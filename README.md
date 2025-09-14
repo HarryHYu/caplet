@@ -62,7 +62,7 @@ Caplet exists to provide simple, free, accessible educational content about pers
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/HarryHYu/caplet.git
+git clone <repository-url>
 cd caplet
 ```
 
@@ -77,12 +77,6 @@ npm run dev
 ```
 
 4. Open your browser and navigate to `http://localhost:5173`
-
-### Security Notes
-
-- **Never commit personal access tokens** to the repository
-- **Use environment variables** for sensitive configuration
-- **The git remote URL** has been sanitized to remove any embedded tokens
 
 ### Building for Production
 

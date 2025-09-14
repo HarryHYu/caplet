@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useCourses } from '../contexts/CoursesContext';
 
 const Home = () => {
+  const { featuredCourses, loading } = useCourses();
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -16,11 +18,11 @@ const Home = () => {
               superannuation, tax, loans, and basic economics in the Australian context.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/about" className="btn-primary text-lg px-8 py-3">
-                Learn About Us
+              <Link to="/courses" className="btn-primary text-lg px-8 py-3">
+                Browse Courses
               </Link>
-              <Link to="/mission" className="btn-secondary text-lg px-8 py-3">
-                Our Mission
+              <Link to="/about" className="btn-secondary text-lg px-8 py-3">
+                Learn About Us
               </Link>
             </div>
           </div>
@@ -80,6 +82,81 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Featured Courses Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Featured Courses
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Start your financial education journey with these popular courses
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading courses...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredCourses.slice(0, 3).map((course) => (
+                <div key={course.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {course.category.charAt(0).toUpperCase() + course.category.slice(1)}
+                      </span>
+                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                        {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {course.title}
+                    </h3>
+
+                    <p className="text-gray-600 mb-4 line-clamp-3">
+                      {course.shortDescription}
+                    </p>
+
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <span>⏱️ {course.duration} min</span>
+                      <span>📚 {course.lessons?.length || 0} lessons</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-green-600">
+                        {course.isFree ? 'Free' : `$${course.price}`}
+                      </span>
+                      <Link
+                        to="/courses"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        View Course
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-8">
+            <Link
+              to="/courses"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+            >
+              View All Courses
+              <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 bg-blue-600">
         <div className="container-custom text-center">
@@ -90,8 +167,8 @@ const Home = () => {
             Start your journey to better financial understanding today. 
             Explore our resources and take control of your financial future.
           </p>
-          <Link to="/faq" className="bg-white text-blue-600 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-            Get Started
+          <Link to="/courses" className="bg-white text-blue-600 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+            Browse Courses
           </Link>
         </div>
       </section>
