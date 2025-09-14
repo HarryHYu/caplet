@@ -16,7 +16,9 @@ app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:5173',
     'https://capletedu.org',
-    'https://www.capletedu.org'
+    'https://www.capletedu.org',
+    'https://caplet.vercel.app',
+    'https://caplet-qnstzfq3c-harry-yus-projects-380f9660.vercel.app'
   ],
   credentials: true
 }));
