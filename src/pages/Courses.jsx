@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useCourses } from '../contexts/CoursesContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -155,7 +156,9 @@ const Courses = () => {
                 </div>
 
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {course.title}
+                  <Link to={`/courses/${course.id}`} className="hover:text-blue-600">
+                    {course.title}
+                  </Link>
                 </h3>
 
                 <p className="text-gray-600 mb-4 line-clamp-3">

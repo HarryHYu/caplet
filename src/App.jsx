@@ -10,6 +10,8 @@ import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
 import References from './pages/References';
 import Courses from './pages/Courses';
+import CourseDetail from './pages/CourseDetail';
+import LessonPlayer from './pages/LessonPlayer';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/references" element={<References />} />
                 <Route path="/courses" element={<Courses />} />
+                <Route path="/courses/:courseId" element={<CourseDetail />} />
+                <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
               </Routes>
             </main>
             <Footer />
