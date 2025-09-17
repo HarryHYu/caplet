@@ -16,7 +16,12 @@ const generateToken = (userId) => {
 
 // Register
 router.post('/register', [
-  body('email').isEmail().normalizeEmail(),
+  body('email').isEmail().normalizeEmail({
+    gmail_remove_dots: false,
+    gmail_remove_subaddress: false,
+    outlookdotcom_remove_subaddress: false,
+    yahoo_remove_subaddress: false
+  }),
   body('password').isLength({ min: 6 }),
   body('firstName').trim().isLength({ min: 1, max: 50 }),
   body('lastName').trim().isLength({ min: 1, max: 50 })
@@ -59,7 +64,12 @@ router.post('/register', [
 
 // Login
 router.post('/login', [
-  body('email').isEmail().normalizeEmail(),
+  body('email').isEmail().normalizeEmail({
+    gmail_remove_dots: false,
+    gmail_remove_subaddress: false,
+    outlookdotcom_remove_subaddress: false,
+    yahoo_remove_subaddress: false
+  }),
   body('password').notEmpty()
 ], async (req, res) => {
   try {
