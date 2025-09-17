@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const UserProgress = require('../models/UserProgress');
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
+const User = require('../models/User');
 
 const router = express.Router();
 
