@@ -17,7 +17,7 @@ const LessonPlayer = () => {
         setError(null);
         setLoading(true);
         const data = await api.getCourse(courseId);
-        const sorted = (data.lessons || []).sort((a, b) => a.order - b.order);
+        const sorted = ((data && data.lessons) || []).sort((a, b) => a.order - b.order);
         const current = sorted.find(l => l.id === lessonId) || sorted[0];
         setCourse(data);
         setLesson(current);

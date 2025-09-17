@@ -14,8 +14,8 @@ const CourseDetail = () => {
       try {
         setError(null);
         setLoading(true);
-        const data = await api.getCourse(courseId);
-        setCourse(data);
+        const courseResponse = await api.getCourse(courseId);
+        setCourse(courseResponse);
       } catch (e) {
         setError(e.message);
       } finally {
