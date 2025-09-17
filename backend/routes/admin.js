@@ -169,4 +169,48 @@ router.post('/bootstrap', async (req, res) => {
 
 module.exports = router;
 
+// Maintenance: upsert admin (update email/password or create if missing)
+// Security model mirrors /bootstrap: require ADMIN_BOOTSTRAP_TOKEN if set,
+// otherwise allow only if no admin exists (first-time setup).
+router.post('/upsert-admin', async (req, res) => {
+  try {
+    const headerToken = req.header('X-Bootstrap-Token');
+    const expectedToken = process.env.ADMIN_BOOTSTRAP_TOKEN;
+
+    const existingAdmin = await User.findOne({ where: { role: 'admin' } });
+
+    if (expectedToken) {
+      if (headerToken !== expectedToken) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+    } else if (existingAdmin) {
+      return res.status(401).json({ message: 'Unauthorized (admin exists)' });
+    }
+
+    const { adminEmail, adminPassword } = req.body || {};
+    if (!adminEmail || !adminPassword) {
+      return res.status(400).json({ message: 'adminEmail and adminPassword are required in body' });
+    }
+
+    let admin = existingAdmin;
+    if (!admin) {
+      admin = await User.create({
+        email: adminEmail,
+        password: adminPassword,
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'admin',
+        isEmailVerified: true
+      });
+    } else {
+      await admin.update({ email: adminEmail, password: adminPassword });
+    }
+
+    return res.json({ message: 'Admin upserted', admin: admin.toJSON() });
+  } catch (error) {
+    console.error('Upsert admin error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
