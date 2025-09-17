@@ -34,8 +34,19 @@ router.post('/register', [
 
     const { email, password, firstName, lastName, dateOfBirth } = req.body;
 
+    // Gmail compatibility: prevent duplicates due to dot variants
+    const [local, domain] = email.split('@');
+    let altEmail = null;
+    if (domain && domain.toLowerCase() === 'gmail.com') {
+      const baseLocal = local.split('+')[0];
+      altEmail = `${baseLocal.replace(/\./g, '')}@gmail.com`;
+    }
+
     // Check if user already exists
-    const existingUser = await User.findOne({ where: { email } });
+    let existingUser = await User.findOne({ where: { email } });
+    if (!existingUser && altEmail) {
+      existingUser = await User.findOne({ where: { email: altEmail } });
+    }
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
@@ -80,8 +91,16 @@ router.post('/login', [
 
     const { email, password } = req.body;
 
-    // Find user
-    const user = await User.findOne({ where: { email } });
+    // Find user (support gmail dot/subaddress variants)
+    let user = await User.findOne({ where: { email } });
+    if (!user) {
+      const [local, domain] = email.split('@');
+      if (domain && domain.toLowerCase() === 'gmail.com') {
+        const baseLocal = local.split('+')[0];
+        const altEmail = `${baseLocal.replace(/\./g, '')}@gmail.com`;
+        user = await User.findOne({ where: { email: altEmail } });
+      }
+    }
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
