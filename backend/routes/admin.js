@@ -11,8 +11,18 @@ router.post('/bootstrap', async (req, res) => {
   try {
     const headerToken = req.header('X-Bootstrap-Token');
     const expectedToken = process.env.ADMIN_BOOTSTRAP_TOKEN;
-    if (!expectedToken || headerToken !== expectedToken) {
-      return res.status(401).json({ message: 'Unauthorized' });
+
+    // If a token is configured, enforce it. If no token configured, allow bootstrap
+    // ONLY if there is no existing admin (first-time setup safety).
+    if (expectedToken) {
+      if (headerToken !== expectedToken) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+    } else {
+      const existingAdminCheck = await User.findOne({ where: { role: 'admin' } });
+      if (existingAdminCheck) {
+        return res.status(401).json({ message: 'Unauthorized (admin already exists)' });
+      }
     }
 
     // If an admin already exists, do nothing
