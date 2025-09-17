@@ -167,8 +167,6 @@ router.post('/bootstrap', async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // Temporary: promote a user to admin (guarded by ADMIN_BOOTSTRAP_TOKEN; if missing, allow only specific emails)
 router.post('/promote', async (req, res) => {
   try {
@@ -195,5 +193,7 @@ router.post('/promote', async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+module.exports = router;
 
 
