@@ -8,6 +8,7 @@ const CourseDetail = () => {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [progress, setProgress] = useState({ courseProgress: null, lessonProgress: [] });
 
   useEffect(() => {
     const load = async () => {
@@ -16,6 +17,12 @@ const CourseDetail = () => {
         setLoading(true);
         const courseResponse = await api.getCourse(courseId);
         setCourse(courseResponse);
+        try {
+          const prog = await api.getCourseProgress(courseId);
+          setProgress(prog);
+        } catch (_) {
+          // ignore if not logged in
+        }
       } catch (e) {
         setError(e.message);
       } finally {
@@ -69,10 +76,16 @@ const CourseDetail = () => {
                 <span>📚 {(course.lessons || []).length} lessons</span>
                 <span className="capitalize">Level: {course.level}</span>
               </div>
-              {/* Simple progress bar placeholder (compute server-side later) */}
-              <div className="w-full bg-gray-200 rounded h-2 mb-4">
-                <div className="bg-blue-600 h-2 rounded" style={{ width: '0%' }}></div>
-              </div>
+              {progress?.courseProgress && (
+                <div className="mb-4">
+                  <div className="w-full bg-gray-200 rounded h-2">
+                    <div className="bg-blue-600 h-2 rounded" style={{ width: `${progress.courseProgress.progressPercentage}%` }}></div>
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {Math.round(progress.courseProgress.progressPercentage)}% complete
+                  </div>
+                </div>
+              )}
               <button onClick={startLesson} className="btn-primary">Start course</button>
             </div>
             {course.thumbnail && (
@@ -92,7 +105,12 @@ const CourseDetail = () => {
                 <li key={lesson.id} className="px-6 py-4 flex items-center justify-between">
                   <div>
                     <p className="font-medium">{lesson.order}. {lesson.title}</p>
-                    <p className="text-sm text-gray-600">{lesson.description}</p>
+                    <p className="text-sm text-gray-600">
+                      {lesson.description}
+                      {progress?.lessonProgress?.some(p => p.lessonId === lesson.id && p.status === 'completed') && (
+                        <span className="ml-2 text-green-600">✓ Completed</span>
+                      )}
+                    </p>
                   </div>
                   <Link to={`/courses/${course.id}/lessons/${lesson.id}`} className="text-blue-600">Open</Link>
                 </li>
