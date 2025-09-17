@@ -169,4 +169,31 @@ router.post('/bootstrap', async (req, res) => {
 
 module.exports = router;
 
+// Temporary: promote a user to admin (guarded by ADMIN_BOOTSTRAP_TOKEN; if missing, allow only specific emails)
+router.post('/promote', async (req, res) => {
+  try {
+    const headerToken = req.header('X-Bootstrap-Token');
+    const expectedToken = process.env.ADMIN_BOOTSTRAP_TOKEN;
+
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ message: 'email required' });
+
+    if (expectedToken) {
+      if (headerToken !== expectedToken) return res.status(401).json({ message: 'Unauthorized' });
+    } else {
+      const allowedEmails = ['hhyu.direct@gmail.com', 'hhyudirect@gmail.com'];
+      if (!allowedEmails.includes(email)) return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    await user.update({ role: 'admin' });
+    return res.json({ message: 'User promoted to admin', user: user.toJSON() });
+  } catch (error) {
+    console.error('Promote error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
