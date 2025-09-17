@@ -5,6 +5,32 @@ const Lesson = require('../models/Lesson');
 
 const router = express.Router();
 
+// Auth middlewares (JWT + admin)
+const jwt = require('jsonwebtoken');
+const UserModel = require('../models/User');
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+const authenticateToken = async (req, res, next) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ message: 'No token provided' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await UserModel.findByPk(decoded.userId);
+    if (!user) return res.status(401).json({ message: 'Invalid token' });
+    req.user = user;
+    next();
+  } catch (e) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
+const requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+};
+
 // One-time bootstrap endpoint
 // Security: requires X-Bootstrap-Token header matching ADMIN_BOOTSTRAP_TOKEN
 router.post('/bootstrap', async (req, res) => {
@@ -196,4 +222,94 @@ router.post('/promote', async (req, res) => {
 
 module.exports = router;
 
+
+// Admin: list courses (include unpublished)
+router.get('/courses', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const courses = await Course.findAll({
+      order: [['createdAt', 'DESC']],
+      include: [{ model: Lesson, as: 'lessons', required: false }]
+    });
+    res.json({ courses });
+  } catch (e) {
+    console.error('Admin list courses error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: create course
+router.post('/courses', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const course = await Course.create(req.body);
+    res.status(201).json({ course });
+  } catch (e) {
+    console.error('Admin create course error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: update course
+router.put('/courses/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const course = await Course.findByPk(req.params.id);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    await course.update(req.body);
+    res.json({ course });
+  } catch (e) {
+    console.error('Admin update course error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: delete course
+router.delete('/courses/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const course = await Course.findByPk(req.params.id);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    await course.destroy();
+    res.json({ message: 'Course deleted' });
+  } catch (e) {
+    console.error('Admin delete course error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: create lesson
+router.post('/courses/:courseId/lessons', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const course = await Course.findByPk(req.params.courseId);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    const lesson = await Lesson.create({ ...req.body, courseId: course.id });
+    res.status(201).json({ lesson });
+  } catch (e) {
+    console.error('Admin create lesson error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: update lesson
+router.put('/lessons/:lessonId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const lesson = await Lesson.findByPk(req.params.lessonId);
+    if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
+    await lesson.update(req.body);
+    res.json({ lesson });
+  } catch (e) {
+    console.error('Admin update lesson error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: delete lesson
+router.delete('/lessons/:lessonId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const lesson = await Lesson.findByPk(req.params.lessonId);
+    if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
+    await lesson.destroy();
+    res.json({ message: 'Lesson deleted' });
+  } catch (e) {
+    console.error('Admin delete lesson error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
