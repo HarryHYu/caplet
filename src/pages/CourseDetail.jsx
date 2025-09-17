@@ -69,6 +69,10 @@ const CourseDetail = () => {
                 <span>📚 {(course.lessons || []).length} lessons</span>
                 <span className="capitalize">Level: {course.level}</span>
               </div>
+              {/* Simple progress bar placeholder (compute server-side later) */}
+              <div className="w-full bg-gray-200 rounded h-2 mb-4">
+                <div className="bg-blue-600 h-2 rounded" style={{ width: '0%' }}></div>
+              </div>
               <button onClick={startLesson} className="btn-primary">Start course</button>
             </div>
             {course.thumbnail && (

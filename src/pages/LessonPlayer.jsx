@@ -10,6 +10,8 @@ const LessonPlayer = () => {
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -21,7 +23,14 @@ const LessonPlayer = () => {
         const current = sorted.find(l => l.id === lessonId) || sorted[0];
         setCourse(data);
         setLesson(current);
-        if (current) await api.updateLessonProgress(current.id, { status: 'in_progress' });
+        // Best-effort progress update; do not block rendering
+        if (current) {
+          try {
+            await api.updateLessonProgress(current.id, { status: 'in_progress' });
+          } catch (e) {
+            console.warn('Progress update failed (non-blocking):', e?.message || e);
+          }
+        }
       } catch (e) {
         setError(e.message);
       } finally {
@@ -40,10 +49,19 @@ const LessonPlayer = () => {
 
   const markComplete = async () => {
     try {
+      setSaving(true);
       await api.updateLessonProgress(lesson.id, { status: 'completed' });
-      goTo(1);
+      setCompleted(true);
+      // If not last lesson, advance
+      const sorted = (course?.lessons || []).sort((a, b) => a.order - b.order);
+      const idxNow = sorted.findIndex(l => l.id === lesson.id);
+      if (idxNow < sorted.length - 1) {
+        goTo(1);
+      }
     } catch (e) {
       alert('Failed to save progress: ' + e.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -107,7 +125,9 @@ const LessonPlayer = () => {
 
               <div className="mt-6 flex items-center justify-between">
                 <button onClick={() => goTo(-1)} disabled={idx <= 0} className="btn-secondary disabled:opacity-50">Prev</button>
-                <button onClick={markComplete} className="btn-primary">Mark complete</button>
+                <button onClick={markComplete} disabled={saving || completed} className="btn-primary disabled:opacity-50">
+                  {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
+                </button>
                 <button onClick={() => goTo(1)} disabled={idx >= sortedLessons.length - 1} className="btn-secondary disabled:opacity-50">Next</button>
               </div>
             </div>
