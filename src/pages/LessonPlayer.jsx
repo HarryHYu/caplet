@@ -13,7 +13,6 @@ const getYouTubeId = (url) => {
 // Quiz Component
 const Quiz = ({ questions, onComplete }) => {
   const [answers, setAnswers] = useState({});
-  const [showResults, setShowResults] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const handleAnswer = (questionId, answerIndex) => {
@@ -22,7 +21,6 @@ const Quiz = ({ questions, onComplete }) => {
 
   const handleSubmit = () => {
     setSubmitted(true);
-    setShowResults(true);
     
     // Calculate score
     const mcqQuestions = questions.filter(q => q.type === 'multiple-choice');
@@ -30,8 +28,13 @@ const Quiz = ({ questions, onComplete }) => {
     const score = Math.round((correct / mcqQuestions.length) * 100);
     
     if (score >= 70) {
-      setTimeout(() => onComplete?.(), 1000);
+      setTimeout(() => onComplete?.(), 1500);
     }
+  };
+
+  const handleReset = () => {
+    setAnswers({});
+    setSubmitted(false);
   };
 
   const mcqQuestions = questions.filter(q => q.type === 'multiple-choice');
@@ -116,29 +119,40 @@ const Quiz = ({ questions, onComplete }) => {
       ))}
 
       {/* Submit Button and Results */}
-      {!submitted ? (
-        <button
-          onClick={handleSubmit}
-          disabled={Object.keys(answers).length < mcqQuestions.length}
-          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Submit Answers
-        </button>
-      ) : (
-        <div className={`p-6 rounded-lg ${score >= 70 ? 'bg-green-50 border-2 border-green-500' : 'bg-yellow-50 border-2 border-yellow-500'}`}>
-          <h3 className="text-xl font-bold mb-2">
-            {score >= 70 ? '🎉 Great job!' : '📚 Keep practicing!'}
-          </h3>
-          <p className="mb-2">
-            You got <strong>{correctCount} out of {mcqQuestions.length}</strong> questions correct ({score}%)
-          </p>
-          {score >= 70 ? (
-            <p className="text-green-700">You passed! Moving to the next lesson...</p>
-          ) : (
-            <p className="text-yellow-700">You need 70% to pass. Review the content and try again!</p>
-          )}
-        </div>
-      )}
+      <div className="space-y-4">
+        {!submitted ? (
+          <button
+            onClick={handleSubmit}
+            className="btn-primary w-full"
+          >
+            Submit Answers
+          </button>
+        ) : (
+          <>
+            <div className={`p-6 rounded-lg ${score >= 70 ? 'bg-green-50 border-2 border-green-500' : 'bg-yellow-50 border-2 border-yellow-500'}`}>
+              <h3 className="text-xl font-bold mb-2">
+                {score >= 70 ? '🎉 Great job!' : '📚 Keep practicing!'}
+              </h3>
+              <p className="mb-2">
+                You got <strong>{correctCount} out of {mcqQuestions.length}</strong> questions correct ({score}%)
+              </p>
+              {score >= 70 ? (
+                <p className="text-green-700">You passed! Advancing to next lesson...</p>
+              ) : (
+                <p className="text-yellow-700">You need 70% to pass. Review the content and try again!</p>
+              )}
+            </div>
+            {score < 70 && (
+              <button
+                onClick={handleReset}
+                className="btn-secondary w-full"
+              >
+                Try Again
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
