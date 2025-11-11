@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
       whereClause[Op.or] = [
         { title: { [Op.iLike]: `%${search}%` } },
         { description: { [Op.iLike]: `%${search}%` } },
-        { tags: { [Op.contains]: [search] } }
+        { shortDescription: { [Op.iLike]: `%${search}%` } }
       ];
     }
 
@@ -117,9 +117,16 @@ router.get('/featured/list', async (req, res) => {
   try {
     const courses = await Course.findAll({
       where: { 
-        isPublished: true,
-        // Add featured logic here - could be based on metadata or a featured flag
+        isPublished: true
       },
+      include: [
+        {
+          model: Lesson,
+          as: 'lessons',
+          where: { isPublished: true },
+          required: false
+        }
+      ],
       order: [['createdAt', 'DESC']],
       limit: 6
     });

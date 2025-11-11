@@ -12,6 +12,7 @@ import References from './pages/References';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import LessonPlayer from './pages/LessonPlayer';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/courses" element={<Courses />} />
                 <Route path="/courses/:courseId" element={<CourseDetail />} />
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
             <Footer />

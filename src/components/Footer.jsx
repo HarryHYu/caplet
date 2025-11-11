@@ -15,7 +15,7 @@ const Footer = () => {
               Empowering Australians with free, accessible financial education to bridge the financial literacy gap.
             </p>
             <p className="text-sm text-gray-500">
-              © 2024 Caplet. All rights reserved.
+              © {new Date().getFullYear()} Caplet. All rights reserved.
             </p>
           </div>
 

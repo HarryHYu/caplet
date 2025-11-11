@@ -39,10 +39,10 @@ const Navbar = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-sm font-medium transition-colors duration-200 ${
+                className={`text-sm font-medium transition-colors duration-200 pb-1 ${
                   isActive(item.path)
                     ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-blue-600'
+                    : 'text-gray-600 hover:text-blue-600 border-b-2 border-transparent'
                 }`}
               >
                 {item.label}
@@ -109,6 +109,36 @@ const Navbar = () => {
                   {item.label}
                 </Link>
               ))}
+              
+              {/* Mobile Auth Section */}
+              <div className="pt-4 border-t border-gray-200">
+                {isAuthenticated ? (
+                  <>
+                    <div className="px-3 py-2 text-sm text-gray-600">
+                      Welcome, {user?.firstName}!
+                    </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowAuthModal(true);
+                      setIsOpen(false);
+                    }}
+                    className="w-full px-3 py-2 bg-blue-600 text-white text-base font-medium rounded-md hover:bg-blue-700"
+                  >
+                    Sign In
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
