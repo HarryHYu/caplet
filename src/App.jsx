@@ -8,10 +8,10 @@ import About from './pages/About';
 import Mission from './pages/Mission';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
-import References from './pages/References';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import LessonPlayer from './pages/LessonPlayer';
+import Survey from './pages/Survey';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -28,10 +28,10 @@ function App() {
                 <Route path="/mission" element={<Mission />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/references" element={<References />} />
                 <Route path="/courses" element={<Courses />} />
                 <Route path="/courses/:courseId" element={<CourseDetail />} />
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
+                <Route path="/survey" element={<Survey />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

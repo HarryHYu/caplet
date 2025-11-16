@@ -3,6 +3,7 @@ const User = require('./User');
 const Course = require('./Course');
 const Lesson = require('./Lesson');
 const UserProgress = require('./UserProgress');
+const Survey = require('./Survey');
 
 // Define associations
 Course.hasMany(Lesson, { 
@@ -61,5 +62,6 @@ module.exports = {
   Course,
   Lesson,
   UserProgress,
+  Survey,
   syncDatabase
 };

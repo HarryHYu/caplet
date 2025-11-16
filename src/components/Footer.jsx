@@ -51,11 +51,6 @@ const Footer = () => {
             <h3 className="text-sm font-semibold text-gray-900 mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/references" className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200">
-                  References
-                </Link>
-              </li>
-              <li>
                 <a 
                   href="https://capletedu.org" 
                   className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200"

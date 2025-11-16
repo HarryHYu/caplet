@@ -142,6 +142,14 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // Survey
+  async submitSurvey(surveyData) {
+    return this.request('/survey', {
+      method: 'POST',
+      body: JSON.stringify(surveyData),
+    });
+  }
 }
 
 export default new ApiService();
