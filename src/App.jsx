@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -17,10 +18,11 @@ import NotFound from './pages/NotFound';
 
 function App() {
   return (
-    <AuthProvider>
-      <CoursesProvider>
-        <Router>
-          <div className="min-h-screen flex flex-col">
+    <ThemeProvider>
+      <AuthProvider>
+        <CoursesProvider>
+          <Router>
+          <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
             <Navbar />
             <main className="flex-grow">
               <Routes>
@@ -42,6 +44,7 @@ function App() {
         </Router>
       </CoursesProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 
