@@ -150,6 +150,10 @@ class ApiService {
       body: JSON.stringify(surveyData),
     });
   }
+
+  async getSurveyStats() {
+    return this.request('/survey/stats');
+  }
 }
 
 export default new ApiService();
