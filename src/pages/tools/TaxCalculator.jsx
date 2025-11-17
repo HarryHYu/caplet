@@ -90,7 +90,7 @@ const TaxCalculator = () => {
       <section className="py-12">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700 p-6">
+            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Enter your details</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -136,41 +136,41 @@ const TaxCalculator = () => {
               </form>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-inner border border-gray-100 dark:border-gray-700 p-6">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-inner border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Summary
               </h2>
               {result ? (
                 <div className="space-y-4">
-                  <div>
+                  <div className="break-words">
                     <p className="text-sm text-gray-500 dark:text-gray-400">Taxable income</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
                       {formatCurrency(result.taxableIncome)}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
+                    <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 overflow-hidden">
                       <p className="text-sm text-gray-500 dark:text-gray-400">Income tax</p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
                         {formatCurrency(result.incomeTax)}
                       </p>
                     </div>
-                    <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
+                    <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 overflow-hidden">
                       <p className="text-sm text-gray-500 dark:text-gray-400">Medicare levy</p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
                         {formatCurrency(result.medicare)}
                       </p>
                     </div>
                   </div>
-                  <div>
+                  <div className="break-words">
                     <p className="text-sm text-gray-500 dark:text-gray-400">Total tax</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
                       {formatCurrency(result.totalTax)}
                     </p>
                   </div>
-                  <div>
+                  <div className="break-words">
                     <p className="text-sm text-gray-500 dark:text-gray-400">Take-home pay</p>
-                    <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
+                    <p className="text-2xl font-semibold text-green-600 dark:text-green-400 break-words overflow-wrap-anywhere">
                       {formatCurrency(result.netIncome)}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
