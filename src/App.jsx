@@ -10,6 +10,7 @@ import Mission from './pages/Mission';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
 import Tools from './pages/Tools';
+import TaxCalculator from './pages/tools/TaxCalculator';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import LessonPlayer from './pages/LessonPlayer';
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/tools" element={<Tools />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
                 <Route path="/courses" element={<Courses />} />
                 <Route path="/courses/:courseId" element={<CourseDetail />} />
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
