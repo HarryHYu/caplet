@@ -11,6 +11,15 @@ import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
 import Tools from './pages/Tools';
 import TaxCalculator from './pages/tools/TaxCalculator';
+import BudgetPlanner from './pages/tools/BudgetPlanner';
+import SavingsGoal from './pages/tools/SavingsGoal';
+import LoanRepayment from './pages/tools/LoanRepayment';
+import CompoundInterest from './pages/tools/CompoundInterest';
+import MortgageCalculator from './pages/tools/MortgageCalculator';
+import SuperContribution from './pages/tools/SuperContribution';
+import GSTCalculator from './pages/tools/GSTCalculator';
+import SalaryCalculator from './pages/tools/SalaryCalculator';
+import EmergencyFund from './pages/tools/EmergencyFund';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import LessonPlayer from './pages/LessonPlayer';
@@ -35,6 +44,15 @@ function App() {
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
+                <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
+                <Route path="/tools/savings-goal" element={<SavingsGoal />} />
+                <Route path="/tools/loan-repayment" element={<LoanRepayment />} />
+                <Route path="/tools/compound-interest" element={<CompoundInterest />} />
+                <Route path="/tools/mortgage" element={<MortgageCalculator />} />
+                <Route path="/tools/super-contribution" element={<SuperContribution />} />
+                <Route path="/tools/gst" element={<GSTCalculator />} />
+                <Route path="/tools/salary" element={<SalaryCalculator />} />
+                <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
                 <Route path="/courses" element={<Courses />} />
                 <Route path="/courses/:courseId" element={<CourseDetail />} />
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />

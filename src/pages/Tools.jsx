@@ -5,19 +5,61 @@ const tools = [
     title: 'Income Tax Calculator',
     description: 'Estimate your annual Australian income tax, Medicare levy, and net pay.',
     path: '/tools/tax-calculator',
-    tag: 'New'
+    tag: 'Core'
   },
   {
-    title: 'Coming Soon',
-    description: 'More budgeting, savings, and business tools are on the way.',
-    path: null,
-    tag: 'Planned'
+    title: 'Budget Planner',
+    description: 'Plan your monthly budget and track spending across different categories.',
+    path: '/tools/budget-planner',
+    tag: 'Core'
   },
   {
-    title: 'Coming Soon',
-    description: 'Tell us what tool you want next and we’ll prioritize it.',
-    path: null,
-    tag: 'Planned'
+    title: 'Savings Goal Calculator',
+    description: 'Calculate how long it will take to reach your savings goal with contributions and interest.',
+    path: '/tools/savings-goal',
+    tag: 'Core'
+  },
+  {
+    title: 'Loan Repayment Calculator',
+    description: 'Calculate monthly loan repayments, total interest, and total amount payable.',
+    path: '/tools/loan-repayment',
+    tag: 'Core'
+  },
+  {
+    title: 'Compound Interest Calculator',
+    description: 'See how your money grows with compound interest and regular contributions.',
+    path: '/tools/compound-interest',
+    tag: 'Core'
+  },
+  {
+    title: 'Mortgage Calculator',
+    description: 'Calculate home loan repayments, total interest, and explore different payment frequencies.',
+    path: '/tools/mortgage',
+    tag: 'High Value'
+  },
+  {
+    title: 'Super Contribution Calculator',
+    description: 'Project your superannuation balance with employer and personal contributions.',
+    path: '/tools/super-contribution',
+    tag: 'High Value'
+  },
+  {
+    title: 'GST Calculator',
+    description: 'Add or remove GST (10%) from amounts for Australian Goods and Services Tax calculations.',
+    path: '/tools/gst',
+    tag: 'High Value'
+  },
+  {
+    title: 'Salary Calculator',
+    description: 'Calculate your take-home pay from gross salary, including tax, Medicare, and superannuation.',
+    path: '/tools/salary',
+    tag: 'High Value'
+  },
+  {
+    title: 'Emergency Fund Calculator',
+    description: 'Calculate how much you should have in your emergency fund to cover unexpected expenses.',
+    path: '/tools/emergency-fund',
+    tag: 'High Value'
   }
 ];
 
@@ -53,8 +95,10 @@ const Tools = () => {
                       {tool.title}
                     </h3>
                     <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      tool.tag === 'New'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                      tool.tag === 'Core'
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                        : tool.tag === 'High Value'
+                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
                         : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
                     }`}>
                       {tool.tag}
