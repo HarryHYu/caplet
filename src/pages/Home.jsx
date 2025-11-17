@@ -12,9 +12,8 @@ const Home = () => {
               <span className="text-blue-600 dark:text-blue-400"> Every Australian</span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              Free, comprehensive financial education covering everything money-related: 
-              trading, investing, budgeting, tax, superannuation, strategies, and more - 
-              all with an Australian focus.
+              Everything money-related. Trading, investing, budgeting, tax, strategies, and more. 
+              Free. Australian-focused.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/courses" className="btn-primary text-lg px-8 py-3">
@@ -33,11 +32,10 @@ const Home = () => {
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              Why Financial Literacy Matters
+              Why It Matters
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              In Australia, many people struggle with basic financial concepts. 
-              We're here to change that with simple, practical education.
+              Financial knowledge = better decisions. Better decisions = better outcomes.
             </p>
           </div>
 
@@ -48,9 +46,9 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Free Education</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Free</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Access comprehensive financial education resources completely free of charge.
+                All content, courses, and tools are completely free.
               </p>
             </div>
 
@@ -60,10 +58,9 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Comprehensive Coverage</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Comprehensive</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Everything money-related: trading, investing, budgeting, tax, strategies, and more - 
-                all with Australian context.
+                Trading to tax. Investing to budgeting. Everything money-related with Australian context.
               </p>
             </div>
 
@@ -73,9 +70,9 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Accessible Design</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Accessible</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Simple, clear explanations designed for all ages and backgrounds.
+                Clear, simple explanations. No jargon. For everyone.
               </p>
             </div>
           </div>
@@ -86,11 +83,10 @@ const Home = () => {
       <section className="py-16 bg-blue-600 dark:bg-blue-800">
         <div className="container-custom text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Improve Your Financial Literacy?
+            Ready to Level Up?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Start your journey to better financial understanding today. 
-            Explore our resources and take control of your financial future.
+            Start learning today. Take control of your financial future.
           </p>
           <Link to="/courses" className="bg-white text-blue-600 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors duration-200">
             Browse Courses
