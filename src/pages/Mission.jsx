@@ -9,8 +9,9 @@ const Mission = () => {
               Our Mission
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              To democratize financial education and empower every Australian with the knowledge 
-              they need to make informed financial decisions.
+              To democratize comprehensive financial education and empower every Australian with 
+              knowledge across all money-related topics - from trading to tax - enabling informed 
+              financial decisions.
             </p>
           </div>
         </div>
@@ -70,8 +71,8 @@ const Mission = () => {
                       Free, accessible educational content
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-600 mr-2">✓</span>
-                      Australian-focused financial topics
+                      <span className="text-blue-600 dark:text-blue-400 mr-2">✓</span>
+                      Comprehensive coverage of all money-related topics
                     </li>
                     <li className="flex items-start">
                       <span className="text-blue-600 mr-2">✓</span>
@@ -87,30 +88,34 @@ const Mission = () => {
                     </li>
                   </ul>
                 </div>
-                <div className="bg-green-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                    Core Topics Covered
+                <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                    Topics Covered
                   </h3>
-                  <ul className="text-gray-600 space-y-3">
+                  <ul className="text-gray-600 dark:text-gray-300 space-y-3">
                     <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
+                      <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
+                      Trading strategies and day trading
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
+                      Investing and portfolio management
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
                       Budgeting and money management
                     </li>
                     <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      Superannuation and retirement
+                      <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
+                      Superannuation and retirement planning
                     </li>
                     <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      Tax basics and obligations
+                      <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
+                      Tax, loans, economics, and business finance
                     </li>
                     <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      Loans and credit management
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      Basic economics and investing
+                      <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
+                      All with Australian context and focus
                     </li>
                   </ul>
                 </div>

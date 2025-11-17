@@ -24,11 +24,11 @@ const FAQ = () => {
     },
     {
       question: "What topics does Caplet cover?",
-      answer: "Caplet covers essential financial topics tailored to the Australian context, including: budgeting and money management, superannuation and retirement planning, tax basics and obligations, loans and credit management, basic economics and investing, insurance and risk management, and financial goal setting. We focus on practical, actionable knowledge that you can apply to your daily financial decisions."
+      answer: "Caplet covers everything money-related with an Australian focus, including: trading strategies and day trading, investing and portfolio management, budgeting and money management, superannuation and retirement planning, tax basics and obligations, loans and credit management, economics and business finance, insurance and risk management, and financial goal setting. We provide comprehensive coverage of all financial topics while maintaining strong relevance to Australian markets, regulations, and financial systems."
     },
     {
       question: "How is Caplet different from other financial education platforms?",
-      answer: "Caplet is specifically designed for the Australian financial landscape. Unlike generic platforms, we focus on Australian financial systems, regulations, and products. Our content is evidence-based, practical, and accessible to all ages and backgrounds. We prioritize simplicity and clarity, making complex financial concepts easy to understand."
+      answer: "Caplet provides comprehensive coverage of all money-related topics - from trading to tax - while maintaining a strong Australian focus. Unlike generic platforms, we ensure all content is relevant to Australian markets, regulations, and financial systems. Our content is evidence-based, practical, and accessible to all ages and backgrounds. We prioritize simplicity and clarity, making complex financial concepts easy to understand, whether you're learning day trading strategies or retirement planning."
     },
     {
       question: "Do I need any prior financial knowledge to use Caplet?",

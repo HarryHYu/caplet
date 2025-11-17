@@ -12,8 +12,9 @@ const Home = () => {
               <span className="text-blue-600 dark:text-blue-400"> Every Australian</span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              Free, accessible financial literacy education to help you understand budgeting, 
-              superannuation, tax, loans, and basic economics in the Australian context.
+              Free, comprehensive financial education covering everything money-related: 
+              trading, investing, budgeting, tax, superannuation, strategies, and more - 
+              all with an Australian focus.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/courses" className="btn-primary text-lg px-8 py-3">
@@ -59,9 +60,10 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Australian Focus</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Comprehensive Coverage</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Content specifically tailored to Australian financial systems and regulations.
+                Everything money-related: trading, investing, budgeting, tax, strategies, and more - 
+                all with Australian context.
               </p>
             </div>
 

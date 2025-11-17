@@ -9,8 +9,9 @@ const About = () => {
               About Caplet
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              We're on a mission to bridge the financial literacy gap in Australia through 
-              accessible, free education for everyone.
+              We're on a mission to provide comprehensive financial education covering everything 
+              money-related - from trading and investing to budgeting and tax - all with an 
+              Australian focus.
             </p>
           </div>
         </div>
@@ -27,18 +28,20 @@ const About = () => {
               </h2>
               <div className="prose prose-lg max-w-none">
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Caplet is an educational platform designed to address the critical financial literacy gap 
-                  in Australia. We believe that financial education should be accessible to everyone, 
-                  regardless of their background or circumstances.
+                  Caplet is a comprehensive financial education platform designed to address the critical 
+                  financial literacy gap in Australia. We believe that financial education should be accessible 
+                  to everyone, regardless of their background or circumstances.
                 </p>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Our platform provides free, comprehensive resources covering essential financial topics 
-                  including budgeting, superannuation, tax, loans, and basic economics - all tailored 
-                  specifically to the Australian financial landscape.
+                  Our platform provides free, comprehensive resources covering everything money-related: 
+                  trading strategies, investing, budgeting, superannuation, tax, loans, economics, 
+                  business finance, and more. While we cover all financial topics, we maintain a strong 
+                  focus on the Australian context - ensuring our content is relevant to Australian markets, 
+                  regulations, and financial systems.
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Think of us as Khan Academy for personal finance, but with a laser focus on 
-                  Australian financial systems and regulations.
+                  Think of us as Khan Academy for all things finance - from day trading to retirement planning, 
+                  all with an Australian perspective.
                 </p>
               </div>
             </div>
