@@ -218,7 +218,7 @@ const SurveyResults = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               What Helps You Understand Financial Concepts?
-            </p>
+            </h2>
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={helpfulExplanationsData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" />
