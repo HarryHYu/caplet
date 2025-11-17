@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ReferenceLine } from 'recharts';
 import api from '../services/api';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4'];
@@ -75,10 +75,15 @@ const SurveyResults = () => {
     name, 
     value 
   }));
-  const confidenceData = Object.entries(stats.confidence.distribution).map(([name, value]) => ({ 
-    name: `Level ${name}`, 
-    value 
-  }));
+  // Generate confidence data for all levels 1-10, filling in 0 for missing ones
+  const confidenceData = [];
+  for (let i = 1; i <= 10; i++) {
+    confidenceData.push({
+      level: i,
+      name: i.toString(),
+      value: stats.confidence.distribution[i] || 0
+    });
+  }
 
   const renderLabel = (entry) => {
     const percent = ((entry.value / stats.total) * 100).toFixed(1);
@@ -206,9 +211,21 @@ const SurveyResults = () => {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={confidenceData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis 
+                  dataKey="name" 
+                  label={{ value: 'Confidence Level', position: 'insideBottom', offset: -5 }}
+                />
+                <YAxis 
+                  label={{ value: 'Number of Responses', angle: -90, position: 'insideLeft' }}
+                />
                 <Tooltip />
+                <ReferenceLine 
+                  y={stats.confidence.average} 
+                  stroke="#EF4444" 
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  label={{ value: `Average: ${stats.confidence.average}`, position: 'right' }}
+                />
                 <Bar dataKey="value" fill="#3B82F6" />
               </BarChart>
             </ResponsiveContainer>
