@@ -40,8 +40,8 @@ const About = () => {
                   regulations, and financial systems.
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Think of us as Khan Academy for all things finance - from day trading to retirement planning, 
-                  all with an Australian perspective.
+                  From day trading strategies to retirement planning, we provide comprehensive financial education 
+                  that covers every aspect of money management, all with an Australian perspective.
                 </p>
               </div>
             </div>
