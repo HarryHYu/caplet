@@ -9,6 +9,7 @@ import About from './pages/About';
 import Mission from './pages/Mission';
 import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
+import Tools from './pages/Tools';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import LessonPlayer from './pages/LessonPlayer';
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/mission" element={<Mission />} />
+                <Route path="/tools" element={<Tools />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/courses" element={<Courses />} />
