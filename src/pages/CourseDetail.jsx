@@ -34,10 +34,10 @@ const CourseDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading course...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading course...</p>
         </div>
       </div>
     );
@@ -45,10 +45,10 @@ const CourseDetail = () => {
 
   if (error || !course) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
-          <p className="text-red-600">{error || 'Course not found'}</p>
-          <Link to="/courses" className="mt-4 inline-block text-blue-600">Back to courses</Link>
+          <p className="text-red-600 dark:text-red-400">{error || 'Course not found'}</p>
+          <Link to="/courses" className="mt-4 inline-block text-blue-600 dark:text-blue-400">Back to courses</Link>
         </div>
       </div>
     );
@@ -60,18 +60,18 @@ const CourseDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10">
       <div className="container-custom">
         <div className="mb-6">
-          <Link to="/courses" className="text-blue-600">← Back to courses</Link>
+          <Link to="/courses" className="text-blue-600 dark:text-blue-400">← Back to courses</Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
           <div className="flex items-start justify-between gap-6">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">{course.title}</h1>
-              <p className="text-gray-700 mb-4">{course.description}</p>
-              <div className="flex gap-4 text-sm text-gray-600 mb-4">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{course.title}</h1>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">{course.description}</p>
+              <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                 <span>⏱️ {course.duration} min</span>
                 <span>📚 {(course.lessons || []).length} lessons</span>
                 <span className="capitalize">Level: {course.level}</span>
@@ -94,25 +94,25 @@ const CourseDetail = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="border-b px-6 py-4">
-            <h2 className="text-xl font-semibold">Lessons</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className="border-b dark:border-gray-700 px-6 py-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Lessons</h2>
           </div>
-          <ul className="divide-y">
+          <ul className="divide-y dark:divide-gray-700">
             {(course.lessons || [])
               .sort((a, b) => a.order - b.order)
               .map((lesson) => (
                 <li key={lesson.id} className="px-6 py-4 flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{lesson.order}. {lesson.title}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-gray-900 dark:text-white">{lesson.order}. {lesson.title}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
                       {lesson.description}
                       {progress?.lessonProgress?.some(p => p.lessonId === lesson.id && p.status === 'completed') && (
-                        <span className="ml-2 text-green-600">✓ Completed</span>
+                        <span className="ml-2 text-green-600 dark:text-green-400">✓ Completed</span>
                       )}
                     </p>
                   </div>
-                  <Link to={`/courses/${course.id}/lessons/${lesson.id}`} className="text-blue-600">Open</Link>
+                  <Link to={`/courses/${course.id}/lessons/${lesson.id}`} className="text-blue-600 dark:text-blue-400">Open</Link>
                 </li>
               ))}
           </ul>

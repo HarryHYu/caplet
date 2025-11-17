@@ -65,15 +65,15 @@ const FAQ = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-16">
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-16">
         <div className="container-custom">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
               Frequently Asked Questions
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Find answers to common questions about financial literacy and the Caplet platform.
             </p>
           </div>
@@ -86,12 +86,12 @@ const FAQ = () => {
           <div className="max-w-4xl mx-auto">
             <div className="space-y-4">
               {faqData.map((item, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg">
+                <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg">
                   <button
-                    className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors duration-200"
+                    className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 bg-white dark:bg-gray-800"
                     onClick={() => toggleItem(index)}
                   >
-                    <span className="font-semibold text-gray-900 pr-4">
+                    <span className="font-semibold text-gray-900 dark:text-white pr-4">
                       {item.question}
                     </span>
                     <svg
@@ -108,7 +108,7 @@ const FAQ = () => {
                   {openItems.has(index) && (
                     <div className="px-6 pb-4">
                       <div className="border-t border-gray-200 pt-4">
-                        <p className="text-gray-600 leading-relaxed">
+                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                           {item.answer}
                         </p>
                       </div>
@@ -119,11 +119,11 @@ const FAQ = () => {
             </div>
 
             {/* Contact CTA */}
-            <div className="mt-12 bg-blue-50 p-8 rounded-lg text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="mt-12 bg-blue-50 dark:bg-blue-900/20 p-8 rounded-lg text-center">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Still have questions?
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 If you couldn't find the answer you're looking for, feel free to reach out to us.
               </p>
               <a

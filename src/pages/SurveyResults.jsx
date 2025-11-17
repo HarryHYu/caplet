@@ -25,10 +25,10 @@ const SurveyResults = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading survey results...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading survey results...</p>
         </div>
       </div>
     );
@@ -36,9 +36,9 @@ const SurveyResults = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">{error}</p>
+          <p className="text-red-600 dark:text-red-400">{error}</p>
         </div>
       </div>
     );
@@ -46,11 +46,11 @@ const SurveyResults = () => {
 
   if (!stats || stats.total === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-16">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Survey Results</h1>
-            <p className="text-gray-600">No survey responses yet. Check back later!</p>
+          <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Survey Results</h1>
+            <p className="text-gray-600 dark:text-gray-300">No survey responses yet. Check back later!</p>
           </div>
         </div>
       </div>
@@ -91,18 +91,18 @@ const SurveyResults = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16">
       <div className="container-custom">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Survey Results</h1>
-            <p className="text-gray-600">Total Responses: <span className="font-semibold text-blue-600">{stats.total}</span></p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Survey Results</h1>
+            <p className="text-gray-600 dark:text-gray-300">Total Responses: <span className="font-semibold text-blue-600 dark:text-blue-400">{stats.total}</span></p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Age Distribution */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Age Distribution</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Age Distribution</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -125,8 +125,8 @@ const SurveyResults = () => {
             </div>
 
             {/* Tracks Spending */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Do You Track Your Spending?</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Do You Track Your Spending?</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -150,8 +150,8 @@ const SurveyResults = () => {
             </div>
 
             {/* Taught at School */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Taught Financial Concepts at School?</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Taught Financial Concepts at School?</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -175,8 +175,8 @@ const SurveyResults = () => {
             </div>
 
             {/* Terms Confusing */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Do Financial Terms Feel Confusing?</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Do Financial Terms Feel Confusing?</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -202,7 +202,7 @@ const SurveyResults = () => {
 
           {/* Confidence Level */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Confidence in Understanding Financial Concepts
             </h2>
             <p className="text-gray-600 mb-4">
@@ -233,7 +233,7 @@ const SurveyResults = () => {
 
           {/* Helpful Explanations */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               What Helps You Understand Financial Concepts?
             </h2>
             <ResponsiveContainer width="100%" height={400}>

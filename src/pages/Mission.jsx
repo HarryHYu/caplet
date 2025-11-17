@@ -1,14 +1,14 @@
 const Mission = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-16">
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-16">
         <div className="container-custom">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
               Our Mission
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               To democratize financial education and empower every Australian with the knowledge 
               they need to make informed financial decisions.
             </p>
@@ -22,17 +22,17 @@ const Mission = () => {
           <div className="max-w-4xl mx-auto">
             {/* Problem Overview */}
             <div className="mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
                 The Problem We're Solving
               </h2>
-              <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 p-6 rounded-r-lg">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Financial Literacy Crisis in Australia
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Current State:</h4>
-                    <ul className="text-gray-600 space-y-2 text-sm">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Current State:</h4>
+                    <ul className="text-gray-600 dark:text-gray-300 space-y-2 text-sm">
                       <li>• 67% of Australians lack basic financial literacy</li>
                       <li>• Young people struggle with debt management</li>
                       <li>• Elderly vulnerable to financial scams</li>
@@ -41,8 +41,8 @@ const Mission = () => {
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Consequences:</h4>
-                    <ul className="text-gray-600 space-y-2 text-sm">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Consequences:</h4>
+                    <ul className="text-gray-600 dark:text-gray-300 space-y-2 text-sm">
                       <li>• Poor financial decisions</li>
                       <li>• Increased debt and stress</li>
                       <li>• Retirement insecurity</li>
@@ -56,17 +56,17 @@ const Mission = () => {
 
             {/* Platform Solution */}
             <div className="mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
                 Our Solution
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-blue-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                     Current Platform
                   </h3>
-                  <ul className="text-gray-600 space-y-3">
+                  <ul className="text-gray-600 dark:text-gray-300 space-y-3">
                     <li className="flex items-start">
-                      <span className="text-blue-600 mr-2">✓</span>
+                      <span className="text-blue-600 dark:text-blue-400 mr-2">✓</span>
                       Free, accessible educational content
                     </li>
                     <li className="flex items-start">
@@ -119,7 +119,7 @@ const Mission = () => {
 
             {/* Potential Features */}
             <div className="mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
                 Future Features & Vision
               </h2>
               
@@ -204,7 +204,7 @@ const Mission = () => {
 
             {/* Long-term Vision */}
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
                 Long-term Vision
               </h2>
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg">
