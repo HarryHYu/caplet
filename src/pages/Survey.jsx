@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 
 const Survey = () => {
@@ -102,9 +103,17 @@ const Survey = () => {
         <div className="max-w-2xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Financial Literacy Survey</h1>
-            <p className="text-gray-600 dark:text-gray-300 mb-8">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
               Help us understand your financial education needs. Your responses are anonymous and will help us improve our content.
             </p>
+            <div className="mb-8">
+              <Link 
+                to="/survey-results" 
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium underline"
+              >
+                View Survey Results →
+              </Link>
+            </div>
 
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-600 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-6">
