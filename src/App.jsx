@@ -25,6 +25,7 @@ import CourseDetail from './pages/CourseDetail';
 import LessonPlayer from './pages/LessonPlayer';
 import Survey from './pages/Survey';
 import SurveyResults from './pages/SurveyResults';
+import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
                 <Route path="/survey" element={<Survey />} />
                 <Route path="/survey-results" element={<SurveyResults />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
