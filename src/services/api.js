@@ -32,10 +32,18 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        // If response isn't JSON, use status text
+        throw new Error(response.statusText || 'Something went wrong');
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Something went wrong');
+        // Try to get detailed error message
+        const errorMsg = data.message || data.errors?.[0]?.msg || data.errors?.[0]?.message || `Error ${response.status}: ${response.statusText}`;
+        throw new Error(errorMsg);
       }
 
       return data;
