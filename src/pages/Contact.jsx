@@ -36,16 +36,22 @@ const Contact = () => {
 
               <div className="space-y-6">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Email Address
                   </h3>
                   <a
                     href="mailto:contact@capletedu.org"
-                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 font-medium text-lg transition-colors duration-200"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 font-medium text-lg transition-colors duration-200 block mb-4"
                   >
                     contact@capletedu.org
                   </a>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+                  <a
+                    href="mailto:contact@capletedu.org"
+                    className="btn-primary inline-block"
+                  >
+                    Send Email
+                  </a>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-4">
                     We typically respond within 24-48 hours
                   </p>
                 </div>
