@@ -48,8 +48,6 @@ const Contact = () => {
                   <a
                     href="mailto:contact@capletedu.org?subject=Contact%20from%20Caplet"
                     className="btn-primary inline-block"
-                    target="_blank"
-                    rel="noopener noreferrer"
                   >
                     Send Email
                   </a>
