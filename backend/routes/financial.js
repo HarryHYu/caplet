@@ -125,13 +125,21 @@ router.get('/history', authenticateToken, async (req, res) => {
 
 // Submit check-in
 router.post('/checkin', authenticateToken, [
+  body('message').notEmpty().withMessage('Message is required'),
   body('monthlyExpenses').optional().isObject(),
-  body('monthlyIncome').optional().isNumeric()
+  body('monthlyIncome').optional().custom((value) => {
+    if (value === null || value === undefined || value === '') return true;
+    return !isNaN(parseFloat(value));
+  }).withMessage('Monthly income must be a number')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      console.error('Validation errors:', errors.array());
+      return res.status(400).json({ 
+        message: 'Validation failed',
+        errors: errors.array() 
+      });
     }
 
     const { message, monthlyIncome, monthlyExpenses, isMonthlyCheckIn } = req.body;

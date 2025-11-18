@@ -28,7 +28,9 @@ const CheckInForm = ({ onClose, onSubmit }) => {
       // Prepare check-in data
       const checkInData = {
         message: message.trim(),
-        monthlyIncome: formData.monthlyIncome || null,
+        monthlyIncome: formData.monthlyIncome && formData.monthlyIncome.trim() !== '' 
+          ? parseFloat(formData.monthlyIncome) 
+          : null,
         monthlyExpenses: formData.monthlyExpenses,
         isMonthlyCheckIn: false // Will be determined by AI or user intent
       };
@@ -36,6 +38,7 @@ const CheckInForm = ({ onClose, onSubmit }) => {
       await onSubmit(checkInData);
     } catch (error) {
       console.error('Error submitting check-in:', error);
+      alert(error.message || 'Failed to submit check-in. Please try again.');
     } finally {
       setLoading(false);
     }

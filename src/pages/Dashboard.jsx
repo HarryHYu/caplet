@@ -76,6 +76,9 @@ const Dashboard = () => {
       setShowCheckIn(false);
     } catch (error) {
       console.error('Error submitting check-in:', error);
+      // Show user-friendly error message
+      const errorMsg = error.message || 'Failed to submit check-in. Please try again.';
+      alert(errorMsg);
       throw error;
     }
   };
