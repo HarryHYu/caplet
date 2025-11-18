@@ -24,56 +24,87 @@ const generateFinancialPlan = async ({ userId, state, checkIn, previousPlan }) =
     const prompt = buildPrompt(state, checkIn, previousPlan, isQuestion, isMonthlyCheckIn);
 
     console.log('Calling OpenAI API...');
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a friendly, professional financial advisor specializing in Australian personal finance. 
-          You help users with questions, provide advice, and create financial plans. 
-          Be conversational, practical, and use Australian financial context (superannuation, tax, etc.).
-          Always respond with valid JSON matching the exact structure provided.`
-        },
-        {
-          role: 'user',
-          content: prompt
+    console.log('API Key present:', !!process.env.OPENAI_API_KEY);
+    console.log('User message:', userMessage.substring(0, 100));
+    
+    // Try gpt-4o first (most capable), fallback to gpt-4-turbo, then gpt-3.5-turbo
+    const models = ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'];
+    let lastError = null;
+    
+    for (const model of models) {
+      try {
+        console.log(`Trying model: ${model}`);
+        const response = await openai.chat.completions.create({
+          model: model,
+          messages: [
+            {
+              role: 'system',
+              content: `You are a friendly, professional financial advisor specializing in Australian personal finance. 
+              You help users with questions, provide advice, and create financial plans. 
+              Be conversational, practical, and use Australian financial context (superannuation, tax, etc.).
+              Always respond with valid JSON matching the exact structure provided.`
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          response_format: { type: 'json_object' }
+        });
+
+            console.log(`OpenAI API response received from ${model}`);
+        const content = response.choices[0].message.content;
+        const aiData = JSON.parse(content);
+
+        // Return response with optional plan
+        return {
+          response: aiData.response || aiData.answer || '',
+          shouldUpdatePlan: aiData.shouldUpdatePlan || isMonthlyCheckIn,
+          budgetAllocation: aiData.budgetAllocation || {},
+          savingsStrategy: aiData.savingsStrategy || {},
+          debtStrategy: aiData.debtStrategy || {},
+          goalTimelines: aiData.goalTimelines || [],
+          actionItems: aiData.actionItems || [],
+          insights: aiData.insights || [aiData.response || aiData.answer || '']
+        };
+      } catch (modelError) {
+        console.error(`Error with model ${model}:`, modelError.message);
+        lastError = modelError;
+        // If it's a model-specific error (not available), try next model
+        if (modelError.message?.includes('model') || modelError.message?.includes('not found')) {
+          continue;
         }
-      ],
-      temperature: 0.7,
-      response_format: { type: 'json_object' }
-    });
-
-    console.log('OpenAI API response received');
-    const content = response.choices[0].message.content;
-    const aiData = JSON.parse(content);
-
-    // Return response with optional plan
-    return {
-      response: aiData.response || aiData.answer || '',
-      shouldUpdatePlan: aiData.shouldUpdatePlan || isMonthlyCheckIn,
-      budgetAllocation: aiData.budgetAllocation || {},
-      savingsStrategy: aiData.savingsStrategy || {},
-      debtStrategy: aiData.debtStrategy || {},
-      goalTimelines: aiData.goalTimelines || [],
-      actionItems: aiData.actionItems || [],
-      insights: aiData.insights || [aiData.response || aiData.answer || '']
-    };
+        // Otherwise, break and throw
+        throw modelError;
+      }
+    }
+    
+    // If we get here, all models failed
+    throw lastError || new Error('All models failed');
   } catch (error) {
     console.error('AI plan generation error:', error);
     console.error('Error details:', {
       message: error.message,
-      stack: error.stack,
+      code: error.code,
+      type: error.type,
+      status: error.status,
+      stack: error.stack?.substring(0, 500),
       hasApiKey: !!process.env.OPENAI_API_KEY
     });
     
     // More helpful error message
     let errorMessage = 'I encountered an error processing your request.';
-    if (error.message?.includes('API key')) {
-      errorMessage = 'OpenAI API key is not configured. Please contact support.';
-    } else if (error.message?.includes('rate limit')) {
+    if (error.message?.includes('API key') || error.code === 'invalid_api_key') {
+      errorMessage = 'OpenAI API key is invalid or not configured. Please check Railway environment variables.';
+    } else if (error.message?.includes('rate limit') || error.code === 'rate_limit_exceeded') {
       errorMessage = 'OpenAI API rate limit reached. Please try again in a moment.';
-    } else if (error.message?.includes('insufficient_quota')) {
-      errorMessage = 'OpenAI API quota exceeded. Please check your OpenAI account billing.';
+    } else if (error.message?.includes('insufficient_quota') || error.code === 'insufficient_quota') {
+      errorMessage = 'OpenAI API quota exceeded. Please check your OpenAI account billing and add credits.';
+    } else if (error.message?.includes('model') || error.code === 'model_not_found') {
+      errorMessage = 'The AI model is not available. Please check your OpenAI account has access to GPT models.';
+    } else {
+      errorMessage = `Error: ${error.message || 'Unknown error occurred'}`;
     }
     
     // Fallback response
