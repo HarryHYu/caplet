@@ -71,14 +71,13 @@ const Dashboard = () => {
       if (result.response) {
         setLastResponse(result.response);
       }
+      // Close form first
+      setShowCheckIn(false);
       // Reload dashboard data
       await loadDashboardData();
-      setShowCheckIn(false);
     } catch (error) {
       console.error('Error submitting check-in:', error);
-      // Show user-friendly error message
-      const errorMsg = error.message || 'Failed to submit check-in. Please try again.';
-      alert(errorMsg);
+      // Re-throw so form can handle it
       throw error;
     }
   };
