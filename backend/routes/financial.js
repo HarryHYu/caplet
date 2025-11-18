@@ -289,7 +289,6 @@ router.post('/checkin', authenticateToken, [
   }
 });
 
-// Delete all user data (except account)
 // Get summary
 router.get('/summary', authenticateToken, async (req, res) => {
   try {
