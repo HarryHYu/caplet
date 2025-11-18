@@ -174,6 +174,12 @@ class ApiService {
       body: JSON.stringify(checkInData),
     });
   }
+
+  async deleteAllData() {
+    return this.request('/financial/delete-all-data', {
+      method: 'DELETE',
+    });
+  }
 }
 
 export default new ApiService();

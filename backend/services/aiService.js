@@ -6,16 +6,22 @@ const openai = new OpenAI({
 
 const generateFinancialPlan = async ({ userId, state, checkIn, previousPlan }) => {
   try {
-    // Build structured prompt
-    const prompt = buildFinancialPlanPrompt(state, checkIn, previousPlan);
+    const userMessage = checkIn.message || '';
+    const isQuestion = detectIfQuestion(userMessage);
+    const isMonthlyCheckIn = checkIn.isMonthlyCheckIn || detectMonthlyCheckIn(userMessage);
+
+    // Build prompt based on intent
+    const prompt = buildPrompt(state, checkIn, previousPlan, isQuestion, isMonthlyCheckIn);
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
           role: 'system',
-          content: `You are a professional financial advisor specializing in Australian personal finance. 
-          You create personalized financial plans based on user data. Always respond with valid JSON matching the exact structure provided.`
+          content: `You are a friendly, professional financial advisor specializing in Australian personal finance. 
+          You help users with questions, provide advice, and create financial plans. 
+          Be conversational, practical, and use Australian financial context (superannuation, tax, etc.).
+          Always respond with valid JSON matching the exact structure provided.`
         },
         {
           role: 'user',
@@ -26,56 +32,118 @@ const generateFinancialPlan = async ({ userId, state, checkIn, previousPlan }) =
       response_format: { type: 'json_object' }
     });
 
-    const planData = JSON.parse(response.choices[0].message.content);
+    const aiData = JSON.parse(response.choices[0].message.content);
 
-    // Validate and structure the response
+    // Return response with optional plan
     return {
-      budgetAllocation: planData.budgetAllocation || {},
-      savingsStrategy: planData.savingsStrategy || {},
-      debtStrategy: planData.debtStrategy || {},
-      goalTimelines: planData.goalTimelines || [],
-      actionItems: planData.actionItems || [],
-      insights: planData.insights || []
+      response: aiData.response || aiData.answer || '',
+      shouldUpdatePlan: aiData.shouldUpdatePlan || isMonthlyCheckIn,
+      budgetAllocation: aiData.budgetAllocation || {},
+      savingsStrategy: aiData.savingsStrategy || {},
+      debtStrategy: aiData.debtStrategy || {},
+      goalTimelines: aiData.goalTimelines || [],
+      actionItems: aiData.actionItems || [],
+      insights: aiData.insights || [aiData.response || aiData.answer || '']
     };
   } catch (error) {
     console.error('AI plan generation error:', error);
     
-    // Fallback to basic plan if AI fails
-    return generateFallbackPlan(state, checkIn);
+    // Fallback response
+    return {
+      response: 'I encountered an error processing your request. Please try again.',
+      shouldUpdatePlan: false,
+      budgetAllocation: {},
+      savingsStrategy: {},
+      debtStrategy: {},
+      goalTimelines: [],
+      actionItems: [],
+      insights: []
+    };
   }
 };
 
-const buildFinancialPlanPrompt = (state, checkIn, previousPlan) => {
-  let prompt = `Create a comprehensive financial plan for an Australian user.
+const detectIfQuestion = (message) => {
+  if (!message) return false;
+  const questionWords = ['how much', 'can i', 'should i', 'what', 'when', 'why', '?', 'afford'];
+  const lowerMessage = message.toLowerCase();
+  return questionWords.some(word => lowerMessage.includes(word));
+};
 
-USER FINANCIAL STATE:
-- Monthly Income: $${state.monthlyIncome.toLocaleString()}
-- Monthly Expenses: $${state.monthlyExpenses.toLocaleString()}
-- Savings Rate: ${state.savingsRate.toFixed(2)}%
-- Accounts: ${JSON.stringify(state.accounts)}
-- Debts: ${JSON.stringify(state.debts)}
-- Goals: ${JSON.stringify(state.goals)}
+const detectMonthlyCheckIn = (message) => {
+  if (!message) return false;
+  const checkInWords = ['monthly', 'check-in', 'checkin', 'spent', 'expenses', 'this month'];
+  const lowerMessage = message.toLowerCase();
+  return checkInWords.some(word => lowerMessage.includes(word));
+};
 
-RECENT CHECK-IN:
-- Major Events: ${JSON.stringify(checkIn.majorEvents)}
-- Monthly Expenses Breakdown: ${JSON.stringify(checkIn.monthlyExpenses)}
-- Goals Update: ${JSON.stringify(checkIn.goalUpdate)}
-- Notes: ${checkIn.notes || 'None'}
+const buildPrompt = (state, checkIn, previousPlan, isQuestion, isMonthlyCheckIn) => {
+  let prompt = '';
+
+  // User's message/query
+  prompt += `USER MESSAGE/QUERY:
+"${checkIn.message}"
 
 `;
 
+  // Financial state context
+  prompt += `USER'S CURRENT FINANCIAL STATE:
+- Monthly Income: $${(state.monthlyIncome || 0).toLocaleString()}
+- Monthly Expenses: $${(state.monthlyExpenses || 0).toLocaleString()}
+- Savings Rate: ${(state.savingsRate || 0).toFixed(2)}%
+- Accounts: ${JSON.stringify(state.accounts || [])}
+- Debts: ${JSON.stringify(state.debts || [])}
+- Goals: ${JSON.stringify(state.goals || [])}
+
+`;
+
+  // Additional context from check-in
+  if (checkIn.monthlyIncome) {
+    prompt += `- New Monthly Income Provided: $${parseFloat(checkIn.monthlyIncome).toLocaleString()}\n`;
+  }
+  if (checkIn.monthlyExpenses && Object.keys(checkIn.monthlyExpenses).length > 0) {
+    prompt += `- Monthly Expenses Breakdown: ${JSON.stringify(checkIn.monthlyExpenses)}\n`;
+  }
+
+  prompt += '\n';
+
+  // Previous plan context
   if (previousPlan) {
-    prompt += `PREVIOUS PLAN (for comparison):
-- Budget Allocation: ${JSON.stringify(previousPlan.budgetAllocation)}
-- Savings Strategy: ${JSON.stringify(previousPlan.savingsStrategy)}
-- Debt Strategy: ${JSON.stringify(previousPlan.debtStrategy)}
-- Goal Timelines: ${JSON.stringify(previousPlan.goalTimelines)}
+    prompt += `PREVIOUS FINANCIAL PLAN:
+- Budget Allocation: ${JSON.stringify(previousPlan.budgetAllocation || {})}
+- Savings Strategy: ${JSON.stringify(previousPlan.savingsStrategy || {})}
+- Debt Strategy: ${JSON.stringify(previousPlan.debtStrategy || {})}
+- Goal Timelines: ${JSON.stringify(previousPlan.goalTimelines || [])}
 
 `;
   }
 
-  prompt += `OUTPUT FORMAT (MUST BE VALID JSON):
+  // Instructions based on intent
+  if (isQuestion) {
+    prompt += `INSTRUCTIONS:
+This appears to be a question or request for advice. Answer the user's question directly and helpfully.
+- Provide a clear, direct answer
+- Use their financial data to give specific, personalized advice
+- Be conversational and friendly
+- If they ask "how much can I spend", calculate based on their income, expenses, and goals
+- Use Australian financial context
+
+OUTPUT FORMAT (MUST BE VALID JSON):
 {
+  "response": "<your direct answer to their question, be specific with numbers and advice>",
+  "shouldUpdatePlan": false,
+  "actionItems": ["<any immediate actions they should take>"],
+  "insights": ["<additional helpful insights>"]
+}
+
+Answer their question now:`;
+  } else if (isMonthlyCheckIn) {
+    prompt += `INSTRUCTIONS:
+This is a monthly financial check-in. Generate a comprehensive financial plan update.
+
+OUTPUT FORMAT (MUST BE VALID JSON):
+{
+  "response": "<brief summary of their financial situation and key recommendations>",
+  "shouldUpdatePlan": true,
   "budgetAllocation": {
     "rent": <monthly amount>,
     "food": <monthly amount>,
@@ -88,13 +156,13 @@ RECENT CHECK-IN:
   "savingsStrategy": {
     "recommendedMonthlySavings": <amount>,
     "emergencyFundTarget": <amount>,
-    "emergencyFundMonths": <number of months expenses>,
-    "investmentRecommendation": <percentage or amount>
+    "emergencyFundMonths": <number>,
+    "investmentRecommendation": "<percentage or amount>"
   },
   "debtStrategy": {
     "totalDebt": <amount>,
     "recommendedMonthlyPayment": <amount>,
-    "payoffTimeline": "<estimated months>",
+    "payoffTimeline": "<estimated timeline>",
     "priorityDebt": "<debt name or description>"
   },
   "goalTimelines": [
@@ -124,62 +192,31 @@ RULES:
 4. Be specific with numbers and timelines
 5. Prioritize action items by urgency/importance
 6. Provide actionable, practical advice
-7. If this is an update, note what changed from the previous plan
 
 Generate the plan now:`;
+  } else {
+    // General update or statement
+    prompt += `INSTRUCTIONS:
+The user is sharing financial information or asking for general advice. Provide helpful guidance and optionally update their plan if significant changes are mentioned.
+
+OUTPUT FORMAT (MUST BE VALID JSON):
+{
+  "response": "<your helpful response addressing their message, provide advice and insights>",
+  "shouldUpdatePlan": <true if significant financial changes mentioned, false otherwise>,
+  "actionItems": ["<any immediate actions>"],
+  "insights": ["<helpful insights>"],
+  "budgetAllocation": <only include if shouldUpdatePlan is true>,
+  "savingsStrategy": <only include if shouldUpdatePlan is true>,
+  "debtStrategy": <only include if shouldUpdatePlan is true>,
+  "goalTimelines": <only include if shouldUpdatePlan is true>
+}
+
+Respond helpfully now:`;
+  }
 
   return prompt;
-};
-
-const generateFallbackPlan = (state, checkIn) => {
-  // Basic fallback plan if AI fails
-  const monthlyIncome = state.monthlyIncome || 0;
-  const monthlyExpenses = state.monthlyExpenses || 0;
-  const available = monthlyIncome - monthlyExpenses;
-  const positiveAvailable = Math.max(0, available);
-
-  return {
-    budgetAllocation: {
-      rent: Math.round(monthlyIncome * 0.30),
-      food: Math.round(monthlyIncome * 0.15),
-      utilities: Math.round(monthlyIncome * 0.05),
-      transport: Math.round(monthlyIncome * 0.10),
-      entertainment: Math.round(monthlyIncome * 0.05),
-      savings: Math.round(positiveAvailable * 0.5),
-      other: Math.round(positiveAvailable * 0.5)
-    },
-    savingsStrategy: {
-      recommendedMonthlySavings: Math.round(positiveAvailable * 0.3),
-      emergencyFundTarget: Math.round(monthlyExpenses * 6),
-      emergencyFundMonths: 6,
-      investmentRecommendation: '10%'
-    },
-    debtStrategy: {
-      totalDebt: state.debts?.reduce((sum, d) => sum + (parseFloat(d.balance) || 0), 0) || 0,
-      recommendedMonthlyPayment: Math.round(positiveAvailable * 0.2),
-      payoffTimeline: '12-24 months',
-      priorityDebt: state.debts?.[0]?.name || 'None'
-    },
-    goalTimelines: (state.goals || []).map(goal => ({
-      name: goal.name,
-      targetDate: goal.deadline || '2025-12-31',
-      description: `Save $${Math.max(0, Math.round(((parseFloat(goal.target) || 0) - (parseFloat(goal.current) || 0)) / 12))} per month`,
-      monthlyContribution: Math.max(0, Math.round(((parseFloat(goal.target) || 0) - (parseFloat(goal.current) || 0)) / 12))
-    })),
-    actionItems: [
-      'Review your monthly expenses and identify areas to reduce spending',
-      'Set up automatic transfers to savings account',
-      'Build emergency fund of 3-6 months expenses'
-    ],
-    insights: [
-      'Consider tracking expenses more closely to identify spending patterns',
-      'Aim to save at least 20% of your income for long-term goals',
-      'Review your financial plan monthly and adjust as needed'
-    ]
-  };
 };
 
 module.exports = {
   generateFinancialPlan
 };
-

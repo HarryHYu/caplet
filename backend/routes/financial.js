@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const { FinancialState, CheckIn, FinancialPlan, User } = require('../models');
+const { FinancialState, CheckIn, FinancialPlan, User, UserProgress } = require('../models');
 const { generateFinancialPlan } = require('../services/aiService');
 
 const router = express.Router();
@@ -134,15 +134,15 @@ router.post('/checkin', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { majorEvents, monthlyExpenses, goalsUpdate, notes, monthlyIncome } = req.body;
+    const { message, monthlyIncome, monthlyExpenses, isMonthlyCheckIn } = req.body;
 
     // Create check-in record
     const checkIn = await CheckIn.create({
       userId: req.user.id,
-      majorEvents: majorEvents || [],
+      majorEvents: [],
       monthlyExpenses: monthlyExpenses || {},
-      goalsUpdate: goalsUpdate || [],
-      notes: notes || ''
+      goalsUpdate: [],
+      notes: message || ''
     });
 
     // Get or create financial state
@@ -161,22 +161,19 @@ router.post('/checkin', authenticateToken, [
       (sum, val) => sum + (parseFloat(val) || 0), 0
     );
 
-    // Update financial state
-    if (monthlyExpenses) {
-      state.monthlyExpenses = totalExpenses;
-    }
+    // Update monthly income if provided
     if (monthlyIncome) {
-      state.monthlyIncome = parseFloat(monthlyIncome) || 0;
+      state.monthlyIncome = parseFloat(monthlyIncome);
     }
 
-    // Update goals if provided
-    if (goalsUpdate && goalsUpdate.length > 0) {
-      state.goals = goalsUpdate;
+    // Update financial state
+    if (monthlyExpenses && totalExpenses > 0) {
+      state.monthlyExpenses = totalExpenses;
     }
 
     // Calculate savings rate
     if (state.monthlyIncome > 0) {
-      state.savingsRate = ((state.monthlyIncome - state.monthlyExpenses) / state.monthlyIncome) * 100;
+      state.savingsRate = ((state.monthlyIncome - (state.monthlyExpenses || 0)) / state.monthlyIncome) * 100;
     }
 
     await state.save();
@@ -187,8 +184,8 @@ router.post('/checkin', authenticateToken, [
       order: [['createdAt', 'DESC']]
     });
 
-    // Generate new plan using AI
-    const newPlan = await generateFinancialPlan({
+    // Generate response using AI (can be a plan, answer, or both)
+    const aiResponse = await generateFinancialPlan({
       userId: req.user.id,
       state: {
         monthlyIncome: parseFloat(state.monthlyIncome),
@@ -199,10 +196,10 @@ router.post('/checkin', authenticateToken, [
         goals: state.goals || []
       },
       checkIn: {
-        majorEvents: majorEvents || [],
+        message: message || '',
+        monthlyIncome: monthlyIncome || null,
         monthlyExpenses: monthlyExpenses || {},
-        goalUpdate: goalsUpdate || [],
-        notes: notes || ''
+        isMonthlyCheckIn: isMonthlyCheckIn || false
       },
       previousPlan: previousPlan ? {
         budgetAllocation: previousPlan.budgetAllocation,
@@ -212,17 +209,20 @@ router.post('/checkin', authenticateToken, [
       } : null
     });
 
-    // Save new plan
-    const plan = await FinancialPlan.create({
-      userId: req.user.id,
-      checkInId: checkIn.id,
-      budgetAllocation: newPlan.budgetAllocation,
-      savingsStrategy: newPlan.savingsStrategy,
-      debtStrategy: newPlan.debtStrategy,
-      goalTimelines: newPlan.goalTimelines,
-      actionItems: newPlan.actionItems,
-      insights: newPlan.insights
-    });
+    // Save plan if it was generated (for monthly check-ins or plan requests)
+    let plan = null;
+    if (aiResponse.shouldUpdatePlan) {
+      plan = await FinancialPlan.create({
+        userId: req.user.id,
+        checkInId: checkIn.id,
+        budgetAllocation: aiResponse.budgetAllocation || {},
+        savingsStrategy: aiResponse.savingsStrategy || {},
+        debtStrategy: aiResponse.debtStrategy || {},
+        goalTimelines: aiResponse.goalTimelines || [],
+        actionItems: aiResponse.actionItems || [],
+        insights: aiResponse.insights || []
+      });
+    }
 
     res.json({
       message: 'Check-in submitted successfully',
@@ -230,17 +230,36 @@ router.post('/checkin', authenticateToken, [
         id: checkIn.id,
         date: checkIn.createdAt
       },
-      plan: {
+      response: aiResponse.response || aiResponse.insights?.[0] || 'Check-in processed',
+      plan: plan ? {
         budgetAllocation: plan.budgetAllocation,
         savingsStrategy: plan.savingsStrategy,
         debtStrategy: plan.debtStrategy,
         goalTimelines: plan.goalTimelines,
         actionItems: plan.actionItems,
         insights: plan.insights
-      }
+      } : null
     });
   } catch (error) {
     console.error('Submit check-in error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Delete all user data (except account)
+router.delete('/delete-all-data', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Delete all financial data
+    await FinancialState.destroy({ where: { userId } });
+    await CheckIn.destroy({ where: { userId } });
+    await FinancialPlan.destroy({ where: { userId } });
+    await UserProgress.destroy({ where: { userId } });
+
+    res.json({ message: 'All data deleted successfully' });
+  } catch (error) {
+    console.error('Delete all data error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
