@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { FinancialState, CheckIn, FinancialPlan, User, UserProgress, Summary } = require('../models');
-const { generateFinancialPlan, updateSummary, extractFinancialData } = require('../services/aiService');
+const { generateFinancialPlan, updateSummary } = require('../services/aiService');
 
 const router = express.Router();
 
@@ -164,27 +164,10 @@ router.post('/checkin', authenticateToken, [
       });
     }
 
-    // Extract financial data from message using AI (if not manually provided)
-    let aiExtractedData = null;
-    if (message && (!monthlyIncome || !monthlyExpenses || Object.keys(monthlyExpenses).length === 0)) {
-      console.log('Extracting financial data from message using AI...');
-      aiExtractedData = await extractFinancialData({
-        message: message,
-        currentState: {
-          monthlyIncome: parseFloat(state.monthlyIncome) || 0,
-          monthlyExpenses: parseFloat(state.monthlyExpenses) || 0,
-          accounts: state.accounts || [],
-          debts: state.debts || [],
-          goals: state.goals || []
-        }
-      });
-    }
-
-    // Use manual input if provided, otherwise use AI-extracted data
-    const finalIncome = monthlyIncome ? parseFloat(monthlyIncome) : (aiExtractedData?.monthlyIncome || null);
-    const finalExpenses = (monthlyExpenses && Object.keys(monthlyExpenses).length > 0) 
-      ? monthlyExpenses 
-      : (aiExtractedData?.expenses || {});
+    // Financial data will be extracted by AI in generateFinancialPlan
+    // For now, prepare manual input
+    const manualIncome = monthlyIncome ? parseFloat(monthlyIncome) : null;
+    const manualExpenses = (monthlyExpenses && Object.keys(monthlyExpenses).length > 0) ? monthlyExpenses : null;
 
     // Update monthly income (manual takes priority, then AI, then keep existing)
     if (finalIncome !== null) {
@@ -231,13 +214,6 @@ router.post('/checkin', authenticateToken, [
       state.goals = [...existingGoals, ...newGoals];
     }
 
-    // Calculate savings rate
-    if (state.monthlyIncome > 0) {
-      state.savingsRate = ((state.monthlyIncome - (state.monthlyExpenses || 0)) / state.monthlyIncome) * 100;
-    }
-
-    await state.save();
-
     // Get or create summary
     let summary = await Summary.findOne({
       where: { userId: req.user.id }
@@ -250,13 +226,117 @@ router.post('/checkin', authenticateToken, [
       });
     }
 
-    // Update summary with new check-in information (use final values)
+    // Get previous plan for comparison
+    const previousPlan = await FinancialPlan.findOne({
+      where: { userId: req.user.id },
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Generate response using AI - AI will extract data AND generate response in one call
+    const aiResponse = await generateFinancialPlan({
+      userId: req.user.id,
+      state: {
+        monthlyIncome: parseFloat(state.monthlyIncome) || 0,
+        monthlyExpenses: parseFloat(state.monthlyExpenses) || 0,
+        savingsRate: parseFloat(state.savingsRate) || 0,
+        accounts: state.accounts || [],
+        debts: state.debts || [],
+        goals: state.goals || []
+      },
+      checkIn: {
+        message: message || '',
+        monthlyIncome: manualIncome, // Pass manual input if provided
+        monthlyExpenses: manualExpenses, // Pass manual input if provided
+        isMonthlyCheckIn: isMonthlyCheckIn || false
+      },
+      summary: summary.content || '', // Pass current summary
+      previousPlan: previousPlan ? {
+        budgetAllocation: previousPlan.budgetAllocation,
+        savingsStrategy: previousPlan.savingsStrategy,
+        debtStrategy: previousPlan.debtStrategy,
+        goalTimelines: previousPlan.goalTimelines
+      } : null
+    });
+
+    // Now update financial state with AI-extracted data (if provided)
+    // Priority: Manual input > AI extracted > Keep existing
+    const extractedData = aiResponse.extractedFinancialData;
+    
+    if (extractedData) {
+      // Update income: manual takes priority, then AI extracted, then keep existing
+      if (manualIncome !== null) {
+        state.monthlyIncome = manualIncome;
+      } else if (extractedData.monthlyIncome !== null && extractedData.monthlyIncome !== undefined) {
+        state.monthlyIncome = parseFloat(extractedData.monthlyIncome);
+      }
+
+      // Update expenses: manual takes priority, then AI extracted, then keep existing
+      if (manualExpenses) {
+        const totalExpenses = Object.values(manualExpenses).reduce(
+          (sum, val) => sum + (parseFloat(val) || 0), 0
+        );
+        state.monthlyExpenses = totalExpenses;
+      } else if (extractedData.expenses && Object.keys(extractedData.expenses).length > 0) {
+        // Filter out null values and calculate total
+        const validExpenses = Object.entries(extractedData.expenses).filter(([_, val]) => val !== null && val !== undefined);
+        const expensesObj = Object.fromEntries(validExpenses.map(([key, val]) => [key, parseFloat(val)]));
+        const totalExpenses = Object.values(expensesObj).reduce((sum, val) => sum + (val || 0), 0);
+        if (totalExpenses > 0) {
+          state.monthlyExpenses = totalExpenses;
+        }
+      }
+
+      // Update accounts (merge, avoid duplicates)
+      if (extractedData.accounts && extractedData.accounts.length > 0) {
+        const existingAccounts = state.accounts || [];
+        const newAccounts = extractedData.accounts.filter(newAcc => 
+          !existingAccounts.some(existing => existing.name === newAcc.name)
+        );
+        state.accounts = [...existingAccounts, ...newAccounts];
+      }
+
+      // Update debts (merge, avoid duplicates)
+      if (extractedData.debts && extractedData.debts.length > 0) {
+        const existingDebts = state.debts || [];
+        const newDebts = extractedData.debts.filter(newDebt => 
+          !existingDebts.some(existing => existing.name === newDebt.name)
+        );
+        state.debts = [...existingDebts, ...newDebts];
+      }
+
+      // Update goals (merge, avoid duplicates)
+      if (extractedData.goals && extractedData.goals.length > 0) {
+        const existingGoals = state.goals || [];
+        const newGoals = extractedData.goals.filter(newGoal => 
+          !existingGoals.some(existing => existing.name === newGoal.name)
+        );
+        state.goals = [...existingGoals, ...newGoals];
+      }
+
+      // Calculate savings rate
+      if (state.monthlyIncome > 0) {
+        state.savingsRate = ((state.monthlyIncome - (state.monthlyExpenses || 0)) / state.monthlyIncome) * 100;
+      }
+
+      await state.save();
+    }
+
+    // Update summary with new check-in information
+    const finalIncome = state.monthlyIncome;
+    const finalExpensesObj = manualExpenses || (extractedData?.expenses && Object.keys(extractedData.expenses).length > 0 
+      ? Object.fromEntries(
+          Object.entries(extractedData.expenses)
+            .filter(([_, val]) => val !== null && val !== undefined)
+            .map(([key, val]) => [key, parseFloat(val)])
+        )
+      : {});
+
     const updatedSummary = await updateSummary({
       currentSummary: summary.content || '',
       newCheckIn: {
         message: message || '',
         monthlyIncome: finalIncome || null,
-        monthlyExpenses: finalExpenses || {}
+        monthlyExpenses: finalExpensesObj || {}
       },
       financialState: {
         monthlyIncome: parseFloat(state.monthlyIncome),
@@ -271,38 +351,6 @@ router.post('/checkin', authenticateToken, [
     // Save updated summary
     summary.content = updatedSummary;
     await summary.save();
-
-    // Get previous plan for comparison
-    const previousPlan = await FinancialPlan.findOne({
-      where: { userId: req.user.id },
-      order: [['createdAt', 'DESC']]
-    });
-
-    // Generate response using AI (can be a plan, answer, or both)
-    const aiResponse = await generateFinancialPlan({
-      userId: req.user.id,
-      state: {
-        monthlyIncome: parseFloat(state.monthlyIncome),
-        monthlyExpenses: parseFloat(state.monthlyExpenses),
-        savingsRate: parseFloat(state.savingsRate),
-        accounts: state.accounts || [],
-        debts: state.debts || [],
-        goals: state.goals || []
-      },
-      checkIn: {
-        message: message || '',
-        monthlyIncome: finalIncome || null,
-        monthlyExpenses: finalExpenses || {},
-        isMonthlyCheckIn: isMonthlyCheckIn || false
-      },
-      summary: updatedSummary, // Pass the summary instead of all check-ins
-      previousPlan: previousPlan ? {
-        budgetAllocation: previousPlan.budgetAllocation,
-        savingsStrategy: previousPlan.savingsStrategy,
-        debtStrategy: previousPlan.debtStrategy,
-        goalTimelines: previousPlan.goalTimelines
-      } : null
-    });
 
     // Save plan if it was generated (for monthly check-ins or plan requests)
     let plan = null;

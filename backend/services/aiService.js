@@ -20,8 +20,8 @@ const generateFinancialPlan = async ({ userId, state, checkIn, summary, previous
     const isQuestion = detectIfQuestion(userMessage);
     const isMonthlyCheckIn = checkIn.isMonthlyCheckIn || detectMonthlyCheckIn(userMessage);
 
-    // Build prompt based on intent
-    const prompt = buildPrompt(state, checkIn, summary || '', previousPlan, isQuestion, isMonthlyCheckIn);
+    // Build unified prompt that makes AI extract data AND generate response
+    const prompt = buildUnifiedPrompt(state, checkIn, summary || '', previousPlan, isQuestion, isMonthlyCheckIn);
 
     console.log('Calling OpenAI API...');
     console.log('API Key present:', !!process.env.OPENAI_API_KEY);
@@ -57,8 +57,11 @@ const generateFinancialPlan = async ({ userId, state, checkIn, summary, previous
         const content = response.choices[0].message.content;
         const aiData = JSON.parse(content);
 
-        // Return response with optional plan
+        // Return response with extracted financial data AND plan
         return {
+          // Extracted financial data (to update FinancialState)
+          extractedFinancialData: aiData.extractedFinancialData || null,
+          // Response and plan
           response: aiData.response || aiData.answer || '',
           shouldUpdatePlan: aiData.shouldUpdatePlan || isMonthlyCheckIn,
           budgetAllocation: aiData.budgetAllocation || {},
@@ -135,6 +138,131 @@ const detectMonthlyCheckIn = (message) => {
   return checkInWords.some(word => lowerMessage.includes(word));
 };
 
+// Unified prompt that makes AI extract data AND generate response in one structured process
+const buildUnifiedPrompt = (state, checkIn, summary, previousPlan, isQuestion, isMonthlyCheckIn) => {
+  let prompt = '';
+
+  // User's message/query
+  prompt += `USER MESSAGE:
+"${checkIn.message}"
+
+`;
+
+  // Comprehensive summary of all historical information
+  if (summary && summary.trim()) {
+    prompt += `HISTORICAL CONTEXT (AI Summary of All Previous Information):
+${summary}
+
+`;
+  }
+
+  // Current financial state (snapshot)
+  prompt += `CURRENT FINANCIAL STATE (Current Database Values):
+- Monthly Income: $${(state.monthlyIncome || 0).toLocaleString()}
+- Monthly Expenses: $${(state.monthlyExpenses || 0).toLocaleString()}
+- Savings Rate: ${(state.savingsRate || 0).toFixed(2)}%
+- Accounts: ${JSON.stringify(state.accounts || [])}
+- Debts: ${JSON.stringify(state.debts || [])}
+- Goals: ${JSON.stringify(state.goals || [])}
+
+`;
+
+  // Manual input if provided (takes priority)
+  if (checkIn.monthlyIncome) {
+    prompt += `MANUAL INPUT PROVIDED:
+- Monthly Income: $${parseFloat(checkIn.monthlyIncome).toLocaleString()}\n`;
+  }
+  if (checkIn.monthlyExpenses && Object.keys(checkIn.monthlyExpenses).length > 0) {
+    prompt += `- Monthly Expenses Breakdown: ${JSON.stringify(checkIn.monthlyExpenses)}\n`;
+  }
+
+  prompt += '\n';
+
+  // Previous plan context
+  if (previousPlan) {
+    prompt += `PREVIOUS FINANCIAL PLAN:
+${JSON.stringify(previousPlan, null, 2)}
+
+`;
+  }
+
+  // STRUCTURED PROCESS FOR AI TO FOLLOW
+  prompt += `FOLLOW THIS EXACT STRUCTURED PROCESS:
+
+STEP 1: EXTRACT FINANCIAL DATA FROM USER MESSAGE
+Analyze the user's message and extract ANY financial information mentioned:
+- Income amounts (salary, wages, raises, annual income - convert to monthly if needed)
+- Expenses (rent, food, bills, subscriptions, purchases - categorize them)
+- Accounts (bank accounts, savings accounts with balances)
+- Debts (loans, credit cards with amounts, interest rates, minimum payments)
+- Goals (savings targets, purchase plans, timelines)
+- Major events (job changes, large purchases, windfalls, emergencies)
+
+IMPORTANT:
+- If manual input was provided above, use those values (they take priority)
+- Only extract information EXPLICITLY mentioned in the message
+- If converting annual to monthly income: divide by 12
+- Categorize expenses into: rent, food, utilities, transport, entertainment, subscriptions, shopping, other
+- For any values not mentioned, use null or keep existing values from CURRENT FINANCIAL STATE
+
+STEP 2: ORGANIZE EXTRACTED DATA
+Structure the extracted data into the format required below. Merge with existing data intelligently:
+- Update income if new value is mentioned (use manual input if provided, else extracted value)
+- Merge expenses (add new categories, update existing ones)
+- Merge accounts (avoid duplicates by name)
+- Merge debts (avoid duplicates by name)  
+- Merge goals (avoid duplicates by name)
+
+STEP 3: GENERATE RESPONSE/PLAN
+Based on the organized financial data, provide:
+- A helpful response to their message/question
+- If monthly check-in or significant changes: generate a financial plan
+- Action items and insights
+
+OUTPUT FORMAT (MUST BE VALID JSON):
+{
+  "extractedFinancialData": {
+    "monthlyIncome": <number or null - extracted from message if mentioned, otherwise null>,
+    "expenses": {
+      "rent": <number or null>,
+      "food": <number or null>,
+      "utilities": <number or null>,
+      "transport": <number or null>,
+      "entertainment": <number or null>,
+      "subscriptions": <number or null>,
+      "shopping": <number or null>,
+      "other": <number or null>
+    },
+    "accounts": [{"name": "<account name>", "balance": <number>, "type": "<savings/checking/investment>"}],
+    "debts": [{"name": "<debt name>", "amount": <number>, "interestRate": <number or null>, "minimumPayment": <number or null>}],
+    "goals": [{"name": "<goal name>", "targetAmount": <number>, "targetDate": "<YYYY-MM-DD or null>", "currentAmount": <number or null>}]
+  },
+  "response": "<your helpful response to their message - be conversational, specific with numbers, use Australian financial context>",
+  "shouldUpdatePlan": <true for monthly check-ins or significant changes, false for simple questions>,
+  "budgetAllocation": {<only include if shouldUpdatePlan is true - rent, food, utilities, transport, entertainment, savings, other>},
+  "savingsStrategy": {<only include if shouldUpdatePlan is true - recommendedMonthlySavings, emergencyFundTarget, emergencyFundMonths, investmentRecommendation>},
+  "debtStrategy": {<only include if shouldUpdatePlan is true - totalDebt, recommendedMonthlyPayment, payoffTimeline, priorityDebt>},
+  "goalTimelines": [<only include if shouldUpdatePlan is true - array of goals with name, targetDate, description, monthlyContribution>],
+  "actionItems": ["<action item 1>", "<action item 2>", ...],
+  "insights": ["<insight 1>", "<insight 2>", ...]
+}
+
+CRITICAL RULES:
+1. Manual input (if provided) ALWAYS takes priority over extracted data
+2. For extractedFinancialData.expenses: Only include categories with values > 0
+3. Use Australian financial context (superannuation, tax brackets, etc.)
+4. Be specific with numbers in your response
+5. Calculate savings rate: ((income - total expenses) / income) * 100
+6. Budget allocation should total close to monthly income
+7. For questions: answer directly with calculations and advice
+8. For check-ins: generate comprehensive plan
+
+NOW FOLLOW THE 3 STEPS ABOVE AND OUTPUT YOUR RESPONSE:`;
+
+  return prompt;
+};
+
+// Old buildPrompt kept for now but replaced above
 const buildPrompt = (state, checkIn, summary, previousPlan, isQuestion, isMonthlyCheckIn) => {
   let prompt = '';
 
