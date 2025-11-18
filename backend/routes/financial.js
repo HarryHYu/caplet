@@ -244,10 +244,15 @@ router.post('/checkin', authenticateToken, [
       // Fallback: Calculate expenses from budget allocation (exclude savings)
       const budgetExpenses = { ...aiResponse.budgetAllocation };
       delete budgetExpenses.savings; // Don't count savings as an expense
-      console.log('📊 Budget allocation (excluding savings):', budgetExpenses);
+      console.log('📊 Budget allocation (excluding savings):', JSON.stringify(budgetExpenses));
       const totalExpenses = Object.values(budgetExpenses).reduce((sum, val) => {
-        const numVal = parseFloat(val) || 0;
-        console.log(`  - Value: ${val} (parsed: ${numVal})`);
+        // Handle string values with $, commas, etc.
+        let cleanVal = val;
+        if (typeof val === 'string') {
+          cleanVal = val.replace(/[$,]/g, '').trim();
+        }
+        const numVal = parseFloat(cleanVal) || 0;
+        console.log(`  - Value: ${val} (type: ${typeof val}, cleaned: ${cleanVal}, parsed: ${numVal})`);
         return sum + numVal;
       }, 0);
       console.log('💰 Total expenses calculated from budget:', totalExpenses);
