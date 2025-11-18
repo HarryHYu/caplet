@@ -146,14 +146,22 @@ const Dashboard = () => {
     setMessages(prev => [...prev, loadingMsg]);
 
     try {
+      // Prepare check-in data - clean up expenses object
+      let monthlyExpenses = null;
+      const expensesEntries = Object.entries(manualInput.monthlyExpenses).filter(([_, val]) => val && val.toString().trim() !== '');
+      if (expensesEntries.length > 0) {
+        monthlyExpenses = {};
+        expensesEntries.forEach(([key, val]) => {
+          monthlyExpenses[key] = val.toString().trim();
+        });
+      }
+
       const checkInData = {
         message: userMessage,
-        monthlyIncome: manualInput.monthlyIncome && manualInput.monthlyIncome.trim() !== '' 
+        monthlyIncome: manualInput.monthlyIncome && manualInput.monthlyIncome.toString().trim() !== '' 
           ? parseFloat(manualInput.monthlyIncome) 
           : null,
-        monthlyExpenses: Object.values(manualInput.monthlyExpenses).some(v => v && v.trim() !== '')
-          ? manualInput.monthlyExpenses
-          : null,
+        monthlyExpenses: monthlyExpenses || {},
         isMonthlyCheckIn: false
       };
 
@@ -186,11 +194,18 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error submitting check-in:', error);
       // Remove loading message and add error
+      let errorMessage = 'Failed to process your message. Please try again.';
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.errors && error.errors.length > 0) {
+        errorMessage = error.errors.map(e => e.msg || e.message).join(', ');
+      }
+      
       setMessages(prev => {
         const withoutLoading = prev.filter(msg => !msg.loading);
         return [...withoutLoading, {
           type: 'error',
-          content: error.message || 'Failed to process your message. Please try again.',
+          content: errorMessage,
           timestamp: new Date()
         }];
       });

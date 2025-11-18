@@ -125,12 +125,17 @@ router.get('/history', authenticateToken, async (req, res) => {
 
 // Submit check-in
 router.post('/checkin', authenticateToken, [
-  body('message').notEmpty().withMessage('Message is required'),
-  body('monthlyExpenses').optional().isObject(),
+  body('message').notEmpty().trim().withMessage('Message is required'),
+  body('monthlyExpenses').optional().isObject().custom((value) => {
+    if (value === null || value === undefined) return true;
+    if (typeof value !== 'object') return false;
+    return true;
+  }).withMessage('Monthly expenses must be an object'),
   body('monthlyIncome').optional().custom((value) => {
     if (value === null || value === undefined || value === '') return true;
-    return !isNaN(parseFloat(value));
-  }).withMessage('Monthly income must be a number')
+    const num = parseFloat(value);
+    return !isNaN(num) && isFinite(num);
+  }).withMessage('Monthly income must be a valid number')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
