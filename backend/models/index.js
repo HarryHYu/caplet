@@ -4,6 +4,9 @@ const Course = require('./Course');
 const Lesson = require('./Lesson');
 const UserProgress = require('./UserProgress');
 const Survey = require('./Survey');
+const FinancialState = require('./FinancialState');
+const CheckIn = require('./CheckIn');
+const FinancialPlan = require('./FinancialPlan');
 
 // Define associations
 Course.hasMany(Lesson, { 
@@ -24,6 +27,46 @@ User.hasMany(UserProgress, {
 UserProgress.belongsTo(User, { 
   foreignKey: 'userId', 
   as: 'user'
+});
+
+User.hasOne(FinancialState, {
+  foreignKey: 'userId',
+  as: 'financialState',
+  onDelete: 'CASCADE'
+});
+FinancialState.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
+User.hasMany(CheckIn, {
+  foreignKey: 'userId',
+  as: 'checkIns',
+  onDelete: 'CASCADE'
+});
+CheckIn.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
+User.hasMany(FinancialPlan, {
+  foreignKey: 'userId',
+  as: 'financialPlans',
+  onDelete: 'CASCADE'
+});
+FinancialPlan.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
+CheckIn.hasOne(FinancialPlan, {
+  foreignKey: 'checkInId',
+  as: 'plan',
+  onDelete: 'SET NULL'
+});
+FinancialPlan.belongsTo(CheckIn, {
+  foreignKey: 'checkInId',
+  as: 'checkIn'
 });
 
 Course.hasMany(UserProgress, { 
@@ -63,5 +106,8 @@ module.exports = {
   Lesson,
   UserProgress,
   Survey,
+  FinancialState,
+  CheckIn,
+  FinancialPlan,
   syncDatabase
 };

@@ -154,6 +154,26 @@ class ApiService {
   async getSurveyStats() {
     return this.request('/survey/stats');
   }
+
+  // Financial
+  async getFinancialState() {
+    return this.request('/financial/state');
+  }
+
+  async getFinancialPlan() {
+    return this.request('/financial/plan');
+  }
+
+  async getCheckInHistory() {
+    return this.request('/financial/history');
+  }
+
+  async submitCheckIn(checkInData) {
+    return this.request('/financial/checkin', {
+      method: 'POST',
+      body: JSON.stringify(checkInData),
+    });
+  }
 }
 
 export default new ApiService();

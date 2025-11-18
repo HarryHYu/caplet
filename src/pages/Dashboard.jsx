@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import CheckInForm from '../components/financial/CheckInForm';
 import FinancialPlan from '../components/financial/FinancialPlan';
 import FinancialSnapshot from '../components/financial/FinancialSnapshot';
 import CheckInHistory from '../components/financial/CheckInHistory';
 
 const Dashboard = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-
-  // Placeholder data - will be replaced with API calls
-  const financialData = {
+  const [loading, setLoading] = useState(true);
+  const [financialData, setFinancialData] = useState({
     netWorth: 0,
     monthlyIncome: 0,
     monthlyExpenses: 0,
@@ -17,18 +21,68 @@ const Dashboard = () => {
     accounts: [],
     debts: [],
     goals: []
-  };
-
-  const plan = {
+  });
+  const [plan, setPlan] = useState({
     budgetAllocation: {},
     savingsStrategy: {},
     debtStrategy: {},
     goalTimelines: [],
     actionItems: [],
     insights: []
+  });
+  const [checkIns, setCheckIns] = useState([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/');
+      return;
+    }
+
+    loadDashboardData();
+  }, [isAuthenticated, navigate]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [state, planData, history] = await Promise.all([
+        api.getFinancialState(),
+        api.getFinancialPlan(),
+        api.getCheckInHistory()
+      ]);
+
+      setFinancialData(state);
+      setPlan(planData);
+      setCheckIns(history);
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const checkIns = [];
+  const handleCheckInSubmit = async (checkInData) => {
+    try {
+      const result = await api.submitCheckIn(checkInData);
+      // Reload dashboard data
+      await loadDashboardData();
+      setShowCheckIn(false);
+      // Optionally show success message
+    } catch (error) {
+      console.error('Error submitting check-in:', error);
+      throw error;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -80,11 +134,7 @@ const Dashboard = () => {
         {showCheckIn && (
           <CheckInForm
             onClose={() => setShowCheckIn(false)}
-            onSubmit={(data) => {
-              // TODO: Handle check-in submission
-              console.log('Check-in data:', data);
-              setShowCheckIn(false);
-            }}
+            onSubmit={handleCheckInSubmit}
           />
         )}
       </div>
