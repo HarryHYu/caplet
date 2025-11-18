@@ -200,13 +200,6 @@ const Dashboard = () => {
           <FinancialPlan plan={plan} />
         </div>
 
-        {/* Check-in History (tucked away, toggleable) */}
-        {showHistory && (
-          <div className="mb-8">
-            <CheckInHistory checkIns={checkIns} />
-          </div>
-        )}
-
         {/* Check-in Modal */}
         {showCheckIn && (
           <CheckInForm
