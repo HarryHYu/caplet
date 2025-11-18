@@ -43,22 +43,22 @@ const FinancialSnapshot = ({ data }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4 md:mt-6">
         {/* Accounts */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
             Accounts
           </h3>
-          {data.accounts.length > 0 ? (
-            <div className="space-y-2">
+          {data.accounts && data.accounts.length > 0 ? (
+            <div className="space-y-2 md:space-y-3">
               {data.accounts.map((account, idx) => (
-                <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                  <span className="text-gray-900 dark:text-white">{account.name}</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    ${account.balance.toLocaleString()}
+                <div key={idx} className="flex justify-between items-center p-3 md:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <span className="text-sm md:text-base text-gray-900 dark:text-white font-medium">{account.name}</span>
+                  <span className="font-semibold text-sm md:text-base text-gray-900 dark:text-white">
+                    ${(account.balance || 0).toLocaleString()}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
               No accounts added yet. Add accounts in your check-in.
             </p>
           )}
@@ -66,22 +66,22 @@ const FinancialSnapshot = ({ data }) => {
 
         {/* Debts */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
             Debts
           </h3>
-          {data.debts.length > 0 ? (
-            <div className="space-y-2">
+          {data.debts && data.debts.length > 0 ? (
+            <div className="space-y-2 md:space-y-3">
               {data.debts.map((debt, idx) => (
-                <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                  <span className="text-gray-900 dark:text-white">{debt.name}</span>
-                  <span className="font-semibold text-red-600 dark:text-red-400">
+                <div key={idx} className="flex justify-between items-center p-3 md:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <span className="text-sm md:text-base text-gray-900 dark:text-white font-medium">{debt.name}</span>
+                  <span className="font-semibold text-sm md:text-base text-red-600 dark:text-red-400">
                     -${(debt.amount || debt.balance || 0).toLocaleString()}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
               No debts recorded. Add debts in your check-in.
             </p>
           )}
@@ -89,25 +89,25 @@ const FinancialSnapshot = ({ data }) => {
       </div>
 
       {/* Goals */}
-      <div className="mt-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="mt-4 md:mt-6">
+        <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
           Active Goals
         </h3>
-        {data.goals.length > 0 ? (
-          <div className="space-y-3">
+        {data.goals && data.goals.length > 0 ? (
+          <div className="space-y-3 md:space-y-4">
             {data.goals.map((goal, idx) => (
-              <div key={idx} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold text-gray-900 dark:text-white">
+              <div key={idx} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 md:p-5">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
+                  <span className="font-semibold text-sm md:text-base text-gray-900 dark:text-white">
                     {goal.name}
                   </span>
-                  <span className="text-gray-600 dark:text-gray-300 text-sm md:text-base">
+                  <span className="text-xs md:text-sm text-gray-600 dark:text-gray-300">
                     ${(goal.currentAmount || goal.current || 0).toLocaleString()} / ${(goal.targetAmount || goal.target || 0).toLocaleString()}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 md:h-2.5">
                   <div
-                    className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
+                    className="bg-blue-600 dark:bg-blue-400 h-2 md:h-2.5 rounded-full transition-all duration-300"
                     style={{ 
                       width: `${Math.min(100, Math.max(0, ((goal.currentAmount || goal.current || 0) / (goal.targetAmount || goal.target || 1)) * 100))}%` 
                     }}
@@ -117,7 +117,7 @@ const FinancialSnapshot = ({ data }) => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
             No goals set yet. Add goals in your check-in.
           </p>
         )}
