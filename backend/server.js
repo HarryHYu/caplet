@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const { testConnection } = require('./config/database');
 const { syncDatabase } = require('./models');
 const seedProductionDatabase = require('./seed-production');
+const createSummariesTable = require('./create-summaries-table');
 require('dotenv').config();
 
 const app = express();
@@ -71,6 +72,9 @@ const startServer = async () => {
     
     // Sync database models
     await syncDatabase();
+    
+    // Explicitly create summaries table if it doesn't exist
+    await createSummariesTable();
     
     // Seed production database if in production
     if (process.env.NODE_ENV === 'production') {
