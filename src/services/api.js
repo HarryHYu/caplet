@@ -172,6 +172,10 @@ class ApiService {
     return this.request('/financial/plan');
   }
 
+  async getSummary() {
+    return this.request('/financial/summary');
+  }
+
   async getCheckInHistory() {
     return this.request('/financial/history');
   }

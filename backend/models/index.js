@@ -7,6 +7,7 @@ const Survey = require('./Survey');
 const FinancialState = require('./FinancialState');
 const CheckIn = require('./CheckIn');
 const FinancialPlan = require('./FinancialPlan');
+const Summary = require('./Summary');
 
 // Define associations
 Course.hasMany(Lesson, { 
@@ -55,6 +56,16 @@ User.hasMany(FinancialPlan, {
   onDelete: 'CASCADE'
 });
 FinancialPlan.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
+User.hasOne(Summary, {
+  foreignKey: 'userId',
+  as: 'summary',
+  onDelete: 'CASCADE'
+});
+Summary.belongsTo(User, {
   foreignKey: 'userId',
   as: 'user'
 });
@@ -109,5 +120,6 @@ module.exports = {
   FinancialState,
   CheckIn,
   FinancialPlan,
+  Summary,
   syncDatabase
 };

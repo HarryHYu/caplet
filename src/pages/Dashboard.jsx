@@ -50,17 +50,18 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [state, planData, history] = await Promise.all([
+      const [state, planData, history, summaryData] = await Promise.all([
         api.getFinancialState(),
         api.getFinancialPlan(),
-        api.getCheckInHistory()
+        api.getCheckInHistory(),
+        api.getSummary().catch(() => ({ content: '' })) // Don't fail if summary doesn't exist
       ]);
 
       setFinancialData(state);
       setPlan(planData);
       setCheckIns(history);
-      // Set summary - handle both string and undefined/null
-      const summaryValue = state.summary || '';
+      // Set summary from dedicated endpoint
+      const summaryValue = summaryData?.content || '';
       setSummary(summaryValue);
       console.log('Summary loaded:', summaryValue ? `${summaryValue.substring(0, 50)}...` : 'empty');
     } catch (error) {

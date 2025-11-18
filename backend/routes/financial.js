@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const { FinancialState, CheckIn, FinancialPlan, User, UserProgress } = require('../models');
+const { FinancialState, CheckIn, FinancialPlan, User, UserProgress, Summary } = require('../models');
 const { generateFinancialPlan, updateSummary } = require('../services/aiService');
 
 const router = express.Router();
@@ -59,8 +59,7 @@ router.get('/state', authenticateToken, async (req, res) => {
       savingsRate: parseFloat(state.savingsRate),
       accounts: state.accounts || [],
       debts: state.debts || [],
-      goals: state.goals || [],
-      summary: state.summary || ''
+      goals: state.goals || []
     });
   } catch (error) {
     console.error('Get financial state error:', error);
@@ -187,9 +186,21 @@ router.post('/checkin', authenticateToken, [
 
     await state.save();
 
+    // Get or create summary
+    let summary = await Summary.findOne({
+      where: { userId: req.user.id }
+    });
+
+    if (!summary) {
+      summary = await Summary.create({
+        userId: req.user.id,
+        content: ''
+      });
+    }
+
     // Update summary with new check-in information
     const updatedSummary = await updateSummary({
-      currentSummary: state.summary || '',
+      currentSummary: summary.content || '',
       newCheckIn: {
         message: message || '',
         monthlyIncome: monthlyIncome || null,
@@ -206,8 +217,8 @@ router.post('/checkin', authenticateToken, [
     });
 
     // Save updated summary
-    state.summary = updatedSummary;
-    await state.save();
+    summary.content = updatedSummary;
+    await summary.save();
 
     // Get previous plan for comparison
     const previousPlan = await FinancialPlan.findOne({
@@ -279,6 +290,22 @@ router.post('/checkin', authenticateToken, [
 });
 
 // Delete all user data (except account)
+// Get summary
+router.get('/summary', authenticateToken, async (req, res) => {
+  try {
+    const summary = await Summary.findOne({
+      where: { userId: req.user.id }
+    });
+
+    res.json({
+      content: summary?.content || ''
+    });
+  } catch (error) {
+    console.error('Get summary error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 router.delete('/delete-all-data', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -287,6 +314,7 @@ router.delete('/delete-all-data', authenticateToken, async (req, res) => {
     await FinancialState.destroy({ where: { userId } });
     await CheckIn.destroy({ where: { userId } });
     await FinancialPlan.destroy({ where: { userId } });
+    await Summary.destroy({ where: { userId } });
     await UserProgress.destroy({ where: { userId } });
 
     res.json({ message: 'All data deleted successfully' });
