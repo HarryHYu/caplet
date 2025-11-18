@@ -230,6 +230,7 @@ router.post('/checkin', authenticateToken, [
         (sum, val) => sum + (parseFloat(val) || 0), 0
       );
       state.monthlyExpenses = totalExpenses;
+      console.log('✅ Expenses updated from manual input:', totalExpenses);
     } else if (extractedData?.expenses && Object.keys(extractedData.expenses).length > 0) {
       // Filter out null values and calculate total
       const validExpenses = Object.entries(extractedData.expenses).filter(([_, val]) => val !== null && val !== undefined);
@@ -237,15 +238,27 @@ router.post('/checkin', authenticateToken, [
       const totalExpenses = Object.values(expensesObj).reduce((sum, val) => sum + (val || 0), 0);
       if (totalExpenses > 0) {
         state.monthlyExpenses = totalExpenses;
+        console.log('✅ Expenses updated from extracted data:', totalExpenses);
       }
     } else if (aiResponse.budgetAllocation && Object.keys(aiResponse.budgetAllocation).length > 0) {
       // Fallback: Calculate expenses from budget allocation (exclude savings)
       const budgetExpenses = { ...aiResponse.budgetAllocation };
       delete budgetExpenses.savings; // Don't count savings as an expense
-      const totalExpenses = Object.values(budgetExpenses).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+      console.log('📊 Budget allocation (excluding savings):', budgetExpenses);
+      const totalExpenses = Object.values(budgetExpenses).reduce((sum, val) => {
+        const numVal = parseFloat(val) || 0;
+        console.log(`  - Value: ${val} (parsed: ${numVal})`);
+        return sum + numVal;
+      }, 0);
+      console.log('💰 Total expenses calculated from budget:', totalExpenses);
       if (totalExpenses > 0) {
         state.monthlyExpenses = totalExpenses;
+        console.log('✅ Expenses updated from budget allocation:', totalExpenses);
+      } else {
+        console.log('⚠️ Total expenses is 0, not updating');
       }
+    } else {
+      console.log('⚠️ No expenses data found - manual:', !!manualExpenses, 'extracted:', !!extractedData?.expenses, 'budget:', !!aiResponse.budgetAllocation);
     }
 
     // Update accounts (merge, avoid duplicates) - only if extractedData exists
@@ -280,7 +293,13 @@ router.post('/checkin', authenticateToken, [
       state.savingsRate = ((state.monthlyIncome - (state.monthlyExpenses || 0)) / state.monthlyIncome) * 100;
     }
 
+    console.log('💾 Saving financial state:', {
+      monthlyIncome: state.monthlyIncome,
+      monthlyExpenses: state.monthlyExpenses,
+      savingsRate: state.savingsRate
+    });
     await state.save();
+    console.log('✅ Financial state saved successfully');
 
     // Update summary with new check-in information
     const finalIncome = state.monthlyIncome;
