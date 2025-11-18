@@ -214,75 +214,73 @@ router.post('/checkin', authenticateToken, [
     });
 
     // Now update financial state with AI-extracted data (if provided)
-    // Priority: Manual input > AI extracted > Keep existing
+    // Priority: Manual input > AI extracted > Budget allocation > Keep existing
     const extractedData = aiResponse.extractedFinancialData;
     
-    if (extractedData) {
-      // Update income: manual takes priority, then AI extracted, then keep existing
-      if (manualIncome !== null) {
-        state.monthlyIncome = manualIncome;
-      } else if (extractedData.monthlyIncome !== null && extractedData.monthlyIncome !== undefined) {
-        state.monthlyIncome = parseFloat(extractedData.monthlyIncome);
-      }
-
-      // Update expenses: manual takes priority, then AI extracted, then budget allocation, then keep existing
-      if (manualExpenses) {
-        const totalExpenses = Object.values(manualExpenses).reduce(
-          (sum, val) => sum + (parseFloat(val) || 0), 0
-        );
-        state.monthlyExpenses = totalExpenses;
-      } else if (extractedData.expenses && Object.keys(extractedData.expenses).length > 0) {
-        // Filter out null values and calculate total
-        const validExpenses = Object.entries(extractedData.expenses).filter(([_, val]) => val !== null && val !== undefined);
-        const expensesObj = Object.fromEntries(validExpenses.map(([key, val]) => [key, parseFloat(val)]));
-        const totalExpenses = Object.values(expensesObj).reduce((sum, val) => sum + (val || 0), 0);
-        if (totalExpenses > 0) {
-          state.monthlyExpenses = totalExpenses;
-        }
-      } else if (aiResponse.budgetAllocation && Object.keys(aiResponse.budgetAllocation).length > 0) {
-        // Fallback: Calculate expenses from budget allocation (exclude savings)
-        const budgetExpenses = { ...aiResponse.budgetAllocation };
-        delete budgetExpenses.savings; // Don't count savings as an expense
-        const totalExpenses = Object.values(budgetExpenses).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-        if (totalExpenses > 0) {
-          state.monthlyExpenses = totalExpenses;
-        }
-      }
-
-      // Update accounts (merge, avoid duplicates)
-      if (extractedData.accounts && extractedData.accounts.length > 0) {
-        const existingAccounts = state.accounts || [];
-        const newAccounts = extractedData.accounts.filter(newAcc => 
-          !existingAccounts.some(existing => existing.name === newAcc.name)
-        );
-        state.accounts = [...existingAccounts, ...newAccounts];
-      }
-
-      // Update debts (merge, avoid duplicates)
-      if (extractedData.debts && extractedData.debts.length > 0) {
-        const existingDebts = state.debts || [];
-        const newDebts = extractedData.debts.filter(newDebt => 
-          !existingDebts.some(existing => existing.name === newDebt.name)
-        );
-        state.debts = [...existingDebts, ...newDebts];
-      }
-
-      // Update goals (merge, avoid duplicates)
-      if (extractedData.goals && extractedData.goals.length > 0) {
-        const existingGoals = state.goals || [];
-        const newGoals = extractedData.goals.filter(newGoal => 
-          !existingGoals.some(existing => existing.name === newGoal.name)
-        );
-        state.goals = [...existingGoals, ...newGoals];
-      }
-
-      // Calculate savings rate
-      if (state.monthlyIncome > 0) {
-        state.savingsRate = ((state.monthlyIncome - (state.monthlyExpenses || 0)) / state.monthlyIncome) * 100;
-      }
-
-      await state.save();
+    // Update income: manual takes priority, then AI extracted, then keep existing
+    if (manualIncome !== null) {
+      state.monthlyIncome = manualIncome;
+    } else if (extractedData?.monthlyIncome !== null && extractedData?.monthlyIncome !== undefined) {
+      state.monthlyIncome = parseFloat(extractedData.monthlyIncome);
     }
+
+    // Update expenses: manual takes priority, then AI extracted, then budget allocation, then keep existing
+    if (manualExpenses) {
+      const totalExpenses = Object.values(manualExpenses).reduce(
+        (sum, val) => sum + (parseFloat(val) || 0), 0
+      );
+      state.monthlyExpenses = totalExpenses;
+    } else if (extractedData?.expenses && Object.keys(extractedData.expenses).length > 0) {
+      // Filter out null values and calculate total
+      const validExpenses = Object.entries(extractedData.expenses).filter(([_, val]) => val !== null && val !== undefined);
+      const expensesObj = Object.fromEntries(validExpenses.map(([key, val]) => [key, parseFloat(val)]));
+      const totalExpenses = Object.values(expensesObj).reduce((sum, val) => sum + (val || 0), 0);
+      if (totalExpenses > 0) {
+        state.monthlyExpenses = totalExpenses;
+      }
+    } else if (aiResponse.budgetAllocation && Object.keys(aiResponse.budgetAllocation).length > 0) {
+      // Fallback: Calculate expenses from budget allocation (exclude savings)
+      const budgetExpenses = { ...aiResponse.budgetAllocation };
+      delete budgetExpenses.savings; // Don't count savings as an expense
+      const totalExpenses = Object.values(budgetExpenses).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+      if (totalExpenses > 0) {
+        state.monthlyExpenses = totalExpenses;
+      }
+    }
+
+    // Update accounts (merge, avoid duplicates) - only if extractedData exists
+    if (extractedData?.accounts && extractedData.accounts.length > 0) {
+      const existingAccounts = state.accounts || [];
+      const newAccounts = extractedData.accounts.filter(newAcc => 
+        !existingAccounts.some(existing => existing.name === newAcc.name)
+      );
+      state.accounts = [...existingAccounts, ...newAccounts];
+    }
+
+    // Update debts (merge, avoid duplicates) - only if extractedData exists
+    if (extractedData?.debts && extractedData.debts.length > 0) {
+      const existingDebts = state.debts || [];
+      const newDebts = extractedData.debts.filter(newDebt => 
+        !existingDebts.some(existing => existing.name === newDebt.name)
+      );
+      state.debts = [...existingDebts, ...newDebts];
+    }
+
+    // Update goals (merge, avoid duplicates) - only if extractedData exists
+    if (extractedData?.goals && extractedData.goals.length > 0) {
+      const existingGoals = state.goals || [];
+      const newGoals = extractedData.goals.filter(newGoal => 
+        !existingGoals.some(existing => existing.name === newGoal.name)
+      );
+      state.goals = [...existingGoals, ...newGoals];
+    }
+
+    // Calculate savings rate
+    if (state.monthlyIncome > 0) {
+      state.savingsRate = ((state.monthlyIncome - (state.monthlyExpenses || 0)) / state.monthlyIncome) * 100;
+    }
+
+    await state.save();
 
     // Update summary with new check-in information
     const finalIncome = state.monthlyIncome;
