@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const { testConnection } = require('./config/database');
 const { syncDatabase } = require('./models');
 const seedProductionDatabase = require('./seed-production');
+const addSummaryColumn = require('./add-summary-column');
 require('dotenv').config();
 
 const app = express();
@@ -71,6 +72,9 @@ const startServer = async () => {
     
     // Sync database models
     await syncDatabase();
+    
+    // Add summary column if it doesn't exist (migration)
+    await addSummaryColumn();
     
     // Seed production database if in production
     if (process.env.NODE_ENV === 'production') {
