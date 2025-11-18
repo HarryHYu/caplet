@@ -165,54 +165,9 @@ router.post('/checkin', authenticateToken, [
     }
 
     // Financial data will be extracted by AI in generateFinancialPlan
-    // For now, prepare manual input
+    // Prepare manual input if provided (takes priority)
     const manualIncome = monthlyIncome ? parseFloat(monthlyIncome) : null;
     const manualExpenses = (monthlyExpenses && Object.keys(monthlyExpenses).length > 0) ? monthlyExpenses : null;
-
-    // Update monthly income (manual takes priority, then AI, then keep existing)
-    if (finalIncome !== null) {
-      state.monthlyIncome = finalIncome;
-    }
-
-    // Calculate total monthly expenses
-    const totalExpenses = Object.values(finalExpenses).reduce(
-      (sum, val) => sum + (parseFloat(val) || 0), 0
-    );
-
-    // Update monthly expenses if we have data
-    if (totalExpenses > 0) {
-      state.monthlyExpenses = totalExpenses;
-    }
-
-    // Update accounts if AI extracted them
-    if (aiExtractedData?.accounts && aiExtractedData.accounts.length > 0) {
-      const existingAccounts = state.accounts || [];
-      // Merge with existing accounts (avoid duplicates)
-      const newAccounts = aiExtractedData.accounts.filter(newAcc => 
-        !existingAccounts.some(existing => existing.name === newAcc.name)
-      );
-      state.accounts = [...existingAccounts, ...newAccounts];
-    }
-
-    // Update debts if AI extracted them
-    if (aiExtractedData?.debts && aiExtractedData.debts.length > 0) {
-      const existingDebts = state.debts || [];
-      // Merge with existing debts (avoid duplicates)
-      const newDebts = aiExtractedData.debts.filter(newDebt => 
-        !existingDebts.some(existing => existing.name === newDebt.name)
-      );
-      state.debts = [...existingDebts, ...newDebts];
-    }
-
-    // Update goals if AI extracted them
-    if (aiExtractedData?.goals && aiExtractedData.goals.length > 0) {
-      const existingGoals = state.goals || [];
-      // Merge with existing goals (avoid duplicates)
-      const newGoals = aiExtractedData.goals.filter(newGoal => 
-        !existingGoals.some(existing => existing.name === newGoal.name)
-      );
-      state.goals = [...existingGoals, ...newGoals];
-    }
 
     // Get or create summary
     let summary = await Summary.findOne({
