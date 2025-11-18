@@ -4,30 +4,23 @@ require('dotenv').config();
 
 const restoreBudgetingCourse = async () => {
   try {
-    console.log('Restoring Budgeting 101 course...');
+    console.log('Restoring Budgeting course with Budgeting 101 lesson...');
     
-    // Check if course already exists
-    let course = await Course.findOne({
-      where: { title: 'Budgeting 101' }
-    });
+    // Delete ALL courses and their lessons first
+    console.log('Deleting all existing courses and lessons...');
+    await Lesson.destroy({ where: {}, truncate: true });
+    await Course.destroy({ where: {}, truncate: true });
+    console.log('✅ All courses and lessons deleted');
 
-    if (course) {
-      console.log('Budgeting 101 course already exists, deleting old version...');
-      // Delete existing lessons
-      await Lesson.destroy({ where: { courseId: course.id } });
-      // Delete course
-      await Course.destroy({ where: { id: course.id } });
-    }
-
-    // Create the course
-    course = await Course.create({
-      title: 'Budgeting 101',
+    // Create the Budgeting course
+    const course = await Course.create({
+      title: 'Budgeting',
       shortDescription: 'Learn how to plan, track, and optimize your spending.',
       description: 'A beginner-friendly guide to budgeting in Australia. Learn the fundamentals of creating and maintaining a budget that works for you.',
       category: 'budgeting',
       level: 'beginner',
       duration: 120,
-      thumbnail: 'https://placehold.co/600x400?text=Budgeting+101',
+      thumbnail: 'https://placehold.co/600x400?text=Budgeting',
       isPublished: true,
       isFree: true,
       tags: ['budgeting', 'personal-finance', 'money-management']
@@ -35,10 +28,10 @@ const restoreBudgetingCourse = async () => {
 
     console.log(`✅ Created course: ${course.title}`);
 
-    // Create the lesson with YouTube video and quiz
+    // Create the Budgeting 101 lesson with YouTube video and quiz
     const lesson = await Lesson.create({
       courseId: course.id,
-      title: 'Introduction to Budgeting',
+      title: 'Budgeting 101',
       description: 'Learn the basics of budgeting with interactive content and a quiz.',
       content: `# Introduction to Budgeting
 
