@@ -36,11 +36,11 @@ const CheckInForm = ({ onClose, onSubmit }) => {
       };
 
       await onSubmit(checkInData);
+      // If successful, form will be closed by parent
     } catch (error) {
       console.error('Error submitting check-in:', error);
       alert(error.message || 'Failed to submit check-in. Please try again.');
-    } finally {
-      setLoading(false);
+      setLoading(false); // Reset loading state on error
     }
   };
 
@@ -166,7 +166,7 @@ const CheckInForm = ({ onClose, onSubmit }) => {
               </button>
               <button
                 type="submit"
-                className="btn-primary"
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading || !message.trim()}
               >
                 {loading ? 'Processing...' : 'Submit'}
