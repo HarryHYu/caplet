@@ -1,16 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import CheckInForm from '../components/financial/CheckInForm';
-import FinancialPlan from '../components/financial/FinancialPlan';
 import FinancialSnapshot from '../components/financial/FinancialSnapshot';
 
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [showCheckIn, setShowCheckIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // Session-only chat messages (not persisted)
+  const [messages, setMessages] = useState([]);
+  
+  // Financial data (loaded from backend)
   const [financialData, setFinancialData] = useState({
     netWorth: 0,
     monthlyIncome: 0,
@@ -20,29 +25,43 @@ const Dashboard = () => {
     debts: [],
     goals: []
   });
-  const [plan, setPlan] = useState({
-    budgetAllocation: {},
-    savingsStrategy: {},
-    debtStrategy: {},
-    goalTimelines: [],
-    actionItems: [],
-    insights: []
+  
+  // Optional manual input
+  const [manualInput, setManualInput] = useState({
+    monthlyIncome: '',
+    monthlyExpenses: {
+      rent: '',
+      food: '',
+      utilities: '',
+      transport: '',
+      entertainment: '',
+      other: ''
+    }
   });
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [lastResponse, setLastResponse] = useState(null);
+  
   const [showSummary, setShowSummary] = useState(false);
   const [summary, setSummary] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
-      // Don't redirect immediately, let user see they need to login
       setLoading(false);
       return;
     }
-
     loadDashboardData();
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const loadDashboardData = async () => {
     try {
@@ -50,14 +69,14 @@ const Dashboard = () => {
       const [state, planData, summaryData] = await Promise.all([
         api.getFinancialState(),
         api.getFinancialPlan(),
-        api.getSummary().catch(() => ({ content: '' })) // Don't fail if summary doesn't exist
+        api.getSummary().catch(() => ({ content: '' }))
       ]);
 
       // Calculate expenses from budget allocation if monthlyExpenses is 0 but plan has budget
       let finalState = { ...state };
       if (finalState.monthlyExpenses === 0 && planData.budgetAllocation && Object.keys(planData.budgetAllocation).length > 0) {
         const budgetExpenses = { ...planData.budgetAllocation };
-        delete budgetExpenses.savings; // Don't count savings as expense
+        delete budgetExpenses.savings;
         const totalExpenses = Object.values(budgetExpenses).reduce((sum, val) => {
           const numVal = typeof val === 'string' 
             ? parseFloat(val.replace(/[$,]/g, '')) || 0
@@ -66,7 +85,6 @@ const Dashboard = () => {
         }, 0);
         if (totalExpenses > 0) {
           finalState.monthlyExpenses = totalExpenses;
-          // Recalculate savings rate
           if (finalState.monthlyIncome > 0) {
             finalState.savingsRate = ((finalState.monthlyIncome - totalExpenses) / finalState.monthlyIncome) * 100;
           }
@@ -74,11 +92,27 @@ const Dashboard = () => {
       }
       
       setFinancialData(finalState);
-      setPlan(planData);
-      // Set summary from dedicated endpoint
       const summaryValue = summaryData?.content || '';
       setSummary(summaryValue);
-      console.log('Summary loaded:', summaryValue ? `${summaryValue.substring(0, 50)}...` : 'empty');
+      
+      // Add welcome message if no messages yet
+      if (messages.length === 0 && summaryValue) {
+        setMessages([{
+          type: 'ai',
+          content: "Hey! I'm your Caplet financial advisor. I remember you - here's what I know about your finances:",
+          timestamp: new Date()
+        }, {
+          type: 'summary',
+          content: summaryValue,
+          timestamp: new Date()
+        }]);
+      } else if (messages.length === 0) {
+        setMessages([{
+          type: 'ai',
+          content: "Hey! I'm your Caplet financial advisor. What's going on with your finances? Tell me anything - a question, an update, a concern, or just do a quick check-in.",
+          timestamp: new Date()
+        }]);
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -86,21 +120,82 @@ const Dashboard = () => {
     }
   };
 
-  const handleCheckInSubmit = async (checkInData) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!message.trim() || submitting) return;
+
+    const userMessage = message.trim();
+    setMessage('');
+    setSubmitting(true);
+
+    // Add user message to chat
+    const userMsg = {
+      type: 'user',
+      content: userMessage,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMsg]);
+
+    // Add loading message
+    const loadingMsg = {
+      type: 'ai',
+      content: 'Thinking...',
+      timestamp: new Date(),
+      loading: true
+    };
+    setMessages(prev => [...prev, loadingMsg]);
+
     try {
+      const checkInData = {
+        message: userMessage,
+        monthlyIncome: manualInput.monthlyIncome && manualInput.monthlyIncome.trim() !== '' 
+          ? parseFloat(manualInput.monthlyIncome) 
+          : null,
+        monthlyExpenses: Object.values(manualInput.monthlyExpenses).some(v => v && v.trim() !== '')
+          ? manualInput.monthlyExpenses
+          : null,
+        isMonthlyCheckIn: false
+      };
+
       const result = await api.submitCheckIn(checkInData);
-      // Store the AI response
-      if (result.response) {
-        setLastResponse(result.response);
-      }
-      // Close form first
-      setShowCheckIn(false);
-      // Reload dashboard data
+      
+      // Remove loading message and add AI response
+      setMessages(prev => {
+        const withoutLoading = prev.filter(msg => !msg.loading);
+        return [...withoutLoading, {
+          type: 'ai',
+          content: result.response || 'Check-in processed successfully.',
+          timestamp: new Date()
+        }];
+      });
+
+      // Reload financial data
       await loadDashboardData();
+      
+      // Reset manual input
+      setManualInput({
+        monthlyIncome: '',
+        monthlyExpenses: {
+          rent: '', food: '', utilities: '', transport: '', entertainment: '', other: ''
+        }
+      });
+      setShowAdvanced(false);
+      
+      // Focus input again
+      setTimeout(() => inputRef.current?.focus(), 100);
     } catch (error) {
       console.error('Error submitting check-in:', error);
-      // Re-throw so form can handle it
-      throw error;
+      // Remove loading message and add error
+      setMessages(prev => {
+        const withoutLoading = prev.filter(msg => !msg.loading);
+        return [...withoutLoading, {
+          type: 'error',
+          content: error.message || 'Failed to process your message. Please try again.',
+          timestamp: new Date()
+        }];
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -108,10 +203,13 @@ const Dashboard = () => {
     try {
       setDeleting(true);
       await api.deleteAllData();
-      // Reload dashboard data
       await loadDashboardData();
+      setMessages([{
+        type: 'ai',
+        content: "All your data has been deleted. How can I help you get started?",
+        timestamp: new Date()
+      }]);
       setShowDeleteConfirm(false);
-      alert('All data deleted successfully');
     } catch (error) {
       console.error('Error deleting data:', error);
       alert('Error deleting data. Please try again.');
@@ -153,159 +251,266 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-4 md:py-8">
-      <div className="container-custom px-4 md:px-6">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Financial Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base">
-              Track your finances and get personalized planning
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 md:gap-4">
-            <button
-              onClick={() => setShowCheckIn(true)}
-              className="btn-primary text-sm md:text-base px-3 md:px-4 py-2"
-            >
-              New Check-in
-            </button>
-            <button
-              onClick={() => setShowSummary(true)}
-              className="px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm md:text-base"
-              title="View AI-maintained financial summary"
-            >
-              View Summary
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="px-3 md:px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm md:text-base"
-            >
-              Delete All Data
-            </button>
-          </div>
-        </div>
-
-        {/* AI Response (if it's a question/answer) */}
-        {lastResponse && (
-          <div className="mb-6 md:mb-8 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-lg p-4 md:p-6">
-            <div className="flex justify-between items-start mb-2">
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
-                AI Response
-              </h2>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      {/* Header with Financial Snapshot - Compact */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3 md:py-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                Financial Dashboard
+              </h1>
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Chat with your AI financial advisor
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setLastResponse(null)}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex-shrink-0 ml-2"
+                onClick={() => setShowSummary(true)}
+                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs md:text-sm font-medium rounded-lg transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                View Summary
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs md:text-sm font-medium rounded-lg transition-colors"
+              >
+                Delete All Data
               </button>
             </div>
-            <p className="text-sm md:text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-              {lastResponse}
-            </p>
           </div>
-        )}
-
-        {/* Financial Snapshot */}
-        <div className="mb-6 md:mb-8">
-          <FinancialSnapshot data={financialData} />
-        </div>
-
-        {/* Financial Plan */}
-        <div className="mb-6 md:mb-8">
-          <FinancialPlan plan={plan} />
-        </div>
-
-        {/* Check-in Modal */}
-        {showCheckIn && (
-          <CheckInForm
-            onClose={() => setShowCheckIn(false)}
-            onSubmit={handleCheckInSubmit}
-          />
-        )}
-
-        {/* Summary Modal */}
-        {showSummary && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto">
-              <div className="p-4 md:p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1 pr-2">
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                      Financial Summary
-                    </h2>
-                    <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      AI-maintained summary of all your financial information and check-ins.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowSummary(false)}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex-shrink-0"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 md:p-4">
-                  {summary && summary.trim() !== '' ? (
-                    <p className="text-sm md:text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-                      {summary}
-                    </p>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400 mb-2">
-                        No summary available yet.
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-500">
-                        Submit a check-in to generate an AI-maintained summary of your financial information.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Delete All Data?
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
-                This will permanently delete all your personal data: check-ins, financial plans, summaries, and progress. 
-                Courses and lessons will be preserved. Your account will remain, but all other personal data will be lost. This action cannot be undone.
+          
+          {/* Compact Financial Snapshot */}
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 md:p-3">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Monthly Income</p>
+              <p className="text-lg md:text-xl font-bold text-green-600 dark:text-green-400">
+                ${(financialData.monthlyIncome || 0).toLocaleString()}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 md:p-3">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Monthly Expenses</p>
+              <p className="text-lg md:text-xl font-bold text-red-600 dark:text-red-400">
+                ${(financialData.monthlyExpenses || 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 md:p-3">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Savings Rate</p>
+              <p className="text-lg md:text-xl font-bold text-blue-600 dark:text-blue-400">
+                {typeof financialData.savingsRate === 'number' ? financialData.savingsRate.toFixed(1) : '0.0'}%
+              </p>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 md:p-3">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Net Worth</p>
+              <p className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
+                ${(financialData.netWorth || 0).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Chat Interface - Main Content */}
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 py-4 md:py-6">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto mb-4 space-y-4">
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[85%] md:max-w-[75%] rounded-lg px-4 py-3 ${
+                  msg.type === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : msg.type === 'error'
+                    ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200'
+                    : msg.type === 'summary'
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                }`}
+              >
+                {msg.loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
+                )}
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Form */}
+        <form onSubmit={handleSubmit} className="flex-shrink-0">
+          {/* Advanced Options (Collapsible) */}
+          {showAdvanced && (
+            <div className="mb-3 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Monthly Income (optional)
+                  </label>
+                  <input
+                    type="number"
+                    value={manualInput.monthlyIncome}
+                    onChange={(e) => setManualInput(prev => ({ ...prev, monthlyIncome: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(manualInput.monthlyExpenses).slice(0, 3).map(([category, value]) => (
+                    <div key={category}>
+                      <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1 capitalize truncate">
+                        {category}
+                      </label>
+                      <input
+                        type="number"
+                        value={value}
+                        onChange={(e) => setManualInput(prev => ({
+                          ...prev,
+                          monthlyExpenses: { ...prev.monthlyExpenses, [category]: e.target.value }
+                        }))}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="0"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(manualInput.monthlyExpenses).slice(3).map(([category, value]) => (
+                    <div key={category}>
+                      <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1 capitalize truncate">
+                        {category}
+                      </label>
+                      <input
+                        type="number"
+                        value={value}
+                        onChange={(e) => setManualInput(prev => ({
+                          ...prev,
+                          monthlyExpenses: { ...prev.monthlyExpenses, [category]: e.target.value }
+                        }))}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        placeholder="0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Message Input */}
+          <div className="flex gap-2">
+            <textarea
+              ref={inputRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Ask a question, share an update, or do a check-in..."
+              className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              rows="3"
+              disabled={submitting}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+            <div className="flex flex-col gap-2">
+              <button
+                type="submit"
+                disabled={!message.trim() || submitting}
+                className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? '...' : 'Send'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors"
+              >
+                {showAdvanced ? 'Hide' : 'Options'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {/* Summary Modal */}
+      {showSummary && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Financial Summary
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    AI-maintained summary of all your financial information
+                  </p>
+                </div>
                 <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="btn-secondary flex-1"
-                  disabled={deleting}
+                  onClick={() => setShowSummary(false)}
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 >
-                  Cancel
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
-                <button
-                  onClick={handleDeleteAllData}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200 flex-1 disabled:opacity-50"
-                  disabled={deleting}
-                >
-                  {deleting ? 'Deleting...' : 'Delete All Data'}
-                </button>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                {summary && summary.trim() ? (
+                  <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{summary}</p>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                    No summary available yet. Start chatting to generate one!
+                  </p>
+                )}
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              Delete All Data?
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
+              This will permanently delete all your personal data: check-ins, financial plans, summaries, and progress. 
+              Courses and lessons will be preserved. Your account will remain, but all other personal data will be lost.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="btn-secondary flex-1"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAllData}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex-1 disabled:opacity-50"
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete All Data'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Dashboard;
-
