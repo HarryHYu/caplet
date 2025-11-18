@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+      <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
       <div className="container-custom py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
@@ -46,22 +46,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Resources */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <a 
-                  href="https://capletedu.org" 
-                  className="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  capletedu.org
-                </a>
-              </li>
-            </ul>
-          </div>
         </div>
       </div>
     </footer>
