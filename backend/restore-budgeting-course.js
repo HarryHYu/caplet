@@ -83,15 +83,54 @@ Remember, the best budget is one you'll actually stick to!`,
       duration: 30,
       order: 1,
       lessonType: 'video',
-      videoUrl: 'https://www.youtube.com/watch?v=YQZ2k8a3QyE', // Placeholder - replace with actual video
-      isPublished: true
+      videoUrl: 'https://www.youtube.com/watch?v=YQZ2k8a3QyE', // Placeholder - update with actual video URL
+      isPublished: true,
+      metadata: {
+        hasQuiz: true,
+        quizQuestions: [
+          {
+            id: 1,
+            type: 'multiple-choice',
+            question: 'What is the main purpose of a budget?',
+            options: [
+              'To limit your spending completely',
+              'To create a plan for how to spend your money',
+              'To track only your income',
+              'To avoid saving money'
+            ],
+            correctAnswer: 1
+          },
+          {
+            id: 2,
+            type: 'multiple-choice',
+            question: 'According to the 50/30/20 rule, what percentage should go to needs?',
+            options: ['20%', '30%', '50%', '70%'],
+            correctAnswer: 2
+          },
+          {
+            id: 3,
+            type: 'multiple-choice',
+            question: 'Which of the following is considered a "need" in budgeting?',
+            options: ['Dining out', 'Rent', 'Entertainment', 'Hobbies'],
+            correctAnswer: 1
+          },
+          {
+            id: 4,
+            type: 'short-answer',
+            question: 'What is one benefit of budgeting?'
+          },
+          {
+            id: 5,
+            type: 'multiple-choice',
+            question: 'How often should you review your budget?',
+            options: ['Daily', 'Weekly', 'Monthly', 'Yearly'],
+            correctAnswer: 2
+          }
+        ]
+      }
     });
 
-    console.log(`✅ Created lesson: ${lesson.title}`);
-
-    // Add quiz questions (stored in content or as separate questions)
-    // For now, quiz questions are handled in the frontend
-    // You can add them as a separate lesson or in the lesson content
+    console.log(`✅ Created lesson: ${lesson.title} with quiz`);
 
     console.log('🎉 Budgeting 101 course restored successfully!');
     return course;
