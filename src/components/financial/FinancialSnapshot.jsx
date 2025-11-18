@@ -5,36 +5,36 @@ const FinancialSnapshot = ({ data }) => {
         Financial Snapshot
       </h2>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         {/* Net Worth */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Worth</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            ${data.netWorth.toLocaleString()}
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 md:p-5">
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2">Net Worth</p>
+          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+            ${(data.netWorth || 0).toLocaleString()}
           </p>
         </div>
 
         {/* Monthly Income */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Monthly Income</p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-            ${data.monthlyIncome.toLocaleString()}
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 md:p-5">
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2">Monthly Income</p>
+          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400">
+            ${(data.monthlyIncome || 0).toLocaleString()}
           </p>
         </div>
 
         {/* Monthly Expenses */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Monthly Expenses</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-            ${data.monthlyExpenses.toLocaleString()}
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 md:p-5">
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2">Monthly Expenses</p>
+          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-red-600 dark:text-red-400">
+            ${(data.monthlyExpenses || 0).toLocaleString()}
           </p>
         </div>
 
         {/* Savings Rate */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Savings Rate</p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {data.savingsRate}%
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 md:p-5">
+          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2">Savings Rate</p>
+          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-blue-600 dark:text-blue-400">
+            {typeof data.savingsRate === 'number' ? data.savingsRate.toFixed(1) : '0.0'}%
           </p>
         </div>
       </div>
@@ -75,7 +75,7 @@ const FinancialSnapshot = ({ data }) => {
                 <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
                   <span className="text-gray-900 dark:text-white">{debt.name}</span>
                   <span className="font-semibold text-red-600 dark:text-red-400">
-                    -${debt.balance.toLocaleString()}
+                    -${(debt.amount || debt.balance || 0).toLocaleString()}
                   </span>
                 </div>
               ))}
@@ -101,14 +101,16 @@ const FinancialSnapshot = ({ data }) => {
                   <span className="font-semibold text-gray-900 dark:text-white">
                     {goal.name}
                   </span>
-                  <span className="text-gray-600 dark:text-gray-300">
-                    ${goal.current.toLocaleString()} / ${goal.target.toLocaleString()}
+                  <span className="text-gray-600 dark:text-gray-300 text-sm md:text-base">
+                    ${(goal.currentAmount || goal.current || 0).toLocaleString()} / ${(goal.targetAmount || goal.target || 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                   <div
-                    className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full"
-                    style={{ width: `${(goal.current / goal.target) * 100}%` }}
+                    className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: `${Math.min(100, Math.max(0, ((goal.currentAmount || goal.current || 0) / (goal.targetAmount || goal.target || 1)) * 100))}%` 
+                    }}
                   />
                 </div>
               </div>

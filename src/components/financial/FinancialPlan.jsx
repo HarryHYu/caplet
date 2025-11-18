@@ -11,15 +11,22 @@ const FinancialPlan = ({ plan }) => {
           Budget Allocation
         </h3>
         {Object.keys(plan.budgetAllocation).length > 0 ? (
-          <div className="space-y-3">
-            {Object.entries(plan.budgetAllocation).map(([category, amount]) => (
-              <div key={category} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                <span className="text-gray-900 dark:text-white capitalize">{category}</span>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  ${amount.toLocaleString()}
-                </span>
-              </div>
-            ))}
+          <div className="space-y-2 md:space-y-3">
+            {Object.entries(plan.budgetAllocation).map(([category, amount]) => {
+              const numAmount = typeof amount === 'string' 
+                ? parseFloat(amount.replace(/[$,]/g, '')) || 0
+                : parseFloat(amount) || 0;
+              return (
+                <div key={category} className="flex justify-between items-center p-3 md:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <span className="text-sm md:text-base text-gray-900 dark:text-white capitalize font-medium">
+                    {category}
+                  </span>
+                  <span className="font-semibold text-sm md:text-base text-gray-900 dark:text-white">
+                    ${numAmount.toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <p className="text-gray-500 dark:text-gray-400 text-sm">
@@ -34,18 +41,24 @@ const FinancialPlan = ({ plan }) => {
           Savings Strategy
         </h3>
         {Object.keys(plan.savingsStrategy).length > 0 ? (
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 md:p-4 space-y-2 md:space-y-3">
             {Object.entries(plan.savingsStrategy).map(([key, value]) => (
-              <div key={key} className="mb-2">
-                <span className="text-gray-900 dark:text-white capitalize">{key}: </span>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {typeof value === 'number' ? `$${value.toLocaleString()}` : value}
+              <div key={key} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                <span className="text-sm md:text-base text-gray-700 dark:text-gray-300 capitalize">
+                  {key.replace(/([A-Z])/g, ' $1').trim()}:
+                </span>
+                <span className="font-semibold text-sm md:text-base text-gray-900 dark:text-white">
+                  {typeof value === 'number' 
+                    ? `$${value.toLocaleString()}` 
+                    : (typeof value === 'string' && !isNaN(parseFloat(value.replace(/[$,]/g, '')))
+                      ? `$${parseFloat(value.replace(/[$,]/g, '')).toLocaleString()}`
+                      : value)}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
             Savings recommendations will appear after your first check-in.
           </p>
         )}
@@ -57,18 +70,24 @@ const FinancialPlan = ({ plan }) => {
           Debt Payoff Strategy
         </h3>
         {Object.keys(plan.debtStrategy).length > 0 ? (
-          <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+          <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 md:p-4 space-y-2 md:space-y-3">
             {Object.entries(plan.debtStrategy).map(([key, value]) => (
-              <div key={key} className="mb-2">
-                <span className="text-gray-900 dark:text-white capitalize">{key}: </span>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {typeof value === 'number' ? `$${value.toLocaleString()}` : value}
+              <div key={key} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                <span className="text-sm md:text-base text-gray-700 dark:text-gray-300 capitalize">
+                  {key.replace(/([A-Z])/g, ' $1').trim()}:
+                </span>
+                <span className="font-semibold text-sm md:text-base text-gray-900 dark:text-white">
+                  {typeof value === 'number' 
+                    ? `$${value.toLocaleString()}` 
+                    : (typeof value === 'string' && !isNaN(parseFloat(value.replace(/[$,]/g, '')))
+                      ? `$${parseFloat(value.replace(/[$,]/g, '')).toLocaleString()}`
+                      : value)}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
             Debt payoff recommendations will appear if you have debts.
           </p>
         )}
@@ -80,25 +99,34 @@ const FinancialPlan = ({ plan }) => {
           Goal Timelines
         </h3>
         {plan.goalTimelines.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-3 md:space-y-4">
             {plan.goalTimelines.map((goal, idx) => (
-              <div key={idx} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold text-gray-900 dark:text-white">
+              <div key={idx} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 md:p-5">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
+                  <span className="font-semibold text-base md:text-lg text-gray-900 dark:text-white">
                     {goal.name}
                   </span>
-                  <span className="text-gray-600 dark:text-gray-300">
-                    Target: {goal.targetDate}
-                  </span>
+                  {goal.targetDate && (
+                    <span className="text-sm md:text-base text-gray-600 dark:text-gray-300">
+                      Target: {goal.targetDate}
+                    </span>
+                  )}
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {goal.description}
-                </p>
+                {goal.description && (
+                  <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+                    {goal.description}
+                  </p>
+                )}
+                {goal.monthlyContribution && (
+                  <p className="text-sm md:text-base text-blue-600 dark:text-blue-400 font-medium mt-2">
+                    Monthly contribution: ${parseFloat(goal.monthlyContribution).toLocaleString()}
+                  </p>
+                )}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
             Goal timelines will be generated based on your goals and financial situation.
           </p>
         )}
@@ -110,16 +138,16 @@ const FinancialPlan = ({ plan }) => {
           Action Items
         </h3>
         {plan.actionItems.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-2 md:space-y-3">
             {plan.actionItems.map((item, idx) => (
-              <div key={idx} className="flex items-start p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <span className="text-yellow-600 dark:text-yellow-400 mr-2">•</span>
-                <span className="text-gray-900 dark:text-white">{item}</span>
+              <div key={idx} className="flex items-start p-3 md:p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                <span className="text-yellow-600 dark:text-yellow-400 mr-2 md:mr-3 text-lg md:text-xl flex-shrink-0">•</span>
+                <span className="text-sm md:text-base text-gray-900 dark:text-white">{item}</span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
             Action items will appear after your first check-in.
           </p>
         )}
@@ -127,19 +155,19 @@ const FinancialPlan = ({ plan }) => {
 
       {/* Insights */}
       <div>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
           Insights & Recommendations
         </h3>
         {plan.insights.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-2 md:space-y-3">
             {plan.insights.map((insight, idx) => (
-              <div key={idx} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <p className="text-gray-900 dark:text-white">{insight}</p>
+              <div key={idx} className="p-3 md:p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <p className="text-sm md:text-base text-gray-900 dark:text-white leading-relaxed">{insight}</p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
             AI insights will appear after your first check-in.
           </p>
         )}
