@@ -278,8 +278,8 @@ const Dashboard = () => {
                 Delete All Data?
               </h2>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                This will permanently delete all your check-ins, financial plans, progress, and course data. 
-                Your account will remain, but all other data will be lost. This action cannot be undone.
+                This will permanently delete all your personal data: check-ins, financial plans, summaries, and progress. 
+                Courses and lessons will be preserved. Your account will remain, but all other personal data will be lost. This action cannot be undone.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button

@@ -309,14 +309,14 @@ router.delete('/delete-all-data', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Delete all financial data
+    // Delete only personal/user-specific data (NOT courses or lessons)
     await FinancialState.destroy({ where: { userId } });
     await CheckIn.destroy({ where: { userId } });
     await FinancialPlan.destroy({ where: { userId } });
     await Summary.destroy({ where: { userId } });
     await UserProgress.destroy({ where: { userId } });
 
-    res.json({ message: 'All data deleted successfully' });
+    res.json({ message: 'All personal data deleted successfully. Courses and lessons are preserved.' });
   } catch (error) {
     console.error('Delete all data error:', error);
     res.status(500).json({ message: 'Internal server error' });

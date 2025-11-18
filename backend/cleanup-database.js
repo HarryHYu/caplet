@@ -25,11 +25,8 @@ const cleanupDatabase = async () => {
     console.log('Deleting surveys...');
     await Survey.destroy({ where: {}, truncate: true });
     
-    console.log('Deleting lessons...');
-    await Lesson.destroy({ where: {}, truncate: true });
-    
-    console.log('Deleting courses...');
-    await Course.destroy({ where: {}, truncate: true });
+    // NOTE: NOT deleting courses or lessons - they are content, not user data
+    console.log('⚠️  Preserving courses and lessons (content, not user data)');
     
     // Remove summary column from financial_states if it exists
     try {
