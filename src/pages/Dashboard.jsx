@@ -53,7 +53,27 @@ const Dashboard = () => {
         api.getSummary().catch(() => ({ content: '' })) // Don't fail if summary doesn't exist
       ]);
 
-      setFinancialData(state);
+      // Calculate expenses from budget allocation if monthlyExpenses is 0 but plan has budget
+      let finalState = { ...state };
+      if (finalState.monthlyExpenses === 0 && planData.budgetAllocation && Object.keys(planData.budgetAllocation).length > 0) {
+        const budgetExpenses = { ...planData.budgetAllocation };
+        delete budgetExpenses.savings; // Don't count savings as expense
+        const totalExpenses = Object.values(budgetExpenses).reduce((sum, val) => {
+          const numVal = typeof val === 'string' 
+            ? parseFloat(val.replace(/[$,]/g, '')) || 0
+            : parseFloat(val) || 0;
+          return sum + numVal;
+        }, 0);
+        if (totalExpenses > 0) {
+          finalState.monthlyExpenses = totalExpenses;
+          // Recalculate savings rate
+          if (finalState.monthlyIncome > 0) {
+            finalState.savingsRate = ((finalState.monthlyIncome - totalExpenses) / finalState.monthlyIncome) * 100;
+          }
+        }
+      }
+      
+      setFinancialData(finalState);
       setPlan(planData);
       // Set summary from dedicated endpoint
       const summaryValue = summaryData?.content || '';
