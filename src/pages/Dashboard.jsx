@@ -59,7 +59,10 @@ const Dashboard = () => {
       setFinancialData(state);
       setPlan(planData);
       setCheckIns(history);
-      setSummary(state.summary || '');
+      // Set summary - handle both string and undefined/null
+      const summaryValue = state.summary || '';
+      setSummary(summaryValue);
+      console.log('Summary loaded:', summaryValue ? `${summaryValue.substring(0, 50)}...` : 'empty');
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -159,7 +162,7 @@ const Dashboard = () => {
             >
               New Check-in
             </button>
-            {summary && (
+            {summary && summary.trim() !== '' && (
               <button
                 onClick={() => setShowSummary(true)}
                 className="px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm md:text-base"
