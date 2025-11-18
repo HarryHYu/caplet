@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { FinancialState, CheckIn, FinancialPlan, User, UserProgress, Summary } = require('../models');
-const { generateFinancialPlan, updateSummary } = require('../services/aiService');
+const { generateFinancialPlan, updateSummary, extractFinancialData } = require('../services/aiService');
 
 const router = express.Router();
 
@@ -164,19 +164,71 @@ router.post('/checkin', authenticateToken, [
       });
     }
 
+    // Extract financial data from message using AI (if not manually provided)
+    let aiExtractedData = null;
+    if (message && (!monthlyIncome || !monthlyExpenses || Object.keys(monthlyExpenses).length === 0)) {
+      console.log('Extracting financial data from message using AI...');
+      aiExtractedData = await extractFinancialData({
+        message: message,
+        currentState: {
+          monthlyIncome: parseFloat(state.monthlyIncome) || 0,
+          monthlyExpenses: parseFloat(state.monthlyExpenses) || 0,
+          accounts: state.accounts || [],
+          debts: state.debts || [],
+          goals: state.goals || []
+        }
+      });
+    }
+
+    // Use manual input if provided, otherwise use AI-extracted data
+    const finalIncome = monthlyIncome ? parseFloat(monthlyIncome) : (aiExtractedData?.monthlyIncome || null);
+    const finalExpenses = (monthlyExpenses && Object.keys(monthlyExpenses).length > 0) 
+      ? monthlyExpenses 
+      : (aiExtractedData?.expenses || {});
+
+    // Update monthly income (manual takes priority, then AI, then keep existing)
+    if (finalIncome !== null) {
+      state.monthlyIncome = finalIncome;
+    }
+
     // Calculate total monthly expenses
-    const totalExpenses = Object.values(monthlyExpenses || {}).reduce(
+    const totalExpenses = Object.values(finalExpenses).reduce(
       (sum, val) => sum + (parseFloat(val) || 0), 0
     );
 
-    // Update monthly income if provided
-    if (monthlyIncome) {
-      state.monthlyIncome = parseFloat(monthlyIncome);
+    // Update monthly expenses if we have data
+    if (totalExpenses > 0) {
+      state.monthlyExpenses = totalExpenses;
     }
 
-    // Update financial state
-    if (monthlyExpenses && totalExpenses > 0) {
-      state.monthlyExpenses = totalExpenses;
+    // Update accounts if AI extracted them
+    if (aiExtractedData?.accounts && aiExtractedData.accounts.length > 0) {
+      const existingAccounts = state.accounts || [];
+      // Merge with existing accounts (avoid duplicates)
+      const newAccounts = aiExtractedData.accounts.filter(newAcc => 
+        !existingAccounts.some(existing => existing.name === newAcc.name)
+      );
+      state.accounts = [...existingAccounts, ...newAccounts];
+    }
+
+    // Update debts if AI extracted them
+    if (aiExtractedData?.debts && aiExtractedData.debts.length > 0) {
+      const existingDebts = state.debts || [];
+      // Merge with existing debts (avoid duplicates)
+      const newDebts = aiExtractedData.debts.filter(newDebt => 
+        !existingDebts.some(existing => existing.name === newDebt.name)
+      );
+      state.debts = [...existingDebts, ...newDebts];
+    }
+
+    // Update goals if AI extracted them
+    if (aiExtractedData?.goals && aiExtractedData.goals.length > 0) {
+      const existingGoals = state.goals || [];
+      // Merge with existing goals (avoid duplicates)
+      const newGoals = aiExtractedData.goals.filter(newGoal => 
+        !existingGoals.some(existing => existing.name === newGoal.name)
+      );
+      state.goals = [...existingGoals, ...newGoals];
     }
 
     // Calculate savings rate
@@ -198,13 +250,13 @@ router.post('/checkin', authenticateToken, [
       });
     }
 
-    // Update summary with new check-in information
+    // Update summary with new check-in information (use final values)
     const updatedSummary = await updateSummary({
       currentSummary: summary.content || '',
       newCheckIn: {
         message: message || '',
-        monthlyIncome: monthlyIncome || null,
-        monthlyExpenses: monthlyExpenses || {}
+        monthlyIncome: finalIncome || null,
+        monthlyExpenses: finalExpenses || {}
       },
       financialState: {
         monthlyIncome: parseFloat(state.monthlyIncome),
@@ -239,8 +291,8 @@ router.post('/checkin', authenticateToken, [
       },
       checkIn: {
         message: message || '',
-        monthlyIncome: monthlyIncome || null,
-        monthlyExpenses: monthlyExpenses || {},
+        monthlyIncome: finalIncome || null,
+        monthlyExpenses: finalExpenses || {},
         isMonthlyCheckIn: isMonthlyCheckIn || false
       },
       summary: updatedSummary, // Pass the summary instead of all check-ins
