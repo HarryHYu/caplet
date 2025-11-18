@@ -225,7 +225,7 @@ router.post('/checkin', authenticateToken, [
         state.monthlyIncome = parseFloat(extractedData.monthlyIncome);
       }
 
-      // Update expenses: manual takes priority, then AI extracted, then keep existing
+      // Update expenses: manual takes priority, then AI extracted, then budget allocation, then keep existing
       if (manualExpenses) {
         const totalExpenses = Object.values(manualExpenses).reduce(
           (sum, val) => sum + (parseFloat(val) || 0), 0
@@ -236,6 +236,14 @@ router.post('/checkin', authenticateToken, [
         const validExpenses = Object.entries(extractedData.expenses).filter(([_, val]) => val !== null && val !== undefined);
         const expensesObj = Object.fromEntries(validExpenses.map(([key, val]) => [key, parseFloat(val)]));
         const totalExpenses = Object.values(expensesObj).reduce((sum, val) => sum + (val || 0), 0);
+        if (totalExpenses > 0) {
+          state.monthlyExpenses = totalExpenses;
+        }
+      } else if (aiResponse.budgetAllocation && Object.keys(aiResponse.budgetAllocation).length > 0) {
+        // Fallback: Calculate expenses from budget allocation (exclude savings)
+        const budgetExpenses = { ...aiResponse.budgetAllocation };
+        delete budgetExpenses.savings; // Don't count savings as an expense
+        const totalExpenses = Object.values(budgetExpenses).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
         if (totalExpenses > 0) {
           state.monthlyExpenses = totalExpenses;
         }
