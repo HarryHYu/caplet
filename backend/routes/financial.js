@@ -125,7 +125,8 @@ router.get('/history', authenticateToken, async (req, res) => {
 
 // Submit check-in
 router.post('/checkin', authenticateToken, [
-  body('monthlyExpenses').optional().isObject()
+  body('monthlyExpenses').optional().isObject(),
+  body('monthlyIncome').optional().isNumeric()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -133,7 +134,7 @@ router.post('/checkin', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { majorEvents, monthlyExpenses, goalsUpdate, notes } = req.body;
+    const { majorEvents, monthlyExpenses, goalsUpdate, notes, monthlyIncome } = req.body;
 
     // Create check-in record
     const checkIn = await CheckIn.create({
@@ -163,6 +164,9 @@ router.post('/checkin', authenticateToken, [
     // Update financial state
     if (monthlyExpenses) {
       state.monthlyExpenses = totalExpenses;
+    }
+    if (monthlyIncome) {
+      state.monthlyIncome = parseFloat(monthlyIncome) || 0;
     }
 
     // Update goals if provided

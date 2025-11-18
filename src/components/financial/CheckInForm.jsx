@@ -16,6 +16,7 @@ const CheckInForm = ({ onClose, onSubmit }) => {
       entertainment: '',
       other: ''
     },
+    monthlyIncome: '',
     
     // Goals Update
     goalsUpdate: [],
@@ -227,13 +228,29 @@ const CheckInForm = ({ onClose, onSubmit }) => {
             {step === 2 && (
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Monthly Expenses Review
+                  Income & Monthly Expenses
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Enter how much you spent this month in each category
+                  Enter your monthly income and how much you spent this month in each category.
                 </p>
 
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Monthly Take-home Income
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.monthlyIncome}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        monthlyIncome: e.target.value
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder="e.g. 8000"
+                    />
+                  </div>
+
                   {Object.entries(formData.monthlyExpenses).map(([category, value]) => (
                     <div key={category}>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 capitalize">
@@ -438,6 +455,11 @@ const CheckInForm = ({ onClose, onSubmit }) => {
                       Monthly Expenses
                     </h4>
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                      {formData.monthlyIncome && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                          Monthly Income: ${parseFloat(formData.monthlyIncome).toLocaleString()}
+                        </p>
+                      )}
                       {Object.entries(formData.monthlyExpenses).map(([category, amount]) => (
                         amount && (
                           <p key={category} className="text-sm text-gray-600 dark:text-gray-300">

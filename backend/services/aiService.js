@@ -136,6 +136,7 @@ const generateFallbackPlan = (state, checkIn) => {
   const monthlyIncome = state.monthlyIncome || 0;
   const monthlyExpenses = state.monthlyExpenses || 0;
   const available = monthlyIncome - monthlyExpenses;
+  const positiveAvailable = Math.max(0, available);
 
   return {
     budgetAllocation: {
@@ -144,26 +145,26 @@ const generateFallbackPlan = (state, checkIn) => {
       utilities: Math.round(monthlyIncome * 0.05),
       transport: Math.round(monthlyIncome * 0.10),
       entertainment: Math.round(monthlyIncome * 0.05),
-      savings: Math.max(0, Math.round(available * 0.5)),
-      other: Math.max(0, Math.round(available * 0.5))
+      savings: Math.round(positiveAvailable * 0.5),
+      other: Math.round(positiveAvailable * 0.5)
     },
     savingsStrategy: {
-      recommendedMonthlySavings: Math.max(0, Math.round(available * 0.3)),
+      recommendedMonthlySavings: Math.round(positiveAvailable * 0.3),
       emergencyFundTarget: Math.round(monthlyExpenses * 6),
       emergencyFundMonths: 6,
       investmentRecommendation: '10%'
     },
     debtStrategy: {
       totalDebt: state.debts?.reduce((sum, d) => sum + (parseFloat(d.balance) || 0), 0) || 0,
-      recommendedMonthlyPayment: Math.round(available * 0.2),
+      recommendedMonthlyPayment: Math.round(positiveAvailable * 0.2),
       payoffTimeline: '12-24 months',
       priorityDebt: state.debts?.[0]?.name || 'None'
     },
     goalTimelines: (state.goals || []).map(goal => ({
       name: goal.name,
       targetDate: goal.deadline || '2025-12-31',
-      description: `Save $${Math.round((parseFloat(goal.target) - parseFloat(goal.current || 0)) / 12)} per month`,
-      monthlyContribution: Math.round((parseFloat(goal.target) - parseFloat(goal.current || 0)) / 12)
+      description: `Save $${Math.max(0, Math.round(((parseFloat(goal.target) || 0) - (parseFloat(goal.current) || 0)) / 12))} per month`,
+      monthlyContribution: Math.max(0, Math.round(((parseFloat(goal.target) || 0) - (parseFloat(goal.current) || 0)) / 12))
     })),
     actionItems: [
       'Review your monthly expenses and identify areas to reduce spending',
