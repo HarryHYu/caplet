@@ -164,9 +164,8 @@ const Dashboard = () => {
             </button>
             <button
               onClick={() => setShowSummary(true)}
-              className="px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!summary || summary.trim() === ''}
-              title={!summary || summary.trim() === '' ? 'Submit a check-in to generate a summary' : 'View AI-maintained financial summary'}
+              className="px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm md:text-base"
+              title="View AI-maintained financial summary"
             >
               View Summary
             </button>
