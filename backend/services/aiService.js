@@ -4,7 +4,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-const generateFinancialPlan = async ({ userId, state, checkIn, previousPlan }) => {
+const generateFinancialPlan = async ({ userId, state, checkIn, summary, previousPlan }) => {
   try {
     // Check if API key is set
     if (!process.env.OPENAI_API_KEY) {
@@ -21,7 +21,7 @@ const generateFinancialPlan = async ({ userId, state, checkIn, previousPlan }) =
     const isMonthlyCheckIn = checkIn.isMonthlyCheckIn || detectMonthlyCheckIn(userMessage);
 
     // Build prompt based on intent
-    const prompt = buildPrompt(state, checkIn, previousPlan, isQuestion, isMonthlyCheckIn);
+    const prompt = buildPrompt(state, checkIn, summary || '', previousPlan, isQuestion, isMonthlyCheckIn);
 
     console.log('Calling OpenAI API...');
     console.log('API Key present:', !!process.env.OPENAI_API_KEY);
@@ -135,7 +135,7 @@ const detectMonthlyCheckIn = (message) => {
   return checkInWords.some(word => lowerMessage.includes(word));
 };
 
-const buildPrompt = (state, checkIn, previousPlan, isQuestion, isMonthlyCheckIn) => {
+const buildPrompt = (state, checkIn, summary, previousPlan, isQuestion, isMonthlyCheckIn) => {
   let prompt = '';
 
   // User's message/query
@@ -144,8 +144,16 @@ const buildPrompt = (state, checkIn, previousPlan, isQuestion, isMonthlyCheckIn)
 
 `;
 
-  // Financial state context
-  prompt += `USER'S CURRENT FINANCIAL STATE:
+  // Comprehensive summary of all historical information
+  if (summary && summary.trim()) {
+    prompt += `COMPREHENSIVE FINANCIAL SUMMARY (All Historical Information):
+${summary}
+
+`;
+  }
+
+  // Current financial state (snapshot)
+  prompt += `CURRENT FINANCIAL STATE (Snapshot):
 - Monthly Income: $${(state.monthlyIncome || 0).toLocaleString()}
 - Monthly Expenses: $${(state.monthlyExpenses || 0).toLocaleString()}
 - Savings Rate: ${(state.savingsRate || 0).toFixed(2)}%
@@ -155,7 +163,7 @@ const buildPrompt = (state, checkIn, previousPlan, isQuestion, isMonthlyCheckIn)
 
 `;
 
-  // Additional context from check-in
+  // Additional context from current check-in
   if (checkIn.monthlyIncome) {
     prompt += `- New Monthly Income Provided: $${parseFloat(checkIn.monthlyIncome).toLocaleString()}\n`;
   }
@@ -276,6 +284,93 @@ Respond helpfully now:`;
   return prompt;
 };
 
+const updateSummary = async ({ currentSummary, newCheckIn, financialState }) => {
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY is not set');
+      return currentSummary || '';
+    }
+
+    const models = ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'];
+    let lastError = null;
+
+    for (const model of models) {
+      try {
+        console.log(`Updating summary with model: ${model}`);
+        
+        const prompt = `You are maintaining a comprehensive financial summary for a user. Update the existing summary with new information from their latest check-in.
+
+EXISTING SUMMARY:
+${currentSummary || 'No previous summary. This is the first check-in.'}
+
+NEW INFORMATION FROM CHECK-IN:
+- Message: "${newCheckIn.message}"
+${newCheckIn.monthlyIncome ? `- Monthly Income: $${parseFloat(newCheckIn.monthlyIncome).toLocaleString()}` : ''}
+${newCheckIn.monthlyExpenses && Object.keys(newCheckIn.monthlyExpenses).length > 0 ? `- Monthly Expenses: ${JSON.stringify(newCheckIn.monthlyExpenses)}` : ''}
+
+CURRENT FINANCIAL STATE:
+- Monthly Income: $${(financialState.monthlyIncome || 0).toLocaleString()}
+- Monthly Expenses: $${(financialState.monthlyExpenses || 0).toLocaleString()}
+- Savings Rate: ${(financialState.savingsRate || 0).toFixed(2)}%
+- Accounts: ${JSON.stringify(financialState.accounts || [])}
+- Debts: ${JSON.stringify(financialState.debts || [])}
+- Goals: ${JSON.stringify(financialState.goals || [])}
+
+INSTRUCTIONS:
+1. Extract all NEW information from the check-in message (financial events, concerns, questions, goals, etc.)
+2. Update the existing summary by:
+   - Adding new information that wasn't in the summary
+   - Updating any changed information (e.g., new income, updated expenses)
+   - Removing redundant or outdated information
+   - Consolidating similar information
+3. Keep the summary concise but comprehensive - include all important data points, financial events, goals, concerns, and patterns
+4. Do NOT include the full original messages - only extract and summarize the key information
+5. Organize the summary logically (income, expenses, goals, concerns, patterns, etc.)
+6. Use Australian financial context
+
+OUTPUT FORMAT:
+Return ONLY the updated summary text. No JSON, no formatting, just the summary text.`;
+
+        const response = await openai.chat.completions.create({
+          model: model,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a financial data summarizer. Extract and consolidate financial information into concise summaries.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.3, // Lower temperature for more consistent summaries
+          max_tokens: 2000
+        });
+
+        const updatedSummary = response.choices[0].message.content.trim();
+        console.log(`Summary updated successfully with ${model}`);
+        return updatedSummary;
+      } catch (modelError) {
+        console.error(`Error updating summary with model ${model}:`, modelError.message);
+        lastError = modelError;
+        if (modelError.message?.includes('model') || modelError.message?.includes('not found')) {
+          continue;
+        }
+        throw modelError;
+      }
+    }
+
+    throw lastError || new Error('All models failed for summary update');
+  } catch (error) {
+    console.error('Summary update error:', error);
+    // Fallback: append new info to existing summary
+    const fallback = currentSummary || '';
+    const newInfo = `\n\n[${new Date().toISOString()}] ${newCheckIn.message}`;
+    return (fallback + newInfo).substring(0, 5000); // Limit length
+  }
+};
+
 module.exports = {
-  generateFinancialPlan
+  generateFinancialPlan,
+  updateSummary
 };

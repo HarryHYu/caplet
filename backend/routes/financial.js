@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { FinancialState, CheckIn, FinancialPlan, User, UserProgress } = require('../models');
-const { generateFinancialPlan } = require('../services/aiService');
+const { generateFinancialPlan, updateSummary } = require('../services/aiService');
 
 const router = express.Router();
 
@@ -186,6 +186,28 @@ router.post('/checkin', authenticateToken, [
 
     await state.save();
 
+    // Update summary with new check-in information
+    const updatedSummary = await updateSummary({
+      currentSummary: state.summary || '',
+      newCheckIn: {
+        message: message || '',
+        monthlyIncome: monthlyIncome || null,
+        monthlyExpenses: monthlyExpenses || {}
+      },
+      financialState: {
+        monthlyIncome: parseFloat(state.monthlyIncome),
+        monthlyExpenses: parseFloat(state.monthlyExpenses),
+        savingsRate: parseFloat(state.savingsRate),
+        accounts: state.accounts || [],
+        debts: state.debts || [],
+        goals: state.goals || []
+      }
+    });
+
+    // Save updated summary
+    state.summary = updatedSummary;
+    await state.save();
+
     // Get previous plan for comparison
     const previousPlan = await FinancialPlan.findOne({
       where: { userId: req.user.id },
@@ -209,6 +231,7 @@ router.post('/checkin', authenticateToken, [
         monthlyExpenses: monthlyExpenses || {},
         isMonthlyCheckIn: isMonthlyCheckIn || false
       },
+      summary: updatedSummary, // Pass the summary instead of all check-ins
       previousPlan: previousPlan ? {
         budgetAllocation: previousPlan.budgetAllocation,
         savingsStrategy: previousPlan.savingsStrategy,

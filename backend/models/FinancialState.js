@@ -64,6 +64,11 @@ const FinancialState = sequelize.define('FinancialState', {
     set(value) {
       this.setDataValue('goals', JSON.stringify(value));
     }
+  },
+  summary: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    defaultValue: ''
   }
 }, {
   tableName: 'financial_states',
