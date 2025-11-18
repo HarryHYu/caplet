@@ -162,14 +162,14 @@ const Dashboard = () => {
             >
               New Check-in
             </button>
-            {summary && summary.trim() !== '' && (
-              <button
-                onClick={() => setShowSummary(true)}
-                className="px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm md:text-base"
-              >
-                View Summary
-              </button>
-            )}
+            <button
+              onClick={() => setShowSummary(true)}
+              className="px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!summary || summary.trim() === ''}
+              title={!summary || summary.trim() === '' ? 'Submit a check-in to generate a summary' : 'View AI-maintained financial summary'}
+            >
+              View Summary
+            </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="px-3 md:px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm md:text-base"
@@ -250,9 +250,20 @@ const Dashboard = () => {
                   </button>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 md:p-4">
-                  <p className="text-sm md:text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-                    {summary || 'No summary available yet. Submit a check-in to generate a summary.'}
-                  </p>
+                  {summary && summary.trim() !== '' ? (
+                    <p className="text-sm md:text-base text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+                      {summary}
+                    </p>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        No summary available yet.
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-500">
+                        Submit a check-in to generate an AI-maintained summary of your financial information.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
