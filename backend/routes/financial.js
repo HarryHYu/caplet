@@ -59,7 +59,8 @@ router.get('/state', authenticateToken, async (req, res) => {
       savingsRate: parseFloat(state.savingsRate),
       accounts: state.accounts || [],
       debts: state.debts || [],
-      goals: state.goals || []
+      goals: state.goals || [],
+      summary: state.summary || ''
     });
   } catch (error) {
     console.error('Get financial state error:', error);

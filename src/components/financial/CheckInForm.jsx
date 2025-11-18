@@ -45,16 +45,16 @@ const CheckInForm = ({ onClose, onSubmit }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[95vh] md:max-h-[90vh] overflow-y-auto">
+        <div className="p-4 md:p-6">
           {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="flex justify-between items-start mb-4 md:mb-6">
+            <div className="flex-1 pr-2">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
                 Financial Check-in
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 mt-1">
                 Tell me what's happening with your finances, ask questions, or do a monthly review
               </p>
             </div>
@@ -155,18 +155,18 @@ const CheckInForm = ({ onClose, onSubmit }) => {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end gap-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 md:gap-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="btn-secondary"
+                className="btn-secondary w-full sm:w-auto"
                 disabled={loading}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                 disabled={loading || !message.trim()}
               >
                 {loading ? 'Processing...' : 'Submit'}

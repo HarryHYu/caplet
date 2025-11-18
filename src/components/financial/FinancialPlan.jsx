@@ -1,13 +1,13 @@
 const FinancialPlan = ({ plan }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6">
+      <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
         Your Financial Plan
       </h2>
 
       {/* Budget Allocation */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="mb-6 md:mb-8">
+        <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
           Budget Allocation
         </h3>
         {Object.keys(plan.budgetAllocation).length > 0 ? (
@@ -29,8 +29,8 @@ const FinancialPlan = ({ plan }) => {
       </div>
 
       {/* Savings Strategy */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="mb-6 md:mb-8">
+        <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
           Savings Strategy
         </h3>
         {Object.keys(plan.savingsStrategy).length > 0 ? (
@@ -52,8 +52,8 @@ const FinancialPlan = ({ plan }) => {
       </div>
 
       {/* Debt Strategy */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="mb-6 md:mb-8">
+        <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
           Debt Payoff Strategy
         </h3>
         {Object.keys(plan.debtStrategy).length > 0 ? (
@@ -75,8 +75,8 @@ const FinancialPlan = ({ plan }) => {
       </div>
 
       {/* Goal Timelines */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="mb-6 md:mb-8">
+        <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
           Goal Timelines
         </h3>
         {plan.goalTimelines.length > 0 ? (
@@ -105,8 +105,8 @@ const FinancialPlan = ({ plan }) => {
       </div>
 
       {/* Action Items */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="mb-6 md:mb-8">
+        <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
           Action Items
         </h3>
         {plan.actionItems.length > 0 ? (
