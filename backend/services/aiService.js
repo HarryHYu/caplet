@@ -6,13 +6,24 @@ const openai = new OpenAI({
 
 const generateFinancialPlan = async ({ userId, state, checkIn, previousPlan }) => {
   try {
+    // Check if API key is set
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY is not set');
+      throw new Error('OpenAI API key not configured');
+    }
+
     const userMessage = checkIn.message || '';
+    if (!userMessage) {
+      throw new Error('No message provided in check-in');
+    }
+
     const isQuestion = detectIfQuestion(userMessage);
     const isMonthlyCheckIn = checkIn.isMonthlyCheckIn || detectMonthlyCheckIn(userMessage);
 
     // Build prompt based on intent
     const prompt = buildPrompt(state, checkIn, previousPlan, isQuestion, isMonthlyCheckIn);
 
+    console.log('Calling OpenAI API...');
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
@@ -32,7 +43,9 @@ const generateFinancialPlan = async ({ userId, state, checkIn, previousPlan }) =
       response_format: { type: 'json_object' }
     });
 
-    const aiData = JSON.parse(response.choices[0].message.content);
+    console.log('OpenAI API response received');
+    const content = response.choices[0].message.content;
+    const aiData = JSON.parse(content);
 
     // Return response with optional plan
     return {
@@ -47,10 +60,25 @@ const generateFinancialPlan = async ({ userId, state, checkIn, previousPlan }) =
     };
   } catch (error) {
     console.error('AI plan generation error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      hasApiKey: !!process.env.OPENAI_API_KEY
+    });
+    
+    // More helpful error message
+    let errorMessage = 'I encountered an error processing your request.';
+    if (error.message?.includes('API key')) {
+      errorMessage = 'OpenAI API key is not configured. Please contact support.';
+    } else if (error.message?.includes('rate limit')) {
+      errorMessage = 'OpenAI API rate limit reached. Please try again in a moment.';
+    } else if (error.message?.includes('insufficient_quota')) {
+      errorMessage = 'OpenAI API quota exceeded. Please check your OpenAI account billing.';
+    }
     
     // Fallback response
     return {
-      response: 'I encountered an error processing your request. Please try again.',
+      response: errorMessage,
       shouldUpdatePlan: false,
       budgetAllocation: {},
       savingsStrategy: {},
