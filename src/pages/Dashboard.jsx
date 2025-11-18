@@ -5,13 +5,11 @@ import api from '../services/api';
 import CheckInForm from '../components/financial/CheckInForm';
 import FinancialPlan from '../components/financial/FinancialPlan';
 import FinancialSnapshot from '../components/financial/FinancialSnapshot';
-import CheckInHistory from '../components/financial/CheckInHistory';
 
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [showCheckIn, setShowCheckIn] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [financialData, setFinancialData] = useState({
     netWorth: 0,
@@ -30,7 +28,6 @@ const Dashboard = () => {
     actionItems: [],
     insights: []
   });
-  const [checkIns, setCheckIns] = useState([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [lastResponse, setLastResponse] = useState(null);
@@ -50,16 +47,14 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [state, planData, history, summaryData] = await Promise.all([
+      const [state, planData, summaryData] = await Promise.all([
         api.getFinancialState(),
         api.getFinancialPlan(),
-        api.getCheckInHistory(),
         api.getSummary().catch(() => ({ content: '' })) // Don't fail if summary doesn't exist
       ]);
 
       setFinancialData(state);
       setPlan(planData);
-      setCheckIns(history);
       // Set summary from dedicated endpoint
       const summaryValue = summaryData?.content || '';
       setSummary(summaryValue);
@@ -151,12 +146,6 @@ const Dashboard = () => {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 md:gap-4">
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="btn-secondary text-sm md:text-base px-3 md:px-4 py-2"
-            >
-              {showHistory ? 'Hide' : 'View'} History
-            </button>
             <button
               onClick={() => setShowCheckIn(true)}
               className="btn-primary text-sm md:text-base px-3 md:px-4 py-2"
