@@ -34,7 +34,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/');
+      // Don't redirect immediately, let user see they need to login
+      setLoading(false);
       return;
     }
 
@@ -72,6 +73,27 @@ const Dashboard = () => {
       throw error;
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Sign In Required
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            Please sign in to access your financial dashboard.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="btn-primary"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
