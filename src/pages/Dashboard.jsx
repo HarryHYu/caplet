@@ -174,13 +174,38 @@ const Dashboard = () => {
       const result = await api.submitCheckIn(checkInData);
       
       // Remove loading message and add AI response
+      const aiResponse = result.response || 'Check-in processed successfully.';
+      const aiSummary = result.summary || null;
+      const aiBreakdown = result.detailedBreakdown || null;
+      
+      // If AI didn't return separate summary/breakdown, create them from the response
+      let finalSummary = aiSummary;
+      let finalBreakdown = aiBreakdown;
+      
+      if (!aiSummary && !aiBreakdown && aiResponse.length > 150) {
+        // Auto-split: first 2-3 sentences as summary, rest as breakdown
+        const sentences = aiResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        if (sentences.length >= 3) {
+          finalSummary = sentences.slice(0, 2).join('. ').trim() + '.';
+          finalBreakdown = aiResponse;
+        } else {
+          // If too short, just use the response for both
+          finalSummary = aiResponse;
+          finalBreakdown = aiResponse;
+        }
+      } else if (!aiSummary) {
+        finalSummary = aiResponse;
+      } else if (!aiBreakdown) {
+        finalBreakdown = aiResponse;
+      }
+      
       setMessages(prev => {
         const withoutLoading = prev.filter(msg => !msg.loading);
         return [...withoutLoading, {
           type: 'ai',
-          content: result.response || 'Check-in processed successfully.',
-          summary: result.summary || result.response || 'Check-in processed successfully.',
-          detailedBreakdown: result.detailedBreakdown || result.response || 'Check-in processed successfully.',
+          content: aiResponse,
+          summary: finalSummary,
+          detailedBreakdown: finalBreakdown,
           timestamp: new Date()
         }];
       });
@@ -376,8 +401,14 @@ const Dashboard = () => {
         <div className="flex-1 overflow-y-auto mb-4 space-y-4">
           {messages.map((msg, idx) => {
             const isExpanded = expandedMessages.has(idx);
-            const hasBreakdown = msg.detailedBreakdown && msg.detailedBreakdown !== msg.summary;
-            const showSummary = msg.summary && hasBreakdown;
+            // Check if we have separate summary and breakdown, or if content is long enough to split
+            const hasSummary = msg.summary && msg.summary.trim().length > 0;
+            const hasBreakdown = msg.detailedBreakdown && msg.detailedBreakdown.trim().length > 0;
+            const hasSeparateParts = hasSummary && hasBreakdown && msg.summary !== msg.detailedBreakdown;
+            const isLongResponse = msg.content && msg.content.length > 200 && msg.type === 'ai';
+            
+            // Show expand button if we have separate parts OR if it's a long AI response
+            const showExpandButton = hasSeparateParts || (isLongResponse && msg.type === 'ai' && !msg.type === 'summary');
             
             return (
               <div
@@ -403,22 +434,25 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <div>
-                      {/* Show summary by default, or full content if no breakdown */}
-                      {showSummary && !isExpanded ? (
+                      {/* Show summary by default if we have separate parts, otherwise show full */}
+                      {hasSeparateParts && !isExpanded ? (
                         <div>
                           <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.summary}</p>
                           <button
                             onClick={() => setExpandedMessages(prev => new Set([...prev, idx]))}
-                            className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                            className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1"
                           >
-                            Show detailed breakdown →
+                            <span>Show detailed breakdown</span>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                           </button>
                         </div>
-                      ) : hasBreakdown && isExpanded ? (
+                      ) : hasSeparateParts && isExpanded ? (
                         <div>
                           <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded text-sm">
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Summary:</p>
-                            <p className="text-gray-600 dark:text-gray-400">{msg.summary}</p>
+                            <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{msg.summary}</p>
                           </div>
                           <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Detailed Breakdown:</p>
@@ -430,9 +464,12 @@ const Dashboard = () => {
                               newSet.delete(idx);
                               setExpandedMessages(newSet);
                             }}
-                            className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                            className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1"
                           >
-                            Show less ↑
+                            <span>Show less</span>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
                           </button>
                         </div>
                       ) : (
