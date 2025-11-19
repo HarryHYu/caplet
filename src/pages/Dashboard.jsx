@@ -175,28 +175,35 @@ const Dashboard = () => {
       
       // Remove loading message and add AI response
       const aiResponse = result.response || 'Check-in processed successfully.';
-      const aiSummary = result.summary || null;
-      const aiBreakdown = result.detailedBreakdown || null;
+      let aiSummary = result.summary || null;
+      let aiBreakdown = result.detailedBreakdown || null;
       
       // If AI didn't return separate summary/breakdown, create them from the response
-      let finalSummary = aiSummary;
-      let finalBreakdown = aiBreakdown;
-      
       if (!aiSummary && !aiBreakdown && aiResponse.length > 150) {
         // Auto-split: first 2-3 sentences as summary, rest as breakdown
         const sentences = aiResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
         if (sentences.length >= 3) {
-          finalSummary = sentences.slice(0, 2).join('. ').trim() + '.';
-          finalBreakdown = aiResponse;
+          aiSummary = sentences.slice(0, 2).join('. ').trim() + '.';
+          aiBreakdown = aiResponse;
+        } else if (sentences.length === 2) {
+          aiSummary = sentences[0].trim() + '.';
+          aiBreakdown = aiResponse;
         } else {
-          // If too short, just use the response for both
-          finalSummary = aiResponse;
-          finalBreakdown = aiResponse;
+          // If too short or only one sentence, use response for both (no expand button)
+          aiSummary = aiResponse;
+          aiBreakdown = aiResponse;
         }
-      } else if (!aiSummary) {
-        finalSummary = aiResponse;
-      } else if (!aiBreakdown) {
-        finalBreakdown = aiResponse;
+      } else if (!aiSummary && aiBreakdown) {
+        // Has breakdown but no summary - use first part of breakdown as summary
+        const sentences = aiBreakdown.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        aiSummary = sentences.slice(0, 2).join('. ').trim() + (sentences.length > 0 ? '.' : '');
+      } else if (aiSummary && !aiBreakdown) {
+        // Has summary but no breakdown - use full response as breakdown
+        aiBreakdown = aiResponse;
+      } else if (!aiSummary && !aiBreakdown) {
+        // Neither provided - use response for both
+        aiSummary = aiResponse;
+        aiBreakdown = aiResponse;
       }
       
       setMessages(prev => {
@@ -406,9 +413,11 @@ const Dashboard = () => {
             const hasBreakdown = msg.detailedBreakdown && msg.detailedBreakdown.trim().length > 0;
             const hasSeparateParts = hasSummary && hasBreakdown && msg.summary !== msg.detailedBreakdown;
             
-            // For AI messages, always show expand if we have separate parts OR if breakdown exists
+            // For AI messages (not loading, not summary type), always show expand button
             const isAIMessage = msg.type === 'ai' && !msg.loading && msg.type !== 'summary';
-            const shouldShowExpand = isAIMessage && (hasSeparateParts || (hasBreakdown && hasSummary));
+            // Show expand if we have separate parts, or if it's a long response (auto-create summary)
+            const isLongResponse = msg.content && msg.content.length > 150;
+            const shouldShowExpand = isAIMessage && (hasSeparateParts || isLongResponse);
             
             return (
               <div
@@ -440,23 +449,23 @@ const Dashboard = () => {
                           <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.summary || msg.content}</p>
                           <button
                             onClick={() => setExpandedMessages(prev => new Set([...prev, idx]))}
-                            className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
+                            className="mt-3 px-3 py-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium flex items-center gap-1.5 transition-colors rounded border border-blue-200 dark:border-blue-700"
                           >
                             <span>Show detailed breakdown</span>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </button>
                         </div>
                       ) : shouldShowExpand && isExpanded ? (
                         <div>
-                          {hasSummary && (
-                            <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded text-sm">
-                              <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Summary:</p>
-                              <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{msg.summary}</p>
+                          {msg.summary && msg.summary !== msg.detailedBreakdown && (
+                            <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm border border-gray-200 dark:border-gray-600">
+                              <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Summary:</p>
+                              <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">{msg.summary}</p>
                             </div>
                           )}
-                          <div className={hasSummary ? "border-t border-gray-200 dark:border-gray-600 pt-3" : ""}>
+                          <div className={msg.summary && msg.summary !== msg.detailedBreakdown ? "border-t border-gray-200 dark:border-gray-600 pt-3" : ""}>
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Detailed Breakdown:</p>
                             <p className="whitespace-pre-wrap break-words leading-relaxed text-sm">{msg.detailedBreakdown || msg.content}</p>
                           </div>
@@ -466,10 +475,10 @@ const Dashboard = () => {
                               newSet.delete(idx);
                               setExpandedMessages(newSet);
                             }}
-                            className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
+                            className="mt-3 px-3 py-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium flex items-center gap-1.5 transition-colors rounded border border-blue-200 dark:border-blue-700"
                           >
                             <span>Show less</span>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
                           </button>
