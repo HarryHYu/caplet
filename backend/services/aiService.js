@@ -65,6 +65,8 @@ const generateFinancialPlan = async ({ userId, state, checkIn, summary, previous
           extractedFinancialData: aiData.extractedFinancialData || null,
           // Response and plan
           response: aiData.response || aiData.answer || '',
+          summary: aiData.summary || aiData.response || aiData.answer || '',
+          detailedBreakdown: aiData.detailedBreakdown || aiData.response || aiData.answer || '',
           shouldUpdatePlan: aiData.shouldUpdatePlan || isMonthlyCheckIn,
           budgetAllocation: aiData.budgetAllocation || {},
           savingsStrategy: aiData.savingsStrategy || {},
@@ -229,6 +231,10 @@ RESPONSE STYLE REQUIREMENTS:
 - Break down calculations step-by-step when relevant
 - Be enthusiastic and encouraging, but stay specific
 
+IMPORTANT - TWO-PART RESPONSE:
+1. SUMMARY: A short 2-3 sentence summary with just the key takeaway (no calculations, just the bottom line)
+2. DETAILED BREAKDOWN: The full response with all calculations, step-by-step reasoning, and complete explanation
+
 EXAMPLES OF GOOD RESPONSES:
 ❌ BAD: "Your savings rate is good. Consider setting up an emergency fund."
 ✅ GOOD: "Your savings rate is 30.9%, which means you're saving $2,550 per month. That's excellent! You should aim for an emergency fund of $17,100 (3 months) to $34,200 (6 months). At your current savings rate, you'll hit the 3-month target in 6.7 months."
@@ -259,6 +265,8 @@ OUTPUT FORMAT (MUST BE VALID JSON):
     "goals": [{"name": "<goal name>", "targetAmount": <number>, "targetDate": "<YYYY-MM-DD or null>", "currentAmount": <number or null>}]
   },
   "response": "<your DIRECT, SPECIFIC, ACTIONABLE response with exact numbers and calculations - be conversational but never vague>",
+  "summary": "<a SHORT 2-3 sentence summary - just the key takeaway and bottom line, NO calculations or step-by-step. Example: 'You can afford a $30,000-$40,000 car. Your monthly payment would be around $472, leaving you with $1,628/month for other savings.'>",
+  "detailedBreakdown": "<the FULL detailed breakdown with ALL calculations shown step-by-step. Include: how you calculated each number, the reasoning behind recommendations, complete breakdowns of costs, timelines, and all supporting details. This is where you show your work.>",
   "shouldUpdatePlan": <true for monthly check-ins or significant changes, false for simple questions>,
   "budgetAllocation": {<only include if shouldUpdatePlan is true - rent, food, utilities, transport, entertainment, savings, other>},
   "savingsStrategy": {<only include if shouldUpdatePlan is true - recommendedMonthlySavings, emergencyFundTarget, emergencyFundMonths, investmentRecommendation>},

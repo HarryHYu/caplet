@@ -43,6 +43,7 @@ const Dashboard = () => {
   const [summary, setSummary] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [expandedMessages, setExpandedMessages] = useState(new Set());
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -178,6 +179,8 @@ const Dashboard = () => {
         return [...withoutLoading, {
           type: 'ai',
           content: result.response || 'Check-in processed successfully.',
+          summary: result.summary || result.response || 'Check-in processed successfully.',
+          detailedBreakdown: result.detailedBreakdown || result.response || 'Check-in processed successfully.',
           timestamp: new Date()
         }];
       });
@@ -371,34 +374,76 @@ const Dashboard = () => {
       <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 py-4 md:py-6">
         {/* Messages */}
         <div className="flex-1 overflow-y-auto mb-4 space-y-4">
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+          {messages.map((msg, idx) => {
+            const isExpanded = expandedMessages.has(idx);
+            const hasBreakdown = msg.detailedBreakdown && msg.detailedBreakdown !== msg.summary;
+            const showSummary = msg.summary && hasBreakdown;
+            
+            return (
               <div
-                className={`max-w-[85%] md:max-w-[75%] rounded-lg px-4 py-3 ${
-                  msg.type === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : msg.type === 'error'
-                    ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200'
-                    : msg.type === 'summary'
-                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm'
-                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                }`}
+                key={idx}
+                className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {msg.loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                  </div>
-                ) : (
-                  <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
-                )}
+                <div
+                  className={`max-w-[85%] md:max-w-[75%] rounded-lg px-4 py-3 ${
+                    msg.type === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : msg.type === 'error'
+                      ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200'
+                      : msg.type === 'summary'
+                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm'
+                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  {msg.loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Show summary by default, or full content if no breakdown */}
+                      {showSummary && !isExpanded ? (
+                        <div>
+                          <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.summary}</p>
+                          <button
+                            onClick={() => setExpandedMessages(prev => new Set([...prev, idx]))}
+                            className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                          >
+                            Show detailed breakdown →
+                          </button>
+                        </div>
+                      ) : hasBreakdown && isExpanded ? (
+                        <div>
+                          <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded text-sm">
+                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Summary:</p>
+                            <p className="text-gray-600 dark:text-gray-400">{msg.summary}</p>
+                          </div>
+                          <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
+                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Detailed Breakdown:</p>
+                            <p className="whitespace-pre-wrap break-words leading-relaxed text-sm">{msg.detailedBreakdown}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const newSet = new Set(expandedMessages);
+                              newSet.delete(idx);
+                              setExpandedMessages(newSet);
+                            }}
+                            className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                          >
+                            Show less ↑
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
 
