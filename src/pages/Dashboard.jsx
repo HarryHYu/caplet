@@ -413,11 +413,11 @@ const Dashboard = () => {
             const hasBreakdown = msg.detailedBreakdown && msg.detailedBreakdown.trim().length > 0;
             const hasSeparateParts = hasSummary && hasBreakdown && msg.summary !== msg.detailedBreakdown;
             
-            // For AI messages (not loading, not summary type), always show expand button
-            const isAIMessage = msg.type === 'ai' && !msg.loading && msg.type !== 'summary';
-            // Show expand if we have separate parts, or if it's a long response (auto-create summary)
+            // For AI messages (not loading, not summary type), show expand if we have content
+            const isAIMessage = msg.type === 'ai' && !msg.loading && msg.type !== 'summary' && msg.content;
+            // Show expand if we have separate parts, or if response is long enough to split
             const isLongResponse = msg.content && msg.content.length > 150;
-            const shouldShowExpand = isAIMessage && (hasSeparateParts || isLongResponse);
+            const shouldShowExpand = isAIMessage && (hasSeparateParts || (isLongResponse && (msg.summary || msg.detailedBreakdown)));
             
             return (
               <div
