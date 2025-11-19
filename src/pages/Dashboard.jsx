@@ -401,14 +401,14 @@ const Dashboard = () => {
         <div className="flex-1 overflow-y-auto mb-4 space-y-4">
           {messages.map((msg, idx) => {
             const isExpanded = expandedMessages.has(idx);
-            // Check if we have separate summary and breakdown, or if content is long enough to split
+            // Check if we have separate summary and breakdown
             const hasSummary = msg.summary && msg.summary.trim().length > 0;
             const hasBreakdown = msg.detailedBreakdown && msg.detailedBreakdown.trim().length > 0;
             const hasSeparateParts = hasSummary && hasBreakdown && msg.summary !== msg.detailedBreakdown;
-            const isLongResponse = msg.content && msg.content.length > 200 && msg.type === 'ai';
             
-            // Show expand button if we have separate parts OR if it's a long AI response
-            const showExpandButton = hasSeparateParts || (isLongResponse && msg.type === 'ai' && !msg.type === 'summary');
+            // For AI messages, always show expand if we have separate parts OR if breakdown exists
+            const isAIMessage = msg.type === 'ai' && !msg.loading && msg.type !== 'summary';
+            const shouldShowExpand = isAIMessage && (hasSeparateParts || (hasBreakdown && hasSummary));
             
             return (
               <div
@@ -435,12 +435,12 @@ const Dashboard = () => {
                   ) : (
                     <div>
                       {/* Show summary by default if we have separate parts, otherwise show full */}
-                      {hasSeparateParts && !isExpanded ? (
+                      {shouldShowExpand && !isExpanded ? (
                         <div>
-                          <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.summary}</p>
+                          <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.summary || msg.content}</p>
                           <button
                             onClick={() => setExpandedMessages(prev => new Set([...prev, idx]))}
-                            className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1"
+                            className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
                           >
                             <span>Show detailed breakdown</span>
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -448,15 +448,17 @@ const Dashboard = () => {
                             </svg>
                           </button>
                         </div>
-                      ) : hasSeparateParts && isExpanded ? (
+                      ) : shouldShowExpand && isExpanded ? (
                         <div>
-                          <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded text-sm">
-                            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Summary:</p>
-                            <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{msg.summary}</p>
-                          </div>
-                          <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
+                          {hasSummary && (
+                            <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded text-sm">
+                              <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Summary:</p>
+                              <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{msg.summary}</p>
+                            </div>
+                          )}
+                          <div className={hasSummary ? "border-t border-gray-200 dark:border-gray-600 pt-3" : ""}>
                             <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Detailed Breakdown:</p>
-                            <p className="whitespace-pre-wrap break-words leading-relaxed text-sm">{msg.detailedBreakdown}</p>
+                            <p className="whitespace-pre-wrap break-words leading-relaxed text-sm">{msg.detailedBreakdown || msg.content}</p>
                           </div>
                           <button
                             onClick={() => {
@@ -464,7 +466,7 @@ const Dashboard = () => {
                               newSet.delete(idx);
                               setExpandedMessages(newSet);
                             }}
-                            className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1"
+                            className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
                           >
                             <span>Show less</span>
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
