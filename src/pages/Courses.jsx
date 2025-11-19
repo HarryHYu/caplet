@@ -61,28 +61,15 @@ const Courses = () => {
     }));
   };
 
-  const handleCourseClick = async (courseId) => {
+  const handleCourseClick = (courseId) => {
     if (!isAuthenticated) {
       alert('Please sign in to access courses');
       navigate('/login');
       return;
     }
 
-    // Auto-enroll if not already enrolled (backend handles this)
-    try {
-      const progress = courseProgress[courseId];
-      if (progress === undefined) {
-        // Try to get progress - will auto-enroll if needed
-        await api.getCourseProgress(courseId).catch(() => {
-          // If it fails, try enrolling
-          return api.enrollInCourse(courseId);
-        });
-      }
-      navigate(`/courses/${courseId}`);
-    } catch (error) {
-      // Even if enrollment fails, navigate to course (backend will handle it)
-      navigate(`/courses/${courseId}`);
-    }
+    // Just navigate - backend will auto-enroll when accessing course detail
+    navigate(`/courses/${courseId}`);
   };
 
   const getCategoryColor = (category) => {
