@@ -95,23 +95,25 @@ const Dashboard = () => {
       const summaryValue = summaryData?.content || '';
       setSummary(summaryValue);
       
-      // Add welcome message if no messages yet
-      if (messages.length === 0 && summaryValue) {
-        setMessages([{
-          type: 'ai',
-          content: "Hey! I'm your Caplet financial advisor. I remember you - here's what I know about your finances:",
-          timestamp: new Date()
-        }, {
-          type: 'summary',
-          content: summaryValue,
-          timestamp: new Date()
-        }]);
-      } else if (messages.length === 0) {
-        setMessages([{
-          type: 'ai',
-          content: "Hey! I'm your Caplet financial advisor. What's going on with your finances? Tell me anything - a question, an update, a concern, or just do a quick check-in.",
-          timestamp: new Date()
-        }]);
+      // Add welcome message only on initial load (when messages are empty)
+      if (messages.length === 0) {
+        if (summaryValue) {
+          setMessages([{
+            type: 'ai',
+            content: "Hey! I'm your Caplet financial advisor. I remember you - here's what I know about your finances:",
+            timestamp: new Date()
+          }, {
+            type: 'summary',
+            content: summaryValue,
+            timestamp: new Date()
+          }]);
+        } else {
+          setMessages([{
+            type: 'ai',
+            content: "Hey! I'm your Caplet financial advisor. What's going on with your finances? Tell me anything - a question, an update, a concern, or just do a quick check-in.",
+            timestamp: new Date()
+          }]);
+        }
       }
     } catch (error) {
       console.error('Error loading dashboard:', error);
@@ -144,6 +146,9 @@ const Dashboard = () => {
       loading: true
     };
     setMessages(prev => [...prev, loadingMsg]);
+    
+    // Scroll to bottom to show loading message
+    setTimeout(() => scrollToBottom(), 100);
 
     try {
       // Prepare check-in data - clean up expenses object
@@ -177,8 +182,45 @@ const Dashboard = () => {
         }];
       });
 
-      // Reload financial data
-      await loadDashboardData();
+      // Update financial data without reloading messages
+      try {
+        const [state, planData] = await Promise.all([
+          api.getFinancialState(),
+          api.getFinancialPlan()
+        ]);
+
+        // Calculate expenses from budget allocation if monthlyExpenses is 0 but plan has budget
+        let finalState = { ...state };
+        if (finalState.monthlyExpenses === 0 && planData.budgetAllocation && Object.keys(planData.budgetAllocation).length > 0) {
+          const budgetExpenses = { ...planData.budgetAllocation };
+          delete budgetExpenses.savings;
+          const totalExpenses = Object.values(budgetExpenses).reduce((sum, val) => {
+            const numVal = typeof val === 'string' 
+              ? parseFloat(val.replace(/[$,]/g, '')) || 0
+              : parseFloat(val) || 0;
+            return sum + numVal;
+          }, 0);
+          if (totalExpenses > 0) {
+            finalState.monthlyExpenses = totalExpenses;
+            if (finalState.monthlyIncome > 0) {
+              finalState.savingsRate = ((finalState.monthlyIncome - totalExpenses) / finalState.monthlyIncome) * 100;
+            }
+          }
+        }
+        
+        setFinancialData(finalState);
+        
+        // Update summary without resetting messages
+        try {
+          const summaryData = await api.getSummary().catch(() => ({ content: '' }));
+          setSummary(summaryData?.content || '');
+        } catch (e) {
+          // Ignore summary update errors
+        }
+      } catch (error) {
+        console.error('Error updating financial data:', error);
+        // Don't show error to user, just log it
+      }
       
       // Reset manual input
       setManualInput({
