@@ -97,12 +97,46 @@ router.put('/lesson/:lessonId', authenticateToken, [
   }
 });
 
-// Get course progress
+// Get course progress (auto-enrolls if not enrolled)
 router.get('/course/:courseId', authenticateToken, async (req, res) => {
   try {
     const { courseId } = req.params;
 
-    const progress = await UserProgress.findAll({
+    // Check if course exists
+    const course = await Course.findOne({
+      where: { id: courseId, isPublished: true }
+    });
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Check if user has any progress for this course
+    let progress = await UserProgress.findAll({
+      where: { 
+        userId: req.user.id, 
+        courseId: courseId
+      },
+      include: [
+        {
+          model: Lesson,
+          as: 'lesson'
+        }
+      ]
+    });
+
+    // Auto-enroll if no progress exists (create a course-level progress entry)
+    if (progress.length === 0) {
+      await UserProgress.create({
+        userId: req.user.id,
+        courseId: courseId,
+        lessonId: null, // Course-level progress
+        status: 'not_started'
+      });
+    }
+
+    // Re-fetch progress to include the new entry
+    progress = await UserProgress.findAll({
       where: { 
         userId: req.user.id, 
         courseId: courseId
@@ -120,7 +154,7 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
       where: { courseId, isPublished: true }
     });
 
-    const completedLessons = progress.filter(p => p.status === 'completed').length;
+    const completedLessons = progress.filter(p => p.lessonId && p.status === 'completed').length;
     const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
     res.json({
@@ -131,7 +165,7 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
         status: progressPercentage === 100 ? 'completed' : 
                 progressPercentage > 0 ? 'in_progress' : 'not_started'
       },
-      lessonProgress: progress
+      lessonProgress: progress.filter(p => p.lessonId) // Only return lesson-level progress
     });
   } catch (error) {
     console.error('Get course progress error:', error);
