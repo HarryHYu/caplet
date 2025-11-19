@@ -357,22 +357,24 @@ router.post('/checkin', authenticateToken, [
       });
     }
 
-    res.json({
-      message: 'Check-in submitted successfully',
-      checkIn: {
-        id: checkIn.id,
-        date: checkIn.createdAt
-      },
-      response: aiResponse.response || aiResponse.insights?.[0] || 'Check-in processed',
-      plan: plan ? {
-        budgetAllocation: plan.budgetAllocation,
-        savingsStrategy: plan.savingsStrategy,
-        debtStrategy: plan.debtStrategy,
-        goalTimelines: plan.goalTimelines,
-        actionItems: plan.actionItems,
-        insights: plan.insights
-      } : null
-    });
+          res.json({
+            message: 'Check-in submitted successfully',
+            checkIn: {
+              id: checkIn.id,
+              date: checkIn.createdAt
+            },
+            response: aiResponse.response || aiResponse.insights?.[0] || 'Check-in processed',
+            summary: aiResponse.summary || null,
+            detailedBreakdown: aiResponse.detailedBreakdown || null,
+            plan: plan ? {
+              budgetAllocation: plan.budgetAllocation,
+              savingsStrategy: plan.savingsStrategy,
+              debtStrategy: plan.debtStrategy,
+              goalTimelines: plan.goalTimelines,
+              actionItems: plan.actionItems,
+              insights: plan.insights
+            } : null
+          });
   } catch (error) {
     console.error('Submit check-in error:', error);
     res.status(500).json({ message: 'Internal server error' });
