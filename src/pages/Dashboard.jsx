@@ -178,18 +178,31 @@ const Dashboard = () => {
       let aiSummary = result.summary || null;
       let aiBreakdown = result.detailedBreakdown || null;
       
+      console.log('AI Response:', { 
+        hasResponse: !!aiResponse, 
+        hasSummary: !!aiSummary, 
+        hasBreakdown: !!aiBreakdown,
+        responseLength: aiResponse?.length 
+      });
+      
       // If AI didn't return separate summary/breakdown, create them from the response
-      if (!aiSummary && !aiBreakdown && aiResponse.length > 150) {
+      if (!aiSummary && !aiBreakdown) {
         // Auto-split: first 2-3 sentences as summary, rest as breakdown
-        const sentences = aiResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
-        if (sentences.length >= 3) {
-          aiSummary = sentences.slice(0, 2).join('. ').trim() + '.';
-          aiBreakdown = aiResponse;
-        } else if (sentences.length === 2) {
-          aiSummary = sentences[0].trim() + '.';
-          aiBreakdown = aiResponse;
+        if (aiResponse.length > 150) {
+          const sentences = aiResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
+          if (sentences.length >= 3) {
+            aiSummary = sentences.slice(0, 2).join('. ').trim() + '.';
+            aiBreakdown = aiResponse;
+          } else if (sentences.length === 2) {
+            aiSummary = sentences[0].trim() + '.';
+            aiBreakdown = aiResponse;
+          } else {
+            // Single sentence - use response for both
+            aiSummary = aiResponse;
+            aiBreakdown = aiResponse;
+          }
         } else {
-          // If too short or only one sentence, use response for both (no expand button)
+          // Short response - use for both (no expand)
           aiSummary = aiResponse;
           aiBreakdown = aiResponse;
         }
@@ -200,10 +213,6 @@ const Dashboard = () => {
       } else if (aiSummary && !aiBreakdown) {
         // Has summary but no breakdown - use full response as breakdown
         aiBreakdown = aiResponse;
-      } else if (!aiSummary && !aiBreakdown) {
-        // Neither provided - use response for both
-        aiSummary = aiResponse;
-        aiBreakdown = aiResponse;
       }
       
       setMessages(prev => {
@@ -211,8 +220,8 @@ const Dashboard = () => {
         return [...withoutLoading, {
           type: 'ai',
           content: aiResponse,
-          summary: finalSummary,
-          detailedBreakdown: finalBreakdown,
+          summary: aiSummary,
+          detailedBreakdown: aiBreakdown,
           timestamp: new Date()
         }];
       });
@@ -413,11 +422,10 @@ const Dashboard = () => {
             const hasBreakdown = msg.detailedBreakdown && msg.detailedBreakdown.trim().length > 0;
             const hasSeparateParts = hasSummary && hasBreakdown && msg.summary !== msg.detailedBreakdown;
             
-            // For AI messages (not loading, not summary type), show expand if we have content
+            // For AI messages (not loading, not summary type), show expand if we have separate parts
             const isAIMessage = msg.type === 'ai' && !msg.loading && msg.type !== 'summary' && msg.content;
-            // Show expand if we have separate parts, or if response is long enough to split
-            const isLongResponse = msg.content && msg.content.length > 150;
-            const shouldShowExpand = isAIMessage && (hasSeparateParts || (isLongResponse && (msg.summary || msg.detailedBreakdown)));
+            // Show expand if we have separate summary and breakdown (different content)
+            const shouldShowExpand = isAIMessage && hasSeparateParts;
             
             return (
               <div
