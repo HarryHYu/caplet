@@ -70,7 +70,6 @@ export const CoursesProvider = ({ children }) => {
     }
   };
 
-  // Enrollment is now automatic when accessing a course - no explicit enrollment needed
 
   useEffect(() => {
     fetchCourses();

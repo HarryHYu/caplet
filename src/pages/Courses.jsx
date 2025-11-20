@@ -68,7 +68,7 @@ const Courses = () => {
       return;
     }
 
-    // Navigate directly - backend will auto-create progress when accessing course detail
+    // Navigate directly to course - no enrollment needed
     navigate(`/courses/${courseId}`);
   };
 

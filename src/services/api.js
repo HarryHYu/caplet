@@ -109,7 +109,6 @@ class ApiService {
     });
   }
 
-  // Enrollment is now automatic when accessing a course - no explicit enrollment needed
 
   async getUserDashboard() {
     return this.request('/users/dashboard');

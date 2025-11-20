@@ -77,7 +77,7 @@ router.put('/profile', authenticateToken, [
   }
 });
 
-// Note: Enrollment is now automatic when accessing a course via /api/progress/course/:courseId
+// Courses are directly accessible - progress is tracked automatically when accessing a course
 
 // Get user dashboard data
 router.get('/dashboard', authenticateToken, async (req, res) => {
