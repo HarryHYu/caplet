@@ -1,12 +1,16 @@
 // Script to add Basics of Investment course
-// Use production database
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:LVeYCQMWmKKlhVfEwBODMGRSNqUYxZUU@tramway.proxy.rlwy.net:47044/railway';
-process.env.NODE_ENV = 'production';
+require('dotenv').config();
+
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL is not set. Please set it before running this script.');
+  process.exit(1);
+}
+
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
 const { sequelize } = require('./config/database');
 const Course = require('./models/Course');
 const Lesson = require('./models/Lesson');
-require('dotenv').config();
 
 const addInvestmentCourse = async () => {
   try {
