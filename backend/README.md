@@ -65,8 +65,6 @@ The API uses SQLite for development and PostgreSQL for production.
 ### Users
 - `GET /api/users/profile` - Get user profile
 - `PUT /api/users/profile` - Update user profile
-- `GET /api/users/courses` - Get user's enrolled courses
-- `POST /api/users/courses/:courseId/enroll` - Enroll in course
 - `GET /api/users/dashboard` - Get user dashboard data
 
 ### Progress

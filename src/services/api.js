@@ -109,15 +109,7 @@ class ApiService {
     });
   }
 
-  async getUserCourses() {
-    return this.request('/users/courses');
-  }
-
-  async enrollInCourse(courseId) {
-    return this.request(`/users/courses/${courseId}/enroll`, {
-      method: 'POST',
-    });
-  }
+  // Enrollment is now automatic when accessing a course - no explicit enrollment needed
 
   async getUserDashboard() {
     return this.request('/users/dashboard');

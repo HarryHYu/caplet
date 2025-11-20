@@ -70,16 +70,7 @@ export const CoursesProvider = ({ children }) => {
     }
   };
 
-  const enrollInCourse = async (courseId) => {
-    try {
-      setError(null);
-      const response = await api.enrollInCourse(courseId);
-      return response;
-    } catch (error) {
-      setError(error.message);
-      throw error;
-    }
-  };
+  // Enrollment is now automatic when accessing a course - no explicit enrollment needed
 
   useEffect(() => {
     fetchCourses();
@@ -98,7 +89,6 @@ export const CoursesProvider = ({ children }) => {
     fetchFeaturedCourses,
     fetchCategories,
     getCourse,
-    enrollInCourse,
   };
 
   return (

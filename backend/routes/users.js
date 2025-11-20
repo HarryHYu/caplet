@@ -77,67 +77,7 @@ router.put('/profile', authenticateToken, [
   }
 });
 
-// Get user's enrolled courses
-router.get('/courses', authenticateToken, async (req, res) => {
-  try {
-    const userProgress = await UserProgress.findAll({
-      where: { userId: req.user.id },
-      include: [
-        {
-          model: Course,
-          as: 'course',
-          where: { isPublished: true }
-        }
-      ],
-      order: [['updatedAt', 'DESC']]
-    });
-
-    res.json({ courses: userProgress });
-  } catch (error) {
-    console.error('Get user courses error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// Enroll in a course
-router.post('/courses/:courseId/enroll', authenticateToken, async (req, res) => {
-  try {
-    const { courseId } = req.params;
-    
-    // Check if course exists and is published
-    const course = await Course.findOne({
-      where: { id: courseId, isPublished: true }
-    });
-
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-
-    // Check if already enrolled
-    const existingEnrollment = await UserProgress.findOne({
-      where: { userId: req.user.id, courseId }
-    });
-
-    if (existingEnrollment) {
-      return res.status(400).json({ message: 'Already enrolled in this course' });
-    }
-
-    // Create enrollment
-    const enrollment = await UserProgress.create({
-      userId: req.user.id,
-      courseId,
-      status: 'not_started'
-    });
-
-    res.status(201).json({
-      message: 'Successfully enrolled in course',
-      enrollment
-    });
-  } catch (error) {
-    console.error('Enroll course error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
+// Note: Enrollment is now automatic when accessing a course via /api/progress/course/:courseId
 
 // Get user dashboard data
 router.get('/dashboard', authenticateToken, async (req, res) => {

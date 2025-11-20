@@ -97,7 +97,7 @@ router.put('/lesson/:lessonId', authenticateToken, [
   }
 });
 
-// Get course progress (auto-enrolls if not enrolled)
+// Get course progress (auto-creates progress entry if not exists)
 router.get('/course/:courseId', authenticateToken, async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -125,15 +125,15 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
       ]
     });
 
-    // Auto-enroll if no progress exists (create a course-level progress entry)
-    if (progress.length === 0) {
-      await UserProgress.create({
-        userId: req.user.id,
-        courseId: courseId,
-        lessonId: null, // Course-level progress
-        status: 'not_started'
-      });
-    }
+          // Auto-create progress entry if none exists (courses are directly accessible)
+          if (progress.length === 0) {
+            await UserProgress.create({
+              userId: req.user.id,
+              courseId: courseId,
+              lessonId: null, // Course-level progress
+              status: 'not_started'
+            });
+          }
 
     // Re-fetch progress to include the new entry
     progress = await UserProgress.findAll({
