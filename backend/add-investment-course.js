@@ -16,10 +16,22 @@ const addInvestmentCourse = async () => {
   try {
     console.log('Adding Basics of Investment course...');
 
-    // Check if course already exists
-    let course = await Course.findOne({
-      where: { title: 'BASICS OF INVESTMENT' }
+    // Ensure no duplicate courses with the same title exist
+    const existingCourses = await Course.findAll({
+      where: { title: 'BASICS OF INVESTMENT' },
+      order: [['createdAt', 'ASC']]
     });
+
+    let course = existingCourses[0] || null;
+
+    if (existingCourses.length > 1) {
+      const duplicateCourses = existingCourses.slice(1);
+      const duplicateIds = duplicateCourses.map(c => c.id);
+      console.log(`Found ${duplicateCourses.length} duplicate course(s). Removing...`);
+      await Lesson.destroy({ where: { courseId: duplicateIds } });
+      await Course.destroy({ where: { id: duplicateIds } });
+      console.log('✅ Removed duplicate course entries');
+    }
 
     if (course) {
       console.log('Course already exists, updating...');
