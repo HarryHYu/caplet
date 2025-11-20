@@ -68,7 +68,7 @@ const Courses = () => {
       return;
     }
 
-    // Navigate directly to course - no enrollment needed
+    // Navigate directly to course
     navigate(`/courses/${courseId}`);
   };
 
