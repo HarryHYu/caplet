@@ -1,24 +1,14 @@
-// Script to clean up database - delete everything except users
-const { sequelize, User, Course, Lesson, UserProgress, Survey, FinancialState, CheckIn, FinancialPlan, Summary } = require('./models');
+// Script to clean up database for CapletEdu
+// - Deletes user-generated education data (progress, surveys)
+// - Drops legacy financial advisor tables that are no longer used in CapletEdu
+const { sequelize, User, Course, Lesson, UserProgress, Survey } = require('./models');
 require('dotenv').config();
 
 const cleanupDatabase = async () => {
   try {
-    console.log('Starting database cleanup...');
-    
-    // Delete all data except users
-    console.log('Deleting summaries...');
-    await Summary.destroy({ where: {}, truncate: true });
-    
-    console.log('Deleting financial plans...');
-    await FinancialPlan.destroy({ where: {}, truncate: true });
-    
-    console.log('Deleting check-ins...');
-    await CheckIn.destroy({ where: {}, truncate: true });
-    
-    console.log('Deleting financial states...');
-    await FinancialState.destroy({ where: {}, truncate: true });
-    
+    console.log('Starting CapletEdu database cleanup...');
+
+    // Delete education-related user data
     console.log('Deleting user progress...');
     await UserProgress.destroy({ where: {}, truncate: true });
     
@@ -27,21 +17,27 @@ const cleanupDatabase = async () => {
     
     // NOTE: NOT deleting courses or lessons - they are content, not user data
     console.log('⚠️  Preserving courses and lessons (content, not user data)');
-    
-    // Remove summary column from financial_states if it exists
-    try {
-      console.log('Removing summary column from financial_states...');
-      await sequelize.query(`
-        ALTER TABLE financial_states 
-        DROP COLUMN IF EXISTS summary
-      `);
-      console.log('✅ Summary column removed (if it existed)');
-    } catch (error) {
-      console.log('Note: Summary column may not exist:', error.message);
+
+    // Drop legacy financial advisor tables (moved to CapletFinancial)
+    const legacyTables = [
+      'financial_plans',
+      'financial_states',
+      'check_ins',
+      'summaries'
+    ];
+
+    for (const table of legacyTables) {
+      try {
+        console.log(`Dropping legacy table if exists: ${table}...`);
+        await sequelize.query(`DROP TABLE IF EXISTS "${table}" CASCADE;`);
+        console.log(`✅ Dropped (or did not exist): ${table}`);
+      } catch (error) {
+        console.log(`Note: Could not drop table ${table} (may not exist):`, error.message);
+      }
     }
-    
-    console.log('✅ Database cleanup completed!');
-    console.log('Users table preserved.');
+
+    console.log('✅ CapletEdu database cleanup completed!');
+    console.log('Users, courses, and lessons preserved.');
   } catch (error) {
     console.error('❌ Database cleanup error:', error);
     throw error;

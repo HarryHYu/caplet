@@ -25,7 +25,6 @@ import CourseDetail from './pages/CourseDetail';
 import LessonPlayer from './pages/LessonPlayer';
 import Survey from './pages/Survey';
 import SurveyResults from './pages/SurveyResults';
-import Dashboard from './pages/Dashboard';
 import Terms from './pages/Terms';
 import NotFound from './pages/NotFound';
 
@@ -60,7 +59,6 @@ function App() {
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
                 <Route path="/survey" element={<Survey />} />
                 <Route path="/survey-results" element={<SurveyResults />} />
-                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

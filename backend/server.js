@@ -5,7 +5,6 @@ const morgan = require('morgan');
 const { testConnection } = require('./config/database');
 const { syncDatabase } = require('./models');
 const seedProductionDatabase = require('./seed-production');
-const createSummariesTable = require('./create-summaries-table');
 require('dotenv').config();
 
 const app = express();
@@ -41,14 +40,13 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// API Routes
+// API Routes (education only - financial advisor moved to CapletFinancial)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/progress', require('./routes/progress'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/survey', require('./routes/survey'));
-app.use('/api/financial', require('./routes/financial'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -72,9 +70,6 @@ const startServer = async () => {
     
     // Sync database models
     await syncDatabase();
-    
-    // Explicitly create summaries table if it doesn't exist
-    await createSummariesTable();
     
     // Seed production database if in production
     if (process.env.NODE_ENV === 'production') {

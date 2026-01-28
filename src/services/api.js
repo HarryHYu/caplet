@@ -153,36 +153,6 @@ class ApiService {
   async getSurveyStats() {
     return this.request('/survey/stats');
   }
-
-  // Financial
-  async getFinancialState() {
-    return this.request('/financial/state');
-  }
-
-  async getFinancialPlan() {
-    return this.request('/financial/plan');
-  }
-
-  async getSummary() {
-    return this.request('/financial/summary');
-  }
-
-  async getCheckInHistory() {
-    return this.request('/financial/history');
-  }
-
-  async submitCheckIn(checkInData) {
-    return this.request('/financial/checkin', {
-      method: 'POST',
-      body: JSON.stringify(checkInData),
-    });
-  }
-
-  async deleteAllData() {
-    return this.request('/financial/delete-all-data', {
-      method: 'DELETE',
-    });
-  }
 }
 
 export default new ApiService();
