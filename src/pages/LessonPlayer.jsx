@@ -205,6 +205,12 @@ const LessonPlayer = () => {
     try {
       setSaving(true);
       await api.updateLessonProgress(lesson.id, { status: 'completed' });
+      // Best-effort: auto-complete any class assignments linked to this lesson
+      try {
+        await api.completeLessonAssignments(lesson.id);
+      } catch (e) {
+        console.warn('Class assignment auto-complete failed (non-blocking):', e?.message || e);
+      }
       setCompleted(true);
       // If not last lesson, advance
       const sorted = (course?.lessons || []).sort((a, b) => a.order - b.order);

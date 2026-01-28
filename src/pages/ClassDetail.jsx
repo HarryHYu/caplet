@@ -15,7 +15,10 @@ const ClassDetail = () => {
     title: '',
     description: '',
     dueDate: '',
+    courseId: '',
+    lessonId: '',
   });
+  const [availableLessons, setAvailableLessons] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   const load = async () => {
@@ -23,6 +26,27 @@ const ClassDetail = () => {
       setLoading(true);
       const res = await api.getClassDetail(classId);
       setData(res);
+      // Load all published courses/lessons once for teachers to link assignments
+      if (res?.membership?.role === 'teacher') {
+        try {
+          const coursesRes = await api.getCourses({ limit: 100 });
+          const courseList = coursesRes.courses || coursesRes || [];
+          const lessons = [];
+          courseList.forEach((c) => {
+            (c.lessons || []).forEach((l) => {
+              lessons.push({
+                id: l.id,
+                title: l.title,
+                courseId: c.id,
+                courseTitle: c.title,
+              });
+            });
+          });
+          setAvailableLessons(lessons);
+        } catch (e) {
+          console.warn('Failed to load lessons for assignment linking:', e?.message || e);
+        }
+      }
     } catch (e) {
       console.error('Load class detail error:', e);
       setError(e.message || 'Failed to load class');
@@ -106,9 +130,19 @@ const ClassDetail = () => {
         title: assignmentForm.title.trim(),
         description: assignmentForm.description.trim(),
         dueDate: assignmentForm.dueDate || null,
+        courseId: assignmentForm.lessonId
+          ? assignmentForm.courseId || null
+          : null,
+        lessonId: assignmentForm.lessonId || null,
       });
       setShowNewAssignment(false);
-      setAssignmentForm({ title: '', description: '', dueDate: '' });
+      setAssignmentForm({
+        title: '',
+        description: '',
+        dueDate: '',
+        courseId: '',
+        lessonId: '',
+      });
       await load();
     } catch (err) {
       console.error('Create assignment error:', err);
@@ -195,6 +229,10 @@ const ClassDetail = () => {
               <div className="space-y-3">
                 {assignments.map((a) => {
                   const isCompleted = a.statusForCurrentUser === 'completed';
+                  const totalStudents = students.length;
+                  const completedCount = Array.isArray(a.submissions)
+                    ? a.submissions.filter((s) => s.status === 'completed').length
+                    : undefined;
                   return (
                     <div
                       key={a.id}
@@ -230,15 +268,28 @@ const ClassDetail = () => {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <span
-                          className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                            isCompleted
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
-                          }`}
-                        >
-                          {isCompleted ? 'Completed' : 'Assigned'}
-                        </span>
+                        {isTeacher ? (
+                          <>
+                            {typeof completedCount === 'number' && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                Completed:{' '}
+                                <span className="font-semibold">
+                                  {completedCount}/{totalStudents}
+                                </span>
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                              isCompleted
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
+                            }`}
+                          >
+                            {isCompleted ? 'Completed' : 'Assigned'}
+                          </span>
+                        )}
                         {!isTeacher && !isCompleted && (
                           <button
                             onClick={() => handleCompleteAssignment(a.id)}
@@ -365,10 +416,35 @@ const ClassDetail = () => {
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                   />
                 </div>
-                <p className="text-xs text-gray-500">
-                  In future we can link directly to specific Caplet lessons or quizzes. For now, this
-                  is a simple homework/task description.
-                </p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Link to lesson (optional)
+                  </label>
+                  <select
+                    value={assignmentForm.lessonId}
+                    onChange={(e) => {
+                      const lessonId = e.target.value;
+                      const lesson = availableLessons.find((l) => l.id === lessonId);
+                      setAssignmentForm((prev) => ({
+                        ...prev,
+                        lessonId,
+                        courseId: lesson ? lesson.courseId : '',
+                      }));
+                    }}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+                  >
+                    <option value="">No linked lesson</option>
+                    {availableLessons.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.courseTitle} – {l.title}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    If you link a lesson, the assignment will show a direct button to that lesson, and
+                    it will be auto-marked complete when students finish the lesson.
+                  </p>
+                </div>
                 <div className="flex justify-end gap-2 mt-2">
                   <button
                     type="button"

@@ -199,17 +199,27 @@ router.get('/:id', authenticateToken, async (req, res) => {
       order: [['createdAt', 'ASC']],
     });
 
+    const includeSubmissions =
+      membership.role === 'teacher'
+        ? {
+            model: AssignmentSubmission,
+            as: 'submissions',
+            include: [{ model: User, as: 'student', attributes: ['id', 'firstName', 'lastName', 'email'] }],
+            required: false,
+          }
+        : {
+            model: AssignmentSubmission,
+            as: 'submissions',
+            where: { studentId: req.user.id },
+            required: false,
+          };
+
     const assignments = await Assignment.findAll({
       where: { classroomId: classroom.id },
       include: [
         { model: Course, as: 'course', attributes: ['id', 'title'] },
         { model: Lesson, as: 'lesson', attributes: ['id', 'title'] },
-        {
-          model: AssignmentSubmission,
-          as: 'submissions',
-          where: { studentId: req.user.id },
-          required: false,
-        },
+        includeSubmissions,
       ],
       order: [['dueDate', 'ASC'], ['createdAt', 'DESC']],
     });
@@ -223,18 +233,41 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }));
 
     const assignmentsDto = assignments.map((a) => {
+      if (membership.role === 'teacher') {
+        const submissions = (a.submissions || []).map((s) => ({
+          id: s.id,
+          studentId: s.studentId,
+          status: s.status,
+          submittedAt: s.submittedAt,
+          student: s.student
+            ? {
+                id: s.student.id,
+                firstName: s.student.firstName,
+                lastName: s.student.lastName,
+                email: s.student.email,
+              }
+            : null,
+        }));
+
+        return {
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          dueDate: a.dueDate,
+          course: a.course ? { id: a.course.id, title: a.course.title } : null,
+          lesson: a.lesson ? { id: a.lesson.id, title: a.lesson.title } : null,
+          submissions,
+        };
+      }
+
       const submission = a.submissions?.[0];
       return {
         id: a.id,
         title: a.title,
         description: a.description,
         dueDate: a.dueDate,
-        course: a.course
-          ? { id: a.course.id, title: a.course.title }
-          : null,
-        lesson: a.lesson
-          ? { id: a.lesson.id, title: a.lesson.title }
-          : null,
+        course: a.course ? { id: a.course.id, title: a.course.title } : null,
+        lesson: a.lesson ? { id: a.lesson.id, title: a.lesson.title } : null,
         statusForCurrentUser: submission ? submission.status : 'assigned',
         submittedAt: submission ? submission.submittedAt : null,
       };
@@ -346,6 +379,62 @@ router.post('/assignments/:id/complete', authenticateToken, async (req, res) => 
     });
   } catch (error) {
     console.error('Complete assignment error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Auto-complete assignments linked to a lesson when a student finishes that lesson
+router.post('/lessons/:lessonId/complete', authenticateToken, async (req, res) => {
+  try {
+    const { lessonId } = req.params;
+
+    // All classes this user is a member of
+    const memberships = await ClassMembership.findAll({
+      where: { userId: req.user.id },
+    });
+    const classroomIds = memberships.map((m) => m.classroomId);
+    if (classroomIds.length === 0) {
+      return res.json({ updated: [] });
+    }
+
+    const assignments = await Assignment.findAll({
+      where: {
+        lessonId,
+        classroomId: classroomIds,
+      },
+    });
+
+    const updated = [];
+
+    for (const assignment of assignments) {
+      const [submission] = await AssignmentSubmission.findOrCreate({
+        where: {
+          assignmentId: assignment.id,
+          studentId: req.user.id,
+        },
+        defaults: {
+          status: 'completed',
+          submittedAt: new Date(),
+        },
+      });
+
+      if (submission.status !== 'completed') {
+        submission.status = 'completed';
+        submission.submittedAt = new Date();
+        await submission.save();
+      }
+
+      updated.push({
+        assignmentId: assignment.id,
+        submissionId: submission.id,
+        status: submission.status,
+        submittedAt: submission.submittedAt,
+      });
+    }
+
+    res.json({ updated });
+  } catch (error) {
+    console.error('Auto-complete lesson assignments error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

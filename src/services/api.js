@@ -189,6 +189,12 @@ class ApiService {
       method: 'POST',
     });
   }
+
+  async completeLessonAssignments(lessonId) {
+    return this.request(`/classes/lessons/${lessonId}/complete`, {
+      method: 'POST',
+    });
+  }
 }
 
 export default new ApiService();
