@@ -45,12 +45,13 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Update user profile
+// Update user profile (including switching between student/teacher roles)
 router.put('/profile', authenticateToken, [
   body('firstName').optional().trim().isLength({ min: 1, max: 50 }),
   body('lastName').optional().trim().isLength({ min: 1, max: 50 }),
   body('bio').optional().trim().isLength({ max: 1000 }),
-  body('preferences').optional().isObject()
+  body('preferences').optional().isObject(),
+  body('role').optional().isIn(['student', 'instructor'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -58,13 +59,24 @@ router.put('/profile', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, bio, preferences } = req.body;
-    
+    const { firstName, lastName, bio, preferences, role } = req.body;
+
+    // Determine new role:
+    // - Admins keep their role (cannot be changed through this endpoint)
+    // - Non-admins may switch between 'student' and 'instructor'
+    let newRole = req.user.role;
+    if (role && req.user.role !== 'admin') {
+      if (role === 'student' || role === 'instructor') {
+        newRole = role;
+      }
+    }
+
     await req.user.update({
       firstName: firstName || req.user.firstName,
       lastName: lastName || req.user.lastName,
       bio: bio !== undefined ? bio : req.user.bio,
-      preferences: preferences || req.user.preferences
+      preferences: preferences || req.user.preferences,
+      role: newRole
     });
 
     res.json({ 

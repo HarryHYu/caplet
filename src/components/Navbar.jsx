@@ -9,8 +9,10 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('login');
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState(false);
   const location = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, updateProfile } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   const navItems = [
@@ -75,16 +77,86 @@ const Navbar = () => {
                 )}
               </button>
               {isAuthenticated ? (
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Welcome, {user?.firstName}!
-                  </span>
+                <div className="relative">
                   <button
-                    onClick={logout}
-                    className="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    type="button"
+                    onClick={() => setShowUserMenu((prev) => !prev)}
+                    className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
-                    Logout
+                    <span>
+                      Hello, {user?.firstName}
+                      {user?.role === 'admin'
+                        ? ' (admin)'
+                        : user?.role === 'instructor'
+                        ? ' (teacher)'
+                        : ' (student)'}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 transform transition-transform ${
+                        showUserMenu ? 'rotate-180' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </button>
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-2 z-50">
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Signed in as
+                        </p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {user?.firstName} {user?.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Role:{' '}
+                          {user?.role === 'admin'
+                            ? 'Admin'
+                            : user?.role === 'instructor'
+                            ? 'Teacher'
+                            : 'Student'}
+                        </p>
+                      </div>
+                      {user?.role !== 'admin' && (
+                        <button
+                          type="button"
+                          disabled={updatingRole}
+                          onClick={async () => {
+                            try {
+                              setUpdatingRole(true);
+                              const nextRole =
+                                user?.role === 'instructor' ? 'student' : 'instructor';
+                              await updateProfile({ role: nextRole });
+                            } catch (e) {
+                              console.error('Role update error:', e);
+                            } finally {
+                              setUpdatingRole(false);
+                            }
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                        >
+                          {user?.role === 'instructor'
+                            ? 'Switch to student account'
+                            : 'Switch to teacher account'}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={logout}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <button
@@ -163,8 +235,31 @@ const Navbar = () => {
                 {isAuthenticated ? (
                   <>
                     <div className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300">
-                      Welcome, {user?.firstName}!
+                      Hello, {user?.firstName}{' '}
+                      {user?.role === 'admin'
+                        ? '(admin)'
+                        : user?.role === 'instructor'
+                        ? '(teacher)'
+                        : '(student)'}
                     </div>
+                    {user?.role !== 'admin' && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const nextRole =
+                              user?.role === 'instructor' ? 'student' : 'instructor';
+                            await updateProfile({ role: nextRole });
+                          } catch (e) {
+                            console.error('Role update error:', e);
+                          }
+                        }}
+                        className="w-full text-left px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
+                      >
+                        {user?.role === 'instructor'
+                          ? 'Switch to student account'
+                          : 'Switch to teacher account'}
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         logout();
