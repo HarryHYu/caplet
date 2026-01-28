@@ -24,7 +24,8 @@ router.post('/register', [
   }),
   body('password').isLength({ min: 6 }),
   body('firstName').trim().isLength({ min: 1, max: 50 }),
-  body('lastName').trim().isLength({ min: 1, max: 50 })
+  body('lastName').trim().isLength({ min: 1, max: 50 }),
+  body('role').optional().isIn(['student', 'instructor'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -32,7 +33,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, firstName, lastName, dateOfBirth } = req.body;
+    const { email, password, firstName, lastName, dateOfBirth, role } = req.body;
 
     // Gmail compatibility: prevent duplicates due to dot variants
     const [local, domain] = email.split('@');
@@ -52,12 +53,15 @@ router.post('/register', [
     }
 
     // Create new user
+    const userRole = role === 'instructor' ? 'instructor' : 'student';
+
     const user = await User.create({
       email,
       password,
       firstName,
       lastName,
-      dateOfBirth
+      dateOfBirth,
+      role: userRole
     });
 
     const token = generateToken(user.id);

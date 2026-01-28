@@ -8,15 +8,17 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'student',
   });
   const [loading, setLoading] = useState(false);
   const { register, error } = useAuth();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -83,6 +85,39 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Account Type
+          </label>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setFormData((prev) => ({ ...prev, role: 'student' }))}
+              className={`py-2 px-3 rounded-md border text-sm font-medium ${
+                formData.role === 'student'
+                  ? 'border-blue-600 bg-blue-50 text-blue-700'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              I’m a student
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData((prev) => ({ ...prev, role: 'instructor' }))}
+              className={`py-2 px-3 rounded-md border text-sm font-medium ${
+                formData.role === 'instructor'
+                  ? 'border-blue-600 bg-blue-50 text-blue-700'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              I’m a teacher
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Teachers can create classes and assignments. Students can join classes.
+          </p>
         </div>
 
         <div>

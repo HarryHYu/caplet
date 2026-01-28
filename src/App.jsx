@@ -25,6 +25,8 @@ import CourseDetail from './pages/CourseDetail';
 import LessonPlayer from './pages/LessonPlayer';
 import Survey from './pages/Survey';
 import SurveyResults from './pages/SurveyResults';
+import Classes from './pages/Classes';
+import ClassDetail from './pages/ClassDetail';
 import Terms from './pages/Terms';
 import NotFound from './pages/NotFound';
 
@@ -57,6 +59,8 @@ function App() {
                 <Route path="/courses" element={<Courses />} />
                 <Route path="/courses/:courseId" element={<CourseDetail />} />
                 <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
+                <Route path="/classes" element={<Classes />} />
+                <Route path="/classes/:classId" element={<ClassDetail />} />
                 <Route path="/survey" element={<Survey />} />
                 <Route path="/survey-results" element={<SurveyResults />} />
                 <Route path="/terms" element={<Terms />} />

@@ -4,6 +4,10 @@ const Course = require('./Course');
 const Lesson = require('./Lesson');
 const UserProgress = require('./UserProgress');
 const Survey = require('./Survey');
+const Classroom = require('./Classroom');
+const ClassMembership = require('./ClassMembership');
+const Assignment = require('./Assignment');
+const AssignmentSubmission = require('./AssignmentSubmission');
 
 // Define associations
 Course.hasMany(Lesson, { 
@@ -47,6 +51,76 @@ UserProgress.belongsTo(Lesson, {
   as: 'lesson'
 });
 
+// Classroom relationships
+User.hasMany(Classroom, {
+  foreignKey: 'createdBy',
+  as: 'createdClasses',
+  onDelete: 'CASCADE',
+});
+Classroom.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator',
+});
+
+Classroom.hasMany(ClassMembership, {
+  foreignKey: 'classroomId',
+  as: 'memberships',
+  onDelete: 'CASCADE',
+});
+ClassMembership.belongsTo(Classroom, {
+  foreignKey: 'classroomId',
+  as: 'classroom',
+});
+
+User.hasMany(ClassMembership, {
+  foreignKey: 'userId',
+  as: 'classMemberships',
+  onDelete: 'CASCADE',
+});
+ClassMembership.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user',
+});
+
+Classroom.hasMany(Assignment, {
+  foreignKey: 'classroomId',
+  as: 'assignments',
+  onDelete: 'CASCADE',
+});
+Assignment.belongsTo(Classroom, {
+  foreignKey: 'classroomId',
+  as: 'classroom',
+});
+
+Assignment.belongsTo(Course, {
+  foreignKey: 'courseId',
+  as: 'course',
+});
+Assignment.belongsTo(Lesson, {
+  foreignKey: 'lessonId',
+  as: 'lesson',
+});
+
+Assignment.hasMany(AssignmentSubmission, {
+  foreignKey: 'assignmentId',
+  as: 'submissions',
+  onDelete: 'CASCADE',
+});
+AssignmentSubmission.belongsTo(Assignment, {
+  foreignKey: 'assignmentId',
+  as: 'assignment',
+});
+
+User.hasMany(AssignmentSubmission, {
+  foreignKey: 'studentId',
+  as: 'assignmentSubmissions',
+  onDelete: 'CASCADE',
+});
+AssignmentSubmission.belongsTo(User, {
+  foreignKey: 'studentId',
+  as: 'student',
+});
+
 // Sync database
 const syncDatabase = async () => {
   try {
@@ -64,5 +138,9 @@ module.exports = {
   Lesson,
   UserProgress,
   Survey,
+  Classroom,
+  ClassMembership,
+  Assignment,
+  AssignmentSubmission,
   syncDatabase
 };

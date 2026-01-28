@@ -153,6 +153,42 @@ class ApiService {
   async getSurveyStats() {
     return this.request('/survey/stats');
   }
+
+  // Classes & assignments
+  async getClasses() {
+    return this.request('/classes');
+  }
+
+  async createClass(data) {
+    return this.request('/classes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async joinClass(code) {
+    return this.request('/classes/join', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  async getClassDetail(classId) {
+    return this.request(`/classes/${classId}`);
+  }
+
+  async createAssignment(classId, data) {
+    return this.request(`/classes/${classId}/assignments`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async completeAssignment(assignmentId) {
+    return this.request(`/classes/assignments/${assignmentId}/complete`, {
+      method: 'POST',
+    });
+  }
 }
 
 export default new ApiService();
