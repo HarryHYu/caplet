@@ -495,6 +495,13 @@ router.post('/assignments/:id/uncomplete', authenticateToken, async (req, res) =
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
+    // Do not allow undo for lesson-linked assignments – those are controlled by lesson completion
+    if (assignment.lessonId) {
+      return res
+        .status(400)
+        .json({ message: 'Cannot undo completion for lesson-linked assignments.' });
+    }
+
     // Ensure user is a member of the class
     const membership = await ClassMembership.findOne({
       where: { classroomId: assignment.classroomId, userId: req.user.id },

@@ -371,7 +371,7 @@ const ClassDetail = () => {
                             Mark as done
                           </button>
                         )}
-                        {!isTeacher && isCompleted && (
+                        {!isTeacher && isCompleted && !a.lesson && (
                           <button
                             onClick={() => handleUncompleteAssignment(a.id)}
                             className="mt-1 px-3 py-1 rounded-md text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
