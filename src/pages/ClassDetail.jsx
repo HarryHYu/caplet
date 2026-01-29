@@ -20,6 +20,11 @@ const ClassDetail = () => {
   });
   const [availableLessons, setAvailableLessons] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
+  const [announcementForm, setAnnouncementForm] = useState({
+    content: '',
+    attachmentUrl: '',
+  });
 
   const load = async () => {
     try {
@@ -114,7 +119,7 @@ const ClassDetail = () => {
 
   if (!data) return null;
 
-  const { classroom, membership, members, assignments } = data;
+  const { classroom, membership, members, assignments, announcements = [] } = data;
   const isTeacher = membership?.role === 'teacher';
 
   const teachers = members.filter((m) => m.role === 'teacher');
@@ -210,6 +215,38 @@ const ClassDetail = () => {
     }
   };
 
+  const handlePostAnnouncement = async (e) => {
+    e.preventDefault();
+    if (!announcementForm.content.trim()) return;
+    setPostingAnnouncement(true);
+    setError('');
+    try {
+      await api.createAnnouncement(classroom.id, {
+        content: announcementForm.content.trim(),
+        attachmentUrl: announcementForm.attachmentUrl.trim() || null,
+      });
+      setAnnouncementForm({ content: '', attachmentUrl: '' });
+      await load();
+    } catch (err) {
+      console.error('Create announcement error:', err);
+      setError(err.message || 'Failed to post announcement');
+    } finally {
+      setPostingAnnouncement(false);
+    }
+  };
+
+  const handleDeleteAnnouncement = async (announcementId) => {
+    const ok = window.confirm('Delete this announcement?');
+    if (!ok) return;
+    try {
+      await api.deleteAnnouncement(classroom.id, announcementId);
+      await load();
+    } catch (err) {
+      console.error('Delete announcement error:', err);
+      setError(err.message || 'Failed to delete announcement');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -270,6 +307,137 @@ const ClassDetail = () => {
             {error}
           </div>
         )}
+
+        {/* Announcements section */}
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+            Announcements
+          </h2>
+          <form onSubmit={handlePostAnnouncement} className="space-y-3 mb-4">
+            <textarea
+              value={announcementForm.content}
+              onChange={(e) =>
+                setAnnouncementForm((prev) => ({ ...prev, content: e.target.value }))
+              }
+              placeholder="Share an update with the class..."
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white"
+            />
+            <input
+              type="url"
+              value={announcementForm.attachmentUrl}
+              onChange={(e) =>
+                setAnnouncementForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))
+              }
+              placeholder="Optional: paste an image, video, or link URL"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white"
+            />
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={postingAnnouncement || !announcementForm.content.trim()}
+                className="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {postingAnnouncement ? 'Posting...' : 'Post'}
+              </button>
+            </div>
+          </form>
+
+          {!Array.isArray(announcements) || announcements.length === 0 ? (
+            <p className="text-sm text-gray-600 dark:text-gray-400">No announcements yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {announcements.map((a) => {
+                if (!a || !a.id) return null;
+                const isAuthor = a.author?.id === user?.id;
+                return (
+                  <div
+                    key={a.id}
+                    className="border border-gray-200 dark:border-gray-700 rounded-md p-3 bg-gray-50 dark:bg-gray-900/40"
+                  >
+                    <div className="flex justify-between items-start gap-2 mb-1">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {a.author
+                            ? `${a.author.firstName} ${a.author.lastName}`
+                            : 'Unknown'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {a.createdAt ? new Date(a.createdAt).toLocaleString() : ''}
+                        </p>
+                      </div>
+                      {(isTeacher || isAuthor) && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAnnouncement(a.id)}
+                          className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
+                      {a.content || ''}
+                    </p>
+                    {Array.isArray(a.attachments) && a.attachments.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {a.attachments.map((att, idx) => {
+                          if (!att || !att.url) return null;
+                          if (att.type === 'image') {
+                            return (
+                              <img
+                                key={idx}
+                                src={att.url}
+                                alt=""
+                                className="max-h-64 rounded-md border border-gray-200 dark:border-gray-700"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            );
+                          }
+                          if (att.type === 'video') {
+                            const videoId = att.url.match(
+                              /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/
+                            )?.[1];
+                            if (videoId) {
+                              return (
+                                <div
+                                  key={idx}
+                                  className="relative pt-[56.25%] rounded-md overflow-hidden border border-gray-200 dark:border-gray-700"
+                                >
+                                  <iframe
+                                    src={`https://www.youtube.com/embed/${videoId}`}
+                                    title="Announcement video"
+                                    className="absolute inset-0 w-full h-full"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                  />
+                                </div>
+                              );
+                            }
+                          }
+                          return (
+                            <a
+                              key={idx}
+                              href={att.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:underline break-all"
+                            >
+                              {att.url}
+                            </a>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Assignments column */}
