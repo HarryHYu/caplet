@@ -177,6 +177,18 @@ class ApiService {
     return this.request(`/classes/${classId}`);
   }
 
+  async leaveClass(classId) {
+    return this.request(`/classes/${classId}/leave`, {
+      method: 'POST',
+    });
+  }
+
+  async deleteClass(classId) {
+    return this.request(`/classes/${classId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async createAssignment(classId, data) {
     return this.request(`/classes/${classId}/assignments`, {
       method: 'POST',
@@ -184,8 +196,20 @@ class ApiService {
     });
   }
 
+  async deleteAssignment(classId, assignmentId) {
+    return this.request(`/classes/${classId}/assignments/${assignmentId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async completeAssignment(assignmentId) {
     return this.request(`/classes/assignments/${assignmentId}/complete`, {
+      method: 'POST',
+    });
+  }
+
+  async uncompleteAssignment(assignmentId) {
+    return this.request(`/classes/assignments/${assignmentId}/uncomplete`, {
       method: 'POST',
     });
   }

@@ -54,6 +54,16 @@ const generateClassCode = async () => {
   return `CL${Date.now().toString(36).toUpperCase()}`;
 };
 
+const requireTeacherInClass = async (req, res, classroomId) => {
+  // Admin can do everything without being explicitly a member
+  if (req.user?.role === 'admin') return true;
+
+  const membership = await ClassMembership.findOne({
+    where: { classroomId, userId: req.user.id },
+  });
+  return !!membership && membership.role === 'teacher';
+};
+
 // Get all classes for current user (both teaching and enrolled)
 router.get('/', authenticateToken, async (req, res) => {
   try {
@@ -177,6 +187,72 @@ router.post(
     }
   }
 );
+
+// Leave a class (teachers or students)
+router.post('/:id/leave', authenticateToken, async (req, res) => {
+  try {
+    const classroom = await Classroom.findByPk(req.params.id);
+    if (!classroom) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    const membership = await ClassMembership.findOne({
+      where: { classroomId: classroom.id, userId: req.user.id },
+    });
+    if (!membership) {
+      return res.status(400).json({ message: 'You are not in this class' });
+    }
+
+    // If teacher is trying to leave and they're the last teacher, block unless they are the only member.
+    if (membership.role === 'teacher') {
+      const teacherCount = await ClassMembership.count({
+        where: { classroomId: classroom.id, role: 'teacher' },
+      });
+      const memberCount = await ClassMembership.count({
+        where: { classroomId: classroom.id },
+      });
+
+      if (teacherCount <= 1) {
+        if (memberCount <= 1) {
+          // Safe: leaving would make the class empty anyway; delete class.
+          await membership.destroy();
+          await classroom.destroy();
+          return res.json({ message: 'Left class and deleted empty class' });
+        }
+        return res
+          .status(400)
+          .json({ message: 'You are the last teacher. Delete the class instead.' });
+      }
+    }
+
+    await membership.destroy();
+    res.json({ message: 'Left class successfully' });
+  } catch (error) {
+    console.error('Leave class error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Delete a class (teacher in class or admin)
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const classroom = await Classroom.findByPk(req.params.id);
+    if (!classroom) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    const allowed = await requireTeacherInClass(req, res, classroom.id);
+    if (!allowed) {
+      return res.status(403).json({ message: 'Only teachers can delete this class' });
+    }
+
+    await classroom.destroy();
+    res.json({ message: 'Class deleted successfully' });
+  } catch (error) {
+    console.error('Delete class error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Get a single class with members and assignments
 router.get('/:id', authenticateToken, async (req, res) => {
@@ -336,6 +412,34 @@ router.post(
   }
 );
 
+// Delete assignment (teacher in class or admin)
+router.delete('/:classId/assignments/:assignmentId', authenticateToken, async (req, res) => {
+  try {
+    const { classId, assignmentId } = req.params;
+
+    const classroom = await Classroom.findByPk(classId);
+    if (!classroom) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    const allowed = await requireTeacherInClass(req, res, classroom.id);
+    if (!allowed) {
+      return res.status(403).json({ message: 'Only teachers can delete assignments' });
+    }
+
+    const assignment = await Assignment.findByPk(assignmentId);
+    if (!assignment || assignment.classroomId !== classroom.id) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    await assignment.destroy(); // cascades submissions
+    res.json({ message: 'Assignment deleted successfully' });
+  } catch (error) {
+    console.error('Delete assignment error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Mark assignment as completed (student)
 router.post('/assignments/:id/complete', authenticateToken, async (req, res) => {
   try {
@@ -379,6 +483,36 @@ router.post('/assignments/:id/complete', authenticateToken, async (req, res) => 
     });
   } catch (error) {
     console.error('Complete assignment error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Un-mark assignment as completed (undo)
+router.post('/assignments/:id/uncomplete', authenticateToken, async (req, res) => {
+  try {
+    const assignment = await Assignment.findByPk(req.params.id);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    // Ensure user is a member of the class
+    const membership = await ClassMembership.findOne({
+      where: { classroomId: assignment.classroomId, userId: req.user.id },
+    });
+    if (!membership) {
+      return res.status(403).json({ message: 'You are not a member of this class' });
+    }
+
+    await AssignmentSubmission.destroy({
+      where: {
+        assignmentId: assignment.id,
+        studentId: req.user.id,
+      },
+    });
+
+    res.json({ message: 'Assignment marked as not completed' });
+  } catch (error) {
+    console.error('Uncomplete assignment error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

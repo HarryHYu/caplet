@@ -162,6 +162,54 @@ const ClassDetail = () => {
     }
   };
 
+  const handleUncompleteAssignment = async (assignmentId) => {
+    try {
+      await api.uncompleteAssignment(assignmentId);
+      await load();
+    } catch (err) {
+      console.error('Uncomplete assignment error:', err);
+      setError(err.message || 'Failed to update assignment');
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId) => {
+    const ok = window.confirm('Delete this assignment? This cannot be undone.');
+    if (!ok) return;
+    try {
+      await api.deleteAssignment(classroom.id, assignmentId);
+      await load();
+    } catch (err) {
+      console.error('Delete assignment error:', err);
+      setError(err.message || 'Failed to delete assignment');
+    }
+  };
+
+  const handleLeaveClass = async () => {
+    const ok = window.confirm('Leave this class?');
+    if (!ok) return;
+    try {
+      await api.leaveClass(classroom.id);
+      navigate('/classes');
+    } catch (err) {
+      console.error('Leave class error:', err);
+      setError(err.message || 'Failed to leave class');
+    }
+  };
+
+  const handleDeleteClass = async () => {
+    const ok = window.confirm(
+      'Delete this class? This deletes the class, all assignments, and completion data.'
+    );
+    if (!ok) return;
+    try {
+      await api.deleteClass(classroom.id);
+      navigate('/classes');
+    } catch (err) {
+      console.error('Delete class error:', err);
+      setError(err.message || 'Failed to delete class');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -196,6 +244,24 @@ const ClassDetail = () => {
                 ({membership?.role === 'teacher' ? 'Teacher' : 'Student'})
               </span>
             </p>
+            <div className="mt-2 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleLeaveClass}
+                className="px-3 py-1.5 rounded-md text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                Leave class
+              </button>
+              {isTeacher && (
+                <button
+                  type="button"
+                  onClick={handleDeleteClass}
+                  className="px-3 py-1.5 rounded-md text-xs font-medium bg-red-600 text-white hover:bg-red-700"
+                >
+                  Delete class
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -278,6 +344,13 @@ const ClassDetail = () => {
                                 </span>
                               </span>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAssignment(a.id)}
+                              className="mt-1 px-3 py-1 rounded-md text-xs font-medium border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20"
+                            >
+                              Delete
+                            </button>
                           </>
                         ) : (
                           <span
@@ -296,6 +369,14 @@ const ClassDetail = () => {
                             className="mt-1 px-3 py-1 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-700"
                           >
                             Mark as done
+                          </button>
+                        )}
+                        {!isTeacher && isCompleted && (
+                          <button
+                            onClick={() => handleUncompleteAssignment(a.id)}
+                            className="mt-1 px-3 py-1 rounded-md text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            Undo
                           </button>
                         )}
                       </div>
@@ -364,7 +445,7 @@ const ClassDetail = () => {
         {isTeacher && showNewAssignment && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb  -4">
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   New assignment
                 </h2>
