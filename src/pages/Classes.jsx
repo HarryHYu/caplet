@@ -24,14 +24,10 @@ const Classes = () => {
       try {
         setLoading(true);
         const data = await api.getClasses();
-        setClasses({
-          teaching: Array.isArray(data?.teaching) ? data.teaching : [],
-          student: Array.isArray(data?.student) ? data.student : [],
-        });
+        setClasses(data);
       } catch (e) {
         console.error('Error loading classes:', e);
         setError(e.message || 'Failed to load classes');
-        setClasses({ teaching: [], student: [] });
       } finally {
         setLoading(false);
       }
@@ -64,10 +60,7 @@ const Classes = () => {
 
   const refreshClasses = async () => {
     const data = await api.getClasses();
-    setClasses({
-      teaching: Array.isArray(data?.teaching) ? data.teaching : [],
-      student: Array.isArray(data?.student) ? data.student : [],
-    });
+    setClasses(data);
   };
 
   const handleCreate = async (e) => {
