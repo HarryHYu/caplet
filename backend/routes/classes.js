@@ -9,7 +9,6 @@ const {
   AssignmentSubmission,
   Course,
   Lesson,
-  ClassAnnouncement,
 } = require('../models');
 
 const router = express.Router();
@@ -350,34 +349,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
       };
     });
 
-    const announcements = await ClassAnnouncement.findAll({
-      where: { classroomId: classroom.id },
-      include: [
-        {
-          model: User,
-          as: 'author',
-          attributes: ['id', 'firstName', 'lastName', 'email'],
-        },
-      ],
-      order: [['createdAt', 'DESC']],
-      limit: 50,
-    });
-
-    const announcementsDto = announcements.map((a) => ({
-      id: a.id,
-      content: a.content,
-      attachments: a.attachments || [],
-      createdAt: a.createdAt,
-      author: a.author
-        ? {
-            id: a.author.id,
-            firstName: a.author.firstName,
-            lastName: a.author.lastName,
-            email: a.author.email,
-          }
-        : null,
-    }));
-
     res.json({
       classroom: {
         id: classroom.id,
@@ -391,7 +362,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
       },
       members,
       assignments: assignmentsDto,
-      announcements: announcementsDto,
     });
   } catch (error) {
     console.error('Get class detail error:', error);
@@ -606,122 +576,6 @@ router.post('/lessons/:lessonId/complete', authenticateToken, async (req, res) =
     res.json({ updated });
   } catch (error) {
     console.error('Auto-complete lesson assignments error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// Announcements
-
-const classifyAttachment = (url) => {
-  if (!url) return null;
-  const lower = url.toLowerCase();
-  if (lower.match(/\.(png|jpe?g|gif|webp)$/)) return 'image';
-  if (
-    lower.includes('youtube.com/watch') ||
-    lower.includes('youtube.com/embed') ||
-    lower.includes('youtu.be/')
-  ) {
-    return 'video';
-  }
-  return 'link';
-};
-
-// Create announcement (any class member)
-router.post(
-  '/:id/announcements',
-  authenticateToken,
-  [body('content').trim().isLength({ min: 1 })],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const classroom = await Classroom.findByPk(req.params.id);
-      if (!classroom) {
-        return res.status(404).json({ message: 'Class not found' });
-      }
-
-      const membership = await ClassMembership.findOne({
-        where: { classroomId: classroom.id, userId: req.user.id },
-      });
-      if (!membership) {
-        return res.status(403).json({ message: 'You are not a member of this class' });
-      }
-
-      const { content, attachmentUrl } = req.body;
-      const attachments = [];
-      if (attachmentUrl && attachmentUrl.trim()) {
-        const type = classifyAttachment(attachmentUrl.trim());
-        attachments.push({ url: attachmentUrl.trim(), type });
-      }
-
-      const announcement = await ClassAnnouncement.create({
-        classroomId: classroom.id,
-        authorId: req.user.id,
-        content,
-        attachments,
-      });
-
-      const full = await ClassAnnouncement.findByPk(announcement.id, {
-        include: [
-          {
-            model: User,
-            as: 'author',
-            attributes: ['id', 'firstName', 'lastName', 'email'],
-          },
-        ],
-      });
-
-      res.status(201).json({
-        id: full.id,
-        content: full.content,
-        attachments: full.attachments || [],
-        createdAt: full.createdAt,
-        author: full.author
-          ? {
-              id: full.author.id,
-              firstName: full.author.firstName,
-              lastName: full.author.lastName,
-              email: full.author.email,
-            }
-          : null,
-      });
-    } catch (error) {
-      console.error('Create announcement error:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  }
-);
-
-// Delete announcement (author, teacher in class, or admin)
-router.delete('/:classId/announcements/:announcementId', authenticateToken, async (req, res) => {
-  try {
-    const { classId, announcementId } = req.params;
-
-    const classroom = await Classroom.findByPk(classId);
-    if (!classroom) {
-      return res.status(404).json({ message: 'Class not found' });
-    }
-
-    const announcement = await ClassAnnouncement.findByPk(announcementId);
-    if (!announcement || announcement.classroomId !== classroom.id) {
-      return res.status(404).json({ message: 'Announcement not found' });
-    }
-
-    // Author can delete their own, teachers/admin can delete any in that class
-    const isAuthor = announcement.authorId === req.user.id;
-    const isTeacherInClass = await requireTeacherInClass(req, res, classroom.id);
-
-    if (!isAuthor && !isTeacherInClass) {
-      return res.status(403).json({ message: 'Not allowed to delete this announcement' });
-    }
-
-    await announcement.destroy();
-    res.json({ message: 'Announcement deleted successfully' });
-  } catch (error) {
-    console.error('Delete announcement error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

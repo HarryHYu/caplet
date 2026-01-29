@@ -177,19 +177,6 @@ class ApiService {
     return this.request(`/classes/${classId}`);
   }
 
-  async createAnnouncement(classId, data) {
-    return this.request(`/classes/${classId}/announcements`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deleteAnnouncement(classId, announcementId) {
-    return this.request(`/classes/${classId}/announcements/${announcementId}`, {
-      method: 'DELETE',
-    });
-  }
-
   async leaveClass(classId) {
     return this.request(`/classes/${classId}/leave`, {
       method: 'POST',
