@@ -13,6 +13,24 @@
 }
 
 @layer components {
+  /* Lesson player: guaranteed non-blank background (not purged) */
+  .lesson-page-bg {
+    background-color: #f3f4f6;
+    min-height: 100vh;
+  }
+  .dark .lesson-page-bg {
+    background-color: #111827;
+  }
+  .lesson-slide-area {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+  }
+  .dark .lesson-slide-area {
+    background-color: rgba(55, 65, 81, 0.5);
+    border-color: #4b5563;
+  }
+
   .btn-primary {
     @apply bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }

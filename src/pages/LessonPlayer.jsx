@@ -324,7 +324,7 @@ const LessonPlayer = () => {
   const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="lesson-page-bg min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="container-custom py-6">
         <div className="mb-4 flex items-center justify-between">
           <Link to={`/courses/${course.id}`} className="text-blue-600 dark:text-blue-400">← {course.title}</Link>
@@ -363,7 +363,7 @@ const LessonPlayer = () => {
               {hasSlides ? (
                 <>
                   {/* Slide-based content (Khan/EP style) */}
-                  <div className="mb-6 min-h-[280px] p-4 rounded-lg bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 shadow-sm">
+                  <div className="lesson-slide-area mb-6 min-h-[280px] p-4 rounded-lg bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 shadow-sm">
                     {(() => {
                       const slide = slides[currentSlideIndex];
                       if (!slide) {
