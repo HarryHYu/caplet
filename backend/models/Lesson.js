@@ -7,13 +7,14 @@ const Lesson = sequelize.define('Lesson', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
-  courseId: {
+  moduleId: {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'courses',
+      model: 'modules',
       key: 'id'
-    }
+    },
+    onDelete: 'CASCADE'
   },
   title: {
     type: DataTypes.STRING,
@@ -70,6 +71,19 @@ const Lesson = sequelize.define('Lesson', {
     },
     set(value) {
       this.setDataValue('metadata', JSON.stringify(value));
+    }
+  },
+  // Slide-based content (Khan/EP style): [{ type: 'text'|'image'|'video', content: string, caption?: string }]
+  // When present, LessonPlayer shows one slide at a time; otherwise falls back to content blob
+  slides: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    get() {
+      const value = this.getDataValue('slides');
+      return value ? JSON.parse(value) : null;
+    },
+    set(value) {
+      this.setDataValue('slides', value ? JSON.stringify(value) : null);
     }
   }
 }, {

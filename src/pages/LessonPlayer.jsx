@@ -157,6 +157,15 @@ const Quiz = ({ questions, onComplete }) => {
   );
 };
 
+// Build flat ordered list of lessons from course.modules (course → modules → lessons)
+function getFlatLessons(course) {
+  if (!course?.modules) return [];
+  return (course.modules || [])
+    .slice()
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .flatMap((m) => (m.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
+}
+
 const LessonPlayer = () => {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
@@ -166,23 +175,35 @@ const LessonPlayer = () => {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   useEffect(() => {
     const load = async () => {
       try {
         setError(null);
         setLoading(true);
+        setCurrentSlideIndex(0);
         const data = await api.getCourse(courseId);
-        const sorted = ((data && data.lessons) || []).sort((a, b) => a.order - b.order);
-        const current = sorted.find(l => l.id === lessonId) || sorted[0];
+        const flatLessons = getFlatLessons(data);
+        const current = flatLessons.find(l => l.id === lessonId) || flatLessons[0];
         setCourse(data);
         setLesson(current);
-        // Best-effort progress update; do not block rendering
         if (current) {
           try {
             await api.updateLessonProgress(current.id, { status: 'in_progress' });
           } catch (e) {
             console.warn('Progress update failed (non-blocking):', e?.message || e);
+          }
+          if (Array.isArray(current.slides) && current.slides.length > 0) {
+            try {
+              const prog = await api.getCourseProgress(courseId);
+              const lp = prog?.lessonProgress?.find((p) => p.lessonId === current.id);
+              if (lp && typeof lp.lastSlideIndex === 'number') {
+                setCurrentSlideIndex(Math.min(lp.lastSlideIndex, current.slides.length - 1));
+              }
+            } catch {
+              // ignore
+            }
           }
         }
       } catch (e) {
@@ -195,9 +216,9 @@ const LessonPlayer = () => {
   }, [courseId, lessonId]);
 
   const goTo = (delta) => {
-    const sorted = (course?.lessons || []).sort((a, b) => a.order - b.order);
-    const idx = sorted.findIndex(l => l.id === lesson?.id);
-    const next = sorted[idx + delta];
+    const flat = getFlatLessons(course);
+    const idx = flat.findIndex(l => l.id === lesson?.id);
+    const next = flat[idx + delta];
     if (next) navigate(`/courses/${course.id}/lessons/${next.id}`);
   };
 
@@ -205,17 +226,15 @@ const LessonPlayer = () => {
     try {
       setSaving(true);
       await api.updateLessonProgress(lesson.id, { status: 'completed' });
-      // Best-effort: auto-complete any class assignments linked to this lesson
       try {
         await api.completeLessonAssignments(lesson.id);
       } catch (e) {
         console.warn('Class assignment auto-complete failed (non-blocking):', e?.message || e);
       }
       setCompleted(true);
-      // If not last lesson, advance
-      const sorted = (course?.lessons || []).sort((a, b) => a.order - b.order);
-      const idxNow = sorted.findIndex(l => l.id === lesson.id);
-      if (idxNow < sorted.length - 1) {
+      const flat = getFlatLessons(course);
+      const idxNow = flat.findIndex(l => l.id === lesson.id);
+      if (idxNow < flat.length - 1) {
         goTo(1);
       }
     } catch (e) {
@@ -223,6 +242,15 @@ const LessonPlayer = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const slides = Array.isArray(lesson.slides) ? lesson.slides : [];
+  const hasSlides = slides.length > 0;
+
+  const goToSlide = (newIndex) => {
+    if (newIndex < 0 || newIndex >= slides.length) return;
+    setCurrentSlideIndex(newIndex);
+    api.updateLessonProgress(lesson.id, { lastSlideIndex: newIndex }).catch(() => {});
   };
 
   if (loading) {
@@ -247,32 +275,41 @@ const LessonPlayer = () => {
     );
   }
 
-  const sortedLessons = (course.lessons || []).sort((a, b) => a.order - b.order);
-  const idx = sortedLessons.findIndex(l => l.id === lesson.id);
+  const flatLessons = getFlatLessons(course);
+  const idx = flatLessons.findIndex(l => l.id === lesson.id);
+
+  const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container-custom py-6">
         <div className="mb-4 flex items-center justify-between">
           <Link to={`/courses/${course.id}`} className="text-blue-600 dark:text-blue-400">← {course.title}</Link>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Lesson {lesson.order} of {sortedLessons.length}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Lesson {idx + 1} of {flatLessons.length}</div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <aside className="lg:col-span-4 bg-white dark:bg-gray-800 rounded-lg shadow p-4 h-max">
-            <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Lessons</h3>
-            <ul className="space-y-2">
-              {sortedLessons.map(l => (
-                <li key={l.id}>
-                  <Link
-                    to={`/courses/${course.id}/lessons/${l.id}`}
-                    className={`block px-3 py-2 rounded ${l.id === lesson.id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-300'}`}
-                  >
-                    {l.order}. {l.title}
-                  </Link>
-                </li>
+            <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Modules & lessons</h3>
+            <div className="space-y-4">
+              {sortedModules.map((mod) => (
+                <div key={mod.id}>
+                  <p className="font-medium text-gray-800 dark:text-gray-200 mb-2">{mod.title}</p>
+                  <ul className="space-y-1 pl-2">
+                    {(mod.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((l) => (
+                      <li key={l.id}>
+                        <Link
+                          to={`/courses/${course.id}/lessons/${l.id}`}
+                          className={`block px-3 py-2 rounded text-sm ${l.id === lesson.id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-300'}`}
+                        >
+                          {l.order}. {l.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </aside>
 
           <main className="lg:col-span-8">
@@ -280,61 +317,137 @@ const LessonPlayer = () => {
               <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{lesson.title}</h1>
               <p className="text-gray-600 dark:text-gray-300 mb-6">{lesson.description}</p>
 
-              {/* YouTube Video Embed */}
-              {lesson.videoUrl && getYouTubeId(lesson.videoUrl) && (
-                <div className="mb-6 relative" style={{ paddingBottom: '56.25%', height: 0 }}>
-                  <iframe
-                    className="absolute top-0 left-0 w-full h-full rounded-lg"
-                    src={`https://www.youtube.com/embed/${getYouTubeId(lesson.videoUrl)}`}
-                    title={lesson.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              )}
+              {hasSlides ? (
+                <>
+                  {/* Slide-based content (Khan/EP style) */}
+                  <div className="mb-6 min-h-[200px]">
+                    {(() => {
+                      const slide = slides[currentSlideIndex];
+                      if (!slide) return null;
+                      if (slide.type === 'text') {
+                        return (
+                          <article className="prose prose-lg dark:prose-invert max-w-none">
+                            <ReactMarkdown
+                              components={{
+                                h1: ({ ...props }) => <h1 className="text-2xl font-bold mt-4 mb-3 text-gray-900 dark:text-white" {...props} />,
+                                h2: ({ ...props }) => <h2 className="text-xl font-bold mt-4 mb-2 text-gray-900 dark:text-white" {...props} />,
+                                p: ({ ...props }) => <p className="mb-3 leading-relaxed text-gray-700 dark:text-gray-300" {...props} />,
+                                ul: ({ ...props }) => <ul className="list-disc list-inside mb-3 space-y-1 text-gray-700 dark:text-gray-300" {...props} />,
+                                li: ({ ...props }) => <li className="ml-2" {...props} />,
+                                strong: ({ ...props }) => <strong className="font-bold text-gray-900 dark:text-white" {...props} />,
+                              }}
+                            >
+                              {slide.content || ''}
+                            </ReactMarkdown>
+                            {slide.caption && <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{slide.caption}</p>}
+                          </article>
+                        );
+                      }
+                      if (slide.type === 'image' && slide.content) {
+                        return (
+                          <div>
+                            <img src={slide.content} alt={slide.caption || ''} className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-600" onError={(e) => { e.target.style.display = 'none'; }} />
+                            {slide.caption && <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{slide.caption}</p>}
+                          </div>
+                        );
+                      }
+                      if (slide.type === 'video' && slide.content) {
+                        const videoId = getYouTubeId(slide.content);
+                        if (videoId) {
+                          return (
+                            <div className="relative pt-[56.25%] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 bg-black">
+                              <iframe
+                                src={`https://www.youtube.com/embed/${videoId}`}
+                                title={slide.caption || 'Video'}
+                                className="absolute inset-0 w-full h-full"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                              {slide.caption && <p className="text-sm text-gray-400 p-2 bg-black/60 absolute bottom-0 left-0 right-0">{slide.caption}</p>}
+                            </div>
+                          );
+                        }
+                        return <a href={slide.content} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400">Watch video</a>;
+                      }
+                      return null;
+                    })()}
+                  </div>
 
-              {/* Lesson Content with Enhanced Markdown Styling */}
-              <article className="prose prose-lg dark:prose-invert max-w-none mb-6">
-                <ReactMarkdown
-                  components={{
-                    h1: ({ ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4 text-gray-900 dark:text-white" {...props} />,
-                    h2: ({ ...props }) => <h2 className="text-2xl font-bold mt-6 mb-3 text-gray-900 dark:text-white" {...props} />,
-                    h3: ({ ...props }) => <h3 className="text-xl font-semibold mt-4 mb-2 text-gray-900 dark:text-white" {...props} />,
-                    p: ({ ...props }) => <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300" {...props} />,
-                    ul: ({ ...props }) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props} />,
-                    ol: ({ ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props} />,
-                    li: ({ ...props }) => <li className="ml-4" {...props} />,
-                    strong: ({ ...props }) => <strong className="font-bold text-gray-900 dark:text-white" {...props} />,
-                    code: ({ inline, ...props }) => 
-                      inline 
-                        ? <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm font-mono text-gray-900 dark:text-gray-100" {...props} />
-                        : <code className="block bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-sm font-mono overflow-x-auto text-gray-900 dark:text-gray-100" {...props} />,
-                    blockquote: ({ ...props }) => <blockquote className="border-l-4 border-blue-500 dark:border-blue-400 pl-4 italic my-4 text-gray-700 dark:text-gray-300" {...props} />,
-                    hr: ({ ...props }) => <hr className="my-8 border-gray-300 dark:border-gray-700" {...props} />,
-                  }}
-                >
-                  {lesson.content || 'No content yet.'}
-                </ReactMarkdown>
-              </article>
+                  <div className="flex items-center justify-between gap-4 mt-4">
+                    <button type="button" onClick={() => goToSlide(currentSlideIndex - 1)} disabled={currentSlideIndex <= 0} className="btn-secondary disabled:opacity-50">← Prev slide</button>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Slide {currentSlideIndex + 1} of {slides.length}</span>
+                    <button type="button" onClick={() => goToSlide(currentSlideIndex + 1)} disabled={currentSlideIndex >= slides.length - 1} className="btn-secondary disabled:opacity-50">Next slide →</button>
+                  </div>
 
-              {/* Quiz Section */}
-              {lesson.metadata?.hasQuiz && lesson.metadata?.quizQuestions && (
-                <Quiz 
-                  questions={lesson.metadata.quizQuestions} 
-                  onComplete={markComplete}
-                />
-              )}
-
-              {/* Navigation - Only show Mark Complete if no quiz */}
-              {!lesson.metadata?.hasQuiz && (
-                <div className="mt-6 flex items-center justify-between">
-                  <button onClick={() => goTo(-1)} disabled={idx <= 0} className="btn-secondary disabled:opacity-50">Prev</button>
-                  <button onClick={markComplete} disabled={saving || completed} className="btn-primary disabled:opacity-50">
-                    {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
-                  </button>
-                  <button onClick={() => goTo(1)} disabled={idx >= sortedLessons.length - 1} className="btn-secondary disabled:opacity-50">Next</button>
-                </div>
+                  {/* Quiz or Mark complete after last slide */}
+                  {currentSlideIndex === slides.length - 1 && (
+                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                      {lesson.metadata?.hasQuiz && lesson.metadata?.quizQuestions && (
+                        <Quiz questions={lesson.metadata.quizQuestions} onComplete={markComplete} />
+                      )}
+                      {(!lesson.metadata?.hasQuiz || !lesson.metadata?.quizQuestions?.length) && (
+                        <div className="flex justify-between items-center">
+                          <button type="button" onClick={() => goToSlide(currentSlideIndex - 1)} disabled={currentSlideIndex <= 0} className="btn-secondary">← Prev slide</button>
+                          <button type="button" onClick={markComplete} disabled={saving || completed} className="btn-primary">
+                            {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
+                          </button>
+                          <span />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Legacy: single content blob + optional video */}
+                  {lesson.videoUrl && getYouTubeId(lesson.videoUrl) && (
+                    <div className="mb-6 relative" style={{ paddingBottom: '56.25%', height: 0 }}>
+                      <iframe
+                        className="absolute top-0 left-0 w-full h-full rounded-lg"
+                        src={`https://www.youtube.com/embed/${getYouTubeId(lesson.videoUrl)}`}
+                        title={lesson.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+                  <article className="prose prose-lg dark:prose-invert max-w-none mb-6">
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4 text-gray-900 dark:text-white" {...props} />,
+                        h2: ({ ...props }) => <h2 className="text-2xl font-bold mt-6 mb-3 text-gray-900 dark:text-white" {...props} />,
+                        h3: ({ ...props }) => <h3 className="text-xl font-semibold mt-4 mb-2 text-gray-900 dark:text-white" {...props} />,
+                        p: ({ ...props }) => <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300" {...props} />,
+                        ul: ({ ...props }) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props} />,
+                        ol: ({ ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props} />,
+                        li: ({ ...props }) => <li className="ml-4" {...props} />,
+                        strong: ({ ...props }) => <strong className="font-bold text-gray-900 dark:text-white" {...props} />,
+                        code: ({ inline, ...props }) =>
+                          inline
+                            ? <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm font-mono text-gray-900 dark:text-gray-100" {...props} />
+                            : <code className="block bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-sm font-mono overflow-x-auto text-gray-900 dark:text-gray-100" {...props} />,
+                        blockquote: ({ ...props }) => <blockquote className="border-l-4 border-blue-500 dark:border-blue-400 pl-4 italic my-4 text-gray-700 dark:text-gray-300" {...props} />,
+                        hr: ({ ...props }) => <hr className="my-8 border-gray-300 dark:border-gray-700" {...props} />,
+                      }}
+                    >
+                      {lesson.content || 'No content yet.'}
+                    </ReactMarkdown>
+                  </article>
+                  {lesson.metadata?.hasQuiz && lesson.metadata?.quizQuestions && (
+                    <Quiz questions={lesson.metadata.quizQuestions} onComplete={markComplete} />
+                  )}
+                  {!lesson.metadata?.hasQuiz && (
+                    <div className="mt-6 flex items-center justify-between">
+                      <button type="button" onClick={() => goTo(-1)} disabled={idx <= 0} className="btn-secondary disabled:opacity-50">Prev</button>
+                      <button type="button" onClick={markComplete} disabled={saving || completed} className="btn-primary disabled:opacity-50">
+                        {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
+                      </button>
+                      <button type="button" onClick={() => goTo(1)} disabled={idx >= sortedLessons.length - 1} className="btn-secondary disabled:opacity-50">Next</button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </main>

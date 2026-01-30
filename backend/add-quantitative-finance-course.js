@@ -12,6 +12,7 @@ process.env.NODE_ENV = 'production';
 
 const { sequelize } = require('./config/database');
 const Course = require('./models/Course');
+const Module = require('./models/Module');
 const Lesson = require('./models/Lesson');
 
 const addQuantitativeFinanceCourse = async () => {
@@ -25,10 +26,8 @@ const addQuantitativeFinanceCourse = async () => {
     
     if (existingCourses.length > 1) {
       console.log(`Found ${existingCourses.length} duplicate course(s). Removing...`);
-      // Keep the first one, delete the rest
       for (let i = 1; i < existingCourses.length; i++) {
-        await Lesson.destroy({ where: { courseId: existingCourses[i].id } });
-        await existingCourses[i].destroy();
+        await existingCourses[i].destroy(); // cascades to modules & lessons
       }
       console.log('✅ Removed duplicate course entries');
     }
@@ -40,8 +39,7 @@ const addQuantitativeFinanceCourse = async () => {
 
     if (course) {
       console.log('Course already exists, updating...');
-      // Delete existing lessons
-      await Lesson.destroy({ where: { courseId: course.id } });
+      await Module.destroy({ where: { courseId: course.id } }); // cascades to lessons
       console.log(`✅ Using existing course: ${course.title}`);
     } else {
       // Create the Quantitative Finance course
@@ -60,9 +58,17 @@ const addQuantitativeFinanceCourse = async () => {
       console.log(`✅ Created course: ${course.title}`);
     }
 
+    const mod = await Module.create({
+      courseId: course.id,
+      title: 'Content',
+      description: null,
+      order: 0,
+      isPublished: true
+    });
+
     // Create Module 1 lesson with video and quiz
     const lesson = await Lesson.create({
-      courseId: course.id,
+      moduleId: mod.id,
       title: 'Module 1: Local–Stochastic Volatility (LSV) Models',
       description: 'Understand the intuition behind LSV models, why banks use them for exotic derivatives, and how they merge two fundamentally different volatility frameworks into one unified system.',
       content: `# Module 1: Local–Stochastic Volatility (LSV) Models

@@ -70,6 +70,12 @@ const UserProgress = sequelize.define('UserProgress', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  lastSlideIndex: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+    comment: 'For slide-based lessons: last viewed slide index (0-based)'
+  },
   bookmarks: {
     type: DataTypes.TEXT,
     defaultValue: '[]',

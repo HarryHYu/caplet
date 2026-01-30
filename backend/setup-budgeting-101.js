@@ -1,15 +1,14 @@
 // Script to delete all courses/lessons and create Budgeting 101 course
-const { Course, Lesson } = require('./models');
+const { Course, Module, Lesson } = require('./models');
 require('dotenv').config();
 
 const setupBudgeting101 = async () => {
   try {
     console.log('Setting up Budgeting 101 course...');
-    
-    // Delete ALL courses and their lessons first
-    console.log('Deleting all existing courses and lessons...');
-    await Lesson.destroy({ where: {}, truncate: true });
-    await Course.destroy({ where: {}, truncate: true });
+
+    // Delete ALL courses (cascades to modules and lessons)
+    console.log('Deleting all existing courses, modules, and lessons...');
+    await Course.destroy({ where: {} });
     console.log('✅ All courses and lessons deleted');
 
     // Create the Budgeting 101 course
@@ -28,9 +27,17 @@ const setupBudgeting101 = async () => {
 
     console.log(`✅ Created course: ${course.title}`);
 
+    const mod = await Module.create({
+      courseId: course.id,
+      title: 'Content',
+      description: null,
+      order: 0,
+      isPublished: true
+    });
+
     // Create Module 1 lesson with video and quiz
     const lesson = await Lesson.create({
-      courseId: course.id,
+      moduleId: mod.id,
       title: 'Module 1: What is a budget?',
       description: 'Grasp the basic idea of what a budget is and how it fits into everyday decisions.',
       content: `# Module 1: What is a budget?

@@ -208,7 +208,7 @@ const Courses = () => {
 
                   <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
                     <span>⏱️ {course.duration} min</span>
-                    <span>📚 {course.lessons?.length || 0} lessons</span>
+                    <span>📚 {(course.modules || []).reduce((sum, m) => sum + (m.lessons || []).length, 0)} lessons</span>
                   </div>
 
                   {/* Progress Bar */}

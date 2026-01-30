@@ -10,6 +10,7 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
 const { sequelize } = require('./config/database');
 const Course = require('./models/Course');
+const Module = require('./models/Module');
 const Lesson = require('./models/Lesson');
 
 const addInvestmentCourse = async () => {
@@ -28,15 +29,13 @@ const addInvestmentCourse = async () => {
       const duplicateCourses = existingCourses.slice(1);
       const duplicateIds = duplicateCourses.map(c => c.id);
       console.log(`Found ${duplicateCourses.length} duplicate course(s). Removing...`);
-      await Lesson.destroy({ where: { courseId: duplicateIds } });
-      await Course.destroy({ where: { id: duplicateIds } });
+      await Course.destroy({ where: { id: duplicateIds } }); // cascades to modules & lessons
       console.log('✅ Removed duplicate course entries');
     }
 
     if (course) {
       console.log('Course already exists, updating...');
-      // Delete existing lessons
-      await Lesson.destroy({ where: { courseId: course.id } });
+      await Module.destroy({ where: { courseId: course.id } }); // cascades to lessons
       console.log(`✅ Using existing course: ${course.title}`);
     } else {
       // Create the Basics of Investment course
@@ -55,9 +54,17 @@ const addInvestmentCourse = async () => {
       console.log(`✅ Created course: ${course.title}`);
     }
 
+    const mod = await Module.create({
+      courseId: course.id,
+      title: 'Content',
+      description: null,
+      order: 0,
+      isPublished: true
+    });
+
     // Create Module 1 lesson with video and quiz
     const lesson = await Lesson.create({
-      courseId: course.id,
+      moduleId: mod.id,
       title: 'Module 1: Introduction to the Stock Market',
       description: 'Understand what the stock market is, why it exists, and how investors use it to grow wealth.',
       content: `# Module 1: Introduction to the Stock Market

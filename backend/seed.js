@@ -1,4 +1,4 @@
-const { Course, Lesson, User } = require('./models');
+const { Course, Module, Lesson, User } = require('./models');
 
 const seedDatabase = async () => {
   try {
@@ -67,10 +67,23 @@ const seedDatabase = async () => {
       console.log(`✅ Created course: ${course.title}`);
     }
 
+    // Create one default module per course (Course → Module → Lesson)
+    const defaultModules = [];
+    for (let i = 0; i < createdCourses.length; i++) {
+      const mod = await Module.create({
+        courseId: createdCourses[i].id,
+        title: 'Content',
+        description: null,
+        order: 0,
+        isPublished: true
+      });
+      defaultModules.push(mod);
+    }
+
     // Create sample lessons for the first course
     const budgetingLessons = [
       {
-        courseId: createdCourses[0].id,
+        moduleId: defaultModules[0].id,
         title: 'Introduction to Budgeting',
         description: 'What is budgeting and why is it important?',
         content: 'Budgeting is the process of creating a plan to spend your money. It helps you understand where your money goes and ensures you have enough for the things that matter most.',
@@ -80,7 +93,7 @@ const seedDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[0].id,
+        moduleId: defaultModules[0].id,
         title: 'Tracking Your Expenses',
         description: 'Learn how to track your daily expenses effectively.',
         content: 'Tracking expenses is the foundation of good budgeting. We\'ll show you different methods and tools to keep track of where your money goes.',
@@ -90,7 +103,7 @@ const seedDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[0].id,
+        moduleId: defaultModules[0].id,
         title: 'Creating Your First Budget',
         description: 'Step-by-step guide to creating a personal budget.',
         content: 'Now that you understand your expenses, let\'s create a budget that works for your lifestyle and financial goals.',
@@ -100,7 +113,7 @@ const seedDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[0].id,
+        moduleId: defaultModules[0].id,
         title: 'Budgeting Quiz',
         description: 'Test your understanding of budgeting concepts.',
         content: 'Answer these questions to test your knowledge of budgeting fundamentals.',
@@ -120,7 +133,7 @@ const seedDatabase = async () => {
     // Create sample lessons for superannuation course
     const superLessons = [
       {
-        courseId: createdCourses[1].id,
+        moduleId: defaultModules[1].id,
         title: 'What is Superannuation?',
         description: 'Understanding the basics of Australian superannuation.',
         content: 'Superannuation is Australia\'s retirement savings system. Learn how it works and why it\'s important for your future.',
@@ -130,7 +143,7 @@ const seedDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[1].id,
+        moduleId: defaultModules[1].id,
         title: 'Superannuation Contributions',
         description: 'Learn about different types of super contributions.',
         content: 'There are several ways to contribute to your super. Understand the different types and their benefits.',

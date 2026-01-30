@@ -32,7 +32,9 @@ const Course = sequelize.define('Course', {
       'tax',
       'loans',
       'investment',
-      'planning'
+      'planning',
+      'corporate-finance',
+      'other'
     ),
     allowNull: false
   },

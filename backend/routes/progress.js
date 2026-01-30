@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const UserProgress = require('../models/UserProgress');
 const Course = require('../models/Course');
+const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
 const User = require('../models/User');
 
@@ -38,7 +39,8 @@ const authenticateToken = async (req, res, next) => {
 router.put('/lesson/:lessonId', authenticateToken, [
   body('status').optional().isIn(['not_started', 'in_progress', 'completed']),
   body('timeSpent').optional().isInt({ min: 0 }),
-  body('notes').optional().isString()
+  body('notes').optional().isString(),
+  body('lastSlideIndex').optional().isInt({ min: 0 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -47,19 +49,22 @@ router.put('/lesson/:lessonId', authenticateToken, [
     }
 
     const { lessonId } = req.params;
-    const { status, timeSpent, notes } = req.body;
+    const { status, timeSpent, notes, lastSlideIndex } = req.body;
 
-    // Get the lesson to find its course
-    const lesson = await Lesson.findByPk(lessonId);
-    if (!lesson) {
+    // Get the lesson and its module to find courseId
+    const lesson = await Lesson.findByPk(lessonId, {
+      include: [{ model: Module, as: 'module', attributes: ['courseId'] }]
+    });
+    if (!lesson || !lesson.module) {
       return res.status(404).json({ message: 'Lesson not found' });
     }
+    const courseId = lesson.module.courseId;
 
     // Find or create progress record
     let progress = await UserProgress.findOne({
       where: { 
         userId: req.user.id, 
-        courseId: lesson.courseId,
+        courseId,
         lessonId: lessonId
       }
     });
@@ -67,7 +72,7 @@ router.put('/lesson/:lessonId', authenticateToken, [
     if (!progress) {
       progress = await UserProgress.create({
         userId: req.user.id,
-        courseId: lesson.courseId,
+        courseId,
         lessonId: lessonId,
         status: 'not_started'
       });
@@ -78,7 +83,8 @@ router.put('/lesson/:lessonId', authenticateToken, [
     if (status) updateData.status = status;
     if (timeSpent !== undefined) updateData.timeSpent = timeSpent;
     if (notes !== undefined) updateData.notes = notes;
-    
+    if (lastSlideIndex !== undefined) updateData.lastSlideIndex = lastSlideIndex;
+
     if (status === 'completed') {
       updateData.completedAt = new Date();
     }
@@ -149,10 +155,14 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
       ]
     });
 
-    // Calculate overall course progress
-    const totalLessons = await Lesson.count({
-      where: { courseId, isPublished: true }
-    });
+    // Calculate overall course progress (lessons via modules)
+    const modules = await Module.findAll({ where: { courseId }, attributes: ['id'] });
+    const moduleIds = modules.map((m) => m.id);
+    const totalLessons = moduleIds.length
+      ? await Lesson.count({
+          where: { moduleId: moduleIds, isPublished: true }
+        })
+      : 0;
 
     const completedLessons = progress.filter(p => p.lessonId && p.status === 'completed').length;
     const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
@@ -203,17 +213,20 @@ router.post('/bookmark/:lessonId', authenticateToken, async (req, res) => {
   try {
     const { lessonId } = req.params;
 
-    // Get the lesson to find its course
-    const lesson = await Lesson.findByPk(lessonId);
-    if (!lesson) {
+    // Get the lesson and its module to find courseId
+    const lesson = await Lesson.findByPk(lessonId, {
+      include: [{ model: Module, as: 'module', attributes: ['courseId'] }]
+    });
+    if (!lesson || !lesson.module) {
       return res.status(404).json({ message: 'Lesson not found' });
     }
+    const courseId = lesson.module.courseId;
 
     // Find or create progress record
     let progress = await UserProgress.findOne({
       where: { 
         userId: req.user.id, 
-        courseId: lesson.courseId,
+        courseId,
         lessonId: lessonId
       }
     });
@@ -221,7 +234,7 @@ router.post('/bookmark/:lessonId', authenticateToken, async (req, res) => {
     if (!progress) {
       progress = await UserProgress.create({
         userId: req.user.id,
-        courseId: lesson.courseId,
+        courseId,
         lessonId: lessonId,
         status: 'not_started'
       });

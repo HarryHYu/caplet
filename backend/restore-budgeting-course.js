@@ -1,15 +1,14 @@
 // Script to restore Budgeting 101 course with actual content
-const { Course, Lesson } = require('./models');
+const { Course, Module, Lesson } = require('./models');
 require('dotenv').config();
 
 const restoreBudgetingCourse = async () => {
   try {
     console.log('Restoring Budgeting course with Budgeting 101 lesson...');
-    
-    // Delete ALL courses and their lessons first
+
+    // Delete ALL courses (cascades to modules and lessons)
     console.log('Deleting all existing courses and lessons...');
-    await Lesson.destroy({ where: {}, truncate: true });
-    await Course.destroy({ where: {}, truncate: true });
+    await Course.destroy({ where: {} });
     console.log('✅ All courses and lessons deleted');
 
     // Create the Budgeting course
@@ -28,9 +27,17 @@ const restoreBudgetingCourse = async () => {
 
     console.log(`✅ Created course: ${course.title}`);
 
+    const mod = await Module.create({
+      courseId: course.id,
+      title: 'Content',
+      description: null,
+      order: 0,
+      isPublished: true
+    });
+
     // Create the Budgeting 101 lesson with YouTube video and quiz
     const lesson = await Lesson.create({
-      courseId: course.id,
+      moduleId: mod.id,
       title: 'Budgeting 101',
       description: 'Learn the basics of budgeting with interactive content and a quiz.',
       content: `# Introduction to Budgeting

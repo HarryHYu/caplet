@@ -1,6 +1,7 @@
 const express = require('express');
 const User = require('../models/User');
 const Course = require('../models/Course');
+const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
 const UserProgress = require('../models/UserProgress');
 
@@ -144,11 +145,18 @@ router.post('/bootstrap', async (req, res) => {
       createdCourses.push(course);
     }
 
-    // Create 3 simple reading lessons per course
+    // Create a default module and 3 simple lessons per course
     for (const course of createdCourses) {
+      const mod = await Module.create({
+        courseId: course.id,
+        title: 'Content',
+        description: null,
+        order: 0,
+        isPublished: true
+      });
       const lessons = [
         {
-          courseId: course.id,
+          moduleId: mod.id,
           title: `${course.title}: Introduction`,
           description: 'Overview and key concepts.',
           content: `# ${course.title}\n\nWelcome to this course. This is a placeholder article.`,
@@ -158,7 +166,7 @@ router.post('/bootstrap', async (req, res) => {
           isPublished: true
         },
         {
-          courseId: course.id,
+          moduleId: mod.id,
           title: `${course.title}: Core Ideas`,
           description: 'Main content explained in simple terms.',
           content: 'Detailed Markdown content goes here. Replace with your material.',
@@ -168,7 +176,7 @@ router.post('/bootstrap', async (req, res) => {
           isPublished: true
         },
         {
-          courseId: course.id,
+          moduleId: mod.id,
           title: `${course.title}: Practical Steps`,
           description: 'Actionable steps and a short recap.',
           content: 'Checklist and summary. Add images or links as needed.',
@@ -315,12 +323,23 @@ router.delete('/courses/:id', authenticateToken, requireAdmin, async (req, res) 
   }
 });
 
-// Admin: create lesson
+// Admin: create lesson (uses default module "Content" for the course)
 router.post('/courses/:courseId/lessons', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.courseId);
     if (!course) return res.status(404).json({ message: 'Course not found' });
-    const lesson = await Lesson.create({ ...req.body, courseId: course.id });
+    let mod = await Module.findOne({ where: { courseId: course.id, title: 'Content' } });
+    if (!mod) {
+      mod = await Module.create({
+        courseId: course.id,
+        title: 'Content',
+        description: null,
+        order: 0,
+        isPublished: true
+      });
+    }
+    const { courseId: _drop, ...body } = req.body;
+    const lesson = await Lesson.create({ ...body, moduleId: mod.id });
     res.status(201).json({ lesson });
   } catch (e) {
     console.error('Admin create lesson error:', e);

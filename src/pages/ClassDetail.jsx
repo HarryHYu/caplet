@@ -47,12 +47,14 @@ const ClassDetail = () => {
           const courseList = coursesRes.courses || coursesRes || [];
           const lessons = [];
           courseList.forEach((c) => {
-            (c.lessons || []).forEach((l) => {
-              lessons.push({
-                id: l.id,
-                title: l.title,
-                courseId: c.id,
-                courseTitle: c.title,
+            (c.modules || []).forEach((m) => {
+              (m.lessons || []).forEach((l) => {
+                lessons.push({
+                  id: l.id,
+                  title: l.title,
+                  courseId: c.id,
+                  courseTitle: c.title,
+                });
               });
             });
           });

@@ -54,8 +54,14 @@ const CourseDetail = () => {
     );
   }
 
+  const flatLessons = (course.modules || [])
+    .slice()
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .flatMap((m) => (m.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
+  const totalLessonCount = flatLessons.length;
+
   const startLesson = () => {
-    const first = (course.lessons || []).sort((a, b) => a.order - b.order)[0];
+    const first = flatLessons[0];
     if (first) navigate(`/courses/${course.id}/lessons/${first.id}`);
   };
 
@@ -73,7 +79,7 @@ const CourseDetail = () => {
               <p className="text-gray-700 dark:text-gray-300 mb-4">{course.description}</p>
               <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
                 <span>⏱️ {course.duration} min</span>
-                <span>📚 {(course.lessons || []).length} lessons</span>
+                <span>📚 {totalLessonCount} lessons</span>
                 <span className="capitalize">Level: {course.level}</span>
               </div>
               {progress?.courseProgress && (
@@ -96,26 +102,37 @@ const CourseDetail = () => {
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="border-b dark:border-gray-700 px-6 py-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Lessons</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Modules & lessons</h2>
           </div>
-          <ul className="divide-y dark:divide-gray-700">
-            {(course.lessons || [])
-              .sort((a, b) => a.order - b.order)
-              .map((lesson) => (
-                <li key={lesson.id} className="px-6 py-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{lesson.order}. {lesson.title}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {lesson.description}
-                      {progress?.lessonProgress?.some(p => p.lessonId === lesson.id && p.status === 'completed') && (
-                        <span className="ml-2 text-green-600 dark:text-green-400">✓ Completed</span>
-                      )}
-                    </p>
-                  </div>
-                  <Link to={`/courses/${course.id}/lessons/${lesson.id}`} className="text-blue-600 dark:text-blue-400">Open</Link>
-                </li>
+          <div className="divide-y dark:divide-gray-700">
+            {(course.modules || [])
+              .slice()
+              .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+              .map((mod) => (
+                <div key={mod.id} className="px-6 py-4">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">{mod.title}</h3>
+                  <ul className="space-y-2">
+                    {(mod.lessons || [])
+                      .slice()
+                      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                      .map((lesson) => (
+                        <li key={lesson.id} className="flex items-center justify-between pl-2">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">{lesson.order}. {lesson.title}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              {lesson.description}
+                              {progress?.lessonProgress?.some(p => p.lessonId === lesson.id && p.status === 'completed') && (
+                                <span className="ml-2 text-green-600 dark:text-green-400">✓ Completed</span>
+                              )}
+                            </p>
+                          </div>
+                          <Link to={`/courses/${course.id}/lessons/${lesson.id}`} className="text-blue-600 dark:text-blue-400">Open</Link>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
               ))}
-          </ul>
+          </div>
         </div>
       </div>
     </div>

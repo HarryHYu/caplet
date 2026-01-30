@@ -1,4 +1,4 @@
-const { Course, Lesson, User } = require('./models');
+const { Course, Module, Lesson, User } = require('./models');
 
 const seedProductionDatabase = async () => {
   try {
@@ -131,11 +131,24 @@ const seedProductionDatabase = async () => {
       console.log(`✅ Created course: ${course.title}`);
     }
 
-    // Create detailed lessons for each course
+    // Create one default module per course (Course → Module → Lesson)
+    const defaultModules = [];
+    for (let i = 0; i < createdCourses.length; i++) {
+      const mod = await Module.create({
+        courseId: createdCourses[i].id,
+        title: 'Content',
+        description: null,
+        order: 0,
+        isPublished: true
+      });
+      defaultModules.push(mod);
+    }
+
+    // Create detailed lessons for each course (use moduleId)
     const allLessons = [
       // Budgeting course lessons
       {
-        courseId: createdCourses[0].id,
+        moduleId: defaultModules[0].id,
         title: 'Introduction to Budgeting',
         description: 'What is budgeting and why is it important for your financial health?',
         content: 'Budgeting is the process of creating a plan to spend your money. It helps you understand where your money goes and ensures you have enough for the things that matter most. A good budget gives you control over your finances and helps you achieve your financial goals.',
@@ -145,7 +158,7 @@ const seedProductionDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[0].id,
+        moduleId: defaultModules[0].id,
         title: 'Tracking Your Expenses',
         description: 'Learn how to track your daily expenses effectively using various methods.',
         content: 'Tracking expenses is the foundation of good budgeting. We\'ll show you different methods and tools to keep track of where your money goes, from simple pen and paper to modern apps and spreadsheets.',
@@ -155,7 +168,7 @@ const seedProductionDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[0].id,
+        moduleId: defaultModules[0].id,
         title: 'Creating Your First Budget',
         description: 'Step-by-step guide to creating a personal budget that works for you.',
         content: 'Now that you understand your expenses, let\'s create a budget that works for your lifestyle and financial goals. We\'ll cover the 50/30/20 rule and other budgeting methods.',
@@ -165,7 +178,7 @@ const seedProductionDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[0].id,
+        moduleId: defaultModules[0].id,
         title: 'Budgeting Tools and Apps',
         description: 'Explore modern tools and apps that make budgeting easier and more effective.',
         content: 'Discover the best budgeting apps and tools available in Australia, including features, costs, and how to choose the right one for your needs.',
@@ -175,7 +188,7 @@ const seedProductionDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[0].id,
+        moduleId: defaultModules[0].id,
         title: 'Budgeting Quiz',
         description: 'Test your understanding of budgeting concepts and principles.',
         content: 'Answer these questions to test your knowledge of budgeting fundamentals and ensure you\'re ready to create your own budget.',
@@ -187,7 +200,7 @@ const seedProductionDatabase = async () => {
 
       // Superannuation course lessons
       {
-        courseId: createdCourses[1].id,
+        moduleId: defaultModules[1].id,
         title: 'What is Superannuation?',
         description: 'Understanding the basics of Australian superannuation system.',
         content: 'Superannuation is Australia\'s retirement savings system. Learn how it works, why it\'s important, and how it fits into your overall financial planning.',
@@ -197,7 +210,7 @@ const seedProductionDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[1].id,
+        moduleId: defaultModules[1].id,
         title: 'Superannuation Contributions',
         description: 'Learn about different types of super contributions and their benefits.',
         content: 'There are several ways to contribute to your super. Understand the different types, their tax benefits, and how to maximize your retirement savings.',
@@ -207,7 +220,7 @@ const seedProductionDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[1].id,
+        moduleId: defaultModules[1].id,
         title: 'Choosing a Super Fund',
         description: 'How to choose the right superannuation fund for your needs.',
         content: 'Learn how to compare super funds, understand fees, and choose the investment options that align with your retirement goals.',
@@ -219,7 +232,7 @@ const seedProductionDatabase = async () => {
 
       // Tax course lessons
       {
-        courseId: createdCourses[2].id,
+        moduleId: defaultModules[2].id,
         title: 'Understanding Australian Tax System',
         description: 'Overview of how the Australian tax system works for individuals.',
         content: 'Learn about income tax, tax brackets, and how the Australian tax system is structured to help you understand your obligations.',
@@ -229,7 +242,7 @@ const seedProductionDatabase = async () => {
         isPublished: true
       },
       {
-        courseId: createdCourses[2].id,
+        moduleId: defaultModules[2].id,
         title: 'Common Tax Deductions',
         description: 'Discover legitimate tax deductions that can reduce your tax bill.',
         content: 'Learn about common work-related deductions, investment deductions, and other expenses you can claim to reduce your taxable income.',

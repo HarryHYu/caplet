@@ -1,6 +1,7 @@
 const { sequelize } = require('../config/database');
 const User = require('./User');
 const Course = require('./Course');
+const Module = require('./Module');
 const Lesson = require('./Lesson');
 const UserProgress = require('./UserProgress');
 const Survey = require('./Survey');
@@ -11,15 +12,25 @@ const AssignmentSubmission = require('./AssignmentSubmission');
 const ClassAnnouncement = require('./ClassAnnouncement');
 const Comment = require('./Comment');
 
-// Define associations
-Course.hasMany(Lesson, { 
-  foreignKey: 'courseId', 
+// Define associations: Course → Module → Lesson
+Course.hasMany(Module, {
+  foreignKey: 'courseId',
+  as: 'modules',
+  onDelete: 'CASCADE'
+});
+Module.belongsTo(Course, {
+  foreignKey: 'courseId',
+  as: 'course'
+});
+
+Module.hasMany(Lesson, {
+  foreignKey: 'moduleId',
   as: 'lessons',
   onDelete: 'CASCADE'
 });
-Lesson.belongsTo(Course, { 
-  foreignKey: 'courseId', 
-  as: 'course'
+Lesson.belongsTo(Module, {
+  foreignKey: 'moduleId',
+  as: 'module'
 });
 
 User.hasMany(UserProgress, { 
@@ -171,6 +182,7 @@ module.exports = {
   sequelize,
   User,
   Course,
+  Module,
   Lesson,
   UserProgress,
   Survey,

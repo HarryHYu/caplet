@@ -1,10 +1,37 @@
 const express = require('express');
 const { Op } = require('sequelize');
 const Course = require('../models/Course');
+const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
 const UserProgress = require('../models/UserProgress');
 
 const router = express.Router();
+
+const includeModulesWithLessons = (whereLesson = { isPublished: true }) => [
+  {
+    model: Module,
+    as: 'modules',
+    required: false,
+    include: [
+      {
+        model: Lesson,
+        as: 'lessons',
+        where: whereLesson,
+        required: false
+      }
+    ]
+  }
+];
+
+function sortCourseContent(course) {
+  if (!course) return course;
+  const modules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  modules.forEach((m) => {
+    m.lessons = (m.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  });
+  course.modules = modules;
+  return course;
+}
 
 // Get all published courses
 router.get('/', async (req, res) => {
@@ -36,19 +63,12 @@ router.get('/', async (req, res) => {
       order: [['createdAt', 'DESC']],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      include: [
-        {
-          model: Lesson,
-          as: 'lessons',
-          where: { isPublished: true },
-          required: false,
-          order: [['order', 'ASC']]
-        }
-      ]
+      include: includeModulesWithLessons()
     });
 
+    const rows = courses.rows.map((c) => sortCourseContent(c.toJSON ? c.toJSON() : c));
     res.json({
-      courses: courses.rows,
+      courses: rows,
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(courses.count / limit),
@@ -71,22 +91,14 @@ router.get('/:id', async (req, res) => {
         id: req.params.id,
         isPublished: true 
       },
-      include: [
-        {
-          model: Lesson,
-          as: 'lessons',
-          where: { isPublished: true },
-          required: false,
-          order: [['order', 'ASC']]
-        }
-      ]
+      include: includeModulesWithLessons()
     });
 
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    res.json({ course });
+    res.json({ course: sortCourseContent(course.toJSON ? course.toJSON() : course) });
   } catch (error) {
     console.error('Get course error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -119,19 +131,13 @@ router.get('/featured/list', async (req, res) => {
       where: { 
         isPublished: true
       },
-      include: [
-        {
-          model: Lesson,
-          as: 'lessons',
-          where: { isPublished: true },
-          required: false
-        }
-      ],
+      include: includeModulesWithLessons(),
       order: [['createdAt', 'DESC']],
       limit: 6
     });
 
-    res.json({ courses });
+    const sorted = courses.map((c) => sortCourseContent(c.toJSON ? c.toJSON() : c));
+    res.json({ courses: sorted });
   } catch (error) {
     console.error('Get featured courses error:', error);
     res.status(500).json({ message: 'Internal server error' });
