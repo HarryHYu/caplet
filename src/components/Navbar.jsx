@@ -29,23 +29,23 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-40">
       <div className="container-custom">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <img src="/logo.png" alt="Caplet" className="h-8 w-auto" />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Caplet</span>
+          <Link to="/" className="flex items-center space-x-2 group">
+            <img src="/logo.png" alt="Caplet" className="h-8 w-auto transition-transform group-hover:scale-110" />
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">Caplet</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => {
               const isActiveLink = isActive(item.path);
-              const linkClass = `text-sm font-medium transition-colors duration-200 pb-1 ${
+              const linkClass = `text-sm font-semibold transition-all duration-200 px-3 py-1.5 rounded-lg ${
                 isActiveLink
-                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent'
+                  ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-600 dark:text-blue-400 dark:from-blue-400/20 dark:to-purple-400/20'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400'
               }`;
               
               return (
@@ -63,7 +63,7 @@ const Navbar = () => {
             <div className="flex items-center space-x-4">
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="p-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all hover:scale-110"
                 aria-label="Toggle dark mode"
               >
                 {isDark ? (
@@ -108,7 +108,7 @@ const Navbar = () => {
                     </svg>
                   </button>
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-2 border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-xl py-2 z-50">
                       <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           Signed in as
@@ -161,9 +161,9 @@ const Navbar = () => {
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                  className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 hover:scale-105"
                 >
-                  Sign In
+                  ✨ Sign In
                 </button>
               )}
             </div>
@@ -276,9 +276,9 @@ const Navbar = () => {
                       setShowAuthModal(true);
                       setIsOpen(false);
                     }}
-                    className="w-full px-3 py-2 bg-blue-600 text-white text-base font-medium rounded-md hover:bg-blue-700 dark:hover:bg-blue-500"
+                    className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-base font-semibold rounded-xl shadow-lg hover:from-blue-600 hover:to-purple-600 transition-all"
                   >
-                    Sign In
+                    ✨ Sign In
                   </button>
                 )}
               </div>
@@ -289,11 +289,11 @@ const Navbar = () => {
 
       {/* Auth Modal */}
       {showAuthModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="relative">
             <button
               onClick={() => setShowAuthModal(false)}
-              className="absolute -top-4 -right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100"
+              className="absolute -top-4 -right-4 bg-white dark:bg-gray-800 rounded-full p-2 shadow-xl hover:scale-110 transition-transform border-2 border-gray-200 dark:border-gray-700"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

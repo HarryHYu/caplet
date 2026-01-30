@@ -1,13 +1,11 @@
 const Mission = () => {
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-16">
-        <div className="container-custom">
+    <div className="min-h-screen">
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/80 via-purple-50/60 to-indigo-100/80 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800" />
+        <div className="container-custom relative">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              Our Mission
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold heading-gradient mb-6">Our Mission</h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Free financial education for every Australian. Everything money-related. 
               Trading to tax. Australian-focused.
@@ -22,11 +20,9 @@ const Mission = () => {
           <div className="max-w-4xl mx-auto">
             {/* What We Do */}
             <div className="mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-                What We Do
-              </h2>
+              <h2 className="text-3xl font-bold heading-gradient mb-6">What We Do</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
+                <div className="card-fun p-6">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                     Platform Features
                   </h3>
@@ -38,7 +34,7 @@ const Mission = () => {
                     <li>• Evidence-based content</li>
                   </ul>
                 </div>
-                <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
+                <div className="card-fun p-6">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                     Topics Covered
                   </h3>

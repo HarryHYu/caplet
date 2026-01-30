@@ -60,13 +60,13 @@ const CourseDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10">
+    <div className="min-h-screen py-10">
       <div className="container-custom">
         <div className="mb-6">
           <Link to="/courses" className="text-blue-600 dark:text-blue-400">← Back to courses</Link>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+        <div className="card-fun p-6 mb-8">
           <div className="flex items-start justify-between gap-6">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{course.title}</h1>
@@ -94,7 +94,7 @@ const CourseDetail = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="card-fun">
           <div className="border-b dark:border-gray-700 px-6 py-4">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Lessons</h2>
           </div>

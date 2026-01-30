@@ -95,20 +95,20 @@ const Courses = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading courses...</p>
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-400 mx-auto rounded-full"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300 font-medium">Loading courses...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl md:text-5xl font-bold heading-gradient mb-4">
             Financial Education Courses
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
@@ -117,7 +117,7 @@ const Courses = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <div className="card-fun p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -126,7 +126,7 @@ const Courses = () => {
               <select
                 value={filters.category}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
               >
                 <option value="">All Categories</option>
                 <option value="budgeting">Budgeting</option>
@@ -145,7 +145,7 @@ const Courses = () => {
               <select
                 value={filters.level}
                 onChange={(e) => handleFilterChange('level', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
               >
                 <option value="">All Levels</option>
                 <option value="beginner">Beginner</option>
@@ -171,8 +171,8 @@ const Courses = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-6">
-            {error}
+          <div className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border-2 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl mb-6 font-medium shadow-lg">
+            ⚠️ {error}
           </div>
         )}
 
@@ -186,19 +186,19 @@ const Courses = () => {
               <div 
                 key={course.id} 
                 onClick={() => handleCourseClick(course.id)}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all cursor-pointer border-2 border-transparent hover:border-blue-500"
+                className="card-fun overflow-hidden cursor-pointer hover:scale-[1.02] hover:border-blue-400/50 dark:hover:border-blue-500/50"
               >
                 <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getCategoryColor(course.category)}`}>
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <span className={`px-3 py-1 text-xs font-bold rounded-xl ${getCategoryColor(course.category)}`}>
                       {course.category.charAt(0).toUpperCase() + course.category.slice(1)}
                     </span>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getLevelColor(course.level)}`}>
+                    <span className={`px-3 py-1 text-xs font-bold rounded-xl ${getLevelColor(course.level)}`}>
                       {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
                     </span>
                   </div>
 
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                     {course.title}
                   </h3>
 
@@ -227,11 +227,11 @@ const Courses = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t-2 border-gray-100 dark:border-gray-700">
                     <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                      {course.isFree ? 'Free' : `$${course.price}`}
+                      {course.isFree ? '✨ Free' : `$${course.price}`}
                     </span>
-                    <span className="text-blue-600 dark:text-blue-400 font-medium text-sm">
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm hover:underline">
                       {hasProgress ? 'Continue →' : 'Start →'}
                     </span>
                   </div>
@@ -242,8 +242,9 @@ const Courses = () => {
         </div>
 
         {courses.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400 text-lg">No courses found matching your criteria.</p>
+          <div className="card-fun text-center py-16">
+            <div className="text-5xl mb-4">📚</div>
+            <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">No courses found matching your criteria.</p>
           </div>
         )}
       </div>
