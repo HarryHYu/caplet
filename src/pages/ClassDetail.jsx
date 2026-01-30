@@ -690,7 +690,7 @@ const ClassDetail = () => {
         {/* People page — only this or Stream or Classwork is visible */}
         {activeTab === 'people' && (
         <div className="min-h-[50vh] pt-6" role="region" aria-label="People page">
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-xl overflow-hidden max-w-2xl">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-xl overflow-hidden">
             <div className="p-6">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mb-6">
                 People
