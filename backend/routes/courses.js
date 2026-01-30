@@ -92,6 +92,32 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get single lesson by ID (ensures slides are returned as array for the lesson player)
+router.get('/:courseId/lessons/:lessonId', async (req, res) => {
+  try {
+    const { courseId, lessonId } = req.params;
+    const row = await Lesson.findByPk(lessonId, {
+      include: [{ model: Module, as: 'module', attributes: ['id', 'courseId'], required: true }]
+    });
+    if (!row || !row.module || row.module.courseId !== courseId) {
+      return res.status(404).json({ message: 'Lesson not found' });
+    }
+    const lesson = row.toJSON ? row.toJSON() : row;
+    if (lesson && typeof lesson.slides === 'string' && lesson.slides.trim()) {
+      try {
+        lesson.slides = JSON.parse(lesson.slides);
+      } catch {
+        lesson.slides = null;
+      }
+    }
+    if (lesson && !Array.isArray(lesson.slides)) lesson.slides = lesson.slides ? [lesson.slides] : [];
+    res.json({ lesson });
+  } catch (error) {
+    console.error('Get lesson error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Get single course with lessons
 router.get('/:id', async (req, res) => {
   try {

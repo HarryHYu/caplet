@@ -186,11 +186,15 @@ const LessonPlayer = () => {
         setError(null);
         setLoading(true);
         setCurrentSlideIndex(0);
-        const data = await api.getCourse(courseId);
-        const flatLessons = getFlatLessons(data);
-        const current = flatLessons.find(l => l.id === lessonId) || flatLessons[0];
-        setCourse(data);
-        setLesson(current);
+        const [courseData, lessonData] = await Promise.all([
+          api.getCourse(courseId),
+          api.getLesson(courseId, lessonId).catch(() => null)
+        ]);
+        const flatLessons = getFlatLessons(courseData);
+        const currentFromList = flatLessons.find((l) => l.id === lessonId) || flatLessons[0];
+        setCourse(courseData);
+        setLesson(lessonData || currentFromList);
+        const current = lessonData || currentFromList;
         if (current) {
           try {
             await api.updateLessonProgress(current.id, { status: 'in_progress' });
@@ -200,10 +204,11 @@ const LessonPlayer = () => {
           try {
             const prog = await api.getCourseProgress(courseId);
             setProgress(prog);
-            if (Array.isArray(current.slides) && current.slides.length > 0) {
+            const slides = Array.isArray(current.slides) ? current.slides : [];
+            if (slides.length > 0) {
               const lp = prog?.lessonProgress?.find((p) => p.lessonId === current.id);
               if (lp && typeof lp.lastSlideIndex === 'number') {
-                setCurrentSlideIndex(Math.min(lp.lastSlideIndex, current.slides.length - 1));
+                setCurrentSlideIndex(Math.min(lp.lastSlideIndex, slides.length - 1));
               }
             }
           } catch {
@@ -319,7 +324,7 @@ const LessonPlayer = () => {
   const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="container-custom py-6">
         <div className="mb-4 flex items-center justify-between">
           <Link to={`/courses/${course.id}`} className="text-blue-600 dark:text-blue-400">← {course.title}</Link>
@@ -358,7 +363,7 @@ const LessonPlayer = () => {
               {hasSlides ? (
                 <>
                   {/* Slide-based content (Khan/EP style) */}
-                  <div className="mb-6 min-h-[200px]">
+                  <div className="mb-6 min-h-[280px] p-4 rounded-lg bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 shadow-sm">
                     {(() => {
                       const slide = slides[currentSlideIndex];
                       if (!slide) {
@@ -374,7 +379,7 @@ const LessonPlayer = () => {
                         const selected = questionAnswer ?? (alreadyAnswered ? undefined : null);
                         const showFeedback = questionSubmitted || alreadyAnswered;
                         return (
-                          <div className="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <div className="p-4 bg-white dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Question</h3>
                             <p className="font-medium text-gray-900 dark:text-white mb-4">{slide.question}</p>
                             <div className="space-y-2">
@@ -501,6 +506,12 @@ const LessonPlayer = () => {
               ) : (
                 <>
                   {/* Legacy: single content blob + optional video */}
+                  {!lesson.content?.trim() && !lesson.videoUrl && (
+                    <div className="mb-6 p-8 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-center">
+                      <p className="text-lg font-medium text-gray-700 dark:text-gray-300">This lesson has no content yet.</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Check back later or mark complete to continue.</p>
+                    </div>
+                  )}
                   {lesson.videoUrl && getYouTubeId(lesson.videoUrl) && (
                     <div className="mb-6 relative" style={{ paddingBottom: '56.25%', height: 0 }}>
                       <iframe
@@ -544,7 +555,7 @@ const LessonPlayer = () => {
                       <button type="button" onClick={markComplete} disabled={saving || completed} className="btn-primary disabled:opacity-50">
                         {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
                       </button>
-                      <button type="button" onClick={() => goTo(1)} disabled={idx >= sortedLessons.length - 1} className="btn-secondary disabled:opacity-50">Next</button>
+                      <button type="button" onClick={() => goTo(1)} disabled={idx >= flatLessons.length - 1} className="btn-secondary disabled:opacity-50">Next</button>
                     </div>
                   )}
                 </>

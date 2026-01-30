@@ -85,8 +85,12 @@ class ApiService {
 
   async getCourse(id) {
     const res = await this.request(`/courses/${id}`);
-    // API returns { course }, normalize to object
     return res.course || res;
+  }
+
+  async getLesson(courseId, lessonId) {
+    const res = await this.request(`/courses/${courseId}/lessons/${lessonId}`);
+    return res.lesson || res;
   }
 
   async getCourseCategories() {
