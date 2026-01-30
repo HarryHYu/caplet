@@ -26,7 +26,17 @@ function sortCourseContent(course) {
   if (!course) return course;
   const modules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   modules.forEach((m) => {
-    m.lessons = (m.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const lessons = (m.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    lessons.forEach((l) => {
+      if (l && typeof l.slides === 'string' && l.slides.trim()) {
+        try {
+          l.slides = JSON.parse(l.slides);
+        } catch {
+          l.slides = null;
+        }
+      }
+    });
+    m.lessons = lessons;
   });
   course.modules = modules;
   return course;

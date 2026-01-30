@@ -248,7 +248,19 @@ const LessonPlayer = () => {
     }
   };
 
-  const slides = Array.isArray(lesson.slides) ? lesson.slides : [];
+  const slidesRaw = lesson.slides;
+  const slides = (() => {
+    if (Array.isArray(slidesRaw)) return slidesRaw;
+    if (typeof slidesRaw === 'string' && slidesRaw.trim()) {
+      try {
+        const parsed = JSON.parse(slidesRaw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  })();
   const hasSlides = slides.length > 0;
 
   const goToSlide = (newIndex) => {
@@ -463,7 +475,9 @@ const LessonPlayer = () => {
                         }
                         return <a href={slide.content} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400">Watch video</a>;
                       }
-                      return null;
+                      return (
+                        <p className="text-gray-500 dark:text-gray-400">Unknown slide type: {slide.type || 'missing'}.</p>
+                      );
                     })()}
                   </div>
 
