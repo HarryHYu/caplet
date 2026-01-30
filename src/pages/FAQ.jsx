@@ -65,12 +65,14 @@ const FAQ = () => {
   ];
 
   return (
-    <div className="min-h-screen">
-      <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/80 via-purple-50/60 to-indigo-100/80 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800" />
-        <div className="container-custom relative">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-16">
+        <div className="container-custom">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold heading-gradient mb-6">Frequently Asked Questions</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+              Frequently Asked Questions
+            </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Common questions about Caplet and financial education.
             </p>
@@ -84,9 +86,9 @@ const FAQ = () => {
           <div className="max-w-4xl mx-auto">
             <div className="space-y-4">
               {faqData.map((item, index) => (
-                <div key={index} className="card-fun overflow-hidden">
+                <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg">
                   <button
-                    className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-all duration-200"
+                    className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 bg-white dark:bg-gray-800"
                     onClick={() => toggleItem(index)}
                   >
                     <span className="font-semibold text-gray-900 dark:text-white pr-4">
@@ -117,7 +119,7 @@ const FAQ = () => {
             </div>
 
             {/* Contact CTA */}
-            <div className="mt-12 card-fun p-8 text-center">
+            <div className="mt-12 bg-blue-50 dark:bg-blue-900/20 p-8 rounded-lg text-center">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Still have questions?
               </h3>

@@ -251,7 +251,7 @@ const LessonPlayer = () => {
   const idx = sortedLessons.findIndex(l => l.id === lesson.id);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container-custom py-6">
         <div className="mb-4 flex items-center justify-between">
           <Link to={`/courses/${course.id}`} className="text-blue-600 dark:text-blue-400">← {course.title}</Link>
@@ -259,7 +259,7 @@ const LessonPlayer = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <aside className="lg:col-span-4 card-fun p-4 h-max">
+          <aside className="lg:col-span-4 bg-white dark:bg-gray-800 rounded-lg shadow p-4 h-max">
             <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Lessons</h3>
             <ul className="space-y-2">
               {sortedLessons.map(l => (
@@ -276,7 +276,7 @@ const LessonPlayer = () => {
           </aside>
 
           <main className="lg:col-span-8">
-            <div className="card-fun p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{lesson.title}</h1>
               <p className="text-gray-600 dark:text-gray-300 mb-6">{lesson.description}</p>
 

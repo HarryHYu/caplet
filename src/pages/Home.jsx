@@ -4,23 +4,22 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/80 via-purple-50/60 to-indigo-100/80 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800" />
-        <div className="container-custom relative">
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-20">
+        <div className="container-custom">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              <span className="text-gray-900 dark:text-white">Financial Education for </span>
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">Every Australian</span>
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+              Financial Education for
+              <span className="text-blue-600 dark:text-blue-400"> Every Australian</span>
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
               Everything money-related. Trading, investing, budgeting, tax, strategies, and more. 
               Free. Australian-focused.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/courses" className="btn-primary text-lg px-8 py-3.5 inline-flex items-center justify-center gap-2">
-                📚 Browse Courses
+              <Link to="/courses" className="btn-primary text-lg px-8 py-3">
+                Browse Courses
               </Link>
-              <Link to="/about" className="btn-secondary text-lg px-8 py-3.5 inline-flex items-center justify-center gap-2">
+              <Link to="/about" className="btn-secondary text-lg px-8 py-3">
                 Learn About Us
               </Link>
             </div>
@@ -29,10 +28,10 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20">
+      <section className="py-16 bg-white dark:bg-gray-900">
         <div className="container-custom">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold heading-gradient mb-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Why It Matters
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
@@ -41,34 +40,56 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: '📖', title: 'Free', desc: 'All content, courses, and tools are completely free.', gradient: 'from-blue-400 to-blue-600' },
-              { icon: '✅', title: 'Comprehensive', desc: 'Trading to tax. Investing to budgeting. Everything money-related with Australian context.', gradient: 'from-emerald-400 to-emerald-600' },
-              { icon: '⚡', title: 'Accessible', desc: 'Clear, simple explanations. No jargon. For everyone.', gradient: 'from-purple-400 to-purple-600' },
-            ].map((item) => (
-              <div key={item.title} className="card-fun text-center p-8 hover:scale-[1.02]">
-                <div className={`w-20 h-20 bg-gradient-to-br ${item.gradient} rounded-2xl flex items-center justify-center mx-auto mb-5 text-4xl shadow-lg`}>
-                  {item.icon}
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{item.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300">{item.desc}</p>
+            <div className="text-center p-6 rounded-lg bg-gray-50 dark:bg-gray-800">
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
               </div>
-            ))}
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Free</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                All content, courses, and tools are completely free.
+              </p>
+            </div>
+
+            <div className="text-center p-6 rounded-lg bg-gray-50 dark:bg-gray-800">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Comprehensive</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Trading to tax. Investing to budgeting. Everything money-related with Australian context.
+              </p>
+            </div>
+
+            <div className="text-center p-6 rounded-lg bg-gray-50 dark:bg-gray-800">
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Accessible</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Clear, simple explanations. No jargon. For everyone.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 dark:from-blue-600 dark:via-purple-600 dark:to-indigo-600">
+      <section className="py-16 bg-blue-600 dark:bg-blue-800">
         <div className="container-custom text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Level Up?
           </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
             Start learning today. Take control of your financial future.
           </p>
-          <Link to="/courses" className="inline-flex items-center gap-2 bg-white text-blue-600 font-bold py-3.5 px-8 rounded-xl hover:bg-gray-100 shadow-xl hover:shadow-2xl transition-all duration-200 hover:scale-105">
-            📚 Browse Courses
+          <Link to="/courses" className="bg-white text-blue-600 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+            Browse Courses
           </Link>
         </div>
       </section>
