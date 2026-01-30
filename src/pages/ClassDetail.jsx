@@ -268,116 +268,144 @@ const ClassDetail = () => {
     return author.email?.charAt(0)?.toUpperCase() || '?';
   };
 
+  const getAvatarColor = (name) => {
+    if (!name) return 'bg-gradient-to-br from-gray-400 to-gray-600';
+    const colors = [
+      'bg-gradient-to-br from-blue-400 to-blue-600',
+      'bg-gradient-to-br from-purple-400 to-purple-600',
+      'bg-gradient-to-br from-pink-400 to-pink-600',
+      'bg-gradient-to-br from-indigo-400 to-indigo-600',
+      'bg-gradient-to-br from-cyan-400 to-cyan-600',
+      'bg-gradient-to-br from-emerald-400 to-emerald-600',
+      'bg-gradient-to-br from-orange-400 to-orange-600',
+      'bg-gradient-to-br from-rose-400 to-rose-600',
+    ];
+    const hash = (name || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[hash % colors.length];
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 py-8 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <button
-              onClick={() => navigate('/classes')}
-              className="mb-2 inline-flex items-center text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              ← Back to classes
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {classroom.name}
-            </h1>
-            {classroom.description ? (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {classroom.description}
-              </p>
-            ) : null}
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              Class code:{' '}
-              <span className="font-mono font-semibold">{classroom.code}</span>
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              You are signed in as
-            </p>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
-              {user?.firstName} {user?.lastName}{' '}
-              <span className="text-xs text-gray-500">
-                ({membership?.role === 'teacher' ? 'Teacher' : 'Student'})
-              </span>
-            </p>
-            <div className="mt-2 flex justify-end gap-2">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
               <button
-                type="button"
-                onClick={handleLeaveClass}
-                className="px-3 py-1.5 rounded-md text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                onClick={() => navigate('/classes')}
+                className="mb-3 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors font-medium"
               >
-                Leave class
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to classes
               </button>
-              {isTeacher && (
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                {classroom.name}
+              </h1>
+              {classroom.description ? (
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                  {classroom.description}
+                </p>
+              ) : null}
+              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Class code:</span>
+                <span className="font-mono font-bold text-gray-900 dark:text-white">{classroom.code}</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-700 rounded-xl">
+                <div className={`w-8 h-8 rounded-full ${getAvatarColor(user?.firstName + user?.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md`}>
+                  {getInitials(user)}
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Signed in as</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                    {membership?.role === 'teacher' ? '👨‍🏫 Teacher' : '👨‍🎓 Student'}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={handleDeleteClass}
-                  className="px-3 py-1.5 rounded-md text-xs font-medium bg-red-600 text-white hover:bg-red-700"
+                  onClick={handleLeaveClass}
+                  className="px-4 py-2 rounded-lg text-sm font-medium border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all hover:scale-105"
                 >
-                  Delete class
+                  Leave class
                 </button>
-              )}
+                {isTeacher && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteClass}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-md transition-all hover:scale-105"
+                  >
+                    Delete class
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="p-3 rounded-md border border-red-300 bg-red-50 text-sm text-red-800">
-            {error}
+          <div className="p-4 rounded-xl border-2 border-red-300 dark:border-red-700 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 text-sm text-red-800 dark:text-red-200 shadow-lg backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">⚠️</span>
+              <span className="font-semibold">{error}</span>
+            </div>
           </div>
         )}
 
         {/* Tab bar — only one "page" (Stream / Classwork / People) is shown below */}
-        <nav className="flex border-b border-gray-200 dark:border-gray-700 -mb-px" aria-label="Class tabs">
+        <nav className="flex gap-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-1.5 shadow-md border border-gray-200/50 dark:border-gray-700/50" aria-label="Class tabs">
           <button
             type="button"
             onClick={() => setActiveTab('stream')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
               activeTab === 'stream'
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
             }`}
           >
-            Stream
+            💬 Stream
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('classwork')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
               activeTab === 'classwork'
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
             }`}
           >
-            Classwork
+            📚 Classwork
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('people')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
               activeTab === 'people'
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
             }`}
           >
-            People
+            👥 People
           </button>
         </nav>
 
         {/* Page content: only the active tab is rendered — screen changes, no route change */}
         {activeTab === 'stream' && (
         <div className="min-h-[50vh] pt-6" role="region" aria-label="Stream page">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stream</h2>
-          <div className="space-y-4">
+          <div className="space-y-5">
           {/* Composer: teachers only (like Google Classroom) */}
           {isTeacher && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80 overflow-hidden">
-            <form onSubmit={handlePostAnnouncement} className="p-4">
-              <div className="flex gap-3">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+            <form onSubmit={handlePostAnnouncement} className="p-5">
+              <div className="flex gap-4">
                 <div
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-sm font-medium"
+                  className={`flex-shrink-0 w-12 h-12 rounded-full ${getAvatarColor(user?.firstName + user?.lastName)} flex items-center justify-center text-white text-sm font-bold shadow-lg ring-2 ring-white dark:ring-gray-800`}
                   aria-hidden
                 >
                   {getInitials(user)}
@@ -389,8 +417,8 @@ const ClassDetail = () => {
                       setAnnouncementForm((prev) => ({ ...prev, content: e.target.value }))
                     }
                     placeholder="Share something with your class..."
-                    rows={2}
-                    className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-[15px] leading-snug resize-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 dark:focus:border-blue-500"
+                    rows={3}
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-[15px] leading-relaxed resize-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 transition-all"
                   />
                   <input
                     type="url"
@@ -398,16 +426,16 @@ const ClassDetail = () => {
                     onChange={(e) =>
                       setAnnouncementForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))
                     }
-                    placeholder="Add attachment (image, video, or link URL)"
-                    className="mt-2 w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 dark:focus:border-blue-500"
+                    placeholder="🔗 Add attachment (image, video, or link URL)"
+                    className="mt-3 w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 transition-all"
                   />
-                  <div className="flex justify-end mt-3">
+                  <div className="flex justify-end mt-4">
                     <button
                       type="submit"
                       disabled={postingAnnouncement || !announcementForm.content.trim()}
-                      className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                     >
-                      {postingAnnouncement ? 'Posting...' : 'Post'}
+                      {postingAnnouncement ? '⏳ Posting...' : '✨ Post'}
                     </button>
                   </div>
                 </div>
@@ -418,11 +446,12 @@ const ClassDetail = () => {
 
           {/* Announcement cards — visible to both teachers and students */}
           {!Array.isArray(announcements) || announcements.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-8 text-center">
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-12 text-center">
+              <div className="text-5xl mb-4">📢</div>
+              <p className="text-gray-600 dark:text-gray-300 text-base font-medium">
                 {isTeacher
-                  ? 'No announcements yet. Share something with your class above.'
-                  : 'No announcements yet.'}
+                  ? 'No announcements yet. Share something with your class above!'
+                  : 'No announcements yet. Check back soon!'}
               </p>
             </div>
           ) : (
@@ -431,28 +460,27 @@ const ClassDetail = () => {
                 if (!a || !a.id) return null;
                 const isAuthor = a.author?.id === user?.id;
                 const canDelete = isTeacher || isAuthor;
+                const authorName = a.author ? `${a.author.firstName} ${a.author.lastName}` : 'Unknown';
                 return (
                   <div
                     key={a.id}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80 overflow-hidden"
+                    className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.01]"
                   >
-                    <div className="p-4">
-                      <div className="flex gap-3">
+                    <div className="p-5">
+                      <div className="flex gap-4">
                         <div
-                          className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 flex items-center justify-center text-sm font-medium"
+                          className={`flex-shrink-0 w-12 h-12 rounded-full ${getAvatarColor(authorName)} flex items-center justify-center text-white text-sm font-bold shadow-lg ring-2 ring-white dark:ring-gray-800`}
                           aria-hidden
                         >
                           {getInitials(a.author)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center justify-between gap-2 mb-2">
                             <div className="flex items-baseline gap-2 min-w-0">
-                              <span className="text-[15px] font-medium text-gray-900 dark:text-white truncate">
-                                {a.author
-                                  ? `${a.author.firstName} ${a.author.lastName}`
-                                  : 'Unknown'}
+                              <span className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                                {authorName}
                               </span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-full">
                                 {formatRelativeTime(a.createdAt)}
                               </span>
                             </div>
@@ -460,17 +488,17 @@ const ClassDetail = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteAnnouncement(a.id)}
-                                className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                className="flex-shrink-0 text-gray-400 hover:text-red-500 dark:hover:text-red-400 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
                                 title="Delete announcement"
                                 aria-label="Delete announcement"
                               >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                               </button>
                             )}
                           </div>
-                          <p className="mt-1 text-[15px] text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                          <p className="text-[15px] text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                             {a.content || ''}
                           </p>
                           {Array.isArray(a.attachments) && a.attachments.length > 0 && (
@@ -544,25 +572,28 @@ const ClassDetail = () => {
         {/* Classwork page — only this or Stream or People is visible */}
         {activeTab === 'classwork' && (
         <div className="min-h-[50vh] pt-6" role="region" aria-label="Classwork page">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
               Classwork
             </h2>
               {isTeacher && (
                 <button
                   onClick={() => setShowNewAssignment(true)}
-                  className="px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                 >
-                  New assignment
+                  ➕ New assignment
                 </button>
               )}
             </div>
             {assignments.length === 0 ? (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                No assignments yet.
-              </p>
+              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-12 text-center">
+                <div className="text-5xl mb-4">📝</div>
+                <p className="text-gray-600 dark:text-gray-300 text-base font-medium">
+                  No assignments yet.
+                </p>
+              </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {assignments.map((a) => {
                   const isCompleted = a.statusForCurrentUser === 'completed';
                   const totalStudents = students.length;
@@ -572,22 +603,21 @@ const ClassDetail = () => {
                   return (
                     <div
                       key={a.id}
-                      className="flex items-start justify-between gap-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3"
+                      className="flex items-start justify-between gap-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]"
                     >
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
                           {a.title}
                         </h3>
                         {a.description && (
-                          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 mb-3">
                             {a.description}
                           </p>
                         )}
-                        <div className="mt-2 flex flex-wrap gap-2 items-center text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex flex-wrap gap-2 items-center">
                           {a.dueDate && (
-                            <span>
-                              Due:{' '}
-                              {new Date(a.dueDate).toLocaleDateString(undefined, {
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-xs font-semibold">
+                              📅 Due {new Date(a.dueDate).toLocaleDateString(undefined, {
                                 month: 'short',
                                 day: 'numeric',
                               })}
@@ -596,57 +626,56 @@ const ClassDetail = () => {
                           {a.lesson && (
                             <Link
                               to={`/courses/${a.course?.id || ''}/lessons/${a.lesson.id}`}
-                              className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+                              className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                             >
-                              Lesson: {a.lesson.title}
+                              📖 {a.lesson.title}
                             </Link>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
+                      <div className="flex flex-col items-end gap-2">
                         {isTeacher ? (
                           <>
                             {typeof completedCount === 'number' && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                Completed:{' '}
-                                <span className="font-semibold">
-                                  {completedCount}/{totalStudents}
+                              <div className="px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl">
+                                <span className="text-xs font-bold text-green-700 dark:text-green-300">
+                                  ✅ {completedCount}/{totalStudents}
                                 </span>
-                              </span>
+                              </div>
                             )}
                             <button
                               type="button"
                               onClick={() => handleDeleteAssignment(a.id)}
-                              className="mt-1 px-3 py-1 rounded-md text-xs font-medium border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20"
+                              className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
                             >
-                              Delete
+                              🗑️ Delete
                             </button>
                           </>
                         ) : (
                           <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            className={`text-xs font-bold px-3 py-1.5 rounded-xl ${
                               isCompleted
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
+                                ? 'bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-700 dark:text-green-300'
+                                : 'bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/40 dark:to-amber-900/40 text-yellow-700 dark:text-yellow-300'
                             }`}
                           >
-                            {isCompleted ? 'Completed' : 'Assigned'}
+                            {isCompleted ? '✅ Completed' : '📋 Assigned'}
                           </span>
                         )}
                         {!isTeacher && !isCompleted && (
                           <button
                             onClick={() => handleCompleteAssignment(a.id)}
-                            className="mt-1 px-3 py-1 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-700"
+                            className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
                           >
-                            Mark as done
+                            ✨ Mark as done
                           </button>
                         )}
                         {!isTeacher && isCompleted && !a.lesson && (
                           <button
                             onClick={() => handleUncompleteAssignment(a.id)}
-                            className="mt-1 px-3 py-1 rounded-md text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            className="px-4 py-2 rounded-xl text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
                           >
-                            Undo
+                            ↪️ Undo
                           </button>
                         )}
                       </div>
@@ -661,28 +690,33 @@ const ClassDetail = () => {
         {/* People page — only this or Stream or Classwork is visible */}
         {activeTab === 'people' && (
         <div className="min-h-[50vh] pt-6" role="region" aria-label="People page">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden max-w-2xl">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-xl overflow-hidden max-w-2xl">
             <div className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mb-6">
                 People
               </h2>
 
-              <div className="mb-3">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Teachers
+              <div className="mb-6">
+                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <span className="text-lg">👨‍🏫</span> Teachers
                 </h3>
                 {teachers.length === 0 ? (
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 pl-7">
                     No teachers yet.
                   </p>
                 ) : (
-                  <ul className="space-y-1">
+                  <ul className="space-y-3">
                     {teachers.map((t) => (
-                      <li key={t.id} className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {t.firstName} {t.lastName}
-                        </span>
-                        <span className="text-xs text-gray-500">{t.email}</span>
+                      <li key={t.id} className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700/50 dark:to-gray-700/50 hover:shadow-md transition-all">
+                        <div className={`w-10 h-10 rounded-full ${getAvatarColor(t.firstName + t.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md`}>
+                          {getInitials(t)}
+                        </div>
+                        <div>
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white block">
+                            {t.firstName} {t.lastName}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{t.email}</span>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -690,21 +724,26 @@ const ClassDetail = () => {
               </div>
 
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Students ({students.length})
+                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <span className="text-lg">👨‍🎓</span> Students ({students.length})
                 </h3>
                 {students.length === 0 ? (
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 pl-7">
                     No students have joined yet.
                   </p>
                 ) : (
-                  <ul className="space-y-1 max-h-64 overflow-y-auto pr-1">
+                  <ul className="space-y-2 max-h-96 overflow-y-auto pr-2">
                     {students.map((s) => (
-                      <li key={s.id} className="flex flex-col border-b border-gray-100 dark:border-gray-700 last:border-b-0 py-1">
-                        <span className="text-sm text-gray-900 dark:text-white">
-                          {s.firstName} {s.lastName}
-                        </span>
-                        <span className="text-xs text-gray-500">{s.email}</span>
+                      <li key={s.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all">
+                        <div className={`w-10 h-10 rounded-full ${getAvatarColor(s.firstName + s.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md`}>
+                          {getInitials(s)}
+                        </div>
+                        <div>
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white block">
+                            {s.firstName} {s.lastName}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{s.email}</span>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -717,22 +756,24 @@ const ClassDetail = () => {
 
         {/* New assignment modal — overlay, not a tab */}
         {isTeacher && showNewAssignment && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  New assignment
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full p-6 border-2 border-gray-200/50 dark:border-gray-700/50 animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                  ✨ New assignment
                 </h2>
                 <button
                   onClick={() => setShowNewAssignment(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
-                  ×
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
-              <form onSubmit={handleCreateAssignment} className="space-y-4 mt-2">
+              <form onSubmit={handleCreateAssignment} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Title
                   </label>
                   <input
@@ -742,11 +783,11 @@ const ClassDetail = () => {
                       setAssignmentForm((prev) => ({ ...prev, title: e.target.value }))
                     }
                     required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    className="block w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Description (optional)
                   </label>
                   <textarea
@@ -755,11 +796,11 @@ const ClassDetail = () => {
                       setAssignmentForm((prev) => ({ ...prev, description: e.target.value }))
                     }
                     rows={3}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    className="block w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 transition-all resize-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Due date (optional)
                   </label>
                   <input
@@ -768,11 +809,11 @@ const ClassDetail = () => {
                     onChange={(e) =>
                       setAssignmentForm((prev) => ({ ...prev, dueDate: e.target.value }))
                     }
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    className="block w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Link to lesson (optional)
                   </label>
                   <select
@@ -786,7 +827,7 @@ const ClassDetail = () => {
                         courseId: lesson ? lesson.courseId : '',
                       }));
                     }}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+                    className="block w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 transition-all"
                   >
                     <option value="">No linked lesson</option>
                     {availableLessons.map((l) => (
@@ -795,16 +836,16 @@ const ClassDetail = () => {
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    If you link a lesson, the assignment will show a direct button to that lesson, and
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    💡 If you link a lesson, the assignment will show a direct button to that lesson, and
                     it will be auto-marked complete when students finish the lesson.
                   </p>
                 </div>
-                <div className="flex justify-end gap-2 mt-2">
+                <div className="flex justify-end gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setShowNewAssignment(false)}
-                    className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="px-5 py-2.5 text-sm rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold transition-all duration-200"
                     disabled={submitting}
                   >
                     Cancel
@@ -812,9 +853,9 @@ const ClassDetail = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+                    className="px-5 py-2.5 text-sm rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                   >
-                    {submitting ? 'Creating...' : 'Create assignment'}
+                    {submitting ? '⏳ Creating...' : '✨ Create assignment'}
                   </button>
                 </div>
               </form>
