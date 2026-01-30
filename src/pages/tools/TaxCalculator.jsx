@@ -12,6 +12,7 @@ const TAX_BRACKETS = [
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
 
+/* eslint-disable-next-line react-refresh/only-export-components -- shared util */
 export const calculateTax = (income) => {
   if (!income || income <= 0) return 0;
 

@@ -32,7 +32,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
     setLoading(true);
 
     try {
-      const { confirmPassword, ...userData } = formData;
+      const { confirmPassword: _unused, ...userData } = formData;
       await register(userData);
       onSuccess?.();
     } catch (error) {

@@ -17,6 +17,7 @@ const Courses = () => {
 
   useEffect(() => {
     fetchCourses(filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchCourses stable from context
   }, [filters]);
 
   useEffect(() => {
@@ -24,7 +25,6 @@ const Courses = () => {
     if (isAuthenticated && courses.length > 0) {
       const fetchProgress = async () => {
         try {
-          const allProgress = await api.getUserProgress();
           const progressMap = {};
           
           // Get all unique course IDs
@@ -38,7 +38,7 @@ const Courses = () => {
                 if (progress.courseProgress) {
                   progressMap[courseId] = progress.courseProgress.progressPercentage || 0;
                 }
-              } catch (e) {
+              } catch {
                 // Course not started, no progress
                 progressMap[courseId] = 0;
               }

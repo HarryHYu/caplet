@@ -298,20 +298,20 @@ const LessonPlayer = () => {
               <article className="prose prose-lg dark:prose-invert max-w-none mb-6">
                 <ReactMarkdown
                   components={{
-                    h1: ({node, ...props}) => <h1 className="text-3xl font-bold mt-6 mb-4 text-gray-900 dark:text-white" {...props} />,
-                    h2: ({node, ...props}) => <h2 className="text-2xl font-bold mt-6 mb-3 text-gray-900 dark:text-white" {...props} />,
-                    h3: ({node, ...props}) => <h3 className="text-xl font-semibold mt-4 mb-2 text-gray-900 dark:text-white" {...props} />,
-                    p: ({node, ...props}) => <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300" {...props} />,
-                    ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props} />,
-                    ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props} />,
-                    li: ({node, ...props}) => <li className="ml-4" {...props} />,
-                    strong: ({node, ...props}) => <strong className="font-bold text-gray-900 dark:text-white" {...props} />,
-                    code: ({node, inline, ...props}) => 
+                    h1: ({ ...props }) => <h1 className="text-3xl font-bold mt-6 mb-4 text-gray-900 dark:text-white" {...props} />,
+                    h2: ({ ...props }) => <h2 className="text-2xl font-bold mt-6 mb-3 text-gray-900 dark:text-white" {...props} />,
+                    h3: ({ ...props }) => <h3 className="text-xl font-semibold mt-4 mb-2 text-gray-900 dark:text-white" {...props} />,
+                    p: ({ ...props }) => <p className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300" {...props} />,
+                    ul: ({ ...props }) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props} />,
+                    ol: ({ ...props }) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props} />,
+                    li: ({ ...props }) => <li className="ml-4" {...props} />,
+                    strong: ({ ...props }) => <strong className="font-bold text-gray-900 dark:text-white" {...props} />,
+                    code: ({ inline, ...props }) => 
                       inline 
                         ? <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm font-mono text-gray-900 dark:text-gray-100" {...props} />
                         : <code className="block bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-sm font-mono overflow-x-auto text-gray-900 dark:text-gray-100" {...props} />,
-                    blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-blue-500 dark:border-blue-400 pl-4 italic my-4 text-gray-700 dark:text-gray-300" {...props} />,
-                    hr: ({node, ...props}) => <hr className="my-8 border-gray-300 dark:border-gray-700" {...props} />,
+                    blockquote: ({ ...props }) => <blockquote className="border-l-4 border-blue-500 dark:border-blue-400 pl-4 italic my-4 text-gray-700 dark:text-gray-300" {...props} />,
+                    hr: ({ ...props }) => <hr className="my-8 border-gray-300 dark:border-gray-700" {...props} />,
                   }}
                 >
                   {lesson.content || 'No content yet.'}

@@ -3,6 +3,7 @@ import api from '../services/api';
 
 const CoursesContext = createContext();
 
+/* eslint-disable-next-line react-refresh/only-export-components */
 export const useCourses = () => {
   const context = useContext(CoursesContext);
   if (!context) {

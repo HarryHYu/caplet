@@ -40,48 +40,48 @@ function App() {
       <AuthProvider>
         <CoursesProvider>
           <Router>
-          <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
-            <Navbar />
-            <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/mission" element={<Mission />} />
-                <Route path="/tools" element={<Tools />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
-                <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
-                <Route path="/tools/savings-goal" element={<SavingsGoal />} />
-                <Route path="/tools/loan-repayment" element={<LoanRepayment />} />
-                <Route path="/tools/compound-interest" element={<CompoundInterest />} />
-                <Route path="/tools/mortgage" element={<MortgageCalculator />} />
-                <Route path="/tools/super-contribution" element={<SuperContribution />} />
-                <Route path="/tools/gst" element={<GSTCalculator />} />
-                <Route path="/tools/salary" element={<SalaryCalculator />} />
-                <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
-                <Route path="/courses" element={<Courses />} />
-                <Route path="/courses/:courseId" element={<CourseDetail />} />
-                <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
-                <Route path="/classes" element={<Classes />} />
-                <Route path="/classes/:classId" element={<ClassDetail />} />
-                <Route path="/settings" element={<Settings />}>
-                  <Route index element={<Navigate to="/settings/profile" replace />} />
-                  <Route path="profile" element={<SettingsProfile />} />
-                  <Route path="account" element={<SettingsAccount />} />
-                </Route>
-                <Route path="/profile/:userId" element={<UserProfile />} />
-                <Route path="/survey" element={<Survey />} />
-                <Route path="/survey-results" element={<SurveyResults />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </Router>
-      </CoursesProvider>
-    </AuthProvider>
+            <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
+              <Navbar />
+              <main className="flex-grow">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/mission" element={<Mission />} />
+                  <Route path="/tools" element={<Tools />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
+                  <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
+                  <Route path="/tools/savings-goal" element={<SavingsGoal />} />
+                  <Route path="/tools/loan-repayment" element={<LoanRepayment />} />
+                  <Route path="/tools/compound-interest" element={<CompoundInterest />} />
+                  <Route path="/tools/mortgage" element={<MortgageCalculator />} />
+                  <Route path="/tools/super-contribution" element={<SuperContribution />} />
+                  <Route path="/tools/gst" element={<GSTCalculator />} />
+                  <Route path="/tools/salary" element={<SalaryCalculator />} />
+                  <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
+                  <Route path="/courses" element={<Courses />} />
+                  <Route path="/courses/:courseId" element={<CourseDetail />} />
+                  <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
+                  <Route path="/classes" element={<Classes />} />
+                  <Route path="/classes/:classId" element={<ClassDetail />} />
+                  <Route path="/settings" element={<Settings />}>
+                    <Route index element={<Navigate to="/settings/profile" replace />} />
+                    <Route path="profile" element={<SettingsProfile />} />
+                    <Route path="account" element={<SettingsAccount />} />
+                  </Route>
+                  <Route path="/profile/:userId" element={<UserProfile />} />
+                  <Route path="/survey" element={<Survey />} />
+                  <Route path="/survey-results" element={<SurveyResults />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </Router>
+        </CoursesProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -50,6 +50,7 @@ app.use('/api/survey', require('./routes/survey'));
 app.use('/api/classes', require('./routes/classes'));
 
 // Error handling middleware
+// eslint-disable-next-line no-unused-vars -- Express error middleware requires 4 args
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 

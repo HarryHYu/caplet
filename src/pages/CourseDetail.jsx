@@ -20,7 +20,7 @@ const CourseDetail = () => {
         try {
           const prog = await api.getCourseProgress(courseId);
           setProgress(prog);
-        } catch (_) {
+        } catch {
           // ignore if not logged in
         }
       } catch (e) {

@@ -35,7 +35,7 @@ class ApiService {
       let data;
       try {
         data = await response.json();
-      } catch (e) {
+      } catch {
         // If response isn't JSON, use status text
         throw new Error(response.statusText || 'Something went wrong');
       }

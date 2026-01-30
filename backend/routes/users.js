@@ -22,17 +22,9 @@ const authenticateToken = async (req, res, next) => {
 
     req.user = user;
     next();
-  } catch (error) {
+  } catch {
     res.status(401).json({ message: 'Invalid token' });
   }
-};
-
-// Role guard: require admin
-const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Admin access required' });
-  }
-  next();
 };
 
 // Get current user's own profile (full)

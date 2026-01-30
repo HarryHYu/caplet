@@ -31,7 +31,6 @@ const SavingsGoal = () => {
     const monthlyRate = rate / 100 / 12;
     const needed = goalNum - currentNum;
     let months = 0;
-    let balance = currentNum;
 
     if (monthlyNum > 0) {
       if (rate > 0) {
