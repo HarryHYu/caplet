@@ -12,6 +12,7 @@ const {
   ClassAnnouncement,
   Comment,
 } = require('../models');
+const { sequelize } = require('../config/database');
 
 const router = express.Router();
 
@@ -427,6 +428,32 @@ router.get('/:id', authenticateToken, async (req, res) => {
       }
     } catch (leaderboardErr) {
       console.warn('Leaderboard (non-critical):', leaderboardErr.message);
+    }
+
+    // Comment counts for announcements and assignments (so frontend can show comments open by default)
+    try {
+      const countRows = await Comment.findAll({
+        where: { classroomId: classroom.id },
+        attributes: [
+          'commentableType',
+          'commentableId',
+          [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+        ],
+        group: ['commentableType', 'commentableId'],
+        raw: true,
+      });
+      const countMap = {};
+      countRows.forEach((r) => {
+        countMap[`${r.commentableType}-${r.commentableId}`] = parseInt(r.count, 10) || 0;
+      });
+      announcementsDto.forEach((a) => {
+        a.commentCount = countMap[`announcement-${a.id}`] || 0;
+      });
+      assignmentsDto.forEach((a) => {
+        a.commentCount = countMap[`assignment-${a.id}`] || 0;
+      });
+    } catch (commentCountErr) {
+      console.warn('Comment counts (non-critical):', commentCountErr.message);
     }
 
     res.json({

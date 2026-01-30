@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -33,6 +33,7 @@ const ClassDetail = () => {
   const [assignmentPrivateTarget, setAssignmentPrivateTarget] = useState({}); // teacher: assignmentId -> student userId for private reply
   const [loadingComments, setLoadingComments] = useState({ announcement: null, assignment: null });
   const [postingComment, setPostingComment] = useState(false);
+  const initialCommentOpenDone = useRef(false);
 
   const load = async () => {
     try {
@@ -76,6 +77,29 @@ const ClassDetail = () => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, classId]);
+
+  // Reset "open comments by default" when switching class
+  useEffect(() => {
+    initialCommentOpenDone.current = false;
+  }, [classId]);
+
+  // When class detail has commentCount > 0, open those sections by default and fetch comments
+  useEffect(() => {
+    if (!data?.classroom || initialCommentOpenDone.current) return;
+    const announcements = data.announcements || [];
+    const assignments = data.assignments || [];
+    const toOpenAnnouncement = announcements.filter((a) => a?.commentCount > 0).map((a) => a.id);
+    const toOpenAssignment = assignments.filter((a) => a?.commentCount > 0).map((a) => a.id);
+    if (toOpenAnnouncement.length === 0 && toOpenAssignment.length === 0) return;
+    initialCommentOpenDone.current = true;
+    setOpenCommentSections((prev) => ({
+      announcement: new Set([...prev.announcement, ...toOpenAnnouncement]),
+      assignment: new Set([...prev.assignment, ...toOpenAssignment]),
+    }));
+    toOpenAnnouncement.forEach((id) => fetchAnnouncementComments(id));
+    toOpenAssignment.forEach((id) => fetchAssignmentComments(id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   if (!isAuthenticated) {
     return (
