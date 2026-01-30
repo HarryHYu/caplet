@@ -10,6 +10,7 @@ const {
   Course,
   Lesson,
   ClassAnnouncement,
+  Comment,
 } = require('../models');
 
 const router = express.Router();
@@ -385,6 +386,49 @@ router.get('/:id', authenticateToken, async (req, res) => {
       announcementsDto = [];
     }
 
+    // Leaderboard: students by completed assignment count (most first)
+    let leaderboard = [];
+    try {
+      const studentMembers = memberships.filter((m) => m.role === 'student');
+      if (studentMembers.length > 0) {
+        const assignmentsInClass = await Assignment.findAll({
+          where: { classroomId: classroom.id },
+          attributes: ['id'],
+          raw: true,
+        });
+        const assignmentIds = assignmentsInClass.map((a) => a.id);
+        if (assignmentIds.length > 0) {
+          const completed = await AssignmentSubmission.findAll({
+            where: { assignmentId: assignmentIds, status: 'completed' },
+            attributes: ['studentId'],
+            raw: true,
+          });
+          const countByStudent = {};
+          studentMembers.forEach((m) => (countByStudent[m.user.id] = 0));
+          completed.forEach((r) => {
+            if (countByStudent[r.studentId] !== undefined) countByStudent[r.studentId]++;
+          });
+          leaderboard = studentMembers
+            .map((m) => ({
+              userId: m.user.id,
+              firstName: m.user.firstName,
+              lastName: m.user.lastName,
+              completedCount: countByStudent[m.user.id] || 0,
+            }))
+            .sort((a, b) => b.completedCount - a.completedCount);
+        } else {
+          leaderboard = studentMembers.map((m) => ({
+            userId: m.user.id,
+            firstName: m.user.firstName,
+            lastName: m.user.lastName,
+            completedCount: 0,
+          }));
+        }
+      }
+    } catch (leaderboardErr) {
+      console.warn('Leaderboard (non-critical):', leaderboardErr.message);
+    }
+
     res.json({
       classroom: {
         id: classroom.id,
@@ -399,6 +443,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
       members,
       assignments: assignmentsDto,
       announcements: announcementsDto,
+      leaderboard,
     });
   } catch (error) {
     console.error('Get class detail error:', error);
@@ -735,6 +780,166 @@ router.delete('/:classId/announcements/:announcementId', authenticateToken, asyn
     res.json({ message: 'Announcement deleted successfully' });
   } catch (error) {
     console.error('Delete announcement error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ----- Comments on announcements (all public) -----
+router.get('/:classId/announcements/:announcementId/comments', authenticateToken, async (req, res) => {
+  try {
+    const { classId, announcementId } = req.params;
+    const classroom = await Classroom.findByPk(classId);
+    if (!classroom) return res.status(404).json({ message: 'Class not found' });
+    const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
+    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
+    const announcement = await ClassAnnouncement.findByPk(announcementId);
+    if (!announcement || announcement.classroomId !== classroom.id) return res.status(404).json({ message: 'Announcement not found' });
+
+    const comments = await Comment.findAll({
+      where: { classroomId: classroom.id, commentableType: 'announcement', commentableId: announcementId },
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      order: [['createdAt', 'ASC']],
+    });
+    res.json(comments.map((c) => ({
+      id: c.id,
+      content: c.content,
+      isPrivate: c.isPrivate,
+      createdAt: c.createdAt,
+      author: c.author ? { id: c.author.id, firstName: c.author.firstName, lastName: c.author.lastName, email: c.author.email } : null,
+    })));
+  } catch (error) {
+    console.error('Get announcement comments error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.post('/:classId/announcements/:announcementId/comments', authenticateToken, [body('content').trim().isLength({ min: 1 })], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const { classId, announcementId } = req.params;
+    const classroom = await Classroom.findByPk(classId);
+    if (!classroom) return res.status(404).json({ message: 'Class not found' });
+    const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
+    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
+    const announcement = await ClassAnnouncement.findByPk(announcementId);
+    if (!announcement || announcement.classroomId !== classroom.id) return res.status(404).json({ message: 'Announcement not found' });
+
+    const comment = await Comment.create({
+      classroomId: classroom.id,
+      commentableType: 'announcement',
+      commentableId: announcementId,
+      authorId: req.user.id,
+      content: req.body.content.trim(),
+      isPrivate: false,
+      targetUserId: null,
+    });
+    const withAuthor = await Comment.findByPk(comment.id, {
+      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email'] }],
+    });
+    res.status(201).json({
+      id: withAuthor.id,
+      content: withAuthor.content,
+      isPrivate: withAuthor.isPrivate,
+      createdAt: withAuthor.createdAt,
+      author: withAuthor.author ? { id: withAuthor.author.id, firstName: withAuthor.author.firstName, lastName: withAuthor.author.lastName, email: withAuthor.author.email } : null,
+    });
+  } catch (error) {
+    console.error('Create announcement comment error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ----- Comments on assignments (public class comments + private student-teacher) -----
+router.get('/:classId/assignments/:assignmentId/comments', authenticateToken, async (req, res) => {
+  try {
+    const { classId, assignmentId } = req.params;
+    const classroom = await Classroom.findByPk(classId);
+    if (!classroom) return res.status(404).json({ message: 'Class not found' });
+    const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
+    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
+    const assignment = await Assignment.findByPk(assignmentId);
+    if (!assignment || assignment.classroomId !== classroom.id) return res.status(404).json({ message: 'Assignment not found' });
+
+    const isTeacher = membership.role === 'teacher';
+    const allComments = await Comment.findAll({
+      where: { classroomId: classroom.id, commentableType: 'assignment', commentableId: assignmentId },
+      include: [
+        { model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email'] },
+        { model: User, as: 'targetUser', attributes: ['id', 'firstName', 'lastName'], required: false },
+      ],
+      order: [['createdAt', 'ASC']],
+    });
+    const filtered = allComments.filter((c) => {
+      if (!c.isPrivate) return true;
+      if (c.authorId === req.user.id) return true;
+      if (c.targetUserId === req.user.id) return true;
+      if (isTeacher) return true;
+      return false;
+    });
+    res.json(filtered.map((c) => ({
+      id: c.id,
+      content: c.content,
+      isPrivate: c.isPrivate,
+      targetUserId: c.targetUserId,
+      targetUser: c.targetUser ? { id: c.targetUser.id, firstName: c.targetUser.firstName, lastName: c.targetUser.lastName } : null,
+      createdAt: c.createdAt,
+      author: c.author ? { id: c.author.id, firstName: c.author.firstName, lastName: c.author.lastName, email: c.author.email } : null,
+    })));
+  } catch (error) {
+    console.error('Get assignment comments error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.post('/:classId/assignments/:assignmentId/comments', authenticateToken, [body('content').trim().isLength({ min: 1 })], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const { classId, assignmentId } = req.params;
+    const { content, isPrivate, targetUserId } = req.body;
+    const classroom = await Classroom.findByPk(classId);
+    if (!classroom) return res.status(404).json({ message: 'Class not found' });
+    const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
+    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
+    const assignment = await Assignment.findByPk(assignmentId);
+    if (!assignment || assignment.classroomId !== classroom.id) return res.status(404).json({ message: 'Assignment not found' });
+
+    const privateComment = !!isPrivate;
+    let targetId = targetUserId || null;
+    if (privateComment && membership.role === 'teacher' && targetUserId) {
+      const targetMember = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: targetUserId, role: 'student' } });
+      if (!targetMember) return res.status(400).json({ message: 'Invalid target student for private comment' });
+      targetId = targetUserId;
+    }
+    if (privateComment && membership.role === 'student') targetId = null;
+
+    const comment = await Comment.create({
+      classroomId: classroom.id,
+      commentableType: 'assignment',
+      commentableId: assignmentId,
+      authorId: req.user.id,
+      content: (content || '').trim(),
+      isPrivate: privateComment,
+      targetUserId: targetId,
+    });
+    const withAuthor = await Comment.findByPk(comment.id, {
+      include: [
+        { model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email'] },
+        { model: User, as: 'targetUser', attributes: ['id', 'firstName', 'lastName'], required: false },
+      ],
+    });
+    res.status(201).json({
+      id: withAuthor.id,
+      content: withAuthor.content,
+      isPrivate: withAuthor.isPrivate,
+      targetUserId: withAuthor.targetUserId,
+      targetUser: withAuthor.targetUser ? { id: withAuthor.targetUser.id, firstName: withAuthor.targetUser.firstName, lastName: withAuthor.targetUser.lastName } : null,
+      createdAt: withAuthor.createdAt,
+      author: withAuthor.author ? { id: withAuthor.author.id, firstName: withAuthor.author.firstName, lastName: withAuthor.author.lastName, email: withAuthor.author.email } : null,
+    });
+  } catch (error) {
+    console.error('Create assignment comment error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

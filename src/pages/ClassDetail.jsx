@@ -26,6 +26,13 @@ const ClassDetail = () => {
     attachmentUrl: '',
   });
   const [activeTab, setActiveTab] = useState('stream'); // 'stream' | 'classwork' | 'people'
+  const [announcementComments, setAnnouncementComments] = useState({});
+  const [assignmentComments, setAssignmentComments] = useState({});
+  const [openCommentSections, setOpenCommentSections] = useState({ announcement: new Set(), assignment: new Set() });
+  const [commentDrafts, setCommentDrafts] = useState({ announcement: {}, assignmentClass: {}, assignmentPrivate: {} });
+  const [assignmentPrivateTarget, setAssignmentPrivateTarget] = useState({}); // teacher: assignmentId -> student userId for private reply
+  const [loadingComments, setLoadingComments] = useState({ announcement: null, assignment: null });
+  const [postingComment, setPostingComment] = useState(false);
 
   const load = async () => {
     try {
@@ -120,7 +127,7 @@ const ClassDetail = () => {
 
   if (!data) return null;
 
-  const { classroom, membership, members, assignments, announcements = [] } = data;
+  const { classroom, membership, members, assignments, announcements = [], leaderboard = [] } = data;
   const isTeacher = membership?.role === 'teacher';
 
   const teachers = members.filter((m) => m.role === 'teacher');
@@ -266,6 +273,97 @@ const ClassDetail = () => {
     const last = author.lastName?.charAt(0) || '';
     if (first || last) return (first + last).toUpperCase();
     return author.email?.charAt(0)?.toUpperCase() || '?';
+  };
+
+  const fetchAnnouncementComments = async (announcementId) => {
+    if (announcementComments[announcementId]) return;
+    setLoadingComments((prev) => ({ ...prev, announcement: announcementId }));
+    try {
+      const list = await api.getAnnouncementComments(classroom.id, announcementId);
+      setAnnouncementComments((prev) => ({ ...prev, [announcementId]: Array.isArray(list) ? list : [] }));
+    } catch (e) {
+      console.warn('Failed to load announcement comments', e);
+      setAnnouncementComments((prev) => ({ ...prev, [announcementId]: [] }));
+    } finally {
+      setLoadingComments((prev) => ({ ...prev, announcement: null }));
+    }
+  };
+
+  const fetchAssignmentComments = async (assignmentId) => {
+    if (assignmentComments[assignmentId]) return;
+    setLoadingComments((prev) => ({ ...prev, assignment: assignmentId }));
+    try {
+      const list = await api.getAssignmentComments(classroom.id, assignmentId);
+      setAssignmentComments((prev) => ({ ...prev, [assignmentId]: Array.isArray(list) ? list : [] }));
+    } catch (e) {
+      console.warn('Failed to load assignment comments', e);
+      setAssignmentComments((prev) => ({ ...prev, [assignmentId]: [] }));
+    } finally {
+      setLoadingComments((prev) => ({ ...prev, assignment: null }));
+    }
+  };
+
+  const toggleAnnouncementComments = (announcementId) => {
+    setOpenCommentSections((prev) => {
+      const next = new Set(prev.announcement);
+      if (next.has(announcementId)) next.delete(announcementId);
+      else next.add(announcementId);
+      return { ...prev, announcement: next };
+    });
+    fetchAnnouncementComments(announcementId);
+  };
+
+  const toggleAssignmentComments = (assignmentId) => {
+    setOpenCommentSections((prev) => {
+      const next = new Set(prev.assignment);
+      if (next.has(assignmentId)) next.delete(assignmentId);
+      else next.add(assignmentId);
+      return { ...prev, assignment: next };
+    });
+    fetchAssignmentComments(assignmentId);
+  };
+
+  const handlePostAnnouncementComment = async (announcementId) => {
+    const draft = commentDrafts.announcement[announcementId];
+    if (!draft || !draft.trim()) return;
+    setPostingComment(true);
+    try {
+      const created = await api.createAnnouncementComment(classroom.id, announcementId, draft.trim());
+      setAnnouncementComments((prev) => ({
+        ...prev,
+        [announcementId]: [...(prev[announcementId] || []), created],
+      }));
+      setCommentDrafts((prev) => ({ ...prev, announcement: { ...prev.announcement, [announcementId]: '' } }));
+    } catch (e) {
+      console.error('Post announcement comment error', e);
+      setError(e.message || 'Failed to post comment');
+    } finally {
+      setPostingComment(false);
+    }
+  };
+
+  const handlePostAssignmentComment = async (assignmentId, { isPrivate, targetUserId }) => {
+    const key = isPrivate ? 'assignmentPrivate' : 'assignmentClass';
+    const draft = commentDrafts[key][assignmentId];
+    if (!draft || !draft.trim()) return;
+    setPostingComment(true);
+    try {
+      const created = await api.createAssignmentComment(classroom.id, assignmentId, {
+        content: draft.trim(),
+        isPrivate: !!isPrivate,
+        targetUserId: targetUserId || undefined,
+      });
+      setAssignmentComments((prev) => ({
+        ...prev,
+        [assignmentId]: [...(prev[assignmentId] || []), created],
+      }));
+      setCommentDrafts((prev) => ({ ...prev, [key]: { ...prev[key], [assignmentId]: '' } }));
+    } catch (e) {
+      console.error('Post assignment comment error', e);
+      setError(e.message || 'Failed to post comment');
+    } finally {
+      setPostingComment(false);
+    }
   };
 
   const getAvatarColor = (name) => {
@@ -557,6 +655,64 @@ const ClassDetail = () => {
                               })}
                             </div>
                           )}
+                          {/* Comments on announcement (all public) */}
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                              type="button"
+                              onClick={() => toggleAnnouncementComments(a.id)}
+                              className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                            >
+                              {openCommentSections.announcement.has(a.id) ? 'Hide comments' : 'Comments'}
+                              {(announcementComments[a.id]?.length ?? 0) > 0 && ` (${announcementComments[a.id].length})`}
+                            </button>
+                            {openCommentSections.announcement.has(a.id) && (
+                              <div className="mt-3 space-y-2">
+                                {loadingComments.announcement === a.id ? (
+                                  <p className="text-xs text-gray-500">Loading...</p>
+                                ) : (
+                                  <>
+                                    {(announcementComments[a.id] || []).map((c) => (
+                                      <div key={c.id} className="flex gap-2 text-sm">
+                                        <span className="font-medium text-gray-900 dark:text-white shrink-0">
+                                          {c.author ? `${c.author.firstName} ${c.author.lastName}` : 'Unknown'}:
+                                        </span>
+                                        <span className="text-gray-700 dark:text-gray-300">{c.content}</span>
+                                        <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(c.createdAt)}</span>
+                                      </div>
+                                    ))}
+                                    <div className="flex gap-2 mt-2">
+                                      <input
+                                        type="text"
+                                        value={commentDrafts.announcement[a.id] || ''}
+                                        onChange={(e) =>
+                                          setCommentDrafts((prev) => ({
+                                            ...prev,
+                                            announcement: { ...prev.announcement, [a.id]: e.target.value },
+                                          }))
+                                        }
+                                        placeholder="Add a class comment..."
+                                        className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-500"
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handlePostAnnouncementComment(a.id);
+                                          }
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        disabled={postingComment || !(commentDrafts.announcement[a.id] || '').trim()}
+                                        onClick={() => handlePostAnnouncementComment(a.id)}
+                                        className="px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                                      >
+                                        Post
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -600,83 +756,259 @@ const ClassDetail = () => {
                   const completedCount = Array.isArray(a.submissions)
                     ? a.submissions.filter((s) => s.status === 'completed').length
                     : undefined;
+                  const commentsList = assignmentComments[a.id] || [];
+                  const classComments = commentsList.filter((c) => !c.isPrivate);
+                  const privateComments = commentsList.filter((c) => c.isPrivate);
+                  const totalComments = commentsList.length;
                   return (
                     <div
                       key={a.id}
-                      className="flex items-start justify-between gap-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]"
+                      className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]"
                     >
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-                          {a.title}
-                        </h3>
-                        {a.description && (
-                          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 mb-3">
-                            {a.description}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap gap-2 items-center">
-                          {a.dueDate && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-xs font-semibold">
-                              📅 Due {new Date(a.dueDate).toLocaleDateString(undefined, {
-                                month: 'short',
-                                day: 'numeric',
-                              })}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                            {a.title}
+                          </h3>
+                          {a.description && (
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 mb-3">
+                              {a.description}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap gap-2 items-center">
+                            {a.dueDate && (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-xs font-semibold">
+                                📅 Due {new Date(a.dueDate).toLocaleDateString(undefined, {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </span>
+                            )}
+                            {a.lesson && (
+                              <Link
+                                to={`/courses/${a.course?.id || ''}/lessons/${a.lesson.id}`}
+                                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                              >
+                                📖 {a.lesson.title}
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          {isTeacher ? (
+                            <>
+                              {typeof completedCount === 'number' && (
+                                <div className="px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl">
+                                  <span className="text-xs font-bold text-green-700 dark:text-green-300">
+                                    ✅ {completedCount}/{totalStudents}
+                                  </span>
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAssignment(a.id)}
+                                className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+                              >
+                                🗑️ Delete
+                              </button>
+                            </>
+                          ) : (
+                            <span
+                              className={`text-xs font-bold px-3 py-1.5 rounded-xl ${
+                                isCompleted
+                                  ? 'bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-700 dark:text-green-300'
+                                  : 'bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/40 dark:to-amber-900/40 text-yellow-700 dark:text-yellow-300'
+                              }`}
+                            >
+                              {isCompleted ? '✅ Completed' : '📋 Assigned'}
                             </span>
                           )}
-                          {a.lesson && (
-                            <Link
-                              to={`/courses/${a.course?.id || ''}/lessons/${a.lesson.id}`}
-                              className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                          {!isTeacher && !isCompleted && (
+                            <button
+                              onClick={() => handleCompleteAssignment(a.id)}
+                              className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
                             >
-                              📖 {a.lesson.title}
-                            </Link>
+                              ✨ Mark as done
+                            </button>
+                          )}
+                          {!isTeacher && isCompleted && !a.lesson && (
+                            <button
+                              onClick={() => handleUncompleteAssignment(a.id)}
+                              className="px-4 py-2 rounded-xl text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                            >
+                              ↪️ Undo
+                            </button>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        {isTeacher ? (
-                          <>
-                            {typeof completedCount === 'number' && (
-                              <div className="px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl">
-                                <span className="text-xs font-bold text-green-700 dark:text-green-300">
-                                  ✅ {completedCount}/{totalStudents}
-                                </span>
-                              </div>
+
+                      {/* Comments on assignment (class + private) */}
+                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button
+                          type="button"
+                          onClick={() => toggleAssignmentComments(a.id)}
+                          className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                        >
+                          {openCommentSections.assignment.has(a.id) ? 'Hide comments' : 'Comments'}
+                          {totalComments > 0 && ` (${totalComments})`}
+                        </button>
+                        {openCommentSections.assignment.has(a.id) && (
+                          <div className="mt-3 space-y-4">
+                            {loadingComments.assignment === a.id ? (
+                              <p className="text-xs text-gray-500">Loading...</p>
+                            ) : (
+                              <>
+                                {/* Class comments (public) */}
+                                <div>
+                                  <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                    Class comments
+                                  </h4>
+                                  {classComments.map((c) => (
+                                    <div key={c.id} className="flex gap-2 text-sm mb-2">
+                                      <span className="font-medium text-gray-900 dark:text-white shrink-0">
+                                        {c.author ? `${c.author.firstName} ${c.author.lastName}` : 'Unknown'}:
+                                      </span>
+                                      <span className="text-gray-700 dark:text-gray-300">{c.content}</span>
+                                      <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(c.createdAt)}</span>
+                                    </div>
+                                  ))}
+                                  <div className="flex gap-2 mt-2">
+                                    <input
+                                      type="text"
+                                      value={commentDrafts.assignmentClass[a.id] || ''}
+                                      onChange={(e) =>
+                                        setCommentDrafts((prev) => ({
+                                          ...prev,
+                                          assignmentClass: { ...prev.assignmentClass, [a.id]: e.target.value },
+                                        }))
+                                      }
+                                      placeholder="Add a class comment..."
+                                      className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-500"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                          e.preventDefault();
+                                          handlePostAssignmentComment(a.id, { isPrivate: false });
+                                        }
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      disabled={postingComment || !(commentDrafts.assignmentClass[a.id] || '').trim()}
+                                      onClick={() => handlePostAssignmentComment(a.id, { isPrivate: false })}
+                                      className="px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                      Post
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Private comments (student–teacher) */}
+                                <div>
+                                  <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                    Private comments
+                                  </h4>
+                                  {privateComments.map((c) => (
+                                    <div key={c.id} className="flex gap-2 text-sm mb-2">
+                                      <span className="font-medium text-gray-900 dark:text-white shrink-0">
+                                        {c.author ? `${c.author.firstName} ${c.author.lastName}` : 'Unknown'}
+                                        {c.targetUser ? ` → ${c.targetUser.firstName} ${c.targetUser.lastName}` : ' (to teacher)'}:
+                                      </span>
+                                      <span className="text-gray-700 dark:text-gray-300">{c.content}</span>
+                                      <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(c.createdAt)}</span>
+                                    </div>
+                                  ))}
+                                  {isTeacher ? (
+                                    <div className="flex flex-wrap gap-2 mt-2 items-center">
+                                      <select
+                                        value={assignmentPrivateTarget[a.id] || ''}
+                                        onChange={(e) =>
+                                          setAssignmentPrivateTarget((prev) => ({
+                                            ...prev,
+                                            [a.id]: e.target.value || undefined,
+                                          }))
+                                        }
+                                        className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white"
+                                      >
+                                        <option value="">Reply to student...</option>
+                                        {students.map((s) => (
+                                          <option key={s.id} value={s.id}>
+                                            {s.firstName} {s.lastName}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <input
+                                        type="text"
+                                        value={commentDrafts.assignmentPrivate[a.id] || ''}
+                                        onChange={(e) =>
+                                          setCommentDrafts((prev) => ({
+                                            ...prev,
+                                            assignmentPrivate: { ...prev.assignmentPrivate, [a.id]: e.target.value },
+                                          }))
+                                        }
+                                        placeholder="Private message..."
+                                        className="flex-1 min-w-[120px] px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-500"
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handlePostAssignmentComment(a.id, {
+                                              isPrivate: true,
+                                              targetUserId: assignmentPrivateTarget[a.id] || undefined,
+                                            });
+                                          }
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        disabled={
+                                          postingComment ||
+                                          !(commentDrafts.assignmentPrivate[a.id] || '').trim() ||
+                                          !assignmentPrivateTarget[a.id]
+                                        }
+                                        onClick={() =>
+                                          handlePostAssignmentComment(a.id, {
+                                            isPrivate: true,
+                                            targetUserId: assignmentPrivateTarget[a.id] || undefined,
+                                          })
+                                        }
+                                        className="px-3 py-2 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+                                      >
+                                        Send
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex gap-2 mt-2">
+                                      <input
+                                        type="text"
+                                        value={commentDrafts.assignmentPrivate[a.id] || ''}
+                                        onChange={(e) =>
+                                          setCommentDrafts((prev) => ({
+                                            ...prev,
+                                            assignmentPrivate: { ...prev.assignmentPrivate, [a.id]: e.target.value },
+                                          }))
+                                        }
+                                        placeholder="Private comment to teacher..."
+                                        className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white placeholder-gray-500"
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handlePostAssignmentComment(a.id, { isPrivate: true });
+                                          }
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        disabled={postingComment || !(commentDrafts.assignmentPrivate[a.id] || '').trim()}
+                                        onClick={() => handlePostAssignmentComment(a.id, { isPrivate: true })}
+                                        className="px-3 py-2 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+                                      >
+                                        Send
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </>
                             )}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteAssignment(a.id)}
-                              className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
-                            >
-                              🗑️ Delete
-                            </button>
-                          </>
-                        ) : (
-                          <span
-                            className={`text-xs font-bold px-3 py-1.5 rounded-xl ${
-                              isCompleted
-                                ? 'bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-700 dark:text-green-300'
-                                : 'bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/40 dark:to-amber-900/40 text-yellow-700 dark:text-yellow-300'
-                            }`}
-                          >
-                            {isCompleted ? '✅ Completed' : '📋 Assigned'}
-                          </span>
-                        )}
-                        {!isTeacher && !isCompleted && (
-                          <button
-                            onClick={() => handleCompleteAssignment(a.id)}
-                            className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
-                          >
-                            ✨ Mark as done
-                          </button>
-                        )}
-                        {!isTeacher && isCompleted && !a.lesson && (
-                          <button
-                            onClick={() => handleUncompleteAssignment(a.id)}
-                            className="px-4 py-2 rounded-xl text-xs font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
-                          >
-                            ↪️ Undo
-                          </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -695,6 +1027,48 @@ const ClassDetail = () => {
               <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mb-6">
                 People
               </h2>
+
+              {/* Leaderboard: most assignments completed */}
+              {Array.isArray(leaderboard) && leaderboard.length > 0 && (
+                <div className="mb-8 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200/50 dark:border-amber-700/50">
+                  <h3 className="text-sm font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span className="text-lg">🏆</span> Leaderboard — most assignments completed
+                  </h3>
+                  <ul className="space-y-2">
+                    {leaderboard.map((entry, index) => (
+                      <li
+                        key={entry.userId}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-800/50 hover:shadow-md transition-all"
+                      >
+                        <span
+                          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                            index === 0
+                              ? 'bg-amber-400 text-amber-900'
+                              : index === 1
+                                ? 'bg-gray-300 text-gray-700 dark:bg-gray-500 dark:text-gray-200'
+                                : index === 2
+                                  ? 'bg-amber-600/80 text-white'
+                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                        <div className={`w-10 h-10 rounded-full ${getAvatarColor(entry.firstName + entry.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md flex-shrink-0`}>
+                          {getInitials(entry)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white block">
+                            {entry.firstName} {entry.lastName}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {entry.completedCount} assignment{entry.completedCount !== 1 ? 's' : ''} completed
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">

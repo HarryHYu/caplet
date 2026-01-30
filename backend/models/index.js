@@ -9,6 +9,7 @@ const ClassMembership = require('./ClassMembership');
 const Assignment = require('./Assignment');
 const AssignmentSubmission = require('./AssignmentSubmission');
 const ClassAnnouncement = require('./ClassAnnouncement');
+const Comment = require('./Comment');
 
 // Define associations
 Course.hasMany(Lesson, { 
@@ -143,6 +144,19 @@ ClassAnnouncement.belongsTo(User, {
   as: 'author',
 });
 
+// Comments (announcements + assignments; optional private for assignments)
+Classroom.hasMany(Comment, {
+  foreignKey: 'classroomId',
+  as: 'comments',
+  onDelete: 'CASCADE',
+});
+Comment.belongsTo(Classroom, { foreignKey: 'classroomId', as: 'classroom' });
+
+User.hasMany(Comment, { foreignKey: 'authorId', as: 'commentsAuthored', onDelete: 'CASCADE' });
+Comment.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
+
+Comment.belongsTo(User, { foreignKey: 'targetUserId', as: 'targetUser' });
+
 // Sync database
 const syncDatabase = async () => {
   try {
@@ -165,5 +179,6 @@ module.exports = {
   Assignment,
   AssignmentSubmission,
   ClassAnnouncement,
+  Comment,
   syncDatabase
 };

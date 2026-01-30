@@ -190,6 +190,28 @@ class ApiService {
     });
   }
 
+  async getAnnouncementComments(classId, announcementId) {
+    return this.request(`/classes/${classId}/announcements/${announcementId}/comments`);
+  }
+
+  async createAnnouncementComment(classId, announcementId, content) {
+    return this.request(`/classes/${classId}/announcements/${announcementId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  async getAssignmentComments(classId, assignmentId) {
+    return this.request(`/classes/${classId}/assignments/${assignmentId}/comments`);
+  }
+
+  async createAssignmentComment(classId, assignmentId, { content, isPrivate, targetUserId }) {
+    return this.request(`/classes/${classId}/assignments/${assignmentId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content, isPrivate: !!isPrivate, targetUserId: targetUserId || undefined }),
+    });
+  }
+
   async leaveClass(classId) {
     return this.request(`/classes/${classId}/leave`, {
       method: 'POST',
