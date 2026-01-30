@@ -633,7 +633,7 @@ const classifyAttachment = (url) => {
   return 'link';
 };
 
-// Create announcement (any class member)
+// Create announcement (teachers only)
 router.post(
   '/:id/announcements',
   authenticateToken,
@@ -655,6 +655,9 @@ router.post(
       });
       if (!membership) {
         return res.status(403).json({ message: 'You are not a member of this class' });
+      }
+      if (membership.role !== 'teacher') {
+        return res.status(403).json({ message: 'Only teachers can post announcements' });
       }
 
       const { content, attachmentUrl } = req.body;

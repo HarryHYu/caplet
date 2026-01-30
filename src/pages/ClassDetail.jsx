@@ -25,6 +25,7 @@ const ClassDetail = () => {
     content: '',
     attachmentUrl: '',
   });
+  const [activeTab, setActiveTab] = useState('stream'); // 'stream' | 'classwork' | 'people'
 
   const load = async () => {
     try {
@@ -247,6 +248,26 @@ const ClassDetail = () => {
     }
   };
 
+  const formatRelativeTime = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const now = new Date();
+    const sec = Math.floor((now - d) / 1000);
+    if (sec < 60) return 'Just now';
+    if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+    if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+    if (sec < 604800) return `${Math.floor(sec / 86400)}d ago`;
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+  };
+
+  const getInitials = (author) => {
+    if (!author) return '?';
+    const first = author.firstName?.charAt(0) || '';
+    const last = author.lastName?.charAt(0) || '';
+    if (first || last) return (first + last).toUpperCase();
+    return author.email?.charAt(0)?.toUpperCase() || '?';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -308,144 +329,225 @@ const ClassDetail = () => {
           </div>
         )}
 
-        {/* Announcements section */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-            Announcements
-          </h2>
-          <form onSubmit={handlePostAnnouncement} className="space-y-3 mb-4">
-            <textarea
-              value={announcementForm.content}
-              onChange={(e) =>
-                setAnnouncementForm((prev) => ({ ...prev, content: e.target.value }))
-              }
-              placeholder="Share an update with the class..."
-              rows={2}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white"
-            />
-            <input
-              type="url"
-              value={announcementForm.attachmentUrl}
-              onChange={(e) =>
-                setAnnouncementForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))
-              }
-              placeholder="Optional: paste an image, video, or link URL"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white"
-            />
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={postingAnnouncement || !announcementForm.content.trim()}
-                className="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-              >
-                {postingAnnouncement ? 'Posting...' : 'Post'}
-              </button>
-            </div>
-          </form>
+        {/* Tab bar — only one "page" (Stream / Classwork / People) is shown below */}
+        <nav className="flex border-b border-gray-200 dark:border-gray-700 -mb-px" aria-label="Class tabs">
+          <button
+            type="button"
+            onClick={() => setActiveTab('stream')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'stream'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
+          >
+            Stream
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('classwork')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'classwork'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
+          >
+            Classwork
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('people')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'people'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
+          >
+            People
+          </button>
+        </nav>
 
+        {/* Page content: only the active tab is rendered — screen changes, no route change */}
+        {activeTab === 'stream' && (
+        <div className="min-h-[50vh] pt-6" role="region" aria-label="Stream page">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stream</h2>
+          <div className="space-y-4">
+          {/* Composer: teachers only (like Google Classroom) */}
+          {isTeacher && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80 overflow-hidden">
+            <form onSubmit={handlePostAnnouncement} className="p-4">
+              <div className="flex gap-3">
+                <div
+                  className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-sm font-medium"
+                  aria-hidden
+                >
+                  {getInitials(user)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <textarea
+                    value={announcementForm.content}
+                    onChange={(e) =>
+                      setAnnouncementForm((prev) => ({ ...prev, content: e.target.value }))
+                    }
+                    placeholder="Share something with your class..."
+                    rows={2}
+                    className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-[15px] leading-snug resize-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 dark:focus:border-blue-500"
+                  />
+                  <input
+                    type="url"
+                    value={announcementForm.attachmentUrl}
+                    onChange={(e) =>
+                      setAnnouncementForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))
+                    }
+                    placeholder="Add attachment (image, video, or link URL)"
+                    className="mt-2 w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 dark:focus:border-blue-500"
+                  />
+                  <div className="flex justify-end mt-3">
+                    <button
+                      type="submit"
+                      disabled={postingAnnouncement || !announcementForm.content.trim()}
+                      className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {postingAnnouncement ? 'Posting...' : 'Post'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          )}
+
+          {/* Announcement cards — visible to both teachers and students */}
           {!Array.isArray(announcements) || announcements.length === 0 ? (
-            <p className="text-sm text-gray-600 dark:text-gray-400">No announcements yet.</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80 p-8 text-center">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                {isTeacher
+                  ? 'No announcements yet. Share something with your class above.'
+                  : 'No announcements yet.'}
+              </p>
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {announcements.map((a) => {
                 if (!a || !a.id) return null;
                 const isAuthor = a.author?.id === user?.id;
+                const canDelete = isTeacher || isAuthor;
                 return (
                   <div
                     key={a.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-md p-3 bg-gray-50 dark:bg-gray-900/40"
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200/80 dark:border-gray-700/80 overflow-hidden"
                   >
-                    <div className="flex justify-between items-start gap-2 mb-1">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {a.author
-                            ? `${a.author.firstName} ${a.author.lastName}`
-                            : 'Unknown'}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {a.createdAt ? new Date(a.createdAt).toLocaleString() : ''}
-                        </p>
-                      </div>
-                      {(isTeacher || isAuthor) && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteAnnouncement(a.id)}
-                          className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                    <div className="p-4">
+                      <div className="flex gap-3">
+                        <div
+                          className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 flex items-center justify-center text-sm font-medium"
+                          aria-hidden
                         >
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
-                      {a.content || ''}
-                    </p>
-                    {Array.isArray(a.attachments) && a.attachments.length > 0 && (
-                      <div className="mt-2 space-y-2">
-                        {a.attachments.map((att, idx) => {
-                          if (!att || !att.url) return null;
-                          if (att.type === 'image') {
-                            return (
-                              <img
-                                key={idx}
-                                src={att.url}
-                                alt=""
-                                className="max-h-64 rounded-md border border-gray-200 dark:border-gray-700"
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                }}
-                              />
-                            );
-                          }
-                          if (att.type === 'video') {
-                            const videoId = att.url.match(
-                              /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/
-                            )?.[1];
-                            if (videoId) {
-                              return (
-                                <div
-                                  key={idx}
-                                  className="relative pt-[56.25%] rounded-md overflow-hidden border border-gray-200 dark:border-gray-700"
-                                >
-                                  <iframe
-                                    src={`https://www.youtube.com/embed/${videoId}`}
-                                    title="Announcement video"
-                                    className="absolute inset-0 w-full h-full"
-                                    frameBorder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                  />
-                                </div>
-                              );
-                            }
-                          }
-                          return (
-                            <a
-                              key={idx}
-                              href={att.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:underline break-all"
-                            >
-                              {att.url}
-                            </a>
-                          );
-                        })}
+                          {getInitials(a.author)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-baseline gap-2 min-w-0">
+                              <span className="text-[15px] font-medium text-gray-900 dark:text-white truncate">
+                                {a.author
+                                  ? `${a.author.firstName} ${a.author.lastName}`
+                                  : 'Unknown'}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+                                {formatRelativeTime(a.createdAt)}
+                              </span>
+                            </div>
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAnnouncement(a.id)}
+                                className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                title="Delete announcement"
+                                aria-label="Delete announcement"
+                              >
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                          <p className="mt-1 text-[15px] text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                            {a.content || ''}
+                          </p>
+                          {Array.isArray(a.attachments) && a.attachments.length > 0 && (
+                            <div className="mt-3 space-y-3">
+                              {a.attachments.map((att, idx) => {
+                                if (!att || !att.url) return null;
+                                if (att.type === 'image') {
+                                  return (
+                                    <img
+                                      key={idx}
+                                      src={att.url}
+                                      alt=""
+                                      className="max-h-72 w-full object-contain rounded-lg border border-gray-200 dark:border-gray-600"
+                                      onError={(e) => {
+                                        e.target.style.display = 'none';
+                                      }}
+                                    />
+                                  );
+                                }
+                                if (att.type === 'video') {
+                                  const videoId = att.url.match(
+                                    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/
+                                  )?.[1];
+                                  if (videoId) {
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className="relative pt-[56.25%] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 bg-black"
+                                      >
+                                        <iframe
+                                          src={`https://www.youtube.com/embed/${videoId}`}
+                                          title="Announcement video"
+                                          className="absolute inset-0 w-full h-full"
+                                          frameBorder="0"
+                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                          allowFullScreen
+                                        />
+                                      </div>
+                                    );
+                                  }
+                                }
+                                return (
+                                  <a
+                                    key={idx}
+                                    href={att.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
+                                  >
+                                    <span className="flex-shrink-0 text-gray-400 dark:text-gray-500">
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                    </span>
+                                    {att.url}
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               })}
             </div>
           )}
+          </div>
         </div>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          {/* Assignments column */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Homework & assignments
-              </h2>
+        {/* Classwork page — only this or Stream or People is visible */}
+        {activeTab === 'classwork' && (
+        <div className="min-h-[50vh] pt-6" role="region" aria-label="Classwork page">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Classwork
+            </h2>
               {isTeacher && (
                 <button
                   onClick={() => setShowNewAssignment(true)}
@@ -553,12 +655,15 @@ const ClassDetail = () => {
                 })}
               </div>
             )}
-          </div>
+        </div>
+        )}
 
-          {/* Members column */}
-          <div className="space-y-4">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+        {/* People page — only this or Stream or Classwork is visible */}
+        {activeTab === 'people' && (
+        <div className="min-h-[50vh] pt-6" role="region" aria-label="People page">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden max-w-2xl">
+            <div className="p-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 People
               </h2>
 
@@ -608,8 +713,9 @@ const ClassDetail = () => {
             </div>
           </div>
         </div>
+        )}
 
-        {/* New assignment modal */}
+        {/* New assignment modal — overlay, not a tab */}
         {isTeacher && showNewAssignment && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
