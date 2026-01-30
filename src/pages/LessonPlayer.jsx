@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 import ReactMarkdown from 'react-markdown';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Extract YouTube video ID from URL
 const getYouTubeId = (url) => {
@@ -169,6 +170,7 @@ function getFlatLessons(course) {
 const LessonPlayer = () => {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [course, setCourse] = useState(null);
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -296,9 +298,13 @@ const LessonPlayer = () => {
     await api.updateLessonProgress(lesson.id, { quizScores: { [key]: isCorrect }, lastSlideIndex: slideIndex }).catch(() => {});
   };
 
+  const pageBg = isDark ? '#1e3a5f' : '#ffffff';
+  const cardBg = isDark ? '#334155' : '#f1f5f9';
+  const slideAreaBg = isDark ? '#475569' : '#ffffff';
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center" style={{ minHeight: '100vh', backgroundColor: pageBg }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-300">Loading lesson...</p>
@@ -309,7 +315,7 @@ const LessonPlayer = () => {
 
   if (error || !course || !lesson) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center" style={{ minHeight: '100vh', backgroundColor: pageBg }}>
         <div className="text-center">
           <p className="text-red-600 dark:text-red-400">{error || 'Lesson not found'}</p>
           <Link to={`/courses/${courseId}`} className="mt-4 inline-block text-blue-600 dark:text-blue-400">Back to course</Link>
@@ -324,7 +330,10 @@ const LessonPlayer = () => {
   const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
-    <div className="lesson-page-bg min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div
+      className="min-h-screen"
+      style={{ minHeight: '100vh', backgroundColor: pageBg }}
+    >
       <div className="container-custom py-6">
         <div className="mb-4 flex items-center justify-between">
           <Link to={`/courses/${course.id}`} className="text-blue-600 dark:text-blue-400">← {course.title}</Link>
@@ -332,7 +341,10 @@ const LessonPlayer = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <aside className="lg:col-span-4 bg-white dark:bg-gray-800 rounded-lg shadow p-4 h-max">
+          <aside
+            className="lg:col-span-4 rounded-lg shadow p-4 h-max"
+            style={{ backgroundColor: cardBg }}
+          >
             <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Modules & lessons</h3>
             <div className="space-y-4">
               {sortedModules.map((mod) => (
@@ -356,14 +368,17 @@ const LessonPlayer = () => {
           </aside>
 
           <main className="lg:col-span-8">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="rounded-lg shadow p-6" style={{ backgroundColor: cardBg }}>
               <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{lesson.title}</h1>
               <p className="text-gray-600 dark:text-gray-300 mb-6">{lesson.description}</p>
 
               {hasSlides ? (
                 <>
                   {/* Slide-based content (Khan/EP style) */}
-                  <div className="lesson-slide-area mb-6 min-h-[280px] p-4 rounded-lg bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 shadow-sm">
+                  <div
+                    className="mb-6 min-h-[280px] p-4 rounded-lg border shadow-sm"
+                    style={{ backgroundColor: slideAreaBg, borderColor: isDark ? '#64748b' : '#e2e8f0' }}
+                  >
                     {(() => {
                       const slide = slides[currentSlideIndex];
                       if (!slide) {
@@ -379,7 +394,7 @@ const LessonPlayer = () => {
                         const selected = questionAnswer ?? (alreadyAnswered ? undefined : null);
                         const showFeedback = questionSubmitted || alreadyAnswered;
                         return (
-                          <div className="p-4 bg-white dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-600" style={{ backgroundColor: slideAreaBg }}>
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Question</h3>
                             <p className="font-medium text-gray-900 dark:text-white mb-4">{slide.question}</p>
                             <div className="space-y-2">
