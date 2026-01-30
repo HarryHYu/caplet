@@ -255,6 +255,30 @@ const LessonPlayer = () => {
     }
   };
 
+  const pageBg = isDark ? '#1e3a5f' : '#ffffff';
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ minHeight: '100vh', backgroundColor: pageBg }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading lesson...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !course || !lesson) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ minHeight: '100vh', backgroundColor: pageBg }}>
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400">{error || 'Lesson not found'}</p>
+          <Link to={`/courses/${courseId}`} className="mt-4 inline-block text-blue-600 dark:text-blue-400">Back to course</Link>
+        </div>
+      </div>
+    );
+  }
+
   const slidesRaw = lesson.slides;
   const slides = (() => {
     if (Array.isArray(slidesRaw)) return slidesRaw;
@@ -298,35 +322,10 @@ const LessonPlayer = () => {
     await api.updateLessonProgress(lesson.id, { quizScores: { [key]: isCorrect }, lastSlideIndex: slideIndex }).catch(() => {});
   };
 
-  const pageBg = isDark ? '#1e3a5f' : '#ffffff';
   const cardBg = isDark ? '#334155' : '#f1f5f9';
   const slideAreaBg = isDark ? '#475569' : '#ffffff';
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ minHeight: '100vh', backgroundColor: pageBg }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading lesson...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !course || !lesson) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ minHeight: '100vh', backgroundColor: pageBg }}>
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400">{error || 'Lesson not found'}</p>
-          <Link to={`/courses/${courseId}`} className="mt-4 inline-block text-blue-600 dark:text-blue-400">Back to course</Link>
-        </div>
-      </div>
-    );
-  }
-
   const flatLessons = getFlatLessons(course);
   const idx = flatLessons.findIndex(l => l.id === lesson.id);
-
   const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
