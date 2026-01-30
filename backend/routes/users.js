@@ -45,10 +45,13 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Update user profile (including switching between student/teacher roles)
+// Update user profile (name, email, password, dateOfBirth, bio, role, preferences)
 router.put('/profile', authenticateToken, [
   body('firstName').optional().trim().isLength({ min: 1, max: 50 }),
   body('lastName').optional().trim().isLength({ min: 1, max: 50 }),
+  body('email').optional().isEmail().normalizeEmail(),
+  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('dateOfBirth').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date (use YYYY-MM-DD)'),
   body('bio').optional().trim().isLength({ max: 1000 }),
   body('preferences').optional().isObject(),
   body('role').optional().isIn(['student', 'instructor'])
@@ -59,11 +62,17 @@ router.put('/profile', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, bio, preferences, role } = req.body;
+    const { firstName, lastName, email, password, dateOfBirth, bio, preferences, role } = req.body;
 
-    // Determine new role:
-    // - Admins keep their role (cannot be changed through this endpoint)
-    // - Non-admins may switch between 'student' and 'instructor'
+    // If changing email, ensure it's not taken by another user
+    if (email && email !== req.user.email) {
+      const existing = await User.findOne({ where: { email } });
+      if (existing) {
+        return res.status(400).json({ message: 'That email is already in use' });
+      }
+    }
+
+    // Determine new role (admins keep role; others may switch student/instructor)
     let newRole = req.user.role;
     if (role && req.user.role !== 'admin') {
       if (role === 'student' || role === 'instructor') {
@@ -71,15 +80,20 @@ router.put('/profile', authenticateToken, [
       }
     }
 
-    await req.user.update({
-      firstName: firstName || req.user.firstName,
-      lastName: lastName || req.user.lastName,
+    const updates = {
+      firstName: firstName !== undefined ? firstName : req.user.firstName,
+      lastName: lastName !== undefined ? lastName : req.user.lastName,
       bio: bio !== undefined ? bio : req.user.bio,
       preferences: preferences || req.user.preferences,
       role: newRole
-    });
+    };
+    if (email !== undefined) updates.email = email;
+    if (dateOfBirth !== undefined) updates.dateOfBirth = dateOfBirth === '' ? null : dateOfBirth;
+    if (password && password.trim()) updates.password = password.trim();
 
-    res.json({ 
+    await req.user.update(updates);
+
+    res.json({
       message: 'Profile updated successfully',
       user: req.user.toJSON()
     });

@@ -125,6 +125,13 @@ const Navbar = () => {
                             : 'Student'}
                         </p>
                       </div>
+                      <Link
+                        to="/settings"
+                        onClick={() => setShowUserMenu(false)}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        Settings
+                      </Link>
                       {user?.role !== 'admin' && (
                         <button
                           type="button"
@@ -150,7 +157,10 @@ const Navbar = () => {
                       )}
                       <button
                         type="button"
-                        onClick={logout}
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          logout();
+                        }}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700"
                       >
                         Logout
@@ -242,6 +252,13 @@ const Navbar = () => {
                         ? '(teacher)'
                         : '(student)'}
                     </div>
+                    <Link
+                      to="/settings"
+                      onClick={() => setIsOpen(false)}
+                      className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
+                    >
+                      Settings
+                    </Link>
                     {user?.role !== 'admin' && (
                       <button
                         onClick={async () => {
