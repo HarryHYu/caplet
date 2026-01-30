@@ -83,22 +83,44 @@ const ClassDetail = () => {
     initialCommentOpenDone.current = false;
   }, [classId]);
 
-  // When class detail has commentCount > 0, open those sections by default and fetch comments
+  // When class detail has commentCount > 0, open those sections by default and fetch comments (fetch inside effect so we use data.classroom.id, no stale closure)
   useEffect(() => {
-    if (!data?.classroom || initialCommentOpenDone.current) return;
+    if (!data?.classroom?.id || initialCommentOpenDone.current) return;
     const announcements = data.announcements || [];
     const assignments = data.assignments || [];
     const toOpenAnnouncement = announcements.filter((a) => a?.commentCount > 0).map((a) => a.id);
     const toOpenAssignment = assignments.filter((a) => a?.commentCount > 0).map((a) => a.id);
     if (toOpenAnnouncement.length === 0 && toOpenAssignment.length === 0) return;
     initialCommentOpenDone.current = true;
+    const classId = data.classroom.id;
     setOpenCommentSections((prev) => ({
       announcement: new Set([...prev.announcement, ...toOpenAnnouncement]),
       assignment: new Set([...prev.assignment, ...toOpenAssignment]),
     }));
-    toOpenAnnouncement.forEach((id) => fetchAnnouncementComments(id));
-    toOpenAssignment.forEach((id) => fetchAssignmentComments(id));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    toOpenAnnouncement.forEach(async (announcementId) => {
+      setLoadingComments((prev) => ({ ...prev, announcement: announcementId }));
+      try {
+        const list = await api.getAnnouncementComments(classId, announcementId);
+        setAnnouncementComments((prev) => ({ ...prev, [announcementId]: Array.isArray(list) ? list : [] }));
+      } catch (e) {
+        console.warn('Failed to load announcement comments', e);
+        setAnnouncementComments((prev) => ({ ...prev, [announcementId]: [] }));
+      } finally {
+        setLoadingComments((prev) => ({ ...prev, announcement: null }));
+      }
+    });
+    toOpenAssignment.forEach(async (assignmentId) => {
+      setLoadingComments((prev) => ({ ...prev, assignment: assignmentId }));
+      try {
+        const list = await api.getAssignmentComments(classId, assignmentId);
+        setAssignmentComments((prev) => ({ ...prev, [assignmentId]: Array.isArray(list) ? list : [] }));
+      } catch (e) {
+        console.warn('Failed to load assignment comments', e);
+        setAssignmentComments((prev) => ({ ...prev, [assignmentId]: [] }));
+      } finally {
+        setLoadingComments((prev) => ({ ...prev, assignment: null }));
+      }
+    });
   }, [data]);
 
   if (!isAuthenticated) {
@@ -690,9 +712,9 @@ const ClassDetail = () => {
                               {(announcementComments[a.id]?.length ?? 0) > 0 && ` (${announcementComments[a.id].length})`}
                             </button>
                             {openCommentSections.announcement.has(a.id) && (
-                              <div className="mt-3 space-y-2">
-                                {loadingComments.announcement === a.id ? (
-                                  <p className="text-xs text-gray-500">Loading...</p>
+                              <div className="mt-3 space-y-2 min-h-[2rem]">
+                                {loadingComments.announcement === a.id || announcementComments[a.id] === undefined ? (
+                                  <p className="text-sm text-gray-500 dark:text-gray-400 py-1">Loading comments…</p>
                                 ) : (
                                   <>
                                     {(announcementComments[a.id] || []).map((c) => (
@@ -877,9 +899,9 @@ const ClassDetail = () => {
                           {totalComments > 0 && ` (${totalComments})`}
                         </button>
                         {openCommentSections.assignment.has(a.id) && (
-                          <div className="mt-3 space-y-4">
-                            {loadingComments.assignment === a.id ? (
-                              <p className="text-xs text-gray-500">Loading...</p>
+                          <div className="mt-3 space-y-4 min-h-[2rem]">
+                            {loadingComments.assignment === a.id || assignmentComments[a.id] === undefined ? (
+                              <p className="text-sm text-gray-500 dark:text-gray-400 py-1">Loading comments…</p>
                             ) : (
                               <>
                                 {/* Class comments (public) */}
