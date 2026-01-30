@@ -54,15 +54,12 @@ const CourseDetail = () => {
     );
   }
 
-  const flatLessons = (course.modules || [])
-    .slice()
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-    .flatMap((m) => (m.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
-  const totalLessonCount = flatLessons.length;
+  const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const totalLessonCount = sortedModules.reduce((sum, m) => sum + (m.lessons || []).length, 0);
 
-  const startLesson = () => {
-    const first = flatLessons[0];
-    if (first) navigate(`/courses/${course.id}/lessons/${first.id}`);
+  const startCourse = () => {
+    const firstModule = sortedModules[0];
+    if (firstModule) navigate(`/courses/${course.id}/modules/${firstModule.id}`);
   };
 
   return (
@@ -92,7 +89,7 @@ const CourseDetail = () => {
                   </div>
                 </div>
               )}
-              <button onClick={startLesson} className="btn-primary">Start course</button>
+              <button onClick={startCourse} className="btn-primary">Start course</button>
             </div>
             {course.thumbnail && (
               <img src={course.thumbnail} alt={course.title} className="w-64 h-40 object-cover rounded" />
@@ -102,37 +99,27 @@ const CourseDetail = () => {
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
           <div className="border-b dark:border-gray-700 px-6 py-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Modules & lessons</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Modules</h2>
           </div>
-          <div className="divide-y dark:divide-gray-700">
-            {(course.modules || [])
-              .slice()
-              .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-              .map((mod) => (
-                <div key={mod.id} className="px-6 py-4">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">{mod.title}</h3>
-                  <ul className="space-y-2">
-                    {(mod.lessons || [])
-                      .slice()
-                      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                      .map((lesson) => (
-                        <li key={lesson.id} className="flex items-center justify-between pl-2">
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-white">{lesson.order}. {lesson.title}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">
-                              {lesson.description}
-                              {progress?.lessonProgress?.some(p => p.lessonId === lesson.id && p.status === 'completed') && (
-                                <span className="ml-2 text-green-600 dark:text-green-400">✓ Completed</span>
-                              )}
-                            </p>
-                          </div>
-                          <Link to={`/courses/${course.id}/lessons/${lesson.id}`} className="text-blue-600 dark:text-blue-400">Open</Link>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              ))}
-          </div>
+          <ul className="divide-y dark:divide-gray-700">
+            {sortedModules.map((mod) => {
+              const lessonCount = (mod.lessons || []).length;
+              return (
+                <li key={mod.id}>
+                  <Link
+                    to={`/courses/${course.id}/modules/${mod.id}`}
+                    className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">{mod.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{lessonCount} lesson{lessonCount !== 1 ? 's' : ''}</p>
+                    </div>
+                    <span className="text-blue-600 dark:text-blue-400">View lessons →</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
     </div>

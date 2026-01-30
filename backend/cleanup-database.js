@@ -1,7 +1,7 @@
 // Script to clean up database for CapletEdu
 // - Deletes user-generated education data (progress, surveys)
 // - Drops legacy/unused tables (financial advisor tables no longer used)
-// Run against PostgreSQL or SQLite; dialect is detected automatically.
+// PostgreSQL only (Railway). Requires DATABASE_URL.
 const { sequelize, UserProgress, Survey } = require('./models');
 require('dotenv').config();
 
@@ -15,8 +15,7 @@ const LEGACY_TABLES = [
 
 const cleanupDatabase = async () => {
   try {
-    console.log('Starting CapletEdu database cleanup...');
-    const dialect = sequelize.getDialect();
+    console.log('Starting database cleanup (PostgreSQL)...');
 
     // Delete education-related user data
     console.log('Deleting user progress...');
@@ -30,11 +29,8 @@ const cleanupDatabase = async () => {
     // Drop only legacy/unused tables
     for (const table of LEGACY_TABLES) {
       try {
-        const sql = dialect === 'postgres'
-          ? `DROP TABLE IF EXISTS "${table}" CASCADE;`
-          : `DROP TABLE IF EXISTS ${table};`;
         console.log(`Dropping legacy table if exists: ${table}...`);
-        await sequelize.query(sql);
+        await sequelize.query(`DROP TABLE IF EXISTS "${table}" CASCADE;`);
         console.log(`✅ Dropped (or did not exist): ${table}`);
       } catch (error) {
         console.log(`Note: Could not drop table ${table} (may not exist):`, error.message);

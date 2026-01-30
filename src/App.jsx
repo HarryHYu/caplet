@@ -22,6 +22,7 @@ import SalaryCalculator from './pages/tools/SalaryCalculator';
 import EmergencyFund from './pages/tools/EmergencyFund';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
+import ModuleDetail from './pages/ModuleDetail';
 import LessonPlayer from './pages/LessonPlayer';
 import Survey from './pages/Survey';
 import SurveyResults from './pages/SurveyResults';
@@ -62,6 +63,7 @@ function App() {
                   <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/courses/:courseId" element={<CourseDetail />} />
+                  <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
                   <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
                   <Route path="/classes" element={<Classes />} />
                   <Route path="/classes/:classId" element={<ClassDetail />} />

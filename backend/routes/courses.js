@@ -7,7 +7,7 @@ const UserProgress = require('../models/UserProgress');
 
 const router = express.Router();
 
-const includeModulesWithLessons = (whereLesson = { isPublished: true }) => [
+const includeModulesWithLessons = () => [
   {
     model: Module,
     as: 'modules',
@@ -16,7 +16,6 @@ const includeModulesWithLessons = (whereLesson = { isPublished: true }) => [
       {
         model: Lesson,
         as: 'lessons',
-        where: whereLesson,
         required: false
       }
     ]
@@ -33,12 +32,12 @@ function sortCourseContent(course) {
   return course;
 }
 
-// Get all published courses
+// Get all courses
 router.get('/', async (req, res) => {
   try {
     const { category, level, search, page = 1, limit = 10 } = req.query;
     
-    const whereClause = { isPublished: true };
+    const whereClause = {};
     
     if (category) {
       whereClause.category = category;
@@ -87,10 +86,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const course = await Course.findOne({
-      where: { 
-        id: req.params.id,
-        isPublished: true 
-      },
+      where: { id: req.params.id },
       include: includeModulesWithLessons()
     });
 
@@ -110,7 +106,6 @@ router.get('/categories/list', async (req, res) => {
   try {
     const categories = await Course.findAll({
       attributes: ['category'],
-      where: { isPublished: true },
       group: ['category'],
       raw: true
     });
@@ -128,9 +123,6 @@ router.get('/categories/list', async (req, res) => {
 router.get('/featured/list', async (req, res) => {
   try {
     const courses = await Course.findAll({
-      where: { 
-        isPublished: true
-      },
       include: includeModulesWithLessons(),
       order: [['createdAt', 'DESC']],
       limit: 6

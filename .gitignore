@@ -22,3 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local DB (testing only; production uses PostgreSQL)
+caplet.db
+backend/caplet.db
+backend/caplet.db.bak
+**/caplet.db
+**/caplet.db.bak
+
+# Env and secrets (never commit)
+.env
+backend/.env
+.env.*
+!.env.example

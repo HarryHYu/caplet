@@ -1,0 +1,97 @@
+{
+  "courseTitle": "Corporate Finance PART 1",
+  "courseShortDescription": "Stakeholders, corporate decision making, financial markets, ESG, risk and return.",
+  "courseDescription": "Corporate Finance Part 1: Stakeholders and Corporate Decision Making, Firms and Financial Markets, ESG Markets, Fundamentals of Investing.",
+  "courseCategory": "corporate-finance",
+  "courseLevel": "intermediate",
+  "moduleTitle": "Stakeholders and Corporate Decision Making (Module 1)",
+  "lessonTitle": "Understanding Stakeholders 1.0",
+  "lessonOrder": 1,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Shareholders and competitors**\n\n**Shareholders:** People who own part of a company by buying shares. They benefit when the company does well and may receive dividends or voting rights.\n\n**Competitors:** Other businesses that sell similar products or services and compete for the same customers."
+    },
+    {
+      "type": "text",
+      "content": "**Corporate managers and bondholders/banks**\n\n**Corporate managers:** People who run the company and make day-to-day and long-term business decisions on behalf of the owners.\n\n**Bondholders/Banks:** Lenders who provide money to the business and expect to be repaid with interest over time."
+    },
+    {
+      "type": "text",
+      "content": "**Employees, customers and society**\n\n**Employees:** People who work for the business and are paid wages or salaries to help it operate.\n\n**Customers:** People or organisations that buy the business's goods or services.\n\n**Society:** The wider community affected by the business, including local communities, the environment, and the economy as a whole."
+    },
+    {
+      "type": "video",
+      "content": "https://www.youtube.com/watch?v=n2idEwYDgak",
+      "caption": "Shareholders vs Stakeholders — While watching: Does prioritising shareholders conflict with other stakeholders?"
+    },
+    {
+      "type": "text",
+      "content": "**Discuss and answer**\n\nWhen a business makes decisions, who should it prioritise, and why? (1–2 sentence answers)"
+    },
+    {
+      "type": "question",
+      "id": "q1",
+      "question": "Who are shareholders?",
+      "options": [
+        "People who manage a company",
+        "People who lend money to a company",
+        "People who own part of a company by buying shares",
+        "People who buy the company's products"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "type": "question",
+      "id": "q2",
+      "question": "Which group competes with a business for the same customers?",
+      "options": ["Shareholders", "Employees", "Competitors", "Bondholders"],
+      "correctIndex": 2
+    },
+    {
+      "type": "question",
+      "id": "q3",
+      "question": "Who is responsible for making day-to-day and long-term decisions in a company?",
+      "options": ["Shareholders", "Corporate managers", "Customers", "Society"],
+      "correctIndex": 1
+    },
+    {
+      "type": "question",
+      "id": "q4",
+      "question": "Bondholders and banks are best described as:",
+      "options": [
+        "Owners of the business",
+        "Employees of the business",
+        "Lenders who expect repayment with interest",
+        "Competitors of the business"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "type": "question",
+      "id": "q5",
+      "question": "Which group is paid wages or salaries to help the business operate?",
+      "options": ["Customers", "Employees", "Shareholders", "Society"],
+      "correctIndex": 1
+    },
+    {
+      "type": "question",
+      "id": "q6",
+      "question": "Who buys the goods or services provided by a business?",
+      "options": ["Managers", "Customers", "Bondholders", "Competitors"],
+      "correctIndex": 1
+    },
+    {
+      "type": "question",
+      "id": "q7",
+      "question": "Which stakeholder represents the wider community affected by a business's actions?",
+      "options": ["Employees", "Shareholders", "Society", "Customers"],
+      "correctIndex": 2
+    },
+    {
+      "type": "image",
+      "content": "https://pages.stern.nyu.edu/adamodar/New_Home_Page/Budimage/Corporate%20Stakeholders.jpg",
+      "caption": "How corporate finance operates"
+    }
+  ]
+}

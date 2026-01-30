@@ -41,8 +41,8 @@ When you paste a lesson in the chat (with slides, video/image URLs, and quiz), t
 | `moduleTitle` | No | Module name (Course → Module → Lesson). Creates or matches module by title. Default: `Content`. |
 | `lessonTitle` | Yes | Lesson name. |
 | `lessonOrder` | No | 1-based order within module. Default: append. |
-| `slides` | Yes (for slide-based) | Array of `{ type: "text"|"image"|"video", content: string, caption?: string }`. |
-| `quiz` | No | Array of `{ question, options: string[], correctIndex: number }` (0-based). |
+| `slides` | Yes (for slide-based) | Array of content slides: `{ type: "text"|"image"|"video", content: string, caption?: string }`. You can also put question slides inline: `{ type: "question", question, options: string[], correctIndex: number, explanation?: string }`. |
+| `quiz` | No | Array of `{ question, options: string[], correctIndex: number, explanation?: string }` (0-based). On import, each quiz item is appended as a **separate slide** (type `question`), so the lesson is one linear flow: content slides then question slides. Progress is tracked by slide index; question answers are stored per slide. |
 
 ## Paste workflow
 

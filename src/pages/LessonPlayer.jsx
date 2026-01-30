@@ -176,6 +176,9 @@ const LessonPlayer = () => {
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [progress, setProgress] = useState({ lessonProgress: [] });
+  const [questionAnswer, setQuestionAnswer] = useState(null);
+  const [questionSubmitted, setQuestionSubmitted] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -194,16 +197,17 @@ const LessonPlayer = () => {
           } catch (e) {
             console.warn('Progress update failed (non-blocking):', e?.message || e);
           }
-          if (Array.isArray(current.slides) && current.slides.length > 0) {
-            try {
-              const prog = await api.getCourseProgress(courseId);
+          try {
+            const prog = await api.getCourseProgress(courseId);
+            setProgress(prog);
+            if (Array.isArray(current.slides) && current.slides.length > 0) {
               const lp = prog?.lessonProgress?.find((p) => p.lessonId === current.id);
               if (lp && typeof lp.lastSlideIndex === 'number') {
                 setCurrentSlideIndex(Math.min(lp.lastSlideIndex, current.slides.length - 1));
               }
-            } catch {
-              // ignore
             }
+          } catch {
+            // ignore
           }
         }
       } catch (e) {
@@ -250,7 +254,29 @@ const LessonPlayer = () => {
   const goToSlide = (newIndex) => {
     if (newIndex < 0 || newIndex >= slides.length) return;
     setCurrentSlideIndex(newIndex);
+    setQuestionAnswer(null);
+    setQuestionSubmitted(false);
     api.updateLessonProgress(lesson.id, { lastSlideIndex: newIndex }).catch(() => {});
+  };
+
+  const lessonProgressRecord = progress?.lessonProgress?.find((p) => p.lessonId === lesson?.id);
+  const quizScores = lessonProgressRecord?.quizScores || {};
+
+  const recordQuestionAnswer = async (slideIndex, isCorrect) => {
+    const key = String(slideIndex);
+    setQuestionSubmitted(true);
+    setProgress((prev) => {
+      const list = prev.lessonProgress || [];
+      const existing = list.find((p) => p.lessonId === lesson.id);
+      const updated = existing
+        ? { ...existing, quizScores: { ...(existing.quizScores || {}), [key]: isCorrect } }
+        : { lessonId: lesson.id, quizScores: { [key]: isCorrect } };
+      return {
+        ...prev,
+        lessonProgress: existing ? list.map((p) => (p.lessonId === lesson.id ? updated : p)) : [...list, updated]
+      };
+    });
+    await api.updateLessonProgress(lesson.id, { quizScores: { [key]: isCorrect }, lastSlideIndex: slideIndex }).catch(() => {});
   };
 
   if (loading) {
@@ -323,7 +349,74 @@ const LessonPlayer = () => {
                   <div className="mb-6 min-h-[200px]">
                     {(() => {
                       const slide = slides[currentSlideIndex];
-                      if (!slide) return null;
+                      if (!slide) {
+                        return (
+                          <p className="text-gray-500 dark:text-gray-400">No content for this slide.</p>
+                        );
+                      }
+                      if (slide.type === 'question') {
+                        const options = Array.isArray(slide.options) ? slide.options : [];
+                        const correctIndex = typeof slide.correctIndex === 'number' ? slide.correctIndex : 0;
+                        const alreadyAnswered = quizScores[String(currentSlideIndex)] !== undefined;
+                        const isCorrect = quizScores[String(currentSlideIndex)] === true;
+                        const selected = questionAnswer ?? (alreadyAnswered ? undefined : null);
+                        const showFeedback = questionSubmitted || alreadyAnswered;
+                        return (
+                          <div className="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Question</h3>
+                            <p className="font-medium text-gray-900 dark:text-white mb-4">{slide.question}</p>
+                            <div className="space-y-2">
+                              {options.map((option, optIdx) => {
+                                const chosen = selected === optIdx;
+                                const correct = correctIndex === optIdx;
+                                const show = showFeedback && (chosen || correct);
+                                return (
+                                  <label
+                                    key={optIdx}
+                                    className={`flex items-center p-3 rounded border-2 cursor-pointer transition ${
+                                      show
+                                        ? correct
+                                          ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/20'
+                                          : chosen
+                                            ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20'
+                                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'
+                                        : chosen
+                                          ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                                          : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-700'
+                                    }`}
+                                  >
+                                    <input
+                                      type="radio"
+                                      name={`slide-q-${currentSlideIndex}`}
+                                      checked={chosen}
+                                      onChange={() => !showFeedback && setQuestionAnswer(optIdx)}
+                                      disabled={showFeedback}
+                                      className="mr-3"
+                                    />
+                                    <span className="text-gray-900 dark:text-white">{option}</span>
+                                    {show && correct && <span className="ml-auto text-green-600 dark:text-green-400">✓</span>}
+                                    {show && chosen && !correct && <span className="ml-auto text-red-600 dark:text-red-400">✗</span>}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            {showFeedback && slide.explanation && (
+                              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 text-sm text-gray-900 dark:text-gray-200">
+                                <strong>Explanation:</strong> {slide.explanation}
+                              </div>
+                            )}
+                            {!showFeedback && selected !== null && (
+                              <button
+                                type="button"
+                                onClick={() => recordQuestionAnswer(currentSlideIndex, selected === correctIndex)}
+                                className="mt-4 btn-primary"
+                              >
+                                Check answer
+                              </button>
+                            )}
+                          </div>
+                        );
+                      }
                       if (slide.type === 'text') {
                         return (
                           <article className="prose prose-lg dark:prose-invert max-w-none">
@@ -380,21 +473,14 @@ const LessonPlayer = () => {
                     <button type="button" onClick={() => goToSlide(currentSlideIndex + 1)} disabled={currentSlideIndex >= slides.length - 1} className="btn-secondary disabled:opacity-50">Next slide →</button>
                   </div>
 
-                  {/* Quiz or Mark complete after last slide */}
+                  {/* Mark complete after last slide (questions are inline as slides) */}
                   {currentSlideIndex === slides.length - 1 && (
-                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                      {lesson.metadata?.hasQuiz && lesson.metadata?.quizQuestions && (
-                        <Quiz questions={lesson.metadata.quizQuestions} onComplete={markComplete} />
-                      )}
-                      {(!lesson.metadata?.hasQuiz || !lesson.metadata?.quizQuestions?.length) && (
-                        <div className="flex justify-between items-center">
-                          <button type="button" onClick={() => goToSlide(currentSlideIndex - 1)} disabled={currentSlideIndex <= 0} className="btn-secondary">← Prev slide</button>
-                          <button type="button" onClick={markComplete} disabled={saving || completed} className="btn-primary">
-                            {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
-                          </button>
-                          <span />
-                        </div>
-                      )}
+                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                      <button type="button" onClick={() => goToSlide(currentSlideIndex - 1)} disabled={currentSlideIndex <= 0} className="btn-secondary">← Prev slide</button>
+                      <button type="button" onClick={markComplete} disabled={saving || completed} className="btn-primary">
+                        {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
+                      </button>
+                      <span />
                     </div>
                   )}
                 </>

@@ -13,26 +13,8 @@ const VALID_CATEGORIES = [
 ];
 const VALID_LEVELS = ['beginner', 'intermediate', 'advanced'];
 
-async function ensureSlideColumns(sequelize) {
-  const dialect = sequelize.getDialect();
-  if (dialect === 'sqlite') {
-    try {
-      await sequelize.query(
-        "SELECT 1 FROM pragma_table_info('lessons') WHERE name='slides'",
-        { type: sequelize.QueryTypes.SELECT }
-      );
-    } catch {
-      await sequelize.query('ALTER TABLE lessons ADD COLUMN slides TEXT;').catch(() => {});
-    }
-    try {
-      await sequelize.query(
-        "SELECT 1 FROM pragma_table_info('user_progress') WHERE name='lastSlideIndex'",
-        { type: sequelize.QueryTypes.SELECT }
-      );
-    } catch {
-      await sequelize.query('ALTER TABLE user_progress ADD COLUMN lastSlideIndex INTEGER DEFAULT 0;').catch(() => {});
-    }
-  }
+async function ensureSlideColumns() {
+  // PostgreSQL schema is managed by Sequelize sync; no extra columns needed here.
 }
 
 async function importLesson(filePath) {
@@ -90,17 +72,20 @@ async function importLesson(filePath) {
   }
 
   const lessonOrder = typeof data.lessonOrder === 'number' ? data.lessonOrder : (await Lesson.max('order', { where: { moduleId: module_.id } }) ?? -1) + 1;
-  const slides = Array.isArray(data.slides) ? data.slides : [];
-  const contentFallback = slides.find(s => s.type === 'text')?.content || '';
+  const rawSlides = Array.isArray(data.slides) ? data.slides : [];
+  const contentFallback = rawSlides.find(s => s.type === 'text')?.content || '';
 
+  const hasQuestionSlides = rawSlides.some(s => s.type === 'question');
   const quiz = Array.isArray(data.quiz) ? data.quiz : [];
-  const quizQuestions = quiz.map((q, i) => ({
+  const questionSlidesFromQuiz = quiz.map((q, i) => ({
+    type: 'question',
     id: `q${i + 1}`,
     question: (q.question || '').trim(),
     options: Array.isArray(q.options) ? q.options.map(o => String(o).trim()) : [],
-    correctAnswer: typeof q.correctIndex === 'number' ? q.correctIndex : 0,
-    type: 'multiple-choice'
+    correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : 0,
+    explanation: q.explanation ? String(q.explanation).trim() : undefined
   }));
+  const slides = hasQuestionSlides ? rawSlides : [...rawSlides, ...questionSlidesFromQuiz];
 
   let lesson = await Lesson.findOne({
     where: { moduleId: module_.id, title: lessonTitle }
@@ -115,10 +100,7 @@ async function importLesson(filePath) {
       duration: 5,
       lessonType: 'reading',
       isPublished: false,
-      metadata: {
-        hasQuiz: quizQuestions.length > 0,
-        quizQuestions
-      },
+      metadata: {},
       slides: slides.length > 0 ? slides : null
     });
     console.log('Created lesson:', lesson.title);
@@ -127,11 +109,7 @@ async function importLesson(filePath) {
       order: lessonOrder,
       content: contentFallback,
       slides: slides.length > 0 ? slides : null,
-      metadata: {
-        ...(lesson.metadata || {}),
-        hasQuiz: quizQuestions.length > 0,
-        quizQuestions
-      }
+      metadata: { ...(lesson.metadata || {}) }
     });
     console.log('Updated lesson:', lesson.title);
   }
@@ -147,7 +125,7 @@ async function main() {
   }
   try {
     await sequelize.authenticate();
-    await ensureSlideColumns(sequelize);
+    await ensureSlideColumns();
     await importLesson(filePath);
     console.log('Done.');
     process.exit(0);

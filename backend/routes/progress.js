@@ -40,7 +40,8 @@ router.put('/lesson/:lessonId', authenticateToken, [
   body('status').optional().isIn(['not_started', 'in_progress', 'completed']),
   body('timeSpent').optional().isInt({ min: 0 }),
   body('notes').optional().isString(),
-  body('lastSlideIndex').optional().isInt({ min: 0 })
+  body('lastSlideIndex').optional().isInt({ min: 0 }),
+  body('quizScores').optional().isObject()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -49,7 +50,7 @@ router.put('/lesson/:lessonId', authenticateToken, [
     }
 
     const { lessonId } = req.params;
-    const { status, timeSpent, notes, lastSlideIndex } = req.body;
+    const { status, timeSpent, notes, lastSlideIndex, quizScores } = req.body;
 
     // Get the lesson and its module to find courseId
     const lesson = await Lesson.findByPk(lessonId, {
@@ -84,6 +85,10 @@ router.put('/lesson/:lessonId', authenticateToken, [
     if (timeSpent !== undefined) updateData.timeSpent = timeSpent;
     if (notes !== undefined) updateData.notes = notes;
     if (lastSlideIndex !== undefined) updateData.lastSlideIndex = lastSlideIndex;
+    if (quizScores !== undefined && typeof quizScores === 'object') {
+      const merged = { ...(progress.quizScores || {}), ...quizScores };
+      updateData.quizScores = merged;
+    }
 
     if (status === 'completed') {
       updateData.completedAt = new Date();
@@ -110,7 +115,7 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
 
     // Check if course exists
     const course = await Course.findOne({
-      where: { id: courseId, isPublished: true }
+      where: { id: courseId }
     });
 
     if (!course) {
@@ -160,7 +165,7 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
     const moduleIds = modules.map((m) => m.id);
     const totalLessons = moduleIds.length
       ? await Lesson.count({
-          where: { moduleId: moduleIds, isPublished: true }
+          where: { moduleId: moduleIds }
         })
       : 0;
 
