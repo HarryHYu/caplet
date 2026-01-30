@@ -109,6 +109,9 @@ class ApiService {
     });
   }
 
+  async getPublicProfile(userId) {
+    return this.request(`/users/${userId}`);
+  }
 
   async getUserDashboard() {
     return this.request('/users/dashboard');

@@ -30,6 +30,7 @@ import ClassDetail from './pages/ClassDetail';
 import Settings from './pages/Settings';
 import SettingsProfile from './pages/SettingsProfile';
 import SettingsAccount from './pages/SettingsAccount';
+import UserProfile from './pages/UserProfile';
 import Terms from './pages/Terms';
 import NotFound from './pages/NotFound';
 
@@ -69,6 +70,7 @@ function App() {
                   <Route path="profile" element={<SettingsProfile />} />
                   <Route path="account" element={<SettingsAccount />} />
                 </Route>
+                <Route path="/profile/:userId" element={<UserProfile />} />
                 <Route path="/survey" element={<Survey />} />
                 <Route path="/survey-results" element={<SurveyResults />} />
                 <Route path="/terms" element={<Terms />} />

@@ -619,11 +619,17 @@ const ClassDetail = () => {
                           {getInitials(a.author)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <div className="flex items-center justify-between gap-2 mb-2">
                             <div className="flex items-baseline gap-2 min-w-0">
-                              <span className="text-base font-semibold text-gray-900 dark:text-white truncate">
-                                {authorName}
-                              </span>
+                              {a.author?.id ? (
+                                <Link to={`/profile/${a.author.id}`} className="text-base font-semibold text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400">
+                                  {authorName}
+                                </Link>
+                              ) : (
+                                <span className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                                  {authorName}
+                                </span>
+                              )}
                               <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-full">
                                 {formatRelativeTime(a.createdAt)}
                               </span>
@@ -719,8 +725,14 @@ const ClassDetail = () => {
                                   <>
                                     {(announcementComments[a.id] || []).map((c) => (
                                       <div key={c.id} className="flex gap-2 text-sm">
-                                        <span className="font-medium text-gray-900 dark:text-white shrink-0">
-                                          {c.author ? `${c.author.firstName} ${c.author.lastName}` : 'Unknown'}:
+                                        <span className="shrink-0">
+                                          {c.author?.id ? (
+                                            <Link to={`/profile/${c.author.id}`} className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
+                                              {c.author.firstName} {c.author.lastName}
+                                            </Link>
+                                          ) : (
+                                            <span className="font-medium text-gray-900 dark:text-white">Unknown</span>
+                                          )}:
                                         </span>
                                         <span className="text-gray-700 dark:text-gray-300">{c.content}</span>
                                         <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(c.createdAt)}</span>
@@ -911,8 +923,14 @@ const ClassDetail = () => {
                                   </h4>
                                   {classComments.map((c) => (
                                     <div key={c.id} className="flex gap-2 text-sm mb-2">
-                                      <span className="font-medium text-gray-900 dark:text-white shrink-0">
-                                        {c.author ? `${c.author.firstName} ${c.author.lastName}` : 'Unknown'}:
+                                      <span className="shrink-0">
+                                        {c.author?.id ? (
+                                          <Link to={`/profile/${c.author.id}`} className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
+                                            {c.author.firstName} {c.author.lastName}
+                                          </Link>
+                                        ) : (
+                                          <span className="font-medium text-gray-900 dark:text-white">Unknown</span>
+                                        )}:
                                       </span>
                                       <span className="text-gray-700 dark:text-gray-300">{c.content}</span>
                                       <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(c.createdAt)}</span>
@@ -955,9 +973,24 @@ const ClassDetail = () => {
                                   </h4>
                                   {privateComments.map((c) => (
                                     <div key={c.id} className="flex gap-2 text-sm mb-2">
-                                      <span className="font-medium text-gray-900 dark:text-white shrink-0">
-                                        {c.author ? `${c.author.firstName} ${c.author.lastName}` : 'Unknown'}
-                                        {c.targetUser ? ` → ${c.targetUser.firstName} ${c.targetUser.lastName}` : ' (to teacher)'}:
+                                      <span className="shrink-0">
+                                        {c.author?.id ? (
+                                          <Link to={`/profile/${c.author.id}`} className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
+                                            {c.author.firstName} {c.author.lastName}
+                                          </Link>
+                                        ) : (
+                                          <span className="font-medium text-gray-900 dark:text-white">Unknown</span>
+                                        )}
+                                        {c.targetUser ? (
+                                          <>
+                                            {' → '}
+                                            <Link to={`/profile/${c.targetUser.id}`} className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
+                                              {c.targetUser.firstName} {c.targetUser.lastName}
+                                            </Link>
+                                          </>
+                                        ) : (
+                                          ' (to teacher)'
+                                        )}:
                                       </span>
                                       <span className="text-gray-700 dark:text-gray-300">{c.content}</span>
                                       <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(c.createdAt)}</span>
@@ -1099,17 +1132,19 @@ const ClassDetail = () => {
                         >
                           {index + 1}
                         </span>
-                        <div className={`w-10 h-10 rounded-full ${getAvatarColor(entry.firstName + entry.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md flex-shrink-0`}>
-                          {getInitials(entry)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-sm font-semibold text-gray-900 dark:text-white block">
-                            {entry.firstName} {entry.lastName}
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {entry.completedCount} assignment{entry.completedCount !== 1 ? 's' : ''} completed
-                          </span>
-                        </div>
+                        <Link to={`/profile/${entry.userId}`} className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className={`w-10 h-10 rounded-full ${getAvatarColor(entry.firstName + entry.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md flex-shrink-0`}>
+                            {getInitials(entry)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white block hover:text-blue-600 dark:hover:text-blue-400">
+                              {entry.firstName} {entry.lastName}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {entry.completedCount} assignment{entry.completedCount !== 1 ? 's' : ''} completed
+                            </span>
+                          </div>
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -1128,15 +1163,17 @@ const ClassDetail = () => {
                   <ul className="space-y-3">
                     {teachers.map((t) => (
                       <li key={t.id} className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700/50 dark:to-gray-700/50 hover:shadow-md transition-all">
-                        <div className={`w-10 h-10 rounded-full ${getAvatarColor(t.firstName + t.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md`}>
-                          {getInitials(t)}
-                        </div>
-                        <div>
-                          <span className="text-sm font-semibold text-gray-900 dark:text-white block">
-                            {t.firstName} {t.lastName}
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{t.email}</span>
-                        </div>
+                        <Link to={`/profile/${t.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className={`w-10 h-10 rounded-full ${getAvatarColor(t.firstName + t.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md flex-shrink-0`}>
+                            {getInitials(t)}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white block hover:text-blue-600 dark:hover:text-blue-400">
+                              {t.firstName} {t.lastName}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{t.email}</span>
+                          </div>
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -1155,15 +1192,17 @@ const ClassDetail = () => {
                   <ul className="space-y-2 max-h-96 overflow-y-auto pr-2">
                     {students.map((s) => (
                       <li key={s.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all">
-                        <div className={`w-10 h-10 rounded-full ${getAvatarColor(s.firstName + s.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md`}>
-                          {getInitials(s)}
-                        </div>
-                        <div>
-                          <span className="text-sm font-semibold text-gray-900 dark:text-white block">
-                            {s.firstName} {s.lastName}
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{s.email}</span>
-                        </div>
+                        <Link to={`/profile/${s.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className={`w-10 h-10 rounded-full ${getAvatarColor(s.firstName + s.lastName)} flex items-center justify-center text-white text-xs font-bold shadow-md flex-shrink-0`}>
+                            {getInitials(s)}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white block hover:text-blue-600 dark:hover:text-blue-400">
+                              {s.firstName} {s.lastName}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{s.email}</span>
+                          </div>
+                        </Link>
                       </li>
                     ))}
                   </ul>

@@ -35,7 +35,7 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-// Get user profile
+// Get current user's own profile (full)
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
     res.json({ user: req.user.toJSON() });
@@ -103,9 +103,7 @@ router.put('/profile', authenticateToken, [
   }
 });
 
-// Courses are directly accessible - progress is tracked automatically when accessing a course
-
-// Get user dashboard data
+// Get user dashboard data (must be before /:userId)
 router.get('/dashboard', authenticateToken, async (req, res) => {
   try {
     const userProgress = await UserProgress.findAll({
@@ -125,13 +123,29 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
       totalTimeSpent: userProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0)
     };
 
-    res.json({ 
+    res.json({
       user: req.user.toJSON(),
       stats,
       recentCourses: userProgress.slice(0, 5)
     });
   } catch (error) {
     console.error('Get dashboard error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get another user's public profile (no email, no dateOfBirth)
+router.get('/:userId', authenticateToken, async (req, res) => {
+  try {
+    const profileUser = await User.findByPk(req.params.userId, {
+      attributes: ['id', 'firstName', 'lastName', 'bio', 'role', 'profilePicture'],
+    });
+    if (!profileUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ user: profileUser.toJSON() });
+  } catch (error) {
+    console.error('Get public profile error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
