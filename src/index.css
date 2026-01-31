@@ -42,4 +42,43 @@
   .container-custom {
     @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
   }
+
+  /* Lesson slide transitions - gamy feel */
+  @keyframes slideEnterNext {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes slideEnterPrev {
+    from {
+      opacity: 0;
+      transform: translateX(-16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  .slide-enter-next {
+    animation: slideEnterNext 0.3s ease-out forwards;
+  }
+  .slide-enter-prev {
+    animation: slideEnterPrev 0.3s ease-out forwards;
+  }
+
+  /* Lesson nav buttons - pill style */
+  .lesson-nav-btn {
+    @apply px-5 py-2.5 rounded-full font-medium transition-all duration-200;
+  }
+  .lesson-nav-btn:not(:disabled):hover {
+    transform: scale(1.03);
+  }
+  .lesson-nav-btn:not(:disabled):active {
+    transform: scale(0.98);
+  }
 }

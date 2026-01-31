@@ -178,6 +178,7 @@ const LessonPlayer = () => {
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState('next'); // 'next' | 'prev' for animation
   const [progress, setProgress] = useState({ lessonProgress: [] });
   const [questionAnswer, setQuestionAnswer] = useState(null);
   const [questionSubmitted, setQuestionSubmitted] = useState(false);
@@ -296,6 +297,7 @@ const LessonPlayer = () => {
 
   const goToSlide = (newIndex) => {
     if (newIndex < 0 || newIndex >= slides.length) return;
+    setSlideDirection(newIndex > currentSlideIndex ? 'next' : 'prev');
     setCurrentSlideIndex(newIndex);
     setQuestionAnswer(null);
     setQuestionSubmitted(false);
@@ -373,11 +375,32 @@ const LessonPlayer = () => {
 
               {hasSlides ? (
                 <>
+                  {/* Progress bar */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      <span>Slide {currentSlideIndex + 1} of {slides.length}</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 dark:bg-blue-400 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${((currentSlideIndex + 1) / slides.length) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
                   {/* Slide-based content (Khan/EP style) */}
                   <div
-                    className="mb-6 min-h-[280px] p-4 rounded-lg border shadow-sm"
-                    style={{ backgroundColor: slideAreaBg, borderColor: isDark ? '#64748b' : '#e2e8f0' }}
+                    className="mb-6 min-h-[280px] p-6 rounded-2xl border-2 overflow-hidden"
+                    style={{
+                      backgroundColor: slideAreaBg,
+                      borderColor: isDark ? '#64748b' : '#e2e8f0',
+                      boxShadow: isDark ? '0 4px 14px rgba(0,0,0,0.2)' : '0 4px 14px rgba(0,0,0,0.06)'
+                    }}
                   >
+                    <div
+                      key={currentSlideIndex}
+                      className={slideDirection === 'next' ? 'slide-enter-next' : 'slide-enter-prev'}
+                    >
                     {(() => {
                       const slide = slides[currentSlideIndex];
                       if (!slide) {
@@ -393,10 +416,10 @@ const LessonPlayer = () => {
                         const selected = questionAnswer ?? (alreadyAnswered ? undefined : null);
                         const showFeedback = questionSubmitted || alreadyAnswered;
                         return (
-                          <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-600" style={{ backgroundColor: slideAreaBg }}>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Question</h3>
-                            <p className="font-medium text-gray-900 dark:text-white mb-4">{slide.question}</p>
-                            <div className="space-y-2">
+                          <div className="p-2">
+                            <h3 className="text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Question</h3>
+                            <p className="font-medium text-lg text-gray-900 dark:text-white mb-5">{slide.question}</p>
+                            <div className="space-y-3">
                               {options.map((option, optIdx) => {
                                 const chosen = selected === optIdx;
                                 const correct = correctIndex === optIdx;
@@ -404,16 +427,16 @@ const LessonPlayer = () => {
                                 return (
                                   <label
                                     key={optIdx}
-                                    className={`flex items-center p-3 rounded border-2 cursor-pointer transition ${
+                                    className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
                                       show
                                         ? correct
-                                          ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/20'
+                                          ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/20 shadow-sm'
                                           : chosen
-                                            ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20'
-                                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'
+                                            ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20 shadow-sm'
+                                            : 'border-gray-200 dark:border-gray-600'
                                         : chosen
-                                          ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                                          : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-700'
+                                          ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-md ring-2 ring-blue-200 dark:ring-blue-800'
+                                          : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-900/10'
                                     }`}
                                   >
                                     <input
@@ -432,15 +455,15 @@ const LessonPlayer = () => {
                               })}
                             </div>
                             {showFeedback && slide.explanation && (
-                              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 text-sm text-gray-900 dark:text-gray-200">
-                                <strong>Explanation:</strong> {slide.explanation}
+                              <div className="mt-5 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 text-sm text-gray-900 dark:text-gray-200">
+                                <strong className="text-blue-700 dark:text-blue-300">Explanation:</strong> {slide.explanation}
                               </div>
                             )}
                             {!showFeedback && selected !== null && (
                               <button
                                 type="button"
                                 onClick={() => recordQuestionAnswer(currentSlideIndex, selected === correctIndex)}
-                                className="mt-4 btn-primary"
+                                className="mt-5 px-6 py-2.5 rounded-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                               >
                                 Check answer
                               </button>
@@ -498,19 +521,61 @@ const LessonPlayer = () => {
                         <p className="text-gray-500 dark:text-gray-400">Unknown slide type: {slide.type || 'missing'}.</p>
                       );
                     })()}
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-4 mt-4">
-                    <button type="button" onClick={() => goToSlide(currentSlideIndex - 1)} disabled={currentSlideIndex <= 0} className="btn-secondary disabled:opacity-50">← Prev slide</button>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Slide {currentSlideIndex + 1} of {slides.length}</span>
-                    <button type="button" onClick={() => goToSlide(currentSlideIndex + 1)} disabled={currentSlideIndex >= slides.length - 1} className="btn-secondary disabled:opacity-50">Next slide →</button>
+                  {/* Slide dots + nav */}
+                  <div className="flex items-center justify-between gap-4 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => goToSlide(currentSlideIndex - 1)}
+                      disabled={currentSlideIndex <= 0}
+                      className="lesson-nav-btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:transform-none"
+                    >
+                      ← Previous
+                    </button>
+                    <div className="flex gap-1.5">
+                      {slides.map((_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => goToSlide(i)}
+                          className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                            i === currentSlideIndex
+                              ? 'bg-blue-500 dark:bg-blue-400 scale-125'
+                              : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                          }`}
+                          aria-label={`Go to slide ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => goToSlide(currentSlideIndex + 1)}
+                      disabled={currentSlideIndex >= slides.length - 1}
+                      className="lesson-nav-btn bg-blue-500 dark:bg-blue-500 text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:transform-none"
+                    >
+                      Next →
+                    </button>
                   </div>
 
-                  {/* Mark complete after last slide (questions are inline as slides) */}
+                  {/* Mark complete after last slide */}
                   {currentSlideIndex === slides.length - 1 && (
                     <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                      <button type="button" onClick={() => goToSlide(currentSlideIndex - 1)} disabled={currentSlideIndex <= 0} className="btn-secondary">← Prev slide</button>
-                      <button type="button" onClick={markComplete} disabled={saving || completed} className="btn-primary">
+                      <button
+                        type="button"
+                        onClick={() => goToSlide(currentSlideIndex - 1)}
+                        disabled={currentSlideIndex <= 0}
+                        className="lesson-nav-btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 disabled:opacity-40"
+                      >
+                        ← Previous
+                      </button>
+                      <button
+                        type="button"
+                        onClick={markComplete}
+                        disabled={saving || completed}
+                        className="lesson-nav-btn bg-green-500 hover:bg-green-600 dark:bg-green-500 dark:hover:bg-green-600 text-white"
+                      >
                         {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
                       </button>
                       <span />
