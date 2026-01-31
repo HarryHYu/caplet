@@ -72,6 +72,24 @@ const ModuleDetail = () => {
   }
 
   const lessons = (module_.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const mp = progress?.moduleProgress?.find((m) => String(m.moduleId) === String(moduleId));
+
+  const lessonHasContent = (l) => {
+    const slides = l.slides;
+    if (Array.isArray(slides) && slides.length > 0) return true;
+    if (typeof slides === 'string' && slides.trim()) {
+      try { const p = JSON.parse(slides); if (Array.isArray(p) && p.length > 0) return true; } catch { /* noop */ }
+    }
+    if (l.content && String(l.content).trim()) return true;
+    if (l.videoUrl && String(l.videoUrl).trim()) return true;
+    return false;
+  };
+  const isLessonComplete = (l) => {
+    if (!lessonHasContent(l)) return false;
+    return progress?.lessonProgress?.some((p) => String(p.lessonId) === String(l.id) && p.status === 'completed');
+  };
+  const completedInModule = lessons.filter(isLessonComplete).length;
+  const totalInModule = lessons.length;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10">
@@ -85,7 +103,23 @@ const ModuleDetail = () => {
           {module_.description && (
             <p className="text-gray-600 dark:text-gray-300">{module_.description}</p>
           )}
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{lessons.length} lessons</p>
+          <div className="flex items-center gap-4 mt-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400">{lessons.length} lessons</p>
+            {totalInModule > 0 && (
+              <>
+                <span className="text-gray-400">•</span>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {completedInModule} / {totalInModule} complete
+                </p>
+                <div className="flex-1 max-w-[200px] h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 dark:bg-green-400 rounded-full transition-all"
+                    style={{ width: `${(completedInModule / totalInModule) * 100}%` }}
+                  />
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -99,8 +133,8 @@ const ModuleDetail = () => {
                   <p className="font-medium text-gray-900 dark:text-white">{lesson.order}. {lesson.title}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {lesson.description}
-                    {progress?.lessonProgress?.some((p) => p.lessonId === lesson.id && p.status === 'completed') && (
-                      <span className="ml-2 text-green-600 dark:text-green-400">✓ Completed</span>
+                    {isLessonComplete(lesson.id) && (
+                      <span className="ml-2 text-green-600 dark:text-green-400 font-medium">✓ Completed</span>
                     )}
                   </p>
                 </div>

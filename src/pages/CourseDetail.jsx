@@ -103,7 +103,11 @@ const CourseDetail = () => {
           </div>
           <ul className="divide-y dark:divide-gray-700">
             {sortedModules.map((mod) => {
-              const lessonCount = (mod.lessons || []).length;
+              const moduleLessons = (mod.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+              const lessonCount = moduleLessons.length;
+              const mp = progress?.moduleProgress?.find((m) => String(m.moduleId) === String(mod.id));
+              const completedInModule = mp ? mp.completedLessons : 0;
+              const totalInModule = mp ? mp.totalLessons : lessonCount;
               return (
                 <li key={mod.id}>
                   <Link
@@ -112,7 +116,9 @@ const CourseDetail = () => {
                   >
                     <div>
                       <p className="font-semibold text-gray-900 dark:text-white">{mod.title}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{lessonCount} lesson{lessonCount !== 1 ? 's' : ''}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {totalInModule > 0 ? `${completedInModule} / ${totalInModule} complete` : `${lessonCount} lesson${lessonCount !== 1 ? 's' : ''}`}
+                      </p>
                     </div>
                     <span className="text-blue-600 dark:text-blue-400">View lessons →</span>
                   </Link>

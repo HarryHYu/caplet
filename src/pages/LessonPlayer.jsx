@@ -590,7 +590,7 @@ const LessonPlayer = () => {
                   {!lesson.content?.trim() && !lesson.videoUrl && (
                     <div className="mb-6 p-8 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-center">
                       <p className="text-lg font-medium text-gray-700 dark:text-gray-300">This lesson has no content yet.</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Check back later or mark complete to continue.</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Check back later—empty lessons cannot be marked complete.</p>
                     </div>
                   )}
                   {lesson.videoUrl && getYouTubeId(lesson.videoUrl) && (
@@ -633,9 +633,13 @@ const LessonPlayer = () => {
                   {!lesson.metadata?.hasQuiz && (
                     <div className="mt-6 flex items-center justify-between">
                       <button type="button" onClick={() => goTo(-1)} disabled={idx <= 0} className="btn-secondary disabled:opacity-50">Prev</button>
-                      <button type="button" onClick={markComplete} disabled={saving || completed} className="btn-primary disabled:opacity-50">
-                        {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
-                      </button>
+                      {(!lesson.content?.trim() && !lesson.videoUrl) ? (
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Empty lesson—add content to complete</span>
+                      ) : (
+                        <button type="button" onClick={markComplete} disabled={saving || completed} className="btn-primary disabled:opacity-50">
+                          {completed ? 'Completed ✓' : saving ? 'Saving…' : 'Mark complete'}
+                        </button>
+                      )}
                       <button type="button" onClick={() => goTo(1)} disabled={idx >= flatLessons.length - 1} className="btn-secondary disabled:opacity-50">Next</button>
                     </div>
                   )}

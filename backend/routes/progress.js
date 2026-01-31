@@ -35,6 +35,20 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
+// Helper: lesson has actual content (slides, text, or video)
+function lessonHasContent(lesson) {
+  const raw = lesson.get ? lesson.get('slides') : lesson.slides;
+  if (raw) {
+    const slides = typeof raw === 'string' ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : raw;
+    if (Array.isArray(slides) && slides.length > 0) return true;
+  }
+  const content = lesson.get ? lesson.get('content') : lesson.content;
+  if (content && String(content).trim()) return true;
+  const video = lesson.get ? lesson.get('videoUrl') : lesson.videoUrl;
+  if (video && String(video).trim()) return true;
+  return false;
+}
+
 // Update lesson progress
 router.put('/lesson/:lessonId', authenticateToken, [
   body('status').optional().isIn(['not_started', 'in_progress', 'completed']),
@@ -58,6 +72,10 @@ router.put('/lesson/:lessonId', authenticateToken, [
     });
     if (!lesson || !lesson.module) {
       return res.status(404).json({ message: 'Lesson not found' });
+    }
+    // Reject marking empty lessons as completed
+    if (status === 'completed' && !lessonHasContent(lesson)) {
+      return res.status(400).json({ message: 'Cannot mark empty lesson as complete' });
     }
     const courseId = lesson.module.courseId;
 
@@ -161,16 +179,52 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
     });
 
     // Calculate overall course progress (lessons via modules)
-    const modules = await Module.findAll({ where: { courseId }, attributes: ['id'] });
+    const modules = await Module.findAll({
+      where: { courseId },
+      attributes: ['id', 'order'],
+      order: [['order', 'ASC']]
+    });
     const moduleIds = modules.map((m) => m.id);
-    const totalLessons = moduleIds.length
-      ? await Lesson.count({
-          where: { moduleId: moduleIds }
-        })
-      : 0;
-
-    const completedLessons = progress.filter(p => p.lessonId && p.status === 'completed').length;
+    const lessonsByModule = await Lesson.findAll({
+      where: { moduleId: moduleIds },
+      attributes: ['id', 'moduleId']
+    });
+    const allLessonsFull = await Lesson.findAll({
+      where: { id: lessonsByModule.map(l => l.id) },
+      attributes: ['id', 'content', 'videoUrl', 'slides']
+    });
+    const lessonHasContentMap = new Map();
+    for (const l of allLessonsFull) {
+      lessonHasContentMap.set(String(l.id), lessonHasContent(l));
+    }
+    const lessonsWithContent = lessonsByModule.filter(l => lessonHasContentMap.get(String(l.id)) === true);
+    const totalLessons = lessonsWithContent.length;
+    const completedProgress = progress.filter(p => p.lessonId && p.status === 'completed');
+    const completedLessonIds = new Set(completedProgress.map(p => String(p.lessonId)));
+    const completedLessons = lessonsWithContent.filter(l => completedLessonIds.has(String(l.id))).length;
     const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+
+    // Per-module progress (only count lessons with content)
+    const moduleProgress = modules.map((m) => {
+      const moduleLessons = lessonsByModule.filter(l => l.moduleId === m.id);
+      const withContent = moduleLessons.filter(l => lessonHasContentMap.get(String(l.id)) === true);
+      const completedInModule = withContent.filter(l => completedLessonIds.has(String(l.id))).length;
+      return {
+        moduleId: m.id,
+        totalLessons: withContent.length,
+        completedLessons: completedInModule
+      };
+    });
+
+    // Normalize lessonProgress for frontend (ensure lessonId is string)
+    const lessonProgress = progress
+      .filter(p => p.lessonId)
+      .map(p => ({
+        lessonId: String(p.lessonId),
+        status: p.status,
+        lastSlideIndex: p.lastSlideIndex,
+        quizScores: p.quizScores || {}
+      }));
 
     res.json({
       courseProgress: {
@@ -180,7 +234,8 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
         status: progressPercentage === 100 ? 'completed' : 
                 progressPercentage > 0 ? 'in_progress' : 'not_started'
       },
-      lessonProgress: progress.filter(p => p.lessonId) // Only return lesson-level progress
+      moduleProgress,
+      lessonProgress
     });
   } catch (error) {
     console.error('Get course progress error:', error);
