@@ -9,7 +9,6 @@ const Courses = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
-    category: '',
     level: '',
     search: '',
   });
@@ -72,18 +71,6 @@ const Courses = () => {
     navigate(`/courses/${courseId}`);
   };
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      budgeting: 'bg-green-100 text-green-800',
-      superannuation: 'bg-blue-100 text-blue-800',
-      tax: 'bg-purple-100 text-purple-800',
-      loans: 'bg-yellow-100 text-yellow-800',
-      investment: 'bg-red-100 text-red-800',
-      planning: 'bg-indigo-100 text-indigo-800',
-    };
-    return colors[category] || 'bg-gray-100 text-gray-800';
-  };
-
   const getLevelColor = (level) => {
     const colors = {
       beginner: 'bg-green-100 text-green-800',
@@ -118,26 +105,7 @@ const Courses = () => {
 
         {/* Filters */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Category
-              </label>
-              <select
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">All Categories</option>
-                <option value="budgeting">Budgeting</option>
-                <option value="superannuation">Superannuation</option>
-                <option value="tax">Tax</option>
-                <option value="loans">Loans & Credit</option>
-                <option value="investment">Investment</option>
-                <option value="planning">Financial Planning</option>
-              </select>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Level
@@ -190,9 +158,6 @@ const Courses = () => {
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getCategoryColor(course.category)}`}>
-                      {course.category.charAt(0).toUpperCase() + course.category.slice(1)}
-                    </span>
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getLevelColor(course.level)}`}>
                       {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
                     </span>
