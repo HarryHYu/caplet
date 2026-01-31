@@ -502,16 +502,18 @@ const LessonPlayer = () => {
                         const videoId = getYouTubeId(slide.content);
                         if (videoId) {
                           return (
-                            <div className="relative pt-[56.25%] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 bg-black">
-                              <iframe
-                                src={`https://www.youtube.com/embed/${videoId}`}
-                                title={slide.caption || 'Video'}
-                                className="absolute inset-0 w-full h-full"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                              {slide.caption && <p className="text-sm text-gray-400 p-2 bg-black/60 absolute bottom-0 left-0 right-0">{slide.caption}</p>}
+                            <div>
+                              <div className="relative pt-[56.25%] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 bg-black">
+                                <iframe
+                                  src={`https://www.youtube.com/embed/${videoId}`}
+                                  title={slide.caption || 'Video'}
+                                  className="absolute inset-0 w-full h-full"
+                                  frameBorder="0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              </div>
+                              {slide.caption && <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{slide.caption}</p>}
                             </div>
                           );
                         }
