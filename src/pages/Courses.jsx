@@ -227,10 +227,7 @@ const Courses = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                      {course.isFree ? 'Free' : `$${course.price}`}
-                    </span>
+                  <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <span className="text-blue-600 dark:text-blue-400 font-medium text-sm">
                       {hasProgress ? 'Continue →' : 'Start →'}
                     </span>

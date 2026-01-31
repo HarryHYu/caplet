@@ -388,9 +388,9 @@ const LessonPlayer = () => {
                     </div>
                   </div>
 
-                  {/* Slide-based content (Khan/EP style) */}
+                  {/* Slide-based content: fixed height so nav doesn't jump */}
                   <div
-                    className="mb-6 min-h-[280px] p-6 rounded-2xl border-2 overflow-hidden"
+                    className="mb-6 h-[420px] flex flex-col rounded-2xl border-2 overflow-hidden"
                     style={{
                       backgroundColor: slideAreaBg,
                       borderColor: isDark ? '#64748b' : '#e2e8f0',
@@ -399,7 +399,7 @@ const LessonPlayer = () => {
                   >
                     <div
                       key={currentSlideIndex}
-                      className={slideDirection === 'next' ? 'slide-enter-next' : 'slide-enter-prev'}
+                      className={`flex-1 overflow-y-auto p-6 ${slideDirection === 'next' ? 'slide-enter-next' : 'slide-enter-prev'}`}
                     >
                     {(() => {
                       const slide = slides[currentSlideIndex];
