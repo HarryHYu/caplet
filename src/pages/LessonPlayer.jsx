@@ -200,22 +200,23 @@ const LessonPlayer = () => {
         const current = lessonData || currentFromList;
         if (current) {
           try {
-            await api.updateLessonProgress(current.id, { status: 'in_progress' });
-          } catch (e) {
-            console.warn('Progress update failed (non-blocking):', e?.message || e);
-          }
-          try {
+            // Check current progress first - don't overwrite 'completed' status
             const prog = await api.getCourseProgress(courseId);
             setProgress(prog);
-            const slides = Array.isArray(current.slides) ? current.slides : [];
-            if (slides.length > 0) {
-              const lp = prog?.lessonProgress?.find((p) => p.lessonId === current.id);
-              if (lp && typeof lp.lastSlideIndex === 'number') {
-                setCurrentSlideIndex(Math.min(lp.lastSlideIndex, slides.length - 1));
-              }
+            const lp = prog?.lessonProgress?.find((p) => String(p.lessonId) === String(current.id));
+            // Only set to 'in_progress' if not already completed
+            if (!lp || lp.status !== 'completed') {
+              await api.updateLessonProgress(current.id, { status: 'in_progress' });
+            } else {
+              // Lesson is completed - set local state
+              setCompleted(true);
             }
-          } catch {
-            // ignore
+            const slides = Array.isArray(current.slides) ? current.slides : [];
+            if (slides.length > 0 && lp && typeof lp.lastSlideIndex === 'number') {
+              setCurrentSlideIndex(Math.min(lp.lastSlideIndex, slides.length - 1));
+            }
+          } catch (e) {
+            console.warn('Progress update failed (non-blocking):', e?.message || e);
           }
         }
       } catch (e) {
