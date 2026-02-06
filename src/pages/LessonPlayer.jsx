@@ -208,14 +208,9 @@ const LessonPlayer = () => {
             const prog = await api.getCourseProgress(courseId);
             setProgress(prog);
             const slides = Array.isArray(current.slides) ? current.slides : [];
-            const lp = prog?.lessonProgress?.find((p) => String(p.lessonId) === String(current.id));
-            if (lp) {
-              // Check if lesson is already completed
-              if (lp.status === 'completed') {
-                setCompleted(true);
-              }
-              // Restore slide position
-              if (slides.length > 0 && typeof lp.lastSlideIndex === 'number') {
+            if (slides.length > 0) {
+              const lp = prog?.lessonProgress?.find((p) => p.lessonId === current.id);
+              if (lp && typeof lp.lastSlideIndex === 'number') {
                 setCurrentSlideIndex(Math.min(lp.lastSlideIndex, slides.length - 1));
               }
             }
@@ -247,13 +242,6 @@ const LessonPlayer = () => {
         await api.completeLessonAssignments(lesson.id);
       } catch (e) {
         console.warn('Class assignment auto-complete failed (non-blocking):', e?.message || e);
-      }
-      // Refresh progress to get updated completion status
-      try {
-        const prog = await api.getCourseProgress(courseId);
-        setProgress(prog);
-      } catch {
-        // ignore - we'll still mark as complete locally
       }
       setCompleted(true);
       const flat = getFlatLessons(course);
