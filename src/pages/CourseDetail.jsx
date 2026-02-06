@@ -11,18 +11,22 @@ const CourseDetail = () => {
   const [progress, setProgress] = useState({ courseProgress: null, lessonProgress: [] });
 
   useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        const prog = await api.getCourseProgress(courseId);
+        setProgress(prog);
+      } catch {
+        // ignore if not logged in
+      }
+    };
+
     const load = async () => {
       try {
         setError(null);
         setLoading(true);
         const courseResponse = await api.getCourse(courseId);
         setCourse(courseResponse);
-        try {
-          const prog = await api.getCourseProgress(courseId);
-          setProgress(prog);
-        } catch {
-          // ignore if not logged in
-        }
+        await loadProgress();
       } catch (e) {
         setError(e.message);
       } finally {
@@ -30,6 +34,10 @@ const CourseDetail = () => {
       }
     };
     load();
+    // Refresh progress when page gains focus (user returns from lesson)
+    const handleFocus = () => loadProgress();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [courseId]);
 
   if (loading) {
