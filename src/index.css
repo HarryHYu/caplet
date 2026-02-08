@@ -45,9 +45,9 @@
 }
 
 .dark {
-  --surface-body: #121212;
-  --surface-soft: #1c1c1c;
-  --surface-raised: #242424;
+  --surface-body: #1f1f1f;
+  --surface-soft: hsl(0, 0%, 15%);
+  --surface-raised: hsl(0, 0%, 12%);
   --surface-inverse: #eceee8;
 
   --text-primary: #eceee8;
