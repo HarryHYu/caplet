@@ -132,8 +132,8 @@ const ModuleDetail = () => {
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">{lesson.order}. {lesson.title}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {lesson.description}
-                    {isLessonComplete(lesson.id) && (
+                    {lesson.description || null}
+                    {isLessonComplete(lesson) && (
                       <span className="ml-2 text-green-600 dark:text-green-400 font-medium">✓ Completed</span>
                     )}
                   </p>

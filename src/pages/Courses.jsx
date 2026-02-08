@@ -62,12 +62,9 @@ const Courses = () => {
 
   const handleCourseClick = (courseId) => {
     if (!isAuthenticated) {
-      alert('Please sign in to access courses');
-      navigate('/login');
+      alert('Please sign in to access courses.');
       return;
     }
-
-    // Navigate directly to course
     navigate(`/courses/${courseId}`);
   };
 

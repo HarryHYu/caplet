@@ -305,7 +305,7 @@ const LessonPlayer = () => {
     api.updateLessonProgress(lesson.id, { lastSlideIndex: newIndex }).catch(() => {});
   };
 
-  const lessonProgressRecord = progress?.lessonProgress?.find((p) => p.lessonId === lesson?.id);
+  const lessonProgressRecord = progress?.lessonProgress?.find((p) => String(p.lessonId) === String(lesson?.id));
   const quizScores = lessonProgressRecord?.quizScores || {};
 
   const recordQuestionAnswer = async (slideIndex, isCorrect) => {
@@ -313,13 +313,13 @@ const LessonPlayer = () => {
     setQuestionSubmitted(true);
     setProgress((prev) => {
       const list = prev.lessonProgress || [];
-      const existing = list.find((p) => p.lessonId === lesson.id);
+      const existing = list.find((p) => String(p.lessonId) === String(lesson.id));
       const updated = existing
         ? { ...existing, quizScores: { ...(existing.quizScores || {}), [key]: isCorrect } }
         : { lessonId: lesson.id, quizScores: { [key]: isCorrect } };
       return {
         ...prev,
-        lessonProgress: existing ? list.map((p) => (p.lessonId === lesson.id ? updated : p)) : [...list, updated]
+        lessonProgress: existing ? list.map((p) => (String(p.lessonId) === String(lesson.id) ? updated : p)) : [...list, updated]
       };
     });
     await api.updateLessonProgress(lesson.id, { quizScores: { [key]: isCorrect }, lastSlideIndex: slideIndex }).catch(() => {});
