@@ -7,9 +7,23 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <img src="/logo.png" alt="Caplet" className="h-8 w-auto" />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">Caplet</span>
+            <div className="flex items-center gap-3 mb-4">
+              <span
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-600 dark:bg-blue-500"
+              >
+                <img src="/logo.png" alt="Caplet" className="h-5 w-5" />
+              </span>
+              <div>
+                <p
+                  className="text-lg font-semibold text-gray-900 dark:text-white"
+                  style={{ fontFamily: "'Source Sans 3', sans-serif" }}
+                >
+                  Caplet
+                </p>
+                <p className="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                  Finance education for life
+                </p>
+              </div>
             </div>
             <p className="text-gray-600 dark:text-gray-300 mb-4 max-w-md">
               Empowering Australians with free, accessible financial education to bridge the financial literacy gap.
@@ -42,8 +56,8 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-
         </div>
+
         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400">
             <p>© {new Date().getFullYear()} Caplet. All rights reserved.</p>
@@ -53,7 +67,7 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
+    </footer >
   );
 };
 
