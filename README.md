@@ -1,148 +1,105 @@
-# Caplet - Financial Education Platform
+# Caplet 🎓
 
-A free, accessible educational platform designed to address the financial literacy gap in Australia, especially for youth and the elderly.
+[![React](https://img.shields.io/badge/React-19.0-blue?logo=react)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 🌟 About
+**Democratizing Financial Education for Every Australian.**
 
-Caplet exists to provide simple, free, accessible educational content about personal finance topics in an Australian context. Think of it like Khan Academy but focused on budgeting, superannuation, tax, loans, and basic economics.
+Caplet is a sophisticated, free-to-use educational platform meticulously crafted to bridge the financial literacy gap in Australia. By combining academic rigor with modern AI technology, we empower youth and the elderly with the knowledge needed to navigate complex financial landscapes.
 
-## 🚀 Tech Stack
+---
 
-- **React 19** - Modern React with latest features
-- **Vite** - Fast build tool and development server
-- **Tailwind CSS** - Utility-first CSS framework
-- **React Router** - Client-side routing
+## 🏛️ Project Pillars
 
-## 📋 Features
+### 1. 📚 Courses
+Our curriculum focuses on the Australian context, covering everything from basic budgeting to advanced quantitative finance. 
+- **Auto-Enrollment**: Zero friction access to knowledge.
+- **Interactive Quizzes**: Real-time progress tracking and knowledge verification.
+- **Markdown-Driven**: Clean, readable, and easily maintainable content.
 
-### Current Platform
-- ✅ Free, accessible educational content
-- ✅ Australian-focused financial topics
-- ✅ Simple, clear explanations
-- ✅ Mobile-responsive design
-- ✅ Evidence-based content
+### 2. 🧮 Tools
+A suite of SEO-optimized financial calculators designed for immediate utility.
+- **Tax & Superannuation**: Tailored for Australian regulations (GST, Super Contribution, etc.).
+- **Loan & Mortgage**: Precise calculations for informed decision-making.
+- **Goal Tracking**: Compound interest and savings calculators to visualize the future.
 
-### Core Topics Covered
-- ✅ Budgeting and money management
-- ✅ Superannuation and retirement
-- ✅ Tax basics and obligations
-- ✅ Loans and credit management
-- ✅ Basic economics and investing
+### 3. 🤖 AI Financial Advisor
+The centerpiece of Caplet—a chat-first interface powered by state-of-the-art LLMs (GPT-4o).
+- **Intelligent Extraction**: Automatically identifies income, expenses, and goals from natural conversation.
+- **Dynamic Planning**: Generates personalized financial plans with exact calculations.
+- **Privacy-First**: Session-only chat messages with full data control for the user.
 
-### Future Features (Planned)
-- 🤖 AI-powered financial consulting
-- 👥 Financial mentorship program
-- 🎮 Interactive learning tools
-- 📊 Personalized progress tracking
+---
 
-## 🏠 Pages
+## 🛠️ Technical Stack
 
-- **Home** - Hero banner with site tagline, short intro, buttons to About and Mission
-- **About** - Summary of the platform, the financial literacy gap in Australia, why it matters
-- **Mission** - Problem overview, platform solution, potential features, long-term vision
-- **FAQ** - Common questions and answers about financial literacy and the platform
-- **Contact** - Email address for inquiries (no forms)
-- **References** - Bibliography based on academic sources
+### Frontend
+- **Framework**: React 19 (Modern Hooks, optimized rendering)
+- **Build Tool**: Vite (Lightning-fast development & HMR)
+- **Styling**: Tailwind CSS (Utility-first, responsive, custom design tokens)
+- **Visualizations**: Recharts (Data-driven insights)
+- **Navigation**: React Router 7
 
-## 🎨 Design
+### Backend
+- **Server**: Node.js & Express 5
+- **Database**: PostgreSQL (Production-ready via Railway) | SQLite (Local development)
+- **ORM**: Sequelize (Consistent data modeling)
+- **AI Integration**: OpenAI SDK (Unified prompt system with fallback logic)
 
-- **Minimalist, clean, readable** design
-- **Education-focused color scheme** (light mode default)
-- **Mobile responsive** layout
-- **Accessible** design principles
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+- Node.js (v18+)
+- npm / yarn / pnpm
 
-- Node.js (version 18 or higher)
-- npm or yarn
+### Quick Start
+1. **Clone & Enter**:
+   ```bash
+   git clone https://github.com/raei-2748/caplet.git
+   cd caplet
+   ```
 
-### Installation
+2. **Setup Dependencies**:
+   ```bash
+   npm install
+   ```
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd caplet
-```
+3. **Database Migration** (Local):
+   ```bash
+   # See backend documentation for migration steps
+   ```
 
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-4. Open your browser and navigate to `http://localhost:5173`
-
-### Building for Production
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist` directory.
-
-## 📁 Project Structure
-
-```
-caplet/
-├── public/                 # Static assets
-├── src/
-│   ├── components/         # Reusable components
-│   │   ├── Navbar.jsx     # Navigation component
-│   │   └── Footer.jsx     # Footer component
-│   ├── pages/             # Page components
-│   │   ├── Home.jsx       # Home page
-│   │   ├── About.jsx      # About page
-│   │   ├── Mission.jsx    # Mission page
-│   │   ├── FAQ.jsx        # FAQ page
-│   │   ├── Contact.jsx    # Contact page
-│   │   └── References.jsx # References page
-│   ├── App.jsx            # Main app component
-│   ├── main.jsx           # App entry point
-│   └── index.css          # Global styles with Tailwind
-├── index.html             # HTML template
-├── package.json           # Dependencies and scripts
-├── tailwind.config.js     # Tailwind configuration
-├── postcss.config.js      # PostCSS configuration
-└── vite.config.js         # Vite configuration
-```
-
-## 🎯 Mission
-
-To democratize financial education and empower every Australian with the knowledge they need to make informed financial decisions.
-
-## 📊 The Problem We're Solving
-
-- 67% of Australians lack basic financial literacy
-- Young people struggle with debt management
-- Elderly population vulnerable to financial scams
-- Complex financial products create confusion
-- Limited access to quality financial education
-
-## 🎨 Logo
-
-The logo placeholder is currently a simple "C" in a blue rounded square. You can replace this with your actual logo by:
-
-1. Adding your logo file to the `public/` directory
-2. Updating the logo references in `src/components/Navbar.jsx` and `src/components/Footer.jsx`
-
-## 📧 Contact
-
-For questions or feedback, contact us at: **contact@capletedu.org**
-
-## 📄 License
-
-This project is designed to provide free financial education to Australians. All content is based on academic research and authoritative sources.
-
-## 🤝 Contributing
-
-This is a static informational website. For content suggestions or feedback, please contact us via email.
+4. **Launch Development Environment**:
+   ```bash
+   npm run dev
+   ```
 
 ---
 
-**Caplet** - Financial Education for Every Australian
+## 📁 Architecture Overview
+
+```text
+caplet/
+├── backend/            # Express server, Sequelize models, AI services
+├── src/                # React application logic
+│   ├── components/     # UI building blocks (Atomic design)
+│   ├── pages/          # View components & entry points
+│   ├── services/       # API abstraction layer
+│   └── contexts/       # Global state management
+├── public/             # Static assets
+└── tailwind.config.js  # Design system configuration
+```
+
+---
+
+## 📧 Contact & Support
+
+We welcome feedback and academic contributions. Reach out to us at: **contact@capletedu.org**
+
+---
+
+**Caplet** - *Think with Clarity. Spend with Confidence.*
