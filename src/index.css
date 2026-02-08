@@ -5,10 +5,29 @@
 @layer base {
   html {
     font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    color-scheme: light dark;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  
+
   body {
     @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+  }
+
+  a {
+    font-weight: 500;
+    text-decoration: inherit;
+  }
+  a:hover {
+    color: #535bf2;
+  }
+  .dark a:hover {
+    color: #818cf8;
   }
 }
 
