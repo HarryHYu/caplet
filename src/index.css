@@ -2,30 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCHOLARLY EDITORIAL DESIGN SYSTEM
+   A refined, institutional aesthetic for professional edtech
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Surfaces */
+  --surface-body: #f8f6f1;
+  --surface-soft: #ffffff;
+  --surface-raised: #fffffe;
+  --surface-inverse: #1a2238;
+
+  /* Typography */
+  --text-primary: #1a2238;
+  --text-muted: #5c6478;
+  --text-contrast: #f8f6f1;
+
+  /* Lines */
+  --line-soft: #e4e2dc;
+  --line-strong: #c9c6be;
+
+  /* Accent: Modern Blue */
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-warm: #3b82f6;
+
+  /* Secondary: Warm Amber */
+  --secondary: #f59e0b;
+  --secondary-muted: #d97706;
+
+  /* Status */
+  --ok: #2d8659;
+  --danger: #b8434e;
+
+  /* Shadows */
+  --shadow-soft: 0 4px 24px rgba(26, 34, 56, 0.06);
+  --shadow-strong: 0 8px 40px rgba(26, 34, 56, 0.1);
+
+  /* Grain overlay */
+  --grain-opacity: 0.03;
+}
+
+.dark {
+  --surface-body: #121212;
+  --surface-soft: #1c1c1c;
+  --surface-raised: #242424;
+  --surface-inverse: #eceee8;
+
+  --text-primary: #eceee8;
+  --text-muted: #9ca3b4;
+  --text-contrast: #121212;
+
+  --line-soft: #2a2a2a;
+  --line-strong: #3a3a3a;
+
+  --accent: #3b82f6;
+  --accent-strong: #2563eb;
+  --accent-warm: #60a5fa;
+
+  --secondary: #fbbf24;
+  --secondary-muted: #f59e0b;
+
+  --ok: #5fc98a;
+  --danger: #e87c84;
+
+  --shadow-soft: 0 4px 28px rgba(0, 0, 0, 0.25);
+  --shadow-strong: 0 12px 48px rgba(0, 0, 0, 0.4);
+
+  --grain-opacity: 0.025;
+}
+
 @layer base {
   html {
     font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   }
-  
+
   body {
-    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+    background: var(--surface-body);
+    color: var(--text-primary);
   }
 }
 
 @layer components {
+
   /* Lesson player: guaranteed non-blank background (not purged) */
   .lesson-page-bg {
     background-color: #f3f4f6;
     min-height: 100vh;
   }
+
   .dark .lesson-page-bg {
     background-color: #111827;
   }
+
   .lesson-slide-area {
     background-color: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
   }
+
   .dark .lesson-slide-area {
     background-color: rgba(55, 65, 81, 0.5);
     border-color: #4b5563;
@@ -34,11 +110,11 @@
   .btn-primary {
     @apply bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-  
+
   .btn-secondary {
     @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-  
+
   .container-custom {
     @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
   }
@@ -49,24 +125,29 @@
       opacity: 0;
       transform: translateX(16px);
     }
+
     to {
       opacity: 1;
       transform: translateX(0);
     }
   }
+
   @keyframes slideEnterPrev {
     from {
       opacity: 0;
       transform: translateX(-16px);
     }
+
     to {
       opacity: 1;
       transform: translateX(0);
     }
   }
+
   .slide-enter-next {
     animation: slideEnterNext 0.3s ease-out forwards;
   }
+
   .slide-enter-prev {
     animation: slideEnterPrev 0.3s ease-out forwards;
   }
@@ -75,9 +156,11 @@
   .lesson-nav-btn {
     @apply px-5 py-2.5 rounded-full font-medium transition-all duration-200;
   }
+
   .lesson-nav-btn:not(:disabled):hover {
     transform: scale(1.03);
   }
+
   .lesson-nav-btn:not(:disabled):active {
     transform: scale(0.98);
   }
