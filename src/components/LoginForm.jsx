@@ -31,8 +31,8 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
+    <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">
         Sign In
       </h2>
       
@@ -44,7 +44,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Email
           </label>
           <input
@@ -59,7 +59,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Password
           </label>
           <input
@@ -83,7 +83,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
       </form>
 
       <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-gray-300">
           Don't have an account?{' '}
           <button
             onClick={onSwitchToRegister}
