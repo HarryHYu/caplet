@@ -29,25 +29,31 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <nav className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 backdrop-blur-xl">
       <div className="container-custom">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <img src="/logo.png" alt="Caplet" className="h-8 w-auto" />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Caplet</span>
+          <Link to="/" className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600 dark:bg-blue-500">
+              <img src="/logo.png" alt="Caplet" className="h-5 w-auto" />
+            </span>
+            <span
+              className="text-xl font-bold text-gray-900 dark:text-white"
+              style={{ fontFamily: "'Source Sans 3', sans-serif" }}
+            >
+              Caplet
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => {
               const isActiveLink = isActive(item.path);
-              const linkClass = `text-sm font-medium transition-colors duration-200 pb-1 ${
-                isActiveLink
+              const linkClass = `text-sm font-medium transition-colors duration-200 pb-1 ${isActiveLink
                   ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                   : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent'
-              }`;
-              
+                }`;
+
               return (
                 <Link
                   key={item.path}
@@ -58,7 +64,7 @@ const Navbar = () => {
                 </Link>
               );
             })}
-            
+
             {/* Dark Mode Toggle & Auth Section */}
             <div className="flex items-center space-x-4">
               <button
@@ -88,13 +94,12 @@ const Navbar = () => {
                       {user?.role === 'admin'
                         ? ' (admin)'
                         : user?.role === 'instructor'
-                        ? ' (teacher)'
-                        : ' (student)'}
+                          ? ' (teacher)'
+                          : ' (student)'}
                     </span>
                     <svg
-                      className={`w-4 h-4 transform transition-transform ${
-                        showUserMenu ? 'rotate-180' : ''
-                      }`}
+                      className={`w-4 h-4 transform transition-transform ${showUserMenu ? 'rotate-180' : ''
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -121,8 +126,8 @@ const Navbar = () => {
                           {user?.role === 'admin'
                             ? 'Admin'
                             : user?.role === 'instructor'
-                            ? 'Teacher'
-                            : 'Student'}
+                              ? 'Teacher'
+                              : 'Student'}
                         </p>
                       </div>
                       <Link
@@ -202,12 +207,11 @@ const Navbar = () => {
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
               {navItems.map((item) => {
                 const isActiveLink = isActive(item.path);
-                const linkClass = `block px-3 py-2 text-base font-medium rounded-md transition-colors duration-200 ${
-                  isActiveLink
+                const linkClass = `block px-3 py-2 text-base font-medium rounded-md transition-colors duration-200 ${isActiveLink
                     ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                     : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                }`;
-                
+                  }`;
+
                 return (
                   <Link
                     key={item.path}
@@ -219,7 +223,7 @@ const Navbar = () => {
                   </Link>
                 );
               })}
-              
+
               {/* Mobile Dark Mode Toggle & Auth Section */}
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button
@@ -249,8 +253,8 @@ const Navbar = () => {
                       {user?.role === 'admin'
                         ? '(admin)'
                         : user?.role === 'instructor'
-                        ? '(teacher)'
-                        : '(student)'}
+                          ? '(teacher)'
+                          : '(student)'}
                     </div>
                     <Link
                       to="/settings"
@@ -317,14 +321,14 @@ const Navbar = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            
+
             {authMode === 'login' ? (
-              <LoginForm 
+              <LoginForm
                 onSuccess={() => setShowAuthModal(false)}
                 onSwitchToRegister={() => setAuthMode('register')}
               />
             ) : (
-              <RegisterForm 
+              <RegisterForm
                 onSuccess={() => setShowAuthModal(false)}
                 onSwitchToLogin={() => setAuthMode('login')}
               />

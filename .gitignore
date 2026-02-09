@@ -35,3 +35,4 @@ backend/caplet.db.bak
 backend/.env
 .env.*
 !.env.example
+.vercel

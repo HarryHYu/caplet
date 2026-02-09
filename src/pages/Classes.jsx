@@ -37,7 +37,7 @@ const Classes = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-body)' }}>
         <div className="text-center max-w-md mx-auto px-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Sign in to view classes
@@ -105,7 +105,7 @@ const Classes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-body)' }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300">Loading your classes...</p>
@@ -115,7 +115,7 @@ const Classes = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+    <div className="min-h-screen py-8 px-4" style={{ background: 'var(--surface-body)' }}>
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
@@ -137,7 +137,8 @@ const Classes = () => {
             )}
             <button
               onClick={() => setShowJoin(true)}
-              className="px-4 py-2 bg-white dark:bg-gray-800 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+              style={{ background: 'var(--surface-soft)', borderColor: 'var(--line-soft)', color: 'var(--text-primary)' }}
             >
               Join with code
             </button>
@@ -165,7 +166,8 @@ const Classes = () => {
                   <Link
                     key={cls.id}
                     to={`/classes/${cls.id}`}
-                    className="block bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:border-blue-500 hover:shadow-md transition"
+                    className="block rounded-lg shadow-sm border p-4 transition duration-200"
+                    style={{ background: 'var(--surface-soft)', borderColor: 'var(--line-soft)' }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-base font-semibold text-gray-900 dark:text-white">
@@ -199,7 +201,8 @@ const Classes = () => {
                 <Link
                   key={cls.id}
                   to={`/classes/${cls.id}`}
-                  className="block bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:border-blue-500 hover:shadow-md transition"
+                  className="block rounded-lg shadow-sm border p-4 transition duration-200"
+                  style={{ background: 'var(--surface-soft)', borderColor: 'var(--line-soft)' }}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-base font-semibold text-gray-900 dark:text-white">
