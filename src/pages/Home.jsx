@@ -25,14 +25,14 @@ const faqData = [
       'Financial literacy means understanding how money decisions affect your daily life and long-term outcomes. It helps you budget with less stress, avoid expensive debt mistakes, and make clearer choices about tax, super, and investing. In practice, it gives you more control and fewer surprises.',
   },
   {
-    question: 'Is Caplet really free?',
+    question: 'Is CapletEdu free to use?',
     answer:
-      'Yes. Core courses and tools are free to access. The goal is to remove cost as a barrier, so students and early earners can build practical money skills before financial pressure grows.',
+      'Yes. CapletEdu currently provides free educational services. Courses and tools are accessible at no cost. Future development may include SaaS offerings for schools and large institutions.',
   },
   {
     question: 'What topics are covered?',
     answer:
-      'Caplet covers everyday money fundamentals: budgeting, cash flow, debt, tax, superannuation, and investing basics. Content is written with Australian context, so examples reflect local systems and common decisions learners actually face.',
+      'CapletEdu covers financial fundamentals tailored to Australian students: budgeting, tax, superannuation, investing basics, and business finance. All content is structured with Australian context and designed for integration into school curricula.',
   },
   {
     question: 'Do I need prior knowledge?',
@@ -89,15 +89,15 @@ const Home = () => {
                 className="inline-block px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-6"
                 style={{ background: 'rgba(255,255,255,0.14)', color: '#fff' }}
               >
-                Free Australian finance education
+                Structured financial education for Australian students
               </span>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6" style={{ color: '#fff' }}>
-                Learn money skills
+                Financial literacy
                 <br />
-                <span style={{ color: 'rgba(255,255,255,0.84)' }}>that reduce stress in real life.</span>
+                <span style={{ color: 'rgba(255,255,255,0.84)' }}>built for schools and institutions.</span>
               </h1>
               <p className="text-lg md:text-xl leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                Practical lessons for students and early professionals: budgeting, tax, super, and investing fundamentals.
+                CapletEdu delivers structured lessons tailored to the Australian context, designed for high school students and integrated into school curricula.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
@@ -187,16 +187,16 @@ const Home = () => {
 
       <section className="py-4 border-y overflow-hidden whitespace-nowrap" style={{ borderColor: 'var(--line-soft)', background: 'var(--surface-soft)' }}>
         <div className="container-custom">
-          <div className="flex items-center justify-center gap-x-12">
+              <div className="flex items-center justify-center gap-x-12">
             <div className="flex items-center gap-3 shrink-0">
               <img src={cfcLogo} alt="CFC" className="h-6 w-auto opacity-80" />
               <span className="text-sm font-semibold tracking-wide uppercase opacity-70" style={{ color: 'var(--text-muted)' }}>
-                associated with <a href="https://capitalfinanceclub.com" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--accent)] transition-colors underline decoration-dotted underline-offset-4">Capital Finance Club</a>
+                used by <a href="https://capitalfinanceclub.com" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--accent)] transition-colors underline decoration-dotted underline-offset-4">Capital Finance Club</a> and <span className="font-bold">Knox Grammar School</span>
               </span>
             </div>
 
             <div className="hidden md:flex items-center gap-x-10 text-sm">
-              {['Always free', 'Australian examples', 'Short practical lessons'].map((signal, i) => (
+              {['Structured curriculum', 'Australian context', 'School-integrated'].map((signal, i) => (
                 <div key={signal} className="flex items-center gap-2 reveal-up" style={{ animationDelay: `${i * 80}ms` }}>
                   <span className="w-1 h-1 rounded-full opacity-40" style={{ background: 'var(--accent)' }} />
                   <span className="font-medium opacity-60" style={{ color: 'var(--text-muted)' }}>{signal}</span>
@@ -382,7 +382,7 @@ const Home = () => {
                 <span className="text-xl font-bold" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Caplet</span>
               </div>
               <p className="text-sm text-muted leading-relaxed">
-                A non-profit initiative dedicated to bridging the financial literacy gap in Australia through structured, academic-grade education and practical utility.
+                CapletEdu is the educational branch of Caplet, delivering structured financial education tailored to the Australian context. Currently integrated into Knox Grammar School Commerce Department and used by Capital Finance Club, with plans to expand to other schools.
               </p>
             </div>
 

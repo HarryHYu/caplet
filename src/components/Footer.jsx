@@ -19,12 +19,12 @@ const Footer = () => {
                   Caplet
                 </p>
                 <p className="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">
-                  Finance education for life
+                  CapletEdu — Structured financial education
                 </p>
               </div>
             </div>
             <p className="text-gray-600 dark:text-gray-300 mb-4 max-w-md">
-              Empowering Australians with free, accessible financial education to bridge the financial literacy gap.
+              CapletEdu delivers structured financial education for high school students and beyond, tailored to the Australian context. Currently integrated into Knox Grammar School and used by Capital Finance Club.
             </p>
           </div>
 

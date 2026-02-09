@@ -9,8 +9,8 @@ const About = () => {
               About Caplet
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Free financial education covering everything money-related. 
-              Trading, investing, budgeting, tax, and more. Australian-focused.
+              CapletEdu delivers structured financial education for high school students and beyond, 
+              tailored specifically to the Australian context.
             </p>
           </div>
         </div>
@@ -27,12 +27,19 @@ const About = () => {
               </h2>
               <div className="prose prose-lg max-w-none">
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Caplet is a free financial education platform for Australians. We cover everything money-related: 
-                  trading strategies, investing, budgeting, superannuation, tax, loans, economics, business finance, and more.
+                  CapletEdu is the educational branch of Caplet, operating at capletedu.org and focusing on structured financial education 
+                  for high school students and beyond. Our lessons are tailored specifically to the Australian context and designed for 
+                  integration into school curricula.
+                </p>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  CapletEdu is currently used for lessons within the Capital Finance Club and is being integrated into the 
+                  Knox Grammar School Commerce Department for Years 9–10, serving approximately 400 students. Coursework is designed 
+                  in collaboration with Knox commerce staff, with plans to expand to other schools and potentially into preparatory 
+                  school settings.
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
-                  All content is tailored to Australian markets, regulations, and financial systems. 
-                  From day trading to retirement planning - we've got you covered.
+                  CapletEdu also sponsors the Caplet Challenge, an Australian case competition owned by the Capital Finance Society. 
+                  While currently free, future development may include SaaS offerings for schools and large institutions.
                 </p>
               </div>
             </div>
@@ -47,22 +54,23 @@ const About = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Topics</h3>
                     <ul className="text-gray-600 dark:text-gray-300 space-y-2">
-                      <li>• Trading strategies & day trading</li>
-                      <li>• Investing & portfolio management</li>
                       <li>• Budgeting & money management</li>
-                      <li>• Superannuation & retirement</li>
-                      <li>• Tax, loans, economics</li>
+                      <li>• Tax & superannuation basics</li>
+                      <li>• Investing fundamentals</li>
                       <li>• Business finance</li>
+                      <li>• Economics & financial systems</li>
+                      <li>• Australian market context</li>
                     </ul>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Approach</h3>
                     <ul className="text-gray-600 dark:text-gray-300 space-y-2">
-                      <li>• Free & accessible</li>
-                      <li>• Australian-focused</li>
-                      <li>• Simple explanations</li>
-                      <li>• Evidence-based</li>
-                      <li>• Practical & actionable</li>
+                      <li>• Structured curriculum design</li>
+                      <li>• School-integrated learning</li>
+                      <li>• Australian context & examples</li>
+                      <li>• Academic-grade content</li>
+                      <li>• Collaboration with educators</li>
+                      <li>• Institution-focused delivery</li>
                     </ul>
                   </div>
                 </div>

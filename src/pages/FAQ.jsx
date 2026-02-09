@@ -19,16 +19,16 @@ const FAQ = () => {
       answer: "Financial literacy is understanding how money works. It helps you make better decisions, avoid debt, plan for retirement, and protect yourself from scams. Many Australians lack these skills, leading to poor financial outcomes."
     },
     {
-      question: "Is Caplet really free to use?",
-      answer: "Yes, completely free. All courses, lessons, and tools are available at no cost. We're committed to keeping it that way."
+      question: "Is CapletEdu free to use?",
+      answer: "Yes. CapletEdu currently provides free educational services. All courses, lessons, and tools are accessible at no cost. Future development may include SaaS offerings for schools and large institutions."
     },
     {
-      question: "What topics does Caplet cover?",
-      answer: "Everything money-related: trading strategies, day trading, investing, budgeting, superannuation, tax, loans, economics, business finance, and more. All with Australian context and focus."
+      question: "What topics does CapletEdu cover?",
+      answer: "CapletEdu covers financial fundamentals tailored to Australian students: budgeting, tax, superannuation, investing basics, and business finance. All content is structured with Australian context and designed for integration into school curricula."
     },
     {
-      question: "How is Caplet different from other financial education platforms?",
-      answer: "We cover all money-related topics with a strong Australian focus. All content is relevant to Australian markets, regulations, and financial systems. Simple, clear, evidence-based, and accessible to everyone."
+      question: "How is CapletEdu different from other financial education platforms?",
+      answer: "CapletEdu is specifically designed for institutional integration into school curricula. We work directly with educators to develop structured lessons tailored to Australian students. Currently integrated into Knox Grammar School Commerce Department and used by Capital Finance Club, with coursework designed in collaboration with school staff."
     },
     {
       question: "Do I need any prior financial knowledge to use Caplet?",
@@ -43,8 +43,8 @@ const FAQ = () => {
       answer: "Yes. All content is thoroughly researched from reliable sources including Australian government resources, financial regulatory bodies, and academic research. We recommend consulting qualified professionals for personalized advice."
     },
     {
-      question: "Is Caplet suitable for young people and students?",
-      answer: "Absolutely! We have content tailored to young Australians: managing student loans, understanding superannuation from your first job, budgeting on limited income, and building good financial habits early."
+      question: "Is CapletEdu suitable for schools and institutions?",
+      answer: "Yes. CapletEdu is specifically designed for high school students and institutional use. We're currently integrated into Knox Grammar School Commerce Department for Years 9–10, serving approximately 400 students. Coursework is designed in collaboration with school staff, and we have plans to expand to other schools."
     },
     {
       question: "What about older Australians and retirees?",
@@ -55,12 +55,12 @@ const FAQ = () => {
       answer: "We provide self-directed learning. For general inquiries, contact us. For personalized financial advice, consult qualified professionals like financial advisors, accountants, or financial counselors."
     },
     {
-      question: "Will Caplet add more features in the future?",
-      answer: "Yes. We're planning AI-powered consulting, mentorship programs, interactive learning tools, and more personalized content. Continuously improving to better serve Australians."
+      question: "What are CapletEdu's expansion plans?",
+      answer: "After establishing CapletEdu within the Knox Commerce Department, we plan to expand to other schools and potentially into preparatory school settings to provide opportunities for younger students. Future development may include SaaS offerings for schools and large institutions."
     },
     {
-      question: "How can I support Caplet's mission?",
-      answer: "Use the platform, share it with others, provide feedback, and spread awareness. The best support is helping us reach more Australians who need financial education."
+      question: "How can schools or institutions integrate CapletEdu?",
+      answer: "Schools and institutions interested in integrating CapletEdu into their curriculum can contact us to discuss partnership opportunities. We work collaboratively with educators to design coursework that fits their specific needs and Australian educational standards."
     }
   ];
 
