@@ -34,9 +34,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600 dark:bg-blue-500">
-              <img src="/logo.png" alt="Caplet" className="h-5 w-auto" />
-            </span>
+            <img src="/logo.png" alt="Caplet" className="h-9 w-auto rounded-lg object-contain" />
             <span
               className="text-xl font-bold text-gray-900 dark:text-white"
               style={{ fontFamily: "'Source Sans 3', sans-serif" }}

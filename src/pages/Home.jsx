@@ -376,8 +376,8 @@ const Home = () => {
             {/* Mission / Brand */}
             <div className="lg:pr-8">
               <div className="flex items-center gap-3 mb-6">
-                <span className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent)' }}>
-                  <img src="/logo.png" alt="Caplet" className="h-5 w-5 object-contain" />
+                <span className="w-9 h-9 flex items-center justify-center">
+                  <img src="/logo.png" alt="Caplet" className="h-8 w-8 object-contain rounded-lg" />
                 </span>
                 <span className="text-xl font-bold" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>Caplet</span>
               </div>

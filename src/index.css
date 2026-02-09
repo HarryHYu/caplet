@@ -91,6 +91,99 @@
 
 @layer components {
 
+  /* Hero + editorial layout */
+  .section-hero {
+    position: relative;
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.28), transparent 55%),
+      radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 1));
+    color: #fff;
+  }
+
+  .section-hero > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .section-hero::before {
+    content: '';
+    position: absolute;
+    inset: -40px;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, var(--grain-opacity)) 1px, transparent 0);
+    background-size: 32px 32px;
+    opacity: var(--grain-opacity);
+    pointer-events: none;
+  }
+
+  .section-kicker {
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .section-title {
+    font-size: clamp(1.75rem, 2vw, 2.25rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .text-muted {
+    color: var(--text-muted);
+  }
+
+  .panel {
+    border-radius: 1rem;
+    border: 1px solid var(--line-soft);
+    background: var(--surface-soft);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .mesh-card {
+    position: relative;
+    border-radius: 1.25rem;
+    border: 1px solid var(--line-soft);
+    background:
+      radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 10%, transparent), transparent 55%),
+      radial-gradient(circle at bottom right, color-mix(in srgb, var(--secondary) 6%, transparent), transparent 60%),
+      var(--surface-soft);
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.18s ease-out, box-shadow 0.18s ease-out, border-color 0.18s ease-out;
+  }
+
+  .mesh-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-strong);
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--line-soft));
+  }
+
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.18);
+  }
+
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: revealUp 0.55s ease-out forwards;
+  }
+
+  @keyframes revealUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   /* Lesson player: guaranteed non-blank background (not purged) */
   .lesson-page-bg {
     background-color: #f3f4f6;
