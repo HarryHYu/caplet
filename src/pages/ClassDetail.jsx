@@ -1218,7 +1218,7 @@ const ClassDetail = () => {
         {/* New assignment modal — overlay, not a tab */}
         {isTeacher && showNewAssignment && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full p-6 border-2 border-gray-200/50 dark:border-gray-700/50 animate-in zoom-in-95 duration-200">
+            <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 border-2 border-gray-200/50 dark:border-gray-700/50 animate-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
                   ✨ New assignment
