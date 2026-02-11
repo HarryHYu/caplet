@@ -97,13 +97,13 @@
     background-image: url('/light.jpg');
     background-size: cover;
     background-position: center;
-    opacity: 0.18;
+    opacity: 0.45; /* higher so the image is clearly visible */
     z-index: -1;
   }
 
   .dark body::before {
     background-image: url('/dark.jpg');
-    opacity: 0.22;
+    opacity: 0.55;
   }
 
   h1,
