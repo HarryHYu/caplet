@@ -16,7 +16,7 @@ const Courses = () => {
 
   useEffect(() => {
     fetchCourses(filters);
-  }, [filters]);
+  }, [fetchCourses, filters]);
 
   useEffect(() => {
     if (isAuthenticated && courses.length > 0) {
@@ -58,15 +58,6 @@ const Courses = () => {
       return;
     }
     navigate(`/courses/${courseId}`);
-  };
-
-  const getLevelColor = (level) => {
-    const colors = {
-      beginner: 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100',
-      intermediate: 'bg-black text-white dark:bg-white dark:text-black',
-      advanced: 'bg-brand text-white',
-    };
-    return colors[level] || 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800';
   };
 
   if (loading) {

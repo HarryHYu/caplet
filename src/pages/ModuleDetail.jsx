@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 
 const ModuleDetail = () => {
   const { courseId, moduleId } = useParams();
+  const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [module_, setModule_] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ const ModuleDetail = () => {
 
   useEffect(() => {
     if (!course?.modules) return;
-    const mod = course.modules.find((m) => m.id === moduleId);
+    const mod = course.modules.find((m) => String(m.id) === String(moduleId));
     setModule_(mod || null);
   }, [course, moduleId]);
 
@@ -72,8 +73,6 @@ const ModuleDetail = () => {
   }
 
   const lessons = (module_.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const mp = progress?.moduleProgress?.find((m) => String(m.moduleId) === String(moduleId));
-
   const lessonHasContent = (l) => {
     const slides = l.slides;
     if (Array.isArray(slides) && slides.length > 0) return true;
@@ -90,6 +89,7 @@ const ModuleDetail = () => {
   };
   const completedInModule = lessons.filter(isLessonComplete).length;
   const totalInModule = lessons.length;
+  const progressWidth = totalInModule > 0 ? (completedInModule / totalInModule) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-white dark:bg-black py-24">
@@ -123,7 +123,7 @@ const ModuleDetail = () => {
               <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
                 <div
                   className="h-full bg-brand transition-all duration-1000"
-                  style={{ width: `${(completedInModule / totalInModule) * 100}%` }}
+                  style={{ width: `${progressWidth}%` }}
                 />
               </div>
             </div>

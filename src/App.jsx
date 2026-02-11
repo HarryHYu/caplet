@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
@@ -23,6 +23,8 @@ import ModuleDetail from './pages/ModuleDetail';
 import LessonPlayer from './pages/LessonPlayer';
 import Survey from './pages/Survey';
 import SurveyResults from './pages/SurveyResults';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import Classes from './pages/Classes';
 import ClassDetail from './pages/ClassDetail';
 import Settings from './pages/Settings';
@@ -30,8 +32,23 @@ import SettingsProfile from './pages/SettingsProfile';
 import SettingsAccount from './pages/SettingsAccount';
 import UserProfile from './pages/UserProfile';
 import Dashboard from './pages/Dashboard';
+import Auth from './pages/Auth';
 import Terms from './pages/Terms';
 import NotFound from './pages/NotFound';
+
+function RootRoute() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Home />;
+}
 
 function App() {
   return (
@@ -43,7 +60,9 @@ function App() {
               <Navbar />
               <main className="flex-grow">
                 <Routes>
-                  <Route path="/" element={<Home />} />
+                  <Route path="/" element={<RootRoute />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
                   <Route path="/tools" element={<Tools />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
@@ -71,6 +90,7 @@ function App() {
                   <Route path="/survey" element={<Survey />} />
                   <Route path="/survey-results" element={<SurveyResults />} />
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/sign-in" element={<Auth />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

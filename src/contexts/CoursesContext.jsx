@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 
 const CoursesContext = createContext();
@@ -17,7 +17,7 @@ export const CoursesProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchCourses = async (params = {}) => {
+  const fetchCourses = useCallback(async (params = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -30,11 +30,11 @@ export const CoursesProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCourses();
-  }, []);
+  }, [fetchCourses]);
 
   const value = {
     courses,

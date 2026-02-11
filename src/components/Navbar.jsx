@@ -1,37 +1,44 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import LoginForm from './LoginForm';
-import RegisterForm from './RegisterForm';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [updatingRole, setUpdatingRole] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout, isAuthenticated, updateProfile } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
-  const navItems = [
+  const publicNavItems = [
     { path: '/', label: 'Home' },
+    { path: '/contact', label: 'Contact' },
+  ];
+
+  const authenticatedNavItems = [
     { path: '/courses', label: 'Courses' },
     { path: '/classes', label: 'Classes' },
     { path: '/tools', label: 'Tools' },
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/contact', label: 'Contact' },
   ];
+  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
+  const homePath = isAuthenticated ? '/dashboard' : '/';
 
   const isActive = (path) => location.pathname === path;
+
+  if (['/login', '/register'].includes(location.pathname)) {
+    return null;
+  }
 
   return (
     <nav className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 border-b border-zinc-100 dark:border-zinc-900 backdrop-blur-md">
       <div className="container-custom">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to={homePath} className="flex items-center gap-3 group">
             <div className="bg-white p-1 rounded-sm transition-transform group-hover:scale-105 border border-zinc-100">
               <img src="/logo.png" alt="Caplet" className="h-7 w-auto" />
             </div>
@@ -150,7 +157,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowAuthModal(true)}
+                  onClick={() => navigate('/sign-in')}
                   className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all hover-lift active:scale-95"
                 >
                   Join / Sign In
@@ -196,40 +203,24 @@ const Navbar = () => {
                   </Link>
                 );
               })}
+              {!isAuthenticated && (
+                <div className="px-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-2">
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate('/login');
+                    }}
+                    className="w-full py-3 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all"
+                  >
+                    Join / Sign In
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Auth Modal Overlay */}
-      {showAuthModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-lg">
-            <button
-              onClick={() => setShowAuthModal(false)}
-              className="absolute -top-12 right-0 text-white/60 hover:text-white transition-colors"
-              aria-label="Close"
-            >
-              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <div className="animate-slide-up">
-              {authMode === 'login' ? (
-                <LoginForm
-                  onSuccess={() => setShowAuthModal(false)}
-                  onSwitchToRegister={() => setAuthMode('register')}
-                />
-              ) : (
-                <RegisterForm
-                  onSuccess={() => setShowAuthModal(false)}
-                  onSwitchToLogin={() => setAuthMode('login')}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 };

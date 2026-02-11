@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -52,19 +52,7 @@ const Dashboard = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
-    loadDashboardData();
-  }, [isAuthenticated, navigate]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       const [state, planData, summaryData] = await Promise.all([
@@ -97,9 +85,10 @@ const Dashboard = () => {
       setSummary(summaryValue);
 
       // Add welcome message only on initial load (when messages are empty)
-      if (messages.length === 0) {
+      setMessages((prev) => {
+        if (prev.length > 0) return prev;
         if (summaryValue) {
-          setMessages([{
+          return [{
             type: 'ai',
             content: "Hey! I'm your Caplet financial advisor. I remember you - here's what I know about your finances:",
             timestamp: new Date()
@@ -107,21 +96,32 @@ const Dashboard = () => {
             type: 'summary',
             content: summaryValue,
             timestamp: new Date()
-          }]);
-        } else {
-          setMessages([{
-            type: 'ai',
-            content: "Hey! I'm your Caplet financial advisor. What's going on with your finances? Tell me anything - a question, an update, a concern, or just do a quick check-in.",
-            timestamp: new Date()
-          }]);
+          }];
         }
-      }
+        return [{
+          type: 'ai',
+          content: "Hey! I'm your Caplet financial advisor. What's going on with your finances? Tell me anything - a question, an update, a concern, or just do a quick check-in.",
+          timestamp: new Date()
+        }];
+      });
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    loadDashboardData();
+  }, [isAuthenticated, loadDashboardData]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -154,7 +154,7 @@ const Dashboard = () => {
     try {
       // Prepare check-in data - clean up expenses object
       let monthlyExpenses = null;
-      const expensesEntries = Object.entries(manualInput.monthlyExpenses).filter(([_, val]) => val && val.toString().trim() !== '');
+      const expensesEntries = Object.entries(manualInput.monthlyExpenses).filter(([, val]) => val && val.toString().trim() !== '');
       if (expensesEntries.length > 0) {
         monthlyExpenses = {};
         expensesEntries.forEach(([key, val]) => {
@@ -258,7 +258,7 @@ const Dashboard = () => {
         try {
           const summaryData = await api.getSummary().catch(() => ({ content: '' }));
           setSummary(summaryData?.content || '');
-        } catch (e) {
+        } catch {
           // Ignore summary update errors
         }
       } catch (error) {
@@ -342,7 +342,7 @@ const Dashboard = () => {
               Back to Home
             </button>
             <button
-              onClick={() => { /* Assume there's a login modal or page */ }}
+              onClick={() => navigate('/sign-in')}
               className="btn-secondary w-full"
             >
               Sign In / Join

@@ -1,6 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Footer = () => {
+  const location = useLocation();
+
+  if (['/login', '/register'].includes(location.pathname)) {
+    return null;
+  }
+
   return (
     <footer className="bg-white dark:bg-black border-t border-zinc-100 dark:border-zinc-900">
       <div className="container-custom py-20">

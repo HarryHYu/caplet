@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 import ReactMarkdown from 'react-markdown';
-import { useTheme } from '../contexts/ThemeContext';
 
 // Extract YouTube video ID from URL
 const getYouTubeId = (url) => {
@@ -24,7 +23,7 @@ const Quiz = ({ questions, onComplete }) => {
     setSubmitted(true);
     const mcqQuestions = questions.filter(q => q.type === 'multiple-choice');
     const correct = mcqQuestions.filter(q => answers[q.id] === q.correctAnswer).length;
-    const score = Math.round((correct / mcqQuestions.length) * 100);
+    const score = mcqQuestions.length > 0 ? Math.round((correct / mcqQuestions.length) * 100) : 0;
     if (score >= 70) {
       setTimeout(() => onComplete?.(), 1500);
     }
@@ -36,7 +35,6 @@ const Quiz = ({ questions, onComplete }) => {
   };
 
   const mcqQuestions = questions.filter(q => q.type === 'multiple-choice');
-  const shortAnswerQuestions = questions.filter(q => q.type === 'short-answer');
   const correctCount = mcqQuestions.filter(q => answers[q.id] === q.correctAnswer).length;
   const score = mcqQuestions.length > 0 ? Math.round((correctCount / mcqQuestions.length) * 100) : 0;
 
@@ -155,7 +153,6 @@ function getFlatLessons(course) {
 const LessonPlayer = () => {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
-  const { isDark } = useTheme();
   const [course, setCourse] = useState(null);
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -179,7 +176,7 @@ const LessonPlayer = () => {
           api.getLesson(courseId, lessonId).catch(() => null)
         ]);
         const flatLessons = getFlatLessons(courseData);
-        const currentFromList = flatLessons.find((l) => l.id === lessonId) || flatLessons[0];
+        const currentFromList = flatLessons.find((l) => String(l.id) === String(lessonId)) || flatLessons[0];
         setCourse(courseData);
         setLesson(lessonData || currentFromList);
         const current = lessonData || currentFromList;

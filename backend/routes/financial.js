@@ -26,7 +26,7 @@ const authenticateToken = async (req, res, next) => {
 
     req.user = user;
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json({ message: 'Invalid token' });
   }
 };
@@ -238,7 +238,7 @@ router.post('/checkin', authenticateToken, [
       console.log('✅ Expenses updated from manual input:', totalExpenses);
     } else if (extractedData?.expenses && Object.keys(extractedData.expenses).length > 0) {
       // Filter out null values and calculate total
-      const validExpenses = Object.entries(extractedData.expenses).filter(([_, val]) => val !== null && val !== undefined);
+      const validExpenses = Object.entries(extractedData.expenses).filter(([, val]) => val !== null && val !== undefined);
       const expensesObj = Object.fromEntries(validExpenses.map(([key, val]) => [key, parseFloat(val)]));
       const totalExpenses = Object.values(expensesObj).reduce((sum, val) => sum + (val || 0), 0);
       if (totalExpenses > 0) {
@@ -316,7 +316,7 @@ router.post('/checkin', authenticateToken, [
     const finalExpensesObj = manualExpenses || (extractedData?.expenses && Object.keys(extractedData.expenses).length > 0 
       ? Object.fromEntries(
           Object.entries(extractedData.expenses)
-            .filter(([_, val]) => val !== null && val !== undefined)
+            .filter(([, val]) => val !== null && val !== undefined)
             .map(([key, val]) => [key, parseFloat(val)])
         )
       : {});
@@ -416,4 +416,3 @@ router.delete('/delete-all-data', authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
-

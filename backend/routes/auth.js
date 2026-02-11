@@ -1,16 +1,44 @@
 const express = require('express');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 
 const router = express.Router();
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 // Generate JWT Token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+};
+
+const normalizeGoogleNames = (payload = {}) => {
+  const fallbackName = typeof payload.name === 'string' ? payload.name.trim() : '';
+  const splitName = fallbackName ? fallbackName.split(/\s+/) : [];
+
+  const firstName = (payload.given_name || splitName[0] || 'Google').slice(0, 50);
+  const lastName = (payload.family_name || splitName.slice(1).join(' ') || 'User').slice(0, 50);
+
+  return { firstName, lastName };
+};
+
+const findUserByEmailVariants = async (email) => {
+  let user = await User.findOne({ where: { email } });
+  if (!user) {
+    const [local, domain] = email.split('@');
+    if (domain && domain.toLowerCase() === 'gmail.com') {
+      const baseLocal = local.split('+')[0];
+      const altEmail = `${baseLocal.replace(/\./g, '')}@gmail.com`;
+      user = await User.findOne({ where: { email: altEmail } });
+    }
+  }
+
+  return user;
 };
 
 // Register
@@ -34,19 +62,8 @@ router.post('/register', [
 
     const { email, password, firstName, lastName, dateOfBirth, role } = req.body;
 
-    // Gmail compatibility: prevent duplicates due to dot variants
-    const [local, domain] = email.split('@');
-    let altEmail = null;
-    if (domain && domain.toLowerCase() === 'gmail.com') {
-      const baseLocal = local.split('+')[0];
-      altEmail = `${baseLocal.replace(/\./g, '')}@gmail.com`;
-    }
-
     // Check if user already exists
-    let existingUser = await User.findOne({ where: { email } });
-    if (!existingUser && altEmail) {
-      existingUser = await User.findOne({ where: { email: altEmail } });
-    }
+    const existingUser = await findUserByEmailVariants(email);
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
@@ -95,15 +112,7 @@ router.post('/login', [
     const { email, password } = req.body;
 
     // Find user (support gmail dot/subaddress variants)
-    let user = await User.findOne({ where: { email } });
-    if (!user) {
-      const [local, domain] = email.split('@');
-      if (domain && domain.toLowerCase() === 'gmail.com') {
-        const baseLocal = local.split('+')[0];
-        const altEmail = `${baseLocal.replace(/\./g, '')}@gmail.com`;
-        user = await User.findOne({ where: { email: altEmail } });
-      }
-    }
+    const user = await findUserByEmailVariants(email);
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -124,6 +133,71 @@ router.post('/login', [
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Login with Google ID token
+router.post('/google', [
+  body('idToken').notEmpty().withMessage('Google ID token is required')
+], async (req, res) => {
+  try {
+    if (!GOOGLE_CLIENT_ID || !googleClient) {
+      return res.status(500).json({ message: 'Google sign-in is not configured' });
+    }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { idToken } = req.body;
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload?.email || !payload.email_verified) {
+      return res.status(401).json({ message: 'Google account email is not verified' });
+    }
+
+    const email = payload.email.toLowerCase();
+    let user = await findUserByEmailVariants(email);
+
+    if (!user) {
+      const { firstName, lastName } = normalizeGoogleNames(payload);
+      user = await User.create({
+        email,
+        password: crypto.randomBytes(32).toString('hex'),
+        firstName,
+        lastName,
+        isEmailVerified: true,
+        profilePicture: payload.picture || null,
+        role: 'student'
+      });
+    } else {
+      const updates = {};
+      if (!user.isEmailVerified) {
+        updates.isEmailVerified = true;
+      }
+      if (payload.picture && !user.profilePicture) {
+        updates.profilePicture = payload.picture;
+      }
+      if (Object.keys(updates).length) {
+        await user.update(updates);
+      }
+    }
+
+    const token = generateToken(user.id);
+
+    res.json({
+      message: 'Google login successful',
+      token,
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(401).json({ message: 'Google authentication failed' });
   }
 });
 

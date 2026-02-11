@@ -40,12 +40,16 @@ const Settings = () => {
                       }`
                     }
                   >
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.2em] mb-1 leading-none transition-colors">
-                      {item.label}
-                    </span>
-                    <span className={`block text-[9px] font-bold uppercase tracking-widest opacity-50 ${isActive ? 'text-white/70 dark:text-black/70' : 'text-zinc-500'}`}>
-                      {item.description}
-                    </span>
+                    {({ isActive }) => (
+                      <>
+                        <span className="block text-[10px] font-bold uppercase tracking-[0.2em] mb-1 leading-none transition-colors">
+                          {item.label}
+                        </span>
+                        <span className={`block text-[9px] font-bold uppercase tracking-widest opacity-50 ${isActive ? 'text-white/70 dark:text-black/70' : 'text-zinc-500'}`}>
+                          {item.description}
+                        </span>
+                      </>
+                    )}
                   </NavLink>
                 </li>
               ))}
