@@ -241,10 +241,12 @@ const LessonPlayer = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Retrieving curriculum...</p>
+          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+            Retrieving curriculum...
+          </p>
         </div>
       </div>
     );
@@ -252,10 +254,18 @@ const LessonPlayer = () => {
 
   if (error || !course || !lesson) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="text-center">
-          <p className="text-red-500 font-bold uppercase tracking-widest text-xs mb-4">{error || 'Lesson not found'}</p>
-          <Link to={`/courses/${courseId}`} className="px-6 py-2 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors">Back to course</Link>
+      <div className="min-h-screen flex items-center justify-center page-section-light">
+        <div className="text-center max-w-md mx-auto px-6">
+          <span className="section-kicker mb-4">System Notice</span>
+          <p className="text-xs font-bold uppercase tracking-widest text-red-500 mb-4">
+            {error || 'Lesson not found'}
+          </p>
+          <Link
+            to={`/courses/${courseId}`}
+            className="btn-secondary"
+          >
+            Back to Course
+          </Link>
         </div>
       </div>
     );

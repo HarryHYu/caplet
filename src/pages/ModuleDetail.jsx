@@ -41,10 +41,10 @@ const ModuleDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Loading module...</p>
         </div>
       </div>
     );
@@ -52,10 +52,13 @@ const ModuleDetail = () => {
 
   if (error || !course) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400">{error || 'Course not found'}</p>
-          <Link to="/courses" className="mt-4 inline-block text-blue-600 dark:text-blue-400">Back to courses</Link>
+      <div className="min-h-screen flex items-center justify-center page-section-light">
+        <div className="text-center max-w-md mx-auto px-6">
+          <span className="section-kicker mb-4">System Notice</span>
+          <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-6">
+            {error || 'Course not found'}
+          </p>
+          <Link to="/courses" className="btn-secondary">Return to Library</Link>
         </div>
       </div>
     );
@@ -63,10 +66,13 @@ const ModuleDetail = () => {
 
   if (!module_) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400">Module not found</p>
-          <Link to={`/courses/${courseId}`} className="mt-4 inline-block text-blue-600 dark:text-blue-400">Back to course</Link>
+      <div className="min-h-screen flex items-center justify-center page-section-light">
+        <div className="text-center max-w-md mx-auto px-6">
+          <span className="section-kicker mb-4">System Notice</span>
+          <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-6">
+            Module not found
+          </p>
+          <Link to={`/courses/${courseId}`} className="btn-secondary">Back to Course</Link>
         </div>
       </div>
     );
