@@ -14,9 +14,11 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-4 mb-8 group">
-              <div className="bg-white p-1.5 rounded-sm border border-zinc-100">
-                <img src="/logo.png" alt="Caplet" className="h-8 w-8 object-contain" />
-              </div>
+              <img
+                src="/logo.png"
+                alt="Caplet"
+                className="h-9 w-auto rounded-lg object-contain group-hover:scale-105 transition-transform"
+              />
               <div>
                 <p className="text-2xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
                   Caplet
