@@ -19,7 +19,7 @@ const Login = () => {
 
                 <div className="w-full max-w-md animate-slide-up">
                     <LoginForm
-                        onSuccess={() => navigate('/dashboard')}
+                        onSuccess={() => navigate('/courses')}
                         onSwitchToRegister={() => navigate('/register')}
                         isPage={true}
                     />

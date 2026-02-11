@@ -158,10 +158,6 @@ class ApiService {
     return this.request(`/users/${userId}`);
   }
 
-  async getUserDashboard() {
-    return this.request('/users/dashboard');
-  }
-
   // Progress
   async updateLessonProgress(lessonId, progressData) {
     return this.request(`/progress/lesson/${lessonId}`, {

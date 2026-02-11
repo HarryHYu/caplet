@@ -10,7 +10,7 @@ const Auth = () => {
   const navigate = useNavigate();
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/courses" replace />;
   }
 
   return (
@@ -19,14 +19,14 @@ const Auth = () => {
         {authMode === 'login' ? (
           <LoginForm
             onSuccess={() => {
-              navigate('/dashboard');
+              navigate('/courses');
             }}
             onSwitchToRegister={() => setAuthMode('register')}
           />
         ) : (
           <RegisterForm
             onSuccess={() => {
-              navigate('/dashboard');
+              navigate('/courses');
             }}
             onSwitchToLogin={() => setAuthMode('login')}
           />
