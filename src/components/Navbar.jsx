@@ -12,20 +12,14 @@ const Navbar = () => {
   const { user, logout, isAuthenticated, updateProfile } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
-  const publicNavItems = [
+  const navItems = [
     { path: '/', label: 'Home' },
-    { path: '/contact', label: 'Contact' },
-  ];
-
-  const authenticatedNavItems = [
     { path: '/courses', label: 'Courses' },
     { path: '/classes', label: 'Classes' },
     { path: '/tools', label: 'Tools' },
-    { path: '/dashboard', label: 'Dashboard' },
     { path: '/contact', label: 'Contact' },
   ];
-  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
-  const homePath = isAuthenticated ? '/dashboard' : '/';
+  const homePath = '/';
 
   const isActive = (path) => location.pathname === path;
 
@@ -39,9 +33,11 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link to={homePath} className="flex items-center gap-3 group">
-            <div className="bg-white p-1 rounded-sm transition-transform group-hover:scale-105 border border-zinc-100">
-              <img src="/logo.png" alt="Caplet" className="h-7 w-auto" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Caplet"
+              className="h-9 w-auto rounded-lg object-contain group-hover:scale-105 transition-transform"
+            />
             <span className="text-xl font-extrabold tracking-tighter text-black dark:text-white uppercase">
               Caplet
             </span>
@@ -157,7 +153,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 <button
-                  onClick={() => navigate('/sign-in')}
+                  onClick={() => navigate('/login')}
                   className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all hover-lift active:scale-95"
                 >
                   Join / Sign In

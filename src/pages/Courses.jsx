@@ -54,8 +54,8 @@ const Courses = () => {
 
   const handleCourseClick = (courseId) => {
     if (!isAuthenticated) {
-      alert('Please sign in to access courses.');
-      return;
+      // Allow browsing but remind user to sign in for progress tracking
+      alert('Sign in to track your progress and access class features. You can still browse course content.');
     }
     navigate(`/courses/${courseId}`);
   };
@@ -74,7 +74,7 @@ const Courses = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-black py-24">
       <div className="container-custom">
-        <div className="mb-20 animate-slide-up">
+        <div className="mb-8 animate-slide-up">
           <span className="section-kicker mb-6">
             Institutional Library
           </span>
@@ -85,6 +85,12 @@ const Courses = () => {
             Professional learning sequences designed to build meaningful financial foundations for the next generation.
           </p>
         </div>
+
+        {!isAuthenticated && (
+          <div className="mb-10 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 text-xs font-semibold uppercase tracking-[0.2em] px-6 py-4">
+            Sign in to save progress and connect courses with classes. All course content remains browseable without an account.
+          </div>
+        )}
 
         {/* Filters */}
         <div className="mb-20 reveal-up" style={{ animationDelay: '100ms' }}>

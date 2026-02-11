@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
   const [formData, setFormData] = useState({
@@ -8,71 +7,13 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
     password: '',
   });
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const googleButtonRef = useRef(null);
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const { login, loginWithGoogle, error: authError } = useAuth();
+  const { login, error: authError } = useAuth();
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   // Sync with auth context error
   useEffect(() => {
     if (authError) setError(authError);
   }, [authError]);
-
-  useEffect(() => {
-    if (!googleClientId) {
-      return undefined;
-    }
-
-    const initializeGoogleButton = () => {
-      if (!window.google?.accounts?.id || !googleButtonRef.current) {
-        return;
-      }
-
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: async (response) => {
-          if (!response?.credential) {
-            return;
-          }
-
-          setGoogleLoading(true);
-          try {
-            await loginWithGoogle(response.credential);
-            onSuccess?.();
-          } catch (googleError) {
-            console.error('Google login error:', googleError);
-          } finally {
-            setGoogleLoading(false);
-          }
-        },
-      });
-
-      googleButtonRef.current.innerHTML = '';
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: 'outline',
-        size: 'large',
-        width: '100%',
-        text: 'continue_with',
-      });
-    };
-
-    if (!window.google?.accounts) {
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeGoogleButton;
-      document.body.appendChild(script);
-
-      return () => {
-        document.body.removeChild(script);
-      };
-    }
-
-    initializeGoogleButton();
-  }, [googleClientId, loginWithGoogle, onSuccess]);
 
   const handleChange = (e) => {
     setFormData({
@@ -170,14 +111,6 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
                 )}
               </button>
             </form>
-
-            <div className="relative flex items-center py-4">
-              <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
-              <span className="flex-shrink-0 mx-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Or continue with</span>
-              <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
-            </div>
-
-            <div ref={googleButtonRef} className="flex justify-center h-[40px]" />
           </div>
 
           <div className="mt-12 text-center pt-8 border-t border-zinc-100 dark:border-zinc-900">

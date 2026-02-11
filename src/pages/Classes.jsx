@@ -35,28 +35,6 @@ const Classes = () => {
     load();
   }, [isAuthenticated]);
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-        <div className="text-center max-w-md mx-auto px-6 animate-slide-up">
-          <span className="section-kicker mb-6">Unauthorized Access</span>
-          <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
-            Identity <br />Verification Required.
-          </h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mb-10 leading-relaxed">
-            Please authenticate to access the institutional classroom terminal.
-          </p>
-          <button
-            onClick={() => navigate('/')}
-            className="btn-primary"
-          >
-            Return to Prime
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const isTeacher = user?.role === 'instructor' || user?.role === 'admin';
 
   const refreshClasses = async () => {
@@ -138,7 +116,13 @@ const Classes = () => {
               </button>
             )}
             <button
-              onClick={() => setShowJoin(true)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  alert('Sign in to join a class with a code.');
+                  return;
+                }
+                setShowJoin(true);
+              }}
               className="px-8 py-4 border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
             >
               Access with Code
@@ -150,6 +134,12 @@ const Classes = () => {
           <div className="mb-12 p-8 border-l-2 border-brand bg-zinc-50 dark:bg-zinc-950 text-black dark:text-white text-[10px] font-bold uppercase tracking-widest animate-fade-in flex items-center gap-4">
             <span className="text-brand">●</span>
             System Conflict: {error}
+          </div>
+        )}
+
+        {!isAuthenticated && (
+          <div className="mb-10 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 text-xs font-semibold uppercase tracking-[0.2em] px-6 py-4">
+            Sign in to create and join classes. You can still review how the class system works without an account.
           </div>
         )}
 

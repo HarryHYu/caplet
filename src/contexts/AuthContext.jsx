@@ -37,10 +37,10 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (credentials) => {
+  const login = async (email, password) => {
     try {
       setError(null);
-      const response = await api.login(credentials);
+      const response = await api.login({ email, password });
       api.setToken(response.token);
       setUser(response.user);
       return response;

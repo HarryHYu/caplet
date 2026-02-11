@@ -48,13 +48,6 @@ const Contact = () => {
                       contact@capletedu.org
                     </a>
                   </div>
-
-                  <a
-                    href="mailto:contact@capletedu.org?subject=Contact%20from%20Caplet"
-                    className="btn-primary w-full inline-block"
-                  >
-                    Initialize Connection
-                  </a>
                 </div>
               </div>
 
