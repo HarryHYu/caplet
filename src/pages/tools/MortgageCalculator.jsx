@@ -44,7 +44,7 @@ const MortgageCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black py-24">
+    <div className="min-h-screen py-24 page-section-light">
       <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
         <div className="container-custom">
           <div className="max-w-4xl">

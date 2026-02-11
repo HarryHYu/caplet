@@ -160,7 +160,7 @@ const Home = () => {
       </section>
 
       {/* Trust Bar */}
-      <section className="py-12 border-y border-zinc-100 dark:border-zinc-900 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm">
+      <section className="py-12 border-y border-zinc-100 dark:border-zinc-900 page-section-soft">
         <div className="container-custom">
           <div className="flex flex-wrap items-center justify-center md:justify-between gap-10 opacity-50 grayscale contrast-125">
             <img src={cfcLogo} alt="CFC" className="h-6 w-auto dark:invert" />
@@ -201,7 +201,7 @@ const Home = () => {
       </section>
 
       {/* Methodology */}
-      <section className="py-32 lg:py-48 bg-black/90 dark:bg-zinc-950/95 text-white overflow-hidden backdrop-blur-sm">
+      <section className="py-32 lg:py-48 page-section-dark text-white overflow-hidden">
         <div className="container-custom relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div>
@@ -245,7 +245,7 @@ const Home = () => {
       </section>
 
       {/* Courses Library */}
-      <section className="py-32 lg:py-48 bg-zinc-50/85 dark:bg-black/85 backdrop-blur-sm">
+      <section className="py-32 lg:py-48 page-section-light">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-24">
             <div className="reveal-up">
@@ -299,7 +299,7 @@ const Home = () => {
       </section>
 
       {/* Mission Section */}
-      <section className="py-32 lg:py-48 bg-white/90 dark:bg-black/90 overflow-hidden border-t border-zinc-100 dark:border-zinc-900 backdrop-blur-sm">
+      <section className="py-32 lg:py-48 page-section-light overflow-hidden border-t border-zinc-100 dark:border-zinc-900">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="reveal-up">
@@ -342,7 +342,7 @@ const Home = () => {
       </section>
 
       {/* FAQ */}
-      <section className="py-32 lg:py-48 bg-white/90 dark:bg-black/90 border-t border-zinc-100 dark:border-zinc-900 backdrop-blur-sm">
+      <section className="py-32 lg:py-48 page-section-light border-t border-zinc-100 dark:border-zinc-900">
         <div className="container-custom">
           <div className="max-w-3xl">
             <div className="mb-20">

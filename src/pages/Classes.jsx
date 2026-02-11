@@ -84,7 +84,7 @@ const Classes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Syncing Class Vectors...</p>
@@ -94,7 +94,7 @@ const Classes = () => {
   }
 
   return (
-    <div className="min-h-screen py-24 bg-white dark:bg-black font-sans">
+    <div className="min-h-screen py-24 page-section-light font-sans">
       <div className="container-custom">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-20">
           <div className="animate-slide-up">

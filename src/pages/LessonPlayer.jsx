@@ -310,7 +310,7 @@ const LessonPlayer = () => {
   const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black pb-20 pt-16">
+    <div className="min-h-screen pb-20 pt-16 page-section-light">
       <div className="container-custom py-10">
         <div className="mb-12 flex items-center justify-between reveal-up">
           <Link to={`/courses/${course.id}`} className="inline-flex items-center gap-3 group">

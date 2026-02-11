@@ -16,7 +16,7 @@ const Settings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black py-24">
+    <div className="min-h-screen py-24 page-section-light">
       <div className="container-custom">
         <div className="mb-16 animate-slide-up">
           <span className="section-kicker mb-6">User Configuration</span>

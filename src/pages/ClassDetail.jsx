@@ -127,7 +127,7 @@ const ClassDetail = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-6">Security Protocol</span>
           <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
@@ -146,7 +146,7 @@ const ClassDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Extracting Class Meta...</p>
@@ -157,7 +157,7 @@ const ClassDetail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-6 text-red-500">System Error</span>
           <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
@@ -433,7 +433,7 @@ const ClassDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black py-24 px-6">
+    <div className="min-h-screen py-24 px-6 page-section-light">
       <div className="container-custom space-y-12">
         <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 animate-slide-up">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
