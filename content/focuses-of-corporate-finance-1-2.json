@@ -1,0 +1,106 @@
+{
+  "courseTitle": "Corporate Finance PART 1",
+  "courseShortDescription": "Stakeholders, corporate decision making, financial markets, ESG, risk and return.",
+  "courseDescription": "Corporate Finance Part 1: Stakeholders and Corporate Decision Making, Firms and Financial Markets, ESG Markets, Fundamentals of Investing.",
+  "courseCategory": "corporate-finance",
+  "courseLevel": "intermediate",
+  "moduleTitle": "Stakeholders and Corporate Decision Making (Module 1)",
+  "lessonTitle": "Focuses of Corporate Finance 1.2",
+  "lessonOrder": 3,
+  "slides": [
+    {
+      "type": "image",
+      "content": "https://preview.redd.it/s84pgbusi9hg1.png?width=1080&crop=smart&auto=webp&s=b106c339036a4489b7ccdbfdbcc751d07f877a87",
+      "caption": "Process of maximising the value of the firm"
+    },
+    {
+      "type": "text",
+      "content": "**Why shareholders are prioritised**\n\n- A firm can have **only one primary objective** – one group whose interests are placed first when making decisions.\n- Corporate finance chooses **shareholders** because they have a **residual claim** on the firm.\n- Other stakeholders (like employees, bondholders, and suppliers) have **contractual claims** they can negotiate and protect through contracts.\n- If the firm maximises long‑term firm value for shareholders, the idea is that the pie grows for everyone."
+    },
+    {
+      "type": "text",
+      "content": "**Why stock price is the optimising metric**\n\n- For a **publicly traded company**, shareholder wealth is usually measured by the **stock price**.\n- Stock price is **easily observable** and **constantly updated** in financial markets.\n- Under the assumption of **rational investors**, stock prices reflect the market’s view of the firm’s decisions – both **short‑term and long‑term** – almost instantaneously.\n- This makes stock price a practical **optimising metric** for decision‑making in corporate finance."
+    },
+    {
+      "type": "video",
+      "content": "https://www.youtube.com/watch?v=gW_GRZ-aW8w",
+      "caption": "Video: Focuses of corporate finance"
+    },
+    {
+      "type": "text",
+      "content": "**Discuss and answer**\n\nWhy does corporate finance prioritise **shareholders** over other stakeholders when maximising firm value? (1–2 sentence answers)"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Why does corporate finance assume a firm should have only one primary objective?",
+      "options": [
+        "To simplify accounting",
+        "Because firms cannot satisfy all stakeholders equally",
+        "Because regulations require it",
+        "To reduce operational costs"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Which stakeholder group does corporate finance prioritise, and why?",
+      "options": [
+        "Employees, because they operate the firm",
+        "Customers, because they generate revenue",
+        "Shareholders, because they have a residual claim",
+        "Bondholders, because they provide funding"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "What is meant by shareholders having a \"residual claim\"?",
+      "options": [
+        "They are paid before all other stakeholders",
+        "They receive fixed payments over time",
+        "They receive whatever remains after other claims are met",
+        "They have guaranteed returns"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Why are other stakeholders said to have \"contractual claims\"?",
+      "options": [
+        "Their returns depend on firm performance",
+        "Their claims are fixed and legally protected",
+        "They cannot negotiate their claims",
+        "They only benefit if the firm is profitable"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "For publicly traded companies, what metric is used to optimise shareholder wealth?",
+      "options": [
+        "Revenue growth",
+        "Dividend yield",
+        "Firm size",
+        "Stock price"
+      ],
+      "correctIndex": 3
+    },
+    {
+      "question": "Why is stock price considered a useful optimising metric?",
+      "options": [
+        "It reflects accounting profits",
+        "It is easily observable and frequently updated",
+        "It is controlled by management",
+        "It guarantees future performance"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Under the assumption of rational investors, stock prices are believed to:",
+      "options": [
+        "Reflect only short-term performance",
+        "Ignore management decisions",
+        "Reflect the combined impact of short- and long-term decisions",
+        "Remain stable over time"
+      ],
+      "correctIndex": 2
+    }
+  ]
+}

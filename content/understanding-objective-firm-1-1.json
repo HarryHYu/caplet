@@ -1,0 +1,86 @@
+{
+  "courseTitle": "Corporate Finance PART 1",
+  "courseShortDescription": "Stakeholders, corporate decision making, financial markets, ESG, risk and return.",
+  "courseDescription": "Corporate Finance Part 1: Stakeholders and Corporate Decision Making, Firms and Financial Markets, ESG Markets, Fundamentals of Investing.",
+  "courseCategory": "corporate-finance",
+  "courseLevel": "intermediate",
+  "moduleTitle": "Stakeholders and Corporate Decision Making (Module 1)",
+  "lessonTitle": "Understanding the Objective of the Firm 1.1",
+  "lessonOrder": 2,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**The objective of the firm**\n\n- In traditional corporate finance, the primary objective in decision-making is to **maximise the value of the firm**.\n- A narrower way to state this is to **maximise shareholder wealth**."
+    },
+    {
+      "type": "text",
+      "content": "**Public companies and stock price**\n\n- When a company's shares are **publicly traded** and markets are assumed to be **efficient**, maximising shareholder wealth usually means **maximising the stock price**.\n- The stock price becomes the market's summary of all available information about a firm's value."
+    },
+    {
+      "type": "video",
+      "content": "https://www.youtube.com/watch?v=RfH3PAmkKsY",
+      "caption": "Video: Understanding the objective of the firm"
+    },
+    {
+      "type": "image",
+      "content": "https://preview.redd.it/imvvi7o5i9hg1.png?width=1080&crop=smart&auto=webp&s=6a2f4489860337759846760a23727d737b3b67e2",
+      "caption": "Firm value, assets, and claims: how corporate finance allocates value"
+    },
+    {
+      "type": "text",
+      "content": "**Discuss and answer**\n\nWhen a firm is deciding between two projects—one that increases profits in the **short term** and one that increases firm value in the **long term**—which should it choose, and why? (1–2 sentence answers)"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "What is the main objective of a firm in traditional corporate finance?",
+      "options": [
+        "Maximise profits each year",
+        "Maximise firm value",
+        "Minimise debt",
+        "Increase dividends"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "When markets are assumed to be efficient, maximising shareholder wealth usually means:",
+      "options": [
+        "Increasing revenue",
+        "Increasing dividends",
+        "Maximising the stock price",
+        "Reducing costs"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Which of the following is an example of an asset in place?",
+      "options": [
+        "A future expansion plan",
+        "Expected profits from a new product",
+        "Existing equipment that generates revenue",
+        "Brand growth from marketing"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Who has a fixed claim on a company's cash flows?",
+      "options": [
+        "Shareholders",
+        "Managers",
+        "Creditors (debt holders)",
+        "Employees"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Which statement best describes equity holders?",
+      "options": [
+        "They receive interest payments",
+        "They have no role in management",
+        "They have a residual claim on cash flows",
+        "They have a fixed maturity"
+      ],
+      "correctIndex": 2
+    }
+  ]
+}

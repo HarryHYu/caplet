@@ -1,0 +1,122 @@
+{
+  "courseTitle": "Corporate Finance PART 1",
+  "courseShortDescription": "Stakeholders, corporate decision making, financial markets, ESG, risk and return.",
+  "courseDescription": "Corporate Finance Part 1: Stakeholders and Corporate Decision Making, Firms and Financial Markets, ESG Markets, Fundamentals of Investing.",
+  "courseCategory": "corporate-finance",
+  "courseLevel": "intermediate",
+  "moduleTitle": "Stakeholders and Corporate Decision Making (Module 1)",
+  "lessonTitle": "Limits of Board Independence 1.6",
+  "lessonOrder": 7,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**CEO influence over board appointments**\n\n- In many companies, **CEOs play a dominant role** in selecting new directors.\n- Historically, boards relied heavily on **CEO recommendations** rather than independent search processes.\n- Although **outside involvement has increased**, CEOs still exert significant influence over who joins the board.\n- Directors selected by CEOs may be less willing to challenge them, reducing board independence."
+    },
+    {
+      "type": "text",
+      "content": "**Limited financial incentives for directors**\n\n- Directors often hold **relatively small equity stakes** in the companies they oversee.\n- In many cases, their **compensation as directors exceeds** the value of their personal shareholdings.\n- Any shares they do hold are frequently **granted by the firm** rather than purchased independently.\n- This weakens alignment with shareholders and reduces incentives to closely monitor management."
+    },
+    {
+      "type": "text",
+      "content": "**Interlocking directorships among CEOs**\n\n- Many board members are themselves **CEOs of other companies**.\n- In some cases, CEOs sit on **each other's boards**, creating networks of mutual oversight.\n- These relationships can **weaken independence** and reduce the likelihood of strong managerial challenges.\n- Directors may be reluctant to challenge peers who could reciprocate by challenging them."
+    },
+    {
+      "type": "text",
+      "content": "**CEO control of board processes**\n\n- In many boards, the **CEO also serves as chair**.\n- This allows the CEO to:\n  - **Set meeting agendas**\n  - **Lead discussions**\n  - **Control the flow of information** provided to directors\n- This limits the board's ability to **independently assess management performance** and creates a conflict of interest."
+    },
+    {
+      "type": "text",
+      "content": "**Consensus over confrontation**\n\n- Board culture often prioritises **cooperation and consensus**.\n- This emphasis on being a **\"team player\"** can discourage directors from openly questioning or challenging management decisions.\n- Even when concerns exist, directors may avoid confrontation to maintain relationships.\n- This focus on harmony can reduce board effectiveness in monitoring management."
+    },
+    {
+      "type": "text",
+      "content": "**The CEO as an authority figure**\n\n- Psychological research shows that people tend to display **strong loyalty to authority figures**.\n- In board settings, the **CEO often fills this role**.\n- This can lead directors to **suppress ethical concerns** or independent judgment in favour of loyalty and alignment.\n- The authority dynamic can override directors' duty to independently monitor and challenge management."
+    },
+    {
+      "type": "video",
+      "content": "https://www.youtube.com/watch?v=okczJ-XyJnQ",
+      "caption": "Corporate governance explained"
+    },
+    {
+      "type": "image",
+      "content": "https://preview.redd.it/api5j03qw9hg1.png?width=1080&crop=smart&auto=webp&s=90f84bd1840528855053de403f1dc8fb42a56a99",
+      "caption": "A comparative analysis of board effectiveness and oversight"
+    },
+    {
+      "type": "text",
+      "content": "**Discuss and answer**\n\nWhy might a board of directors struggle to act independently, even when it is formally responsible for monitoring the CEO? Refer to one factor discussed in the lesson. (1–2 sentences)"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Why can CEO influence over board appointments reduce board independence?",
+      "options": [
+        "CEOs lack knowledge of director skills",
+        "Directors selected by CEOs may be less willing to challenge them",
+        "Boards are legally required to follow CEOs",
+        "CEOs are elected by shareholders"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Why might directors have weaker incentives to closely monitor management?",
+      "options": [
+        "They are unpaid",
+        "Their equity stakes are often small",
+        "They face legal penalties for oversight",
+        "They control company operations"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "What is a potential problem with directors receiving shares from the firm rather than buying them?",
+      "options": [
+        "It increases firm risk",
+        "It weakens alignment with shareholders",
+        "It guarantees high returns",
+        "It improves board independence"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Why can interlocking directorships weaken board oversight?",
+      "options": [
+        "CEOs lack experience",
+        "Directors may be overly critical",
+        "Mutual board memberships reduce willingness to challenge peers",
+        "Boards become too large"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "How does a CEO acting as board chair affect governance?",
+      "options": [
+        "It strengthens independent monitoring",
+        "It separates decision-making roles",
+        "It allows the CEO to control agendas and information",
+        "It eliminates agency problems"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Why can a strong focus on consensus reduce board effectiveness?",
+      "options": [
+        "It encourages open debate",
+        "It increases shareholder participation",
+        "It discourages confrontation and critical questioning",
+        "It improves decision speed"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "How does the CEO's role as an authority figure affect board decisions?",
+      "options": [
+        "Directors become more independent",
+        "Directors may suppress ethical or independent judgment",
+        "Loyalty has no effect on governance",
+        "Authority improves oversight"
+      ],
+      "correctIndex": 1
+    }
+  ]
+}

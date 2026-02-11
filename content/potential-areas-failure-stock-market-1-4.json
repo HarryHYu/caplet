@@ -1,0 +1,114 @@
+{
+  "courseTitle": "Corporate Finance PART 1",
+  "courseShortDescription": "Stakeholders, corporate decision making, financial markets, ESG, risk and return.",
+  "courseDescription": "Corporate Finance Part 1: Stakeholders and Corporate Decision Making, Firms and Financial Markets, ESG Markets, Fundamentals of Investing.",
+  "courseCategory": "corporate-finance",
+  "courseLevel": "intermediate",
+  "moduleTitle": "Stakeholders and Corporate Decision Making (Module 1)",
+  "lessonTitle": "Potential areas of failure in the stock market 1.4",
+  "lessonOrder": 5,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Agency problems between shareholders and managers**\n\n- **Managers** may sometimes prioritise their **own interests** over those of shareholders.\n- In many cases, shareholders have **limited ability** to directly control or influence managerial decisions.\n- This can be reinforced by:\n  - **Annual meetings** that are tightly managed\n  - **Boards** that may not effectively challenge senior executives"
+    },
+    {
+      "type": "text",
+      "content": "**Conflicts between shareholders and lenders**\n\n- **Bondholders** lend money to businesses and expect to be repaid with interest.\n- Their interests can be **harmed** if managers take actions that favour shareholders at the expense of lenders.\n- While **loan covenants** and **lender protections** exist, they only provide **partial protection**.\n- Managers may still make decisions that increase risk for bondholders while benefiting shareholders."
+    },
+    {
+      "type": "text",
+      "content": "**Information gaps and market inefficiencies**\n\n- **Managers** may delay the release of bad news or provide information that is **misleading**, which can distort market decisions.\n- **Financial markets** themselves are not always efficient and can be:\n  - **Short-term focused** rather than considering long-term value\n  - **React irrationally** to information\n- These inefficiencies can lead to misallocation of resources."
+    },
+    {
+      "type": "text",
+      "content": "**External costs beyond the firm**\n\n- Business activities can create significant **social costs or benefits** that are not easily linked to a specific firm.\n- These **external effects** mean that some impacts on society may not be fully accounted for in business decisions, such as:\n  - **Environmental consequences** (pollution, resource depletion)\n  - **Social consequences** (community impacts, inequality)\n- Firms may not bear the full cost of negative externalities, leading to overproduction or harmful practices."
+    },
+    {
+      "type": "video",
+      "content": "https://www.youtube.com/watch?v=4raPjecIZ1Q",
+      "caption": "Financial market failure"
+    },
+    {
+      "type": "image",
+      "content": "https://preview.redd.it/lxa15c3lj9hg1.png?auto=webp&s=d6c67b7dace8e491be2214690fbe1c7e23184280",
+      "caption": "Where incentives break down and conflicts emerge"
+    },
+    {
+      "type": "text",
+      "content": "**Discuss and answer**\n\nWhich stakeholder group do you think is most at risk when market incentives fail, and why? Use one example from the lesson. (1–2 sentences)"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "What is an agency problem in corporate finance?",
+      "options": [
+        "When firms fail to earn profits",
+        "When managers prioritise their own interests over shareholders",
+        "When customers are dissatisfied",
+        "When bondholders receive interest payments"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Why do shareholders often have limited control over managers in practice?",
+      "options": [
+        "Shareholders lack voting rights",
+        "Managers own most shares",
+        "Annual meetings and boards may be tightly controlled",
+        "Shareholders are legally prohibited from influencing management"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Which stakeholder group lends money to businesses and expects repayment with interest?",
+      "options": [
+        "Shareholders",
+        "Employees",
+        "Bondholders",
+        "Competitors"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "How can bondholder interests be harmed by managerial decisions?",
+      "options": [
+        "When managers increase employee wages",
+        "When managers favour shareholders at lenders' expense",
+        "When firms issue dividends",
+        "When firms reduce operating costs"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Why are loan covenants and lender protections not fully effective?",
+      "options": [
+        "They eliminate all risk for bondholders",
+        "They are optional for firms",
+        "They only provide partial protection",
+        "They apply only to shareholders"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Why may financial markets fail to allocate resources efficiently?",
+      "options": [
+        "Managers always disclose information accurately",
+        "Markets are always long-term focused",
+        "Information may be delayed, misleading, or markets may react irrationally",
+        "Investors ignore company information"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "What best describes external costs in corporate finance?",
+      "options": [
+        "Costs paid directly by shareholders",
+        "Costs fully recorded in financial statements",
+        "Social or environmental impacts not fully traced to the firm",
+        "Costs faced only by competitors"
+      ],
+      "correctIndex": 2
+    }
+  ]
+}

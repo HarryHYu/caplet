@@ -1,0 +1,110 @@
+{
+  "courseTitle": "Corporate Finance PART 1",
+  "courseShortDescription": "Stakeholders, corporate decision making, financial markets, ESG, risk and return.",
+  "courseDescription": "Corporate Finance Part 1: Stakeholders and Corporate Decision Making, Firms and Financial Markets, ESG Markets, Fundamentals of Investing.",
+  "courseCategory": "corporate-finance",
+  "courseLevel": "intermediate",
+  "moduleTitle": "Stakeholders and Corporate Decision Making (Module 1)",
+  "lessonTitle": "Maximisation of stock prices 1.3",
+  "lessonOrder": 4,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Share price and employee interests**\n\n- Maximising share price **does not conflict** with meeting the needs of employees.\n- Many employees are also **shareholders**, so they benefit directly when share price increases.\n- Companies that successfully increase share value are often **profitable enough** to offer:\n  - Fair pay\n  - Job security\n  - Good working conditions"
+    },
+    {
+      "type": "text",
+      "content": "**Share price and customer value**\n\n- Focusing on share price **does not reduce** the importance of customers.\n- In most businesses, **long-term share value** depends on:\n  - Keeping customers **satisfied**\n  - Maintaining customer **loyalty**\n- Satisfied customers drive revenue, which supports higher share prices over time."
+    },
+    {
+      "type": "text",
+      "content": "**Share price and social responsibility**\n\n- Pursuing higher share prices **does not require** a company to ignore social responsibilities.\n- Businesses that regularly **disregard social expectations** risk:\n  - **Losing customers** who care about social issues\n  - **Increased regulation** from governments\n  - **Targeted taxes** or penalties\n- These risks can harm long-term firm value and share price."
+    },
+    {
+      "type": "video",
+      "content": "https://www.youtube.com/watch?v=n2idEwYDgak",
+      "caption": "Shareholders vs Stakeholders"
+    },
+    {
+      "type": "image",
+      "content": "https://preview.redd.it/akv9i0d9j9hg1.png?width=1080&crop=smart&auto=webp&s=bc1d9a4336ccae5738482ba9e09ebf01380484bf",
+      "caption": "Managerial relationships with key stakeholders"
+    },
+    {
+      "type": "text",
+      "content": "**Discuss and answer**\n\nDo you think maximising share price can align with the interests of employees, customers, and society in the long run? Explain your reasoning using one example. (1–2 sentences)"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Why does maximising share price not necessarily conflict with employee interests?",
+      "options": [
+        "Employees do not depend on company performance",
+        "Employees are not affected by company profits",
+        "Many employees are also shareholders and benefit from firm success",
+        "Employees only care about short-term wages"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Companies that successfully increase share price are often able to offer employees:",
+      "options": [
+        "Higher taxes and stricter rules",
+        "Fair pay, job security, and good working conditions",
+        "Fewer responsibilities",
+        "Lower wages but higher bonuses"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Why does focusing on share price not reduce the importance of customers?",
+      "options": [
+        "Customers directly set share prices",
+        "Long-term share value depends on customer satisfaction and loyalty",
+        "Customers are also managers",
+        "Customer needs are protected by law"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "In most businesses, long-term share value is most strongly supported by:",
+      "options": [
+        "Cutting employee wages",
+        "Ignoring social concerns",
+        "Keeping customers satisfied and loyal",
+        "Reducing product quality"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Which statement best describes the relationship between share price and social responsibility?",
+      "options": [
+        "Social responsibility always reduces share price",
+        "Firms must ignore society to maximise share price",
+        "Ignoring social expectations can harm long-term firm value",
+        "Social responsibility has no impact on business outcomes"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "What risk do businesses face if they regularly disregard social expectations?",
+      "options": [
+        "Increased employee bonuses",
+        "Higher customer loyalty",
+        "Loss of customers and increased regulation",
+        "Lower operating costs"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Which of the following best summarises the lesson's key idea?",
+      "options": [
+        "Maximising share price benefits only shareholders",
+        "Maximising share price conflicts with all other stakeholders",
+        "Long-term share price maximisation can align with employees, customers, and society",
+        "Share price only reflects short-term profits"
+      ],
+      "correctIndex": 2
+    }
+  ]
+}

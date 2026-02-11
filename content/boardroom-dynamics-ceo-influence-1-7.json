@@ -1,0 +1,130 @@
+{
+  "courseTitle": "Corporate Finance PART 1",
+  "courseShortDescription": "Stakeholders, corporate decision making, financial markets, ESG, risk and return.",
+  "courseDescription": "Corporate Finance Part 1: Stakeholders and Corporate Decision Making, Firms and Financial Markets, ESG Markets, Fundamentals of Investing.",
+  "courseCategory": "corporate-finance",
+  "courseLevel": "intermediate",
+  "moduleTitle": "Stakeholders and Corporate Decision Making (Module 1)",
+  "lessonTitle": "Boardroom Dynamics and CEO Influence 1.7",
+  "lessonOrder": 8,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Managerial power without shareholder discipline**\n\n- When managers do **not fear discipline** from shareholders, they are more likely to prioritise their **own interests** over those of stockholders.\n- Weak shareholder oversight creates opportunities for managers to make decisions that benefit themselves rather than shareholders.\n- This lack of accountability can lead to actions that reduce firm value."
+    },
+    {
+      "type": "text",
+      "content": "**Greenmail as a defensive strategy**\n\n- **Greenmail** occurs when management buys out a **hostile acquirer's stake at a premium** in exchange for a **standstill agreement**.\n- This prevents further takeover attempts and protects management's position.\n- While it stops the immediate threat, it uses company resources to protect management rather than benefit shareholders."
+    },
+    {
+      "type": "text",
+      "content": "**Golden parachutes and managerial protection**\n\n- **Golden parachutes** are clauses in executive contracts that guarantee **large payments** if managers lose their jobs following a takeover.\n- These payments **reduce personal risk** for management during takeover situations.\n- While they may help attract executives, they can also make managers less resistant to takeovers that might benefit shareholders."
+    },
+    {
+      "type": "text",
+      "content": "**Poison pills as takeover deterrents**\n\n- **Poison pills** are securities or rights that are **triggered by hostile takeover attempts**.\n- They make the acquisition **significantly more costly or unattractive** to outsiders.\n- While they protect management, they can prevent value-enhancing takeovers that would benefit shareholders."
+    },
+    {
+      "type": "text",
+      "content": "**Shark repellents and shareholder approval**\n\n- **Shark repellents** are anti-takeover provisions that **require shareholder approval**.\n- While still defensive, they differ from other mechanisms by **involving stockholders directly**.\n- This gives shareholders a voice, but they may still approve provisions that ultimately reduce their own power."
+    },
+    {
+      "type": "text",
+      "content": "**Overpaying in takeovers**\n\n- Many acquisitions are driven by **managerial motives** rather than shareholder value.\n- **Overpaying in takeovers** is one of the fastest ways to **destroy stockholder wealth**.\n- Managers may pursue acquisitions for reasons such as:\n  - Building larger empires\n  - Increasing their own compensation\n  - Reducing personal risk through diversification\n- These motives often conflict with maximising shareholder value."
+    },
+    {
+      "type": "text",
+      "content": "**Market reaction to takeover announcements**\n\n- **Stock prices of acquiring firms frequently fall** when takeovers are announced.\n- This indicates that **shareholders often do not share management's enthusiasm** for acquisitions.\n- The market's negative reaction suggests that many takeovers are expected to destroy rather than create value."
+    },
+    {
+      "type": "text",
+      "content": "**Why many mergers fail**\n\n- Evidence suggests that many mergers **do not succeed**:\n  - **Profitability of merged firms** often does not improve relative to peers\n  - A **significant number of mergers are later reversed**, signalling failure\n- Common reasons for failure include:\n  - Overpayment\n  - Cultural conflicts\n  - Integration challenges\n  - Managerial overconfidence"
+    },
+    {
+      "type": "image",
+      "content": "https://preview.redd.it/5xgx64ymx9hg1.png?width=1080&crop=smart&auto=webp&s=31dccbf7bd70310621080ac2c48185a59f65a8d6",
+      "caption": "Stakeholders and the distribution of corporate control"
+    },
+    {
+      "type": "video",
+      "content": "https://www.youtube.com/watch?v=K9VGwuv4nuU",
+      "caption": "Why mergers fail"
+    },
+    {
+      "type": "text",
+      "content": "**Discuss and answer**\n\nWhy might managers support takeover defences or acquisitions that reduce shareholder value? Refer to one concept from the lesson. (1–2 sentences)"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Why are managers more likely to prioritise their own interests when shareholder discipline is weak?",
+      "options": [
+        "Managers lack financial incentives",
+        "Managers face no legal obligations",
+        "Managers face fewer constraints on their decisions",
+        "Managers are required to act independently"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "What is greenmail?",
+      "options": [
+        "A tax paid by acquiring firms",
+        "A dividend paid to shareholders",
+        "A premium paid to buy out a hostile acquirer's stake",
+        "A penalty imposed by regulators"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "What is the main effect of golden parachutes on managers?",
+      "options": [
+        "They increase managerial risk",
+        "They reduce personal financial risk during takeovers",
+        "They guarantee firm profitability",
+        "They eliminate hostile takeovers"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "What is the purpose of a poison pill?",
+      "options": [
+        "To reward shareholders",
+        "To lower stock prices",
+        "To make hostile takeovers more costly or unattractive",
+        "To encourage mergers"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "How do shark repellents differ from other takeover defences?",
+      "options": [
+        "They benefit only managers",
+        "They are illegal in most markets",
+        "They require shareholder approval",
+        "They guarantee takeover success"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Why does overpaying in takeovers often destroy shareholder wealth?",
+      "options": [
+        "It increases employee wages",
+        "It reflects managerial overconfidence or self-interest",
+        "It reduces competition",
+        "It guarantees higher profits"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "What does the stock market's reaction to takeover announcements suggest?",
+      "options": [
+        "Shareholders always support acquisitions",
+        "Markets expect mergers to always succeed",
+        "Shareholders often doubt the value of acquisitions",
+        "Stock prices always rise after takeovers"
+      ],
+      "correctIndex": 2
+    }
+  ]
+}

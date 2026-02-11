@@ -1,0 +1,114 @@
+{
+  "courseTitle": "Corporate Finance PART 1",
+  "courseShortDescription": "Stakeholders, corporate decision making, financial markets, ESG, risk and return.",
+  "courseDescription": "Corporate Finance Part 1: Stakeholders and Corporate Decision Making, Firms and Financial Markets, ESG Markets, Fundamentals of Investing.",
+  "courseCategory": "corporate-finance",
+  "courseLevel": "intermediate",
+  "moduleTitle": "Stakeholders and Corporate Decision Making (Module 1)",
+  "lessonTitle": "Stockholder interests vs Management interests 1.5",
+  "lessonOrder": 6,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Formal mechanisms for manager accountability**\n\n- In theory, shareholders are assumed to have **strong control** over management.\n- Two main mechanisms are meant to hold managers accountable:\n  - **Annual general meetings** – shareholders can voice concerns and use voting rights to influence managerial behaviour\n  - **Board of directors** – expected to represent shareholder interests and monitor management decisions\n- These mechanisms are designed to align management actions with shareholder interests."
+    },
+    {
+      "type": "text",
+      "content": "**Limits of shareholder control in practice**\n\n- In practice, however, these mechanisms are often **less effective** than theory suggests.\n- Management is **not always disciplined** as strongly as intended.\n- The gap between theory and practice creates opportunities for managers to prioritise their own interests over shareholders."
+    },
+    {
+      "type": "text",
+      "content": "**Why annual meetings weaken shareholder influence**\n\n- The ability of shareholders to influence management through annual meetings is weakened by several factors:\n  - **Many small shareholders** choose not to attend meetings because the time and cost involved outweigh the value of their investment\n  - **Management has an advantage** in proxy voting – unsubmitted proxy votes typically default in favour of current management\n- This gives management significant control over meeting outcomes."
+    },
+    {
+      "type": "text",
+      "content": "**Why large shareholders rarely challenge management**\n\n- For **large shareholders**, the easiest response to poor management is often to **sell their shares** rather than challenge decisions directly.\n- This is particularly true for **passive investors** such as index funds.\n- In addition, annual meetings are usually **highly structured and tightly controlled**, which limits opportunities for outsiders or dissenting voices to raise issues that management may prefer to avoid."
+    },
+    {
+      "type": "video",
+      "content": "https://www.youtube.com/watch?v=EAQOfk1F0Ns",
+      "caption": "Corporate shareholder rights and authority"
+    },
+    {
+      "type": "image",
+      "content": "https://preview.redd.it/e0f80errj9hg1.png?width=1080&crop=smart&auto=webp&s=0085c96f8dea4ab0e5a28dbb9c7b99f32eabece0",
+      "caption": "Mutual funds consistently side with management over shareholders"
+    },
+    {
+      "type": "text",
+      "content": "**Discuss and answer**\n\nWhy might shareholders struggle to effectively control management, even though formal accountability mechanisms exist? Refer to one mechanism discussed in the lesson. (1–2 sentences)"
+    }
+  ],
+  "quiz": [
+    {
+      "question": "Which two mechanisms are designed to hold managers accountable to shareholders?",
+      "options": [
+        "Financial markets and regulators",
+        "Annual general meetings and boards of directors",
+        "Bond covenants and loan agreements",
+        "Customers and employees"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "In theory, what role does the board of directors play?",
+      "options": [
+        "To manage daily operations",
+        "To represent employee interests",
+        "To represent shareholder interests and monitor management",
+        "To set government policy"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Why are annual general meetings often ineffective in disciplining management?",
+      "options": [
+        "They occur too frequently",
+        "Small shareholders often do not attend",
+        "Shareholders lack voting rights",
+        "Managers cannot attend"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "How do proxy voting rules often benefit management?",
+      "options": [
+        "Proxy votes must oppose management",
+        "Unsubmitted proxy votes default in favour of management",
+        "Proxy votes are ignored",
+        "Proxy votes are controlled by regulators"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "Why do large or passive shareholders often avoid challenging management directly?",
+      "options": [
+        "They lack legal authority",
+        "They are unaware of management decisions",
+        "Selling shares is easier than engaging in governance",
+        "They are prohibited from voting"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "Which type of investor is most likely to sell shares instead of confronting management?",
+      "options": [
+        "Activist investors",
+        "Retail traders",
+        "Passive investors such as index funds",
+        "Company founders"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "What does evidence from mutual fund voting patterns suggest?",
+      "options": [
+        "Mutual funds strongly oppose management",
+        "Mutual funds consistently support shareholder proposals",
+        "Mutual funds often side with management",
+        "Mutual funds do not participate in voting"
+      ],
+      "correctIndex": 2
+    }
+  ]
+}
