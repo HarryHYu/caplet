@@ -31,67 +31,91 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">
-        Sign In
-      </h2>
-      
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+    <div className="w-full max-w-md mx-auto">
+      <div className="mesh-card p-10 md:p-12 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 shadow-2xl relative overflow-hidden">
+        {/* Decorative corner element */}
+        <div className="absolute top-0 right-0 w-24 h-24 bg-brand/5 -mr-12 -mt-12 rotate-45 pointer-events-none" />
+
+        <div className="relative z-10">
+          <div className="mb-10 text-center">
+            <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-brand mb-4">Secure Access</p>
+            <h2 className="text-4xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
+              Sign In
+            </h2>
+          </div>
+
+          {error && (
+            <div className="mb-8 p-4 bg-rose-50 dark:bg-rose-900/10 border-l-4 border-rose-500 text-rose-700 dark:text-rose-400 text-xs font-bold uppercase tracking-wider animate-shake">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+                Institutional Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="name@institution.com"
+                className="w-full px-0 py-3 bg-transparent border-b-2 border-zinc-100 dark:border-zinc-800 focus:border-brand outline-none transition-all text-black dark:text-white font-medium"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+                  Access Key
+                </label>
+                <button type="button" className="text-[10px] font-bold text-brand uppercase tracking-widest hover:underline">
+                  Reset?
+                </button>
+              </div>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="••••••••"
+                className="w-full px-0 py-3 bg-transparent border-b-2 border-zinc-100 dark:border-zinc-800 focus:border-brand outline-none transition-all text-black dark:text-white font-medium"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full btn-primary py-4 mt-4 flex items-center justify-center gap-3 group"
+            >
+              {loading ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Enter Terminal</span>
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-12 text-center pt-8 border-t border-zinc-100 dark:border-zinc-900">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+              Not yet enrolled?{' '}
+              <button
+                onClick={onSwitchToRegister}
+                className="text-brand hover:underline"
+              >
+                Create Account
+              </button>
+            </p>
+          </div>
         </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-        >
-          {loading ? 'Signing in...' : 'Sign In'}
-        </button>
-      </form>
-
-      <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          Don't have an account?{' '}
-          <button
-            onClick={onSwitchToRegister}
-            className="text-blue-600 hover:text-blue-500 font-medium"
-          >
-            Sign up
-          </button>
-        </p>
       </div>
     </div>
   );

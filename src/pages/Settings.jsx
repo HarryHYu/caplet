@@ -16,27 +16,34 @@ const Settings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Settings</h1>
-        <div className="flex flex-col md:flex-row gap-8">
-          <nav className="w-full md:w-56 flex-shrink-0" aria-label="Settings">
-            <ul className="space-y-1">
+    <div className="min-h-screen bg-white dark:bg-black py-24">
+      <div className="container-custom">
+        <div className="mb-16 animate-slide-up">
+          <span className="section-kicker mb-6">User Configuration</span>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
+            Account <br />Settings.
+          </h1>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-16">
+          <nav className="w-full md:w-64 flex-shrink-0 animate-slide-up" style={{ animationDelay: '100ms' }}>
+            <ul className="space-y-2">
               {navItems.map((item) => (
                 <li key={item.path}>
                   <NavLink
                     to={item.path}
                     end={item.path === '/settings/profile'}
                     className={({ isActive }) =>
-                      `block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                        isActive
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      `block p-6 border transition-all group ${isActive
+                        ? 'bg-black dark:bg-white border-black dark:border-white text-white dark:text-black'
+                        : 'bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700'
                       }`
                     }
                   >
-                    <span className="block">{item.label}</span>
-                    <span className="block text-xs font-normal text-gray-500 dark:text-gray-400 mt-0.5">
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.2em] mb-1 leading-none transition-colors">
+                      {item.label}
+                    </span>
+                    <span className={`block text-[9px] font-bold uppercase tracking-widest opacity-50 ${isActive ? 'text-white/70 dark:text-black/70' : 'text-zinc-500'}`}>
                       {item.description}
                     </span>
                   </NavLink>
@@ -44,8 +51,10 @@ const Settings = () => {
               ))}
             </ul>
           </nav>
-          <main className="flex-1 min-w-0">
-            <Outlet />
+          <main className="flex-1 min-w-0 animate-slide-up" style={{ animationDelay: '200ms' }}>
+            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

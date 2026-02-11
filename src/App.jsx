@@ -5,9 +5,6 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import About from './pages/About';
-import Mission from './pages/Mission';
-import FAQ from './pages/FAQ';
 import Contact from './pages/Contact';
 import Tools from './pages/Tools';
 import TaxCalculator from './pages/tools/TaxCalculator';
@@ -32,6 +29,7 @@ import Settings from './pages/Settings';
 import SettingsProfile from './pages/SettingsProfile';
 import SettingsAccount from './pages/SettingsAccount';
 import UserProfile from './pages/UserProfile';
+import Dashboard from './pages/Dashboard';
 import Terms from './pages/Terms';
 import NotFound from './pages/NotFound';
 
@@ -46,10 +44,7 @@ function App() {
               <main className="flex-grow">
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/mission" element={<Mission />} />
                   <Route path="/tools" element={<Tools />} />
-                  <Route path="/faq" element={<FAQ />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
                   <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
@@ -75,6 +70,7 @@ function App() {
                   <Route path="/profile/:userId" element={<UserProfile />} />
                   <Route path="/survey" element={<Survey />} />
                   <Route path="/survey-results" element={<SurveyResults />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

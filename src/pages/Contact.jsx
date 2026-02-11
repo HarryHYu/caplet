@@ -1,113 +1,92 @@
 const Contact = () => {
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black py-24">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-16">
+      <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              Contact Us
+          <div className="animate-slide-up">
+            <span className="section-kicker mb-6">Network Interface</span>
+            <h1 className="text-5xl md:text-6xl font-extrabold text-black dark:text-white mb-8 tracking-tighter uppercase">
+              Establish <br />Contact.
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Have questions or feedback? We'd love to hear from you.
+            <p className="text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl font-medium leading-relaxed">
+              Direct access channels for strategic partnerships, institutional integration, and protocol support.
             </p>
           </div>
         </div>
       </section>
 
       {/* Contact Information */}
-      <section className="py-16">
+      <section className="reveal-up" style={{ animationDelay: '100ms' }}>
         <div className="container-custom">
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 shadow-sm">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  Get in Touch
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300">
-                  We're here to help with any questions about financial literacy or the Caplet platform.
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Email Address
-                  </h3>
-                  <a
-                    href="mailto:contact@capletedu.org"
-                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 font-medium text-lg transition-colors duration-200 block mb-4"
-                  >
-                    contact@capletedu.org
-                  </a>
-                  <a
-                    href="mailto:contact@capletedu.org?subject=Contact%20from%20Caplet"
-                    className="btn-primary inline-block"
-                  >
-                    Send Email
-                  </a>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-4">
-                    We typically respond within 24-48 hours
+          <div className="max-w-4xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900 p-12">
+                <div className="mb-12">
+                  <div className="w-12 h-12 bg-brand/5 border border-brand/10 flex items-center justify-center text-brand mb-8">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter mb-4">
+                    Communications Node
+                  </h2>
+                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest leading-loose">
+                    Centralized management for curriculum inquiries and platform logistics. Response latency: 24–48 hours.
                   </p>
                 </div>
 
-                <div className="border-t border-gray-200 pt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
-                    What We Can Help With
+                <div className="space-y-10">
+                  <div>
+                    <h3 className="text-[10px] font-black text-zinc-300 dark:text-zinc-700 uppercase tracking-[0.3em] mb-4">
+                      Institutional Endpoint
+                    </h3>
+                    <a
+                      href="mailto:contact@capletedu.org"
+                      className="text-2xl font-black text-black dark:text-white hover:text-brand transition-colors duration-200 block underline underline-offset-8 decoration-1"
+                    >
+                      contact@capletedu.org
+                    </a>
+                  </div>
+
+                  <a
+                    href="mailto:contact@capletedu.org?subject=Contact%20from%20Caplet"
+                    className="btn-primary w-full inline-block"
+                  >
+                    Initialize Connection
+                  </a>
+                </div>
+              </div>
+
+              <div className="space-y-12">
+                <div>
+                  <h3 className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-8">
+                    Operational Scope
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                  <div className="grid grid-cols-1 gap-6">
+                    {[
+                      'Institutional curriculum integration',
+                      'Strategic educational partnerships',
+                      'Platform technical maintenance',
+                      'Legacy system migrations'
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-4 text-xs font-bold text-black dark:text-white uppercase tracking-widest">
+                        <div className="w-1.5 h-1.5 bg-brand" />
+                        {item}
                       </div>
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">General inquiries about Caplet</span>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">Content suggestions and feedback</span>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">Technical issues or bugs</span>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">Partnership opportunities</span>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="border-t border-gray-200 pt-6">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      Important Note
-                    </h3>
-                    <p className="text-gray-600 text-sm">
-                      While we're happy to help with general questions about financial literacy and our platform, 
-                      we cannot provide personalized financial advice. For specific financial advice, 
-                      please consult with qualified financial professionals such as financial advisors, 
-                      accountants, or financial counselors.
-                    </p>
-                  </div>
+                <div className="p-10 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900">
+                  <h3 className="text-[10px] font-black text-black dark:text-white uppercase tracking-widest mb-4">
+                    Notice: Advisory Protocol
+                  </h3>
+                  <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed uppercase tracking-tight">
+                    While the platform provides comprehensive financial literacy resources, it does not constitute
+                    personalized financial advice. All institutional deployments should be verified by certified
+                    professionals where regional regulations apply.
+                  </p>
                 </div>
               </div>
             </div>
