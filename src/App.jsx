@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
@@ -34,6 +34,12 @@ import UserProfile from './pages/UserProfile';
 import Terms from './pages/Terms';
 import NotFound from './pages/NotFound';
 
+function HomeOrRedirect() {
+  const { isAuthenticated } = useAuth();
+  if (isAuthenticated) return <Navigate to="/courses" replace />;
+  return <Home />;
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -44,7 +50,7 @@ function App() {
               <Navbar />
               <main className="flex-grow">
                 <Routes>
-                  <Route path="/" element={<Home />} />
+                  <Route path="/" element={<HomeOrRedirect />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/tools" element={<Tools />} />
