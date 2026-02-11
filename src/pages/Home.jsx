@@ -160,7 +160,7 @@ const Home = () => {
       </section>
 
       {/* Trust Bar */}
-      <section className="py-12 border-y border-zinc-100 dark:border-zinc-900 bg-white dark:bg-zinc-950">
+      <section className="py-12 border-y border-zinc-100 dark:border-zinc-900 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm">
         <div className="container-custom">
           <div className="flex flex-wrap items-center justify-center md:justify-between gap-10 opacity-50 grayscale contrast-125">
             <img src={cfcLogo} alt="CFC" className="h-6 w-auto dark:invert" />
@@ -201,7 +201,7 @@ const Home = () => {
       </section>
 
       {/* Methodology */}
-      <section className="py-32 lg:py-48 bg-black dark:bg-zinc-950 text-white overflow-hidden">
+      <section className="py-32 lg:py-48 bg-black/90 dark:bg-zinc-950/95 text-white overflow-hidden backdrop-blur-sm">
         <div className="container-custom relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div>
@@ -245,7 +245,7 @@ const Home = () => {
       </section>
 
       {/* Courses Library */}
-      <section className="py-32 lg:py-48 bg-zinc-50 dark:bg-black">
+      <section className="py-32 lg:py-48 bg-zinc-50/85 dark:bg-black/85 backdrop-blur-sm">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-24">
             <div className="reveal-up">
@@ -299,7 +299,7 @@ const Home = () => {
       </section>
 
       {/* Mission Section */}
-      <section className="py-32 lg:py-48 bg-white dark:bg-black overflow-hidden border-t border-zinc-100 dark:border-zinc-900">
+      <section className="py-32 lg:py-48 bg-white/90 dark:bg-black/90 overflow-hidden border-t border-zinc-100 dark:border-zinc-900 backdrop-blur-sm">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="reveal-up">
@@ -342,7 +342,7 @@ const Home = () => {
       </section>
 
       {/* FAQ */}
-      <section className="py-32 lg:py-48 bg-white dark:bg-black border-t border-zinc-100 dark:border-zinc-900">
+      <section className="py-32 lg:py-48 bg-white/90 dark:bg-black/90 border-t border-zinc-100 dark:border-zinc-900 backdrop-blur-sm">
         <div className="container-custom">
           <div className="max-w-3xl">
             <div className="mb-20">
@@ -382,7 +382,7 @@ const Home = () => {
       </section>
 
       {/* Large Decorative Footer */}
-      <section className="overflow-hidden bg-white dark:bg-black py-40">
+      <section className="overflow-hidden py-40">
         <div className="container-custom">
           <h2 className="text-[18vw] font-extrabold text-zinc-100 dark:text-zinc-950 leading-none tracking-tighter select-none reveal-up">
             CAPLET.
