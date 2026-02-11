@@ -59,104 +59,108 @@ const Tools = () => {
 
   const filteredTools = tools.filter(tool => {
     const query = searchQuery.toLowerCase();
-    return tool.title.toLowerCase().includes(query) || 
-           tool.description.toLowerCase().includes(query);
+    return tool.title.toLowerCase().includes(query) ||
+      tool.description.toLowerCase().includes(query);
   });
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black py-24">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-16">
+      <section className="mb-20">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              Financial Tools
+          <div className="animate-slide-up">
+            <span className="section-kicker mb-6">
+              Interactive Terminals
+            </span>
+            <h1 className="text-5xl md:text-6xl font-extrabold text-black dark:text-white mb-8 tracking-tighter uppercase">
+              Financial <br />Utility Hub.
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Practical tools to help you manage your finances, plan for the future, and make informed financial decisions.
+            <p className="text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl font-medium leading-relaxed">
+              Professional-grade tools designed to help you analyze, calculate, and plan your financial sequence with absolute precision.
             </p>
           </div>
         </div>
       </section>
 
       {/* Main Content */}
-      <section className="py-16">
+      <section className="pb-32">
         <div className="container-custom">
-          <div className="max-w-6xl mx-auto">
-            {/* Search Bar */}
-            <div className="mb-8">
-              <div className="relative max-w-2xl mx-auto">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search tools by name or description..."
-                  className="w-full px-4 py-3 pl-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <svg
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          {/* Search Bar */}
+          <div className="mb-20 animate-slide-up" style={{ animationDelay: '100ms' }}>
+            <div className="relative max-w-3xl">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="IDENTIFY UTILITY..."
+                className="w-full px-5 py-5 pl-14 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 text-black dark:text-white font-bold text-xs uppercase tracking-[0.2em] focus:border-brand outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+              />
+              <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-zinc-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
               </div>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-5 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
+          </div>
 
-            {/* Tools Grid */}
-            {filteredTools.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredTools.map((tool, index) => (
-                  <div
-                    key={index}
-                    className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm flex flex-col"
-                  >
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          {/* Tools Grid */}
+          {filteredTools.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {filteredTools.map((tool, index) => (
+                <div
+                  key={index}
+                  className="mesh-card p-0 group animate-slide-up bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 overflow-hidden flex flex-col"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="p-10 flex flex-col flex-grow">
+                    <div className="w-8 h-1 overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-8">
+                      <div className="w-full h-full bg-brand origin-left transition-transform duration-500 group-hover:scale-x-50" />
+                    </div>
+                    <h3 className="text-xl font-extrabold text-black dark:text-white mb-4 group-hover:text-brand transition-colors leading-tight uppercase tracking-tighter">
                       {tool.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 flex-grow mb-6">
+                    <p className="text-zinc-500 dark:text-zinc-400 text-xs font-medium leading-relaxed flex-grow mb-10 line-clamp-3">
                       {tool.description}
                     </p>
                     {tool.path ? (
                       <Link
                         to={tool.path}
-                        className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 dark:hover:bg-blue-500 transition-colors"
+                        className="inline-flex items-center justify-between w-full text-[10px] font-bold uppercase tracking-[0.2em] text-brand border-t border-zinc-50 dark:border-zinc-900 pt-8"
                       >
-                        Open Tool
+                        Launch Terminal
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
                       </Link>
                     ) : (
-                      <button
-                        disabled
-                        className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300 cursor-not-allowed"
+                      <div
+                        className="inline-flex items-center justify-center px-6 py-3 bg-zinc-50 dark:bg-zinc-900 text-zinc-400 text-[10px] font-bold uppercase tracking-widest cursor-not-allowed"
                       >
-                        Coming Soon
-                      </button>
+                        Status: Development
+                      </div>
                     )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-600 dark:text-gray-300 text-lg mb-2">
-                  No tools found matching "{searchQuery}"
-                </p>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  Try a different search term
-                </p>
-              </div>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-32 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 animate-fade-in">
+              <p className="text-zinc-500 font-extrabold text-xs uppercase tracking-[0.3em]">
+                Filter Yielded Zero results
+              </p>
+              <p className="text-zinc-400 font-bold text-[10px] uppercase tracking-widest mt-4">
+                Redefine your parameters
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </div>

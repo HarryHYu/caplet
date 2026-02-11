@@ -1,4 +1,4 @@
-# Caplet 🎓
+# Caplet
 
 [![React](https://img.shields.io/badge/React-19.0-blue?logo=react)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite)](https://vitejs.dev/)
@@ -11,21 +11,21 @@ Caplet is a sophisticated, free-to-use educational platform meticulously crafted
 
 ---
 
-## 🏛️ Project Pillars
+## Project Pillars
 
-### 1. 📚 Courses
+### 1. Courses
 Our curriculum focuses on the Australian context, covering everything from basic budgeting to advanced quantitative finance. 
 - **Auto-Enrollment**: Zero friction access to knowledge.
 - **Interactive Quizzes**: Real-time progress tracking and knowledge verification.
 - **Markdown-Driven**: Clean, readable, and easily maintainable content.
 
-### 2. 🧮 Tools
+### 2. Tools
 A suite of SEO-optimized financial calculators designed for immediate utility.
 - **Tax & Superannuation**: Tailored for Australian regulations (GST, Super Contribution, etc.).
 - **Loan & Mortgage**: Precise calculations for informed decision-making.
 - **Goal Tracking**: Compound interest and savings calculators to visualize the future.
 
-### 3. 🤖 AI Financial Advisor
+### 3. AI Financial Advisor
 The centerpiece of Caplet—a chat-first interface powered by state-of-the-art LLMs (GPT-4o).
 - **Intelligent Extraction**: Automatically identifies income, expenses, and goals from natural conversation.
 - **Dynamic Planning**: Generates personalized financial plans with exact calculations.
@@ -33,7 +33,7 @@ The centerpiece of Caplet—a chat-first interface powered by state-of-the-art L
 
 ---
 
-## 🛠️ Technical Stack
+## Technical Stack
 
 ### Frontend
 - **Framework**: React 19 (Modern Hooks, optimized rendering)
@@ -50,7 +50,7 @@ The centerpiece of Caplet—a chat-first interface powered by state-of-the-art L
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
@@ -80,7 +80,7 @@ The centerpiece of Caplet—a chat-first interface powered by state-of-the-art L
 
 ---
 
-## 📁 Architecture Overview
+## Architecture Overview
 
 ```text
 caplet/
@@ -96,7 +96,7 @@ caplet/
 
 ---
 
-## 📧 Contact & Support
+## Contact & Support
 
 We welcome feedback and academic contributions. Reach out to us at: **contact@capletedu.org**
 

@@ -40,24 +40,24 @@ const BudgetPlanner = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-12">
+    <div className="min-h-screen bg-white dark:bg-black py-24">
+      <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
+          <div className="max-w-4xl">
+            <div className="flex items-center justify-between mb-8 animate-slide-up">
               <div>
-                <p className="text-sm text-blue-600 dark:text-blue-300 font-semibold uppercase tracking-wide mb-2">
-                  Caplet Tools
+                <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-4">
+                  Institutional Tools
                 </p>
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                  Budget Planner
+                <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
+                  Budget <br />Terminal.
                 </h1>
-                <p className="mt-3 text-lg text-gray-600 dark:text-gray-300">
-                  Plan your monthly budget and track your spending across different categories.
+                <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest leading-relaxed max-w-xl">
+                  Strategic allocation protocols and monthly expenditure analysis.
                 </p>
               </div>
-              <Link to="/tools" className="text-sm text-blue-600 dark:text-blue-300 hover:underline">
-                ← Back to tools
+              <Link to="/tools" className="text-[10px] font-black text-zinc-400 hover:text-brand uppercase tracking-widest transition-colors mb-auto">
+                ← Return to Base
               </Link>
             </div>
           </div>
@@ -66,13 +66,13 @@ const BudgetPlanner = () => {
 
       <section className="py-12">
         <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Enter your budget</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-6xl">
+            <div className="lg:col-span-2 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900 p-10 reveal-up">
+              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Allocation Parameters</h2>
+              <form onSubmit={handleSubmit} className="space-y-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Monthly Income
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3 italic">
+                    Gross Monthly Yield (AUD)
                   </label>
                   <input
                     type="number"
@@ -80,83 +80,86 @@ const BudgetPlanner = () => {
                     step="100"
                     value={income}
                     onChange={(e) => setIncome(e.target.value)}
-                    placeholder="e.g. 5000"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="E.G. 5000"
+                    className="w-full px-6 py-4 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-black text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4">Monthly Expenses</h3>
-                  {Object.keys(expenses).map((key) => (
-                    <div key={key}>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {key.charAt(0).toUpperCase() + key.slice(1)}
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="10"
-                        value={expenses[key]}
-                        onChange={(e) => setExpenses({ ...expenses, [key]: e.target.value })}
-                        placeholder="0"
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  ))}
+                <div className="space-y-6">
+                  <h3 className="text-[10px] font-black text-brand uppercase tracking-widest mt-12 mb-6">Expense Distribution</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {Object.keys(expenses).map((key) => (
+                      <div key={key}>
+                        <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 italic">
+                          {key}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="10"
+                          value={expenses[key]}
+                          onChange={(e) => setExpenses({ ...expenses, [key]: e.target.value })}
+                          placeholder="0"
+                          className="w-full px-5 py-3 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-bold text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white font-semibold transition-colors mt-6"
+                  className="w-full py-5 bg-black dark:bg-white text-white dark:text-black font-black text-[10px] uppercase tracking-[0.3em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all active:scale-[0.98] mt-10"
                 >
-                  Calculate Budget
+                  Analyze Strategy
                 </button>
               </form>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-inner border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Summary</h2>
+            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 reveal-up" style={{ animationDelay: '200ms' }}>
+              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Yield Summary</h2>
               {result ? (
-                <div className="space-y-4">
-                  <div className="break-words">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Income</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
+                <div className="space-y-10">
+                  <div>
+                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Total Influx</p>
+                    <p className="text-2xl font-extrabold text-black dark:text-white tracking-tighter">
                       {formatCurrency(result.income)}
                     </p>
                   </div>
-                  <div className="break-words">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Expenses</p>
-                    <p className="text-2xl font-semibold text-red-600 dark:text-red-400 break-words overflow-wrap-anywhere">
+                  <div>
+                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Total Outflow</p>
+                    <p className="text-2xl font-extrabold text-black dark:text-white tracking-tighter">
                       {formatCurrency(result.totalExpenses)}
                     </p>
                   </div>
-                  <div className="break-words">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {result.remaining >= 0 ? 'Remaining' : 'Overspent'}
+                  <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                    <p className="text-[9px] font-black text-brand uppercase tracking-widest mb-1 italic">
+                      {result.remaining >= 0 ? 'Surplus Protocol' : 'Deficit Alert'}
                     </p>
-                    <p className={`text-2xl font-semibold break-words overflow-wrap-anywhere ${
-                      result.remaining >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                    }`}>
+                    <p className={`text-3xl font-extrabold tracking-tighter ${result.remaining >= 0 ? 'text-brand' : 'text-black dark:text-white'
+                      }`}>
                       {formatCurrency(Math.abs(result.remaining))}
                     </p>
                   </div>
+
                   {result.savingsRate > 0 && (
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Savings Rate</p>
-                      <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                    <div className="p-6 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900">
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Savings Efficiency</p>
+                      <p className="text-xl font-extrabold text-brand tracking-tighter">
                         {result.savingsRate.toFixed(1)}%
                       </p>
                     </div>
                   )}
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Breakdown</p>
-                    <div className="space-y-2">
+
+                  <div className="mt-4">
+                    <p className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-6">Distribution Map</p>
+                    <div className="space-y-4">
                       {result.breakdown.map((item) => (
                         item.amount > 0 && (
-                          <div key={item.category} className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-300">{item.category}</span>
-                            <span className="text-gray-900 dark:text-white font-medium">
-                              {formatCurrency(item.amount)} ({item.percentage.toFixed(1)}%)
+                          <div key={item.category} className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
+                            <span className="text-zinc-500">{item.category}</span>
+                            <span className="text-black dark:text-white">
+                              {formatCurrency(item.amount)} <span className="text-[8px] text-zinc-400">[{item.percentage.toFixed(1)}%]</span>
                             </span>
                           </div>
                         )
@@ -165,9 +168,12 @@ const BudgetPlanner = () => {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Enter your income and expenses to see your budget summary.
-                </p>
+                <div className="flex flex-col items-center justify-center h-full py-20 text-center">
+                  <span className="w-1.5 h-1.5 bg-zinc-200 dark:bg-zinc-800 mb-4" />
+                  <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
+                    Awaiting operational input.
+                  </p>
+                </div>
               )}
             </div>
           </div>

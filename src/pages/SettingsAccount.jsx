@@ -22,46 +22,49 @@ const SettingsAccount = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Account</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Role and account preferences.
+    <div className="bg-transparent overflow-hidden">
+      <div className="pb-8 border-b border-zinc-100 dark:border-zinc-900 mb-10">
+        <h2 className="text-xl font-extrabold text-black dark:text-white uppercase tracking-tighter">Account Vectors.</h2>
+        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-2">
+          Manage institutional roles and system preferences.
         </p>
       </div>
-      <div className="p-6 space-y-6">
+      <div className="space-y-12">
         {message.text && (
           <div
-            className={`p-3 rounded-lg text-sm ${
-              message.type === 'success'
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200'
-                : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'
-            }`}
+            className={`px-6 py-4 border font-bold text-[10px] uppercase tracking-widest ${message.type === 'success'
+                ? 'border-brand text-brand'
+                : 'border-red-500 text-red-500'
+              }`}
           >
-            {message.text}
+            {message.type === 'success' ? 'Vector Update Successful:' : 'System Conflict:'} {message.text}
           </div>
         )}
         <div>
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Account role</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-            You are currently signed in as{' '}
-            <span className="font-medium">
-              {user?.role === 'admin' ? 'Admin' : user?.role === 'instructor' ? 'Teacher' : 'Student'}
-            </span>.
+          <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-4">Access Protocol (Role)</h3>
+          <div className="p-8 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900">
+            <p className="text-sm font-medium text-black dark:text-white mb-6">
+              Current identity classification: <br />
+              <span className="text-2xl font-extrabold uppercase tracking-tighter text-brand">
+                {user?.role === 'admin' ? 'Administrative' : user?.role === 'instructor' ? 'Educational Leader' : 'Academic Participant'}
+              </span>
+            </p>
             {user?.role !== 'admin' && (
-              <> You can switch between student and teacher to access classes as either role.</>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed mb-8 max-w-sm">
+                You may re-classify your identity to access teacher-specific curricula or student sequences.
+              </p>
             )}
-          </p>
-          {user?.role !== 'admin' && (
-            <button
-              type="button"
-              onClick={handleSwitchRole}
-              disabled={updating}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
-            >
-              {updating ? 'Updating…' : user?.role === 'instructor' ? 'Switch to student account' : 'Switch to teacher account'}
-            </button>
-          )}
+            {user?.role !== 'admin' && (
+              <button
+                type="button"
+                onClick={handleSwitchRole}
+                disabled={updating}
+                className="px-8 py-4 bg-black dark:bg-white text-white dark:text-black font-bold text-[10px] uppercase tracking-[0.3em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all disabled:opacity-20 flex items-center justify-center min-w-[200px]"
+              >
+                {updating ? 'Processing...' : user?.role === 'instructor' ? 'Switch to Participant View' : 'Request Leader Access'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

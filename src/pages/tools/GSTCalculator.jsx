@@ -44,24 +44,24 @@ const GSTCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-12">
+    <div className="min-h-screen bg-white dark:bg-black py-24">
+      <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
+          <div className="max-w-4xl">
+            <div className="flex items-center justify-between mb-8 animate-slide-up">
               <div>
-                <p className="text-sm text-blue-600 dark:text-blue-300 font-semibold uppercase tracking-wide mb-2">
-                  Caplet Tools
+                <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-4">
+                  Institutional Tools
                 </p>
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                  GST Calculator
+                <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
+                  GST <br />Terminal.
                 </h1>
-                <p className="mt-3 text-lg text-gray-600 dark:text-gray-300">
-                  Add or remove GST (10%) from amounts for Australian Goods and Services Tax calculations.
+                <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest leading-relaxed max-w-xl">
+                  Precision calculations for Australian Goods and Services Tax protocols.
                 </p>
               </div>
-              <Link to="/tools" className="text-sm text-blue-600 dark:text-blue-300 hover:underline">
-                ← Back to tools
+              <Link to="/tools" className="text-[10px] font-black text-zinc-400 hover:text-brand uppercase tracking-widest transition-colors mb-auto">
+                ← Return to Base
               </Link>
             </div>
           </div>
@@ -71,12 +71,12 @@ const GSTCalculator = () => {
       <section className="py-12">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Enter amount</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="lg:col-span-2 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900 p-10 reveal-up">
+              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-8">Input Parameters</h2>
+              <form onSubmit={handleSubmit} className="space-y-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Amount
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3 italic">
+                    Transaction Value (AUD)
                   </label>
                   <input
                     type="number"
@@ -84,95 +84,95 @@ const GSTCalculator = () => {
                     step="0.01"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder="e.g. 100"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="E.G. 1000.00"
+                    className="w-full px-6 py-4 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-black text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Calculation Type
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-4 italic">
+                    Protocol Selection
                   </label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center">
+                  <div className="flex gap-8">
+                    <label className="flex items-center group cursor-pointer">
                       <input
                         type="radio"
                         name="type"
                         value="add"
                         checked={calculationType === 'add'}
                         onChange={(e) => setCalculationType(e.target.value)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-600"
+                        className="w-4 h-4 accent-brand"
                       />
-                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Add GST</span>
+                      <span className="ml-3 text-[10px] font-black text-zinc-500 group-hover:text-black dark:group-hover:text-white uppercase tracking-widest transition-colors">Apply GST</span>
                     </label>
-                    <label className="flex items-center">
+                    <label className="flex items-center group cursor-pointer">
                       <input
                         type="radio"
                         name="type"
                         value="remove"
                         checked={calculationType === 'remove'}
                         onChange={(e) => setCalculationType(e.target.value)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-600"
+                        className="w-4 h-4 accent-brand"
                       />
-                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Remove GST</span>
+                      <span className="ml-3 text-[10px] font-black text-zinc-500 group-hover:text-black dark:group-hover:text-white uppercase tracking-widest transition-colors">Extract GST</span>
                     </label>
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white font-semibold transition-colors"
+                  className="w-full py-5 bg-black dark:bg-white text-white dark:text-black font-black text-[10px] uppercase tracking-[0.3em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all active:scale-[0.98]"
                 >
-                  Calculate
+                  Execute Calculation
                 </button>
               </form>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-inner border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Results</h2>
+            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 reveal-up" style={{ animationDelay: '200ms' }}>
+              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Calculated Metrics</h2>
               {result ? (
                 result.error ? (
-                  <p className="text-red-600 dark:text-red-400 text-sm">{result.error}</p>
+                  <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">{result.error}</p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-8">
                     {result.type === 'add' ? (
                       <>
-                        <div className="break-words">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Original Amount</p>
-                          <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
+                        <div>
+                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Base Principal</p>
+                          <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
                             {formatCurrency(result.originalAmount)}
                           </p>
                         </div>
-                        <div className="break-words">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">GST (10%)</p>
-                          <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
+                        <div>
+                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Tax Levy (10%)</p>
+                          <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
                             {formatCurrency(result.gst)}
                           </p>
                         </div>
-                        <div className="break-words">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Total (GST Inclusive)</p>
-                          <p className="text-2xl font-semibold text-green-600 dark:text-green-400 break-words overflow-wrap-anywhere">
+                        <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                          <p className="text-[9px] font-black text-brand uppercase tracking-widest mb-1 italic">Gross Total</p>
+                          <p className="text-3xl font-extrabold text-brand tracking-tighter">
                             {formatCurrency(result.total)}
                           </p>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="break-words">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">GST Inclusive Amount</p>
-                          <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
+                        <div>
+                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Gross Principal</p>
+                          <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
                             {formatCurrency(result.originalAmount)}
                           </p>
                         </div>
-                        <div className="break-words">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">GST (10%)</p>
-                          <p className="text-lg font-semibold text-red-600 dark:text-red-400 break-words overflow-wrap-anywhere">
+                        <div>
+                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Extracted Levy</p>
+                          <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
                             {formatCurrency(result.gst)}
                           </p>
                         </div>
-                        <div className="break-words">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Base Amount (GST Exclusive)</p>
-                          <p className="text-2xl font-semibold text-green-600 dark:text-green-400 break-words overflow-wrap-anywhere">
+                        <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                          <p className="text-[9px] font-black text-brand uppercase tracking-widest mb-1 italic">Net Value</p>
+                          <p className="text-3xl font-extrabold text-brand tracking-tighter">
                             {formatCurrency(result.base)}
                           </p>
                         </div>
@@ -181,9 +181,12 @@ const GSTCalculator = () => {
                   </div>
                 )
               ) : (
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Enter an amount and select calculation type to see GST breakdown.
-                </p>
+                <div className="flex flex-col items-center justify-center h-full py-20 text-center">
+                  <span className="w-1.5 h-1.5 bg-zinc-200 dark:bg-zinc-800 mb-4" />
+                  <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
+                    Awaiting operational input.
+                  </p>
+                </div>
               )}
             </div>
           </div>

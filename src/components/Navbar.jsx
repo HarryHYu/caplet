@@ -1,55 +1,59 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import LoginForm from './LoginForm';
-import RegisterForm from './RegisterForm';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [updatingRole, setUpdatingRole] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout, isAuthenticated, updateProfile } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
-  const navItems = [
+  const publicNavItems = [
     { path: '/', label: 'Home' },
-    { path: '/about', label: 'About' },
-    { path: '/mission', label: 'Mission' },
-    { path: '/courses', label: 'Courses' },
-    { path: '/classes', label: 'Classes' },
-    { path: '/tools', label: 'Tools' },
-    { path: '/faq', label: 'FAQ' },
     { path: '/contact', label: 'Contact' },
   ];
 
+  const authenticatedNavItems = [
+    { path: '/courses', label: 'Courses' },
+    { path: '/classes', label: 'Classes' },
+    { path: '/tools', label: 'Tools' },
+    { path: '/dashboard', label: 'Dashboard' },
+    { path: '/contact', label: 'Contact' },
+  ];
+  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
+  const homePath = isAuthenticated ? '/dashboard' : '/';
+
   const isActive = (path) => location.pathname === path;
 
+  if (['/login', '/register'].includes(location.pathname)) {
+    return null;
+  }
+
   return (
-    <nav className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 backdrop-blur-xl">
+    <nav className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 border-b border-zinc-100 dark:border-zinc-900 backdrop-blur-md">
       <div className="container-custom">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="Caplet" className="h-9 w-auto rounded-lg object-contain" />
-            <span
-              className="text-xl font-bold text-gray-900 dark:text-white"
-              style={{ fontFamily: "'Source Sans 3', sans-serif" }}
-            >
+          <Link to={homePath} className="flex items-center gap-3 group">
+            <div className="bg-white p-1 rounded-sm transition-transform group-hover:scale-105 border border-zinc-100">
+              <img src="/logo.png" alt="Caplet" className="h-7 w-auto" />
+            </div>
+            <span className="text-xl font-extrabold tracking-tighter text-black dark:text-white uppercase">
               Caplet
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-10">
             {navItems.map((item) => {
               const isActiveLink = isActive(item.path);
-              const linkClass = `text-sm font-medium transition-colors duration-200 pb-1 ${isActiveLink
-                  ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent'
+              const linkClass = `text-[11px] font-bold uppercase tracking-[0.15em] transition-all relative py-1 ${isActiveLink
+                ? 'text-brand'
+                : 'text-zinc-500 hover:text-black dark:hover:text-white'
                 }`;
 
               return (
@@ -59,24 +63,27 @@ const Navbar = () => {
                   className={linkClass}
                 >
                   {item.label}
+                  {isActiveLink && (
+                    <span className="absolute bottom-0 left-0 w-full h-[2px] bg-brand" />
+                  )}
                 </Link>
               );
             })}
 
             {/* Dark Mode Toggle & Auth Section */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6 pl-6 border-l border-zinc-100 dark:border-zinc-800">
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
                 aria-label="Toggle dark mode"
               >
                 {isDark ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 ) : (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 )}
               </button>
@@ -85,55 +92,35 @@ const Navbar = () => {
                   <button
                     type="button"
                     onClick={() => setShowUserMenu((prev) => !prev)}
-                    className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    className="flex items-center space-x-2 text-xs font-bold uppercase tracking-widest text-black dark:text-white hover:text-brand transition-colors"
                   >
-                    <span>
-                      Hello, {user?.firstName}
-                      {user?.role === 'admin'
-                        ? ' (admin)'
-                        : user?.role === 'instructor'
-                          ? ' (teacher)'
-                          : ' (student)'}
-                    </span>
+                    <span>{user?.firstName}</span>
                     <svg
-                      className={`w-4 h-4 transform transition-transform ${showUserMenu ? 'rotate-180' : ''
-                        }`}
+                      className={`w-4 h-4 transform transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-2 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Signed in as
-                        </p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    <div className="absolute right-0 mt-4 w-60 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-2xl py-3 z-50">
+                      <div className="px-5 py-3 border-b border-zinc-50 dark:border-zinc-800">
+                        <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-1">Authenticated</p>
+                        <p className="text-sm font-bold text-black dark:text-white truncate">
                           {user?.firstName} {user?.lastName}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Role:{' '}
-                          {user?.role === 'admin'
-                            ? 'Admin'
-                            : user?.role === 'instructor'
-                              ? 'Teacher'
-                              : 'Student'}
+                        <p className="text-[10px] font-bold text-brand uppercase tracking-tighter">
+                          {user?.role === 'admin' ? 'System Admin' : user?.role === 'instructor' ? 'Faculty' : 'Student'}
                         </p>
                       </div>
                       <Link
                         to="/settings"
                         onClick={() => setShowUserMenu(false)}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className="block w-full text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white"
                       >
-                        Settings
+                        Profile Settings
                       </Link>
                       {user?.role !== 'admin' && (
                         <button
@@ -142,8 +129,7 @@ const Navbar = () => {
                           onClick={async () => {
                             try {
                               setUpdatingRole(true);
-                              const nextRole =
-                                user?.role === 'instructor' ? 'student' : 'instructor';
+                              const nextRole = user?.role === 'instructor' ? 'student' : 'instructor';
                               await updateProfile({ role: nextRole });
                             } catch (e) {
                               console.error('Role update error:', e);
@@ -151,11 +137,9 @@ const Navbar = () => {
                               setUpdatingRole(false);
                             }
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                          className="w-full text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white disabled:opacity-50"
                         >
-                          {user?.role === 'instructor'
-                            ? 'Switch to student account'
-                            : 'Switch to teacher account'}
+                          Switch Role
                         </button>
                       )}
                       <button
@@ -164,19 +148,19 @@ const Navbar = () => {
                           setShowUserMenu(false);
                           logout();
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700"
+                        className="w-full text-left px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900 border-t border-zinc-50 dark:border-zinc-800 transition-colors"
                       >
-                        Logout
+                        Sign Out
                       </button>
                     </div>
                   )}
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                  onClick={() => navigate('/sign-in')}
+                  className="px-5 py-2 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all hover-lift active:scale-95"
                 >
-                  Sign In
+                  Join / Sign In
                 </button>
               )}
             </div>
@@ -186,13 +170,13 @@ const Navbar = () => {
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none"
+              className="text-black dark:text-white focus:outline-none"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
             </button>
@@ -201,139 +185,42 @@ const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
+          <div className="md:hidden pb-6 reveal-up">
+            <div className="space-y-1">
               {navItems.map((item) => {
                 const isActiveLink = isActive(item.path);
-                const linkClass = `block px-3 py-2 text-base font-medium rounded-md transition-colors duration-200 ${isActiveLink
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                  }`;
-
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={linkClass}
+                    className={`block px-4 py-3 text-xs font-bold uppercase tracking-widest border-l-2 ${isActiveLink
+                      ? 'text-brand border-brand bg-zinc-50 dark:bg-zinc-900'
+                      : 'text-zinc-500 border-transparent hover:text-black dark:hover:text-white'
+                      }`}
                     onClick={() => setIsOpen(false)}
                   >
                     {item.label}
                   </Link>
                 );
               })}
-
-              {/* Mobile Dark Mode Toggle & Auth Section */}
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button
-                  onClick={toggleTheme}
-                  className="w-full text-left px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md flex items-center space-x-2"
-                >
-                  {isDark ? (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                      <span>Light Mode</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                      </svg>
-                      <span>Dark Mode</span>
-                    </>
-                  )}
-                </button>
-                {isAuthenticated ? (
-                  <>
-                    <div className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300">
-                      Hello, {user?.firstName}{' '}
-                      {user?.role === 'admin'
-                        ? '(admin)'
-                        : user?.role === 'instructor'
-                          ? '(teacher)'
-                          : '(student)'}
-                    </div>
-                    <Link
-                      to="/settings"
-                      onClick={() => setIsOpen(false)}
-                      className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-                    >
-                      Settings
-                    </Link>
-                    {user?.role !== 'admin' && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const nextRole =
-                              user?.role === 'instructor' ? 'student' : 'instructor';
-                            await updateProfile({ role: nextRole });
-                          } catch (e) {
-                            console.error('Role update error:', e);
-                          }
-                        }}
-                        className="w-full text-left px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-                      >
-                        {user?.role === 'instructor'
-                          ? 'Switch to student account'
-                          : 'Switch to teacher account'}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        logout();
-                        setIsOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
+              {!isAuthenticated && (
+                <div className="px-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-2">
                   <button
                     onClick={() => {
-                      setShowAuthModal(true);
                       setIsOpen(false);
+                      navigate('/login');
                     }}
-                    className="w-full px-3 py-2 bg-blue-600 text-white text-base font-medium rounded-md hover:bg-blue-700 dark:hover:bg-blue-500"
+                    className="w-full py-3 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all"
                   >
-                    Sign In
+                    Join / Sign In
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Auth Modal */}
-      {showAuthModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => setShowAuthModal(false)}
-              className="absolute -top-4 -right-4 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              aria-label="Close"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {authMode === 'login' ? (
-              <LoginForm
-                onSuccess={() => setShowAuthModal(false)}
-                onSwitchToRegister={() => setAuthMode('register')}
-              />
-            ) : (
-              <RegisterForm
-                onSuccess={() => setShowAuthModal(false)}
-                onSwitchToLogin={() => setAuthMode('login')}
-              />
-            )}
-          </div>
-        </div>
-      )}
     </nav>
   );
 };

@@ -50,6 +50,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (idToken) => {
+    try {
+      setError(null);
+      const response = await api.googleLogin(idToken);
+      api.setToken(response.token);
+      setUser(response.user);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
   const register = async (userData) => {
     try {
       setError(null);
@@ -92,6 +105,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     error,
     login,
+    loginWithGoogle,
     register,
     logout,
     updateProfile,
