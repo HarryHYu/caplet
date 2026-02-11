@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 
 const ModuleDetail = () => {
   const { courseId, moduleId } = useParams();
+  const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [module_, setModule_] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ const ModuleDetail = () => {
 
   useEffect(() => {
     if (!course?.modules) return;
-    const mod = course.modules.find((m) => m.id === moduleId);
+    const mod = course.modules.find((m) => String(m.id) === String(moduleId));
     setModule_(mod || null);
   }, [course, moduleId]);
 
@@ -72,8 +73,6 @@ const ModuleDetail = () => {
   }
 
   const lessons = (module_.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const mp = progress?.moduleProgress?.find((m) => String(m.moduleId) === String(moduleId));
-
   const lessonHasContent = (l) => {
     const slides = l.slides;
     if (Array.isArray(slides) && slides.length > 0) return true;
@@ -90,65 +89,95 @@ const ModuleDetail = () => {
   };
   const completedInModule = lessons.filter(isLessonComplete).length;
   const totalInModule = lessons.length;
+  const progressWidth = totalInModule > 0 ? (completedInModule / totalInModule) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10">
+    <div className="min-h-screen bg-white dark:bg-black py-24">
       <div className="container-custom">
-        <div className="mb-6">
-          <Link to={`/courses/${courseId}`} className="text-blue-600 dark:text-blue-400">← Back to {course.title}</Link>
-        </div>
+        <div className="mb-12 animate-slide-up">
+          <button
+            onClick={() => navigate(`/courses/${courseId}`)}
+            className="mb-8 inline-flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-brand transition-colors"
+          >
+            ← Back to Sequence
+          </button>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{module_.title}</h1>
-          {module_.description && (
-            <p className="text-gray-600 dark:text-gray-300">{module_.description}</p>
-          )}
-          <div className="flex items-center gap-4 mt-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400">{lessons.length} lessons</p>
-            {totalInModule > 0 && (
-              <>
-                <span className="text-gray-400">•</span>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {completedInModule} / {totalInModule} complete
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
+            <div className="flex-1">
+              <span className="section-kicker mb-4">Module Analysis</span>
+              <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
+                {module_.title}.
+              </h1>
+              {module_.description && (
+                <p className="text-xl text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed max-w-2xl">
+                  {module_.description}
                 </p>
-                <div className="flex-1 max-w-[200px] h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-green-500 dark:bg-green-400 rounded-full transition-all"
-                    style={{ width: `${(completedInModule / totalInModule) * 100}%` }}
-                  />
-                </div>
-              </>
-            )}
+              )}
+            </div>
+
+            <div className="flex flex-col gap-4 min-w-[240px]">
+              <div className="flex items-center justify-between text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                <span>Verification Progress</span>
+                <span className="text-black dark:text-white">{completedInModule} / {totalInModule}</span>
+              </div>
+              <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
+                <div
+                  className="h-full bg-brand transition-all duration-1000"
+                  style={{ width: `${progressWidth}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-          <div className="border-b dark:border-gray-700 px-6 py-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Lessons</h2>
+        <div className="space-y-4 reveal-up" style={{ animationDelay: '100ms' }}>
+          <div className="border-b border-zinc-100 dark:border-zinc-900 pb-4 mb-8">
+            <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">
+              Operational Sequences ({lessons.length})
+            </h2>
           </div>
-          <ul className="divide-y dark:divide-gray-700">
+
+          <div className="grid grid-cols-1 gap-4">
             {lessons.map((lesson) => (
-              <li key={lesson.id} className="px-6 py-4 flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{lesson.order}. {lesson.title}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {lesson.description || null}
-                    {isLessonComplete(lesson) && (
-                      <span className="ml-2 text-green-600 dark:text-green-400 font-medium">✓ Completed</span>
-                    )}
-                  </p>
+              <Link
+                key={lesson.id}
+                to={`/courses/${courseId}/lessons/${lesson.id}`}
+                className="group flex items-center justify-between p-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 hover:border-brand transition-all"
+              >
+                <div className="flex items-center gap-8 min-w-0">
+                  <span className="text-2xl font-black text-zinc-200 dark:text-zinc-800 tabular-nums">
+                    {String(lesson.order).padStart(2, '0')}
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black text-black dark:text-white uppercase tracking-tight group-hover:text-brand transition-colors truncate">
+                      {lesson.title}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">
+                        {lesson.description || 'Instructional Sequence'}
+                      </span>
+                      {isLessonComplete(lesson) && (
+                        <span className="inline-flex items-center gap-1.5 text-[8px] font-black text-brand uppercase tracking-widest">
+                          <span className="w-1 h-1 bg-brand rounded-full animate-pulse" />
+                          Verified
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <Link
-                  to={`/courses/${courseId}/lessons/${lesson.id}`}
-                  className="text-blue-600 dark:text-blue-400 font-medium"
-                >
-                  Open →
-                </Link>
-              </li>
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
+                  Execute →
+                </span>
+              </Link>
             ))}
-          </ul>
+          </div>
+
           {lessons.length === 0 && (
-            <p className="px-6 py-8 text-gray-500 dark:text-gray-400">No lessons in this module yet.</p>
+            <div className="p-20 text-center border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-950">
+              <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
+                Zero operational sequences detected in this module.
+              </p>
+            </div>
           )}
         </div>
       </div>

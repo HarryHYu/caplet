@@ -12,14 +12,36 @@ const PORT = process.env.PORT || 5002;
 
 // Middleware
 app.use(helmet());
+const allowedOrigins = new Set([
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'https://capletedu.org',
+  'https://www.capletedu.org',
+  'https://caplet.vercel.app'
+]);
+
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'https://capletedu.org',
-    'https://www.capletedu.org',
-    'https://caplet.vercel.app',
-    'https://caplet-qnstzfq3c-harry-yus-projects-380f9660.vercel.app'
-  ],
+  origin(origin, callback) {
+    // Allow server-to-server requests and local tooling without Origin header.
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow localhost dev servers on any port.
+    if (/^https?:\/\/localhost:\d+$/.test(origin) || /^https?:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow Vercel preview domains for this project.
+    if (/^https:\/\/caplet-.*\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 app.use(morgan('combined'));

@@ -37,19 +37,20 @@ const Classes = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-body)' }}>
-        <div className="text-center max-w-md mx-auto px-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Sign in to view classes
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+        <div className="text-center max-w-md mx-auto px-6 animate-slide-up">
+          <span className="section-kicker mb-6">Unauthorized Access</span>
+          <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
+            Identity <br />Verification Required.
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Create or join classroom-style groups to use Caplet lessons with your class.
+          <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mb-10 leading-relaxed">
+            Please authenticate to access the institutional classroom terminal.
           </p>
           <button
             onClick={() => navigate('/')}
             className="btn-primary"
           >
-            Go to Home
+            Return to Prime
           </button>
         </div>
       </div>
@@ -105,81 +106,86 @@ const Classes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-body)' }}>
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading your classes...</p>
+          <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Syncing Class Vectors...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-8 px-4" style={{ background: 'var(--surface-body)' }}>
-      <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Classes
+    <div className="min-h-screen py-24 bg-white dark:bg-black font-sans">
+      <div className="container-custom">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-20">
+          <div className="animate-slide-up">
+            <span className="section-kicker mb-4">Institutional Layer</span>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
+              Class <br />Terminals.
             </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Use Caplet lessons in a classroom setting, similar to Google Classroom or Khan Academy.
+            <p className="max-w-md text-xs font-bold text-zinc-400 uppercase tracking-widest mt-6 leading-relaxed">
+              Synchronous group learning sequences. Connect with instructors and peer networks.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
             {isTeacher && (
               <button
                 onClick={() => setShowCreate(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                className="px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all shadow-sm"
               >
-                Create class
+                Initialize Class
               </button>
             )}
             <button
               onClick={() => setShowJoin(true)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-              style={{ background: 'var(--surface-soft)', borderColor: 'var(--line-soft)', color: 'var(--text-primary)' }}
+              className="px-8 py-4 border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
             >
-              Join with code
+              Access with Code
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-md border border-red-300 bg-red-50 text-sm text-red-800">
-            {error}
+          <div className="mb-12 p-8 border-l-2 border-brand bg-zinc-50 dark:bg-zinc-950 text-black dark:text-white text-[10px] font-bold uppercase tracking-widest animate-fade-in flex items-center gap-4">
+            <span className="text-brand">●</span>
+            System Conflict: {error}
           </div>
         )}
 
         {isTeacher && (
-          <section className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Classes you teach
+          <section className="mb-20 animate-slide-up" style={{ animationDelay: '200ms' }}>
+            <h2 className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.3em] mb-10 border-b border-zinc-100 dark:border-zinc-900 pb-4">
+              Leader Portals
             </h2>
             {classes.teaching.length === 0 ? (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                You’re not teaching any classes yet. Create one to get started.
-              </p>
+              <div className="p-16 border border-zinc-100 dark:border-zinc-900 text-center bg-zinc-50 dark:bg-zinc-950">
+                <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                  Zero active teaching sequences detected.
+                </p>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {classes.teaching.map((cls) => (
                   <Link
                     key={cls.id}
                     to={`/classes/${cls.id}`}
-                    className="block rounded-lg shadow-sm border p-4 transition duration-200"
-                    style={{ background: 'var(--surface-soft)', borderColor: 'var(--line-soft)' }}
+                    className="mesh-card p-10 group"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                    <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-xl font-extrabold text-black dark:text-white uppercase tracking-tighter group-hover:text-brand transition-colors">
                         {cls.name}
                       </h3>
-                      <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                        Teacher
+                      <span className="text-[9px] font-bold px-3 py-1 bg-brand text-white uppercase tracking-widest">
+                        Leader
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Class code: <span className="font-mono font-semibold">{cls.code}</span>
-                    </p>
+                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
+                      <span className="text-zinc-400">Class Key:</span>
+                      <span className="text-black dark:text-white bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-sm font-mono group-hover:bg-black group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-all">
+                        {cls.code}
+                      </span>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -187,34 +193,38 @@ const Classes = () => {
           </section>
         )}
 
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-            Classes you’re in
+        <section className="animate-slide-up" style={{ animationDelay: '300ms' }}>
+          <h2 className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.3em] mb-10 border-b border-zinc-100 dark:border-zinc-900 pb-4">
+            Participant Streams
           </h2>
           {classes.student.length === 0 ? (
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              You’re not in any classes yet. Ask your teacher for a class code to join.
-            </p>
+            <div className="p-16 border border-zinc-100 dark:border-zinc-900 text-center bg-zinc-50 dark:bg-zinc-950">
+              <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                Zero participant memberships found.
+              </p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {classes.student.map((cls) => (
                 <Link
                   key={cls.id}
                   to={`/classes/${cls.id}`}
-                  className="block rounded-lg shadow-sm border p-4 transition duration-200"
-                  style={{ background: 'var(--surface-soft)', borderColor: 'var(--line-soft)' }}
+                  className="mesh-card p-10 group"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-xl font-extrabold text-black dark:text-white uppercase tracking-tighter group-hover:text-brand transition-colors">
                       {cls.name}
                     </h3>
-                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-                      Student
+                    <span className="text-[9px] font-bold px-3 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
+                      Participant
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Class code: <span className="font-mono font-semibold">{cls.code}</span>
-                  </p>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
+                    <span className="text-zinc-400">Access Vector:</span>
+                    <span className="text-black dark:text-white bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-sm font-mono group-hover:bg-brand group-hover:text-white transition-all">
+                      {cls.code}
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>
@@ -223,23 +233,25 @@ const Classes = () => {
 
         {/* Create class modal */}
         {showCreate && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Create class
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-50 p-6">
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 max-w-lg w-full p-12 shadow-2xl">
+              <div className="flex items-center justify-between mb-10">
+                <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
+                  New Sequence.
                 </h2>
                 <button
                   onClick={() => setShowCreate(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
                 >
-                  ×
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                    Class name
+              <form onSubmit={handleCreate} className="space-y-8">
+                <div className="space-y-3">
+                  <label className="block text-[9px] font-bold italic uppercase tracking-widest text-zinc-500">
+                    Class Title
                   </label>
                   <input
                     type="text"
@@ -248,37 +260,39 @@ const Classes = () => {
                       setCreateForm((prev) => ({ ...prev, name: e.target.value }))
                     }
                     required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    className="w-full px-5 py-4 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold text-xs uppercase tracking-[0.1em] focus:border-brand outline-none"
+                    placeholder="E.G. LEVEL 1 TRADING TERMINAL..."
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                    Description (optional)
+                <div className="space-y-3">
+                  <label className="block text-[9px] font-bold italic uppercase tracking-widest text-zinc-500">
+                    Operational Scope (Optional)
                   </label>
                   <textarea
                     value={createForm.description}
                     onChange={(e) =>
                       setCreateForm((prev) => ({ ...prev, description: e.target.value }))
                     }
-                    rows={3}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    rows={4}
+                    className="w-full px-5 py-4 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold text-xs uppercase tracking-[0.1em] focus:border-brand outline-none resize-none"
+                    placeholder="DEFINE OBJECTIVES..."
                   />
                 </div>
-                <div className="flex justify-end gap-2 mt-2">
+                <div className="flex gap-4 pt-6">
                   <button
                     type="button"
                     onClick={() => setShowCreate(false)}
-                    className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="flex-1 px-8 py-4 border border-zinc-100 dark:border-zinc-900 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-900"
                     disabled={submitting}
                   >
-                    Cancel
+                    Abort
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+                    className="flex-1 px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all shadow-sm"
                   >
-                    {submitting ? 'Creating...' : 'Create'}
+                    {submitting ? 'Initializing...' : 'Execute'}
                   </button>
                 </div>
               </form>
@@ -288,48 +302,50 @@ const Classes = () => {
 
         {/* Join class modal */}
         {showJoin && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Join class
+          <div className="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center z-50 p-6">
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 max-w-sm w-full p-12 shadow-2xl">
+              <div className="flex items-center justify-between mb-10">
+                <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
+                  Join Unit.
                 </h2>
                 <button
                   onClick={() => setShowJoin(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
                 >
-                  ×
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
-              <form onSubmit={handleJoin} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                    Class code
+              <form onSubmit={handleJoin} className="space-y-10">
+                <div className="space-y-4 text-center">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-500">
+                    Enter Verification Key
                   </label>
                   <input
                     type="text"
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                     required
-                    placeholder="E.g. ABC123"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono tracking-widest"
+                    maxLength={10}
+                    placeholder="ABC123"
+                    className="w-full bg-transparent text-center text-4xl font-extrabold text-black dark:text-white tracking-[0.3em] outline-none border-b-2 border-zinc-100 dark:border-zinc-900 focus:border-brand py-6 uppercase transition-all"
                   />
                 </div>
-                <div className="flex justify-end gap-2 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowJoin(false)}
-                    className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    disabled={submitting}
-                  >
-                    Cancel
-                  </button>
+                <div className="flex flex-col gap-4">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+                    className="w-full px-8 py-5 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all"
                   >
-                    {submitting ? 'Joining...' : 'Join'}
+                    {submitting ? 'Linking...' : 'Establish Connection'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowJoin(false)}
+                    className="w-full py-4 text-[9px] font-bold uppercase tracking-widest text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
+                  >
+                    Discard Protocol
                   </button>
                 </div>
               </form>

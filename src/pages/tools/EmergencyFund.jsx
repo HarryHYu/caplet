@@ -36,24 +36,24 @@ const EmergencyFund = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-12">
+    <div className="min-h-screen bg-white dark:bg-black py-24">
+      <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
+          <div className="max-w-4xl">
+            <div className="flex items-center justify-between mb-8 animate-slide-up">
               <div>
-                <p className="text-sm text-blue-600 dark:text-blue-300 font-semibold uppercase tracking-wide mb-2">
-                  Caplet Tools
+                <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-4">
+                  Institutional Tools
                 </p>
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                  Emergency Fund Calculator
+                <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
+                  Resilience <br />Terminal.
                 </h1>
-                <p className="mt-3 text-lg text-gray-600 dark:text-gray-300">
-                  Calculate how much you should have in your emergency fund to cover unexpected expenses.
+                <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest leading-relaxed max-w-xl">
+                  Strategic redundancy planning and liquid reserve architecture.
                 </p>
               </div>
-              <Link to="/tools" className="text-sm text-blue-600 dark:text-blue-300 hover:underline">
-                ← Back to tools
+              <Link to="/tools" className="text-[10px] font-black text-zinc-400 hover:text-brand uppercase tracking-widest transition-colors mb-auto">
+                ← Return to Base
               </Link>
             </div>
           </div>
@@ -62,13 +62,13 @@ const EmergencyFund = () => {
 
       <section className="py-12">
         <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Enter your details</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-6xl">
+            <div className="lg:col-span-2 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900 p-10 reveal-up">
+              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Reserve Parameters</h2>
+              <form onSubmit={handleSubmit} className="space-y-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Monthly Essential Expenses
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3 italic">
+                    Critical Monthly Burn Rate (AUD)
                   </label>
                   <input
                     type="number"
@@ -76,33 +76,33 @@ const EmergencyFund = () => {
                     step="100"
                     value={monthlyExpenses}
                     onChange={(e) => setMonthlyExpenses(e.target.value)}
-                    placeholder="e.g. 3000"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="E.G. 3000"
+                    className="w-full px-6 py-4 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-black text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Include rent, food, utilities, insurance, minimum debt payments
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-3">
+                    Includes: Shelter, sustenance, utilities, and mandatory liabilities.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Months of Coverage
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3 italic">
+                    Sustainability Window
                   </label>
                   <select
                     value={monthsCoverage}
                     onChange={(e) => setMonthsCoverage(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-6 py-4 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-black text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
                   >
-                    <option value="3">3 months (minimum)</option>
-                    <option value="6">6 months (recommended)</option>
-                    <option value="9">9 months (conservative)</option>
-                    <option value="12">12 months (very conservative)</option>
+                    <option value="3">3 Months (Standard)</option>
+                    <option value="6">6 Months (Recommended)</option>
+                    <option value="9">9 Months (Conservative)</option>
+                    <option value="12">12 Months (Institutional)</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Current Emergency Savings (optional)
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3 italic">
+                    Current Liquid Liquidity (Optional)
                   </label>
                   <input
                     type="number"
@@ -110,74 +110,88 @@ const EmergencyFund = () => {
                     step="100"
                     value={currentSavings}
                     onChange={(e) => setCurrentSavings(e.target.value)}
-                    placeholder="e.g. 5000"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="E.G. 5000"
+                    className="w-full px-6 py-4 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-black text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white font-semibold transition-colors"
+                  className="w-full py-5 bg-black dark:bg-white text-white dark:text-black font-black text-[10px] uppercase tracking-[0.3em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all active:scale-[0.98] mt-4"
                 >
-                  Calculate
+                  Analyze Resilience
                 </button>
               </form>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-inner border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Results</h2>
+            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 reveal-up" style={{ animationDelay: '200ms' }}>
+              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Reserve Analysis</h2>
               {result ? (
                 result.error ? (
-                  <p className="text-red-600 dark:text-red-400 text-sm">{result.error}</p>
+                  <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">{result.error}</p>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="break-words">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Recommended Emergency Fund</p>
-                      <p className="text-2xl font-semibold text-green-600 dark:text-green-400 break-words overflow-wrap-anywhere">
+                  <div className="space-y-10">
+                    <div>
+                      <p className="text-[9px] font-black text-brand uppercase tracking-widest mb-1 italic">Target Reserve Capital</p>
+                      <p className="text-3xl font-extrabold text-brand tracking-tighter">
                         {formatCurrency(result.recommended)}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        ({result.months} months × {formatCurrency(result.monthlyExpenses)})
+                      <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-2">
+                        Window: {result.months} Cycles × {formatCurrency(result.monthlyExpenses)}
                       </p>
                     </div>
                     {result.current > 0 && (
                       <>
-                        <div className="break-words">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Current Savings</p>
-                          <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                            {formatCurrency(result.current)}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {result.percentage.toFixed(1)}% of goal
-                          </p>
+                        <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800 space-y-8">
+                          <div>
+                            <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Liquid Status</p>
+                            <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
+                              {formatCurrency(result.current)}
+                            </p>
+                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-2 italic">
+                              {result.percentage.toFixed(1)}% Saturation
+                            </p>
+                          </div>
+                          {result.shortfall > 0 ? (
+                            <div>
+                              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Capital Shortfall</p>
+                              <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
+                                {formatCurrency(result.shortfall)}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="p-6 bg-brand/5 border border-brand/20">
+                              <p className="text-[9px] font-black text-brand uppercase tracking-widest">
+                                ✓ Target Saturation Achieved
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        {result.shortfall > 0 ? (
-                          <div className="break-words">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Shortfall</p>
-                            <p className="text-lg font-semibold text-red-600 dark:text-red-400 break-words overflow-wrap-anywhere">
-                              {formatCurrency(result.shortfall)}
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-                            <p className="text-sm font-semibold text-green-700 dark:text-green-400">
-                              ✓ You have enough saved!
-                            </p>
-                          </div>
-                        )}
                       </>
                     )}
-                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                      <p>• Emergency fund should cover essential expenses only</p>
-                      <p>• Keep in a high-interest savings account</p>
-                      <p>• Reassess when expenses change</p>
+                    <div className="mt-4 pt-8 border-t border-zinc-200 dark:border-zinc-800 space-y-4">
+                      <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                        <div className="w-1 h-1 bg-brand" />
+                        Focus on critical liabilities only
+                      </div>
+                      <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                        <div className="w-1 h-1 bg-brand" />
+                        Maintain in immediate liquidity
+                      </div>
+                      <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                        <div className="w-1 h-1 bg-brand" />
+                        Recalibrate per life cycle shifts
+                      </div>
                     </div>
                   </div>
                 )
               ) : (
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Enter your monthly expenses to see recommended emergency fund amount.
-                </p>
+                <div className="flex flex-col items-center justify-center h-full py-20 text-center">
+                  <span className="w-1.5 h-1.5 bg-zinc-200 dark:bg-zinc-800 mb-4" />
+                  <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
+                    Awaiting operational input.
+                  </p>
+                </div>
               )}
             </div>
           </div>
