@@ -35,7 +35,6 @@ const Login = () => {
             <div className="hidden lg:flex lg:w-1/2 relative bg-zinc-900 overflow-hidden flex-col justify-between p-12 md:p-16 lg:p-20">
                 {/* Background Effects */}
                 <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-[url('/light.png')] dark:bg-[url('/dark.png')] bg-cover bg-center opacity-25 mix-blend-overlay"></div>
                     <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-brand/20 rounded-full blur-[120px] mix-blend-screen animate-blob"></div>
                     <div className="absolute bottom-[-20%] left-[-20%] w-[60%] h-[60%] bg-indigo-500/10 rounded-full blur-[100px] mix-blend-screen animate-blob animation-delay-4000"></div>
                 </div>

@@ -35,7 +35,6 @@ const Register = () => {
             <div className="hidden lg:flex lg:w-1/2 relative bg-zinc-900 overflow-hidden flex-col justify-between p-12 md:p-16 lg:p-20">
                 {/* Background Effects */}
                 <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-[url('/light.png')] dark:bg-[url('/dark.png')] bg-cover bg-center opacity-25 mix-blend-overlay"></div>
                     <div className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] bg-brand/20 rounded-full blur-[120px] mix-blend-screen animate-blob"></div>
                     <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[100px] mix-blend-screen animate-blob animation-delay-2000"></div>
                 </div>
