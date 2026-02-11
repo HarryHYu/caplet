@@ -87,7 +87,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       {/* Hero Section */}
-      <section className="py-24 md:py-32 lg:py-48 relative overflow-hidden">
+      <section className="pt-16 pb-20 md:pt-20 md:pb-24 lg:pt-24 lg:pb-28 relative overflow-hidden">
         <div className="container-custom relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="max-w-xl animate-slide-up">
