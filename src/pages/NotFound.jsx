@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const NotFound = () => {
+  const { isAuthenticated } = useAuth();
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
       <div className="text-center">
@@ -13,17 +15,27 @@ const NotFound = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            to="/"
+            to={isAuthenticated ? '/courses' : '/'}
             className="btn-primary text-lg px-8 py-3"
           >
-            Go Home
+            {isAuthenticated ? 'Go to Courses' : 'Go Home'}
           </Link>
-          <Link
-            to="/courses"
-            className="btn-secondary text-lg px-8 py-3"
-          >
-            Browse Courses
-          </Link>
+          {isAuthenticated && (
+            <Link
+              to="/classes"
+              className="btn-secondary text-lg px-8 py-3"
+            >
+              Classes
+            </Link>
+          )}
+          {!isAuthenticated && (
+            <Link
+              to="/courses"
+              className="btn-secondary text-lg px-8 py-3"
+            >
+              Browse Courses
+            </Link>
+          )}
         </div>
       </div>
     </div>

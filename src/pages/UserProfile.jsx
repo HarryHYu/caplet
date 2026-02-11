@@ -46,7 +46,7 @@ const UserProfile = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-gray-600 dark:text-gray-300 mb-4">{error || 'User not found'}</p>
-          <Link to="/" className="text-blue-600 dark:text-blue-400 hover:underline">Back to Home</Link>
+          <Link to="/courses" className="text-blue-600 dark:text-blue-400 hover:underline">Back to Courses</Link>
         </div>
       </div>
     );

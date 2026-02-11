@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 const Survey = () => {
+  const { isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     age: '',
     tracksSpending: '',
@@ -92,8 +94,8 @@ const Survey = () => {
               <Link to="/survey-results" className="btn-primary">
                 View Survey Results
               </Link>
-              <Link to="/" className="btn-secondary">
-                Return to Home
+              <Link to={isAuthenticated ? '/courses' : '/'} className="btn-secondary">
+                {isAuthenticated ? 'Return to Courses' : 'Return to Home'}
               </Link>
             </div>
           </div>

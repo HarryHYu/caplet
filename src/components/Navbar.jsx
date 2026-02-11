@@ -12,14 +12,15 @@ const Navbar = () => {
   const { user, logout, isAuthenticated, updateProfile } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
-  const navItems = [
+  const allNavItems = [
     { path: '/', label: 'Home' },
     { path: '/courses', label: 'Courses' },
     { path: '/classes', label: 'Classes' },
     { path: '/tools', label: 'Tools' },
     { path: '/contact', label: 'Contact' },
   ];
-  const homePath = '/';
+  const navItems = isAuthenticated ? allNavItems.filter((item) => item.path !== '/') : allNavItems;
+  const homePath = isAuthenticated ? '/courses' : '/';
 
   const isActive = (path) => location.pathname === path;
 
