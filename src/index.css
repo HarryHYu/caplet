@@ -88,22 +88,22 @@
     position: relative;
   }
 
-  /* Background texture overlay (uses /public/light.jpg and /public/dark.jpg) */
+  /* Background texture overlay (uses /public/light1.jpg and /public/dark1.jpg) */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background-image: url('/light.jpg');
+    background-image: url('/light1.jpg');
     background-size: cover;
     background-position: center;
-    opacity: 0.45; /* higher so the image is clearly visible */
+    opacity: 0.28;
     z-index: -1;
   }
 
   .dark body::before {
-    background-image: url('/dark.jpg');
-    opacity: 0.55;
+    background-image: url('/dark1.jpg');
+    opacity: 0.34;
   }
 
   h1,
