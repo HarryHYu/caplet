@@ -116,12 +116,8 @@ const Tools = () => {
           {/* Tools Grid */}
           {filteredTools.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {filteredTools.map((tool, index) => (
-                <div
-                  key={index}
-                  className="mesh-card p-0 group animate-slide-up bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 overflow-hidden flex flex-col"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
+              {filteredTools.map((tool, index) => {
+                const cardInner = (
                   <div className="p-10 flex flex-col flex-grow">
                     <div className="w-8 h-1 overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-8">
                       <div className="w-full h-full bg-brand origin-left transition-transform duration-500 group-hover:scale-x-50" />
@@ -133,23 +129,41 @@ const Tools = () => {
                       {tool.description}
                     </p>
                     {tool.path ? (
-                      <Link
-                        to={tool.path}
-                        className="inline-flex items-center justify-between w-full text-[10px] font-bold uppercase tracking-[0.2em] text-brand border-t border-zinc-50 dark:border-zinc-900 pt-8"
-                      >
+                      <div className="inline-flex items-center justify-between w-full text-[10px] font-bold uppercase tracking-[0.2em] text-brand border-t border-zinc-50 dark:border-zinc-900 pt-8">
                         Launch Terminal
                         <span className="group-hover:translate-x-1 transition-transform">→</span>
-                      </Link>
+                      </div>
                     ) : (
-                      <div
-                        className="inline-flex items-center justify-center px-6 py-3 bg-zinc-50 dark:bg-zinc-900 text-zinc-400 text-[10px] font-bold uppercase tracking-widest cursor-not-allowed"
-                      >
+                      <div className="inline-flex items-center justify-center px-6 py-3 bg-zinc-50 dark:bg-zinc-900 text-zinc-400 text-[10px] font-bold uppercase tracking-widest cursor-not-allowed">
                         Status: Development
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+
+                if (tool.path) {
+                  return (
+                    <Link
+                      key={index}
+                      to={tool.path}
+                      className="mesh-card p-0 group animate-slide-up bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 overflow-hidden flex flex-col"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      {cardInner}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className="mesh-card p-0 group animate-slide-up bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 overflow-hidden flex flex-col"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    {cardInner}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-32 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 animate-fade-in">
