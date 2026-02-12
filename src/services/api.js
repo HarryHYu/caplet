@@ -330,15 +330,17 @@ class ApiService {
   }
 
   /**
-   * Returns a proxied image URL when the host may be blocked at school (Reddit, Imgur, Google Drive, Cloudinary).
-   * Backend fetches the image so the browser only hits your API.
+   * For image slides: use proxy when the host is blocked at school (Reddit, Imgur).
+   * For Google Drive we use the URL as-is so the browser loads from Drive (often allowed at school); proxy is fallback.
    */
   getProxiedImageSrc(imageUrl) {
     if (!imageUrl || typeof imageUrl !== 'string') return imageUrl;
     try {
       const host = new URL(imageUrl).hostname.toLowerCase();
-      const proxyHosts = ['reddit', 'imgur', 'drive.google', 'googleusercontent', 'cloudinary'];
-      if (proxyHosts.some((h) => host.includes(h))) {
+      if (host.includes('drive.google') || host.includes('googleusercontent')) {
+        return imageUrl;
+      }
+      if (host.includes('reddit') || host.includes('imgur') || host.includes('cloudinary')) {
         return `${this.baseURL}/proxy-image?url=${encodeURIComponent(imageUrl)}`;
       }
     } catch (_) {}
