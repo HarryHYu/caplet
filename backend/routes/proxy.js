@@ -29,6 +29,21 @@ function isAllowedUrl(urlString) {
   }
 }
 
+// Google Drive: server-side fetch often gets HTML. Use thumbnail endpoint for raw image bytes.
+function getDriveImageUrl(urlString) {
+  try {
+    const u = new URL(urlString);
+    if (u.hostname.toLowerCase() !== 'drive.google.com') return null;
+    const id = u.searchParams.get('id') || (u.pathname.match(/\/d\/([^/]+)/) || [])[1];
+    if (!id) return null;
+    return `https://drive.google.com/thumbnail?id=${id}&sz=w1920`;
+  } catch {
+    return null;
+  }
+}
+
+const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
 /**
  * GET /api/proxy-image?url=...
  * Proxies image from url when the origin is blocked at school (e.g. Reddit, or use Google Drive / Imgur / Cloudinary).
@@ -39,10 +54,14 @@ router.get('/proxy-image', async (req, res) => {
     return res.status(400).json({ message: 'Missing url query parameter' });
   }
 
-  const decodedUrl = decodeURIComponent(rawUrl.trim());
+  let decodedUrl = decodeURIComponent(rawUrl.trim());
   if (!isAllowedUrl(decodedUrl)) {
     return res.status(403).json({ message: 'URL not allowed for proxy' });
   }
+
+  // Prefer Drive thumbnail endpoint so we get raw image, not HTML preview.
+  const driveThumb = getDriveImageUrl(decodedUrl);
+  if (driveThumb) decodedUrl = driveThumb;
 
   try {
     const controller = new AbortController();
@@ -51,8 +70,10 @@ router.get('/proxy-image', async (req, res) => {
     const response = await fetch(decodedUrl, {
       method: 'GET',
       signal: controller.signal,
+      redirect: 'follow',
       headers: {
-        'User-Agent': 'CapletEdu-ImageProxy/1.0',
+        'User-Agent': BROWSER_UA,
+        'Accept': 'image/*,*/*',
       },
     });
     clearTimeout(timeout);
@@ -61,18 +82,22 @@ router.get('/proxy-image', async (req, res) => {
       return res.status(response.status).send(response.statusText);
     }
 
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    const contentType = response.headers.get('content-type') || 'image/png';
+    if (contentType.includes('text/html')) {
+      return res.status(502).json({ message: 'Drive returned HTML; check file sharing is "Anyone with the link"' });
+    }
     const contentLength = response.headers.get('content-length');
     if (contentLength && parseInt(contentLength, 10) > MAX_IMAGE_SIZE) {
       return res.status(413).json({ message: 'Image too large' });
     }
 
-    res.set('Cache-Control', 'public, max-age=86400'); // 24h
-    res.set('Content-Type', contentType);
     const buffer = await response.arrayBuffer();
     if (buffer.byteLength > MAX_IMAGE_SIZE) {
       return res.status(413).json({ message: 'Image too large' });
     }
+
+    res.set('Cache-Control', 'public, max-age=86400'); // 24h
+    res.set('Content-Type', contentType);
     res.send(Buffer.from(buffer));
   } catch (err) {
     if (err.name === 'AbortError') {

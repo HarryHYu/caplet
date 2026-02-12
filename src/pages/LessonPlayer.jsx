@@ -460,10 +460,23 @@ const LessonPlayer = () => {
                           }
 
                           if (slide.type === 'image' && slide.content) {
+                            const imgSrc = api.getProxiedImageSrc(slide.content);
                             return (
                               <div className="flex flex-col gap-4">
-                                <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                                  <img src={api.getProxiedImageSrc(slide.content)} alt={slide.caption || ''} className="w-full h-auto object-cover" />
+                                <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 min-h-[280px] flex items-center justify-center relative">
+                                  <img
+                                    src={imgSrc}
+                                    alt={slide.caption || 'Lesson image'}
+                                    className="w-full h-auto max-h-[480px] object-contain relative z-10"
+                                    referrerPolicy="no-referrer"
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.style.visibility = 'hidden';
+                                      const fallback = e.target.nextElementSibling;
+                                      if (fallback) fallback.classList.remove('hidden');
+                                    }}
+                                  />
+                                  <p className="hidden absolute inset-0 flex items-center justify-center text-sm text-slate-500 dark:text-slate-400 text-center p-8">Image could not be loaded. Check the link or try again.</p>
                                 </div>
                                 {slide.caption && <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">{slide.caption}</p>}
                               </div>
