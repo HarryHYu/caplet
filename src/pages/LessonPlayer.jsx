@@ -449,6 +449,7 @@ const LessonPlayer = () => {
                                     ul: ({ ...props }) => <ul className="list-disc list-outside mb-4 space-y-2 text-slate-600 dark:text-slate-300 pl-4" {...props} />,
                                     li: ({ ...props }) => <li className="font-medium" {...props} />,
                                     strong: ({ ...props }) => <strong className="font-bold text-slate-900 dark:text-white" {...props} />,
+                                    img: ({ src, alt, ...props }) => <img src={api.getProxiedImageSrc(src)} alt={alt || ''} className="max-w-full h-auto rounded-lg" {...props} />,
                                   }}
                                 >
                                   {slide.content || ''}
@@ -462,7 +463,7 @@ const LessonPlayer = () => {
                             return (
                               <div className="flex flex-col gap-4">
                                 <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                                  <img src={slide.content} alt={slide.caption || ''} className="w-full h-auto object-cover" />
+                                  <img src={api.getProxiedImageSrc(slide.content)} alt={slide.caption || ''} className="w-full h-auto object-cover" />
                                 </div>
                                 {slide.caption && <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-center">{slide.caption}</p>}
                               </div>
@@ -579,6 +580,7 @@ const LessonPlayer = () => {
                           li: ({ ...props }) => <li className="font-medium" {...props} />,
                           strong: ({ ...props }) => <strong className="font-bold text-slate-900 dark:text-white" {...props} />,
                           blockquote: ({ ...props }) => <blockquote className="border-l-4 border-brand pl-6 italic my-8 text-black dark:text-white bg-zinc-50 dark:bg-zinc-900/50 p-8 font-medium" {...props} />,
+                          img: ({ src, alt, ...props }) => <img src={api.getProxiedImageSrc(src)} alt={alt || ''} className="max-w-full h-auto rounded-lg" {...props} />,
                         }}
                       >
                         {lesson.content || 'Analytical content pending...'}

@@ -328,6 +328,22 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  /**
+   * Returns a proxied image URL when the host may be blocked at school (Reddit, Imgur, Google Drive, Cloudinary).
+   * Backend fetches the image so the browser only hits your API.
+   */
+  getProxiedImageSrc(imageUrl) {
+    if (!imageUrl || typeof imageUrl !== 'string') return imageUrl;
+    try {
+      const host = new URL(imageUrl).hostname.toLowerCase();
+      const proxyHosts = ['reddit', 'imgur', 'drive.google', 'googleusercontent', 'cloudinary'];
+      if (proxyHosts.some((h) => host.includes(h))) {
+        return `${this.baseURL}/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+      }
+    } catch (_) {}
+    return imageUrl;
+  }
 }
 
 export default new ApiService();

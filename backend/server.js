@@ -70,6 +70,7 @@ app.use('/api/progress', require('./routes/progress'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/survey', require('./routes/survey'));
 app.use('/api/classes', require('./routes/classes'));
+app.use('/api', require('./routes/proxy'));
 
 // Error handling middleware
 // eslint-disable-next-line no-unused-vars -- Express error middleware requires 4 args
