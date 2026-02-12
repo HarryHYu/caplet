@@ -286,6 +286,15 @@ const LessonPlayer = () => {
   })();
   const hasSlides = slides.length > 0;
 
+  // Preload all lesson images when the lesson opens so they're cached by the time user navigates slides
+  const imageSlideUrls = slides.filter((s) => s.type === 'image' && s.content).map((s) => s.content);
+  useEffect(() => {
+    imageSlideUrls.forEach((url) => {
+      const img = new Image();
+      img.src = api.getProxiedImageSrc(url);
+    });
+  }, [lesson?.id, imageSlideUrls.join(' ')]);
+
   const goToSlide = (newIndex) => {
     if (newIndex < 0 || newIndex >= slides.length) return;
     setSlideDirection(newIndex > currentSlideIndex ? 'next' : 'prev');
