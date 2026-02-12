@@ -105,6 +105,8 @@ router.get('/proxy-image', async (req, res) => {
 
       res.set('Cache-Control', 'public, max-age=86400');
       res.set('Content-Type', response.headers.get('content-type') || 'image/png');
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.set('Access-Control-Allow-Origin', '*');
       res.send(Buffer.from(buffer));
       return;
     } catch (err) {
