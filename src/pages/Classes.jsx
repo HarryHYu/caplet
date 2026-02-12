@@ -115,18 +115,25 @@ const Classes = () => {
                 Initialize Class
               </button>
             )}
-            <button
-              onClick={() => {
-                if (!isAuthenticated) {
-                  alert('Sign in to join a class with a code.');
-                  return;
-                }
-                setShowJoin(true);
-              }}
-              className="px-8 py-4 border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
-            >
-              Access with Code
-            </button>
+            {!isTeacher && (
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    alert('Sign in to join a class with a code.');
+                    return;
+                  }
+                  setShowJoin(true);
+                }}
+                className="px-8 py-4 border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
+              >
+                Access with Code
+              </button>
+            )}
+            {isTeacher && (
+              <span className="px-6 py-4 text-[9px] font-bold text-zinc-400 uppercase tracking-widest border border-zinc-200 dark:border-zinc-800">
+                Teachers: ask the class owner to add you.
+              </span>
+            )}
           </div>
         </div>
 

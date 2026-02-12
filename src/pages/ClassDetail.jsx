@@ -33,6 +33,9 @@ const ClassDetail = () => {
   const [assignmentPrivateTarget, setAssignmentPrivateTarget] = useState({}); // teacher: assignmentId -> student userId for private reply
   const [loadingComments, setLoadingComments] = useState({ announcement: null, assignment: null });
   const [postingComment, setPostingComment] = useState(false);
+  const [showAddTeacher, setShowAddTeacher] = useState(false);
+  const [addTeacherEmail, setAddTeacherEmail] = useState('');
+  const [addingTeacher, setAddingTeacher] = useState(false);
   const initialCommentOpenDone = useRef(false);
 
   const load = async () => {
@@ -179,6 +182,7 @@ const ClassDetail = () => {
 
   const { classroom, membership, members, assignments, announcements = [], leaderboard = [] } = data;
   const isTeacher = membership?.role === 'teacher';
+  const isOwner = !!membership?.isOwner;
 
   const teachers = members.filter((m) => m.role === 'teacher');
   const students = members.filter((m) => m.role === 'student');
@@ -270,6 +274,36 @@ const ClassDetail = () => {
     } catch (err) {
       console.error('Delete class error:', err);
       setError(err.message || 'Failed to delete class');
+    }
+  };
+
+  const handleAddTeacher = async (e) => {
+    e.preventDefault();
+    if (!addTeacherEmail.trim()) return;
+    setAddingTeacher(true);
+    setError('');
+    try {
+      await api.addClassTeacher(classroom.id, addTeacherEmail.trim());
+      setShowAddTeacher(false);
+      setAddTeacherEmail('');
+      await load();
+    } catch (err) {
+      console.error('Add teacher error:', err);
+      setError(err.message || 'Failed to add teacher');
+    } finally {
+      setAddingTeacher(false);
+    }
+  };
+
+  const handleRemoveMember = async (userId, label) => {
+    const ok = window.confirm(`Remove ${label} from this class?`);
+    if (!ok) return;
+    try {
+      await api.removeClassMember(classroom.id, userId);
+      await load();
+    } catch (err) {
+      console.error('Remove member error:', err);
+      setError(err.message || 'Failed to remove member');
     }
   };
 
@@ -473,14 +507,16 @@ const ClassDetail = () => {
                 </div>
               </div>
               <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={handleLeaveClass}
-                  className="px-6 py-3 border border-zinc-200 dark:border-zinc-800 text-[9px] font-bold uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
-                >
-                  Discard membership
-                </button>
-                {isTeacher && (
+                {!isOwner && (
+                  <button
+                    type="button"
+                    onClick={handleLeaveClass}
+                    className="px-6 py-3 border border-zinc-200 dark:border-zinc-800 text-[9px] font-bold uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
+                  >
+                    Discard membership
+                  </button>
+                )}
+                {isOwner && (
                   <button
                     type="button"
                     onClick={handleDeleteClass}
@@ -1101,6 +1137,15 @@ const ClassDetail = () => {
                   Institutional <br />Network.
                 </h2>
               </div>
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddTeacher(true)}
+                  className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all"
+                >
+                  Add teacher
+                </button>
+              )}
             </div>
 
             {/* Leaderboard: most assignments completed */}
@@ -1173,6 +1218,15 @@ const ClassDetail = () => {
                             <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">{t.email}</span>
                           </div>
                         </Link>
+                        {isOwner && t.id !== user?.id && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMember(t.id, `${t.firstName} ${t.lastName}`)}
+                            className="text-[9px] font-bold text-red-500 hover:text-red-600 uppercase tracking-widest flex-shrink-0"
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1204,6 +1258,15 @@ const ClassDetail = () => {
                             <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{s.email}</span>
                           </div>
                         </Link>
+                        {isOwner && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMember(s.id, `${s.firstName} ${s.lastName}`)}
+                            className="text-[9px] font-bold text-red-500 hover:text-red-600 uppercase tracking-widest flex-shrink-0"
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1323,6 +1386,62 @@ const ClassDetail = () => {
                     className="px-10 py-4 bg-black dark:bg-white text-white dark:text-black text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white disabled:opacity-30 transition-all shadow-lg order-1 sm:order-2"
                   >
                     {submitting ? 'PROCESSING...' : 'INITIALIZE PROTOCOL'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Add teacher modal — owner only */}
+        {isOwner && showAddTeacher && (
+          <div className="fixed inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-md w-full p-10 animate-in zoom-in-95 duration-300">
+              <div className="flex items-start justify-between mb-8">
+                <div>
+                  <span className="section-kicker mb-2">Personnel</span>
+                  <h2 className="text-xl font-black text-black dark:text-white uppercase tracking-tighter">
+                    Add teacher
+                  </h2>
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-2">
+                    Enter the teacher&apos;s account email. They must have an instructor account.
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setShowAddTeacher(false); setAddTeacherEmail(''); setError(''); }}
+                  className="p-2 text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <form onSubmit={handleAddTeacher} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Email</label>
+                  <input
+                    type="email"
+                    value={addTeacherEmail}
+                    onChange={(e) => setAddTeacherEmail(e.target.value)}
+                    required
+                    className="block w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-black dark:text-white text-sm font-medium placeholder-zinc-400 focus:border-brand outline-none transition-all"
+                    placeholder="instructor@example.com"
+                  />
+                </div>
+                <div className="flex gap-4 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddTeacher(false); setAddTeacherEmail(''); setError(''); }}
+                    className="px-6 py-3 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black dark:hover:text-white transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={addingTeacher}
+                    className="px-8 py-3 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white disabled:opacity-50 transition-all"
+                  >
+                    {addingTeacher ? 'Adding...' : 'Add teacher'}
                   </button>
                 </div>
               </form>

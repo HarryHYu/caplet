@@ -268,6 +268,19 @@ class ApiService {
     });
   }
 
+  async addClassTeacher(classId, email) {
+    return this.request(`/classes/${classId}/teachers`, {
+      method: 'POST',
+      body: JSON.stringify({ email: email.trim() }),
+    });
+  }
+
+  async removeClassMember(classId, userId) {
+    return this.request(`/classes/${classId}/members/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async createAssignment(classId, data) {
     return this.request(`/classes/${classId}/assignments`, {
       method: 'POST',

@@ -67,6 +67,11 @@ const requireTeacherInClass = async (req, res, classroomId) => {
   return !!membership && membership.role === 'teacher';
 };
 
+/** True if user is the class owner (created the class). Only owner (or admin) can delete class, add/remove teachers, remove students. */
+const isClassOwner = (classroom, userId) => {
+  return classroom && (classroom.createdBy === userId);
+};
+
 // Get all classes for current user (both teaching and enrolled)
 router.get('/', authenticateToken, async (req, res) => {
   try {
@@ -143,7 +148,7 @@ router.post(
   }
 );
 
-// Join a class by code (students and teachers)
+// Join a class by code (students only; teachers cannot join — only the owner can add them)
 router.post(
   '/join',
   authenticateToken,
@@ -155,6 +160,13 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
+      const isTeacherAccount = req.user.role === 'instructor' || req.user.role === 'admin';
+      if (isTeacherAccount) {
+        return res.status(403).json({
+          message: 'Teachers cannot join a class with a code. Only the class owner can add you as a teacher.',
+        });
+      }
+
       const { code } = req.body;
       const normalizedCode = code.trim().toUpperCase();
 
@@ -163,17 +175,13 @@ router.post(
         return res.status(404).json({ message: 'Class not found. Check the code and try again.' });
       }
 
-      // Determine membership role: teachers join as teachers, others as students
-      const membershipRole =
-        req.user.role === 'instructor' || req.user.role === 'admin' ? 'teacher' : 'student';
-
       const [membership] = await ClassMembership.findOrCreate({
         where: {
           classroomId: classroom.id,
           userId: req.user.id,
         },
         defaults: {
-          role: membershipRole,
+          role: 'student',
         },
       });
 
@@ -191,7 +199,7 @@ router.post(
   }
 );
 
-// Leave a class (teachers or students)
+// Leave a class (students and class teachers; owner cannot leave — must delete class)
 router.post('/:id/leave', authenticateToken, async (req, res) => {
   try {
     const classroom = await Classroom.findByPk(req.params.id);
@@ -206,25 +214,20 @@ router.post('/:id/leave', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'You are not in this class' });
     }
 
-    // If teacher is trying to leave and they're the last teacher, block unless they are the only member.
+    if (isClassOwner(classroom, req.user.id)) {
+      return res.status(400).json({
+        message: 'You are the class owner. Delete the class instead if you want to leave.',
+      });
+    }
+
     if (membership.role === 'teacher') {
       const teacherCount = await ClassMembership.count({
         where: { classroomId: classroom.id, role: 'teacher' },
       });
-      const memberCount = await ClassMembership.count({
-        where: { classroomId: classroom.id },
-      });
-
       if (teacherCount <= 1) {
-        if (memberCount <= 1) {
-          // Safe: leaving would make the class empty anyway; delete class.
-          await membership.destroy();
-          await classroom.destroy();
-          return res.json({ message: 'Left class and deleted empty class' });
-        }
         return res
           .status(400)
-          .json({ message: 'You are the last teacher. Delete the class instead.' });
+          .json({ message: 'You are the last teacher. Only the class owner can remove you or delete the class.' });
       }
     }
 
@@ -236,7 +239,102 @@ router.post('/:id/leave', authenticateToken, async (req, res) => {
   }
 });
 
-// Delete a class (teacher in class or admin)
+// Remove a member (student or teacher) — only class owner or admin
+router.delete('/:id/members/:userId', authenticateToken, async (req, res) => {
+  try {
+    const classroom = await Classroom.findByPk(req.params.id);
+    if (!classroom) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+    if (!isClassOwner(classroom, req.user.id) && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only the class owner can remove members' });
+    }
+
+    const targetUserId = req.params.userId;
+    if (targetUserId === req.user.id) {
+      return res.status(400).json({ message: 'To leave the class, use Discard membership. To delete the class, use Terminate Class.' });
+    }
+
+    const targetMembership = await ClassMembership.findOne({
+      where: { classroomId: classroom.id, userId: targetUserId },
+    });
+    if (!targetMembership) {
+      return res.status(404).json({ message: 'Member not found in this class' });
+    }
+
+    const teacherCount = await ClassMembership.count({
+      where: { classroomId: classroom.id, role: 'teacher' },
+    });
+    if (targetMembership.role === 'teacher' && teacherCount <= 1) {
+      return res.status(400).json({ message: 'Cannot remove the last teacher. Delete the class or add another teacher first.' });
+    }
+
+    await targetMembership.destroy();
+    res.json({ message: 'Member removed' });
+  } catch (error) {
+    console.error('Remove member error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Add a teacher to the class — only class owner or admin
+router.post(
+  '/:id/teachers',
+  authenticateToken,
+  [body('email').trim().isEmail()],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const classroom = await Classroom.findByPk(req.params.id);
+      if (!classroom) {
+        return res.status(404).json({ message: 'Class not found' });
+      }
+      if (!isClassOwner(classroom, req.user.id) && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Only the class owner can add teachers' });
+      }
+
+      const email = req.body.email.trim().toLowerCase();
+      const newTeacher = await User.findOne({ where: { email } });
+      if (!newTeacher) {
+        return res.status(404).json({ message: 'No user found with that email' });
+      }
+      if (newTeacher.role !== 'instructor' && newTeacher.role !== 'admin') {
+        return res.status(400).json({ message: 'That user is not a teacher account. They can join the class as a student with the class code.' });
+      }
+
+      const [membership, created] = await ClassMembership.findOrCreate({
+        where: { classroomId: classroom.id, userId: newTeacher.id },
+        defaults: { role: 'teacher' },
+      });
+      if (!created) {
+        if (membership.role === 'teacher') {
+          return res.status(400).json({ message: 'That user is already a teacher in this class' });
+        }
+        membership.role = 'teacher';
+        await membership.save();
+      }
+
+      res.status(201).json({
+        message: 'Teacher added',
+        user: {
+          id: newTeacher.id,
+          firstName: newTeacher.firstName,
+          lastName: newTeacher.lastName,
+          email: newTeacher.email,
+        },
+      });
+    } catch (error) {
+      console.error('Add teacher error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+);
+
+// Delete a class (only class owner or admin)
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const classroom = await Classroom.findByPk(req.params.id);
@@ -244,9 +342,10 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Class not found' });
     }
 
-    const allowed = await requireTeacherInClass(req, res, classroom.id);
-    if (!allowed) {
-      return res.status(403).json({ message: 'Only teachers can delete this class' });
+    const isOwner = isClassOwner(classroom, req.user.id);
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Only the class owner can delete this class' });
     }
 
     await classroom.destroy();
@@ -466,6 +565,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
       },
       membership: {
         role: membership.role,
+        isOwner: isClassOwner(classroom, req.user.id),
       },
       members,
       assignments: assignmentsDto,
