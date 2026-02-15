@@ -1,52 +1,56 @@
 # Caplet
 
 [![React](https://img.shields.io/badge/React-19.0-blue?logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-7.0-646CFF?logo=vite)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Democratizing Financial Education for Every Australian.**
+**Free Financial Education for Australians.**
 
-Caplet is a sophisticated, free-to-use educational platform meticulously crafted to bridge the financial literacy gap in Australia. By combining academic rigor with modern AI technology, we empower youth and the elderly with the knowledge needed to navigate complex financial landscapes.
+Caplet (CapletEdu) is a free educational platform that bridges the financial literacy gap in Australia. It provides structured courses, financial calculators, and classroom tools designed for institutional integration—including Knox Grammar School Commerce Department and Capital Finance Club.
 
 ---
 
-## Project Pillars
+## Features
 
 ### 1. Courses
-Our curriculum focuses on the Australian context, covering everything from basic budgeting to advanced quantitative finance. 
-- **Auto-Enrollment**: Zero friction access to knowledge.
-- **Interactive Quizzes**: Real-time progress tracking and knowledge verification.
-- **Markdown-Driven**: Clean, readable, and easily maintainable content.
+Australian-focused curriculum covering budgeting, tax, superannuation, investing, and business finance.
+- **Auto-enrollment** — Click and start learning
+- **Progress tracking** — Per-course and per-lesson completion
+- **Slide-based lessons** — Text, video, images, and quizzes
+- **Module structure** — Courses → Modules → Lessons
 
 ### 2. Tools
-A suite of SEO-optimized financial calculators designed for immediate utility.
-- **Tax & Superannuation**: Tailored for Australian regulations (GST, Super Contribution, etc.).
-- **Loan & Mortgage**: Precise calculations for informed decision-making.
-- **Goal Tracking**: Compound interest and savings calculators to visualize the future.
+Ten free financial calculators tailored for Australian context:
+- Tax, GST, Salary, Super Contribution
+- Budget Planner, Savings Goal, Emergency Fund
+- Loan Repayment, Mortgage, Compound Interest
 
-### 3. AI Financial Advisor
-The centerpiece of Caplet—a chat-first interface powered by state-of-the-art LLMs (GPT-4o).
-- **Intelligent Extraction**: Automatically identifies income, expenses, and goals from natural conversation.
-- **Dynamic Planning**: Generates personalized financial plans with exact calculations.
-- **Privacy-First**: Session-only chat messages with full data control for the user.
+### 3. Classes
+Classroom management for teachers and students:
+- Create classes, add students (by invite code)
+- Post announcements, create assignments
+- Track submissions and engagement
+
+### 4. Survey
+Anonymous financial literacy survey with results dashboard.
 
 ---
 
 ## Technical Stack
 
 ### Frontend
-- **Framework**: React 19 (Modern Hooks, optimized rendering)
-- **Build Tool**: Vite (Lightning-fast development & HMR)
-- **Styling**: Tailwind CSS (Utility-first, responsive, custom design tokens)
-- **Visualizations**: Recharts (Data-driven insights)
-- **Navigation**: React Router 7
+- **React 19** with Vite 7
+- **Tailwind CSS** (utility-first, dark mode)
+- **React Router 7** — Client-side routing
+- **Recharts** — Survey and data visualization
+- **React Markdown** — Lesson content rendering
 
 ### Backend
-- **Server**: Node.js & Express 5
-- **Database**: PostgreSQL (Production-ready via Railway) | SQLite (Local development)
-- **ORM**: Sequelize (Consistent data modeling)
-- **AI Integration**: OpenAI SDK (Unified prompt system with fallback logic)
+- **Node.js + Express 5** — REST API
+- **PostgreSQL** (Railway) | SQLite (local dev)
+- **Sequelize ORM** — Database models
+- **JWT + bcryptjs** — Authentication
 
 ---
 
@@ -54,52 +58,70 @@ The centerpiece of Caplet—a chat-first interface powered by state-of-the-art L
 
 ### Prerequisites
 - Node.js (v18+)
-- npm / yarn / pnpm
+- npm / pnpm / yarn
 
 ### Quick Start
-1. **Clone & Enter**:
+
+1. **Clone & enter**
    ```bash
-   git clone https://github.com/raei-2748/caplet.git
+   git clone https://github.com/HarryHYu/caplet.git
    cd caplet
    ```
 
-2. **Setup Dependencies**:
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Database Migration** (Local):
+3. **Backend setup** (see `backend/README.md`)
    ```bash
-   # See backend documentation for migration steps
-   ```
-
-4. **Launch Development Environment**:
-   ```bash
+   cd backend
+   npm install
+   # Add .env with DATABASE_URL, JWT_SECRET, etc.
    npm run dev
    ```
 
+4. **Run frontend**
+   ```bash
+   cd ..
+   npm run dev
+   ```
+
+Frontend: http://localhost:5173  
+Backend: http://localhost:5002
+
 ---
 
-## Architecture Overview
+## Architecture
 
-```text
+```
 caplet/
-├── backend/            # Express server, Sequelize models, AI services
-├── src/                # React application logic
-│   ├── components/     # UI building blocks (Atomic design)
-│   ├── pages/          # View components & entry points
-│   ├── services/       # API abstraction layer
-│   └── contexts/       # Global state management
-├── public/             # Static assets
-└── tailwind.config.js  # Design system configuration
+├── backend/          # Express API, Sequelize models
+├── src/              # React app
+│   ├── components/   # Navbar, Footer, BackgroundTexture, etc.
+│   ├── pages/        # Route components
+│   ├── contexts/     # Auth, Courses, Theme
+│   └── services/     # API layer
+├── content/          # Lesson JSON files (import pipeline)
+└── public/           # Static assets
 ```
 
 ---
 
-## Contact & Support
+## Deployment
 
-We welcome feedback and academic contributions. Reach out to us at: **contact@capletedu.org**
+- **Frontend:** Vercel — capletedu.org
+- **Backend:** Railway — PostgreSQL + Express API
+- Push to `main` triggers auto-deploy for both.
+
+See `DEPLOYMENT.md` for details.
 
 ---
 
-**Caplet** - *Think with Clarity. Spend with Confidence.*
+## Contact
+
+**contact@capletedu.org**
+
+---
+
+**Caplet** — *Think with clarity. Spend with confidence.*

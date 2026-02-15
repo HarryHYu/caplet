@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Caplet is a financial education platform for Australians. It is a monorepo with a React frontend (root) and a Node.js/Express backend (`backend/`). The frontend deploys to Vercel at capletedu.org; the backend deploys to Railway with PostgreSQL.
+Caplet is a free financial education platform for Australians. It is a monorepo with a React frontend (root) and a Node.js/Express backend (`backend/`). The frontend deploys to Vercel at capletedu.org; the backend deploys to Railway with PostgreSQL. Core features: Courses (modules/lessons with quizzes), Tools (10 calculators), Classes (classroom management), and Survey.
 
 ## Development Commands
 
@@ -42,7 +42,7 @@ Lesson JSON format is documented in `content/LESSON_FORMAT.md`. Courses are seed
 ### Backend (Express 5 + Sequelize + PostgreSQL)
 - **Entry point**: `backend/server.js` — sets up middleware, mounts route files, auto-syncs DB with `{ alter: true }`
 - **Models**: `backend/models/` with associations defined in `backend/models/index.js`. Key hierarchy: Course → Module → Lesson. Classroom system: Classroom → ClassMembership, Assignment → AssignmentSubmission, ClassAnnouncement → Comment
-- **Routes**: `backend/routes/` — auth, courses, users, progress, admin, survey, classes
+- **Routes**: `backend/routes/` — auth, courses, users, progress, admin, survey, classes, proxy (lesson images)
 - **Auth**: JWT tokens, bcryptjs password hashing. Middleware in `backend/routes/auth.js`
 - **DB config**: `backend/config/database.js` — Sequelize with PostgreSQL only
 

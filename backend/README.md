@@ -2,101 +2,53 @@
 
 Backend API for the Caplet financial education platform.
 
-## 🚀 Features
+## Features
 
-- **User Authentication** - JWT-based auth with registration/login
-- **Course Management** - CRUD operations for courses and lessons
-- **Progress Tracking** - Track user progress through courses
-- **User Profiles** - User management and preferences
-- **RESTful API** - Clean API endpoints
+- **Auth** — JWT registration/login
+- **Courses** — CRUD for courses, modules, lessons
+- **Progress** — Lesson completion, quiz scores, auto-enrollment
+- **Classes** — Classroom management (teachers, students, announcements, assignments)
+- **Survey** — Anonymous survey submission and stats
+- **Proxy** — Image proxy for lesson content (Reddit, Imgur, Google Drive)
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **Sequelize** - ORM for database operations
-- **SQLite** - Development database
-- **PostgreSQL** - Production database
-- **JWT** - Authentication tokens
-- **bcryptjs** - Password hashing
+- Node.js + Express 5
+- Sequelize ORM
+- PostgreSQL (Railway production)
+- JWT + bcryptjs
 
-## 📦 Installation
+## Setup
 
 1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Create `backend/.env`:
+   ```env
+   DATABASE_URL=postgres://user:pass@host:5432/dbname
+   JWT_SECRET=your-secret
+   NODE_ENV=development
+   FRONTEND_URL=http://localhost:5173
+   PORT=5002
+   ```
+
+3. Run:
+   ```bash
+   npm run dev    # nodemon, port 5002
+   npm start      # production
+   ```
+
+## Database
+
+PostgreSQL only. `DATABASE_URL` is required. Tables sync on startup via Sequelize `{ alter: true }`.
+
+## Course Content
+
+Import lessons:
 ```bash
-npm install
+node scripts/import-lesson.js ../content/my-lesson.json
 ```
 
-2. Start development server:
-```bash
-npm run dev
-```
-
-3. Start production server:
-```bash
-npm start
-```
-
-## 🗄️ Database
-
-The API uses SQLite for development and PostgreSQL for production.
-
-### Models
-
-- **User** - User accounts and profiles
-- **Course** - Educational courses
-- **Lesson** - Individual lessons within courses
-- **UserProgress** - User progress tracking
-
-## 🔗 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user
-- `POST /api/auth/logout` - Logout user
-
-### Courses
-- `GET /api/courses` - Get all published courses
-- `GET /api/courses/:id` - Get single course with lessons
-- `GET /api/courses/categories/list` - Get course categories
-- `GET /api/courses/featured/list` - Get featured courses
-
-### Users
-- `GET /api/users/profile` - Get user profile
-- `PUT /api/users/profile` - Update user profile
-- `GET /api/users/dashboard` - Get user dashboard data
-
-### Progress
-- `PUT /api/progress/lesson/:lessonId` - Update lesson progress
-- `GET /api/progress/course/:courseId` - Get course progress
-- `GET /api/progress` - Get all user progress
-- `POST /api/progress/bookmark/:lessonId` - Bookmark lesson
-- `DELETE /api/progress/bookmark/:lessonId` - Remove bookmark
-
-## 🔧 Environment Variables
-
-Create a `.env` file with:
-
-```env
-DATABASE_URL=sqlite://caplet.db
-JWT_SECRET=your-secret-key
-PORT=5000
-NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
-```
-
-## 🚀 Deployment
-
-For production deployment on Railway:
-
-1. Set up PostgreSQL database
-2. Update `DATABASE_URL` environment variable
-3. Set `NODE_ENV=production`
-4. Deploy to Railway
-
-## 📝 Development
-
-The API runs on `http://localhost:5000` by default.
-
-Use `npm run dev` for development with auto-reload.
+See `content/LESSON_FORMAT.md` for JSON format.
