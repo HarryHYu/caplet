@@ -121,38 +121,55 @@ const Home = () => {
                   transformStyle: 'preserve-3d',
                 }}
               >
-                <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 shadow-2xl p-1">
+                <Link to={featuredCourses[0] ? `/courses/${featuredCourses[0].id}` : '/courses'} className="block group/card">
+                <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 shadow-2xl p-1 group-hover/card:border-brand/50 transition-colors">
                   <div className="bg-zinc-50 dark:bg-zinc-900 px-8 py-6 flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800">
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand mb-1">Module 01</p>
-                      <h3 className="text-lg font-extrabold text-black dark:text-white uppercase tracking-tight">Income & Taxation</h3>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand mb-1">
+                        {featuredCourses[0] ? 'Module 01' : 'Sample'}
+                      </p>
+                      <h3 className="text-lg font-extrabold text-black dark:text-white uppercase tracking-tight line-clamp-1">
+                        {featuredCourses[0]?.modules?.[0]?.title || 'Financial Foundations'}
+                      </h3>
                     </div>
                     <div className="w-10 h-10 border border-brand/20 flex items-center justify-center text-brand font-bold text-xs">
-                      1/4
+                      {featuredCourses[0]?.modules?.[0]?.lessons?.length
+                        ? `1/${featuredCourses[0].modules.length}`
+                        : '—'}
                     </div>
                   </div>
 
                   <div className="px-8 py-10 space-y-8">
-                    {[
-                      { num: '•', title: 'Gross vs Net Income', sub: 'The difference between earning and taking home' },
-                      { num: '•', title: 'Tax Withholding (PAYG)', sub: 'How the ATO collects tax automatically' },
-                      { num: '•', title: 'Superannuation', sub: 'Building your long-term wealth sequence' }
-                    ].map((item) => (
-                      <div key={item.title} className="flex items-start gap-4 group">
-                        <div className="text-brand font-bold text-lg leading-none group-hover:scale-125 transition-transform">{item.num}</div>
-                        <div>
-                          <p className="font-bold text-sm text-black dark:text-white uppercase tracking-wide leading-tight">{item.title}</p>
-                          <p className="text-xs mt-1 text-zinc-500 dark:text-zinc-400 font-medium">{item.sub}</p>
+                    {(() => {
+                      const firstMod = featuredCourses[0]?.modules?.[0];
+                      const lessons = (firstMod?.lessons || []).slice(0, 3);
+                      const items = lessons.length >= 3
+                        ? lessons.map((l) => ({ title: l.title, sub: l.description || '' }))
+                        : [
+                            { title: 'What is financial literacy?', sub: 'Understanding money decisions that shape your future' },
+                            { title: 'Income and expenses', sub: 'Tracking your money flow' },
+                            { title: 'Setting goals', sub: 'Planning for what matters' },
+                          ];
+                      return items.map((item) => (
+                        <div key={item.title} className="flex items-start gap-4 group">
+                          <div className="text-brand font-bold text-lg leading-none group-hover:scale-125 transition-transform">•</div>
+                          <div>
+                            <p className="font-bold text-sm text-black dark:text-white uppercase tracking-wide leading-tight line-clamp-1">{item.title}</p>
+                            <p className="text-xs mt-1 text-zinc-500 dark:text-zinc-400 font-medium line-clamp-2">{item.sub || 'Core concepts for real-world decisions'}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ));
+                    })()}
                   </div>
 
                   <div className="px-8 py-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                    <span className="text-[10px] uppercase font-bold text-zinc-400">Time: 12m</span>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-brand">Proceed to checkout →</div>
+                    <span className="text-[10px] uppercase font-bold text-zinc-400">
+                      Time: {featuredCourses[0]?.duration || 15}m
+                    </span>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-brand group-hover/card:translate-x-1 transition-transform">View course →</div>
                   </div>
                 </div>
+              </Link>
               </div>
             </div>
           </div>
