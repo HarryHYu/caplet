@@ -78,7 +78,17 @@
     scroll-behavior: auto;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
-    background: var(--surface-body);
+    /* Base color + texture at ~28% visibility — on html so it shows on every page */
+    background-color: var(--surface-body);
+    background-image: linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)), url('/light1.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100%;
+  }
+
+  html.dark {
+    background-image: linear-gradient(rgba(10, 10, 11, 0.66), rgba(10, 10, 11, 0.66)), url('/dark1.jpg');
   }
 
   body {
@@ -86,24 +96,7 @@
     color: var(--text-primary);
     overflow-x: hidden;
     position: relative;
-  }
-
-  /* Background texture overlay (uses /public/light1.jpg and /public/dark1.jpg) */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background-image: url('/light1.jpg');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.28;
-    z-index: -1;
-  }
-
-  .dark body::before {
-    background-image: url('/dark1.jpg');
-    opacity: 0.34;
+    min-height: 100%;
   }
 
   h1,
