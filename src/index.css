@@ -141,7 +141,7 @@
 
   .page-section-dark {
     background-color: rgba(3, 3, 4, 0.9);
-    color: var(--text-contrast);
+    color: #FAFAFA;
     backdrop-filter: blur(12px);
   }
 

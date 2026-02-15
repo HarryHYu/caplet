@@ -96,7 +96,7 @@ const Home = () => {
               </span>
               <h1 className="text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[0.9] mb-10 text-black dark:text-white tracking-tighter">
                 Financial literacy <br />
-                <span className="text-zinc-600 dark:text-zinc-700">for schools.</span>
+                <span className="text-zinc-600 dark:text-zinc-400">for schools.</span>
               </h1>
               <p className="text-xl leading-relaxed mb-12 text-zinc-500 dark:text-zinc-400 font-medium max-w-md">
                 Bridging the literacy gap with professional, structured learning modules tailored for the Australian context.
@@ -183,7 +183,7 @@ const Home = () => {
             <img src={cfcLogo} alt="CFC" className="h-6 w-auto dark:invert" />
             <div className="flex gap-10 items-center">
               {['Structured', 'Standardised', 'Integrated'].map((label) => (
-                <span key={label} className="text-[10px] font-bold uppercase tracking-[0.3em] text-black dark:text-white border-b border-black/20 pb-1">
+                <span key={label} className="text-[10px] font-bold uppercase tracking-[0.3em] text-black dark:text-white border-b border-black/20 dark:border-white/30 pb-1">
                   {label}
                 </span>
               ))}
@@ -223,22 +223,22 @@ const Home = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div>
               <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-brand mb-6">Our Sequence</p>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-10 tracking-tighter leading-none">The Caplet <br />Pathway.</h2>
-              <p className="text-zinc-400 text-lg font-medium leading-relaxed max-w-sm mb-12">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-10 tracking-tighter leading-none text-white">The Caplet <br />Pathway.</h2>
+              <p className="text-zinc-300 text-lg font-medium leading-relaxed max-w-sm mb-12">
                 We transform complex financial data into a structured learning journey built for high-impact absorption.
               </p>
               <div className="flex gap-4">
                 <div className="w-12 h-[1px] bg-brand mt-3 shrink-0" />
-                <p className="text-xs uppercase font-bold tracking-widest text-white/50">Institutional Standards Applied Globally</p>
+                <p className="text-xs uppercase font-bold tracking-widest text-white/60">Institutional Standards Applied Globally</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <div className="p-10 border border-white/10 bg-white/5 backdrop-blur-sm">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-6">Phase Alpha: Foundations</h3>
+              <div className="p-10 border border-white/10 bg-white/5 backdrop-blur-sm text-white">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-6">Phase Alpha: Foundations</h3>
                 <ul className="space-y-4">
                   {['Budgeting Systems', 'Tax Compliance', 'Superannuation'].map(item => (
-                    <li key={item} className="text-sm font-bold flex items-center justify-between">
+                    <li key={item} className="text-sm font-bold flex items-center justify-between text-white">
                       <span>{item}</span>
                       <span className="text-[10px] text-brand">01</span>
                     </li>
@@ -308,7 +308,7 @@ const Home = () => {
               ))
             ) : (
               <div className="col-span-full py-20 text-center border border-dashed border-zinc-200 dark:border-zinc-800">
-                <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs italic">Loading Library...</p>
+                <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest text-xs italic">Loading Library...</p>
               </div>
             )}
           </div>
@@ -380,7 +380,7 @@ const Home = () => {
                     <span className="text-sm font-bold uppercase tracking-widest text-black dark:text-white group-hover:text-brand transition-colors">
                       {item.question}
                     </span>
-                    <span className={`text-xl font-bold transition-transform duration-500 ${openFaq.has(index) ? 'rotate-45 text-brand' : 'text-zinc-300'}`}>
+                    <span className={`text-xl font-bold transition-transform duration-500 ${openFaq.has(index) ? 'rotate-45 text-brand' : 'text-zinc-500 dark:text-zinc-400'}`}>
                       +
                     </span>
                   </button>
@@ -401,7 +401,7 @@ const Home = () => {
       {/* Large Decorative Footer */}
       <section className="overflow-hidden py-40">
         <div className="container-custom">
-          <h2 className="text-[18vw] font-extrabold text-zinc-400 dark:text-zinc-950 leading-none tracking-tighter select-none reveal-up">
+          <h2 className="text-[18vw] font-extrabold text-zinc-400 leading-none tracking-tighter select-none reveal-up">
             CAPLET.
           </h2>
         </div>
