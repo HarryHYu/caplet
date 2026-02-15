@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**CRITICAL: Always `git add -A && git commit -m "..." && git push` after making changes. Never forget to push.**
+
 ## Project Overview
 
 Caplet is a free financial education platform for Australians. It is a monorepo with a React frontend (root) and a Node.js/Express backend (`backend/`). The frontend deploys to Vercel at capletedu.org; the backend deploys to Railway with PostgreSQL. Core features: Courses (modules/lessons with quizzes), Tools (10 calculators), Classes (classroom management), and Survey.
