@@ -210,6 +210,21 @@ const LessonPlayer = () => {
     load();
   }, [courseId, lessonId]);
 
+  // Preload lesson images - must run unconditionally (same hook count every render)
+  const imageSlideUrls = (() => {
+    const l = lesson;
+    if (!l?.slides) return [];
+    const raw = l.slides;
+    const arr = Array.isArray(raw) ? raw : (typeof raw === 'string' && raw.trim() ? (() => { try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; } })() : []);
+    return arr.filter((s) => s?.type === 'image' && s?.content).map((s) => s.content);
+  })();
+  useEffect(() => {
+    imageSlideUrls.forEach((url) => {
+      const img = new Image();
+      img.src = api.getProxiedImageSrc(url);
+    });
+  }, [lesson?.id, imageSlideUrls.join(' ')]);
+
   const goTo = (delta) => {
     const flat = getFlatLessons(course);
     const idx = flat.findIndex(l => l.id === lesson?.id);
@@ -285,15 +300,6 @@ const LessonPlayer = () => {
     return [];
   })();
   const hasSlides = slides.length > 0;
-
-  // Preload all lesson images when the lesson opens so they're cached by the time user navigates slides
-  const imageSlideUrls = slides.filter((s) => s.type === 'image' && s.content).map((s) => s.content);
-  useEffect(() => {
-    imageSlideUrls.forEach((url) => {
-      const img = new Image();
-      img.src = api.getProxiedImageSrc(url);
-    });
-  }, [lesson?.id, imageSlideUrls.join(' ')]);
 
   const goToSlide = (newIndex) => {
     if (newIndex < 0 || newIndex >= slides.length) return;
