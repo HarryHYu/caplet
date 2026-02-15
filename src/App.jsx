@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -40,16 +40,13 @@ function HomeOrRedirect() {
   return <Home />;
 }
 
-function App() {
+function AppContent() {
+  const location = useLocation();
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <CoursesProvider>
-          <Router>
-            <div className="min-h-screen flex flex-col">
-              <Navbar />
-              <main className="flex-grow">
-                <Routes>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-grow">
+        <Routes key={location.pathname}>
                   <Route path="/" element={<HomeOrRedirect />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
@@ -81,10 +78,20 @@ function App() {
                   <Route path="/survey-results" element={<SurveyResults />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
+        </Routes>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <CoursesProvider>
+          <Router>
+            <AppContent />
           </Router>
         </CoursesProvider>
       </AuthProvider>
