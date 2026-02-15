@@ -201,7 +201,7 @@ const Home = () => {
       </section>
 
       {/* Methodology */}
-      <section className="py-32 lg:py-48 page-section-soft text-white overflow-hidden">
+      <section className="py-32 lg:py-48 page-section-dark overflow-hidden">
         <div className="container-custom relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div>

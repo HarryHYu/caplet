@@ -25,7 +25,7 @@ const SurveyResults = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen page-section-light flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-300">Loading survey results...</p>
@@ -36,7 +36,7 @@ const SurveyResults = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen page-section-light flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 dark:text-red-400">{error}</p>
         </div>
@@ -46,7 +46,7 @@ const SurveyResults = () => {
 
   if (!stats || stats.total === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16">
+      <div className="min-h-screen page-section-light py-16">
         <div className="container-custom">
           <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Survey Results</h1>
@@ -91,7 +91,7 @@ const SurveyResults = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-16">
+    <div className="min-h-screen page-section-light py-16">
       <div className="container-custom">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-8">

@@ -36,14 +36,14 @@ const UserProfile = () => {
   if (!isAuthenticated) return null;
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen page-section-light flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent" />
       </div>
     );
   }
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
+      <div className="min-h-screen page-section-light flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-gray-600 dark:text-gray-300 mb-4">{error || 'User not found'}</p>
           <Link to="/courses" className="text-blue-600 dark:text-blue-400 hover:underline">Back to Courses</Link>
@@ -66,7 +66,7 @@ const UserProfile = () => {
   const colorIndex = (profile.firstName + profile.lastName).split('').reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+    <div className="min-h-screen page-section-light py-8 px-4">
       <div className="max-w-lg mx-auto">
         <button
           type="button"
