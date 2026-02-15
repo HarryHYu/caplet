@@ -96,7 +96,7 @@ const Home = () => {
               </span>
               <h1 className="text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[0.9] mb-10 text-black dark:text-white tracking-tighter">
                 Financial literacy <br />
-                <span className="text-zinc-400 dark:text-zinc-700">for schools.</span>
+                <span className="text-zinc-600 dark:text-zinc-700">for schools.</span>
               </h1>
               <p className="text-xl leading-relaxed mb-12 text-zinc-500 dark:text-zinc-400 font-medium max-w-md">
                 Bridging the literacy gap with professional, structured learning modules tailored for the Australian context.
@@ -384,7 +384,7 @@ const Home = () => {
       {/* Large Decorative Footer */}
       <section className="overflow-hidden py-40">
         <div className="container-custom">
-          <h2 className="text-[18vw] font-extrabold text-zinc-100 dark:text-zinc-950 leading-none tracking-tighter select-none reveal-up">
+          <h2 className="text-[18vw] font-extrabold text-zinc-400 dark:text-zinc-950 leading-none tracking-tighter select-none reveal-up">
             CAPLET.
           </h2>
         </div>
