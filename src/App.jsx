@@ -1,9 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
-import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import BackgroundTexture from './components/BackgroundTexture';
 import Home from './pages/Home';
 import Contact from './pages/Contact';
 import Tools from './pages/Tools';
@@ -40,68 +41,53 @@ function HomeOrRedirect() {
   return <Home />;
 }
 
-function AppContent() {
-  const { isDark } = useTheme();
-  return (
-    <Router>
-      {/* Fixed background texture — behind all content, shows on every page */}
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${isDark ? '/dark1.jpg' : '/light1.jpg'})`,
-          opacity: isDark ? 0.34 : 0.28,
-        }}
-      />
-      <div className="relative z-10 min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<HomeOrRedirect />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/tools" element={<Tools />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
-            <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
-            <Route path="/tools/savings-goal" element={<SavingsGoal />} />
-            <Route path="/tools/loan-repayment" element={<LoanRepayment />} />
-            <Route path="/tools/compound-interest" element={<CompoundInterest />} />
-            <Route path="/tools/mortgage" element={<MortgageCalculator />} />
-            <Route path="/tools/super-contribution" element={<SuperContribution />} />
-            <Route path="/tools/gst" element={<GSTCalculator />} />
-            <Route path="/tools/salary" element={<SalaryCalculator />} />
-            <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/courses/:courseId" element={<CourseDetail />} />
-            <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
-            <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
-            <Route path="/classes" element={<Classes />} />
-            <Route path="/classes/:classId" element={<ClassDetail />} />
-            <Route path="/settings" element={<Settings />}>
-              <Route index element={<Navigate to="/settings/profile" replace />} />
-              <Route path="profile" element={<SettingsProfile />} />
-              <Route path="account" element={<SettingsAccount />} />
-            </Route>
-            <Route path="/profile/:userId" element={<UserProfile />} />
-            <Route path="/survey" element={<Survey />} />
-            <Route path="/survey-results" element={<SurveyResults />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
-  );
-}
-
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <CoursesProvider>
-          <AppContent />
+          <Router>
+            <BackgroundTexture />
+            <div className="relative z-10 min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow">
+                <Routes>
+                  <Route path="/" element={<HomeOrRedirect />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/tools" element={<Tools />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
+                  <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
+                  <Route path="/tools/savings-goal" element={<SavingsGoal />} />
+                  <Route path="/tools/loan-repayment" element={<LoanRepayment />} />
+                  <Route path="/tools/compound-interest" element={<CompoundInterest />} />
+                  <Route path="/tools/mortgage" element={<MortgageCalculator />} />
+                  <Route path="/tools/super-contribution" element={<SuperContribution />} />
+                  <Route path="/tools/gst" element={<GSTCalculator />} />
+                  <Route path="/tools/salary" element={<SalaryCalculator />} />
+                  <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
+                  <Route path="/courses" element={<Courses />} />
+                  <Route path="/courses/:courseId" element={<CourseDetail />} />
+                  <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
+                  <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
+                  <Route path="/classes" element={<Classes />} />
+                  <Route path="/classes/:classId" element={<ClassDetail />} />
+                  <Route path="/settings" element={<Settings />}>
+                    <Route index element={<Navigate to="/settings/profile" replace />} />
+                    <Route path="profile" element={<SettingsProfile />} />
+                    <Route path="account" element={<SettingsAccount />} />
+                  </Route>
+                  <Route path="/profile/:userId" element={<UserProfile />} />
+                  <Route path="/survey" element={<Survey />} />
+                  <Route path="/survey-results" element={<SurveyResults />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </Router>
         </CoursesProvider>
       </AuthProvider>
     </ThemeProvider>
