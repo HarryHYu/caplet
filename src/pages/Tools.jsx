@@ -64,7 +64,7 @@ const Tools = () => {
   });
 
   return (
-    <div className="min-h-screen py-24 page-section-light">
+    <div className="min-h-screen py-24">
       {/* Hero Section */}
       <section className="mb-20">
         <div className="container-custom">

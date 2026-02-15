@@ -256,7 +256,7 @@ const LessonPlayer = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand border-t-transparent mx-auto"></div>
           <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
@@ -269,7 +269,7 @@ const LessonPlayer = () => {
 
   if (error || !course || !lesson) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-4">System Notice</span>
           <p className="text-xs font-bold uppercase tracking-widest text-red-500 mb-4">
@@ -335,7 +335,7 @@ const LessonPlayer = () => {
   const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
-    <div className="min-h-screen pb-20 pt-16 page-section-light">
+    <div className="min-h-screen pb-20 pt-16">
       <div className="container-custom py-10">
         <div className="mb-12 flex items-center justify-between reveal-up">
           <Link to={`/courses/${course.id}`} className="inline-flex items-center gap-3 group">

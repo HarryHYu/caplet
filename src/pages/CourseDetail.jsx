@@ -34,7 +34,7 @@ const CourseDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand border-t-transparent mx-auto"></div>
           <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
@@ -47,7 +47,7 @@ const CourseDetail = () => {
 
   if (error || !course) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-4">System Notice</span>
           <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-6">
@@ -73,7 +73,7 @@ const CourseDetail = () => {
   };
 
   return (
-    <div className="min-h-screen py-24 page-section-light">
+    <div className="min-h-screen py-24">
       <div className="container-custom">
         <div className="mb-10 animate-slide-up">
           <button

@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 const NotFound = () => {
   const { isAuthenticated } = useAuth();
   return (
-    <div className="min-h-screen page-section-light flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center">
         <h1 className="text-9xl font-bold text-blue-600 dark:text-blue-400">404</h1>
         <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mt-4 mb-2">
