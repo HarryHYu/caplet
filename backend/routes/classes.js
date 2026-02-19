@@ -657,6 +657,13 @@ router.post('/assignments/:id/complete', authenticateToken, async (req, res) => 
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
+    // Lesson-linked assignments can only be completed by finishing the lesson
+    if (assignment.lessonId) {
+      return res
+        .status(400)
+        .json({ message: 'Complete the lesson to verify this assignment.' });
+    }
+
     // Ensure user is a member of the class
     const membership = await ClassMembership.findOne({
       where: { classroomId: assignment.classroomId, userId: req.user.id },

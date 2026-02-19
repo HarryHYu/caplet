@@ -933,13 +933,18 @@ const ClassDetail = () => {
                               {isCompleted ? 'VERIFIED' : 'PENDING'}
                             </span>
                           )}
-                          {!isTeacher && !isCompleted && (
+                          {!isTeacher && !isCompleted && !a.lesson && (
                             <button
                               onClick={() => handleCompleteAssignment(a.id)}
                               className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all shadow-sm"
                             >
                               FINALIZE
                             </button>
+                          )}
+                          {!isTeacher && !isCompleted && a.lesson && (
+                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                              Complete the lesson above to verify.
+                            </p>
                           )}
                           {!isTeacher && isCompleted && !a.lesson && (
                             <button
