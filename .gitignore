@@ -36,3 +36,4 @@ backend/.env
 .env.*
 !.env.example
 .vercel
+# Force redeploy
