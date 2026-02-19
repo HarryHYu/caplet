@@ -819,7 +819,7 @@ const ClassDetail = () => {
                   onClick={() => setShowNewAssignment(true)}
                   className="px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all shadow-sm"
                 >
-                  Register Protocol
+                  Assign homework
                 </button>
               )}
             </div>
@@ -871,10 +871,39 @@ const ClassDetail = () => {
                                 to={`/courses/${a.course?.id || ''}/lessons/${a.lesson.id}`}
                                 className="inline-flex items-center gap-2 px-3 py-1 bg-brand text-white text-[9px] font-bold uppercase tracking-widest hover:bg-brand/90 transition-colors"
                               >
-                                📖 LINKED SEQUENCE: {a.lesson.title}
+                                📖 LINKED LESSON: {a.lesson.title}
                               </Link>
                             )}
                           </div>
+                          {/* Teacher: who has completed this assignment */}
+                          {isTeacher && totalStudents > 0 && (
+                            <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                              <p className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest mb-3">
+                                Who has completed
+                              </p>
+                              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {students.map((s) => {
+                                  const sub = Array.isArray(a.submissions)
+                                    ? a.submissions.find((x) => x.studentId === s.id)
+                                    : null;
+                                  const done = sub?.status === 'completed';
+                                  return (
+                                    <li
+                                      key={s.id}
+                                      className={`flex items-center justify-between gap-2 text-[10px] font-medium ${done ? 'text-zinc-700 dark:text-zinc-300' : 'text-zinc-400 dark:text-zinc-500'}`}
+                                    >
+                                      <span className="truncate uppercase tracking-wide">
+                                        {s.firstName} {s.lastName}
+                                      </span>
+                                      <span className={`shrink-0 px-2 py-0.5 border text-[8px] font-bold uppercase ${done ? 'border-brand text-brand bg-brand/10' : 'border-zinc-200 dark:border-zinc-700 text-zinc-400'}`}>
+                                        {done ? (sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Done') : 'Not done'}
+                                      </span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4 min-w-[120px]">
                           {isTeacher ? (
@@ -1282,9 +1311,9 @@ const ClassDetail = () => {
             <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-lg w-full max-h-[90vh] overflow-y-auto p-10 animate-in zoom-in-95 duration-300">
               <div className="flex items-start justify-between mb-10">
                 <div>
-                  <span className="section-kicker mb-2">Protocol Registration</span>
+                  <span className="section-kicker mb-2">Classwork</span>
                   <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter">
-                    Define New Assignment
+                    Assign homework
                   </h2>
                 </div>
                 <button
@@ -1310,7 +1339,7 @@ const ClassDetail = () => {
                     }
                     required
                     className="block w-full px-0 py-3 bg-transparent border-b border-zinc-200 dark:border-zinc-800 text-black dark:text-white text-lg font-bold placeholder-zinc-300 focus:border-brand outline-none transition-all"
-                    placeholder="ENTER PROTOCOL TITLE..."
+                    placeholder="e.g. Complete Chapter 3"
                   />
                 </div>
 
@@ -1346,7 +1375,7 @@ const ClassDetail = () => {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                      Linked Sequence
+                      Assign lesson (homework)
                     </label>
                     <select
                       value={assignmentForm.lessonId}
@@ -1361,13 +1390,16 @@ const ClassDetail = () => {
                       }}
                       className="block w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-black dark:text-white text-[10px] font-bold uppercase tracking-widest focus:border-brand outline-none transition-all"
                     >
-                      <option value="">NONE</option>
+                      <option value="">No lesson — general assignment</option>
                       {availableLessons.map((l) => (
                         <option key={l.id} value={l.id}>
-                          {l.courseTitle.toUpperCase()} – {l.title.toUpperCase()}
+                          {l.courseTitle} – {l.title}
                         </option>
                       ))}
                     </select>
+                    {availableLessons.length === 0 && (
+                      <p className="text-[9px] text-zinc-400 mt-1">No lessons available. Publish a course with lessons to assign.</p>
+                    )}
                   </div>
                 </div>
 
@@ -1378,14 +1410,14 @@ const ClassDetail = () => {
                     className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black dark:hover:text-white transition-all order-2 sm:order-1"
                     disabled={submitting}
                   >
-                    Abort
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
                     className="px-10 py-4 bg-black dark:bg-white text-white dark:text-black text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white disabled:opacity-30 transition-all shadow-lg order-1 sm:order-2"
                   >
-                    {submitting ? 'PROCESSING...' : 'INITIALIZE PROTOCOL'}
+                    {submitting ? 'Creating...' : 'Create assignment'}
                   </button>
                 </div>
               </form>
