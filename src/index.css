@@ -5,12 +5,12 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   FINANCIAL EDITORIAL DESIGN SYSTEM
-   Modern, precise, and clean. Using "Outfit" typography.
+   CAPLET DESIGN SYSTEM
+   Clean, readable, educational. Using "Outfit" typography.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Surfaces - "Paper & Ink" */
+  /* Surfaces */
   --surface-body: #FAFAFA;
   --surface-soft: #F4F4F5;
   --surface-raised: #FFFFFF;
@@ -25,23 +25,23 @@
   --text-dim: #82828C;
   --text-contrast: #FFFFFF;
 
-  /* Lines - "Technical Precision" */
+  /* Lines */
   --line-soft: #E2E2E5;
   --line-strong: #171717;
 
-  /* Accent: High-Performance Blue */
+  /* Accent */
   --accent: #0050FF;
   --accent-strong: #0036CC;
   --accent-soft: rgba(0, 80, 255, 0.05);
 
-  /* Shadows - "Soft Depth" */
+  /* Shadows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
   --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.06);
 
   /* Radii */
   --radius-none: 0px;
-  --radius-sm: 2px;
+  --radius-sm: 4px;
   --radius-md: 12px;
 }
 
@@ -80,21 +80,6 @@
     overflow-x: hidden;
   }
 
-  /* Grain Texture Overlay */
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3%3C/filter%3%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3%3C/svg%3");
-    opacity: 0.035;
-    z-index: 9999;
-  }
-
-  .dark body::after {
-    opacity: 0.055;
-  }
-
   h1,
   h2,
   h3,
@@ -106,15 +91,15 @@
 
   /* Typography Scale */
   h1 {
-    @apply text-6xl md:text-8xl font-black tracking-tight leading-[0.85];
+    @apply text-4xl md:text-5xl font-bold tracking-tight leading-tight;
   }
 
   h2 {
-    @apply text-4xl md:text-6xl font-extrabold tracking-tight leading-none;
+    @apply text-2xl md:text-3xl font-bold tracking-tight leading-snug;
   }
 
   h3 {
-    @apply text-2xl md:text-3xl font-bold tracking-tight;
+    @apply text-xl md:text-2xl font-semibold tracking-tight;
   }
 }
 
@@ -123,82 +108,131 @@
     @apply max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20;
   }
 
-  /* Editorial Sections */
+  /* Section helpers */
   .section-divider {
-    @apply w-full h-px bg-line-soft my-20;
+    @apply w-full h-px bg-line-soft my-16;
   }
 
   .section-kicker {
-    @apply text-[11px] font-bold uppercase tracking-[0.3em] text-accent mb-4 block;
+    @apply text-xs font-semibold uppercase tracking-wide text-accent mb-2 block;
   }
 
   .section-title {
-    @apply text-5xl md:text-7xl font-black mb-10 tracking-tighter leading-none;
+    @apply text-3xl md:text-4xl font-bold mb-8 tracking-tight;
   }
 
   /* Interactive Elements */
   .btn-primary {
-    @apply px-10 py-5 bg-text-primary text-surface-body font-bold text-xs tracking-[0.15em] uppercase transition-all duration-500 relative overflow-hidden flex items-center justify-center;
-    border-radius: var(--radius-none);
+    @apply px-8 py-3 bg-accent text-white font-semibold text-sm tracking-wide rounded-lg transition-colors duration-200 flex items-center justify-center;
   }
 
   .btn-primary:hover {
-    @apply scale-[1.02] shadow-lg;
-    background-color: var(--accent);
+    @apply bg-accent-strong;
+  }
+
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply px-10 py-5 bg-transparent text-text-primary border border-text-primary font-bold text-xs tracking-[0.15em] uppercase transition-all duration-500 flex items-center justify-center;
-    border-radius: var(--radius-none);
+    @apply px-8 py-3 bg-transparent text-text-primary border border-line-soft font-semibold text-sm tracking-wide rounded-lg transition-colors duration-200 flex items-center justify-center;
   }
 
   .btn-secondary:hover {
-    @apply bg-text-primary text-surface-body;
+    @apply bg-surface-soft border-text-dim;
   }
 
-  /* Cards - "Glass Editorial" */
+  /* Cards */
   .card-premium {
-    @apply p-10 bg-surface-raised border border-line-soft transition-all duration-700 relative;
-    border-radius: var(--radius-none);
+    @apply p-8 bg-surface-raised border border-line-soft rounded-xl transition-shadow duration-200;
   }
 
   .card-premium:hover {
-    @apply shadow-xl -translate-y-1;
+    @apply shadow-lg;
     border-color: var(--accent);
   }
 
-  /* Technical Grid Background */
-  .grid-technical {
-    background-image:
-      linear-gradient(var(--line-soft) 1px, transparent 1px),
-      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
-    background-size: 40px 40px;
+  /* Prose styling for lesson content (ReactMarkdown) */
+  .prose-editorial {
+    @apply text-base leading-relaxed text-text-primary;
   }
 
-  /* Animations */
-  .reveal-text {
-    @apply opacity-0 translate-y-8;
-    animation: revealText 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  .prose-editorial h1 {
+    @apply text-3xl font-bold mt-8 mb-4;
   }
 
-  @keyframes revealText {
-    to {
-      @apply opacity-100 translate-y-0;
-    }
+  .prose-editorial h2 {
+    @apply text-2xl font-bold mt-8 mb-3;
   }
 
-  /* Motion Library Classes (if not using Framer Motion) */
-  .stagger-1 {
-    animation-delay: 100ms;
+  .prose-editorial h3 {
+    @apply text-xl font-semibold mt-6 mb-3;
   }
 
-  .stagger-2 {
-    animation-delay: 200ms;
+  .prose-editorial p {
+    @apply mb-4 leading-relaxed;
   }
 
-  .stagger-3 {
-    animation-delay: 300ms;
+  .prose-editorial ul {
+    @apply list-disc pl-6 mb-4 space-y-2;
   }
+
+  .prose-editorial ol {
+    @apply list-decimal pl-6 mb-4 space-y-2;
+  }
+
+  .prose-editorial li {
+    @apply leading-relaxed;
+  }
+
+  .prose-editorial strong {
+    @apply font-bold text-text-primary;
+  }
+
+  .prose-editorial blockquote {
+    @apply border-l-4 border-accent pl-4 my-4 italic text-text-muted;
+  }
+
+  .prose-editorial code {
+    @apply bg-surface-soft px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+
+  .prose-editorial pre {
+    @apply bg-surface-soft p-4 rounded-lg overflow-x-auto mb-4;
+  }
+
+  .prose-editorial a {
+    @apply text-accent underline hover:text-accent-strong;
+  }
+
+  .prose-editorial img {
+    @apply rounded-lg my-4 max-w-full;
+  }
+
+  .prose-editorial hr {
+    @apply my-8 border-line-soft;
+  }
+
+  /* Legacy animation classes — now no-ops for backwards compat */
+  .reveal-text {}
+
+  .stagger-1 {}
+
+  .stagger-2 {}
+
+  .stagger-3 {}
+}
+
+/* Page Transitions & Utilities */
+.fade-enter {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 400ms, transform 400ms;
 }
 
 /* Custom Scrollbar */
@@ -212,6 +246,7 @@
 
 ::-webkit-scrollbar-thumb {
   background: var(--text-dim);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -221,8 +256,4 @@
 /* Utility Overrides */
 .text-balance {
   text-wrap: balance;
-}
-
-.tracking-ultra {
-  letter-spacing: -0.05em;
 }

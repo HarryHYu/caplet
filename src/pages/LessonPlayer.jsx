@@ -9,148 +9,6 @@ function getYouTubeId(url) {
   return match ? match[1] : url;
 }
 
-const Quiz = ({ questions, onComplete }) => {
-  const [answers, setAnswers] = useState({});
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleAnswer = (questionId, answerIndex) => {
-    setAnswers({ ...answers, [questionId]: answerIndex });
-  };
-
-  const handleSubmit = () => {
-    setSubmitted(true);
-    const mcqQuestions = questions.filter(q => q.type === 'multiple-choice');
-    const correct = mcqQuestions.filter(q => answers[q.id] === q.correctAnswer).length;
-    const score = mcqQuestions.length > 0 ? Math.round((correct / mcqQuestions.length) * 100) : 0;
-    if (score >= 70) {
-      setTimeout(() => onComplete?.(), 1500);
-    }
-  };
-
-  const handleReset = () => {
-    setAnswers({});
-    setSubmitted(false);
-  };
-
-  const mcqQuestions = questions.filter(q => q.type === 'multiple-choice');
-  const correctCount = mcqQuestions.filter(q => answers[q.id] === q.correctAnswer).length;
-  const score = mcqQuestions.length > 0 ? Math.round((correctCount / mcqQuestions.length) * 100) : 0;
-
-  return (
-    <div className="mt-24 pt-24 border-t border-line-soft">
-      <div className="flex items-center gap-6 mb-16 reveal-text">
-        <div className="w-12 h-12 bg-accent/5 border border-accent/20 flex items-center justify-center text-accent">
-          <span className="text-xl font-serif italic">Q</span>
-        </div>
-        <div>
-          <span className="section-kicker">Assessment Protocol</span>
-          <h2 className="text-3xl font-serif italic">Technical Validation.</h2>
-        </div>
-      </div>
-
-      <div className="space-y-12">
-        {mcqQuestions.map((q, idx) => (
-          <div key={q.id} className="p-12 bg-surface-raised border border-line-soft reveal-text">
-            <div className="flex justify-between items-start mb-10">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">Inquiry {String(idx + 1).padStart(2, '0')}</span>
-              {submitted && (
-                <span className={`text-[9px] font-black uppercase tracking-widest ${answers[q.id] === q.correctAnswer ? 'text-accent' : 'text-text-dim'}`}>
-                  {answers[q.id] === q.correctAnswer ? 'Validated' : 'Discrepancy'}
-                </span>
-              )}
-            </div>
-            <p className="text-2xl font-bold mb-12 text-text-primary leading-snug">
-              {q.question}
-            </p>
-            <div className="space-y-4">
-              {q.options.map((option, optIdx) => {
-                const isSelected = answers[q.id] === optIdx;
-                const isCorrect = q.correctAnswer === optIdx;
-                const showFeedback = submitted;
-
-                return (
-                  <label
-                    key={optIdx}
-                    className={`flex items-center p-6 cursor-pointer transition-all duration-500 border relative overflow-hidden ${showFeedback
-                      ? isCorrect
-                        ? 'border-accent bg-accent/5'
-                        : isSelected
-                          ? 'border-line-soft opacity-60'
-                          : 'border-line-soft opacity-40 grayscale'
-                      : isSelected
-                        ? 'border-accent bg-accent/5'
-                        : 'border-line-soft hover:border-text-dim bg-surface-body'
-                      }`}
-                  >
-                    <input
-                      type="radio"
-                      name={`question-${q.id}`}
-                      checked={isSelected}
-                      onChange={() => handleAnswer(q.id, optIdx)}
-                      disabled={submitted}
-                      className="hidden"
-                    />
-                    <div className={`w-4 h-4 rounded-full border-2 mr-6 flex items-center justify-center transition-colors ${isSelected ? 'border-accent bg-accent' : 'border-line-soft'}`}>
-                      {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                    </div>
-                    <span className="text-sm font-bold uppercase tracking-tight text-text-primary">{option}</span>
-                  </label>
-                );
-              })}
-            </div>
-            {submitted && q.explanation && (
-              <div className="mt-12 p-8 bg-surface-soft border-l-2 border-accent">
-                <span className="font-black text-[9px] uppercase tracking-[0.4em] text-accent block mb-4 italic">Rationale</span>
-                <p className="text-sm font-serif italic text-text-muted leading-relaxed">{q.explanation}</p>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-16 reveal-text">
-        {!submitted ? (
-          <button
-            onClick={handleSubmit}
-            className="btn-primary w-full py-6 text-[11px]"
-          >
-            Finalize Assessment
-          </button>
-        ) : (
-          <div className="space-y-8">
-            <div className={`p-16 text-center border relative overflow-hidden ${score >= 70 ? 'bg-accent/5 border-accent' : 'bg-surface-raised border-line-soft'}`}>
-              <div className="absolute inset-0 opacity-5 grid-technical !bg-[size:20px_20px]" />
-              <div className="relative z-10">
-                <span className="section-kicker">Terminal Result</span>
-                <h3 className="text-4xl font-serif italic mb-6">
-                  {score >= 70 ? 'Integrity Verified.' : 'Analysis Required.'}
-                </h3>
-                <div className="flex items-center justify-center gap-4 mb-8">
-                  <span className="text-5xl font-black tabular-nums">{score}%</span>
-                  <span className="text-[10px] font-bold text-text-dim uppercase tracking-[0.3em] text-left">Accuracy<br />Rating</span>
-                </div>
-                {score >= 70 ? (
-                  <p className="text-accent font-black text-[10px] uppercase tracking-widest animate-pulse">Syncing mastery status to registry...</p>
-                ) : (
-                  <p className="text-text-dim font-black text-[10px] uppercase tracking-widest italic">Conceptual alignment below required threshold (70%).</p>
-                )}
-              </div>
-            </div>
-            {score < 70 && (
-              <button
-                onClick={handleReset}
-                className="btn-secondary w-full py-6 text-[11px]"
-              >
-                Re-initialize Evaluation
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 // Build flat ordered list of lessons from course.modules (course → modules → lessons)
 function getFlatLessons(course) {
   if (!course?.modules) return [];
@@ -170,7 +28,6 @@ const LessonPlayer = () => {
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [slideDirection, setSlideDirection] = useState('next');
   const [progress, setProgress] = useState({ lessonProgress: [] });
   const [questionAnswer, setQuestionAnswer] = useState(null);
   const [questionSubmitted, setQuestionSubmitted] = useState(false);
@@ -220,7 +77,6 @@ const LessonPlayer = () => {
   const goToSlide = (newIndex) => {
     const slides = Array.isArray(lesson.slides) ? lesson.slides : [];
     if (newIndex < 0 || newIndex >= slides.length) return;
-    setSlideDirection(newIndex > currentSlideIndex ? 'next' : 'prev');
     setCurrentSlideIndex(newIndex);
     setQuestionAnswer(null);
     setQuestionSubmitted(false);
@@ -252,7 +108,7 @@ const LessonPlayer = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-accent border-t-transparent animate-spin"></div>
+        <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -260,10 +116,12 @@ const LessonPlayer = () => {
   if (error || !course || !lesson) {
     return (
       <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-6 reveal-text">
-          <span className="section-kicker">Status Error</span>
-          <p className="text-3xl font-serif italic mb-12">{error || 'Terminal node not found.'}</p>
-          <Link to={`/courses/${courseId}`} className="btn-primary py-4 px-12 text-[10px]">Back to Course</Link>
+        <div className="text-center max-w-md mx-auto px-6">
+          <p className="text-2xl font-bold mb-4">{error || 'Lesson not found'}</p>
+          <p className="text-text-muted mb-8">The lesson you're looking for doesn't exist or may have been moved.</p>
+          <Link to={`/courses/${courseId}`} className="btn-primary py-3 px-8">
+            Back to Course
+          </Link>
         </div>
       </div>
     );
@@ -299,209 +157,230 @@ const LessonPlayer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-12 md:py-20">
       <div className="container-custom">
-        <div className="mb-20 flex items-center justify-between reveal-text">
-          <Link to={`/courses/${course.id}`} className="inline-flex items-center gap-4 group">
-            <div className="w-10 h-10 bg-surface-raised border border-line-soft flex items-center justify-center text-text-dim group-hover:text-accent group-hover:border-accent transition-all">
-              ←
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim group-hover:text-text-primary transition-colors">
-              Unit Overview
-            </span>
+        {/* Top nav */}
+        <div className="mb-10 flex items-center justify-between">
+          <Link to={`/courses/${course.id}`} className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-accent transition-colors">
+            <span>&larr;</span>
+            <span>Back to Course</span>
           </Link>
-          <div className="px-6 py-3 bg-surface-raised border border-line-soft text-[10px] font-black uppercase tracking-[0.4em] text-accent tabular-nums">
-            Node {idx + 1} / {flatLessons.length}
+          <div className="text-sm text-text-muted">
+            Lesson {idx + 1} of {flatLessons.length}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <main className="lg:col-span-8">
-            <div className="reveal-text">
-              <div className="mb-20">
-                <span className="section-kicker">Theoretical Perspective</span>
-                <h1 className="text-5xl lg:text-7xl mb-8">
-                  {lesson.title}
-                </h1>
-                <p className="text-xl text-text-muted font-serif italic max-w-2xl leading-relaxed">
+            {/* Lesson header */}
+            <div className="mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold mb-3">
+                {lesson.title}
+              </h1>
+              {lesson.description && (
+                <p className="text-lg text-text-muted leading-relaxed max-w-2xl">
                   {lesson.description}
                 </p>
-              </div>
-
-              {hasSlides ? (
-                <>
-                  <div className="mb-12">
-                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.4em] text-accent mb-4 italic">
-                      <span>Transmission Status</span>
-                      <span>{Math.round(((currentSlideIndex + 1) / slides.length) * 100)}% Complete</span>
-                    </div>
-                    <div className="h-1 bg-surface-soft overflow-hidden">
-                      <div
-                        className="h-full bg-accent transition-all duration-1000 ease-out"
-                        style={{ width: `${((currentSlideIndex + 1) / slides.length) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-surface-raised border border-line-soft p-1.5 relative mb-12">
-                    <div className="absolute inset-0 opacity-5 grid-technical !bg-[size:25px_25px]" />
-                    <div className="relative z-10 bg-surface-body border border-line-soft min-h-[500px] flex flex-col p-12 lg:p-16">
-                      <div key={currentSlideIndex} className="flex-1 animate-fade-in">
-                        {(() => {
-                          const slide = slides[currentSlideIndex];
-                          if (!slide) return null;
-
-                          if (slide.type === 'question') {
-                            const options = Array.isArray(slide.options) ? slide.options : [];
-                            const correctIndex = typeof slide.correctIndex === 'number' ? slide.correctIndex : 0;
-                            const alreadyAnswered = quizScores[String(currentSlideIndex)] !== undefined;
-                            const selected = questionAnswer ?? (alreadyAnswered ? undefined : null);
-                            const showFeedback = questionSubmitted || alreadyAnswered;
-                            const isActuallyCorrect = alreadyAnswered ? quizScores[String(currentSlideIndex)] : (selected === correctIndex);
-
-                            return (
-                              <div className="max-w-xl mx-auto py-8">
-                                <span className="section-kicker mb-8">Conceptual Inquiry</span>
-                                <h3 className="text-3xl font-bold text-text-primary mb-12 leading-tight">{slide.question}</h3>
-                                <div className="space-y-4">
-                                  {options.map((option, optIdx) => {
-                                    const chosen = selected === optIdx;
-                                    const isTrulyCorrect = correctIndex === optIdx;
-                                    return (
-                                      <button
-                                        key={optIdx}
-                                        disabled={showFeedback}
-                                        onClick={() => setQuestionAnswer(optIdx)}
-                                        className={`w-full text-left p-6 border transition-all duration-500 font-bold uppercase tracking-tight text-xs flex justify-between items-center ${showFeedback
-                                          ? isTrulyCorrect
-                                            ? 'border-accent bg-accent/5'
-                                            : chosen ? 'border-line-soft opacity-60' : 'border-line-soft opacity-30'
-                                          : chosen
-                                            ? 'border-accent bg-accent/5 translate-x-2'
-                                            : 'border-line-soft hover:border-text-dim'
-                                          }`}
-                                      >
-                                        {option}
-                                        {showFeedback && isTrulyCorrect && <span className="text-accent text-[9px] tracking-widest">Verified</span>}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                                {!showFeedback && selected !== null && (
-                                  <button
-                                    onClick={() => recordQuestionAnswer(currentSlideIndex, selected === correctIndex)}
-                                    className="btn-primary w-full mt-12 py-5 text-[10px]"
-                                  >
-                                    Confirm Resolution
-                                  </button>
-                                )}
-                                {showFeedback && slide.explanation && (
-                                  <div className="mt-12 p-8 bg-surface-soft border-l-2 border-accent">
-                                    <p className="text-sm font-serif italic text-text-muted leading-relaxed">{slide.explanation}</p>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          }
-
-                          if (slide.type === 'text') {
-                            return (
-                              <article className="prose-editorial">
-                                <ReactMarkdown>{slide.content || ''}</ReactMarkdown>
-                                {slide.caption && <p className="mt-12 pt-8 border-t border-line-soft text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">{slide.caption}</p>}
-                              </article>
-                            );
-                          }
-
-                          if (slide.type === 'image' && slide.content) {
-                            return (
-                              <div className="h-full flex flex-col justify-center gap-8">
-                                <div className="p-1 bg-surface-soft border border-line-soft">
-                                  <img src={api.getProxiedImageSrc(slide.content)} alt="" className="w-full grayscale opacity-90" />
-                                </div>
-                                {slide.caption && <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim text-center">{slide.caption}</p>}
-                              </div>
-                            );
-                          }
-
-                          if (slide.type === 'video' && slide.content) {
-                            const videoId = getYouTubeId(slide.content);
-                            return (
-                              <div className="h-full flex flex-col justify-center gap-8">
-                                <div className="aspect-video bg-black border border-line-soft">
-                                  <iframe src={`https://www.youtube.com/embed/${videoId}`} className="w-full h-full" frameBorder="0" allowFullScreen />
-                                </div>
-                                {slide.caption && <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim text-center">{slide.caption}</p>}
-                              </div>
-                            );
-                          }
-
-                          return null;
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-8 pt-8 border-t border-line-soft">
-                    <button
-                      onClick={() => goToSlide(currentSlideIndex - 1)}
-                      disabled={currentSlideIndex <= 0}
-                      className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim hover:text-accent disabled:opacity-20 transition-colors"
-                    >
-                      ← Previous Node
-                    </button>
-
-                    <div className="text-[11px] font-serif italic text-text-dim">
-                      Section {currentSlideIndex + 1} of {slides.length}
-                    </div>
-
-                    <button
-                      onClick={() => goToSlide(currentSlideIndex + 1)}
-                      disabled={currentSlideIndex >= slides.length - 1}
-                      className="text-[10px] font-black uppercase tracking-[0.4em] text-text-primary hover:text-accent disabled:opacity-20 transition-colors"
-                    >
-                      Next Node →
-                    </button>
-                  </div>
-
-                  {currentSlideIndex === slides.length - 1 && (
-                    <div className="mt-24 pt-12 border-t border-line-soft text-center reveal-text">
-                      <button
-                        onClick={markComplete}
-                        disabled={saving || completed}
-                        className="btn-primary px-20 py-6 text-[11px]"
-                      >
-                        {completed ? 'Registry Synchronized ✓' : saving ? 'Transmitting…' : 'Finalize Technical Unit'}
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="prose-editorial py-20">
-                  <ReactMarkdown>{lesson.content || 'Generating technical content sequence...'}</ReactMarkdown>
-                </div>
               )}
             </div>
+
+            {hasSlides ? (
+              <>
+                {/* Progress bar */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between text-sm text-text-muted mb-2">
+                    <span>Progress</span>
+                    <span>{Math.round(((currentSlideIndex + 1) / slides.length) * 100)}%</span>
+                  </div>
+                  <div className="h-2 bg-surface-soft rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${((currentSlideIndex + 1) / slides.length) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Slide viewer */}
+                <div className="bg-surface-raised border border-line-soft rounded-xl min-h-[450px] flex flex-col p-8 md:p-12 mb-6">
+                  <div key={currentSlideIndex} className="flex-1">
+                    {(() => {
+                      const slide = slides[currentSlideIndex];
+                      if (!slide) return null;
+
+                      if (slide.type === 'question') {
+                        const options = Array.isArray(slide.options) ? slide.options : [];
+                        const correctIndex = typeof slide.correctIndex === 'number' ? slide.correctIndex : 0;
+                        const alreadyAnswered = quizScores[String(currentSlideIndex)] !== undefined;
+                        const selected = questionAnswer ?? (alreadyAnswered ? undefined : null);
+                        const showFeedback = questionSubmitted || alreadyAnswered;
+                        const isActuallyCorrect = alreadyAnswered ? quizScores[String(currentSlideIndex)] : (selected === correctIndex);
+
+                        return (
+                          <div className="max-w-xl mx-auto py-4">
+                            <div className="flex items-center gap-2 mb-6">
+                              <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+                                <span className="text-accent text-sm font-bold">Q</span>
+                              </div>
+                              <span className="text-sm font-medium text-accent">Question</span>
+                            </div>
+                            <h3 className="text-xl font-semibold text-text-primary mb-6 leading-relaxed">{slide.question}</h3>
+                            <div className="space-y-3">
+                              {options.map((option, optIdx) => {
+                                const chosen = selected === optIdx;
+                                const isTrulyCorrect = correctIndex === optIdx;
+                                return (
+                                  <button
+                                    key={optIdx}
+                                    disabled={showFeedback}
+                                    onClick={() => setQuestionAnswer(optIdx)}
+                                    className={`w-full text-left p-4 border rounded-lg transition-colors duration-200 text-sm flex justify-between items-center ${showFeedback
+                                      ? isTrulyCorrect
+                                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                                        : chosen ? 'border-red-300 bg-red-50 dark:bg-red-900/20 opacity-75' : 'border-line-soft opacity-50'
+                                      : chosen
+                                        ? 'border-accent bg-accent/5'
+                                        : 'border-line-soft hover:border-accent/50 hover:bg-surface-soft'
+                                      }`}
+                                  >
+                                    <span>{option}</span>
+                                    {showFeedback && isTrulyCorrect && <span className="text-green-600 dark:text-green-400 text-xs font-semibold">Correct</span>}
+                                    {showFeedback && chosen && !isTrulyCorrect && <span className="text-red-500 text-xs font-semibold">Incorrect</span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {!showFeedback && selected !== null && (
+                              <button
+                                onClick={() => recordQuestionAnswer(currentSlideIndex, selected === correctIndex)}
+                                className="btn-primary w-full mt-6 py-3"
+                              >
+                                Submit Answer
+                              </button>
+                            )}
+                            {showFeedback && (
+                              <div className={`mt-6 p-4 rounded-lg border-l-4 ${isActuallyCorrect
+                                ? 'bg-green-50 dark:bg-green-900/20 border-green-500'
+                                : 'bg-red-50 dark:bg-red-900/20 border-red-400'
+                                }`}>
+                                <p className={`text-sm font-semibold mb-1 ${isActuallyCorrect ? 'text-green-700 dark:text-green-300' : 'text-red-600 dark:text-red-300'}`}>
+                                  {isActuallyCorrect ? 'Correct!' : 'Not quite right'}
+                                </p>
+                                {slide.explanation && (
+                                  <p className="text-sm text-text-muted leading-relaxed">{slide.explanation}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      if (slide.type === 'text') {
+                        return (
+                          <article className="prose-editorial">
+                            <ReactMarkdown>{slide.content || ''}</ReactMarkdown>
+                            {slide.caption && <p className="mt-6 pt-4 border-t border-line-soft text-sm text-text-muted">{slide.caption}</p>}
+                          </article>
+                        );
+                      }
+
+                      if (slide.type === 'image' && slide.content) {
+                        return (
+                          <div className="h-full flex flex-col justify-center gap-4">
+                            <div className="rounded-lg overflow-hidden border border-line-soft">
+                              <img src={api.getProxiedImageSrc(slide.content)} alt={slide.caption || ''} className="w-full" />
+                            </div>
+                            {slide.caption && <p className="text-sm text-text-muted text-center">{slide.caption}</p>}
+                          </div>
+                        );
+                      }
+
+                      if (slide.type === 'video' && slide.content) {
+                        const videoId = getYouTubeId(slide.content);
+                        return (
+                          <div className="h-full flex flex-col justify-center gap-4">
+                            <div className="aspect-video bg-black rounded-lg overflow-hidden border border-line-soft">
+                              <iframe
+                                src={`https://www.youtube.com/embed/${videoId}`}
+                                className="w-full h-full"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                title={slide.caption || 'Video'}
+                              />
+                            </div>
+                            {slide.caption && <p className="text-sm text-text-muted text-center">{slide.caption}</p>}
+                          </div>
+                        );
+                      }
+
+                      return null;
+                    })()}
+                  </div>
+                </div>
+
+                {/* Navigation */}
+                <div className="flex items-center justify-between gap-4 py-4">
+                  <button
+                    onClick={() => goToSlide(currentSlideIndex - 1)}
+                    disabled={currentSlideIndex <= 0}
+                    className="text-sm font-medium text-text-muted hover:text-accent disabled:opacity-30 transition-colors"
+                  >
+                    &larr; Previous
+                  </button>
+
+                  <div className="text-sm text-text-muted">
+                    {currentSlideIndex + 1} of {slides.length}
+                  </div>
+
+                  <button
+                    onClick={() => goToSlide(currentSlideIndex + 1)}
+                    disabled={currentSlideIndex >= slides.length - 1}
+                    className="text-sm font-medium text-text-primary hover:text-accent disabled:opacity-30 transition-colors"
+                  >
+                    Next &rarr;
+                  </button>
+                </div>
+
+                {/* Complete button on last slide */}
+                {currentSlideIndex === slides.length - 1 && (
+                  <div className="mt-8 text-center">
+                    <button
+                      onClick={markComplete}
+                      disabled={saving || completed}
+                      className="btn-primary px-12 py-3"
+                    >
+                      {completed ? 'Lesson Completed' : saving ? 'Saving...' : 'Complete Lesson'}
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="prose-editorial py-8">
+                <ReactMarkdown>{lesson.content || 'No content available yet.'}</ReactMarkdown>
+              </div>
+            )}
           </main>
 
-          <aside className="lg:col-span-4 reveal-text stagger-1">
-            <div className="sticky top-32 space-y-12">
-              <div className="p-10 bg-surface-raised border border-line-soft">
-                <span className="section-kicker mb-8">Curriculum Trajectory</span>
-                <div className="space-y-10">
+          {/* Sidebar */}
+          <aside className="lg:col-span-4">
+            <div className="sticky top-8 space-y-6">
+              {/* Course outline */}
+              <div className="p-6 bg-surface-raised border border-line-soft rounded-xl">
+                <h3 className="text-sm font-semibold text-text-primary mb-4">Course Outline</h3>
+                <div className="space-y-6">
                   {(course.modules || []).sort((a, b) => (a.order || 0) - (b.order || 0)).map((mod) => (
                     <div key={mod.id}>
-                      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-4 border-b border-line-soft pb-2">{mod.title}</p>
-                      <ul className="space-y-3">
+                      <p className="text-xs font-semibold text-text-muted mb-2 uppercase tracking-wide">{mod.title}</p>
+                      <ul className="space-y-1.5">
                         {(mod.lessons || []).sort((a, b) => (a.order || 0) - (b.order || 0)).map((l) => (
                           <li key={l.id}>
                             <Link
                               to={`/courses/${course.id}/lessons/${l.id}`}
-                              className={`flex items-start gap-4 text-[11px] font-bold transition-all group ${l.id === lesson.id ? 'text-accent' : 'text-text-dim hover:text-text-primary'
+                              className={`flex items-start gap-2 text-sm transition-colors ${l.id === lesson.id ? 'text-accent font-medium' : 'text-text-muted hover:text-text-primary'
                                 }`}
                             >
-                              <span className="tabular-nums opacity-40">{String(l.order).padStart(2, '0')}</span>
-                              <span className="leading-tight uppercase tracking-tight">{l.title}</span>
+                              <span className="text-text-dim">{String(l.order).padStart(2, '0')}.</span>
+                              <span className="leading-snug">{l.title}</span>
                             </Link>
                           </li>
                         ))}
@@ -511,25 +390,23 @@ const LessonPlayer = () => {
                 </div>
               </div>
 
-              <div className="p-10 bg-surface-inverse text-surface-body relative overflow-hidden">
-                <div className="absolute inset-0 opacity-5 grid-technical !bg-[size:30px_30px]" />
-                <div className="relative z-10">
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-accent mb-6 block">Mastery Index</span>
-                  {(() => {
-                    const pct = Math.round(progress?.courseProgress?.progressPercentage || 0);
-                    return (
-                      <>
-                        <div className="flex items-end justify-between mb-4">
-                          <span className="text-4xl font-serif italic">{pct}%</span>
-                          <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">Curriculum Sync</span>
-                        </div>
-                        <div className="h-1 bg-surface-body/20 overflow-hidden">
-                          <div className="h-full bg-accent transition-all duration-700" style={{ width: `${pct}%` }} />
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
+              {/* Progress */}
+              <div className="p-6 bg-accent/5 border border-accent/20 rounded-xl">
+                <h3 className="text-sm font-semibold text-text-primary mb-3">Your Progress</h3>
+                {(() => {
+                  const pct = Math.round(progress?.courseProgress?.progressPercentage || 0);
+                  return (
+                    <>
+                      <div className="flex items-end justify-between mb-2">
+                        <span className="text-3xl font-bold">{pct}%</span>
+                        <span className="text-xs text-text-muted">course complete</span>
+                      </div>
+                      <div className="h-2 bg-surface-body rounded-full overflow-hidden">
+                        <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </aside>
@@ -540,4 +417,3 @@ const LessonPlayer = () => {
 };
 
 export default LessonPlayer;
-
