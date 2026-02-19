@@ -515,13 +515,20 @@ const LessonPlayer = () => {
                 <div className="absolute inset-0 opacity-5 grid-technical !bg-[size:30px_30px]" />
                 <div className="relative z-10">
                   <span className="text-[10px] font-black uppercase tracking-[0.4em] text-accent mb-6 block">Mastery Index</span>
-                  <div className="flex items-end justify-between mb-4">
-                    <span className="text-4xl font-serif italic">33%</span>
-                    <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">Curriculum Sync</span>
-                  </div>
-                  <div className="h-1 bg-surface-body/20 overflow-hidden">
-                    <div className="h-full bg-accent w-1/3" />
-                  </div>
+                  {(() => {
+                    const pct = Math.round(progress?.courseProgress?.progressPercentage || 0);
+                    return (
+                      <>
+                        <div className="flex items-end justify-between mb-4">
+                          <span className="text-4xl font-serif italic">{pct}%</span>
+                          <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">Curriculum Sync</span>
+                        </div>
+                        <div className="h-1 bg-surface-body/20 overflow-hidden">
+                          <div className="h-full bg-accent transition-all duration-700" style={{ width: `${pct}%` }} />
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

@@ -41,16 +41,26 @@ class ApiService {
     const requestWithBaseURL = async (baseURL) => {
       const url = `${baseURL}${endpoint}`;
       const response = await fetch(url, config);
+
+      // Handle empty responses (e.g. 204 No Content from delete endpoints)
+      if (response.status === 204 || response.headers.get('content-length') === '0') {
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return null;
+      }
+
       let data;
       try {
         data = await response.json();
       } catch {
-        // If response isn't JSON, use status text
-        throw new Error(response.statusText || 'Something went wrong');
+        if (!response.ok) {
+          throw new Error(response.statusText || 'Something went wrong');
+        }
+        return null;
       }
 
       if (!response.ok) {
-        // Try to get detailed error message
         const errorMsg = data.message || data.errors?.[0]?.msg || data.errors?.[0]?.message || `Error ${response.status}: ${response.statusText}`;
         throw new Error(errorMsg);
       }
@@ -365,7 +375,7 @@ class ApiService {
       if (host.includes('reddit') || host.includes('imgur') || host.includes('drive.google') || host.includes('googleusercontent') || host.includes('cloudinary')) {
         return `${this.baseURL}/proxy-image?url=${encodeURIComponent(imageUrl)}`;
       }
-    } catch (_) {}
+    } catch (_) { }
     return imageUrl;
   }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCourses } from '../contexts/CoursesContext';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -68,6 +68,13 @@ const Courses = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
+        {error && (
+          <div className="mb-20 p-10 bg-red-50 text-red-800 text-[10px] font-bold uppercase tracking-widest border border-red-100 flex items-center gap-4 reveal-text">
+            <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+            Signal Error: {error}
+          </div>
+        )}
+
         {/* Header Section */}
         <header className="mb-32 reveal-text">
           <span className="section-kicker">Academic Repository</span>
@@ -196,6 +203,5 @@ const Courses = () => {
     </div>
   );
 };
-
 
 export default Courses;

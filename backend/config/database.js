@@ -1,3 +1,4 @@
+const path = require('path');
 const { Sequelize } = require('sequelize');
 
 const sequelize = process.env.DATABASE_URL
@@ -13,14 +14,14 @@ const sequelize = process.env.DATABASE_URL
   })
   : new Sequelize({
     dialect: 'sqlite',
-    storage: './caplet.db',
+    storage: path.join(__dirname, '..', 'caplet.db'),
     logging: false // Less noise in dev
   });
 
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ Database connection established (PostgreSQL).');
+    console.log('✅ Database connection established.');
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);
   }
