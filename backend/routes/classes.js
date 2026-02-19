@@ -231,6 +231,19 @@ router.post('/:id/leave', authenticateToken, async (req, res) => {
       }
     }
 
+    if (membership.role === 'student') {
+      const assignmentIds = await Assignment.findAll({
+        where: { classroomId: classroom.id },
+        attributes: ['id'],
+        raw: true,
+      }).then((rows) => rows.map((r) => r.id));
+      if (assignmentIds.length > 0) {
+        await AssignmentSubmission.destroy({
+          where: { studentId: req.user.id, assignmentId: assignmentIds },
+        });
+      }
+    }
+
     await membership.destroy();
     res.json({ message: 'Left class successfully' });
   } catch (error) {
@@ -267,6 +280,19 @@ router.delete('/:id/members/:userId', authenticateToken, async (req, res) => {
     });
     if (targetMembership.role === 'teacher' && teacherCount <= 1) {
       return res.status(400).json({ message: 'Cannot remove the last teacher. Delete the class or add another teacher first.' });
+    }
+
+    if (targetMembership.role === 'student') {
+      const assignmentIds = await Assignment.findAll({
+        where: { classroomId: classroom.id },
+        attributes: ['id'],
+        raw: true,
+      }).then((rows) => rows.map((r) => r.id));
+      if (assignmentIds.length > 0) {
+        await AssignmentSubmission.destroy({
+          where: { studentId: targetUserId, assignmentId: assignmentIds },
+        });
+      }
     }
 
     await targetMembership.destroy();
