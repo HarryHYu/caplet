@@ -78,9 +78,9 @@ const Survey = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen py-24 page-section-light">
+      <div className="min-h-screen py-16">
         <div className="container-custom">
-          <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 text-center">
+          <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -105,13 +105,12 @@ const Survey = () => {
   }
 
   return (
-    <div className="min-h-screen py-24 page-section-light">
+    <div className="min-h-screen py-16">
       <div className="container-custom">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10">
-            <span className="section-kicker mb-4">Survey</span>
-            <h1 className="text-3xl font-extrabold text-black dark:text-white mb-2 uppercase tracking-tight">Financial Literacy Survey</h1>
-            <p className="text-zinc-600 dark:text-zinc-300 mb-8 text-sm leading-relaxed">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Financial Literacy Survey</h1>
+            <p className="text-gray-600 dark:text-gray-300 mb-8">
               Help us understand your financial education needs. Your responses are anonymous and will help us improve our content.
             </p>
 

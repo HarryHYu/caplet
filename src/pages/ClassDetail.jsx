@@ -33,7 +33,6 @@ const ClassDetail = () => {
   const [assignmentPrivateTarget, setAssignmentPrivateTarget] = useState({}); // teacher: assignmentId -> student userId for private reply
   const [loadingComments, setLoadingComments] = useState({ announcement: null, assignment: null });
   const [postingComment, setPostingComment] = useState(false);
-  const [deletingCommentId, setDeletingCommentId] = useState(null);
   const [showAddTeacher, setShowAddTeacher] = useState(false);
   const [addTeacherEmail, setAddTeacherEmail] = useState('');
   const [addingTeacher, setAddingTeacher] = useState(false);
@@ -131,17 +130,17 @@ const ClassDetail = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-6">Sign In Required</span>
+          <span className="section-kicker mb-6">Security Protocol</span>
           <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
-            Please Sign In <br />to Continue.
+            Authentication <br />Terminal Offline.
           </h2>
           <button
             onClick={() => navigate('/')}
             className="btn-primary"
           >
-            Go to Home
+            Access Mainframe
           </button>
         </div>
       </div>
@@ -150,10 +149,10 @@ const ClassDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Loading class...</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Extracting Class Meta...</p>
         </div>
       </div>
     );
@@ -161,18 +160,18 @@ const ClassDetail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-6 text-red-500">Error</span>
+          <span className="section-kicker mb-6 text-red-500">System Error</span>
           <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
-            Something Went <br />Wrong.
+            Protocol Breach <br />Detected.
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mb-10">{error}</p>
           <button
             onClick={() => navigate('/classes')}
             className="btn-secondary"
           >
-            Back to Classes
+            Reset Vector
           </button>
         </div>
       </div>
@@ -451,38 +450,6 @@ const ClassDetail = () => {
     }
   };
 
-  const handleDeleteAnnouncementComment = async (announcementId, commentId) => {
-    setDeletingCommentId(commentId);
-    try {
-      await api.deleteAnnouncementComment(classroom.id, announcementId, commentId);
-      setAnnouncementComments((prev) => ({
-        ...prev,
-        [announcementId]: (prev[announcementId] || []).filter((c) => c.id !== commentId),
-      }));
-    } catch (e) {
-      console.error('Delete announcement comment error', e);
-      setError(e.message || 'Failed to delete comment');
-    } finally {
-      setDeletingCommentId(null);
-    }
-  };
-
-  const handleDeleteAssignmentComment = async (assignmentId, commentId) => {
-    setDeletingCommentId(commentId);
-    try {
-      await api.deleteAssignmentComment(classroom.id, assignmentId, commentId);
-      setAssignmentComments((prev) => ({
-        ...prev,
-        [assignmentId]: (prev[assignmentId] || []).filter((c) => c.id !== commentId),
-      }));
-    } catch (e) {
-      console.error('Delete assignment comment error', e);
-      setError(e.message || 'Failed to delete comment');
-    } finally {
-      setDeletingCommentId(null);
-    }
-  };
-
   const getAvatarColor = (name) => {
     if (!name) return 'bg-gradient-to-br from-gray-400 to-gray-600';
     const colors = [
@@ -509,7 +476,7 @@ const ClassDetail = () => {
                 onClick={() => navigate('/classes')}
                 className="mb-8 inline-flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-brand transition-colors"
               >
-                ← Back to Classes
+                ← Back to Terminals
               </button>
               <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-4">
                 {classroom.name}
@@ -520,7 +487,7 @@ const ClassDetail = () => {
                 </p>
               ) : null}
               <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Class Code:</span>
+                <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Access Key:</span>
                 <span className="font-mono font-bold text-black dark:text-white text-xs">{classroom.code}</span>
               </div>
             </div>
@@ -530,12 +497,12 @@ const ClassDetail = () => {
                   {getInitials(user)}
                 </div>
                 <div>
-                  <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Signed in as</p>
+                  <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Authenticated As</p>
                   <p className="text-xs font-bold text-black dark:text-white uppercase tracking-tight">
                     {user?.firstName} {user?.lastName}
                   </p>
                   <span className="text-[9px] text-brand font-bold uppercase tracking-widest mt-1 block">
-                    {membership?.role === 'teacher' ? 'Teacher' : 'Student'}
+                    {membership?.role === 'teacher' ? 'Instructor Layer' : 'Participant Layer'}
                   </span>
                 </div>
               </div>
@@ -546,7 +513,7 @@ const ClassDetail = () => {
                     onClick={handleLeaveClass}
                     className="px-6 py-3 border border-zinc-200 dark:border-zinc-800 text-[9px] font-bold uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
                   >
-                    Leave Class
+                    Discard membership
                   </button>
                 )}
                 {isOwner && (
@@ -555,7 +522,7 @@ const ClassDetail = () => {
                     onClick={handleDeleteClass}
                     className="px-6 py-3 bg-red-500 text-white text-[9px] font-bold uppercase tracking-widest hover:bg-red-600 shadow-sm transition-all"
                   >
-                    Delete Class
+                    Terminate Class
                   </button>
                 )}
               </div>
@@ -565,7 +532,7 @@ const ClassDetail = () => {
 
         {error && (
           <div className="p-6 border border-red-500 text-red-500 text-[10px] font-bold uppercase tracking-widest bg-red-50/50 dark:bg-red-900/10 animate-fade-in">
-            Error: {error}
+            System Conflict: {error}
           </div>
         )}
 
@@ -579,7 +546,7 @@ const ClassDetail = () => {
               : 'text-zinc-400 hover:text-black dark:hover:text-white hover:bg-white dark:hover:bg-zinc-800'
               }`}
           >
-            Stream
+            Sequence Stream
           </button>
           <button
             type="button"
@@ -589,7 +556,7 @@ const ClassDetail = () => {
               : 'text-zinc-400 hover:text-black dark:hover:text-white hover:bg-white dark:hover:bg-zinc-800'
               }`}
           >
-            Classwork
+            Operational Tasks
           </button>
           <button
             type="button"
@@ -599,7 +566,7 @@ const ClassDetail = () => {
               : 'text-zinc-400 hover:text-black dark:hover:text-white hover:bg-white dark:hover:bg-zinc-800'
               }`}
           >
-            People
+            Personnel
           </button>
         </nav>
         {/* Page content: only the active tab is rendered — screen changes, no route change */}
@@ -623,7 +590,7 @@ const ClassDetail = () => {
                           onChange={(e) =>
                             setAnnouncementForm((prev) => ({ ...prev, content: e.target.value }))
                           }
-                          placeholder="Post an announcement..."
+                          placeholder="ESTABLISH SEQUENCE DIRECTIVE..."
                           rows={3}
                           className="w-full px-5 py-4 bg-transparent border border-zinc-100 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-300 dark:placeholder-zinc-600 text-sm font-bold uppercase tracking-widest leading-relaxed resize-none focus:border-brand outline-none transition-all"
                         />
@@ -633,7 +600,7 @@ const ClassDetail = () => {
                           onChange={(e) =>
                             setAnnouncementForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))
                           }
-                          placeholder="Attachment URL (optional)..."
+                          placeholder="PROTOCOL ATTACHMENT URL..."
                           className="mt-4 w-full px-5 py-3 bg-transparent border border-zinc-100 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-300 dark:placeholder-zinc-600 text-[10px] font-bold uppercase tracking-widest focus:border-brand outline-none transition-all"
                         />
                         <div className="flex justify-end mt-6">
@@ -642,7 +609,7 @@ const ClassDetail = () => {
                             disabled={postingAnnouncement || !announcementForm.content.trim()}
                             className="px-10 py-3 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                           >
-                            {postingAnnouncement ? 'Posting...' : 'Post Announcement'}
+                            {postingAnnouncement ? 'transmitting...' : 'transmit protocol'}
                           </button>
                         </div>
                       </div>
@@ -656,8 +623,8 @@ const ClassDetail = () => {
                 <div className="p-20 border border-zinc-100 dark:border-zinc-900 text-center bg-zinc-50 dark:bg-zinc-950">
                   <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
                     {isTeacher
-                      ? 'No announcements yet. Post one to get started.'
-                      : 'No announcements yet.'}
+                      ? 'No protocols transmitted to stream.'
+                      : 'Awaiting primary transmission...'}
                   </p>
                 </div>
               ) : (
@@ -688,7 +655,7 @@ const ClassDetail = () => {
                                 </span>
                               )}
                               <span className="text-[8px] font-bold text-zinc-400 mt-1 uppercase tracking-widest">
-                                Posted {formatRelativeTime(a.createdAt)}
+                                Transmission {formatRelativeTime(a.createdAt)}
                               </span>
                             </div>
                           </div>
@@ -697,7 +664,7 @@ const ClassDetail = () => {
                               type="button"
                               onClick={() => handleDeleteAnnouncement(a.id)}
                               className="text-zinc-300 hover:text-red-500 transition-colors p-2"
-                              title="Delete announcement"
+                              title="Terminate transmission"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -781,33 +748,18 @@ const ClassDetail = () => {
                               ) : (
                                 <>
                                   {(announcementComments[a.id] || []).map((c) => (
-                                    <div key={c.id} className="flex gap-2 text-sm items-start group">
-                                      <div className="flex-1 min-w-0">
-                                        <span className="shrink-0">
-                                          {c.author?.id ? (
-                                            <Link to={`/profile/${c.author.id}`} className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
-                                              {c.author.firstName} {c.author.lastName}
-                                            </Link>
-                                          ) : (
-                                            <span className="font-medium text-gray-900 dark:text-white">Unknown</span>
-                                          )}:
-                                        </span>
-                                        <span className="text-gray-700 dark:text-gray-300"> {c.content}</span>
-                                        <span className="text-xs text-gray-400 shrink-0 ml-1">{formatRelativeTime(c.createdAt)}</span>
-                                      </div>
-                                      {isTeacher && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDeleteAnnouncementComment(a.id, c.id)}
-                                          disabled={deletingCommentId === c.id}
-                                          className="shrink-0 p-1 text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                                          title="Delete comment"
-                                        >
-                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                          </svg>
-                                        </button>
-                                      )}
+                                    <div key={c.id} className="flex gap-2 text-sm">
+                                      <span className="shrink-0">
+                                        {c.author?.id ? (
+                                          <Link to={`/profile/${c.author.id}`} className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
+                                            {c.author.firstName} {c.author.lastName}
+                                          </Link>
+                                        ) : (
+                                          <span className="font-medium text-gray-900 dark:text-white">Unknown</span>
+                                        )}:
+                                      </span>
+                                      <span className="text-gray-700 dark:text-gray-300">{c.content}</span>
+                                      <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(c.createdAt)}</span>
                                     </div>
                                   ))}
                                   <div className="flex gap-2 mt-2">
@@ -857,9 +809,9 @@ const ClassDetail = () => {
           <div className="min-h-[50vh] pt-6 animate-slide-up" role="region" aria-label="Classwork page">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-12">
               <div>
-                <span className="section-kicker mb-4">Assignments</span>
+                <span className="section-kicker mb-4">Operational Layer</span>
                 <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
-                  Class <br />Assignments.
+                  Instructional <br />Protocols.
                 </h2>
               </div>
               {isTeacher && (
@@ -867,7 +819,7 @@ const ClassDetail = () => {
                   onClick={() => setShowNewAssignment(true)}
                   className="px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all shadow-sm"
                 >
-                  Create Assignment
+                  Assign homework
                 </button>
               )}
             </div>
@@ -875,7 +827,7 @@ const ClassDetail = () => {
             {assignments.length === 0 ? (
               <div className="p-20 border border-zinc-100 dark:border-zinc-900 text-center bg-zinc-50 dark:bg-zinc-950">
                 <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
-                  No assignments yet. Create one to get started.
+                  Zero operational protocols detected.
                 </p>
               </div>
             ) : (
@@ -919,10 +871,39 @@ const ClassDetail = () => {
                                 to={`/courses/${a.course?.id || ''}/lessons/${a.lesson.id}`}
                                 className="inline-flex items-center gap-2 px-3 py-1 bg-brand text-white text-[9px] font-bold uppercase tracking-widest hover:bg-brand/90 transition-colors"
                               >
-                                📖 Linked Lesson: {a.lesson.title}
+                                📖 LINKED LESSON: {a.lesson.title}
                               </Link>
                             )}
                           </div>
+                          {/* Teacher: who has completed this assignment */}
+                          {isTeacher && totalStudents > 0 && (
+                            <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                              <p className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest mb-3">
+                                Who has completed
+                              </p>
+                              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {students.map((s) => {
+                                  const sub = Array.isArray(a.submissions)
+                                    ? a.submissions.find((x) => x.studentId === s.id)
+                                    : null;
+                                  const done = sub?.status === 'completed';
+                                  return (
+                                    <li
+                                      key={s.id}
+                                      className={`flex items-center justify-between gap-2 text-[10px] font-medium ${done ? 'text-zinc-700 dark:text-zinc-300' : 'text-zinc-400 dark:text-zinc-500'}`}
+                                    >
+                                      <span className="truncate uppercase tracking-wide">
+                                        {s.firstName} {s.lastName}
+                                      </span>
+                                      <span className={`shrink-0 px-2 py-0.5 border text-[8px] font-bold uppercase ${done ? 'border-brand text-brand bg-brand/10' : 'border-zinc-200 dark:border-zinc-700 text-zinc-400'}`}>
+                                        {done ? (sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Done') : 'Not done'}
+                                      </span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4 min-w-[120px]">
                           {isTeacher ? (
@@ -930,7 +911,7 @@ const ClassDetail = () => {
                               {typeof completedCount === 'number' && (
                                 <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
                                   <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">
-                                    Completed: {completedCount}/{totalStudents}
+                                    COMPLETION: {completedCount}/{totalStudents}
                                   </span>
                                 </div>
                               )}
@@ -939,7 +920,7 @@ const ClassDetail = () => {
                                 onClick={() => handleDeleteAssignment(a.id)}
                                 className="w-full px-6 py-2 border border-zinc-200 dark:border-zinc-800 text-[9px] font-bold uppercase tracking-widest hover:text-red-500 hover:border-red-500 transition-all"
                               >
-                                Delete
+                                TERMINATE
                               </button>
                             </>
                           ) : (
@@ -949,23 +930,28 @@ const ClassDetail = () => {
                                 : 'border-zinc-200 dark:border-zinc-800 text-zinc-400'
                                 }`}
                             >
-                              {isCompleted ? 'Completed' : 'Not Started'}
+                              {isCompleted ? 'VERIFIED' : 'PENDING'}
                             </span>
                           )}
-                          {!isTeacher && !isCompleted && (
+                          {!isTeacher && !isCompleted && !a.lesson && (
                             <button
                               onClick={() => handleCompleteAssignment(a.id)}
                               className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all shadow-sm"
                             >
-                              Mark Complete
+                              FINALIZE
                             </button>
+                          )}
+                          {!isTeacher && !isCompleted && a.lesson && (
+                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                              Complete the lesson above to verify.
+                            </p>
                           )}
                           {!isTeacher && isCompleted && !a.lesson && (
                             <button
                               onClick={() => handleUncompleteAssignment(a.id)}
                               className="w-full px-6 py-2 border border-zinc-200 dark:border-zinc-800 text-[9px] font-bold uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
                             >
-                              Mark Incomplete
+                              REVERT
                             </button>
                           )}
                         </div>
@@ -978,22 +964,22 @@ const ClassDetail = () => {
                           onClick={() => toggleAssignmentComments(a.id)}
                           className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest hover:text-brand transition-colors"
                         >
-                          {openCommentSections.assignment.has(a.id) ? 'Hide Comments' : 'Show Comments'}
+                          {openCommentSections.assignment.has(a.id) ? 'CLOSE LOGS' : 'ACCESS LOGS'}
                           {totalComments > 0 && ` [${totalComments}]`}
                         </button>
                         {openCommentSections.assignment.has(a.id) && (
                           <div className="mt-6 space-y-6 min-h-[2rem]">
                             {loadingComments.assignment === a.id || assignmentComments[a.id] === undefined ? (
-                              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest py-1">Loading comments...</p>
+                              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest py-1">Fetching records...</p>
                             ) : (
                               <>
                                 {/* Class comments (public) */}
                                 <div>
                                   <h4 className="text-[10px] font-black text-zinc-300 uppercase tracking-widest mb-4">
-                                    Class Comments
+                                    PUBLIC LOGS
                                   </h4>
                                   {classComments.map((c) => (
-                                    <div key={c.id} className="flex gap-4 text-xs mb-4 group">
+                                    <div key={c.id} className="flex gap-4 text-xs mb-4">
                                       <div className="flex flex-col flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-1">
                                           {c.author?.id ? (
@@ -1007,19 +993,6 @@ const ClassDetail = () => {
                                         </div>
                                         <span className="text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed">{c.content}</span>
                                       </div>
-                                      {isTeacher && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDeleteAssignmentComment(a.id, c.id)}
-                                          disabled={deletingCommentId === c.id}
-                                          className="shrink-0 p-1 text-zinc-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                                          title="Delete comment"
-                                        >
-                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                          </svg>
-                                        </button>
-                                      )}
                                     </div>
                                   ))}
                                   <div className="flex gap-2 mt-4">
@@ -1032,7 +1005,7 @@ const ClassDetail = () => {
                                           assignmentClass: { ...prev.assignmentClass, [a.id]: e.target.value },
                                         }))
                                       }
-                                      placeholder="Add a class comment..."
+                                      placeholder="ESTABLISH PUBLIC LOG ENTRY..."
                                       className="flex-1 px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs font-bold uppercase tracking-widest placeholder-zinc-400 focus:border-brand outline-none transition-all"
                                       onKeyDown={(e) => {
                                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -1047,7 +1020,7 @@ const ClassDetail = () => {
                                       onClick={() => handlePostAssignmentComment(a.id, { isPrivate: false })}
                                       className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white disabled:opacity-30 transition-all"
                                     >
-                                      Post
+                                      LOG
                                     </button>
                                   </div>
                                 </div>
@@ -1055,10 +1028,10 @@ const ClassDetail = () => {
                                 {/* Private comments (student–teacher) */}
                                 <div>
                                   <h4 className="text-[10px] font-black text-brand uppercase tracking-widest mb-4">
-                                    Private Messages
+                                    SECURE CHANNEL
                                   </h4>
                                   {privateComments.map((c) => (
-                                    <div key={c.id} className="flex gap-4 text-xs mb-4 group">
+                                    <div key={c.id} className="flex gap-4 text-xs mb-4">
                                       <div className="flex flex-col flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-1">
                                           {c.author?.id ? (
@@ -1082,19 +1055,6 @@ const ClassDetail = () => {
                                         </div>
                                         <span className="text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed">{c.content}</span>
                                       </div>
-                                      {isTeacher && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDeleteAssignmentComment(a.id, c.id)}
-                                          disabled={deletingCommentId === c.id}
-                                          className="shrink-0 p-1 text-zinc-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                                          title="Delete comment"
-                                        >
-                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                          </svg>
-                                        </button>
-                                      )}
                                     </div>
                                   ))}
                                   {isTeacher ? (
@@ -1109,7 +1069,7 @@ const ClassDetail = () => {
                                         }
                                         className="w-full px-4 py-2 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-[10px] font-bold uppercase tracking-widest focus:border-brand outline-none transition-all"
                                       >
-                                        <option value="">Select student...</option>
+                                        <option value="">Target Participant...</option>
                                         {students.map((s) => (
                                           <option key={s.id} value={s.id}>
                                             {s.firstName} {s.lastName}
@@ -1126,7 +1086,7 @@ const ClassDetail = () => {
                                               assignmentPrivate: { ...prev.assignmentPrivate, [a.id]: e.target.value },
                                             }))
                                           }
-                                          placeholder="Send private message..."
+                                          placeholder="TRANSMIT SECURE PROTOCOL..."
                                           className="flex-1 px-4 py-3 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-xs font-bold uppercase tracking-widest placeholder-zinc-400 focus:border-brand outline-none transition-all"
                                           onKeyDown={(e) => {
                                             if (e.key === 'Enter' && !e.shiftKey) {
@@ -1168,7 +1128,7 @@ const ClassDetail = () => {
                                             assignmentPrivate: { ...prev.assignmentPrivate, [a.id]: e.target.value },
                                           }))
                                         }
-                                        placeholder="Send private message to teacher..."
+                                        placeholder="TRANSMIT SECURE PROTOCOL TO INSTRUCTOR..."
                                         className="flex-1 px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs font-bold uppercase tracking-widest placeholder-zinc-400 focus:border-brand outline-none transition-all"
                                         onKeyDown={(e) => {
                                           if (e.key === 'Enter' && !e.shiftKey) {
@@ -1206,9 +1166,9 @@ const ClassDetail = () => {
           <div className="min-h-[50vh] pt-6 animate-slide-up" role="region" aria-label="People page">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-12">
               <div>
-                <span className="section-kicker mb-4">People</span>
+                <span className="section-kicker mb-4">Personnel</span>
                 <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
-                  Class <br />Members.
+                  Institutional <br />Network.
                 </h2>
               </div>
               {isOwner && (
@@ -1227,7 +1187,7 @@ const ClassDetail = () => {
               <div className="mb-12 p-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900">
                 <h3 className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
                   <span className="w-8 h-[1px] bg-brand"></span>
-                  Leaderboard — Most Assignments Completed
+                  OPERATIONAL RANKINGS — PROTOCOLS VERIFIED
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {leaderboard.map((entry, index) => (
@@ -1256,7 +1216,7 @@ const ClassDetail = () => {
                             {entry.firstName} {entry.lastName}
                           </span>
                           <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">
-                            {entry.completedCount} Completed
+                            {entry.completedCount} VERIFICATIONS
                           </span>
                         </div>
                       </Link>
@@ -1271,11 +1231,11 @@ const ClassDetail = () => {
               <div>
                 <h3 className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
                   <span className="w-4 h-[1px] bg-zinc-200 dark:bg-zinc-800"></span>
-                  Teachers
+                  INSTRUCTORS
                 </h3>
                 {teachers.length === 0 ? (
                   <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest pl-7">
-                    No teachers in this class.
+                    Zero instructors detected.
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -1311,11 +1271,11 @@ const ClassDetail = () => {
               <div>
                 <h3 className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
                   <span className="w-4 h-[1px] bg-zinc-200 dark:bg-zinc-800"></span>
-                  Students ({students.length})
+                  PARTICIPANTS ({students.length})
                 </h3>
                 {students.length === 0 ? (
                   <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest pl-7">
-                    No students in this class yet.
+                    Zero participants detected.
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 gap-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
@@ -1356,9 +1316,9 @@ const ClassDetail = () => {
             <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-lg w-full max-h-[90vh] overflow-y-auto p-10 animate-in zoom-in-95 duration-300">
               <div className="flex items-start justify-between mb-10">
                 <div>
-                  <span className="section-kicker mb-2">Create Assignment</span>
+                  <span className="section-kicker mb-2">Classwork</span>
                   <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter">
-                    New Assignment
+                    Assign homework
                   </h2>
                 </div>
                 <button
@@ -1384,7 +1344,7 @@ const ClassDetail = () => {
                     }
                     required
                     className="block w-full px-0 py-3 bg-transparent border-b border-zinc-200 dark:border-zinc-800 text-black dark:text-white text-lg font-bold placeholder-zinc-300 focus:border-brand outline-none transition-all"
-                    placeholder="Enter assignment title..."
+                    placeholder="e.g. Complete Chapter 3"
                   />
                 </div>
 
@@ -1399,7 +1359,7 @@ const ClassDetail = () => {
                     }
                     rows={4}
                     className="block w-full px-4 py-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-black dark:text-white text-xs font-medium placeholder-zinc-400 focus:border-brand outline-none transition-all resize-none"
-                    placeholder="Enter assignment description..."
+                    placeholder="SPECIFY OPERATIONAL PARAMETERS..."
                   />
                 </div>
 
@@ -1420,7 +1380,7 @@ const ClassDetail = () => {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                      Link to Lesson
+                      Assign lesson (homework)
                     </label>
                     <select
                       value={assignmentForm.lessonId}
@@ -1435,13 +1395,16 @@ const ClassDetail = () => {
                       }}
                       className="block w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-black dark:text-white text-[10px] font-bold uppercase tracking-widest focus:border-brand outline-none transition-all"
                     >
-                      <option value="">NONE</option>
+                      <option value="">No lesson — general assignment</option>
                       {availableLessons.map((l) => (
                         <option key={l.id} value={l.id}>
-                          {l.courseTitle.toUpperCase()} – {l.title.toUpperCase()}
+                          {l.courseTitle} – {l.title}
                         </option>
                       ))}
                     </select>
+                    {availableLessons.length === 0 && (
+                      <p className="text-[9px] text-zinc-400 mt-1">No lessons available. Publish a course with lessons to assign.</p>
+                    )}
                   </div>
                 </div>
 
@@ -1452,14 +1415,14 @@ const ClassDetail = () => {
                     className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black dark:hover:text-white transition-all order-2 sm:order-1"
                     disabled={submitting}
                   >
-                    Abort
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
                     className="px-10 py-4 bg-black dark:bg-white text-white dark:text-black text-[10px] font-black uppercase tracking-[0.2em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white disabled:opacity-30 transition-all shadow-lg order-1 sm:order-2"
                   >
-                    {submitting ? 'Creating...' : 'Create Assignment'}
+                    {submitting ? 'Creating...' : 'Create assignment'}
                   </button>
                 </div>
               </form>
@@ -1473,7 +1436,7 @@ const ClassDetail = () => {
             <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-md w-full p-10 animate-in zoom-in-95 duration-300">
               <div className="flex items-start justify-between mb-8">
                 <div>
-                  <span className="section-kicker mb-2">Add Teacher</span>
+                  <span className="section-kicker mb-2">Personnel</span>
                   <h2 className="text-xl font-black text-black dark:text-white uppercase tracking-tighter">
                     Add teacher
                   </h2>

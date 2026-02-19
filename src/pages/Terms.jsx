@@ -1,24 +1,23 @@
 const Terms = () => {
   return (
-    <div className="min-h-screen py-24 page-section-light">
+    <div className="min-h-screen py-10">
       <div className="container-custom">
-        <div className="max-w-3xl mx-auto bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10">
-          <span className="section-kicker mb-4">Legal Interface</span>
-          <h1 className="text-3xl font-extrabold text-black dark:text-white mb-6 uppercase tracking-tight">
+        <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
             Terms and Services
           </h1>
-
-          <div className="space-y-4 text-xs font-bold uppercase tracking-widest leading-relaxed text-zinc-600 dark:text-zinc-400">
-            <p>
+          
+          <div className="prose dark:prose-invert max-w-none">
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
               Caplet is not liable for any financial damages.
             </p>
-
-            <p>
+            
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
               Caplet is designed purely for educational purposes and should not be construed as robust financial advice.
             </p>
-
-            <p>
-              Do not sue us.
+            
+            <p className="text-gray-700 dark:text-gray-300">
+              Don't sue us.
             </p>
           </div>
         </div>

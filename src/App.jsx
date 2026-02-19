@@ -4,6 +4,7 @@ import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import BackgroundTexture from './components/BackgroundTexture';
 import Home from './pages/Home';
 import Contact from './pages/Contact';
 import Tools from './pages/Tools';
@@ -45,7 +46,8 @@ function App() {
       <AuthProvider>
         <CoursesProvider>
           <Router>
-            <div className="min-h-screen flex flex-col">
+            <BackgroundTexture />
+            <div className="relative z-10 min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow">
                 <Routes>

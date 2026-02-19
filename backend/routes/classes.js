@@ -231,6 +231,19 @@ router.post('/:id/leave', authenticateToken, async (req, res) => {
       }
     }
 
+    if (membership.role === 'student') {
+      const assignmentIds = await Assignment.findAll({
+        where: { classroomId: classroom.id },
+        attributes: ['id'],
+        raw: true,
+      }).then((rows) => rows.map((r) => r.id));
+      if (assignmentIds.length > 0) {
+        await AssignmentSubmission.destroy({
+          where: { studentId: req.user.id, assignmentId: assignmentIds },
+        });
+      }
+    }
+
     await membership.destroy();
     res.json({ message: 'Left class successfully' });
   } catch (error) {
@@ -267,6 +280,19 @@ router.delete('/:id/members/:userId', authenticateToken, async (req, res) => {
     });
     if (targetMembership.role === 'teacher' && teacherCount <= 1) {
       return res.status(400).json({ message: 'Cannot remove the last teacher. Delete the class or add another teacher first.' });
+    }
+
+    if (targetMembership.role === 'student') {
+      const assignmentIds = await Assignment.findAll({
+        where: { classroomId: classroom.id },
+        attributes: ['id'],
+        raw: true,
+      }).then((rows) => rows.map((r) => r.id));
+      if (assignmentIds.length > 0) {
+        await AssignmentSubmission.destroy({
+          where: { studentId: targetUserId, assignmentId: assignmentIds },
+        });
+      }
     }
 
     await targetMembership.destroy();
@@ -410,9 +436,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
       role: m.role,
     }));
 
+    const currentMemberIds = new Set(members.map((m) => m.id));
+
     const assignmentsDto = assignments.map((a) => {
       if (membership.role === 'teacher') {
-        const submissions = (a.submissions || []).map((s) => ({
+        const allSubmissions = (a.submissions || []).map((s) => ({
           id: s.id,
           studentId: s.studentId,
           status: s.status,
@@ -426,6 +454,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
               }
             : null,
         }));
+        // Only include submissions for current members (exclude students who left)
+        const submissions = allSubmissions.filter((s) => currentMemberIds.has(s.studentId));
 
         return {
           id: a.id,
@@ -655,6 +685,13 @@ router.post('/assignments/:id/complete', authenticateToken, async (req, res) => 
     const assignment = await Assignment.findByPk(req.params.id);
     if (!assignment) {
       return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    // Lesson-linked assignments can only be completed by finishing the lesson
+    if (assignment.lessonId) {
+      return res
+        .status(400)
+        .json({ message: 'Complete the lesson to verify this assignment.' });
     }
 
     // Ensure user is a member of the class
