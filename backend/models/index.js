@@ -33,34 +33,34 @@ Lesson.belongsTo(Module, {
   as: 'module'
 });
 
-User.hasMany(UserProgress, { 
-  foreignKey: 'userId', 
+User.hasMany(UserProgress, {
+  foreignKey: 'userId',
   as: 'progress',
   onDelete: 'CASCADE'
 });
-UserProgress.belongsTo(User, { 
-  foreignKey: 'userId', 
+UserProgress.belongsTo(User, {
+  foreignKey: 'userId',
   as: 'user'
 });
 
 
-Course.hasMany(UserProgress, { 
-  foreignKey: 'courseId', 
+Course.hasMany(UserProgress, {
+  foreignKey: 'courseId',
   as: 'progress',
   onDelete: 'CASCADE'
 });
-UserProgress.belongsTo(Course, { 
-  foreignKey: 'courseId', 
+UserProgress.belongsTo(Course, {
+  foreignKey: 'courseId',
   as: 'course'
 });
 
-Lesson.hasMany(UserProgress, { 
-  foreignKey: 'lessonId', 
+Lesson.hasMany(UserProgress, {
+  foreignKey: 'lessonId',
   as: 'progress',
   onDelete: 'CASCADE'
 });
-UserProgress.belongsTo(Lesson, { 
-  foreignKey: 'lessonId', 
+UserProgress.belongsTo(Lesson, {
+  foreignKey: 'lessonId',
   as: 'lesson'
 });
 
@@ -171,7 +171,12 @@ Comment.belongsTo(User, { foreignKey: 'targetUserId', as: 'targetUser' });
 // Sync database
 const syncDatabase = async () => {
   try {
-    await sequelize.sync({ alter: true });
+    // Use sync() without alter to create missing tables only.
+    // ALTER TABLE causes issues in SQLite when there are unique constraints
+    // (e.g., users_backup email constraint violations).
+    // Use CAPLET_DB_ALTER=1 env to force alter when schema changes are needed.
+    const useAlter = process.env.CAPLET_DB_ALTER === '1';
+    await sequelize.sync(useAlter ? { alter: true } : {});
     console.log('✅ Database synchronized successfully');
   } catch (error) {
     console.error('❌ Database sync error:', error);

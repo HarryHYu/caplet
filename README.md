@@ -7,99 +7,49 @@
 
 **Democratizing Financial Education for Every Australian.**
 
-Caplet is a sophisticated, free-to-use educational platform meticulously crafted to bridge the financial literacy gap in Australia. By combining academic rigor with modern AI technology, we empower youth and the elderly with the knowledge needed to navigate complex financial landscapes.
+Caplet is a free financial education platform combining structured courses, practical calculators, and an AI-powered financial advisor — built specifically for the Australian context.
+
+> **Live:** [capletedu.org](https://capletedu.org) · **Contact:** contact@capletedu.org
 
 ---
 
-## Project Pillars
+## What's Inside
 
-### 1. Courses
-Our curriculum focuses on the Australian context, covering everything from basic budgeting to advanced quantitative finance. 
-- **Auto-Enrollment**: Zero friction access to knowledge.
-- **Interactive Quizzes**: Real-time progress tracking and knowledge verification.
-- **Markdown-Driven**: Clean, readable, and easily maintainable content.
-
-### 2. Tools
-A suite of SEO-optimized financial calculators designed for immediate utility.
-- **Tax & Superannuation**: Tailored for Australian regulations (GST, Super Contribution, etc.).
-- **Loan & Mortgage**: Precise calculations for informed decision-making.
-- **Goal Tracking**: Compound interest and savings calculators to visualize the future.
-
-### 3. AI Financial Advisor
-The centerpiece of Caplet—a chat-first interface powered by state-of-the-art LLMs (GPT-4o).
-- **Intelligent Extraction**: Automatically identifies income, expenses, and goals from natural conversation.
-- **Dynamic Planning**: Generates personalized financial plans with exact calculations.
-- **Privacy-First**: Session-only chat messages with full data control for the user.
+| Pillar | Description |
+|---|---|
+| **Courses** | Free curriculum from budgeting basics to quantitative finance, with quizzes and progress tracking |
+| **Tools** | 10 SEO-optimized financial calculators (Tax, GST, Super, Mortgage, and more) |
+| **AI Advisor** | Chat-first dashboard powered by GPT-4o — extracts financial data from conversation and generates personalized plans |
 
 ---
 
-## Technical Stack
+## Quick Start
 
-### Frontend
-- **Framework**: React 19 (Modern Hooks, optimized rendering)
-- **Build Tool**: Vite (Lightning-fast development & HMR)
-- **Styling**: Tailwind CSS (Utility-first, responsive, custom design tokens)
-- **Visualizations**: Recharts (Data-driven insights)
-- **Navigation**: React Router 7
+```bash
+git clone https://github.com/raei-2748/caplet.git
+cd caplet
+npm install
+npm run dev          # Frontend → localhost:5173
 
-### Backend
-- **Server**: Node.js & Express 5
-- **Database**: PostgreSQL (Production-ready via Railway) | SQLite (Local development)
-- **ORM**: Sequelize (Consistent data modeling)
-- **AI Integration**: OpenAI SDK (Unified prompt system with fallback logic)
-
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v18+)
-- npm / yarn / pnpm
-
-### Quick Start
-1. **Clone & Enter**:
-   ```bash
-   git clone https://github.com/raei-2748/caplet.git
-   cd caplet
-   ```
-
-2. **Setup Dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Database Migration** (Local):
-   ```bash
-   # See backend documentation for migration steps
-   ```
-
-4. **Launch Development Environment**:
-   ```bash
-   npm run dev
-   ```
-
----
-
-## Architecture Overview
-
-```text
-caplet/
-├── backend/            # Express server, Sequelize models, AI services
-├── src/                # React application logic
-│   ├── components/     # UI building blocks (Atomic design)
-│   ├── pages/          # View components & entry points
-│   ├── services/       # API abstraction layer
-│   └── contexts/       # Global state management
-├── public/             # Static assets
-└── tailwind.config.js  # Design system configuration
+cd backend
+npm run dev          # Backend → localhost:5002
 ```
 
 ---
 
-## Contact & Support
+## Documentation
 
-We welcome feedback and academic contributions. Reach out to us at: **contact@capletedu.org**
+Full documentation lives in the [`docs/`](./docs/) folder:
+
+| Doc | Contents |
+|---|---|
+| [docs/README.md](./docs/README.md) | Documentation index & platform overview |
+| [docs/architecture.md](./docs/architecture.md) | Tech stack, codebase structure, key patterns |
+| [docs/database.md](./docs/database.md) | Full database schema |
+| [docs/deployment.md](./docs/deployment.md) | Environment setup, Railway & Vercel deployment |
+| [docs/content-pipeline.md](./docs/content-pipeline.md) | Lesson format & course import workflow |
+| [docs/roadmap.md](./docs/roadmap.md) | Recent changes, future plans, challenges |
 
 ---
 
-**Caplet** - *Think with Clarity. Spend with Confidence.*
+*Caplet — Think with Clarity. Spend with Confidence.*

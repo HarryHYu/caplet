@@ -1,0 +1,63 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet Caplet" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "Caplet" [ref=e9]
+        - generic [ref=e10]: Caplet
+      - generic [ref=e11]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /
+        - link "Contact" [ref=e13] [cursor=pointer]:
+          - /url: /contact
+        - generic [ref=e14]:
+          - button "Toggle dark mode" [ref=e15] [cursor=pointer]:
+            - img [ref=e16]
+          - button "Join / Sign In" [ref=e18] [cursor=pointer]
+  - main [ref=e19]:
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e23]: Institutional Library
+        - heading "Educational Catalog." [level=1] [ref=e24]:
+          - text: Educational
+          - text: Catalog.
+        - paragraph [ref=e25]: Professional learning sequences designed to build meaningful financial foundations for the next generation.
+      - generic [ref=e26]:
+        - paragraph [ref=e27]: User needs to login to see all of them.
+        - link "Sign In" [ref=e29] [cursor=pointer]:
+          - /url: /sign-in
+  - contentinfo [ref=e30]:
+    - generic [ref=e31]:
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - img "Caplet" [ref=e36]
+            - generic [ref=e37]:
+              - paragraph [ref=e38]: Caplet
+              - paragraph [ref=e39]: Systemic Education
+          - paragraph [ref=e40]: Professional financial education designed for the Australian context. Structured, data-driven, and built for institutional excellence.
+        - generic [ref=e41]:
+          - heading "Platform" [level=3] [ref=e42]
+          - list [ref=e43]:
+            - listitem [ref=e44]:
+              - link "Academy" [ref=e45] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e46]:
+              - link "Calculators" [ref=e47] [cursor=pointer]:
+                - /url: /tools
+            - listitem [ref=e48]:
+              - link "Terminal" [ref=e49] [cursor=pointer]:
+                - /url: /dashboard
+        - generic [ref=e50]:
+          - heading "Resources" [level=3] [ref=e51]
+          - list [ref=e52]:
+            - listitem [ref=e53]:
+              - link "Contact" [ref=e54] [cursor=pointer]:
+                - /url: /contact
+      - generic [ref=e56]:
+        - paragraph [ref=e57]: © 2026 Caplet Education. All rights reserved.
+        - generic [ref=e58]:
+          - link "Terms" [ref=e59] [cursor=pointer]:
+            - /url: /terms
+          - link "Privacy" [ref=e60] [cursor=pointer]:
+            - /url: /terms

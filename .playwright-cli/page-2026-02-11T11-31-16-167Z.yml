@@ -1,0 +1,67 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet Caplet" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "Caplet"
+        - generic [ref=e8]: Caplet
+      - generic [ref=e9]:
+        - link "Home" [ref=e10] [cursor=pointer]:
+          - /url: /
+        - link "About" [ref=e11] [cursor=pointer]:
+          - /url: /about
+        - link "Mission" [ref=e12] [cursor=pointer]:
+          - /url: /mission
+        - link "Courses" [ref=e13] [cursor=pointer]:
+          - /url: /courses
+        - link "Classes" [ref=e14] [cursor=pointer]:
+          - /url: /classes
+        - link "Tools" [ref=e15] [cursor=pointer]:
+          - /url: /tools
+        - link "FAQ" [ref=e16] [cursor=pointer]:
+          - /url: /faq
+        - link "Contact" [ref=e17] [cursor=pointer]:
+          - /url: /contact
+        - generic [ref=e18]:
+          - button "Toggle dark mode" [ref=e19] [cursor=pointer]:
+            - img [ref=e20]
+          - button "Sign In" [ref=e22] [cursor=pointer]
+  - main [ref=e23]:
+    - generic [ref=e25]:
+      - heading "404" [level=1] [ref=e26]
+      - heading "Page Not Found" [level=2] [ref=e27]
+      - paragraph [ref=e28]: Sorry, we couldn't find the page you're looking for. It might have been moved or deleted.
+      - generic [ref=e29]:
+        - link "Go Home" [ref=e30] [cursor=pointer]:
+          - /url: /
+        - link "Browse Courses" [ref=e31] [cursor=pointer]:
+          - /url: /courses
+  - contentinfo [ref=e32]:
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - img "Caplet" [ref=e38]
+            - generic [ref=e39]:
+              - paragraph [ref=e40]: Caplet
+              - paragraph [ref=e41]: CapletEdu — Structured financial education
+          - paragraph [ref=e42]: CapletEdu delivers structured financial education for high school students and beyond, tailored to the Australian context. Currently integrated into Knox Grammar School and used by Capital Finance Club.
+        - generic [ref=e43]:
+          - heading "Quick Links" [level=3] [ref=e44]
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - link "About" [ref=e47] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e48]:
+              - link "Mission" [ref=e49] [cursor=pointer]:
+                - /url: /mission
+            - listitem [ref=e50]:
+              - link "FAQ" [ref=e51] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e52]:
+              - link "Contact" [ref=e53] [cursor=pointer]:
+                - /url: /contact
+      - generic [ref=e55]:
+        - paragraph [ref=e56]: © 2026 Caplet. All rights reserved.
+        - link "Terms and Services" [ref=e57] [cursor=pointer]:
+          - /url: /terms

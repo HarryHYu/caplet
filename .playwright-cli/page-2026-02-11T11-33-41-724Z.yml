@@ -1,0 +1,92 @@
+- generic [ref=e3]:
+  - navigation [ref=e67]:
+    - generic [ref=e69]:
+      - link "Caplet Caplet" [ref=e70] [cursor=pointer]:
+        - /url: /dashboard
+        - img "Caplet" [ref=e72]
+        - generic [ref=e73]: Caplet
+      - generic [ref=e74]:
+        - link "Courses" [ref=e75] [cursor=pointer]:
+          - /url: /courses
+        - link "Classes" [ref=e76] [cursor=pointer]:
+          - /url: /classes
+        - link "Tools" [ref=e77] [cursor=pointer]:
+          - /url: /tools
+        - link "Dashboard" [ref=e78] [cursor=pointer]:
+          - /url: /dashboard
+          - text: Dashboard
+        - link "Contact" [ref=e80] [cursor=pointer]:
+          - /url: /contact
+        - generic [ref=e81]:
+          - button "Toggle dark mode" [ref=e82] [cursor=pointer]:
+            - img [ref=e83]
+          - button "New" [ref=e86] [cursor=pointer]:
+            - generic [ref=e87]: New
+            - img [ref=e88]
+  - main [ref=e4]:
+    - generic [ref=e90]:
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - generic [ref=e94]:
+            - generic [ref=e95]: Terminal Dashboard
+            - heading "Financial Protocol." [level=1] [ref=e96]
+            - paragraph [ref=e97]: Intelligent financial advisory powered by Caplet AI. Monitor your sequence and optimize your logic.
+          - generic [ref=e98]:
+            - button "View Summary" [ref=e99] [cursor=pointer]
+            - button "Reset Sequence" [ref=e100] [cursor=pointer]
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - paragraph [ref=e103]: Monthly Income
+            - paragraph [ref=e104]: $0
+          - generic [ref=e107]:
+            - paragraph [ref=e108]: Monthly Expenses
+            - paragraph [ref=e109]: $0
+          - generic [ref=e112]:
+            - paragraph [ref=e113]: Savings Rate
+            - paragraph [ref=e114]: 0.0%
+          - generic [ref=e117]:
+            - paragraph [ref=e118]: Net Worth
+            - paragraph [ref=e119]: $0
+      - generic [ref=e124]:
+        - generic [ref=e125]:
+          - textbox "Ask a question or share a financial update..." [ref=e126]
+          - generic: Terminal v1.0
+        - generic [ref=e127]:
+          - button "Advanced Options" [ref=e128] [cursor=pointer]:
+            - img [ref=e129]
+          - button "Transmit" [disabled] [ref=e131]
+  - contentinfo [ref=e132]:
+    - generic [ref=e133]:
+      - generic [ref=e134]:
+        - generic [ref=e135]:
+          - generic [ref=e136]:
+            - img "Caplet" [ref=e138]
+            - generic [ref=e139]:
+              - paragraph [ref=e140]: Caplet
+              - paragraph [ref=e141]: Systemic Education
+          - paragraph [ref=e142]: Professional financial education designed for the Australian context. Structured, data-driven, and built for institutional excellence.
+        - generic [ref=e143]:
+          - heading "Platform" [level=3] [ref=e144]
+          - list [ref=e145]:
+            - listitem [ref=e146]:
+              - link "Academy" [ref=e147] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e148]:
+              - link "Calculators" [ref=e149] [cursor=pointer]:
+                - /url: /tools
+            - listitem [ref=e150]:
+              - link "Terminal" [ref=e151] [cursor=pointer]:
+                - /url: /dashboard
+        - generic [ref=e152]:
+          - heading "Resources" [level=3] [ref=e153]
+          - list [ref=e154]:
+            - listitem [ref=e155]:
+              - link "Contact" [ref=e156] [cursor=pointer]:
+                - /url: /contact
+      - generic [ref=e158]:
+        - paragraph [ref=e159]: © 2026 Caplet Education. All rights reserved.
+        - generic [ref=e160]:
+          - link "Terms" [ref=e161] [cursor=pointer]:
+            - /url: /terms
+          - link "Privacy" [ref=e162] [cursor=pointer]:
+            - /url: /terms

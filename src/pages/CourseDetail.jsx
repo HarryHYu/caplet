@@ -34,30 +34,22 @@ const CourseDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-            Loading course...
-          </p>
-        </div>
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-accent border-t-transparent animate-spin"></div>
       </div>
     );
   }
 
   if (error || !course) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
-        <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-4">Notice</span>
-          <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-6">
-            {error || 'Course not found'}
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6 reveal-text">
+          <span className="section-kicker">Status Error</span>
+          <p className="text-3xl font-serif italic mb-12">
+            {error || 'The requested curriculum entity could not be located.'}
           </p>
-          <Link
-            to="/courses"
-            className="btn-secondary"
-          >
-            Return to Library
+          <Link to="/courses" className="btn-primary py-4 px-12 text-[10px]">
+            Return to Registry
           </Link>
         </div>
       </div>
@@ -73,134 +65,155 @@ const CourseDetail = () => {
   };
 
   return (
-    <div className="min-h-screen py-24">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <div className="mb-10 animate-slide-up">
+        <div className="mb-24 reveal-text">
           <button
             onClick={() => navigate('/courses')}
-            className="mb-6 inline-flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-brand transition-colors"
+            className="mb-12 inline-flex items-center gap-4 text-[10px] font-black text-text-dim uppercase tracking-[0.4em] hover:text-accent transition-colors"
           >
-            ← Back to Courses
+            ← Library Registry
           </button>
-          <span className="section-kicker mb-4">Course Details</span>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-4">
-            {course.title}
-          </h1>
-          {course.description && (
-            <p className="text-lg text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed max-w-2xl">
-              {course.description}
-            </p>
-          )}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
+            <div className="flex-1">
+              <span className="section-kicker">Detailed Curriculum Spectrum</span>
+              <h1 className="text-6xl md:text-8xl mb-12 max-w-4xl">
+                {course.title}
+              </h1>
+              <p className="text-2xl text-text-muted font-serif italic max-w-2xl leading-relaxed">
+                {course.description || course.shortDescription}
+              </p>
+            </div>
+            {course.thumbnail && (
+              <div className="w-full md:w-80 aspect-video md:aspect-square bg-surface-soft border border-line-soft p-1 overflow-hidden shrink-0">
+                <img
+                  src={course.thumbnail}
+                  alt=""
+                  className="w-full h-full object-cover grayscale opacity-80"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16 reveal-up" style={{ animationDelay: '120ms' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 mb-32 reveal-text stagger-1">
           <div className="lg:col-span-8">
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 mb-8">
-                <div className="space-y-3">
-                  <div className="flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-                    <span>Duration: {course.duration} Minutes</span>
-                    <span>Units: {totalLessonCount}</span>
-                    <span className="capitalize">Level: {course.level}</span>
+            <div className="bg-surface-raised border border-line-soft p-12 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-5 grid-technical !bg-[size:30px_30px]" />
+              <div className="relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">Temporal Commitment</p>
+                    <p className="text-xl font-bold">{course.duration} Minutes</p>
                   </div>
-                  {progress?.courseProgress && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                        <span>Course Progress</span>
-                        <span className="text-black dark:text-white">
-                          {Math.round(progress.courseProgress.progressPercentage)}%
-                        </span>
-                      </div>
-                      <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
-                        <div
-                          className="h-full bg-brand transition-all duration-1000"
-                          style={{ width: `${progress.courseProgress.progressPercentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">Structural Units</p>
+                    <p className="text-xl font-bold">{totalLessonCount} Modules</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">Sophistication Level</p>
+                    <p className="text-xl font-bold capitalize">{course.level}</p>
+                  </div>
                 </div>
+
+                {progress?.courseProgress && (
+                  <div className="mb-16">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.4em] text-accent mb-4">
+                      <span>Integration Status</span>
+                      <span>{Math.round(progress.courseProgress.progressPercentage)}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-surface-soft overflow-hidden">
+                      <div
+                        className="h-full bg-accent transition-all duration-1000 ease-out"
+                        style={{ width: `${progress.courseProgress.progressPercentage}%` }}
+                      />
+                    </div>
+                    <p className="mt-4 text-[9px] font-bold uppercase tracking-widest text-text-dim italic">System authenticated. Syncing progression data across academy nodes.</p>
+                  </div>
+                )}
+
                 <button
                   onClick={startCourse}
-                  className="btn-primary px-10 py-4 text-[10px] tracking-[0.25em]"
+                  className="btn-primary py-5 px-16 text-[11px] w-full md:w-auto"
                 >
-                  Start Course
+                  {progress?.courseProgress ? 'Resume Terminal' : 'Initialize Curriculum'}
                 </button>
               </div>
-              {course.thumbnail && (
-                <div className="mt-4">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.title}
-                    className="w-full max-w-xl aspect-video object-cover border border-zinc-100 dark:border-zinc-900"
-                  />
-                </div>
-              )}
             </div>
           </div>
 
-          <aside className="lg:col-span-4 space-y-6">
-            <div className="p-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900">
-              <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] mb-5">
-                Course Summary
-              </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed">
-                This course is part of the CapletEdu curriculum and is structured into modules and
-                lessons that can be used directly in the classroom.
+          <aside className="lg:col-span-4 bg-surface-inverse p-12 text-surface-body relative overflow-hidden flex flex-col justify-end min-h-[300px]">
+            <div className="absolute inset-0 opacity-5 grid-technical !bg-[size:40px_40px]" />
+            <div className="relative z-10">
+              <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-accent mb-8 block">Protocol Note</span>
+              <p className="text-lg font-serif italic leading-[1.6]">
+                "This curriculum is part of the Caplet Intelligence Registry. All modules are peer-reviewed for academic precision and financial relevance."
               </p>
             </div>
           </aside>
         </div>
 
-        <div className="reveal-up" style={{ animationDelay: '200ms' }}>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">
-              Modules ({sortedModules.length})
-            </h2>
+        <div className="reveal-text stagger-2">
+          <div className="flex items-end justify-between mb-12 border-b border-line-soft pb-8">
+            <div>
+              <span className="section-kicker">Sequence</span>
+              <h2 className="text-4xl font-serif italic">The Syllabus.</h2>
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Section Count: {sortedModules.length}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-px bg-line-soft border border-line-soft overflow-hidden">
             {sortedModules.map((mod, index) => {
               const moduleLessons = (mod.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
               const lessonCount = moduleLessons.length;
               const mp = progress?.moduleProgress?.find((m) => String(m.moduleId) === String(mod.id));
               const completedInModule = mp ? mp.completedLessons : 0;
               const totalInModule = mp ? mp.totalLessons : lessonCount;
-              const percentage =
-                totalInModule > 0 ? Math.round((completedInModule / totalInModule) * 100) : 0;
+              const percentage = totalInModule > 0 ? Math.round((completedInModule / totalInModule) * 100) : 0;
 
               return (
                 <Link
                   key={mod.id}
                   to={`/courses/${course.id}/modules/${mod.id}`}
-                  className="group bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 px-8 py-6 flex items-center justify-between hover:border-brand transition-all"
-                  style={{ animationDelay: `${index * 60}ms` }}
+                  className="group bg-surface-body p-12 flex flex-col md:flex-row md:items-center justify-between transition-all duration-700 hover:bg-surface-raised relative overflow-hidden"
                 >
-                  <div className="flex items-center gap-6 min-w-0">
-                    <span className="text-2xl font-black text-zinc-200 dark:text-zinc-800 tabular-nums">
+                  <div className="absolute inset-y-0 left-0 w-1 bg-accent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
+
+                  <div className="flex items-center gap-12 min-w-0 mb-8 md:mb-0">
+                    <span className="text-5xl font-serif italic text-text-dim opacity-20 group-hover:opacity-40 transition-opacity tabular-nums">
                       {String(index + 1).padStart(2, '0')}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-sm font-extrabold text-black dark:text-white uppercase tracking-tight mb-1 truncate">
+                      <h3 className="text-2xl font-bold text-text-primary uppercase tracking-tight mb-2 truncate group-hover:text-accent transition-colors">
                         {mod.title}
-                      </p>
-                      <p className="text-[10px] text-zinc-400 uppercase tracking-widest">
-                        {lessonCount} lesson{lessonCount !== 1 ? 's' : ''} · {percentage}% complete
-                      </p>
+                      </h3>
+                      <div className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.2em] text-text-dim">
+                        <span>{lessonCount} Technical Units</span>
+                        <span className="w-1 h-1 bg-line-soft rounded-full" />
+                        <span className={percentage === 100 ? 'text-accent' : ''}>{percentage}% Integrity</span>
+                      </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest group-hover:text-brand group-hover:translate-x-1 transition-all">
-                    View Module →
-                  </span>
+
+                  <div className="flex items-center gap-8">
+                    {percentage === 100 && (
+                      <div className="px-3 py-1 bg-accent/10 border border-accent/30 text-[9px] font-black uppercase text-accent tracking-widest">
+                        Verified
+                      </div>
+                    )}
+                    <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.3em] group-hover:text-accent group-hover:translate-x-2 transition-all">
+                      View Unit Registry →
+                    </span>
+                  </div>
                 </Link>
               );
             })}
           </div>
 
           {sortedModules.length === 0 && (
-            <div className="mt-10 p-16 text-center border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-950">
-              <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
-                No modules available for this course yet.
+            <div className="p-40 text-center border border-line-soft bg-surface-soft">
+              <p className="text-xl font-serif italic text-text-dim">
+                No technical modules found in this spectrum.
               </p>
             </div>
           )}
@@ -209,5 +222,6 @@ const CourseDetail = () => {
     </div>
   );
 };
+
 
 export default CourseDetail;

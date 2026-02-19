@@ -41,24 +41,21 @@ const ModuleDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Loading module...</p>
-        </div>
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-accent border-t-transparent animate-spin"></div>
       </div>
     );
   }
 
   if (error || !course) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
-        <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-4">Notice</span>
-          <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-6">
-            {error || 'Course not found'}
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6 reveal-text">
+          <span className="section-kicker">Status Error</span>
+          <p className="text-3xl font-serif italic mb-12">
+            {error || 'The requested curriculum entity could not be located.'}
           </p>
-          <Link to="/courses" className="btn-secondary">Return to Library</Link>
+          <Link to="/courses" className="btn-primary py-4 px-12 text-[10px]">Return to Registry</Link>
         </div>
       </div>
     );
@@ -66,69 +63,56 @@ const ModuleDetail = () => {
 
   if (!module_) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
-        <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-4">Notice</span>
-          <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-6">
-            Module not found
-          </p>
-          <Link to={`/courses/${courseId}`} className="btn-secondary">Back to Course</Link>
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6 reveal-text">
+          <span className="section-kicker">Status Error</span>
+          <p className="text-3xl font-serif italic mb-12">Unit registry not found.</p>
+          <Link to={`/courses/${courseId}`} className="btn-primary py-4 px-12 text-[10px]">Back to Course</Link>
         </div>
       </div>
     );
   }
 
   const lessons = (module_.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const lessonHasContent = (l) => {
-    const slides = l.slides;
-    if (Array.isArray(slides) && slides.length > 0) return true;
-    if (typeof slides === 'string' && slides.trim()) {
-      try { const p = JSON.parse(slides); if (Array.isArray(p) && p.length > 0) return true; } catch { /* noop */ }
-    }
-    if (l.content && String(l.content).trim()) return true;
-    if (l.videoUrl && String(l.videoUrl).trim()) return true;
-    return false;
-  };
+
   const isLessonComplete = (l) => {
-    if (!lessonHasContent(l)) return false;
     return progress?.lessonProgress?.some((p) => String(p.lessonId) === String(l.id) && p.status === 'completed');
   };
+
   const completedInModule = lessons.filter(isLessonComplete).length;
   const totalInModule = lessons.length;
   const progressWidth = totalInModule > 0 ? (completedInModule / totalInModule) * 100 : 0;
 
   return (
-    <div className="min-h-screen py-24">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <div className="mb-12 animate-slide-up">
+        <div className="mb-24 reveal-text">
           <button
             onClick={() => navigate(`/courses/${courseId}`)}
-            className="mb-8 inline-flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-brand transition-colors"
+            className="mb-12 inline-flex items-center gap-4 text-[10px] font-black text-text-dim uppercase tracking-[0.4em] hover:text-accent transition-colors"
           >
-            ← Back to Course
+            ← Course Overview
           </button>
 
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-12">
             <div className="flex-1">
-              <span className="section-kicker mb-4">Module</span>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
+              <span className="section-kicker">Unit Focus</span>
+              <h1 className="text-6xl md:text-8xl mb-8">
                 {module_.title}.
               </h1>
-              {module_.description && (
-                <p className="text-xl text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed max-w-2xl">
-                  {module_.description}
-                </p>
-              )}
+              <p className="text-2xl text-text-muted font-serif italic max-w-2xl leading-relaxed">
+                {module_.description || 'Detailed technical analysis and conceptual overview of this structural curriculum unit.'}
+              </p>
             </div>
 
-            <div className="flex flex-col gap-4 min-w-[240px]">
-              <div className="flex items-center justify-between text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                <span>Progress</span>
-                <span className="text-black dark:text-white">{completedInModule} / {totalInModule}</span>
+            <div className="flex flex-col gap-6 min-w-[300px] p-8 bg-surface-raised border border-line-soft">
+              <div className="flex items-center justify-between text-[10px] font-black text-text-dim uppercase tracking-[0.4em]">
+                <span>Unit Mastery</span>
+                <span className="text-accent">{completedInModule} / {totalInModule} Verified</span>
               </div>
-              <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
+              <div className="h-1 w-full bg-surface-soft overflow-hidden">
                 <div
-                  className="h-full bg-brand transition-all duration-1000"
+                  className="h-full bg-accent transition-all duration-1000 ease-out"
                   style={{ width: `${progressWidth}%` }}
                 />
               </div>
@@ -136,52 +120,54 @@ const ModuleDetail = () => {
           </div>
         </div>
 
-        <div className="space-y-4 reveal-up" style={{ animationDelay: '100ms' }}>
-          <div className="border-b border-zinc-100 dark:border-zinc-900 pb-4 mb-8">
-            <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">
-              Lessons ({lessons.length})
-            </h2>
+        <div className="reveal-text stagger-1">
+          <div className="flex items-end justify-between mb-12 border-b border-line-soft pb-8">
+            <div>
+              <span className="section-kicker">Inventory</span>
+              <h2 className="text-4xl font-serif italic">Technical Lessons.</h2>
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Module Node: {moduleId}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {lessons.map((lesson) => (
+          <div className="grid grid-cols-1 gap-px bg-line-soft border border-line-soft overflow-hidden">
+            {lessons.map((lesson, idx) => (
               <Link
                 key={lesson.id}
                 to={`/courses/${courseId}/lessons/${lesson.id}`}
-                className="group flex items-center justify-between p-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 hover:border-brand transition-all"
+                className="group bg-surface-body p-12 flex flex-col md:flex-row md:items-center justify-between transition-all duration-700 hover:bg-surface-raised relative overflow-hidden"
               >
-                <div className="flex items-center gap-8 min-w-0">
-                  <span className="text-2xl font-black text-zinc-200 dark:text-zinc-800 tabular-nums">
-                    {String(lesson.order).padStart(2, '0')}
+                <div className="flex items-center gap-12 min-w-0 mb-8 md:mb-0">
+                  <span className="text-5xl font-serif italic text-text-dim opacity-20 group-hover:opacity-40 transition-opacity tabular-nums">
+                    {String(lesson.order || idx + 1).padStart(2, '0')}
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-black text-black dark:text-white uppercase tracking-tight group-hover:text-brand transition-colors truncate">
+                    <h3 className="text-2xl font-bold text-text-primary uppercase tracking-tight mb-2 truncate group-hover:text-accent transition-colors">
                       {lesson.title}
                     </h3>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">
-                        {lesson.description || 'Lesson'}
-                      </span>
+                    <div className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.2em] text-text-dim">
+                      <span>{lesson.description || 'General Technical Unit'}</span>
                       {isLessonComplete(lesson) && (
-                        <span className="inline-flex items-center gap-1.5 text-[8px] font-black text-brand uppercase tracking-widest">
-                          <span className="w-1 h-1 bg-brand rounded-full animate-pulse" />
-                          Verified
-                        </span>
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-accent/10 border border-accent/20 rounded-full">
+                          <span className="w-1 h-1 bg-accent rounded-full animate-pulse" />
+                          <span className="text-accent font-black tracking-widest">Verified Mastery</span>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
-                  Start Lesson →
-                </span>
+                <div className="flex items-center gap-8">
+                  <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] group-hover:text-accent group-hover:translate-x-2 transition-all">
+                    Initialize Unit →
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
 
           {lessons.length === 0 && (
-            <div className="p-20 text-center border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-950">
-              <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
-                No lessons available in this module yet.
+            <div className="p-40 text-center border border-line-soft bg-surface-soft">
+              <p className="text-xl font-serif italic text-text-dim">
+                No technical units found in this inventory.
               </p>
             </div>
           )}
@@ -190,5 +176,6 @@ const ModuleDetail = () => {
     </div>
   );
 };
+
 
 export default ModuleDetail;

@@ -21,6 +21,7 @@ import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModuleDetail from './pages/ModuleDetail';
 import LessonPlayer from './pages/LessonPlayer';
+import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Classes from './pages/Classes';
@@ -34,7 +35,7 @@ import NotFound from './pages/NotFound';
 
 function HomeOrRedirect() {
   const { isAuthenticated } = useAuth();
-  if (isAuthenticated) return <Navigate to="/courses" replace />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return <Home />;
 }
 
@@ -49,6 +50,7 @@ function App() {
               <main className="flex-grow">
                 <Routes>
                   <Route path="/" element={<HomeOrRedirect />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/tools" element={<Tools />} />

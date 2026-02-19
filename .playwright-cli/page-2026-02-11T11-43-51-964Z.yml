@@ -1,0 +1,250 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet Caplet" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "Caplet" [ref=e9]
+        - generic [ref=e10]: Caplet
+      - generic [ref=e11]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /
+          - text: Home
+        - link "Contact" [ref=e14] [cursor=pointer]:
+          - /url: /contact
+        - generic [ref=e15]:
+          - button "Toggle dark mode" [ref=e16] [cursor=pointer]:
+            - img [ref=e17]
+          - button "Join / Sign In" [ref=e19] [cursor=pointer]
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - generic [ref=e26]: Institutional Financial Education
+          - heading "Financial literacy for schools." [level=1] [ref=e27]:
+            - text: Financial literacy
+            - text: for schools.
+          - paragraph [ref=e28]: Bridging the literacy gap with professional, structured learning modules tailored for the Australian context.
+          - generic [ref=e29]:
+            - link "Get Started Free" [ref=e30] [cursor=pointer]:
+              - /url: /courses
+            - link "Explore Terminals" [ref=e31] [cursor=pointer]:
+              - /url: /tools
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - generic [ref=e36]:
+              - paragraph [ref=e37]: Module 02
+              - heading "Budget Architecture" [level=3] [ref=e269]
+            - generic [ref=e39]: 2/4
+          - generic [ref=e40]:
+            - generic [ref=e270]:
+              - generic [ref=e271]: •
+              - generic [ref=e272]:
+                - paragraph [ref=e273]: Zero-Based Budgeting
+                - paragraph [ref=e274]: Assigning every dollar with intent
+            - generic [ref=e275]:
+              - generic [ref=e276]: •
+              - generic [ref=e277]:
+                - paragraph [ref=e278]: Fixed vs Variable Costs
+                - paragraph [ref=e279]: Build predictable weekly cash flow
+            - generic [ref=e280]:
+              - generic [ref=e281]: •
+              - generic [ref=e282]:
+                - paragraph [ref=e283]: Emergency Buffer
+                - paragraph [ref=e284]: Designing your first safety reserve
+          - generic [ref=e56]:
+            - generic [ref=e57]: "Time: 14m"
+            - generic [ref=e58]:
+              - button "Preview Next" [active] [ref=e59] [cursor=pointer]
+              - link "Open Catalog →" [ref=e60] [cursor=pointer]:
+                - /url: /courses
+      - generic [ref=e63]:
+        - link "Capital Finance Club Capital Finance Club" [ref=e64] [cursor=pointer]:
+          - /url: https://capitalfinanceclub.com
+          - img "Capital Finance Club" [ref=e65]
+          - generic [ref=e66]: Capital Finance Club
+        - generic [ref=e67]:
+          - generic [ref=e68]: Structured
+          - generic [ref=e69]: Standardised
+          - generic [ref=e70]: Integrated
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - paragraph [ref=e74]: Core Capabilities
+          - heading "Practical logic over theory." [level=2] [ref=e75]:
+            - text: Practical logic
+            - text: over theory.
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - heading "Budgeting without burnout" [level=3] [ref=e80]
+            - paragraph [ref=e81]: Build a weekly money system that survives rent week, groceries, and surprise costs.
+          - generic [ref=e82]:
+            - heading "Tax and super basics" [level=3] [ref=e85]
+            - paragraph [ref=e86]: Understand your payslip, tax withheld, and super contributions with plain-English examples.
+          - generic [ref=e87]:
+            - heading "Investing with context" [level=3] [ref=e90]
+            - paragraph [ref=e91]: Learn risk and long-term strategy before choosing products or platforms.
+      - generic [ref=e94]:
+        - generic [ref=e95]:
+          - paragraph [ref=e96]: Our Sequence
+          - heading "The Caplet Pathway." [level=2] [ref=e97]:
+            - text: The Caplet
+            - text: Pathway.
+          - paragraph [ref=e98]: We transform complex financial data into a structured learning journey built for high-impact absorption.
+          - paragraph [ref=e101]: Institutional Standards Applied Globally
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - 'heading "Phase Alpha: Foundations" [level=3] [ref=e104]'
+            - list [ref=e105]:
+              - listitem [ref=e106]:
+                - generic [ref=e107]: Budgeting Systems
+                - generic [ref=e108]: "01"
+              - listitem [ref=e109]:
+                - generic [ref=e110]: Tax Compliance
+                - generic [ref=e111]: "01"
+              - listitem [ref=e112]:
+                - generic [ref=e113]: Superannuation
+                - generic [ref=e114]: "01"
+          - generic [ref=e115]:
+            - 'heading "Phase Beta: Applied Logic" [level=3] [ref=e116]'
+            - list [ref=e117]:
+              - listitem [ref=e118]:
+                - generic [ref=e119]: Investment Strategy
+                - img [ref=e120]
+              - listitem [ref=e122]:
+                - generic [ref=e123]: Risk Management
+                - img [ref=e124]
+              - listitem [ref=e126]:
+                - generic [ref=e127]: Curriculum Sync
+                - img [ref=e128]
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - paragraph [ref=e134]: Library
+            - heading "Academic catalog." [level=2] [ref=e135]:
+              - text: Academic
+              - text: catalog.
+          - link "View All Modules" [ref=e136] [cursor=pointer]:
+            - /url: /courses
+        - generic [ref=e137]:
+          - link "L1 Income & Tax Foundations A practical walkthrough of Australian payslips, PAYG withholding, and tax-time readiness. 12 Minutes Enter Module →" [ref=e138] [cursor=pointer]:
+            - /url: /courses
+            - generic [ref=e139]:
+              - generic [ref=e141]: L1
+              - heading "Income & Tax Foundations" [level=3] [ref=e142]
+              - paragraph [ref=e143]: A practical walkthrough of Australian payslips, PAYG withholding, and tax-time readiness.
+            - generic [ref=e144]:
+              - generic [ref=e145]: 12 Minutes
+              - generic [ref=e146]: Enter Module →
+          - link "L2 Budget Systems for Students Build a weekly operating budget with emergency buffers and controlled discretionary spend. 15 Minutes Enter Module →" [ref=e147] [cursor=pointer]:
+            - /url: /courses
+            - generic [ref=e148]:
+              - generic [ref=e150]: L2
+              - heading "Budget Systems for Students" [level=3] [ref=e151]
+              - paragraph [ref=e152]: Build a weekly operating budget with emergency buffers and controlled discretionary spend.
+            - generic [ref=e153]:
+              - generic [ref=e154]: 15 Minutes
+              - generic [ref=e155]: Enter Module →
+          - link "L3 Investing Logic Primer Learn risk, diversification, and compounding fundamentals before choosing products. 18 Minutes Enter Module →" [ref=e156] [cursor=pointer]:
+            - /url: /courses
+            - generic [ref=e157]:
+              - generic [ref=e159]: L3
+              - heading "Investing Logic Primer" [level=3] [ref=e160]
+              - paragraph [ref=e161]: Learn risk, diversification, and compounding fundamentals before choosing products.
+            - generic [ref=e162]:
+              - generic [ref=e163]: 18 Minutes
+              - generic [ref=e164]: Enter Module →
+      - generic [ref=e167]:
+        - generic [ref=e168]:
+          - paragraph [ref=e169]: Our Mission
+          - heading "Institutional standard." [level=2] [ref=e170]:
+            - text: Institutional
+            - text: standard.
+          - paragraph [ref=e171]: CapletEdu delivers structured financial education for Australian students, integrated into school curricula and designed for high-impact absorption. Currently serving Knox Grammar School Commerce Department for Years 9–10.
+          - generic [ref=e172]:
+            - generic [ref=e173]:
+              - heading "Integration" [level=3] [ref=e174]
+              - list [ref=e175]:
+                - listitem [ref=e176]: Knox Grammar School
+                - listitem [ref=e178]:
+                  - link "Capital Finance Club" [ref=e180] [cursor=pointer]:
+                    - /url: https://capitalfinanceclub.com
+                - listitem [ref=e181]: Scalable Systems
+            - generic [ref=e183]:
+              - heading "Topics" [level=3] [ref=e184]
+              - list [ref=e185]:
+                - listitem [ref=e186]: Budgeting & Tax
+                - listitem [ref=e188]: Superannuation
+                - listitem [ref=e190]: Investing Basics
+        - generic [ref=e193]:
+          - heading "\"Empowering students with practical financial logic through academic-grade curriculum designed for the Australian context.\"" [level=3] [ref=e195]
+          - paragraph [ref=e196]: Caplet Institutional Vision
+      - generic [ref=e200]:
+        - generic [ref=e201]:
+          - paragraph [ref=e202]: Help center
+          - heading "Support." [level=2] [ref=e203]
+        - generic [ref=e204]:
+          - generic [ref=e205]:
+            - button "What is financial literacy and why is it important? +" [ref=e206] [cursor=pointer]:
+              - generic [ref=e207]: What is financial literacy and why is it important?
+              - generic [ref=e208]: +
+            - paragraph [ref=e209]: Financial literacy means understanding how money decisions affect your daily life and long-term outcomes. It helps you budget with less stress, avoid expensive debt mistakes, and make clearer choices about tax, super, and investing. In practice, it gives you more control and fewer surprises.
+          - generic [ref=e210]:
+            - button "How is CapletEdu different from other platforms? +" [ref=e211] [cursor=pointer]:
+              - generic [ref=e212]: How is CapletEdu different from other platforms?
+              - generic [ref=e213]: +
+            - paragraph [ref=e214]: CapletEdu is specifically designed for institutional integration into school curricula. We work directly with educators to develop structured lessons tailored to Australian students. Currently integrated into Knox Grammar School Commerce Department and used by Capital Finance Club.
+          - generic [ref=e215]:
+            - button "Is CapletEdu free to use? +" [ref=e216] [cursor=pointer]:
+              - generic [ref=e217]: Is CapletEdu free to use?
+              - generic [ref=e218]: +
+            - paragraph [ref=e219]: Yes. CapletEdu currently provides free educational services. Courses and tools are accessible at no cost. Future development may include SaaS offerings for schools and large institutions.
+          - generic [ref=e220]:
+            - button "What topics are covered? +" [ref=e221] [cursor=pointer]:
+              - generic [ref=e222]: What topics are covered?
+              - generic [ref=e223]: +
+            - paragraph [ref=e224]: "CapletEdu covers financial fundamentals tailored to Australian students: budgeting, tax, superannuation, investing basics, and business finance. All content is structured with Australian context and designed for integration into school curricula."
+          - generic [ref=e225]:
+            - button "Can I trust the information on Caplet? +" [ref=e226] [cursor=pointer]:
+              - generic [ref=e227]: Can I trust the information on Caplet?
+              - generic [ref=e228]: +
+            - paragraph [ref=e229]: Yes. All content is thoroughly researched from reliable sources including Australian government resources, financial regulatory bodies, and academic research. We recommend consulting qualified professionals for personalized advice.
+          - generic [ref=e230]:
+            - button "How often is content updated? +" [ref=e231] [cursor=pointer]:
+              - generic [ref=e232]: How often is content updated?
+              - generic [ref=e233]: +
+            - paragraph [ref=e234]: Content is reviewed regularly and improved over time as regulations, examples, and learner needs change. Priority updates focus on practical relevance and clarity rather than theory-heavy rewrites.
+      - heading "CAPLET." [level=2] [ref=e237]
+  - contentinfo [ref=e238]:
+    - generic [ref=e239]:
+      - generic [ref=e240]:
+        - generic [ref=e241]:
+          - generic [ref=e242]:
+            - img "Caplet" [ref=e244]
+            - generic [ref=e245]:
+              - paragraph [ref=e246]: Caplet
+              - paragraph [ref=e247]: Systemic Education
+          - paragraph [ref=e248]: Professional financial education designed for the Australian context. Structured, data-driven, and built for institutional excellence.
+        - generic [ref=e249]:
+          - heading "Platform" [level=3] [ref=e250]
+          - list [ref=e251]:
+            - listitem [ref=e252]:
+              - link "Academy" [ref=e253] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e254]:
+              - link "Calculators" [ref=e255] [cursor=pointer]:
+                - /url: /tools
+            - listitem [ref=e256]:
+              - link "Terminal" [ref=e257] [cursor=pointer]:
+                - /url: /dashboard
+        - generic [ref=e258]:
+          - heading "Resources" [level=3] [ref=e259]
+          - list [ref=e260]:
+            - listitem [ref=e261]:
+              - link "Contact" [ref=e262] [cursor=pointer]:
+                - /url: /contact
+      - generic [ref=e264]:
+        - paragraph [ref=e265]: © 2026 Caplet Education. All rights reserved.
+        - generic [ref=e266]:
+          - link "Terms" [ref=e267] [cursor=pointer]:
+            - /url: /terms
+          - link "Privacy" [ref=e268] [cursor=pointer]:
+            - /url: /terms

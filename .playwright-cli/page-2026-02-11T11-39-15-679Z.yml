@@ -1,0 +1,60 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - paragraph [ref=e12]: New Enrollment
+          - heading "Create Account" [level=2] [ref=e13]
+        - generic [ref=e14]:
+          - generic [ref=e15]:
+            - generic [ref=e16]:
+              - generic [ref=e17]: Given Name
+              - textbox "Given Name" [ref=e18]:
+                - /placeholder: John
+            - generic [ref=e19]:
+              - generic [ref=e20]: Surname
+              - textbox "Surname" [ref=e21]:
+                - /placeholder: Doe
+          - generic [ref=e22]:
+            - generic [ref=e23]: Institutional Role
+            - generic [ref=e24]:
+              - button "Student" [ref=e25] [cursor=pointer]
+              - button "Faculty" [ref=e26] [cursor=pointer]
+          - generic [ref=e27]:
+            - generic [ref=e28]: Institutional Email
+            - textbox "Institutional Email" [ref=e29]:
+              - /placeholder: name@institution.com
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - generic [ref=e32]: Access Key
+              - textbox "Access Key" [ref=e33]:
+                - /placeholder: ••••••••
+            - generic [ref=e34]:
+              - generic [ref=e35]: Confirm Key
+              - textbox "Confirm Key" [ref=e36]:
+                - /placeholder: ••••••••
+          - button "Begin Enrollment →" [ref=e37] [cursor=pointer]:
+            - generic [ref=e38]: Begin Enrollment
+            - generic [ref=e39]: →
+        - paragraph [ref=e41]:
+          - text: Already enrolled?
+          - button "Sign In" [ref=e42] [cursor=pointer]
+      - link "← Back to Home" [ref=e44] [cursor=pointer]:
+        - /url: /
+    - generic [ref=e45]:
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - generic [ref=e52]: Caplet
+          - img "Caplet" [ref=e54]
+        - generic [ref=e55]:
+          - heading "Join the new standard." [level=1] [ref=e56]:
+            - text: Join the new
+            - text: standard.
+          - paragraph [ref=e57]: Create your institutional capability profile. Access structured learning modules, financial tools, and real-time progress tracking.
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - heading "Student Access" [level=3] [ref=e61]
+          - paragraph [ref=e62]: Full curriculum, progress tracking, interactive quizzes.
+        - generic [ref=e63]:
+          - heading "Faculty Access" [level=3] [ref=e64]
+          - paragraph [ref=e65]: Class management, assignment distribution, analytics.

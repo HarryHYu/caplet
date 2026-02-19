@@ -22,7 +22,7 @@ export const CoursesProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       const response = await api.getCourses(params);
-      setCourses(response.courses);
+      setCourses(response.courses || response || []);
       return response;
     } catch (error) {
       setError(error.message);

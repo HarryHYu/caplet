@@ -64,19 +64,19 @@ const Tools = () => {
   });
 
   return (
-    <div className="min-h-screen py-24">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       {/* Hero Section */}
-      <section className="mb-20">
+      <section className="mb-24">
         <div className="container-custom">
-          <div className="animate-slide-up">
-            <span className="section-kicker mb-6">
-              Financial Tools
+          <div className="reveal-text">
+            <span className="section-kicker mb-8">
+              Utility Suite
             </span>
-            <h1 className="text-5xl md:text-6xl font-extrabold text-black dark:text-white mb-8 tracking-tighter uppercase">
-              Financial <br />Calculators.
+            <h1 className="text-6xl lg:text-8xl mb-10">
+              Technical <br />Calculators.
             </h1>
-            <p className="text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl font-medium leading-relaxed">
-              Free tools to help you calculate tax, plan your budget, and make better financial decisions.
+            <p className="text-xl text-text-muted max-w-2xl font-serif italic leading-relaxed">
+              Proprietary tools for tax estimation, asset projection, and structural budget analysis.
             </p>
           </div>
         </div>
@@ -86,28 +86,24 @@ const Tools = () => {
       <section className="pb-32">
         <div className="container-custom">
           {/* Search Bar */}
-          <div className="mb-20 animate-slide-up" style={{ animationDelay: '100ms' }}>
-            <div className="relative max-w-3xl">
+          <div className="mb-24 reveal-text stagger-1">
+            <div className="relative max-w-4xl">
+              <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none text-text-dim">
+                <span className="text-[10px] font-black tracking-widest uppercase">Search_</span>
+              </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tools..."
-                className="w-full px-5 py-5 pl-14 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 text-black dark:text-white font-bold text-xs uppercase tracking-[0.2em] focus:border-brand outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                placeholder="BY IDENTIFIER OR FUNCTION"
+                className="w-full px-24 py-8 bg-surface-raised border border-line-soft text-text-primary font-bold text-xs uppercase tracking-[0.4em] focus:border-accent outline-none transition-all placeholder:text-text-dim/30"
               />
-              <div className="absolute left-5 top-1/2 transform -translate-y-1/2 text-zinc-400">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-5 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
+                  className="absolute right-8 top-1/2 -translate-y-1/2 text-text-dim hover:text-accent transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  [ CLR ]
                 </button>
               )}
             </div>
@@ -115,63 +111,55 @@ const Tools = () => {
 
           {/* Tools Grid */}
           {filteredTools.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {filteredTools.map((tool, index) => {
-                const cardInner = (
-                  <div className="p-10 flex flex-col flex-grow">
-                    <div className="w-8 h-1 overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-8">
-                      <div className="w-full h-full bg-brand origin-left transition-transform duration-500 group-hover:scale-x-50" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5 bg-line-soft border border-line-soft reveal-text stagger-2">
+              {filteredTools.map((tool, index) => (
+                <Link
+                  key={index}
+                  to={tool.path || '#'}
+                  className="group bg-surface-body p-12 lg:p-16 relative overflow-hidden flex flex-col min-h-[400px] transition-all hover:bg-surface-soft"
+                >
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] grid-technical !bg-[size:25px_25px] transition-opacity" />
+
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="flex justify-between items-start mb-16">
+                      <span className="text-[9px] font-black uppercase tracking-[0.4em] text-text-dim">0{index + 1} / UTILITY</span>
+                      <div className="w-10 h-10 border border-line-soft flex items-center justify-center text-text-dim group-hover:text-accent group-hover:border-accent transition-all">
+                        →
+                      </div>
                     </div>
-                    <h3 className="text-xl font-extrabold text-black dark:text-white mb-4 group-hover:text-brand transition-colors leading-tight uppercase tracking-tighter">
-                      {tool.title}
+
+                    <h3 className="text-3xl font-serif italic text-text-primary mb-6 group-hover:text-accent transition-colors">
+                      {tool.title}.
                     </h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-xs font-medium leading-relaxed flex-grow mb-10 line-clamp-3">
+                    <p className="text-sm font-medium text-text-muted leading-relaxed line-clamp-3 mb-10">
                       {tool.description}
                     </p>
-                    {tool.path ? (
-                      <div className="inline-flex items-center justify-between w-full text-[10px] font-bold uppercase tracking-[0.2em] text-brand border-t border-zinc-50 dark:border-zinc-900 pt-8">
-                        Open Tool
-                        <span className="group-hover:translate-x-1 transition-transform">→</span>
-                      </div>
-                    ) : (
-                      <div className="inline-flex items-center justify-center px-6 py-3 bg-zinc-50 dark:bg-zinc-900 text-zinc-400 text-[10px] font-bold uppercase tracking-widest cursor-not-allowed">
-                        Status: Development
-                      </div>
-                    )}
-                  </div>
-                );
 
-                if (tool.path) {
-                  return (
-                    <Link
-                      key={index}
-                      to={tool.path}
-                      className="mesh-card p-0 group animate-slide-up bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 overflow-hidden flex flex-col"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      {cardInner}
-                    </Link>
-                  );
-                }
-
-                return (
-                  <div
-                    key={index}
-                    className="mesh-card p-0 group animate-slide-up bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 overflow-hidden flex flex-col"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    {cardInner}
+                    <div className="mt-auto pt-8 border-t border-line-soft flex items-end justify-between">
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-text-dim mb-1">Accessibility</p>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${tool.path ? 'text-accent' : 'text-text-muted'}`}>
+                          {tool.path ? 'Active Terminal' : 'Development'}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-dim group-hover:text-text-primary transition-colors">Invoke Module</span>
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
+                </Link>
+              ))}
             </div>
           ) : (
-            <div className="text-center py-32 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 animate-fade-in">
-              <p className="text-zinc-500 font-extrabold text-xs uppercase tracking-[0.3em]">
-                No tools found
+            <div className="text-center py-40 bg-surface-raised border border-line-soft reveal-text">
+              <div className="mb-8 opacity-20">
+                <span className="text-6xl font-serif italic text-text-dim">?</span>
+              </div>
+              <p className="text-text-dim font-black text-xs uppercase tracking-[0.4em]">
+                Registry Query Null
               </p>
-              <p className="text-zinc-400 font-bold text-[10px] uppercase tracking-widest mt-4">
-                Try a different search term
+              <p className="text-text-muted font-serif italic text-sm mt-4">
+                No tools found for the requested identifier.
               </p>
             </div>
           )}
@@ -180,6 +168,7 @@ const Tools = () => {
     </div>
   );
 };
+
 
 export default Tools;
 

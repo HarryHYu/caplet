@@ -10,6 +10,7 @@ export default {
       fontFamily: {
         display: ['"Outfit"', 'system-ui', 'sans-serif'],
         body: ['"Outfit"', 'system-ui', 'sans-serif'],
+        serif: ['"Outfit"', 'sans-serif'],
       },
       colors: {
         // Monochrome Scale
@@ -29,32 +30,51 @@ export default {
           950: '#09090B',
         },
         dim: '#71717A',
-        // Highlight Blue
+        // Brand Blue (legacy)
         brand: {
           DEFAULT: '#0066FF',
           light: '#3385FF',
           dark: '#0052CC',
           soft: 'rgba(0, 102, 255, 0.05)',
         },
-        // Support for established component patterns
+        // Design system tokens — CSS variable backed
         accent: {
-          DEFAULT: '#0066FF',
-          light: '#3385FF',
-          dark: '#0052CC',
+          DEFAULT: 'var(--accent)',
+          strong: 'var(--accent-strong)',
+          soft: 'var(--accent-soft)',
+        },
+        surface: {
+          body: 'var(--surface-body)',
+          soft: 'var(--surface-soft)',
+          raised: 'var(--surface-raised)',
+          inverse: 'var(--surface-inverse)',
+        },
+        text: {
+          primary: 'var(--text-primary)',
+          muted: 'var(--text-muted)',
+          dim: 'var(--text-dim)',
+          contrast: 'var(--text-contrast)',
+        },
+        line: {
+          soft: 'var(--line-soft)',
+          strong: 'var(--line-strong)',
         },
       },
+      letterSpacing: {
+        ultra: '-0.05em',
+      },
       boxShadow: {
-        'minimal': '0 1px 3px rgba(0, 0, 0, 0.05)',
+        minimal: '0 1px 3px rgba(0, 0, 0, 0.05)',
         'minimal-lg': '0 4px 12px rgba(0, 0, 0, 0.08)',
-        'glow': '0 0 20px rgba(0, 102, 255, 0.15)',
+        glow: '0 0 20px rgba(0, 102, 255, 0.15)',
       },
       borderRadius: {
-        'none': '0',
-        'sm': '1px',
-        'DEFAULT': '2px',
-        'md': '4px',
-        'lg': '6px',
-        'xl': '8px',
+        none: '0',
+        sm: '1px',
+        DEFAULT: '2px',
+        md: '4px',
+        lg: '6px',
+        xl: '8px',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out forwards',
