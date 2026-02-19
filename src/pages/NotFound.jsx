@@ -4,26 +4,29 @@ import { useAuth } from '../contexts/AuthContext';
 const NotFound = () => {
   const { isAuthenticated } = useAuth();
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="text-center">
-        <h1 className="text-9xl font-bold text-blue-600 dark:text-blue-400">404</h1>
-        <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mt-4 mb-2">
-          Page Not Found
-        </h2>
-        <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
-          Sorry, we couldn't find the page you're looking for. It might have been moved or deleted.
+    <div className="min-h-screen flex items-center justify-center px-4 page-section-light">
+      <div className="text-center max-w-md mx-auto">
+        <span className="section-kicker mb-4 text-red-500">Page Not Found</span>
+        <h1 className="text-[64px] md:text-[80px] font-black text-black dark:text-white leading-none mb-4">
+          404
+        </h1>
+        <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em] mb-6">
+          Page not found.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-8 font-medium uppercase tracking-tight">
+          The page you're looking for doesn't exist or has been moved. Try navigating back to the home page or courses.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             to={isAuthenticated ? '/courses' : '/'}
-            className="btn-primary text-lg px-8 py-3"
+            className="btn-primary text-[10px] px-8 py-3"
           >
             {isAuthenticated ? 'Go to Courses' : 'Go Home'}
           </Link>
           {isAuthenticated && (
             <Link
               to="/classes"
-              className="btn-secondary text-lg px-8 py-3"
+              className="btn-secondary text-[10px] px-8 py-3"
             >
               Classes
             </Link>
@@ -31,7 +34,7 @@ const NotFound = () => {
           {!isAuthenticated && (
             <Link
               to="/courses"
-              className="btn-secondary text-lg px-8 py-3"
+              className="btn-secondary text-[10px] px-8 py-3"
             >
               Browse Courses
             </Link>

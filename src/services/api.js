@@ -245,6 +245,12 @@ class ApiService {
     });
   }
 
+  async deleteAnnouncementComment(classId, announcementId, commentId) {
+    return this.request(`/classes/${classId}/announcements/${announcementId}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async getAssignmentComments(classId, assignmentId) {
     return this.request(`/classes/${classId}/assignments/${assignmentId}/comments`);
   }
@@ -253,6 +259,12 @@ class ApiService {
     return this.request(`/classes/${classId}/assignments/${assignmentId}/comments`, {
       method: 'POST',
       body: JSON.stringify({ content, isPrivate: !!isPrivate, targetUserId: targetUserId || undefined }),
+    });
+  }
+
+  async deleteAssignmentComment(classId, assignmentId, commentId) {
+    return this.request(`/classes/${classId}/assignments/${assignmentId}/comments/${commentId}`, {
+      method: 'DELETE',
     });
   }
 

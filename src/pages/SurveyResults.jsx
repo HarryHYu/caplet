@@ -25,10 +25,12 @@ const SurveyResults = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading survey results...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-brand border-t-transparent mx-auto mb-4"></div>
+          <p className="mt-2 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em]">
+            Loading survey results...
+          </p>
         </div>
       </div>
     );
@@ -36,9 +38,12 @@ const SurveyResults = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400">{error}</p>
+      <div className="min-h-screen flex items-center justify-center page-section-light">
+        <div className="text-center max-w-md mx-auto px-6">
+          <span className="section-kicker mb-4 text-red-500">Error</span>
+          <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em]">
+            {error}
+          </p>
         </div>
       </div>
     );
@@ -46,11 +51,14 @@ const SurveyResults = () => {
 
   if (!stats || stats.total === 0) {
     return (
-      <div className="min-h-screen py-16">
+      <div className="min-h-screen py-24 page-section-light">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Survey Results</h1>
-            <p className="text-gray-600 dark:text-gray-300">No survey responses yet. Check back later!</p>
+          <div className="max-w-4xl mx-auto bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 text-center">
+            <span className="section-kicker mb-4">Survey Results</span>
+            <h1 className="text-3xl font-extrabold text-black dark:text-white mb-4 uppercase tracking-tight">Survey Results</h1>
+            <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em]">
+              No survey responses yet. Check back later.
+            </p>
           </div>
         </div>
       </div>
@@ -91,12 +99,18 @@ const SurveyResults = () => {
   };
 
   return (
-    <div className="min-h-screen py-16">
+    <div className="min-h-screen py-24 page-section-light">
       <div className="container-custom">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Survey Results</h1>
-            <p className="text-gray-600 dark:text-gray-300">Total Responses: <span className="font-semibold text-blue-600 dark:text-blue-400">{stats.total}</span></p>
+          <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 mb-8">
+            <span className="section-kicker mb-4">Survey Results</span>
+            <h1 className="text-4xl font-extrabold text-black dark:text-white mb-2 uppercase tracking-tight">Survey Results</h1>
+            <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em]">
+              Total Responses:{' '}
+              <span className="text-brand">
+                {stats.total}
+              </span>
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
