@@ -410,9 +410,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
       role: m.role,
     }));
 
+    const currentMemberIds = new Set(members.map((m) => m.id));
+
     const assignmentsDto = assignments.map((a) => {
       if (membership.role === 'teacher') {
-        const submissions = (a.submissions || []).map((s) => ({
+        const allSubmissions = (a.submissions || []).map((s) => ({
           id: s.id,
           studentId: s.studentId,
           status: s.status,
@@ -426,6 +428,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
               }
             : null,
         }));
+        // Only include submissions for current members (exclude students who left)
+        const submissions = allSubmissions.filter((s) => currentMemberIds.has(s.studentId));
 
         return {
           id: a.id,
