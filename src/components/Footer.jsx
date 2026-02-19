@@ -55,9 +55,9 @@ const Footer = () => {
             <h3 className="text-[10px] font-bold text-accent uppercase tracking-[0.4em] mb-10">Resources</h3>
             <ul className="space-y-6">
               {[
-                { label: 'Terminal', path: '/dashboard' },
+                { label: 'My Dashboard', path: '/dashboard' },
                 { label: 'Support', path: '/contact' },
-                { label: 'Security', path: '#' }
+                { label: 'Security', path: '/terms' }
               ].map(link => (
                 <li key={link.label}>
                   <Link to={link.path} className="text-[11px] font-bold uppercase tracking-widest text-text-muted hover:text-accent transition-colors">
@@ -86,8 +86,8 @@ const Footer = () => {
             © {new Date().getFullYear()} Caplet Education. Precision in Finance.
           </p>
           <div className="flex items-center gap-12 text-[10px] font-bold uppercase tracking-widest text-text-dim">
-            <Link to="#" className="hover:text-accent transition-colors">Privacy Protocol</Link>
-            <Link to="#" className="hover:text-accent transition-colors">Terms of Service</Link>
+            <Link to="/terms" className="hover:text-accent transition-colors">Privacy Protocol</Link>
+            <Link to="/terms" className="hover:text-accent transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

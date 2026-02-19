@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 function getYouTubeId(url) {
@@ -21,6 +22,7 @@ function getFlatLessons(course) {
 const LessonPlayer = () => {
   const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [course, setCourse] = useState(null);
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ const LessonPlayer = () => {
         setCourse(courseData);
         setLesson(lessonData || currentFromList);
         const current = lessonData || currentFromList;
-        if (current) {
+        if (current && isAuthenticated) {
           try {
             const prog = await api.getCourseProgress(courseId);
             setProgress(prog);
@@ -72,7 +74,7 @@ const LessonPlayer = () => {
       }
     };
     load();
-  }, [courseId, lessonId]);
+  }, [courseId, lessonId, isAuthenticated]);
 
   const goToSlide = (newIndex) => {
     const slides = Array.isArray(lesson.slides) ? lesson.slides : [];
@@ -80,10 +82,16 @@ const LessonPlayer = () => {
     setCurrentSlideIndex(newIndex);
     setQuestionAnswer(null);
     setQuestionSubmitted(false);
-    api.updateLessonProgress(lesson.id, { lastSlideIndex: newIndex }).catch(() => { });
+    if (isAuthenticated) {
+      api.updateLessonProgress(lesson.id, { lastSlideIndex: newIndex }).catch(() => { });
+    }
   };
 
   const markComplete = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
     try {
       setSaving(true);
       await api.updateLessonProgress(lesson.id, { status: 'completed' });
@@ -145,7 +153,9 @@ const LessonPlayer = () => {
   const recordQuestionAnswer = async (slideIndex, isCorrect) => {
     const key = String(slideIndex);
     setQuestionSubmitted(true);
-    await api.updateLessonProgress(lesson.id, { quizScores: { [key]: isCorrect }, lastSlideIndex: slideIndex }).catch(() => { });
+    if (isAuthenticated) {
+      await api.updateLessonProgress(lesson.id, { quizScores: { [key]: isCorrect }, lastSlideIndex: slideIndex }).catch(() => { });
+    }
     setProgress(prev => ({
       ...prev,
       lessonProgress: (prev.lessonProgress || []).map(p =>

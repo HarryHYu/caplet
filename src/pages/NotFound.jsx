@@ -4,39 +4,39 @@ import { useAuth } from '../contexts/AuthContext';
 const NotFound = () => {
   const { isAuthenticated } = useAuth();
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 page-section-light">
-      <div className="text-center max-w-md mx-auto">
-        <span className="section-kicker mb-4 text-red-500">Page Not Found</span>
-        <h1 className="text-[64px] md:text-[80px] font-black text-black dark:text-white leading-none mb-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-surface-body selection:bg-accent selection:text-white">
+      <div className="text-center max-w-md mx-auto reveal-text">
+        <span className="section-kicker !text-red-500 mb-6">Protocol Error</span>
+        <h1 className="text-[80px] md:text-[120px] font-serif italic text-text-primary leading-none mb-4">
           404
         </h1>
-        <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em] mb-6">
-          Page not found.
+        <p className="text-[10px] font-bold text-text-dim uppercase tracking-[0.4em] mb-8">
+          Page not found. The requested node does not exist within this registry.
         </p>
-        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-8 font-medium uppercase tracking-tight">
+        <p className="text-sm text-text-muted font-medium leading-relaxed mb-12">
           The page you're looking for doesn't exist or has been moved. Try navigating back to the home page or courses.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             to={isAuthenticated ? '/courses' : '/'}
-            className="btn-primary text-[10px] px-8 py-3"
+            className="btn-primary text-[10px] px-10 py-5"
           >
-            {isAuthenticated ? 'Go to Courses' : 'Go Home'}
+            {isAuthenticated ? 'Return to Curriculum' : 'Return to Index'}
           </Link>
           {isAuthenticated && (
             <Link
               to="/classes"
-              className="btn-secondary text-[10px] px-8 py-3"
+              className="btn-secondary text-[10px] px-10 py-5"
             >
-              Classes
+              Academy
             </Link>
           )}
           {!isAuthenticated && (
             <Link
               to="/courses"
-              className="btn-secondary text-[10px] px-8 py-3"
+              className="btn-secondary text-[10px] px-10 py-5"
             >
-              Browse Courses
+              Browse Curriculum
             </Link>
           )}
         </div>

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ReferenceLine } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import api from '../services/api';
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4'];
+const COLORS = ['var(--color-text-primary)', 'var(--color-text-dim)', 'var(--color-line-soft)', 'var(--color-accent)', '#888', '#aaa', '#ccc'];
 
 const SurveyResults = () => {
   const [stats, setStats] = useState(null);
@@ -25,23 +25,19 @@ const SurveyResults = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-brand border-t-transparent mx-auto mb-4"></div>
-          <p className="mt-2 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em]">
-            Loading survey results...
-          </p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-surface-body">
+        <div className="w-12 h-12 border border-line-soft border-t-accent animate-spin mb-8" />
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted">Awaiting Data Harvest...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
-        <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-4 text-red-500">Error</span>
-          <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em]">
+      <div className="min-h-screen flex items-center justify-center bg-surface-body">
+        <div className="text-center max-w-md mx-auto px-6 reveal-text">
+          <span className="section-kicker mb-4 text-accent italic">Transmission Protocol Error</span>
+          <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
             {error}
           </p>
         </div>
@@ -51,13 +47,13 @@ const SurveyResults = () => {
 
   if (!stats || stats.total === 0) {
     return (
-      <div className="min-h-screen py-24 page-section-light">
+      <div className="min-h-screen py-32 bg-surface-body">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 text-center">
-            <span className="section-kicker mb-4">Survey Results</span>
-            <h1 className="text-3xl font-extrabold text-black dark:text-white mb-4 uppercase tracking-tight">Survey Results</h1>
-            <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em]">
-              No survey responses yet. Check back later.
+          <div className="max-w-4xl mx-auto bg-surface-raised border border-line-soft p-20 text-center reveal-text">
+            <span className="section-kicker mb-4">Observation Post</span>
+            <h1 className="text-4xl font-black mb-8 italic uppercase tracking-tighter">Null Result.</h1>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.25em]">
+              No empirical responses have been logged in the current cycle.
             </p>
           </div>
         </div>
@@ -65,25 +61,24 @@ const SurveyResults = () => {
     );
   }
 
-  // Prepare data for charts
   const ageData = Object.entries(stats.age).map(([name, value]) => ({ name, value }));
-  const tracksSpendingData = Object.entries(stats.tracksSpending).map(([name, value]) => ({ 
-    name: name === 'yes' ? 'Yes' : 'No', 
-    value 
+  const tracksSpendingData = Object.entries(stats.tracksSpending).map(([name, value]) => ({
+    name: name === 'yes' ? 'Affirmative' : 'Negative',
+    value
   }));
-  const taughtAtSchoolData = Object.entries(stats.taughtAtSchool).map(([name, value]) => ({ 
-    name: name === 'yes' ? 'Yes' : 'No', 
-    value 
+  const taughtAtSchoolData = Object.entries(stats.taughtAtSchool).map(([name, value]) => ({
+    name: name === 'yes' ? 'Institutional' : 'Autonomous',
+    value
   }));
-  const termsConfusingData = Object.entries(stats.termsConfusing).map(([name, value]) => ({ 
-    name: name === 'yes' ? 'Yes' : 'No', 
-    value 
+  const termsConfusingData = Object.entries(stats.termsConfusing).map(([name, value]) => ({
+    name: name === 'yes' ? 'Complex' : 'Transparent',
+    value
   }));
-  const helpfulExplanationsData = Object.entries(stats.helpfulExplanations).map(([name, value]) => ({ 
-    name, 
-    value 
+  const helpfulExplanationsData = Object.entries(stats.helpfulExplanations).map(([name, value]) => ({
+    name,
+    value
   }));
-  // Generate confidence data for all levels 1-10, filling in 0 for missing ones
+
   const confidenceData = [];
   for (let i = 1; i <= 10; i++) {
     confidenceData.push({
@@ -95,172 +90,197 @@ const SurveyResults = () => {
 
   const renderLabel = (entry) => {
     const percent = ((entry.value / stats.total) * 100).toFixed(1);
-    return `${entry.name}: ${percent}%`;
+    return `${entry.name} (${percent}%)`;
   };
 
   return (
-    <div className="min-h-screen py-24 page-section-light">
+    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 mb-8">
-            <span className="section-kicker mb-4">Survey Results</span>
-            <h1 className="text-4xl font-extrabold text-black dark:text-white mb-2 uppercase tracking-tight">Survey Results</h1>
-            <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.25em]">
-              Total Responses:{' '}
-              <span className="text-brand">
-                {stats.total}
-              </span>
-            </p>
+        <header className="mb-24 reveal-text">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+            <div>
+              <span className="section-kicker">Observatory &rarr; Global Matrix</span>
+              <h1 className="text-6xl md:text-8xl mb-8 font-black uppercase tracking-tighter">
+                Literacy <br />Spectrum.
+              </h1>
+              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
+                Synthesis of crowd-sourced financial intelligence and perceived competency across global demographics.
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim block mb-2 italic">Total Transmissions</span>
+              <span className="text-6xl font-black text-accent leading-none">{stats.total}</span>
+            </div>
           </div>
+          <div className="h-px w-full bg-line-soft" />
+        </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            {/* Age Distribution */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Age Distribution</h2>
-              <ResponsiveContainer width="100%" height={300}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-line-soft border border-line-soft reveal-text stagger-1 mb-px">
+          <div className="bg-surface-body p-12 lg:p-16 border-b lg:border-b-0 lg:border-r border-line-soft">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-12 italic">Demographic Architecture</h2>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={ageData}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={renderLabel}
-                    outerRadius={80}
-                    fill="#8884d8"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
                     dataKey="value"
                   >
                     {ageData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="transparent" />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                  <Legend verticalAlign="bottom" align="center" iconType="square" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
+          </div>
 
-            {/* Tracks Spending */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Do You Track Your Spending?</h2>
-              <ResponsiveContainer width="100%" height={300}>
+          <div className="bg-surface-body p-12 lg:p-16">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-12 italic">Economic Discipline</h2>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={tracksSpendingData}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={renderLabel}
-                    outerRadius={80}
-                    fill="#8884d8"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
                     dataKey="value"
                   >
                     {tracksSpendingData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={['var(--color-accent)', 'var(--color-line-soft)'][index % 2]} stroke="transparent" />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                  <Legend verticalAlign="bottom" align="center" iconType="square" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
+          </div>
+        </div>
 
-            {/* Taught at School */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Taught Financial Concepts at School?</h2>
-              <ResponsiveContainer width="100%" height={300}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-line-soft border-x border-b border-line-soft reveal-text stagger-2 mb-px">
+          <div className="bg-surface-body p-12 lg:p-16 border-b lg:border-b-0 lg:border-r border-line-soft">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-12 italic">Educational Heritage</h2>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={taughtAtSchoolData}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={renderLabel}
-                    outerRadius={80}
-                    fill="#8884d8"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
                     dataKey="value"
                   >
                     {taughtAtSchoolData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={['var(--color-text-primary)', 'var(--color-line-soft)'][index % 2]} stroke="transparent" />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                  <Legend verticalAlign="bottom" align="center" iconType="square" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
+          </div>
 
-            {/* Terms Confusing */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Do Financial Terms Feel Confusing?</h2>
-              <ResponsiveContainer width="100%" height={300}>
+          <div className="bg-surface-body p-12 lg:p-16">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-12 italic">Semantic Barrier Analysis</h2>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={termsConfusingData}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={renderLabel}
-                    outerRadius={80}
-                    fill="#8884d8"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
                     dataKey="value"
                   >
                     {termsConfusingData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={['var(--color-accent)', 'var(--color-text-dim)'][index % 2]} stroke="transparent" />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                  <Legend verticalAlign="bottom" align="center" iconType="square" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
+        </div>
 
-          {/* Confidence Level */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Confidence in Understanding Financial Concepts
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Average Confidence: <span className="font-semibold text-blue-600">{stats.confidence.average} / 10</span>
-            </p>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={confidenceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name" 
-                  label={{ value: 'Confidence Level', position: 'insideBottom', offset: -5 }}
-                />
-                <YAxis 
-                  label={{ value: 'Number of Responses', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip />
-                <ReferenceLine 
-                  y={stats.confidence.average} 
-                  stroke="#EF4444" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  label={{ value: `Average: ${stats.confidence.average}`, position: 'right' }}
-                />
-                <Bar dataKey="value" fill="#3B82F6" />
-              </BarChart>
-            </ResponsiveContainer>
+        {/* Confidence Level */}
+        <div className="bg-surface-raised border-x border-b border-line-soft p-12 lg:p-20 reveal-text stagger-3 mb-px relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.02] grid-technical !bg-[size:40px_40px] pointer-events-none" />
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 relative z-10">
+            <div>
+              <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-2 italic">Competency Self-Assessment</h2>
+              <p className="text-sm font-serif italic text-text-dim">Distribution of perceived knowledge levels (1-10 Scale).</p>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-text-muted block mb-1">Matrix Average</span>
+              <span className="text-4xl font-black text-accent">{stats.confidence.average}</span>
+            </div>
           </div>
-
-          {/* Helpful Explanations */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              What Helps You Understand Financial Concepts?
-            </h2>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={helpfulExplanationsData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={150} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#10B981" />
+          <div className="h-[300px] relative z-10">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={confidenceData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-line-soft)" />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 10, fontWeight: 'bold', fill: 'var(--color-text-dim)' }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 10, fontWeight: 'bold', fill: 'var(--color-text-dim)' }}
+                />
+                <Tooltip cursor={{ fill: 'var(--color-surface-body)', opacity: 0.4 }} contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                <Bar dataKey="value" fill="var(--color-text-primary)" barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* Helpful Explanations */}
+        <div className="bg-surface-body border-x border-b border-line-soft p-12 lg:p-20 reveal-text stagger-4">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 italic">Pedagogical Preference Matrix</h2>
+          <div className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={helpfulExplanationsData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-line-soft)" />
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={180}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 9, fontWeight: 'black', fill: 'var(--color-text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                />
+                <Tooltip cursor={{ fill: 'var(--color-surface-raised)', opacity: 0.4 }} contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                <Bar dataKey="value" fill="var(--color-accent)" barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <footer className="mt-20 flex justify-between items-center text-[9px] font-black uppercase tracking-[0.4em] text-text-dim opacity-40">
+          <span>Observation Cycle: 2024.A</span>
+          <span>Transmission Integrity: 100%</span>
+        </footer>
       </div>
     </div>
   );

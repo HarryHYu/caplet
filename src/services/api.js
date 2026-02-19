@@ -1,14 +1,16 @@
-const DEV_API_BASE_URLS = [
-  'http://localhost:5000/api',
-  'http://localhost:5002/api',
-];
 const PROD_API_BASE_URL = 'https://caplet-production.up.railway.app/api';
+const DEV_API_BASE_URLS = [
+  'http://localhost:5002/api',
+  'http://localhost:5000/api',
+  PROD_API_BASE_URL,
+];
 const ENV_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_BASE_URL = ENV_API_BASE_URL || (import.meta.env.DEV ? DEV_API_BASE_URLS[0] : PROD_API_BASE_URL);
 
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
+    console.log('API Service Initialized with Base URL:', this.baseURL); // Debug log
     this.baseURLCandidates = ENV_API_BASE_URL
       ? [ENV_API_BASE_URL]
       : (import.meta.env.DEV ? DEV_API_BASE_URLS : [PROD_API_BASE_URL]);
@@ -62,7 +64,9 @@ class ApiService {
 
       if (!response.ok) {
         const errorMsg = data.message || data.errors?.[0]?.msg || data.errors?.[0]?.message || `Error ${response.status}: ${response.statusText}`;
-        throw new Error(errorMsg);
+        const error = new Error(errorMsg);
+        error.status = response.status;
+        throw error;
       }
 
       return data;
@@ -87,13 +91,11 @@ class ApiService {
         const canRetry = i < candidateBaseURLs.length - 1;
         const isNetworkError = error instanceof TypeError;
         if (!(canRetry && isNetworkError)) {
-          console.error('API Error:', error);
           throw error;
         }
       }
     }
 
-    console.error('API Error:', lastError);
     throw lastError;
   }
 
@@ -375,7 +377,9 @@ class ApiService {
       if (host.includes('reddit') || host.includes('imgur') || host.includes('drive.google') || host.includes('googleusercontent') || host.includes('cloudinary')) {
         return `${this.baseURL}/proxy-image?url=${encodeURIComponent(imageUrl)}`;
       }
-    } catch (_) { }
+    } catch {
+      return imageUrl;
+    }
     return imageUrl;
   }
 }

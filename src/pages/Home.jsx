@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useCourses } from '../contexts/CoursesContext';
 import cfcLogo from '../assets/CFC Logo (1).png';
 
@@ -52,36 +52,28 @@ const faqData = [
 ];
 
 const Home = () => {
-  const { courses } = useCourses();
-  const featuredCourses = useMemo(() => courses.slice(0, 3), [courses]);
+  const { courses, loading, error, hasFetched, fetchCourses } = useCourses();
+  const featuredCourses = useMemo(() => (Array.isArray(courses) ? courses.slice(0, 3) : []), [courses]);
   const [openFaq, setOpenFaq] = useState(new Set());
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (!hasFetched && !loading) {
+      fetchCourses().catch(() => {
+        // Error state is managed in context.
+      });
+    }
+  }, [fetchCourses, hasFetched, loading]);
 
   const toggleFaq = (index) => {
-    const next = new Set(openFaq);
-    if (next.has(index)) {
-      next.delete(index);
-    } else {
-      next.add(index);
-    }
-    setOpenFaq(next);
-  };
-
-  const handleMouseMove = (e) => {
-    const card = e.currentTarget;
-    const box = card.getBoundingClientRect();
-    const x = e.clientX - box.left;
-    const y = e.clientY - box.top;
-    const centerX = box.width / 2;
-    const centerY = box.height / 2;
-    const rotateX = (y - centerY) / 12;
-    const rotateY = (centerX - x) / 12;
-
-    setTilt({ x: rotateX, y: rotateY });
-  };
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
+    setOpenFaq((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
   };
 
   return (
@@ -91,7 +83,7 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-surface-body via-surface-body/80 to-surface-body pointer-events-none" />
 
         <div className="container-custom relative z-10">
-          <div className="max-w-4xl mx-auto text-center reveal-text">
+          <div className="max-w-4xl mx-auto text-center">
             <span className="section-kicker">Academic Standard ・ Australian Context</span>
             <h1 className="text-5xl md:text-7xl lg:text-8xl mb-12 text-balance tracking-tighter font-extrabold">
               Most people will never think about <br className="hidden md:block" />
@@ -142,7 +134,7 @@ const Home = () => {
       <section className="py-40 lg:py-64">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-24 items-start">
-            <div className="lg:col-span-5 reveal-text">
+            <div className="lg:col-span-5">
               <span className="section-kicker">The Edge</span>
               <h2 className="mb-12">Practical learning <br />over theory.</h2>
               <p className="text-lg text-text-muted leading-relaxed font-medium">
@@ -157,10 +149,10 @@ const Home = () => {
                   <p className="text-sm text-text-muted leading-relaxed font-medium">{feature.text}</p>
                 </div>
               ))}
-              <div className="bg-accent p-12 text-white flex flex-col justify-between group cursor-pointer">
+              <Link to="/register" className="bg-accent p-12 text-white flex flex-col justify-between group cursor-pointer transition-transform hover:scale-[0.99] active:scale-[0.97]">
                 <h3 className="text-xl font-bold uppercase tracking-tight">Join the network</h3>
                 <div className="text-4xl font-serif italic self-end group-hover:translate-x-2 transition-transform">&rarr;</div>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -195,7 +187,7 @@ const Home = () => {
               </div>
             </div>
 
-            <div className="relative aspect-square reveal-text stagger-2">
+            <div className="relative aspect-square">
               <div className="absolute inset-0 border border-zinc-800 rotate-45 scale-75 group-hover:rotate-90 transition-transform duration-1000" />
               <div className="absolute inset-0 border border-accent/30 -rotate-12 scale-90" />
               <div className="absolute inset-0 flex items-center justify-center">
@@ -216,7 +208,7 @@ const Home = () => {
       <section className="py-40 lg:py-64">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-12 mb-32">
-            <div className="reveal-text">
+            <div>
               <span className="section-kicker">Curriculum</span>
               <h2 className="text-balance">Explore the <br />modules.</h2>
             </div>
@@ -226,13 +218,28 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-line-soft border border-line-soft">
-            {featuredCourses.length > 0 ? (
-              featuredCourses.map((course, index) => (
+            {loading && !hasFetched ? (
+              <div className="col-span-full py-40 text-center bg-surface-body">
+                <p className="text-text-dim font-bold uppercase tracking-[0.4em] text-[10px] animate-pulse">Loading Academy...</p>
+              </div>
+            ) : error ? (
+              <div className="col-span-full py-32 px-8 text-center bg-surface-body">
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-red-600 mb-8">Curriculum unavailable</p>
+                <p className="text-sm text-text-muted mb-10">{error}</p>
+                <button
+                  type="button"
+                  onClick={() => fetchCourses().catch(() => {})}
+                  className="btn-secondary"
+                >
+                  Retry Load
+                </button>
+              </div>
+            ) : featuredCourses.length > 0 ? (
+              featuredCourses.map((course) => (
                 <Link
                   key={course.id}
                   to={`/courses/${course.id}`}
-                  className="bg-surface-body p-12 group transition-all duration-700 hover:bg-surface-raised reveal-text"
-                  style={{ animationDelay: `${index * 150}ms` }}
+                  className="bg-surface-body p-12 group transition-all duration-700 hover:bg-surface-raised"
                 >
                   <div className="flex justify-between items-start mb-16">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">
@@ -254,8 +261,11 @@ const Home = () => {
                 </Link>
               ))
             ) : (
-              <div className="col-span-full py-40 text-center bg-surface-body">
-                <p className="text-text-dim font-bold uppercase tracking-[0.4em] text-[10px] animate-pulse">Loading Academy...</p>
+              <div className="col-span-full py-32 px-8 text-center bg-surface-body">
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-text-dim mb-8">No curriculum published</p>
+                <Link to="/courses" className="btn-secondary">
+                  Browse Full Library
+                </Link>
               </div>
             )}
           </div>
@@ -267,7 +277,7 @@ const Home = () => {
         <div className="absolute top-0 right-0 w-1/3 h-full grid-technical opacity-20 pointer-events-none" />
         <div className="container-custom relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-start">
-            <div className="reveal-text">
+            <div>
               <span className="section-kicker">Academic Trust</span>
               <h2 className="mb-12">Designed for <br />Educators.</h2>
               <p className="text-xl text-text-muted font-medium leading-relaxed mb-16">
@@ -294,7 +304,7 @@ const Home = () => {
               </div>
             </div>
 
-            <div className="lg:sticky lg:top-32 p-1 bg-text-primary reveal-text stagger-2">
+            <div className="lg:sticky lg:top-32 p-1 bg-text-primary">
               <div className="bg-surface-body p-12 lg:p-20 border border-zinc-200">
                 <div className="w-12 h-px bg-accent mb-12" />
                 <blockquote className="text-3xl lg:text-4xl font-serif italic leading-tight text-balance mb-12">

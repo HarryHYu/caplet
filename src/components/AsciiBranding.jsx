@@ -23,10 +23,8 @@ const AsciiBranding = () => {
             const maxLen = CAPLET_ASCII[0].length;
 
             interval = setInterval(() => {
-                setLines(prev => {
-                    return CAPLET_ASCII.map((line, i) => {
-                        // Only reveal up to charIndex
-                        // We need to handle potential undefined if lines have diff lengths, though here they are consistent
+                setLines(() => {
+                    return CAPLET_ASCII.map((line) => {
                         return line.substring(0, charIndex);
                     });
                 });
@@ -83,9 +81,9 @@ const AsciiBranding = () => {
     }, [phase]);
 
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-900/50 relative overflow-hidden selection:bg-brand selection:text-white">
+        <div className="w-full h-full flex flex-col items-center justify-center bg-surface-soft relative overflow-hidden selection:bg-accent selection:text-white">
             {/* Background Grid */}
-            <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
                 style={{ backgroundImage: 'linear-gradient(#808080 1px, transparent 1px), linear-gradient(90deg, #808080 1px, transparent 1px)', backgroundSize: '32px 32px' }}>
             </div>
 
@@ -93,26 +91,26 @@ const AsciiBranding = () => {
 
                 {/* ASCII Container */}
                 <div className={`transition-opacity duration-500 ${showLogo ? 'opacity-0 absolute' : 'opacity-100'}`}>
-                    <div className="font-mono font-bold text-zinc-900 dark:text-zinc-100 whitespace-pre text-[10px] sm:text-[12px] md:text-[14px] leading-[1.15] tracking-tighter">
+                    <div className="font-mono font-bold text-text-primary whitespace-pre text-[10px] sm:text-[12px] md:text-[14px] leading-[1.15] tracking-tighter">
                         {lines.map((line, i) => (
                             <div key={i} className="h-[1.2em]">{line}</div>
                         ))}
                     </div>
-                    {phase === 'typing' && <div className="mt-8 text-center text-[10px] uppercase tracking-[0.2em] text-brand animate-pulse font-bold">Initializing System...</div>}
+                    {phase === 'typing' && <div className="mt-8 text-center text-[10px] uppercase tracking-[0.2em] text-accent animate-pulse font-bold">Initializing System...</div>}
                 </div>
 
                 {/* Logo Container */}
                 <div className={`transition-all duration-1000 transform absolute ${showLogo ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
                     <div className="relative">
-                        <div className="absolute inset-0 bg-brand/20 blur-[50px] rounded-full"></div>
-                        <div className="relative w-32 h-32 md:w-40 md:h-40 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 bg-white dark:bg-black shadow-2xl flex items-center justify-center ring-1 ring-black/5 dark:ring-white/10">
-                            <img src="/logo.png" alt="Caplet Logo" className="w-full h-full object-contain invert dark:invert-0" />
+                        <div className="absolute inset-0 bg-accent/20 blur-[50px] rounded-full"></div>
+                        <div className="relative w-32 h-32 md:w-40 md:h-40 border border-line-soft p-8 bg-surface-raised shadow-2xl flex items-center justify-center">
+                            <img src="/logo.png" alt="Caplet Logo" className="w-full h-full object-contain dark:invert" />
                         </div>
                     </div>
 
                     <div className="mt-8 text-center space-y-2">
-                        <h3 className="text-xl font-extrabold text-black dark:text-white uppercase tracking-tighter">Caplet</h3>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 animate-pulse">
+                        <h3 className="text-xl font-serif italic text-text-primary uppercase tracking-tighter">Caplet</h3>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim animate-pulse">
                             System Ready
                         </p>
                     </div>

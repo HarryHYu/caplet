@@ -28,7 +28,9 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        api.clearToken();
+        if (error.status === 401) {
+          api.clearToken();
+        }
       } finally {
         setLoading(false);
       }

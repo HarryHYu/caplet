@@ -1,0 +1,112 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet Logo Caplet." [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "Caplet Logo" [ref=e8]
+        - generic [ref=e9]: Caplet.
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Index" [ref=e12] [cursor=pointer]:
+            - /url: /
+          - link "Curriculum" [ref=e14] [cursor=pointer]:
+            - /url: /courses
+          - link "Academy" [ref=e15] [cursor=pointer]:
+            - /url: /classes
+          - link "Instruments" [ref=e16] [cursor=pointer]:
+            - /url: /tools
+          - link "Contact" [ref=e17] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e19]:
+          - button "Toggle dark mode" [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - link "Join Academy" [ref=e23] [cursor=pointer]:
+            - /url: /login
+  - main [ref=e24]:
+    - generic [ref=e305]:
+      - button "← Course Overview" [ref=e306] [cursor=pointer]
+      - generic [ref=e307]:
+        - generic [ref=e308]:
+          - heading "Stakeholders and Corporate Decision Making" [level=1] [ref=e309]
+          - paragraph [ref=e310]: Understanding corporate stakeholders, governance structures, and strategic decision-making processes.
+        - generic [ref=e312]:
+          - generic [ref=e313]: Progress
+          - generic [ref=e314]: 0 of 3 completed
+      - generic [ref=e316]:
+        - generic [ref=e317]:
+          - heading "Lessons" [level=2] [ref=e318]
+          - paragraph [ref=e319]: 3 lessons
+        - generic [ref=e320]:
+          - link "1 Introduction to Corporate Stakeholders Who are corporate stakeholders and their roles. Start Lesson →" [ref=e321] [cursor=pointer]:
+            - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/7efe5695-8e2b-4f4d-962d-beb0a43c8d9f
+            - generic [ref=e322]:
+              - generic [ref=e323]: "1"
+              - generic [ref=e324]:
+                - heading "Introduction to Corporate Stakeholders" [level=3] [ref=e325]
+                - generic [ref=e327]: Who are corporate stakeholders and their roles.
+            - generic [ref=e329]: Start Lesson →
+          - link "2 Corporate Governance Structures Understanding boards, committees, and management hierarchy. Start Lesson →" [ref=e330] [cursor=pointer]:
+            - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/8c46fa1b-9d2c-465a-89be-ef4b25bcdd37
+            - generic [ref=e331]:
+              - generic [ref=e332]: "2"
+              - generic [ref=e333]:
+                - heading "Corporate Governance Structures" [level=3] [ref=e334]
+                - generic [ref=e336]: Understanding boards, committees, and management hierarchy.
+            - generic [ref=e338]: Start Lesson →
+          - link "3 Agency Theory and Conflicts Exploring principal-agent relationships in corporations. Start Lesson →" [ref=e339] [cursor=pointer]:
+            - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/aaa1b472-1467-428a-9476-262e69db94f2
+            - generic [ref=e340]:
+              - generic [ref=e341]: "3"
+              - generic [ref=e342]:
+                - heading "Agency Theory and Conflicts" [level=3] [ref=e343]
+                - generic [ref=e345]: Exploring principal-agent relationships in corporations.
+            - generic [ref=e347]: Start Lesson →
+  - contentinfo [ref=e196]:
+    - generic [ref=e197]:
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - link "Caplet." [ref=e200] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e203]: Caplet.
+          - paragraph [ref=e204]: Professional financial education designed for the Australian context. Structured learning, built for school integration.
+          - generic [ref=e205]:
+            - generic [ref=e206]: Compliance
+            - generic [ref=e207]: Literacy
+            - generic [ref=e208]: Application
+        - generic [ref=e209]:
+          - heading "Academy" [level=3] [ref=e210]
+          - list [ref=e211]:
+            - listitem [ref=e212]:
+              - link "Curriculum" [ref=e213] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e214]:
+              - link "Academy" [ref=e215] [cursor=pointer]:
+                - /url: /classes
+            - listitem [ref=e216]:
+              - link "Instruments" [ref=e217] [cursor=pointer]:
+                - /url: /tools
+        - generic [ref=e218]:
+          - heading "Resources" [level=3] [ref=e219]
+          - list [ref=e220]:
+            - listitem [ref=e221]:
+              - link "Terminal" [ref=e222] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e223]:
+              - link "Support" [ref=e224] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e225]:
+              - link "Security" [ref=e226] [cursor=pointer]:
+                - /url: /terms
+        - generic [ref=e227]:
+          - generic [ref=e228]: Current Status
+          - generic [ref=e231]: Network Active
+          - generic [ref=e232]:
+            - text: Deployment v4.2.0
+            - text: "Cluster: AU-SYD-1"
+      - generic [ref=e233]:
+        - paragraph [ref=e234]: © 2026 Caplet Education. Precision in Finance.
+        - generic [ref=e235]:
+          - link "Privacy Protocol" [ref=e236] [cursor=pointer]:
+            - /url: /terms
+          - link "Terms of Service" [ref=e237] [cursor=pointer]:
+            - /url: /terms

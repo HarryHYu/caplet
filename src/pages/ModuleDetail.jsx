@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 const ModuleDetail = () => {
   const { courseId, moduleId } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [course, setCourse] = useState(null);
   const [module_, setModule_] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,11 +20,13 @@ const ModuleDetail = () => {
         setLoading(true);
         const courseResponse = await api.getCourse(courseId);
         setCourse(courseResponse);
-        try {
-          const prog = await api.getCourseProgress(courseId);
-          setProgress(prog);
-        } catch {
-          // ignore if not logged in
+        if (isAuthenticated) {
+          try {
+            const prog = await api.getCourseProgress(courseId);
+            setProgress(prog);
+          } catch {
+            // ignore when progress is unavailable
+          }
         }
       } catch (e) {
         setError(e.message);
@@ -31,7 +35,7 @@ const ModuleDetail = () => {
       }
     };
     load();
-  }, [courseId]);
+  }, [courseId, isAuthenticated]);
 
   useEffect(() => {
     if (!course?.modules) return;

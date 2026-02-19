@@ -61,136 +61,120 @@ const TaxCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen py-24 page-section-light">
-      <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
-        <div className="container-custom">
-          <div className="max-w-4xl">
-            <div className="flex items-center justify-between mb-8 animate-slide-up">
-              <div>
-                <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-4">
-                  Financial Tools
-                </p>
-                <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
-                  Tax <br />Calculator.
-                </h1>
-                <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest leading-relaxed max-w-xl">
-                  Estimate Australian income tax, Medicare levy, and take-home pay.
-                </p>
-              </div>
-              <Link to="/tools" className="text-[10px] font-black text-zinc-400 hover:text-brand uppercase tracking-widest transition-colors mb-auto">
-                ← Back to Tools
-              </Link>
+    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
+      <div className="container-custom">
+        <header className="mb-24 reveal-text">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+            <div>
+              <span className="section-kicker">Instruments &rarr; Compliance</span>
+              <h1 className="text-6xl md:text-8xl mb-8">
+                Tax <br />Architecture.
+              </h1>
+              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
+                Synthesize your fiscal obligation and optimize net outcome based on residency brackets.
+              </p>
             </div>
+            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
+              &larr; Back to Instruments
+            </Link>
           </div>
-        </div>
-      </section>
+          <div className="h-px w-full bg-line-soft" />
+        </header>
 
-      <section className="py-12">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-6xl">
-            <div className="lg:col-span-2 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900 p-10 reveal-up">
-              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Assessment Parameters</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Taxable income (annual)
-                  </label>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
+          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Assessment Parameters</h2>
+            <form onSubmit={handleSubmit} className="space-y-16">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                  Annual Taxable Income (AUD)
+                </label>
+                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
+                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
                   <input
                     type="number"
                     min="0"
                     step="100"
                     value={income}
                     onChange={(e) => setIncome(e.target.value)}
-                    placeholder="e.g. 85000"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0.00"
+                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
+              </div>
 
-                <div className="flex items-center">
-                  <input
-                    id="medicare"
-                    type="checkbox"
-                    checked={includeMedicare}
-                    onChange={(e) => setIncludeMedicare(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-600"
-                  />
-                  <label htmlFor="medicare" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                    Include Medicare levy (2%)
-                  </label>
+              <div className="flex items-center gap-4 p-6 bg-surface-raised border border-line-soft">
+                <input
+                  id="medicare"
+                  type="checkbox"
+                  checked={includeMedicare}
+                  onChange={(e) => setIncludeMedicare(e.target.checked)}
+                  className="w-5 h-5 accent-accent bg-transparent border-line-soft"
+                />
+                <label htmlFor="medicare" className="text-[10px] font-black uppercase tracking-widest text-text-primary">
+                  Integrate Medicare Levy (2.0%)
+                </label>
+              </div>
+
+              {error && (
+                <div className="text-[10px] font-bold text-accent uppercase tracking-widest">
+                  {error}
                 </div>
-
-                {error && (
-                  <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white font-semibold transition-colors"
-                >
-                  Calculate tax
-                </button>
-              </form>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-inner border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Summary
-              </h2>
-              {result ? (
-                <div className="space-y-4">
-                  <div className="break-words">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Taxable income</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                      {formatCurrency(result.taxableIncome)}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 overflow-hidden">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Income tax</p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.incomeTax)}
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 overflow-hidden">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Medicare levy</p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.medicare)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="break-words">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total tax</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                      {formatCurrency(result.totalTax)}
-                    </p>
-                  </div>
-                  <div className="break-words">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Take-home pay</p>
-                    <p className="text-2xl font-semibold text-green-600 dark:text-green-400 break-words overflow-wrap-anywhere">
-                      {formatCurrency(result.netIncome)}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      Effective tax rate: {result.effectiveRate.toFixed(2)}%
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Enter your taxable income to see your estimated tax for the year.
-                </p>
               )}
 
-              <div className="mt-6 text-xs text-gray-500 dark:text-gray-400 space-y-2">
-                <p>• Based on Australian resident tax rates for 2023-24.</p>
-                <p>• Does not include offsets, HECS/HELP, or other levies.</p>
-                <p>• For educational purposes only. Consult a professional for personalised advice.</p>
+              <button type="submit" className="btn-primary w-full py-6 text-xs uppercase tracking-[0.3em] mt-8">
+                Execute Assessment
+              </button>
+            </form>
+          </div>
+
+          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Fiscal Summary</h2>
+
+            {result ? (
+              <div className="space-y-12 relative z-10">
+                <div>
+                  <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-4 italic">Estimated Liability</p>
+                  <p className="text-5xl font-black tracking-tighter text-text-primary">
+                    {formatCurrency(result.totalTax)}
+                  </p>
+                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.3em] mt-4">Effective Rate: {result.effectiveRate.toFixed(2)}%</p>
+                </div>
+
+                <div className="pt-10 border-t border-line-soft space-y-8">
+                  <div className="grid grid-cols-2 gap-px bg-line-soft border border-line-soft">
+                    <div className="bg-surface-body p-6">
+                      <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mb-1">Income Tax</p>
+                      <p className="text-lg font-bold">{formatCurrency(result.incomeTax)}</p>
+                    </div>
+                    <div className="bg-surface-body p-6">
+                      <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mb-1">Medicare</p>
+                      <p className="text-lg font-bold">{formatCurrency(result.medicare)}</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-surface-body p-8 border border-line-soft">
+                    <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-4">Net Liquidity (Annual)</p>
+                    <p className="text-3xl font-black text-accent">{formatCurrency(result.netIncome)}</p>
+                  </div>
+
+                  <div className="pt-8 border-t border-line-soft text-[9px] text-text-dim space-y-2 opacity-60 uppercase tracking-widest font-bold">
+                    <p>• AU Resident Rates (2023-24)</p>
+                    <p>• Excludes HECS/HELP Adjustments</p>
+                    <p>• Schematic Educational Purpose Only</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
+                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">FISCAL</div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Awaiting Income Data</p>
+              </div>
+            )}
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

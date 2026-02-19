@@ -37,7 +37,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto reveal-text">
+    <div className={`w-full mx-auto reveal-text ${isPage ? 'max-w-xl' : 'max-w-md'}`}>
       <div className="mb-16">
         <span className="section-kicker">Access Terminal</span>
         <h2 className="text-5xl font-serif italic mb-4">
@@ -97,7 +97,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              <span>Bypass Gate</span>
+              <span>login:</span>
               <span className="group-hover:translate-x-2 transition-transform">→</span>
             </>
           )}
