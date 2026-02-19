@@ -1,0 +1,164 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet Logo Caplet." [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "Caplet Logo" [ref=e8]
+        - generic [ref=e9]: Caplet.
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Index" [ref=e12] [cursor=pointer]:
+            - /url: /
+          - link "Curriculum" [ref=e14] [cursor=pointer]:
+            - /url: /courses
+          - link "Academy" [ref=e15] [cursor=pointer]:
+            - /url: /classes
+          - link "Instruments" [ref=e16] [cursor=pointer]:
+            - /url: /tools
+          - link "Contact" [ref=e17] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e19]:
+          - button "Toggle dark mode" [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - link "Join Academy" [ref=e23] [cursor=pointer]:
+            - /url: /login
+  - main [ref=e24]:
+    - generic [ref=e349]:
+      - generic [ref=e350]:
+        - link "← Back to Course" [ref=e351] [cursor=pointer]:
+          - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e
+          - generic [ref=e352]: ←
+          - generic [ref=e353]: Back to Course
+        - generic [ref=e354]: Lesson 1 of 11
+      - generic [ref=e355]:
+        - main [ref=e356]:
+          - generic [ref=e357]:
+            - heading "Introduction to Corporate Stakeholders" [level=1] [ref=e358]
+            - paragraph [ref=e359]: Who are corporate stakeholders and their roles.
+          - paragraph [ref=e361]: Corporate stakeholders include shareholders, employees, customers, suppliers, and the community. Each group has distinct interests that influence corporate decisions.
+        - complementary [ref=e362]:
+          - generic [ref=e363]:
+            - generic [ref=e364]:
+              - heading "Course Outline" [level=3] [ref=e365]
+              - generic [ref=e366]:
+                - generic [ref=e367]:
+                  - paragraph [ref=e368]: Stakeholders and Corporate Decision Making
+                  - list [ref=e369]:
+                    - listitem [ref=e370]:
+                      - link "01. Introduction to Corporate Stakeholders" [ref=e371] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/7efe5695-8e2b-4f4d-962d-beb0a43c8d9f
+                        - generic [ref=e372]: "01."
+                        - generic [ref=e373]: Introduction to Corporate Stakeholders
+                    - listitem [ref=e374]:
+                      - link "02. Corporate Governance Structures" [ref=e375] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/8c46fa1b-9d2c-465a-89be-ef4b25bcdd37
+                        - generic [ref=e376]: "02."
+                        - generic [ref=e377]: Corporate Governance Structures
+                    - listitem [ref=e378]:
+                      - link "03. Agency Theory and Conflicts" [ref=e379] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/aaa1b472-1467-428a-9476-262e69db94f2
+                        - generic [ref=e380]: "03."
+                        - generic [ref=e381]: Agency Theory and Conflicts
+                - generic [ref=e382]:
+                  - paragraph [ref=e383]: Firms and Financial Markets
+                  - list [ref=e384]:
+                    - listitem [ref=e385]:
+                      - link "01. Capital Markets Overview" [ref=e386] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/ad7b1a3a-8a3f-4b6f-b3fc-97202e5ebe66
+                        - generic [ref=e387]: "01."
+                        - generic [ref=e388]: Capital Markets Overview
+                    - listitem [ref=e389]:
+                      - link "02. Capital Structure Decisions" [ref=e390] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/bfe68f4c-5ba8-4f35-84f7-adbb420783d8
+                        - generic [ref=e391]: "02."
+                        - generic [ref=e392]: Capital Structure Decisions
+                    - listitem [ref=e393]:
+                      - link "03. Market Efficiency" [ref=e394] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/1d9b3dbd-4f50-411a-acbc-499b5321db1c
+                        - generic [ref=e395]: "03."
+                        - generic [ref=e396]: Market Efficiency
+                - generic [ref=e397]:
+                  - paragraph [ref=e398]: ESG Markets
+                  - list [ref=e399]:
+                    - listitem [ref=e400]:
+                      - link "01. Introduction to ESG Investing" [ref=e401] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/df5b6278-5f03-49a4-9e94-ff282d2b317b
+                        - generic [ref=e402]: "01."
+                        - generic [ref=e403]: Introduction to ESG Investing
+                    - listitem [ref=e404]:
+                      - link "02. ESG Frameworks and Standards" [ref=e405] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/5b62e65c-6b63-43b5-95ea-85be31418d38
+                        - generic [ref=e406]: "02."
+                        - generic [ref=e407]: ESG Frameworks and Standards
+                - generic [ref=e408]:
+                  - paragraph [ref=e409]: Fundamentals of Investing
+                  - list [ref=e410]:
+                    - listitem [ref=e411]:
+                      - link "01. Risk and Return" [ref=e412] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/62ab77ab-31c1-4ed6-8eed-ed21ec91aa45
+                        - generic [ref=e413]: "01."
+                        - generic [ref=e414]: Risk and Return
+                    - listitem [ref=e415]:
+                      - link "02. Portfolio Diversification" [ref=e416] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/90937eff-4d63-4ce9-8dbb-a4aac7aa3c16
+                        - generic [ref=e417]: "02."
+                        - generic [ref=e418]: Portfolio Diversification
+                    - listitem [ref=e419]:
+                      - link "03. Time Value of Money" [ref=e420] [cursor=pointer]:
+                        - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/lessons/63cf2aaf-9e5a-482f-aef9-7842ba926e91
+                        - generic [ref=e421]: "03."
+                        - generic [ref=e422]: Time Value of Money
+            - generic [ref=e423]:
+              - heading "Your Progress" [level=3] [ref=e424]
+              - generic [ref=e425]:
+                - generic [ref=e426]: 0%
+                - generic [ref=e427]: course complete
+  - contentinfo [ref=e196]:
+    - generic [ref=e197]:
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - link "Caplet." [ref=e200] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e203]: Caplet.
+          - paragraph [ref=e204]: Professional financial education designed for the Australian context. Structured learning, built for school integration.
+          - generic [ref=e205]:
+            - generic [ref=e206]: Compliance
+            - generic [ref=e207]: Literacy
+            - generic [ref=e208]: Application
+        - generic [ref=e209]:
+          - heading "Academy" [level=3] [ref=e210]
+          - list [ref=e211]:
+            - listitem [ref=e212]:
+              - link "Curriculum" [ref=e213] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e214]:
+              - link "Academy" [ref=e215] [cursor=pointer]:
+                - /url: /classes
+            - listitem [ref=e216]:
+              - link "Instruments" [ref=e217] [cursor=pointer]:
+                - /url: /tools
+        - generic [ref=e218]:
+          - heading "Resources" [level=3] [ref=e219]
+          - list [ref=e220]:
+            - listitem [ref=e221]:
+              - link "Terminal" [ref=e222] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e223]:
+              - link "Support" [ref=e224] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e225]:
+              - link "Security" [ref=e226] [cursor=pointer]:
+                - /url: /terms
+        - generic [ref=e227]:
+          - generic [ref=e228]: Current Status
+          - generic [ref=e231]: Network Active
+          - generic [ref=e232]:
+            - text: Deployment v4.2.0
+            - text: "Cluster: AU-SYD-1"
+      - generic [ref=e233]:
+        - paragraph [ref=e234]: © 2026 Caplet Education. Precision in Finance.
+        - generic [ref=e235]:
+          - link "Privacy Protocol" [ref=e236] [cursor=pointer]:
+            - /url: /terms
+          - link "Terms of Service" [ref=e237] [cursor=pointer]:
+            - /url: /terms

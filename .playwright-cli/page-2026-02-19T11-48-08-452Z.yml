@@ -1,0 +1,53 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - link "Caplet Intelligence" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e10]: Caplet Intelligence
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - generic [ref=e14]: Access Terminal
+            - heading "Welcome back." [level=2] [ref=e15]
+            - paragraph [ref=e16]: Enter your credentials to synchronize with the Caplet Intelligence Registry.
+          - generic [ref=e17]:
+            - generic [ref=e18]:
+              - generic [ref=e19]: Registry Email
+              - textbox "Registry Email" [ref=e20]:
+                - /placeholder: IDENTIFIER@TERMINAL.COM
+            - generic [ref=e21]:
+              - generic [ref=e23]: Security Key
+              - textbox "Security Key" [ref=e24]:
+                - /placeholder: ••••••••••••
+            - button "Bypass Gate →" [ref=e25] [cursor=pointer]:
+              - generic [ref=e26]: Bypass Gate
+              - generic [ref=e27]: →
+          - generic [ref=e28]:
+            - paragraph [ref=e29]:
+              - text: New Registry Entry?
+              - button "Initialize Node" [ref=e30] [cursor=pointer]
+            - button "Recover Encrypted Key" [ref=e32] [cursor=pointer]
+        - link "← Abort and Return Home" [ref=e34] [cursor=pointer]:
+          - /url: /
+    - generic [ref=e35]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: Internal Protocol
+          - heading "Mastering the Financial Engine." [level=1] [ref=e41]:
+            - text: Mastering the
+            - text: Financial Engine.
+          - paragraph [ref=e42]: Access a proprietary curriculum designed for the next generation of financial architects.
+        - generic [ref=e44]:
+          - generic [ref=e45]: Current Network Status
+          - generic [ref=e47]:
+            - paragraph [ref=e48]: Operational.
+            - paragraph [ref=e49]: All Registry nodes at 100% capacity
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - paragraph [ref=e54]: V. Identification
+            - text: v2.8.4-ALPHA
+          - generic [ref=e55]:
+            - paragraph [ref=e56]: Registry Latency
+            - text: 14MS / HK-1
+        - generic [ref=e59]: Core Active

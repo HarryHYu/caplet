@@ -1,0 +1,85 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet Logo Caplet." [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "Caplet Logo" [ref=e8]
+        - generic [ref=e9]: Caplet.
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Index" [ref=e12] [cursor=pointer]:
+            - /url: /
+          - link "Curriculum" [ref=e13] [cursor=pointer]:
+            - /url: /courses
+          - link "Academy" [ref=e14] [cursor=pointer]:
+            - /url: /classes
+            - text: Academy
+          - link "Instruments" [ref=e16] [cursor=pointer]:
+            - /url: /tools
+          - link "Contact" [ref=e17] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e19]:
+          - button "Toggle dark mode" [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - link "Join Academy" [ref=e23] [cursor=pointer]:
+            - /url: /login
+  - main [ref=e24]:
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e29]: Faculty Admissions
+          - heading "The Academy." [level=1] [ref=e30]
+          - paragraph [ref=e31]: Collaborative learning environments structured for peer progression and academic leadership.
+        - button "Join Class" [ref=e33] [cursor=pointer]
+      - generic [ref=e34]:
+        - heading "Enrollment Registry" [level=2] [ref=e35]
+        - paragraph [ref=e37]: Awaiting first academy registration.
+  - contentinfo [ref=e38]:
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - link "Caplet." [ref=e42] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e45]: Caplet.
+          - paragraph [ref=e46]: Professional financial education designed for the Australian context. Structured learning, built for school integration.
+          - generic [ref=e47]:
+            - generic [ref=e48]: Compliance
+            - generic [ref=e49]: Literacy
+            - generic [ref=e50]: Application
+        - generic [ref=e51]:
+          - heading "Academy" [level=3] [ref=e52]
+          - list [ref=e53]:
+            - listitem [ref=e54]:
+              - link "Curriculum" [ref=e55] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e56]:
+              - link "Academy" [ref=e57] [cursor=pointer]:
+                - /url: /classes
+            - listitem [ref=e58]:
+              - link "Instruments" [ref=e59] [cursor=pointer]:
+                - /url: /tools
+        - generic [ref=e60]:
+          - heading "Resources" [level=3] [ref=e61]
+          - list [ref=e62]:
+            - listitem [ref=e63]:
+              - link "Terminal" [ref=e64] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e65]:
+              - link "Support" [ref=e66] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e67]:
+              - link "Security" [ref=e68] [cursor=pointer]:
+                - /url: /terms
+        - generic [ref=e69]:
+          - generic [ref=e70]: Current Status
+          - generic [ref=e73]: Network Active
+          - generic [ref=e74]:
+            - text: Deployment v4.2.0
+            - text: "Cluster: AU-SYD-1"
+      - generic [ref=e75]:
+        - paragraph [ref=e76]: © 2026 Caplet Education. Precision in Finance.
+        - generic [ref=e77]:
+          - link "Privacy Protocol" [ref=e78] [cursor=pointer]:
+            - /url: /terms
+          - link "Terms of Service" [ref=e79] [cursor=pointer]:
+            - /url: /terms

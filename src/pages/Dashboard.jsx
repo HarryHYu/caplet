@@ -6,7 +6,6 @@ import api from '../services/api';
 import {
     BookOpenIcon,
     AcademicCapIcon,
-    ClockIcon,
     FireIcon,
     ArrowRightIcon,
     CheckCircleIcon
@@ -14,10 +13,18 @@ import {
 
 export default function Dashboard() {
     const { user } = useAuth();
-    const { courses, loading: coursesLoading } = useCourses();
+    const { courses, loading: coursesLoading, hasFetched, fetchCourses } = useCourses();
     const [userProgress, setUserProgress] = useState([]);
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
+
+    useEffect(() => {
+        if (!hasFetched && !coursesLoading) {
+            fetchCourses().catch(() => {
+                // Sidebar can render without courses when unavailable.
+            });
+        }
+    }, [coursesLoading, fetchCourses, hasFetched]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -62,6 +69,11 @@ export default function Dashboard() {
         if (hour >= 5 && hour < 12) return 'Good morning';
         if (hour >= 12 && hour < 18) return 'Good afternoon';
         return 'Good evening';
+    };
+
+    const shouldHideCourseLogo = (course) => {
+        const title = (course?.title || '').toLowerCase();
+        return title.includes('corporate finance part 1');
     };
 
     return (
@@ -115,13 +127,15 @@ export default function Dashboard() {
                                 <span className="section-kicker">Resume Stream</span>
                                 <div className="mt-8 group relative overflow-hidden bg-surface-raised border border-line-soft p-12 transition-all hover:shadow-2xl">
                                     <div className="flex flex-col md:flex-row gap-12 items-center">
-                                        <div className="w-40 h-40 shrink-0 bg-surface-soft p-1 border border-line-soft">
-                                            <img
-                                                src={lastAccessedCourse.thumbnail || 'https://placehold.co/400x400'}
-                                                alt=""
-                                                className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
-                                            />
-                                        </div>
+                                        {!shouldHideCourseLogo(lastAccessedCourse) && (
+                                            <div className="w-40 h-40 shrink-0 bg-surface-soft p-1 border border-line-soft">
+                                                <img
+                                                    src={lastAccessedCourse.thumbnail || 'https://placehold.co/400x400'}
+                                                    alt=""
+                                                    className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
+                                                />
+                                            </div>
+                                        )}
                                         <div className="flex-1">
                                             <h3 className="text-4xl font-serif italic mb-6">{lastAccessedCourse.title}</h3>
                                             <div className="w-full bg-surface-soft h-1 mb-8 overflow-hidden">
@@ -171,20 +185,22 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Technical Sidebar */}
+                    {/* Sidebar */}
                     <div className="lg:col-span-4 space-y-20">
                         <div className="reveal-text stagger-3">
-                            <span className="section-kicker">Signals</span>
+                            <span className="section-kicker">My Courses</span>
                             <div className="mt-8 space-y-6">
                                 {courses.slice(0, 4).map(course => (
-                                    <Link key={course.id} to={`/courses/${course.id}`} className="flex gap-6 group">
-                                        <div className="w-12 h-12 bg-surface-soft border border-line-soft shrink-0 flex items-center justify-center font-serif italic group-hover:bg-accent group-hover:text-white transition-colors">
-                                            {course.level || 'L1'}
-                                        </div>
+                                    <Link
+                                        key={course.id}
+                                        to={`/courses/${course.id}`}
+                                        className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
+                                    >
                                         <div className="min-w-0">
                                             <p className="text-[11px] font-bold uppercase tracking-widest truncate group-hover:text-accent transition-colors">{course.title}</p>
                                             <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mt-1">{course.duration}m Duration</p>
                                         </div>
+                                        <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
                                     </Link>
                                 ))}
                             </div>

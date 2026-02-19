@@ -58,28 +58,28 @@ const SettingsProfile = () => {
   };
 
   return (
-    <div className="bg-transparent overflow-hidden">
-      <div className="pb-8 border-b border-zinc-100 dark:border-zinc-900 mb-10">
-        <h2 className="text-xl font-extrabold text-black dark:text-white uppercase tracking-tighter">Profile Details.</h2>
-        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-2">
+    <div>
+      <div className="pb-8 border-b border-line-soft mb-12">
+        <h2 className="text-xl font-bold uppercase tracking-tighter text-text-primary">Profile Details.</h2>
+        <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest mt-2">
           Update your personal information and account details.
         </p>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-10">
         {message.text && (
           <div
             className={`px-6 py-4 border font-bold text-[10px] uppercase tracking-widest ${message.type === 'success'
-                ? 'border-brand text-brand'
-                : 'border-red-500 text-red-500'
+              ? 'border-accent text-accent'
+              : 'border-red-500 text-red-500'
               }`}
           >
             {message.type === 'success' ? 'Success:' : 'Error:'} {message.text}
           </div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
           <div className="space-y-3">
-            <label htmlFor="firstName" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-              First Name
+            <label htmlFor="firstName" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+              Given Name
             </label>
             <input
               id="firstName"
@@ -88,12 +88,12 @@ const SettingsProfile = () => {
               required
               value={form.firstName}
               onChange={handleChange}
-              className="w-full px-5 py-4 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold text-xs uppercase tracking-widest focus:border-brand outline-none transition-all"
+              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold text-xs uppercase tracking-widest"
             />
           </div>
           <div className="space-y-3">
-            <label htmlFor="lastName" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-              Last Name
+            <label htmlFor="lastName" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+              Surname
             </label>
             <input
               id="lastName"
@@ -102,13 +102,13 @@ const SettingsProfile = () => {
               required
               value={form.lastName}
               onChange={handleChange}
-              className="w-full px-5 py-4 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold text-xs uppercase tracking-widest focus:border-brand outline-none transition-all"
+              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold text-xs uppercase tracking-widest"
             />
           </div>
         </div>
         <div className="space-y-3">
-          <label htmlFor="email" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-            Email Address
+          <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+            Registry Email
           </label>
           <input
             id="email"
@@ -117,12 +117,12 @@ const SettingsProfile = () => {
             required
             value={form.email}
             onChange={handleChange}
-            className="w-full px-5 py-4 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold text-xs uppercase tracking-widest focus:border-brand outline-none transition-all"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold text-xs uppercase tracking-widest"
           />
         </div>
         <div className="space-y-3">
-          <label htmlFor="password" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-            New Password
+          <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+            New Security Key
           </label>
           <input
             id="password"
@@ -130,15 +130,15 @@ const SettingsProfile = () => {
             type="password"
             value={form.password}
             onChange={handleChange}
-            placeholder="Leave blank to keep current password..."
-            className="w-full px-5 py-4 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold text-xs uppercase tracking-widest focus:border-brand outline-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700 transition-all"
+            placeholder="Leave blank to keep current"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs placeholder:text-text-muted/30"
           />
-          <p className="mt-2 text-[8px] font-bold text-zinc-400 uppercase tracking-widest">
+          <p className="mt-2 text-[9px] font-bold text-text-dim uppercase tracking-widest">
             Minimum 6 characters required.
           </p>
         </div>
         <div className="space-y-3">
-          <label htmlFor="dateOfBirth" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+          <label htmlFor="dateOfBirth" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
             Date of Birth
           </label>
           <input
@@ -147,12 +147,12 @@ const SettingsProfile = () => {
             type="date"
             value={form.dateOfBirth}
             onChange={handleChange}
-            className="w-full px-5 py-4 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold text-xs uppercase tracking-widest focus:border-brand outline-none transition-all appearance-none"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold text-xs uppercase tracking-widest appearance-none"
           />
         </div>
         <div className="space-y-3">
-          <label htmlFor="bio" className="block text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-            Bio
+          <label htmlFor="bio" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+            Professional Dossier
           </label>
           <textarea
             id="bio"
@@ -162,19 +162,19 @@ const SettingsProfile = () => {
             value={form.bio}
             onChange={handleChange}
             placeholder="Tell us about yourself..."
-            className="w-full px-5 py-4 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold text-xs uppercase tracking-[0.1em] focus:border-brand outline-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700 transition-all resize-none"
+            className="w-full px-6 py-5 bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs tracking-wide placeholder:text-text-muted/30 resize-none"
           />
           <div className="flex justify-between items-center mt-2">
-            <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">
-              Character Count: {form.bio.length}/1000
+            <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest">
+              Characters: {form.bio.length}/1000
             </p>
           </div>
         </div>
-        <div className="pt-6">
+        <div className="pt-8">
           <button
             type="submit"
             disabled={saving}
-            className="px-8 py-4 bg-black dark:bg-white text-white dark:text-black font-bold text-[10px] uppercase tracking-[0.3em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all disabled:opacity-20 flex items-center justify-center min-w-[150px]"
+            className="btn-primary py-5 px-10 text-[10px] disabled:opacity-30"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

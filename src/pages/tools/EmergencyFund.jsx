@@ -36,167 +36,164 @@ const EmergencyFund = () => {
   };
 
   return (
-    <div className="min-h-screen py-24 page-section-light">
-      <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
-        <div className="container-custom">
-          <div className="max-w-4xl">
-            <div className="flex items-center justify-between mb-8 animate-slide-up">
-              <div>
-                <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-4">
-                  Financial Tools
-                </p>
-                <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
-                  Emergency Fund <br />Calculator.
-                </h1>
-                <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest leading-relaxed max-w-xl">
-                  Calculate how much you should have in your emergency fund to cover unexpected expenses.
-                </p>
-              </div>
-              <Link to="/tools" className="text-[10px] font-black text-zinc-400 hover:text-brand uppercase tracking-widest transition-colors mb-auto">
-                ← Back to Tools
-              </Link>
+    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
+      <div className="container-custom">
+        <header className="mb-24 reveal-text">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+            <div>
+              <span className="section-kicker">Instruments &rarr; Risk Management</span>
+              <h1 className="text-6xl md:text-8xl mb-8">
+                Emergency <br />Fund.
+              </h1>
+              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
+                Analyze your capital resilience and define the necessary liquidity buffer for unexpected transitions.
+              </p>
             </div>
+            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
+              &larr; Back to Instruments
+            </Link>
           </div>
-        </div>
-      </section>
+          <div className="h-px w-full bg-line-soft" />
+        </header>
 
-      <section className="py-12">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-6xl">
-            <div className="lg:col-span-2 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900 p-10 reveal-up">
-              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Reserve Parameters</h2>
-              <form onSubmit={handleSubmit} className="space-y-8">
-                <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3 italic">
-                    Critical Monthly Burn Rate (AUD)
-                  </label>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
+          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Reserve Parameters</h2>
+            <form onSubmit={handleSubmit} className="space-y-16">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                  Critical Monthly Burn Rate (AUD)
+                </label>
+                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
+                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
                   <input
                     type="number"
                     min="0"
                     step="100"
                     value={monthlyExpenses}
                     onChange={(e) => setMonthlyExpenses(e.target.value)}
-                    placeholder="E.G. 3000"
-                    className="w-full px-6 py-4 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-black text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
+                    placeholder="0.00"
+                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
-                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-3">
-                    Includes: Shelter, sustenance, utilities, and mandatory liabilities.
-                  </p>
                 </div>
+                <p className="text-[10px] font-medium text-text-dim mt-4 uppercase tracking-widest">
+                  Includes: Shelter, sustenance, and mandatory liabilities.
+                </p>
+              </div>
 
-                <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3 italic">
-                    Sustainability Window
-                  </label>
-                  <select
-                    value={monthsCoverage}
-                    onChange={(e) => setMonthsCoverage(e.target.value)}
-                    className="w-full px-6 py-4 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-black text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
-                  >
-                    <option value="3">3 Months (Standard)</option>
-                    <option value="6">6 Months (Recommended)</option>
-                    <option value="9">9 Months (Conservative)</option>
-                    <option value="12">12 Months</option>
-                  </select>
-                </div>
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                  Sustainability Window
+                </label>
+                <select
+                  value={monthsCoverage}
+                  onChange={(e) => setMonthsCoverage(e.target.value)}
+                  className="w-full bg-surface-raised border border-line-soft px-6 py-4 text-xs font-bold uppercase tracking-widest outline-none focus:border-accent appearance-none cursor-pointer"
+                >
+                  <option value="3">3 Months (Standard)</option>
+                  <option value="6">6 Months (Recommended)</option>
+                  <option value="9">9 Months (Conservative)</option>
+                  <option value="12">12 Months (Maximum)</option>
+                </select>
+              </div>
 
-                <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3 italic">
-                    Current Liquid Liquidity (Optional)
-                  </label>
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                  Liquid Assets at Registry
+                </label>
+                <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                  <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
                   <input
                     type="number"
                     min="0"
                     step="100"
                     value={currentSavings}
                     onChange={(e) => setCurrentSavings(e.target.value)}
-                    placeholder="E.G. 5000"
-                    className="w-full px-6 py-4 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-black text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
+                    placeholder="0"
+                    className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-5 bg-black dark:bg-white text-white dark:text-black font-black text-[10px] uppercase tracking-[0.3em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all active:scale-[0.98] mt-4"
-                >
-                  Analyze Resilience
-                </button>
-              </form>
-            </div>
+              <button type="submit" className="btn-primary w-full py-6 text-xs uppercase tracking-[0.3em] mt-8">
+                Analyze Resilience
+              </button>
+            </form>
+          </div>
 
-            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 reveal-up" style={{ animationDelay: '200ms' }}>
-              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Reserve Analysis</h2>
-              {result ? (
-                result.error ? (
-                  <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">{result.error}</p>
-                ) : (
-                  <div className="space-y-10">
-                    <div>
-                      <p className="text-[9px] font-black text-brand uppercase tracking-widest mb-1 italic">Target Reserve Capital</p>
-                      <p className="text-3xl font-extrabold text-brand tracking-tighter">
-                        {formatCurrency(result.recommended)}
-                      </p>
-                      <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-2">
-                        Window: {result.months} Cycles × {formatCurrency(result.monthlyExpenses)}
-                      </p>
-                    </div>
-                    {result.current > 0 && (
-                      <>
-                        <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800 space-y-8">
-                          <div>
-                            <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Liquid Status</p>
-                            <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
-                              {formatCurrency(result.current)}
-                            </p>
-                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-2 italic">
-                              {result.percentage.toFixed(1)}% Saturation
-                            </p>
-                          </div>
-                          {result.shortfall > 0 ? (
-                            <div>
-                              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Capital Shortfall</p>
-                              <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
-                                {formatCurrency(result.shortfall)}
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="p-6 bg-brand/5 border border-brand/20">
-                              <p className="text-[9px] font-black text-brand uppercase tracking-widest">
-                                ✓ Target Saturation Achieved
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                    <div className="mt-4 pt-8 border-t border-zinc-200 dark:border-zinc-800 space-y-4">
-                      <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
-                        <div className="w-1 h-1 bg-brand" />
-                        Focus on critical liabilities only
-                      </div>
-                      <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
-                        <div className="w-1 h-1 bg-brand" />
-                        Maintain in immediate liquidity
-                      </div>
-                      <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
-                        <div className="w-1 h-1 bg-brand" />
-                        Recalibrate per life cycle shifts
-                      </div>
-                    </div>
-                  </div>
-                )
+          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Resilience Analysis</h2>
+
+            {result ? (
+              result.error ? (
+                <p className="text-[10px] font-bold text-accent uppercase tracking-widest relative z-10">{result.error}</p>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full py-20 text-center">
-                  <span className="w-1.5 h-1.5 bg-zinc-200 dark:bg-zinc-800 mb-4" />
-                  <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
-                    Enter values to calculate.
-                  </p>
+                <div className="space-y-12 relative z-10">
+                  <div>
+                    <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-4 italic">Target Liquid Reserve</p>
+                    <p className="text-5xl font-black tracking-tighter text-text-primary">
+                      {formatCurrency(result.recommended)}
+                    </p>
+                    <p className="text-[10px] font-bold text-text-dim uppercase tracking-[0.2em] mt-4">
+                      Protocol: {result.months} Cycles @ {formatCurrency(result.monthlyExpenses)} / Cycle
+                    </p>
+                  </div>
+
+                  {result.current > 0 && (
+                    <div className="pt-10 border-t border-line-soft space-y-10">
+                      <div>
+                        <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-4">Saturation Level</p>
+                        <div className="flex items-end justify-between mb-3">
+                          <p className="text-2xl font-bold">{formatCurrency(result.current)}</p>
+                          <p className="text-xs font-bold text-accent">{result.percentage.toFixed(1)}%</p>
+                        </div>
+                        <div className="w-full bg-surface-soft h-1.5 overflow-hidden">
+                          <div
+                            className="bg-accent h-full transition-all duration-1000 ease-out"
+                            style={{ width: `${Math.min(100, result.percentage)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {result.shortfall > 0 ? (
+                        <div>
+                          <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-2 font-serif italic">Capital Shortfall</p>
+                          <p className="text-xl font-bold text-text-primary">{formatCurrency(result.shortfall)}</p>
+                        </div>
+                      ) : (
+                        <div className="p-8 bg-accent/5 border border-accent/20">
+                          <p className="text-[10px] font-black text-accent uppercase tracking-widest">
+                            ✓ Target Saturation Achieved
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="pt-12 border-t border-line-soft space-y-6">
+                    {[
+                      'Prioritize immediate liquidity',
+                      'Exclude non-essential consumption',
+                      'Recalibrate per life stage shift'
+                    ].map((step, idx) => (
+                      <div key={idx} className="flex items-center gap-4 text-[9px] font-bold text-text-dim uppercase tracking-widest">
+                        <div className="w-1 h-1 bg-accent" />
+                        {step}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
+              )
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
+                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-4xl font-serif italic mb-8">!</div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Economic Data Missing</p>
+              </div>
+            )}
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

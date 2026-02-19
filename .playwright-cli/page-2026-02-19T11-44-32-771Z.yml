@@ -1,0 +1,218 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet Logo Caplet." [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "Caplet Logo" [ref=e8]
+        - generic [ref=e9]: Caplet.
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Index" [ref=e12] [cursor=pointer]:
+            - /url: /
+          - link "Curriculum" [ref=e13] [cursor=pointer]:
+            - /url: /courses
+          - link "Academy" [ref=e14] [cursor=pointer]:
+            - /url: /classes
+          - link "Instruments" [ref=e15] [cursor=pointer]:
+            - /url: /tools
+            - text: Instruments
+          - link "Contact" [ref=e17] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e19]:
+          - button "Toggle dark mode" [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - link "Join Academy" [ref=e23] [cursor=pointer]:
+            - /url: /login
+  - main [ref=e24]:
+    - generic [ref=e25]:
+      - generic [ref=e28]:
+        - generic [ref=e29]: Utility Suite
+        - heading "Technical Calculators." [level=1] [ref=e30]:
+          - text: Technical
+          - text: Calculators.
+        - paragraph [ref=e31]: Proprietary tools for tax estimation, asset projection, and structural budget analysis.
+      - generic [ref=e33]:
+        - generic [ref=e35]:
+          - generic:
+            - generic: Search_
+          - textbox "BY IDENTIFIER OR FUNCTION" [ref=e36]
+        - generic [ref=e37]:
+          - link "01 / UTILITY → Income Tax Calculator. Estimate your annual Australian income tax, Medicare levy, and net pay. Accessibility Active Terminal Invoke Module" [ref=e38] [cursor=pointer]:
+            - /url: /tools/tax-calculator
+            - generic [ref=e40]:
+              - generic [ref=e41]:
+                - generic [ref=e42]: 01 / UTILITY
+                - generic [ref=e43]: →
+              - heading "Income Tax Calculator." [level=3] [ref=e44]
+              - paragraph [ref=e45]: Estimate your annual Australian income tax, Medicare levy, and net pay.
+              - generic [ref=e46]:
+                - generic [ref=e47]:
+                  - paragraph [ref=e48]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e49]: Invoke Module
+          - link "02 / UTILITY → Budget Planner. Plan your monthly budget and track spending across different categories. Accessibility Active Terminal Invoke Module" [ref=e50] [cursor=pointer]:
+            - /url: /tools/budget-planner
+            - generic [ref=e52]:
+              - generic [ref=e53]:
+                - generic [ref=e54]: 02 / UTILITY
+                - generic [ref=e55]: →
+              - heading "Budget Planner." [level=3] [ref=e56]
+              - paragraph [ref=e57]: Plan your monthly budget and track spending across different categories.
+              - generic [ref=e58]:
+                - generic [ref=e59]:
+                  - paragraph [ref=e60]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e61]: Invoke Module
+          - link "03 / UTILITY → Savings Goal Calculator. Calculate how long it will take to reach your savings goal with contributions and interest. Accessibility Active Terminal Invoke Module" [ref=e62] [cursor=pointer]:
+            - /url: /tools/savings-goal
+            - generic [ref=e64]:
+              - generic [ref=e65]:
+                - generic [ref=e66]: 03 / UTILITY
+                - generic [ref=e67]: →
+              - heading "Savings Goal Calculator." [level=3] [ref=e68]
+              - paragraph [ref=e69]: Calculate how long it will take to reach your savings goal with contributions and interest.
+              - generic [ref=e70]:
+                - generic [ref=e71]:
+                  - paragraph [ref=e72]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e73]: Invoke Module
+          - link "04 / UTILITY → Loan Repayment Calculator. Calculate monthly loan repayments, total interest, and total amount payable. Accessibility Active Terminal Invoke Module" [ref=e74] [cursor=pointer]:
+            - /url: /tools/loan-repayment
+            - generic [ref=e76]:
+              - generic [ref=e77]:
+                - generic [ref=e78]: 04 / UTILITY
+                - generic [ref=e79]: →
+              - heading "Loan Repayment Calculator." [level=3] [ref=e80]
+              - paragraph [ref=e81]: Calculate monthly loan repayments, total interest, and total amount payable.
+              - generic [ref=e82]:
+                - generic [ref=e83]:
+                  - paragraph [ref=e84]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e85]: Invoke Module
+          - link "05 / UTILITY → Compound Interest Calculator. See how your money grows with compound interest and regular contributions. Accessibility Active Terminal Invoke Module" [ref=e86] [cursor=pointer]:
+            - /url: /tools/compound-interest
+            - generic [ref=e88]:
+              - generic [ref=e89]:
+                - generic [ref=e90]: 05 / UTILITY
+                - generic [ref=e91]: →
+              - heading "Compound Interest Calculator." [level=3] [ref=e92]
+              - paragraph [ref=e93]: See how your money grows with compound interest and regular contributions.
+              - generic [ref=e94]:
+                - generic [ref=e95]:
+                  - paragraph [ref=e96]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e97]: Invoke Module
+          - link "06 / UTILITY → Mortgage Calculator. Calculate home loan repayments, total interest, and explore different payment frequencies. Accessibility Active Terminal Invoke Module" [ref=e98] [cursor=pointer]:
+            - /url: /tools/mortgage
+            - generic [ref=e100]:
+              - generic [ref=e101]:
+                - generic [ref=e102]: 06 / UTILITY
+                - generic [ref=e103]: →
+              - heading "Mortgage Calculator." [level=3] [ref=e104]
+              - paragraph [ref=e105]: Calculate home loan repayments, total interest, and explore different payment frequencies.
+              - generic [ref=e106]:
+                - generic [ref=e107]:
+                  - paragraph [ref=e108]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e109]: Invoke Module
+          - link "07 / UTILITY → Super Contribution Calculator. Project your superannuation balance with employer and personal contributions. Accessibility Active Terminal Invoke Module" [ref=e110] [cursor=pointer]:
+            - /url: /tools/super-contribution
+            - generic [ref=e112]:
+              - generic [ref=e113]:
+                - generic [ref=e114]: 07 / UTILITY
+                - generic [ref=e115]: →
+              - heading "Super Contribution Calculator." [level=3] [ref=e116]
+              - paragraph [ref=e117]: Project your superannuation balance with employer and personal contributions.
+              - generic [ref=e118]:
+                - generic [ref=e119]:
+                  - paragraph [ref=e120]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e121]: Invoke Module
+          - link "08 / UTILITY → GST Calculator. Add or remove GST (10%) from amounts for Australian Goods and Services Tax calculations. Accessibility Active Terminal Invoke Module" [ref=e122] [cursor=pointer]:
+            - /url: /tools/gst
+            - generic [ref=e124]:
+              - generic [ref=e125]:
+                - generic [ref=e126]: 08 / UTILITY
+                - generic [ref=e127]: →
+              - heading "GST Calculator." [level=3] [ref=e128]
+              - paragraph [ref=e129]: Add or remove GST (10%) from amounts for Australian Goods and Services Tax calculations.
+              - generic [ref=e130]:
+                - generic [ref=e131]:
+                  - paragraph [ref=e132]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e133]: Invoke Module
+          - link "09 / UTILITY → Salary Calculator. Calculate your take-home pay from gross salary, including tax, Medicare, and superannuation. Accessibility Active Terminal Invoke Module" [ref=e134] [cursor=pointer]:
+            - /url: /tools/salary
+            - generic [ref=e136]:
+              - generic [ref=e137]:
+                - generic [ref=e138]: 09 / UTILITY
+                - generic [ref=e139]: →
+              - heading "Salary Calculator." [level=3] [ref=e140]
+              - paragraph [ref=e141]: Calculate your take-home pay from gross salary, including tax, Medicare, and superannuation.
+              - generic [ref=e142]:
+                - generic [ref=e143]:
+                  - paragraph [ref=e144]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e145]: Invoke Module
+          - link "010 / UTILITY → Emergency Fund Calculator. Calculate how much you should have in your emergency fund to cover unexpected expenses. Accessibility Active Terminal Invoke Module" [ref=e146] [cursor=pointer]:
+            - /url: /tools/emergency-fund
+            - generic [ref=e148]:
+              - generic [ref=e149]:
+                - generic [ref=e150]: 010 / UTILITY
+                - generic [ref=e151]: →
+              - heading "Emergency Fund Calculator." [level=3] [ref=e152]
+              - paragraph [ref=e153]: Calculate how much you should have in your emergency fund to cover unexpected expenses.
+              - generic [ref=e154]:
+                - generic [ref=e155]:
+                  - paragraph [ref=e156]: Accessibility
+                  - text: Active Terminal
+                - generic [ref=e157]: Invoke Module
+  - contentinfo [ref=e158]:
+    - generic [ref=e159]:
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - link "Caplet." [ref=e162] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e165]: Caplet.
+          - paragraph [ref=e166]: Professional financial education designed for the Australian context. Structured learning, built for school integration.
+          - generic [ref=e167]:
+            - generic [ref=e168]: Compliance
+            - generic [ref=e169]: Literacy
+            - generic [ref=e170]: Application
+        - generic [ref=e171]:
+          - heading "Academy" [level=3] [ref=e172]
+          - list [ref=e173]:
+            - listitem [ref=e174]:
+              - link "Curriculum" [ref=e175] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e176]:
+              - link "Academy" [ref=e177] [cursor=pointer]:
+                - /url: /classes
+            - listitem [ref=e178]:
+              - link "Instruments" [ref=e179] [cursor=pointer]:
+                - /url: /tools
+        - generic [ref=e180]:
+          - heading "Resources" [level=3] [ref=e181]
+          - list [ref=e182]:
+            - listitem [ref=e183]:
+              - link "Terminal" [ref=e184] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e185]:
+              - link "Support" [ref=e186] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e187]:
+              - link "Security" [ref=e188] [cursor=pointer]:
+                - /url: /tools
+        - generic [ref=e189]:
+          - generic [ref=e190]: Current Status
+          - generic [ref=e193]: Network Active
+          - generic [ref=e194]:
+            - text: Deployment v4.2.0
+            - text: "Cluster: AU-SYD-1"
+      - generic [ref=e195]:
+        - paragraph [ref=e196]: © 2026 Caplet Education. Precision in Finance.
+        - generic [ref=e197]:
+          - link "Privacy Protocol" [ref=e198] [cursor=pointer]:
+            - /url: /tools
+          - link "Terms of Service" [ref=e199] [cursor=pointer]:
+            - /url: /tools

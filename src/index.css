@@ -21,8 +21,8 @@
   --font-body: 'Outfit', system-ui, sans-serif;
 
   --text-primary: #09090B;
-  --text-muted: #4B4B4F;
-  --text-dim: #82828C;
+  --text-muted: #3F3F46;
+  --text-dim: #71717A;
   --text-contrast: #FFFFFF;
 
   /* Lines */
@@ -52,8 +52,8 @@
   --surface-inverse: #FAFAFA;
 
   --text-primary: #F4F4F5;
-  --text-muted: #A1A1AA;
-  --text-dim: #71717A;
+  --text-muted: #D4D4D8;
+  --text-dim: #A1A1AA;
   --text-contrast: #050505;
 
   --line-soft: #1C1C1F;
@@ -123,32 +123,40 @@
 
   /* Interactive Elements */
   .btn-primary {
-    @apply px-8 py-3 bg-accent text-white font-semibold text-sm tracking-wide rounded-lg transition-colors duration-200 flex items-center justify-center;
+    @apply px-8 py-3 bg-accent text-white font-semibold text-sm tracking-wide rounded-lg transition-all duration-200 flex items-center justify-center border border-transparent shadow-md;
   }
 
   .btn-primary:hover {
-    @apply bg-accent-strong;
+    @apply bg-accent-strong -translate-y-0.5 shadow-lg;
+  }
+
+  .btn-primary:active {
+    @apply translate-y-0 shadow-md;
   }
 
   .btn-primary:disabled {
-    @apply opacity-50 cursor-not-allowed;
+    @apply opacity-50 cursor-not-allowed transform-none shadow-none;
   }
 
   .btn-secondary {
-    @apply px-8 py-3 bg-transparent text-text-primary border border-line-soft font-semibold text-sm tracking-wide rounded-lg transition-colors duration-200 flex items-center justify-center;
+    @apply px-8 py-3 bg-transparent text-text-primary border border-line-soft font-semibold text-sm tracking-wide rounded-lg transition-all duration-200 flex items-center justify-center;
   }
 
   .btn-secondary:hover {
-    @apply bg-surface-soft border-text-dim;
+    @apply bg-surface-soft border-text-dim -translate-y-0.5;
+  }
+
+  .btn-secondary:active {
+    @apply translate-y-0;
   }
 
   /* Cards */
   .card-premium {
-    @apply p-8 bg-surface-raised border border-line-soft rounded-xl transition-shadow duration-200;
+    @apply p-8 bg-surface-raised border border-line-soft rounded-xl transition-all duration-300;
   }
 
   .card-premium:hover {
-    @apply shadow-lg;
+    @apply shadow-lg -translate-y-1;
     border-color: var(--accent);
   }
 
@@ -212,27 +220,99 @@
   .prose-editorial hr {
     @apply my-8 border-line-soft;
   }
-
-  /* Legacy animation classes — now no-ops for backwards compat */
-  .reveal-text {}
-
-  .stagger-1 {}
-
-  .stagger-2 {}
-
-  .stagger-3 {}
 }
 
-/* Page Transitions & Utilities */
-.fade-enter {
-  opacity: 0;
-  transform: scale(0.98);
-}
+@layer utilities {
+  .grid-technical {
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
 
-.fade-enter-active {
-  opacity: 1;
-  transform: scale(1);
-  transition: opacity 400ms, transform 400ms;
+  .reveal-text {
+    animation: reveal-text 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .reveal-up {
+    animation: reveal-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .stagger-1 {
+    animation-delay: 0.1s;
+  }
+
+  .stagger-2 {
+    animation-delay: 0.2s;
+  }
+
+  .stagger-3 {
+    animation-delay: 0.3s;
+  }
+
+  .stagger-4 {
+    animation-delay: 0.4s;
+  }
+
+  .stagger-5 {
+    animation-delay: 0.5s;
+  }
+
+  @keyframes reveal-text {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out forwards;
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
 }
 
 /* Custom Scrollbar */

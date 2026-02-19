@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -33,10 +33,30 @@ import UserProfile from './pages/UserProfile';
 import Terms from './pages/Terms';
 import NotFound from './pages/NotFound';
 
+function FullPageSpinner() {
+  return (
+    <div className="min-h-screen bg-surface-body flex items-center justify-center">
+      <div className="w-12 h-12 border-2 border-accent border-t-transparent animate-spin" />
+    </div>
+  );
+}
+
 function HomeOrRedirect() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <FullPageSpinner />;
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return <Home />;
+}
+
+function RequireAuth({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return <FullPageSpinner />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  return children;
 }
 
 function App() {
@@ -50,7 +70,7 @@ function App() {
               <main className="flex-grow">
                 <Routes>
                   <Route path="/" element={<HomeOrRedirect />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/tools" element={<Tools />} />
@@ -70,8 +90,8 @@ function App() {
                   <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
                   <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
                   <Route path="/classes" element={<Classes />} />
-                  <Route path="/classes/:classId" element={<ClassDetail />} />
-                  <Route path="/settings" element={<Settings />}>
+                  <Route path="/classes/:classId" element={<RequireAuth><ClassDetail /></RequireAuth>} />
+                  <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>}>
                     <Route index element={<Navigate to="/settings/profile" replace />} />
                     <Route path="profile" element={<SettingsProfile />} />
                     <Route path="account" element={<SettingsAccount />} />

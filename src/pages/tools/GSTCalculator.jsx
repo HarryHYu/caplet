@@ -21,7 +21,6 @@ const GSTCalculator = () => {
     const GST_RATE = 0.10; // 10% GST in Australia
 
     if (calculationType === 'add') {
-      // Add GST to amount
       const gst = amountNum * GST_RATE;
       const total = amountNum + gst;
       setResult({
@@ -31,7 +30,6 @@ const GSTCalculator = () => {
         type: 'add',
       });
     } else {
-      // Remove GST from amount (GST inclusive)
       const gst = amountNum * (GST_RATE / (1 + GST_RATE));
       const base = amountNum - gst;
       setResult({
@@ -44,154 +42,128 @@ const GSTCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen py-24 page-section-light">
-      <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
-        <div className="container-custom">
-          <div className="max-w-4xl">
-            <div className="flex items-center justify-between mb-8 animate-slide-up">
-              <div>
-                <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-4">
-                  Financial Tools
-                </p>
-                <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
-                  GST <br />Calculator.
-                </h1>
-                <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest leading-relaxed max-w-xl">
-                  Calculate Australian Goods and Services Tax (10%) on any amount.
-                </p>
-              </div>
-              <Link to="/tools" className="text-[10px] font-black text-zinc-400 hover:text-brand uppercase tracking-widest transition-colors mb-auto">
-                ← Back to Tools
-              </Link>
+    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
+      <div className="container-custom">
+        <header className="mb-24 reveal-text">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+            <div>
+              <span className="section-kicker">Instruments &rarr; Compliance</span>
+              <h1 className="text-6xl md:text-8xl mb-8">
+                GST<br />Nexus.
+              </h1>
+              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
+                Execute goods and services tax transformations with 10% statutory precision for the Australian jurisdiction.
+              </p>
             </div>
+            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
+              &larr; Back to Instruments
+            </Link>
           </div>
-        </div>
-      </section>
+          <div className="h-px w-full bg-line-soft" />
+        </header>
 
-      <section className="py-12">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="lg:col-span-2 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900 p-10 reveal-up">
-              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-8">Calculate GST</h2>
-              <form onSubmit={handleSubmit} className="space-y-8">
-                <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3 italic">
-                    Transaction Value (AUD)
-                  </label>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
+          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Transaction Parameters</h2>
+            <form onSubmit={handleSubmit} className="space-y-16">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                  Value Registry (AUD)
+                </label>
+                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
+                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder="E.G. 1000.00"
-                    className="w-full px-6 py-4 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 text-black dark:text-white font-black text-[11px] uppercase tracking-widest focus:border-brand outline-none transition-all"
+                    placeholder="0.00"
+                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-4 italic">
-                    Calculation Type
-                  </label>
-                  <div className="flex gap-8">
-                    <label className="flex items-center group cursor-pointer">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-8 block italic">
+                  Operator Mode
+                </label>
+                <div className="flex gap-12">
+                  {[
+                    { id: 'add', label: 'Apply Levy' },
+                    { id: 'remove', label: 'Extract Levy' }
+                  ].map((type) => (
+                    <label key={type.id} className="flex items-center gap-4 cursor-pointer group">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${calculationType === type.id ? 'border-accent bg-accent' : 'border-line-soft group-hover:border-text-dim'}`}>
+                        {calculationType === type.id && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                      </div>
                       <input
                         type="radio"
                         name="type"
-                        value="add"
-                        checked={calculationType === 'add'}
+                        value={type.id}
+                        checked={calculationType === type.id}
                         onChange={(e) => setCalculationType(e.target.value)}
-                        className="w-4 h-4 accent-brand"
+                        className="hidden"
                       />
-                      <span className="ml-3 text-[10px] font-black text-zinc-500 group-hover:text-black dark:group-hover:text-white uppercase tracking-widest transition-colors">Apply GST</span>
+                      <span className={`text-xs font-bold uppercase tracking-widest transition-colors ${calculationType === type.id ? 'text-text-primary' : 'text-text-dim group-hover:text-text-muted'}`}>
+                        {type.label}
+                      </span>
                     </label>
-                    <label className="flex items-center group cursor-pointer">
-                      <input
-                        type="radio"
-                        name="type"
-                        value="remove"
-                        checked={calculationType === 'remove'}
-                        onChange={(e) => setCalculationType(e.target.value)}
-                        className="w-4 h-4 accent-brand"
-                      />
-                      <span className="ml-3 text-[10px] font-black text-zinc-500 group-hover:text-black dark:group-hover:text-white uppercase tracking-widest transition-colors">Extract GST</span>
-                    </label>
-                  </div>
+                  ))}
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-5 bg-black dark:bg-white text-white dark:text-black font-black text-[10px] uppercase tracking-[0.3em] hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all active:scale-[0.98]"
-                >
-                  Calculate
-                </button>
-              </form>
-            </div>
+              <button type="submit" className="btn-primary w-full py-6 text-xs uppercase tracking-[0.3em] mt-8">
+                Confirm Transformation
+              </button>
+            </form>
+          </div>
 
-            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10 reveal-up" style={{ animationDelay: '200ms' }}>
-              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Results</h2>
-              {result ? (
-                result.error ? (
-                  <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">{result.error}</p>
-                ) : (
-                  <div className="space-y-8">
-                    {result.type === 'add' ? (
-                      <>
-                        <div>
-                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Base Principal</p>
-                          <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
-                            {formatCurrency(result.originalAmount)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Tax Levy (10%)</p>
-                          <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
-                            {formatCurrency(result.gst)}
-                          </p>
-                        </div>
-                        <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
-                          <p className="text-[9px] font-black text-brand uppercase tracking-widest mb-1 italic">Gross Total</p>
-                          <p className="text-3xl font-extrabold text-brand tracking-tighter">
-                            {formatCurrency(result.total)}
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Gross Principal</p>
-                          <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
-                            {formatCurrency(result.originalAmount)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 italic">Extracted Levy</p>
-                          <p className="text-xl font-extrabold text-black dark:text-white tracking-tighter">
-                            {formatCurrency(result.gst)}
-                          </p>
-                        </div>
-                        <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
-                          <p className="text-[9px] font-black text-brand uppercase tracking-widest mb-1 italic">Net Value</p>
-                          <p className="text-3xl font-extrabold text-brand tracking-tighter">
-                            {formatCurrency(result.base)}
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )
+          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Output Log</h2>
+
+            {result ? (
+              result.error ? (
+                <p className="text-[10px] font-bold text-accent uppercase tracking-widest relative z-10">{result.error}</p>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full py-20 text-center">
-                  <span className="w-1.5 h-1.5 bg-zinc-200 dark:bg-zinc-800 mb-4" />
-                  <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
-                    Enter values to calculate.
-                  </p>
+                <div className="space-y-12 relative z-10">
+                  <div className="space-y-8">
+                    <div>
+                      <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-2 italic">Principal Input</p>
+                      <p className="text-2xl font-bold tracking-tight">{formatCurrency(result.originalAmount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-2 italic">Tax Derivative (10%)</p>
+                      <p className="text-2xl font-bold tracking-tight">{formatCurrency(result.gst)}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-10 border-t border-line-soft">
+                    <p className="text-[9px] font-bold text-accent uppercase tracking-[0.4em] mb-4">
+                      {result.type === 'add' ? 'Gross Aggregation' : 'Net Extraction'}
+                    </p>
+                    <p className="text-5xl font-black tracking-tighter text-text-primary">
+                      {formatCurrency(result.type === 'add' ? result.total : result.base)}
+                    </p>
+                  </div>
+
+                  <div className="pt-12 border-t border-line-soft">
+                    <p className="text-[10px] font-serif italic text-text-dim leading-relaxed">
+                      "Taxation is the price which we pay for civilization, for our social, civil and political institutions."
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
+              )
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
+                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">GST</div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Awaiting Economic Event</p>
+              </div>
+            )}
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

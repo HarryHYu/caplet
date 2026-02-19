@@ -12,7 +12,7 @@ const Navbar = () => {
 
   const allNavItems = [
     { path: '/', label: 'Index', publicOnly: true },
-    { path: '/dashboard', label: 'Terminal', privateOnly: true },
+    { path: '/dashboard', label: 'My Dashboard', privateOnly: true },
     { path: '/courses', label: 'Curriculum' },
     { path: '/classes', label: 'Academy' },
     { path: '/tools', label: 'Instruments' },
@@ -43,7 +43,7 @@ const Navbar = () => {
             <img
               src="/logo.png"
               alt="Caplet Logo"
-              className="w-8 h-8 object-contain transition-transform duration-500 group-hover:scale-110"
+              className="w-8 h-8 object-contain transition-transform duration-500 group-hover:scale-110 dark:invert"
             />
             <span className="text-2xl font-black tracking-ultra text-text-primary uppercase font-serif italic">
               Caplet.

@@ -13,7 +13,7 @@ async function run() {
   console.log(`Found ${lessons.length} lessons total. Removing all descriptions...\n`);
   
   // Force update all lessons to have null descriptions
-  const result = await Lesson.update(
+  await Lesson.update(
     { description: null },
     { where: {} }
   );

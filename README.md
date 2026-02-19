@@ -114,7 +114,7 @@ caplet/
 - **Backend:** Railway — PostgreSQL + Express API
 - Push to `main` triggers auto-deploy for both.
 
-See `DEPLOYMENT.md` for details.
+See [`CAPLET.md`](./CAPLET.md) or [`docs/deployment.md`](./docs/deployment.md) for details.
 
 ---
 

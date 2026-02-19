@@ -1,8 +1,10 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const redirectPath = location.state?.from || '/dashboard';
 
     return (
         <div className="min-h-screen flex bg-surface-body selection:bg-accent selection:text-white">
@@ -20,7 +22,7 @@ const Login = () => {
 
                 <div className="w-full max-w-sm relative z-10">
                     <LoginForm
-                        onSuccess={() => navigate('/dashboard')}
+                        onSuccess={() => navigate(redirectPath, { replace: true })}
                         onSwitchToRegister={() => navigate('/register')}
                         isPage={true}
                     />
