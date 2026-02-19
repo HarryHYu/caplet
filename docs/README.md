@@ -10,7 +10,8 @@ Caplet is a financial education platform for Australians — bridging the financ
 
 | Document | Description |
 |---|---|
-| [architecture.md](./architecture.md) | Frontend & backend stack, key patterns, codebase structure |
+| [../CAPLET.md](../CAPLET.md) | **Core project description** — overview, architecture, commands, deployment |
+| [architecture.md](./architecture.md) | Frontend & backend stack, key patterns, full codebase structure |
 | [database.md](./database.md) | Full database schema — all Sequelize models and relationships |
 | [deployment.md](./deployment.md) | Dev commands, environment variables, Railway + Vercel deployment |
 | [content-pipeline.md](./content-pipeline.md) | Lesson JSON format, import workflow, course seeding scripts |

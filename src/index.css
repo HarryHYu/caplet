@@ -223,18 +223,6 @@
   .stagger-3 {}
 }
 
-/* Page Transitions & Utilities */
-.fade-enter {
-  opacity: 0;
-  transform: scale(0.98);
-}
-
-.fade-enter-active {
-  opacity: 1;
-  transform: scale(1);
-  transition: opacity 400ms, transform 400ms;
-}
-
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;

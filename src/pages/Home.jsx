@@ -93,9 +93,9 @@ const Home = () => {
         <div className="container-custom relative z-10">
           <div className="max-w-4xl mx-auto text-center reveal-text">
             <span className="section-kicker">Academic Standard ・ Australian Context</span>
-            <h1 className="mb-12 text-balance">
-              Financial logic for the <br />
-              <span className="text-zinc-400 dark:text-zinc-800 italic font-serif font-light">next generation.</span>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl mb-12 text-balance tracking-tighter font-extrabold">
+              Most people will never think about <br className="hidden md:block" />
+              money this way. <span className="text-zinc-400 dark:text-zinc-600 italic font-serif font-light">Now you can.</span>
             </h1>
             <p className="text-xl md:text-2xl text-text-muted mb-16 max-w-2xl mx-auto font-medium leading-relaxed">
               Bridging the literacy gap with professional, structured learning modules designed for school integration.
