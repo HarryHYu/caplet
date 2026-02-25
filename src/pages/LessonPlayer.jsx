@@ -525,12 +525,12 @@ const LessonPlayer = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-10 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-10 card-editorial">
                       <button
                         type="button"
                         onClick={() => goToSlide(currentSlideIndex - 1)}
                         disabled={currentSlideIndex <= 0}
-                        className="w-full sm:w-auto px-8 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition-all active:scale-[0.98]"
+                        className="btn-secondary w-full sm:w-auto disabled:opacity-40"
                       >
                         ← Previous
                       </button>
@@ -554,7 +554,7 @@ const LessonPlayer = () => {
                         type="button"
                         onClick={() => goToSlide(currentSlideIndex + 1)}
                         disabled={currentSlideIndex >= slides.length - 1}
-                        className="w-full sm:w-auto px-8 py-3 bg-black dark:bg-white text-white dark:text-black font-bold text-[10px] uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white disabled:opacity-40 transition-all active:scale-[0.98]"
+                        className="btn-primary w-full sm:w-auto disabled:opacity-40"
                       >
                         Next Sequence →
                       </button>
