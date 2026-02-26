@@ -185,78 +185,68 @@ const FlashcardSlide = ({ cards, caption }) => {
   );
 };
 
-// Matching slide — click to pair left/right; instant feedback, no save
+// Matching slide — select dropdown per term; no click-order issues
 const MatchingSlide = ({ pairs, caption }) => {
-  const [matches, setMatches] = useState({}); // leftIdx -> rightIdx (pairIdx)
-  const [selectedLeft, setSelectedLeft] = useState(null);
+  const [selections, setSelections] = useState({}); // leftIdx -> pairIdx (which right)
   const [checked, setChecked] = useState(false);
   const [rightOrder] = useState(() => pairs.map((_, i) => i).sort(() => Math.random() - 0.5));
-  const handleLeft = (e, i) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (checked) return;
-    if (matches[i] !== undefined) {
-      setMatches((m) => { const n = { ...m }; delete n[i]; return n; });
-      return;
-    }
-    setSelectedLeft(selectedLeft === i ? null : i);
+  const usedRight = new Set(Object.values(selections).filter((v) => v !== '' && v !== undefined));
+  const handleSelect = (leftIdx, pairIdx) => {
+    const val = pairIdx === '' || pairIdx === undefined ? undefined : Number(pairIdx);
+    setSelections((s) => {
+      const next = { ...s };
+      if (val === undefined || val === '') {
+        delete next[leftIdx];
+      } else {
+        next[leftIdx] = val;
+      }
+      return next;
+    });
   };
-  const handleRight = (e, pairIdx) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (checked || selectedLeft === null) return;
-    if (Object.values(matches).includes(pairIdx)) return;
-    setMatches((m) => ({ ...m, [selectedLeft]: pairIdx }));
-    setSelectedLeft(null);
-  };
-  const allMatched = Object.keys(matches).length === pairs.length;
   const handleCheck = () => setChecked(true);
   const getLeft = (p) => p.left ?? p.Left ?? '';
   const getRight = (p) => p.right ?? p.Right ?? '';
+  const allSelected = pairs.every((_, i) => selections[i] !== undefined && selections[i] !== '');
   return (
     <div className="min-w-0">
       {caption && <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">{caption}</p>}
-      <div className="grid grid-cols-2 gap-4 min-w-0">
-        <div className="space-y-2 min-w-0">
-          {pairs.map((p, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={(e) => handleLeft(e, i)}
-              className={`w-full text-left p-4 border-2 cursor-pointer transition-all rounded-xl select-none ${
-                selectedLeft === i ? 'border-brand bg-brand/5' : matches[i] !== undefined ? 'border-slate-300 dark:border-slate-600' : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
+      <p className="text-[10px] font-bold text-slate-400 mb-6">Select the definition that matches each term.</p>
+      <div className="space-y-4">
+        {pairs.map((p, i) => (
+          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl">
+            <span className="font-bold text-slate-900 dark:text-white text-sm shrink-0 sm:w-40">{getLeft(p)}</span>
+            <span className="hidden sm:inline text-slate-400">→</span>
+            <select
+              value={selections[i] ?? ''}
+              onChange={(e) => handleSelect(i, e.target.value)}
+              className={`flex-1 px-4 py-3 border-2 rounded-lg font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-900 ${
+                checked
+                  ? selections[i] === i
+                    ? 'border-brand bg-brand/5'
+                    : 'border-red-500 bg-red-500/5'
+                  : 'border-slate-200 dark:border-slate-700'
               }`}
             >
-              <span className="font-bold text-slate-900 dark:text-white text-sm">{getLeft(p)}</span>
-              {checked && matches[i] !== undefined && (
-                <span className={`ml-2 text-[9px] font-black uppercase ${matches[i] === i ? 'text-brand' : 'text-red-500'}`}>
-                  {matches[i] === i ? '✓' : '✗'}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="space-y-2 min-w-0">
-          {rightOrder.map((pairIdx) => {
-            const isTaken = Object.values(matches).includes(pairIdx);
-            return (
-              <button
-                key={pairIdx}
-                type="button"
-                onClick={(e) => handleRight(e, pairIdx)}
-                disabled={isTaken}
-                className={`w-full text-left p-4 border-2 cursor-pointer transition-all rounded-xl select-none disabled:cursor-default ${
-                  isTaken ? 'border-slate-300 dark:border-slate-600 opacity-75' : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
-                }`}
-              >
-                <span className="font-bold text-slate-900 dark:text-white text-sm">{getRight(pairs[pairIdx])}</span>
-              </button>
-            );
-          })}
-        </div>
+              <option value="">— Choose definition —</option>
+              {rightOrder.map((pairIdx) => (
+                <option
+                  key={pairIdx}
+                  value={pairIdx}
+                  disabled={usedRight.has(pairIdx) && selections[i] !== pairIdx}
+                >
+                  {getRight(pairs[pairIdx])}
+                </option>
+              ))}
+            </select>
+            {checked && selections[i] !== undefined && selections[i] !== '' && (
+              <span className={`text-[9px] font-black uppercase shrink-0 ${selections[i] === i ? 'text-brand' : 'text-red-500'}`}>
+                {selections[i] === i ? '✓ Correct' : '✗ Incorrect'}
+              </span>
+            )}
+          </div>
+        ))}
       </div>
-      <p className="text-[10px] font-bold text-slate-400 mt-4">Click a term (left), then its definition (right) to pair. Click a matched term to unmatch.</p>
-      {allMatched && (
+      {allSelected && (
         <button type="button" onClick={handleCheck} className="mt-6 btn-primary">Verify matches</button>
       )}
     </div>
