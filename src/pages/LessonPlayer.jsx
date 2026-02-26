@@ -141,6 +141,190 @@ const Quiz = ({ questions, onComplete }) => {
   );
 };
 
+// Flashcard slide — flip cards, no progress saved
+const FlashcardSlide = ({ cards, caption }) => {
+  const [index, setIndex] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const card = cards[index];
+  if (!card) return null;
+  return (
+    <div className="flex flex-col items-center">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Retention Protocol {index + 1} / {cards.length}</p>
+      <button
+        type="button"
+        onClick={() => setFlipped((f) => !f)}
+        className="w-full max-w-lg min-h-[180px] p-8 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl text-left hover:border-brand transition-all cursor-pointer"
+      >
+        <p className="font-bold text-slate-900 dark:text-white text-base leading-relaxed">
+          {flipped ? (card.back || '') : (card.front || '')}
+        </p>
+        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mt-4">Tap to flip</p>
+      </button>
+      <div className="flex gap-4 mt-6">
+        <button
+          type="button"
+          onClick={() => { setIndex((i) => Math.max(0, i - 1)); setFlipped(false); }}
+          disabled={index <= 0}
+          className="btn-secondary disabled:opacity-40"
+        >
+          ← Previous
+        </button>
+        <button
+          type="button"
+          onClick={() => { setIndex((i) => Math.min(cards.length - 1, i + 1)); setFlipped(false); }}
+          disabled={index >= cards.length - 1}
+          className="btn-primary disabled:opacity-40"
+        >
+          Next →
+        </button>
+      </div>
+      {caption && <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-6">{caption}</p>}
+    </div>
+  );
+};
+
+// Matching slide — click to pair left/right; instant feedback, no save
+const MatchingSlide = ({ pairs, caption }) => {
+  const [matches, setMatches] = useState({}); // leftIdx -> rightIdx
+  const [selectedLeft, setSelectedLeft] = useState(null);
+  const [checked, setChecked] = useState(false);
+  const rightOrder = useState(() => pairs.map((_, i) => i).sort(() => Math.random() - 0.5))[0];
+  const handleLeft = (i) => {
+    if (checked) return;
+    if (matches[i] !== undefined) {
+      setMatches((m) => { const n = { ...m }; delete n[i]; return n; });
+      return;
+    }
+    setSelectedLeft(selectedLeft === i ? null : i);
+  };
+  const handleRight = (pairIdx) => {
+    if (checked || selectedLeft === null) return;
+    if (Object.values(matches).includes(pairIdx)) return;
+    setMatches((m) => ({ ...m, [selectedLeft]: pairIdx }));
+    setSelectedLeft(null);
+  };
+  const allMatched = Object.keys(matches).length === pairs.length;
+  const handleCheck = () => setChecked(true);
+  return (
+    <div>
+      {caption && <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">{caption}</p>}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-2">
+          {pairs.map((p, i) => (
+            <div
+              key={i}
+              onClick={() => handleLeft(i)}
+              className={`p-4 border-2 cursor-pointer transition-all rounded-xl ${
+                selectedLeft === i ? 'border-brand bg-brand/5' : matches[i] !== undefined ? 'border-slate-300 dark:border-slate-600' : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
+              }`}
+            >
+              <span className="font-bold text-slate-900 dark:text-white text-sm">{p.left}</span>
+              {checked && matches[i] !== undefined && (
+                <span className={`ml-2 text-[9px] font-black uppercase ${matches[i] === i ? 'text-brand' : 'text-red-500'}`}>
+                  {matches[i] === i ? '✓' : '✗'}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {rightOrder.map((pairIdx) => (
+            <div
+              key={pairIdx}
+              onClick={() => handleRight(pairIdx)}
+              className={`p-4 border-2 cursor-pointer transition-all rounded-xl ${
+                Object.values(matches).includes(pairIdx) ? 'border-slate-300 dark:border-slate-600' : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
+              }`}
+            >
+              <span className="font-bold text-slate-900 dark:text-white text-sm">{pairs[pairIdx].right}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="text-[10px] font-bold text-slate-400 mt-4">Click a term, then its definition to pair. Click again to deselect.</p>
+      {allMatched && (
+        <button type="button" onClick={handleCheck} className="mt-6 btn-primary">Verify matches</button>
+      )}
+    </div>
+  );
+};
+
+// Fill-in-blank slide — template uses {{0}}, {{1}} for blanks; alternatives = [[a,b],[c]] per blank
+const FillBlankSlide = ({ template, blanks, alternatives, caption }) => {
+  const [values, setValues] = useState(blanks.map(() => ''));
+  const [checked, setChecked] = useState(false);
+  const parts = template.split(/(\{\{\d+\}\})/g);
+  const getAlternative = (i) => (alternatives && alternatives[i]) || [blanks[i]];
+  const isCorrect = (i) => getAlternative(i).some((a) => a.toLowerCase().trim() === (values[i] || '').toLowerCase().trim());
+  const allCorrect = blanks.every((_, i) => isCorrect(i));
+  return (
+    <div>
+      {caption && <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">{caption}</p>}
+      <p className="leading-relaxed">
+        {parts.map((part, i) => {
+          const m = part.match(/^\{\{(\d+)\}\}$/);
+          if (m) {
+            const idx = parseInt(m[1], 10);
+            return (
+              <span key={i} className="inline">
+                <input
+                  type="text"
+                  value={values[idx]}
+                  onChange={(e) => setValues((v) => { const n = [...v]; n[idx] = e.target.value; return n; })}
+                  placeholder="______"
+                  className={`inline-block w-40 mx-1 px-3 py-1.5 border-2 rounded-lg font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-900 text-sm align-middle ${
+                    checked ? (isCorrect(idx) ? 'border-brand' : 'border-red-500') : 'border-slate-200 dark:border-slate-700'
+                  }`}
+                />
+              </span>
+            );
+          }
+          return <span key={i} className="font-medium text-slate-700 dark:text-slate-300">{part}</span>;
+        })}
+      </p>
+      <button type="button" onClick={() => setChecked(true)} className="mt-6 btn-primary">Verify</button>
+      {checked && !allCorrect && <p className="mt-4 text-[10px] font-bold text-slate-400">Check your answers. Some blanks may be incorrect.</p>}
+      {checked && allCorrect && <p className="mt-4 text-[10px] font-bold text-brand">All correct.</p>}
+    </div>
+  );
+};
+
+// Ordering slide — drag-to-reorder or up/down; correctOrder = [0,1,2] means items[0], items[1], items[2]
+const OrderingSlide = ({ prompt, items, correctOrder, caption }) => {
+  const [order, setOrder] = useState(() => items.map((_, i) => i).sort(() => Math.random() - 0.5));
+  const [checked, setChecked] = useState(false);
+  const move = (idx, dir) => {
+    const next = [...order];
+    const j = dir === 'up' ? idx - 1 : idx + 1;
+    if (j < 0 || j >= next.length) return;
+    [next[idx], next[j]] = [next[j], next[idx]];
+    setOrder(next);
+  };
+  const isCorrect = checked && order.every((val, i) => val === correctOrder[i]);
+  return (
+    <div>
+      {caption && <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">{caption}</p>}
+      {prompt && <p className="font-bold text-slate-900 dark:text-white mb-6">{prompt}</p>}
+      <div className="space-y-2">
+        {order.map((idx, pos) => (
+          <div
+            key={idx}
+            className="flex items-center gap-4 p-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900"
+          >
+            <div className="flex flex-col gap-0">
+              <button type="button" onClick={() => move(pos, 'up')} disabled={pos === 0} className="text-slate-400 hover:text-brand disabled:opacity-30">▲</button>
+              <button type="button" onClick={() => move(pos, 'down')} disabled={pos === order.length - 1} className="text-slate-400 hover:text-brand disabled:opacity-30">▼</button>
+            </div>
+            <span className="font-bold text-slate-900 dark:text-white">{items[idx]}</span>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={() => setChecked(true)} className="mt-6 btn-primary">Verify order</button>
+      {checked && (isCorrect ? <p className="mt-4 text-[10px] font-bold text-brand">Correct order.</p> : <p className="mt-4 text-[10px] font-bold text-slate-400">Not quite. Try again.</p>)}
+    </div>
+  );
+};
+
 // Build flat ordered list of lessons from course.modules (course → modules → lessons)
 function getFlatLessons(course) {
   if (!course?.modules) return [];
@@ -517,7 +701,31 @@ const LessonPlayer = () => {
                                 </div>
                               );
                             }
-                            return <a href={slide.content} target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-bold underline">Stream External Content</a>;
+                            return <a href={slide.content} target="_blank" rel="noopener noreferrer" className="text-brand font-bold underline">Stream External Content</a>;
+                          }
+
+                          if (slide.type === 'flashcard' && Array.isArray(slide.cards) && slide.cards.length > 0) {
+                            return (
+                              <FlashcardSlide cards={slide.cards} caption={slide.caption} />
+                            );
+                          }
+
+                          if (slide.type === 'matching' && Array.isArray(slide.pairs) && slide.pairs.length > 0) {
+                            return (
+                              <MatchingSlide pairs={slide.pairs} caption={slide.caption} />
+                            );
+                          }
+
+                          if (slide.type === 'fillblank' && slide.template && Array.isArray(slide.blanks)) {
+                            return (
+                              <FillBlankSlide template={slide.template} blanks={slide.blanks} alternatives={slide.alternatives} caption={slide.caption} />
+                            );
+                          }
+
+                          if (slide.type === 'ordering' && Array.isArray(slide.items) && Array.isArray(slide.correctOrder)) {
+                            return (
+                              <OrderingSlide prompt={slide.prompt} items={slide.items} correctOrder={slide.correctOrder} caption={slide.caption} />
+                            );
                           }
 
                           return <p className="text-slate-400 italic">Instructional module content unavailable.</p>;
@@ -542,7 +750,7 @@ const LessonPlayer = () => {
                             type="button"
                             onClick={() => goToSlide(i)}
                             className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === currentSlideIndex
-                              ? 'bg-indigo-600 w-6'
+                              ? 'bg-brand w-6'
                               : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300'
                               }`}
                             aria-label={`Go to slide ${i + 1}`}

@@ -58,6 +58,44 @@
       "content": "**Key idea**\n\nThe workplace operates as a regulated relationship:\n- Employees provide labour\n- Employers provide wages\n- Unions advocate for workers\n- Government sets minimum standards\n\nThe **Fair Work system** exists to balance power and prevent exploitation while maintaining productive businesses."
     },
     {
+      "type": "flashcard",
+      "caption": "Key terms",
+      "cards": [
+        { "front": "What is the Fair Work Commission?", "back": "Australia's national workplace tribunal that hears disputes, approves agreements, and sets minimum wages." },
+        { "front": "What are the National Employment Standards (NES)?", "back": "Minimum legal entitlements for most employees, including 38-hour weeks, leave, and casual conversion rights." },
+        { "front": "What does the Fair Work Ombudsman do?", "back": "Investigates breaches, resolves pay disputes, and educates workers and employers about workplace laws." },
+        { "front": "What is the Fair Work Act 2009?", "back": "The law that establishes minimum workplace standards and governs employer–employee relationships in Australia." }
+      ]
+    },
+    {
+      "type": "matching",
+      "caption": "Match terms to definitions",
+      "pairs": [
+        { "left": "Employee", "right": "A person who performs work for payment under an employer" },
+        { "left": "Employer", "right": "A person or business that hires workers" },
+        { "left": "Trade union", "right": "An organisation representing workers' interests" },
+        { "left": "NES", "right": "National Employment Standards – minimum legal entitlements" }
+      ]
+    },
+    {
+      "type": "fillblank",
+      "caption": "Complete the sentence",
+      "template": "The {{0}} is Australia's national workplace tribunal, while the {{1}} investigates breaches and enforces workplace laws.",
+      "blanks": ["Fair Work Commission", "Fair Work Ombudsman"],
+      "alternatives": [["Fair Work Commission", "FWC"], ["Fair Work Ombudsman", "FWO"]]
+    },
+    {
+      "type": "ordering",
+      "prompt": "Order the steps in resolving a workplace dispute:",
+      "caption": "Correct sequence",
+      "items": [
+        "Employee contacts Fair Work Ombudsman or lodges claim",
+        "Fair Work Commission hears the dispute",
+        "Decision is issued (legally binding)"
+      ],
+      "correctOrder": [0, 1, 2]
+    },
+    {
       "type": "video",
       "content": "https://www.youtube.com/watch?v=57O0rb9OjDQ",
       "caption": "Overview of workplace rights and the Fair Work system"
