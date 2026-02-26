@@ -147,16 +147,18 @@ const FlashcardSlide = ({ cards, caption }) => {
   const [flipped, setFlipped] = useState(false);
   const card = cards[index];
   if (!card) return null;
+  const front = card.front ?? card.Front ?? '';
+  const back = card.back ?? card.Back ?? '';
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center min-w-0">
       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Retention Protocol {index + 1} / {cards.length}</p>
       <button
         type="button"
         onClick={() => setFlipped((f) => !f)}
-        className="w-full max-w-lg min-h-[180px] p-8 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl text-left hover:border-brand transition-all cursor-pointer"
+        className="w-full max-w-lg min-h-[180px] p-8 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl text-left hover:border-brand transition-all cursor-pointer select-none"
       >
         <p className="font-bold text-slate-900 dark:text-white text-base leading-relaxed">
-          {flipped ? (card.back || '') : (card.front || '')}
+          {flipped ? back : front}
         </p>
         <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mt-4">Tap to flip</p>
       </button>
@@ -185,11 +187,13 @@ const FlashcardSlide = ({ cards, caption }) => {
 
 // Matching slide — click to pair left/right; instant feedback, no save
 const MatchingSlide = ({ pairs, caption }) => {
-  const [matches, setMatches] = useState({}); // leftIdx -> rightIdx
+  const [matches, setMatches] = useState({}); // leftIdx -> rightIdx (pairIdx)
   const [selectedLeft, setSelectedLeft] = useState(null);
   const [checked, setChecked] = useState(false);
-  const rightOrder = useState(() => pairs.map((_, i) => i).sort(() => Math.random() - 0.5))[0];
-  const handleLeft = (i) => {
+  const [rightOrder] = useState(() => pairs.map((_, i) => i).sort(() => Math.random() - 0.5));
+  const handleLeft = (e, i) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (checked) return;
     if (matches[i] !== undefined) {
       setMatches((m) => { const n = { ...m }; delete n[i]; return n; });
@@ -197,7 +201,9 @@ const MatchingSlide = ({ pairs, caption }) => {
     }
     setSelectedLeft(selectedLeft === i ? null : i);
   };
-  const handleRight = (pairIdx) => {
+  const handleRight = (e, pairIdx) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (checked || selectedLeft === null) return;
     if (Object.values(matches).includes(pairIdx)) return;
     setMatches((m) => ({ ...m, [selectedLeft]: pairIdx }));
@@ -205,43 +211,51 @@ const MatchingSlide = ({ pairs, caption }) => {
   };
   const allMatched = Object.keys(matches).length === pairs.length;
   const handleCheck = () => setChecked(true);
+  const getLeft = (p) => p.left ?? p.Left ?? '';
+  const getRight = (p) => p.right ?? p.Right ?? '';
   return (
-    <div>
+    <div className="min-w-0">
       {caption && <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">{caption}</p>}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-4 min-w-0">
+        <div className="space-y-2 min-w-0">
           {pairs.map((p, i) => (
-            <div
+            <button
               key={i}
-              onClick={() => handleLeft(i)}
-              className={`p-4 border-2 cursor-pointer transition-all rounded-xl ${
+              type="button"
+              onClick={(e) => handleLeft(e, i)}
+              className={`w-full text-left p-4 border-2 cursor-pointer transition-all rounded-xl select-none ${
                 selectedLeft === i ? 'border-brand bg-brand/5' : matches[i] !== undefined ? 'border-slate-300 dark:border-slate-600' : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
               }`}
             >
-              <span className="font-bold text-slate-900 dark:text-white text-sm">{p.left}</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">{getLeft(p)}</span>
               {checked && matches[i] !== undefined && (
                 <span className={`ml-2 text-[9px] font-black uppercase ${matches[i] === i ? 'text-brand' : 'text-red-500'}`}>
                   {matches[i] === i ? '✓' : '✗'}
                 </span>
               )}
-            </div>
+            </button>
           ))}
         </div>
-        <div className="space-y-2">
-          {rightOrder.map((pairIdx) => (
-            <div
-              key={pairIdx}
-              onClick={() => handleRight(pairIdx)}
-              className={`p-4 border-2 cursor-pointer transition-all rounded-xl ${
-                Object.values(matches).includes(pairIdx) ? 'border-slate-300 dark:border-slate-600' : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
-              }`}
-            >
-              <span className="font-bold text-slate-900 dark:text-white text-sm">{pairs[pairIdx].right}</span>
-            </div>
-          ))}
+        <div className="space-y-2 min-w-0">
+          {rightOrder.map((pairIdx) => {
+            const isTaken = Object.values(matches).includes(pairIdx);
+            return (
+              <button
+                key={pairIdx}
+                type="button"
+                onClick={(e) => handleRight(e, pairIdx)}
+                disabled={isTaken}
+                className={`w-full text-left p-4 border-2 cursor-pointer transition-all rounded-xl select-none disabled:cursor-default ${
+                  isTaken ? 'border-slate-300 dark:border-slate-600 opacity-75' : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                }`}
+              >
+                <span className="font-bold text-slate-900 dark:text-white text-sm">{getRight(pairs[pairIdx])}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
-      <p className="text-[10px] font-bold text-slate-400 mt-4">Click a term, then its definition to pair. Click again to deselect.</p>
+      <p className="text-[10px] font-bold text-slate-400 mt-4">Click a term (left), then its definition (right) to pair. Click a matched term to unmatch.</p>
       {allMatched && (
         <button type="button" onClick={handleCheck} className="mt-6 btn-primary">Verify matches</button>
       )}
