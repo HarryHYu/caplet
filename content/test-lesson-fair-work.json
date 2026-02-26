@@ -99,10 +99,10 @@
       "type": "video",
       "content": "https://www.youtube.com/watch?v=57O0rb9OjDQ",
       "caption": "Overview of workplace rights and the Fair Work system"
-    }
-  ],
-  "quiz": [
+    },
     {
+      "type": "question",
+      "id": "q1",
       "question": "Explain how the Fair Work system protects employees in Australian workplaces.",
       "options": [
         "It sets enforceable minimum standards and provides independent bodies to resolve disputes and enforce workplace laws.",
@@ -114,6 +114,8 @@
       "explanation": "The Fair Work Act 2009 sets minimum conditions through the National Employment Standards. The Fair Work Commission resolves disputes and unfair dismissal claims, while the Fair Work Ombudsman investigates breaches and educates workers about pay and entitlements."
     },
     {
+      "type": "question",
+      "id": "q2",
       "question": "An employee is best defined as:",
       "options": [
         "A person who owns a business",
@@ -125,72 +127,56 @@
       "explanation": "An employee works for another person or organisation in return for payment."
     },
     {
+      "type": "question",
+      "id": "q3",
       "question": "Which group sets minimum workplace standards in Australia?",
-      "options": [
-        "Trade unions",
-        "Employees",
-        "Government",
-        "Customers"
-      ],
+      "options": ["Trade unions", "Employees", "Government", "Customers"],
       "correctIndex": 2,
       "explanation": "Governments create laws, including the Fair Work Act, that set minimum standards."
     },
     {
+      "type": "question",
+      "id": "q4",
       "question": "The Fair Work Act 2009 mainly regulates:",
-      "options": [
-        "Taxation",
-        "Employment relationships",
-        "International trade",
-        "Consumer purchases"
-      ],
+      "options": ["Taxation", "Employment relationships", "International trade", "Consumer purchases"],
       "correctIndex": 1,
       "explanation": "The Fair Work Act governs the relationship between employers and employees."
     },
     {
+      "type": "question",
+      "id": "q5",
       "question": "Which organisation acts as the workplace tribunal?",
-      "options": [
-        "Fair Work Ombudsman",
-        "Fair Work Commission",
-        "Trade Union",
-        "Parliament"
-      ],
+      "options": ["Fair Work Ombudsman", "Fair Work Commission", "Trade Union", "Parliament"],
       "correctIndex": 1,
-      "explanation": "The Fair Work Commission is Australia\u2019s national workplace tribunal."
+      "explanation": "The Fair Work Commission is Australia's national workplace tribunal."
     },
     {
+      "type": "question",
+      "id": "q6",
       "question": "The Fair Work Ombudsman primarily:",
-      "options": [
-        "Makes laws",
-        "Sets interest rates",
-        "Investigates workplace breaches",
-        "Runs businesses"
-      ],
+      "options": ["Makes laws", "Sets interest rates", "Investigates workplace breaches", "Runs businesses"],
       "correctIndex": 2,
       "explanation": "The FWO investigates breaches, resolves pay disputes and enforces workplace entitlements."
     },
     {
+      "type": "question",
+      "id": "q7",
       "question": "Which of the following is an employer responsibility?",
-      "options": [
-        "Obey lawful commands",
-        "Provide a safe workplace",
-        "Pay income tax",
-        "Attend training"
-      ],
+      "options": ["Obey lawful commands", "Provide a safe workplace", "Pay income tax", "Attend training"],
       "correctIndex": 1,
       "explanation": "Employers must provide a safe workplace and meet legal standards."
     },
     {
+      "type": "question",
+      "id": "q8",
       "question": "Trade unions mainly aim to:",
-      "options": [
-        "Increase company profit",
-        "Represent worker interests",
-        "Replace government",
-        "Hire employees"
-      ],
+      "options": ["Increase company profit", "Represent worker interests", "Replace government", "Hire employees"],
       "correctIndex": 1,
       "explanation": "Unions negotiate for higher wages, safer conditions and job security on behalf of workers."
     },
     {
+      "type": "question",
+      "id": "q9",
       "question": "National Employment Standards (NES) apply to:",
       "options": [
         "Only full-time workers",
@@ -202,24 +188,18 @@
       "explanation": "NES are minimum legal entitlements for most employees in the Fair Work system."
     },
     {
+      "type": "question",
+      "id": "q10",
       "question": "Maximum ordinary weekly working hours under NES are:",
-      "options": [
-        "20",
-        "30",
-        "38",
-        "45"
-      ],
+      "options": ["20", "30", "38", "45"],
       "correctIndex": 2,
       "explanation": "NES set a maximum of 38 ordinary weekly hours for most employees."
     },
     {
+      "type": "question",
+      "id": "q11",
       "question": "Which organisation approves enterprise agreements?",
-      "options": [
-        "High Court",
-        "Fair Work Commission",
-        "Trade Union",
-        "Treasury"
-      ],
+      "options": ["High Court", "Fair Work Commission", "Trade Union", "Treasury"],
       "correctIndex": 1,
       "explanation": "The Fair Work Commission approves enterprise agreements and ensures they meet legal standards."
     }

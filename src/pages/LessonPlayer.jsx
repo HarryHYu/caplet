@@ -737,36 +737,39 @@ const LessonPlayer = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-10 card-editorial">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 mt-10 card-editorial">
                       <button
                         type="button"
                         onClick={() => goToSlide(currentSlideIndex - 1)}
                         disabled={currentSlideIndex <= 0}
-                        className="btn-secondary w-full sm:w-auto disabled:opacity-40"
+                        className="btn-secondary w-full sm:w-auto shrink-0 disabled:opacity-40"
                       >
                         ← Previous
                       </button>
 
-                      <div className="flex gap-2.5 px-4 py-2 bg-white dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-700">
-                        {slides.map((_, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => goToSlide(i)}
-                            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === currentSlideIndex
-                              ? 'bg-brand w-6'
-                              : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300'
-                              }`}
-                            aria-label={`Go to slide ${i + 1}`}
-                          />
-                        ))}
+                      <div className="flex items-center gap-3 shrink min-w-0">
+                        <span className="text-[9px] font-bold text-zinc-400 shrink-0 hidden sm:inline">{currentSlideIndex + 1} / {slides.length}</span>
+                        <div className="flex gap-1.5 overflow-x-auto max-w-[180px] sm:max-w-[240px] px-2 py-1 custom-scrollbar">
+                          {slides.map((_, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => goToSlide(i)}
+                              className={`shrink-0 w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === currentSlideIndex
+                                ? 'bg-brand w-5'
+                                : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300'
+                                }`}
+                              aria-label={`Go to slide ${i + 1}`}
+                            />
+                          ))}
+                        </div>
                       </div>
 
                       <button
                         type="button"
                         onClick={() => goToSlide(currentSlideIndex + 1)}
                         disabled={currentSlideIndex >= slides.length - 1}
-                        className="btn-primary w-full sm:w-auto disabled:opacity-40"
+                        className="btn-primary w-full sm:w-auto shrink-0 disabled:opacity-40"
                       >
                         Next Sequence →
                       </button>
