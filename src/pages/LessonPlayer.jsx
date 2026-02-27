@@ -165,16 +165,15 @@ const FlashcardSlide = ({ cards, caption }) => {
   return (
     <div className="flex flex-col items-center min-w-0">
       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Retention Protocol {index + 1} / {cards.length}</p>
-      {/* 3D flip card */}
-      <div key={index} className="w-full max-w-lg perspective-[1200px] animate-card-in">
+      {/* 3D flip card — no overflow/scale on parents (breaks backface-visibility) */}
+      <div key={index} className="w-full max-w-lg" style={{ perspective: 1200 }}>
         <button
           type="button"
           onClick={() => setFlipped((f) => !f)}
-          className="w-full min-h-[200px] block text-left select-none transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
-          style={{ transformStyle: 'preserve-3d' }}
+          className="w-full min-h-[200px] block text-left select-none border-0 p-0 bg-transparent cursor-pointer"
         >
           <div
-            className="relative w-full min-h-[200px] rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-lg transition-transform duration-500 ease-out"
+            className="relative w-full min-h-[200px] rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-lg transition-[transform] duration-500 ease-out hover:border-brand/50"
             style={{
               transformStyle: 'preserve-3d',
               transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -182,16 +181,16 @@ const FlashcardSlide = ({ cards, caption }) => {
           >
             {/* Front face */}
             <div
-              className="absolute inset-0 p-8 flex flex-col justify-between rounded-2xl backface-hidden"
-              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(0deg)' }}
+              className="absolute inset-0 p-8 flex flex-col justify-between rounded-2xl bg-white dark:bg-slate-900"
+              style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(0deg)' }}
             >
               <p className="font-bold text-slate-900 dark:text-white text-base leading-relaxed">{front}</p>
               <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mt-4">Tap to flip</p>
             </div>
             {/* Back face */}
             <div
-              className="absolute inset-0 p-8 flex flex-col justify-between rounded-2xl backface-hidden bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
-              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+              className="absolute inset-0 p-8 flex flex-col justify-between rounded-2xl bg-slate-50 dark:bg-slate-800/80"
+              style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
             >
               <p className="font-medium text-slate-700 dark:text-slate-200 text-base leading-relaxed">{back}</p>
               <p className="text-[9px] font-bold uppercase tracking-widest text-brand">Show question</p>
