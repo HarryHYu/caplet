@@ -141,32 +141,17 @@ const Quiz = ({ questions, onComplete }) => {
   );
 };
 
-// Flashcard slide — 3D flip cards, no progress saved
-const FlashcardSlide = ({ cards, caption }) => {
-  const [index, setIndex] = useState(0);
+// Flashcard slide — single card, 3D flip. Use main lesson nav (prev/next) to move between cards.
+const FlashcardSlide = ({ card, caption }) => {
   const [flipped, setFlipped] = useState(false);
-  const card = cards[index];
   if (!card) return null;
   const front = card.front ?? card.Front ?? '';
   const back = card.back ?? card.Back ?? '';
 
-  const goPrev = () => {
-    if (index <= 0) return;
-    setFlipped(false);
-    setIndex((i) => i - 1);
-  };
-
-  const goNext = () => {
-    if (index >= cards.length - 1) return;
-    setFlipped(false);
-    setIndex((i) => i + 1);
-  };
-
   return (
     <div className="flex flex-col items-center min-w-0">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Retention Protocol {index + 1} / {cards.length}</p>
       {/* 3D flip card — no overflow/scale on parents (breaks backface-visibility) */}
-      <div key={index} className="w-full max-w-lg" style={{ perspective: 1200 }}>
+      <div className="w-full max-w-lg" style={{ perspective: 1200 }}>
         <button
           type="button"
           onClick={() => setFlipped((f) => !f)}
@@ -196,24 +181,6 @@ const FlashcardSlide = ({ cards, caption }) => {
               <p className="text-[9px] font-bold uppercase tracking-widest text-brand">Show question</p>
             </div>
           </div>
-        </button>
-      </div>
-      <div className="flex gap-4 mt-6">
-        <button
-          type="button"
-          onClick={goPrev}
-          disabled={index <= 0}
-          className="btn-secondary disabled:opacity-40 transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100"
-        >
-          ← Previous
-        </button>
-        <button
-          type="button"
-          onClick={goNext}
-          disabled={index >= cards.length - 1}
-          className="btn-primary disabled:opacity-40 transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100"
-        >
-          Next →
         </button>
       </div>
       {caption && <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-6">{caption}</p>}
@@ -511,7 +478,7 @@ const LessonPlayer = () => {
   }
 
   const slidesRaw = lesson.slides;
-  const slides = (() => {
+  const slidesRawParsed = (() => {
     if (Array.isArray(slidesRaw)) return slidesRaw;
     if (typeof slidesRaw === 'string' && slidesRaw.trim()) {
       try {
@@ -523,6 +490,14 @@ const LessonPlayer = () => {
     }
     return [];
   })();
+
+  // Expand flashcard slides: each card becomes its own slide (use main nav prev/next)
+  const slides = slidesRawParsed.flatMap((slide) => {
+    if (slide.type === 'flashcard' && Array.isArray(slide.cards) && slide.cards.length > 0) {
+      return slide.cards.map((card) => ({ ...slide, type: 'flashcard', card, cards: undefined }));
+    }
+    return [slide];
+  });
   const hasSlides = slides.length > 0;
 
   const goToSlide = (newIndex) => {
@@ -744,9 +719,9 @@ const LessonPlayer = () => {
                             return <a href={slide.content} target="_blank" rel="noopener noreferrer" className="text-brand font-bold underline">Stream External Content</a>;
                           }
 
-                          if (slide.type === 'flashcard' && Array.isArray(slide.cards) && slide.cards.length > 0) {
+                          if (slide.type === 'flashcard' && slide.card) {
                             return (
-                              <FlashcardSlide cards={slide.cards} caption={slide.caption} />
+                              <FlashcardSlide card={slide.card} caption={slide.caption} />
                             );
                           }
 
