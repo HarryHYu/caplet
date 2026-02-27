@@ -64,11 +64,6 @@ const Footer = () => {
                   Contact
                 </Link>
               </li>
-              <li>
-                <Link to="/metrics" className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-black dark:hover:text-white transition-colors">
-                  Metrics
-                </Link>
-              </li>
             </ul>
           </div>
         </div>

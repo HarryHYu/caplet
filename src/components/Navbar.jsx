@@ -17,7 +17,6 @@ const Navbar = () => {
     { path: '/courses', label: 'Courses' },
     { path: '/classes', label: 'Classes' },
     { path: '/tools', label: 'Tools' },
-    { path: '/metrics', label: 'Metrics' },
     { path: '/contact', label: 'Contact' },
   ];
   const navItems = isAuthenticated ? allNavItems.filter((item) => item.path !== '/') : allNavItems;
