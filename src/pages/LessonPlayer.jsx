@@ -719,10 +719,13 @@ const LessonPlayer = () => {
                             return <a href={slide.content} target="_blank" rel="noopener noreferrer" className="text-brand font-bold underline">Stream External Content</a>;
                           }
 
-                          if (slide.type === 'flashcard' && slide.card) {
-                            return (
-                              <FlashcardSlide card={slide.card} caption={slide.caption} />
-                            );
+                          if (slide.type === 'flashcard') {
+                            const card = slide.card ?? (Array.isArray(slide.cards) && slide.cards[0]) ?? null;
+                            if (card) {
+                              return (
+                                <FlashcardSlide card={card} caption={slide.caption} />
+                              );
+                            }
                           }
 
                           if (slide.type === 'matching' && Array.isArray(slide.pairs) && slide.pairs.length > 0) {
@@ -782,7 +785,7 @@ const LessonPlayer = () => {
                         disabled={currentSlideIndex >= slides.length - 1}
                         className="btn-primary w-full sm:w-auto shrink-0 disabled:opacity-40"
                       >
-                        Next Sequence →
+                        Next →
                       </button>
                     </div>
 
