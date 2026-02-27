@@ -1,0 +1,85 @@
+{
+  "courseTitle": "Year 10 AT2 Revision",
+  "courseCategory": "other",
+  "courseLevel": "intermediate",
+  "courseShortDescription": "Revision lessons and interactive tools for Year 10 AT2.",
+  "courseDescription": "Revision materials for Year 10 AT2. Contains revision lessons and interactive tools (flashcards, matching, etc.).",
+  "courseDuration": 60,
+  "moduleTitle": "Revision",
+  "lessonTitle": "Week 3 — Young Offenders and ATSI Customary Law",
+  "lessonOrder": 3,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Week 3 — Young Offenders and ATSI Customary Law**\n\nDetailed Study Revision Notes\n\n**Young Offenders and Legal Responsibility**\n\nYoung offender: person aged 10–17 who commits a criminal offence.\n\nThe legal system recognises young people have lower maturity, weaker judgment, and limited understanding of consequences.\n\nTherefore the justice system emphasises rehabilitation, early intervention, preventing reoffending, and reintegration into society.\n\n**Goal:** Avoid long-term criminal behaviour caused by harsh punishment at a young age."
+    },
+    {
+      "type": "text",
+      "content": "**Minimum Age of Criminal Responsibility (MACR)**\n\n**Australia: 10 years old**\n- Under 10 → cannot be charged with a crime\n\n**Reason:** Children lack cognitive development required to understand criminal wrongdoing."
+    },
+    {
+      "type": "text",
+      "content": "**Doli Incapax (Ages 10–14)**\n\n**Meaning:** \"incapable of wrongdoing\"\n\n**Legal presumption:** The child does not understand serious moral/legal wrongness.\n\n**Prosecution must prove:**\n- Child knew conduct was seriously wrong\n- More than just naughty behaviour\n\n**Effect:**\n- Higher burden of proof\n- Protects developing children\n- Balances accountability and fairness"
+    },
+    {
+      "type": "text",
+      "content": "**Children's Court**\n\nHandles offences committed by minors.\n\n**Key features:**\n- Less formal procedures\n- Privacy protections\n- Rehabilitation focus\n\n**Sentencing priorities:**\n- Education programs\n- Counselling\n- Supervision\n- Community-based orders"
+    },
+    {
+      "type": "text",
+      "content": "**Debate About MACR**\n\n**Arguments Supporting Age 10**\n- Promotes accountability\n- Reinforces boundaries\n- Allows early intervention\n\n**Arguments Against Age 10**\n- Below UN recommendation (14)\n- Limited impulse control in children\n- Early criminalisation increases reoffending"
+    },
+    {
+      "type": "text",
+      "content": "**ATSI Customary Law**\n\nBefore colonisation, Aboriginal and Torres Strait Islander communities used their own legal systems.\n\n**Characteristics:**\n- Oral law traditions\n- Kinship responsibility\n- Community decision-making\n- Restoration over punishment\n- Connection to land and culture"
+    },
+    {
+      "type": "text",
+      "content": "**Traditional Dispute Resolution**\n\nResponses depended on seriousness and community expectations.\n\n**Possible outcomes:**\n- Public shaming\n- Compensation\n- Exile\n- Symbolic physical punishment"
+    },
+    {
+      "type": "text",
+      "content": "**Circle Sentencing**\n\nModern court process incorporating Indigenous justice principles.\n\n**Participants:**\n- Magistrate\n- Aboriginal elders\n- Offender\n- Community/family\n- Sometimes victim\n\n**Goals:**\n- Culturally appropriate justice\n- Offender accountability\n- Reduced reoffending\n- Community involvement"
+    },
+    {
+      "type": "text",
+      "content": "**Native Title Act 1993**\n\nRecognised Indigenous land rights in Australian law following the Mabo decision.\n\n**Significance:**\n- Acknowledgment of customary law traditions\n- Integration of Indigenous rights into legal system"
+    },
+    {
+      "type": "text",
+      "content": "**Recognition of Customary Law Debate**\n\n**Arguments For**\n- Respects culture\n- Improves engagement\n- Better justice outcomes\n\n**Arguments Against**\n- Consistency concerns\n- Dual legal system issues\n- Limited specialist access"
+    },
+    {
+      "type": "text",
+      "content": "**Extended Response Practice**\n\n**Question:** Explain how the doli incapax principle balances accountability and fairness.\n\n*(Use your notes to plan and write your response.)*"
+    },
+    {
+      "type": "flashcard",
+      "caption": "Week 3 — Young Offenders",
+      "cards": [
+        { "front": "Age range of young offenders?", "back": "10–17." },
+        { "front": "Main aim of youth justice system?", "back": "Rehabilitation and preventing reoffending." },
+        { "front": "Minimum age of criminal responsibility in Australia?", "back": "10." },
+        { "front": "Can a child under 10 be charged?", "back": "No." },
+        { "front": "Meaning of doli incapax?", "back": "Incapable of wrongdoing." },
+        { "front": "What must the prosecution prove (10–14)?", "back": "The child knew the behaviour was seriously wrong." },
+        { "front": "Purpose of Children's Court?", "back": "Rehabilitation-focused justice for minors." },
+        { "front": "Why different courts for young offenders?", "back": "Reduced maturity and development." },
+        { "front": "UN recommended MACR?", "back": "14." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Week 3 — ATSI Customary Law",
+      "cards": [
+        { "front": "Key feature of ATSI customary law?", "back": "Restoring harmony." },
+        { "front": "Traditional ATSI dispute resolution focus?", "back": "Community repair, not punishment." },
+        { "front": "What is circle sentencing?", "back": "Court process involving elders and community." },
+        { "front": "Goal of circle sentencing?", "back": "Accountability and reduced reoffending." },
+        { "front": "What did Native Title Act 1993 recognise?", "back": "Indigenous land rights and customary law recognition." },
+        { "front": "One argument supporting customary law recognition?", "back": "Cultural fairness." },
+        { "front": "One argument against recognition?", "back": "Consistency concerns." }
+      ]
+    }
+  ]
+}
