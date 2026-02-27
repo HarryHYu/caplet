@@ -141,7 +141,7 @@ const Quiz = ({ questions, onComplete }) => {
   );
 };
 
-// Flashcard slide — flip cards, no progress saved
+// Flashcard slide — 3D flip cards, no progress saved
 const FlashcardSlide = ({ cards, caption }) => {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -149,33 +149,70 @@ const FlashcardSlide = ({ cards, caption }) => {
   if (!card) return null;
   const front = card.front ?? card.Front ?? '';
   const back = card.back ?? card.Back ?? '';
+
+  const goPrev = () => {
+    if (index <= 0) return;
+    setFlipped(false);
+    setIndex((i) => i - 1);
+  };
+
+  const goNext = () => {
+    if (index >= cards.length - 1) return;
+    setFlipped(false);
+    setIndex((i) => i + 1);
+  };
+
   return (
     <div className="flex flex-col items-center min-w-0">
       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Retention Protocol {index + 1} / {cards.length}</p>
-      <button
-        type="button"
-        onClick={() => setFlipped((f) => !f)}
-        className="w-full max-w-lg min-h-[180px] p-8 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl text-left hover:border-brand transition-all cursor-pointer select-none"
-      >
-        <p className="font-bold text-slate-900 dark:text-white text-base leading-relaxed">
-          {flipped ? back : front}
-        </p>
-        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mt-4">Tap to flip</p>
-      </button>
+      {/* 3D flip card */}
+      <div key={index} className="w-full max-w-lg perspective-[1200px] animate-card-in">
+        <button
+          type="button"
+          onClick={() => setFlipped((f) => !f)}
+          className="w-full min-h-[200px] block text-left select-none transition-transform duration-300 hover:scale-[1.01] active:scale-[0.99]"
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          <div
+            className="relative w-full min-h-[200px] rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-lg transition-transform duration-500 ease-out"
+            style={{
+              transformStyle: 'preserve-3d',
+              transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            }}
+          >
+            {/* Front face */}
+            <div
+              className="absolute inset-0 p-8 flex flex-col justify-between rounded-2xl backface-hidden"
+              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(0deg)' }}
+            >
+              <p className="font-bold text-slate-900 dark:text-white text-base leading-relaxed">{front}</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mt-4">Tap to flip</p>
+            </div>
+            {/* Back face */}
+            <div
+              className="absolute inset-0 p-8 flex flex-col justify-between rounded-2xl backface-hidden bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+            >
+              <p className="font-medium text-slate-700 dark:text-slate-200 text-base leading-relaxed">{back}</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-brand">Show question</p>
+            </div>
+          </div>
+        </button>
+      </div>
       <div className="flex gap-4 mt-6">
         <button
           type="button"
-          onClick={() => { setIndex((i) => Math.max(0, i - 1)); setFlipped(false); }}
+          onClick={goPrev}
           disabled={index <= 0}
-          className="btn-secondary disabled:opacity-40"
+          className="btn-secondary disabled:opacity-40 transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100"
         >
           ← Previous
         </button>
         <button
           type="button"
-          onClick={() => { setIndex((i) => Math.min(cards.length - 1, i + 1)); setFlipped(false); }}
+          onClick={goNext}
           disabled={index >= cards.length - 1}
-          className="btn-primary disabled:opacity-40"
+          className="btn-primary disabled:opacity-40 transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100"
         >
           Next →
         </button>
