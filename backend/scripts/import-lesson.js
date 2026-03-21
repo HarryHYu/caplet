@@ -1,7 +1,7 @@
 /**
  * Import a lesson from the canonical JSON format (from AI / content/example-lesson.json).
- * Usage: node scripts/import-lesson.js <path-to-lesson.json>
- * Example: node scripts/import-lesson.js ../../content/example-lesson.json
+ * Usage: node scripts/import-lesson.js <path-to-lesson.json> [--publish]
+ * Example: node scripts/import-lesson.js ../../content/example-lesson.json --publish
  */
 const fs = require('fs');
 const path = require('path');
@@ -117,16 +117,27 @@ async function importLesson(filePath) {
   return { course, lesson };
 }
 
+async function publishLesson(course, lesson) {
+  await course.update({ isPublished: true });
+  await lesson.update({ isPublished: true });
+  console.log('Published course and lesson.');
+}
+
 async function main() {
-  const filePath = process.argv[2];
+  const args = process.argv.slice(2);
+  const publishFlag = args.includes('--publish');
+  const filePath = args.find(a => !a.startsWith('--'));
   if (!filePath) {
-    console.error('Usage: node scripts/import-lesson.js <path-to-lesson.json>');
+    console.error('Usage: node scripts/import-lesson.js <path-to-lesson.json> [--publish]');
     process.exit(1);
   }
   try {
     await sequelize.authenticate();
     await ensureSlideColumns();
-    await importLesson(filePath);
+    const { course, lesson } = await importLesson(filePath);
+    if (publishFlag) {
+      await publishLesson(course, lesson);
+    }
     console.log('Done.');
     process.exit(0);
   } catch (err) {

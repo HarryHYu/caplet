@@ -1,0 +1,101 @@
+{
+  "courseTitle": "Year 10 AT2 Revision",
+  "courseCategory": "other",
+  "courseLevel": "intermediate",
+  "courseShortDescription": "Revision lessons and interactive tools for Year 10 AT2.",
+  "courseDescription": "Revision materials for Year 10 AT2. Contains revision lessons and interactive tools (flashcards, matching, etc.).",
+  "courseDuration": 60,
+  "moduleTitle": "Revision",
+  "lessonTitle": "Week 4 — Courts, Law-Making, and Juries",
+  "lessonOrder": 4,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Week 4 — Courts, Law-Making, and Juries**\n\nDetailed Study Revision Notes\n\n**Court Hierarchy in Australia**\n\nA court hierarchy is a ranking of courts based on authority and seriousness of cases.\n\n**Purpose:**\n- More serious matters handled by higher courts\n- Appeals reviewed by superior courts\n- Consistent application of law across the system\n\n**Hierarchy (lowest → highest):**\n- Local Court\n- District Court\n- Supreme Court\n- High Court of Australia\n\nEach court has jurisdiction (legal authority to hear certain cases)."
+    },
+    {
+      "type": "text",
+      "content": "**Criminal vs Civil Jurisdiction**\n\n**Criminal Jurisdiction**\n- Offences against society\n- Prosecuted by the state\n- Penalties include fines and imprisonment\n- Seriousness increases higher in the hierarchy\n\n**Civil Jurisdiction**\n- Disputes between individuals/organisations\n- Aims to provide remedies or compensation\n- Higher courts hear larger or more complex claims"
+    },
+    {
+      "type": "text",
+      "content": "**Local Court**\n\n**Presiding officer:** Magistrate\n**No jury**\n\n**Criminal matters:**\n- Summary offences\n- Committal hearings for indictable offences\n- Bail applications\n- Warrants and AVOs\n\n**Civil matters:**\n- Disputes up to $100,000"
+    },
+    {
+      "type": "text",
+      "content": "**District Court**\n\nMiddle-level court.\n\n**Hears:**\n- Serious indictable offences\n- Civil claims $100,001–$750,000\n- Appeals from Local Court\n\nMay use juries in criminal trials."
+    },
+    {
+      "type": "text",
+      "content": "**Supreme Court**\n\nHighest court in the state.\n\n**Hears:**\n- Most serious criminal offences\n- Large civil disputes (over $750,000)\n- Appeals from lower courts\n\nDecisions are binding precedent on lower courts."
+    },
+    {
+      "type": "text",
+      "content": "**High Court of Australia**\n\nHighest court nationally.\n\n**Roles:**\n- Interprets the Constitution\n- Resolves federal vs state disputes\n- Hears final appeals"
+    },
+    {
+      "type": "text",
+      "content": "**Judges vs Magistrates**\n\n**Magistrates**\n- Local Court\n- Decide cases alone\n- Less formal\n\n**Judges**\n- Higher courts\n- Interpret law\n- May create precedent\n- Preside over jury trials"
+    },
+    {
+      "type": "text",
+      "content": "**Statute Law**\n\nLaw made by parliament.\n\n**Process:**\n- Bill introduced\n- Debate in parliament\n- Passed by both houses\n- Royal assent → becomes law\n\n**Features:**\n- Can be amended or repealed\n- Reflects changing social values"
+    },
+    {
+      "type": "text",
+      "content": "**Common Law**\n\nLaw developed through judicial decisions.\n\n**Occurs when:**\n- No legislation exists\n- Legislation unclear\n\nJudges interpret law → decision forms legal principle."
+    },
+    {
+      "type": "text",
+      "content": "**Precedent**\n\nCourts must follow decisions of higher courts in similar cases.\n\n**Importance:**\n- Consistency\n- Fairness\n- Predictability\n\nLower courts bound by higher courts."
+    },
+    {
+      "type": "text",
+      "content": "**Statutory Interpretation**\n\nJudges interpret unclear legislation.\n\n**Effects:**\n- Clarifies meaning\n- Creates precedent\n- Guides future cases"
+    },
+    {
+      "type": "text",
+      "content": "**Division of Law-Making Powers**\n\n**Federal government:** immigration, taxation, defence\n\n**State government:** education, health, transport\n\n**Local government:** roads, waste services, community facilities\n\nHigh Court resolves disputes about powers."
+    },
+    {
+      "type": "text",
+      "content": "**Jury System**\n\nUsed in serious trials.\n\n**Role:**\n- Determine facts\n- Decide guilt or liability\n- Reflect community values\n\nJuries do not decide the law; the judge does."
+    },
+    {
+      "type": "text",
+      "content": "**Standards of Proof**\n\n**Civil:** balance of probabilities (more likely than not)\n\n**Criminal:** beyond reasonable doubt (very high certainty)\n\n**Reason:** Criminal penalties are more severe."
+    },
+    {
+      "type": "text",
+      "content": "**Extended Response Practice**\n\n**Question:** Explain why the court hierarchy is essential for consistency and fairness.\n\n*(Use your notes to plan and write your response.)*"
+    },
+    {
+      "type": "flashcard",
+      "caption": "Week 4 — Courts and Hierarchy",
+      "cards": [
+        { "front": "Purpose of court hierarchy?", "back": "Consistency, appeals, appropriate seriousness handling." },
+        { "front": "Highest court in Australia?", "back": "High Court." },
+        { "front": "Who prosecutes criminal cases?", "back": "The state." },
+        { "front": "Civil cases usually seek?", "back": "Compensation or remedies." },
+        { "front": "Who presides in Local Court?", "back": "Magistrate." },
+        { "front": "Which court hears appeals from Local Court?", "back": "District Court." },
+        { "front": "Supreme Court decisions?", "back": "Binding precedent." },
+        { "front": "Role of High Court?", "back": "Constitutional interpretation and final appeals." },
+        { "front": "Difference between judge and magistrate?", "back": "Judge in higher courts; magistrate in Local Court." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Week 4 — Law-Making and Juries",
+      "cards": [
+        { "front": "What is statute law?", "back": "Law made by parliament." },
+        { "front": "What is common law?", "back": "Judge-made law." },
+        { "front": "What is precedent?", "back": "Following higher court decisions." },
+        { "front": "Why statutory interpretation occurs?", "back": "Law unclear." },
+        { "front": "Jury decides?", "back": "Facts, not law." },
+        { "front": "Criminal standard of proof?", "back": "Beyond reasonable doubt." },
+        { "front": "Civil standard of proof?", "back": "Balance of probabilities." }
+      ]
+    }
+  ]
+}

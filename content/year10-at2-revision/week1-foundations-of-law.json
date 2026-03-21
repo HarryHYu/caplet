@@ -1,0 +1,105 @@
+{
+  "courseTitle": "Year 10 AT2 Revision",
+  "courseCategory": "other",
+  "courseLevel": "intermediate",
+  "courseShortDescription": "Revision lessons and interactive tools for Year 10 AT2.",
+  "courseDescription": "Revision materials for Year 10 AT2. Contains revision lessons and interactive tools (flashcards, matching, etc.).",
+  "courseDuration": 60,
+  "moduleTitle": "Revision",
+  "lessonTitle": "Week 1 — Foundations of Law",
+  "lessonOrder": 1,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Week 1 — Foundations of Law**\n\nDetailed Study Revision Notes\n\n**1. Morals, Ethics, Rules and Laws**\n\nHuman behaviour in society is controlled through different types of standards. They differ mainly in who creates them and the consequences if they are broken."
+    },
+    {
+      "type": "text",
+      "content": "**Morals**\n\n- Personal beliefs about right and wrong\n- Formed through upbringing, religion, culture and experiences\n- Controlled by an individual's conscience\n- If broken: guilt, embarrassment, social judgement\n- Not a legal matter\n\n**Ethics**\n\n- Formal standards of behaviour in professions or organisations\n- Often written in codes of conduct\n- Apply to occupations such as doctors, lawyers, teachers and businesses\n- If broken: warnings, disciplinary action, loss of job or licence\n- Not a criminal offence"
+    },
+    {
+      "type": "text",
+      "content": "**Rules**\n\n- Behaviour standards in specific environments (school, workplace, clubs)\n- Created by organisations rather than government\n- Only apply within that setting\n- If broken: internal penalties such as detention, suspension or removal\n\n**Laws**\n\n- Official rules created by government\n- Apply to everyone within a jurisdiction\n- Enforced by police and courts\n- If broken: fines, criminal record, imprisonment\n\n**Key principle:** Only laws result in legal punishment."
+    },
+    {
+      "type": "text",
+      "content": "**2. Reasons Laws Exist**\n\nSociety requires structure to function safely and predictably.\n\n**Core purposes:**\n- **Protection** — Protects individuals and property from harm\n- **Certainty** — Defines rights and responsibilities so people can act safely\n- **Dispute Resolution** — Provides peaceful ways to settle conflicts\n- **Deterrence** — Discourages wrongdoing through punishment risk\n- **Social Regulation** — Prevents disorder and instability\n- **Justice and Fairness** — Ensures equal treatment under the law\n- **Balance of Interests** — Balances individual freedom with public safety"
+    },
+    {
+      "type": "text",
+      "content": "**3. Four Roles of Law**\n\n- **Establish Boundaries** — Defines acceptable behaviour\n- **Protection** — Safeguards individuals and groups\n- **Promote Freedom** — Order allows people to live safely\n- **Resolve Disputes** — Provides peaceful conflict resolution"
+    },
+    {
+      "type": "text",
+      "content": "**4. Justice**\n\nJustice means fair and impartial treatment under the law.\n\nA legal system achieves justice when:\n- rights are protected\n- society functions safely\n- equality and access exist"
+    },
+    {
+      "type": "text",
+      "content": "**5. Symbolism of Lady Justice**\n\n- **Blindfold** — equality before the law\n- **Scales** — balance and fairness\n- **Sword** — enforcement and consequences"
+    },
+    {
+      "type": "text",
+      "content": "**6. Why Rules Alone Are Insufficient**\n\n**Rules:**\n- apply only in specific places\n- cannot punish serious wrongdoing\n- cannot regulate society broadly\n\n**Laws:**\n- apply to everyone\n- provide enforcement power\n- maintain stability"
+    },
+    {
+      "type": "flashcard",
+      "caption": "Foundations of Law — Behaviour Standards",
+      "cards": [
+        { "front": "What are morals?", "back": "Personal beliefs about right and wrong." },
+        { "front": "What are ethics?", "back": "Professional standards governing behaviour." },
+        { "front": "What are rules?", "back": "Organisation-based expectations." },
+        { "front": "What are laws?", "back": "Government-made enforceable rules." },
+        { "front": "Which standard carries legal punishment?", "back": "Laws." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Foundations of Law — Differences",
+      "cards": [
+        { "front": "Consequence of breaking a moral?", "back": "Social or personal consequence." },
+        { "front": "Consequence of breaking a rule?", "back": "Organisational penalty." },
+        { "front": "Consequence of breaking a law?", "back": "Legal punishment." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Foundations of Law — Purpose of Law",
+      "cards": [
+        { "front": "Why do laws exist?", "back": "To protect, regulate behaviour, resolve disputes and ensure justice." },
+        { "front": "What is deterrence?", "back": "Preventing wrongdoing through fear of punishment." },
+        { "front": "What is anarchy?", "back": "Absence of law and order." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Foundations of Law — Roles of Law",
+      "cards": [
+        { "front": "Four roles of law?", "back": "Establish boundaries, protection, freedom, dispute resolution." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Foundations of Law — Justice",
+      "cards": [
+        { "front": "Definition of justice?", "back": "Fair and equal treatment under the law." },
+        { "front": "When is justice achieved?", "back": "When rights, fairness and access are upheld." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Foundations of Law — Lady Justice",
+      "cards": [
+        { "front": "Blindfold represents?", "back": "Equality before the law." },
+        { "front": "Scales represent?", "back": "Balance and fairness." },
+        { "front": "Sword represents?", "back": "Enforcement and consequences." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Foundations of Law — Core Concept",
+      "cards": [
+        { "front": "Why are laws needed instead of only rules?", "back": "Rules cannot regulate society or enforce serious punishment." }
+      ]
+    }
+  ]
+}

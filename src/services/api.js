@@ -218,6 +218,10 @@ class ApiService {
     return this.request('/survey/stats');
   }
 
+  async getMetrics() {
+    return this.request('/metrics');
+  }
+
   // Classes & assignments
   async getClasses() {
     return this.request('/classes');
