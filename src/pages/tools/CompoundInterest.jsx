@@ -46,7 +46,7 @@ const CompoundInterest = () => {
   };
 
   return (
-    <div className="min-h-screen py-24 page-section-light">
+    <div className="min-h-screen py-24">
       <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
         <div className="container-custom">
           <div className="max-w-4xl">

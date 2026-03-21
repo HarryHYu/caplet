@@ -4,6 +4,7 @@ import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import BackgroundTexture from './components/BackgroundTexture';
 import Home from './pages/Home';
 import Contact from './pages/Contact';
 import Tools from './pages/Tools';
@@ -30,6 +31,7 @@ import SettingsProfile from './pages/SettingsProfile';
 import SettingsAccount from './pages/SettingsAccount';
 import UserProfile from './pages/UserProfile';
 import Terms from './pages/Terms';
+import Metrics from './pages/Metrics';
 import NotFound from './pages/NotFound';
 
 function HomeOrRedirect() {
@@ -44,7 +46,8 @@ function App() {
       <AuthProvider>
         <CoursesProvider>
           <Router>
-            <div className="min-h-screen flex flex-col">
+            <BackgroundTexture />
+            <div className="relative z-10 min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow">
                 <Routes>
@@ -76,6 +79,7 @@ function App() {
                   </Route>
                   <Route path="/profile/:userId" element={<UserProfile />} />
                   <Route path="/terms" element={<Terms />} />
+                  <Route path="/metrics" element={<Metrics />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

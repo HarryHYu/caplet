@@ -69,6 +69,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/progress', require('./routes/progress'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/survey', require('./routes/survey'));
+app.use('/api/metrics', require('./routes/metrics'));
 app.use('/api/classes', require('./routes/classes'));
 app.use('/api', require('./routes/proxy'));
 

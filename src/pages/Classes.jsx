@@ -84,7 +84,7 @@ const Classes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Loading classes...</p>

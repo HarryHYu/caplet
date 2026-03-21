@@ -1,0 +1,94 @@
+{
+  "courseTitle": "Year 10 AT2 Revision",
+  "courseCategory": "other",
+  "courseLevel": "intermediate",
+  "courseShortDescription": "Revision lessons and interactive tools for Year 10 AT2.",
+  "courseDescription": "Revision materials for Year 10 AT2. Contains revision lessons and interactive tools (flashcards, matching, etc.).",
+  "courseDuration": 60,
+  "moduleTitle": "Revision",
+  "lessonTitle": "Week 5 — Justice Outcomes, Punishment, and Access to Law",
+  "lessonOrder": 5,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Week 5 — Justice Outcomes, Punishment, and Access to Law**\n\nDetailed Study Revision Notes\n\n**Access to the Law**\n\nAccess to the law means people are practically able to use the legal system to:\n- Understand legal rights and procedures\n- Defend themselves\n- Seek remedies and justice"
+    },
+    {
+      "type": "text",
+      "content": "**Barriers to Justice**\n\n**Cost** — Lawyers and court processes are expensive; prevents disadvantaged individuals from enforcing rights.\n\n**Time** — Cases may take years; justice delayed = justice weakened.\n\n**Language** — Legal terminology is complex; non-English speakers disadvantaged.\n\n**Distance** — Rural/remote communities far from courts and lawyers.\n\n**Complex Procedures** — Technical rules and documentation requirements discourage participation."
+    },
+    {
+      "type": "text",
+      "content": "**Legal Aid NSW**\n\n**Provides:**\n- Free or low-cost legal advice\n- Representation for disadvantaged people\n\n**Purpose:**\n- Reduce inequality\n- Improve fairness\n\n**Limitation:**\n- Limited funding and strict eligibility criteria"
+    },
+    {
+      "type": "text",
+      "content": "**Purpose of Sentencing**\n\nCourts balance multiple objectives:\n\n**Punishment** — Penalty proportional to seriousness.\n\n**Deterrence** — Discourages offender and public from committing crimes.\n\n**Rehabilitation** — Addresses causes of offending behaviour.\n\n**Denunciation** — Public condemnation of wrongdoing.\n\n**Community Protection** — Prevents harm by restricting offender freedom."
+    },
+    {
+      "type": "text",
+      "content": "**Types of Punishment**\n\nIncreasing severity:\n- Fines\n- Bonds\n- Community service\n- Imprisonment"
+    },
+    {
+      "type": "text",
+      "content": "**Community-Based Sentencing**\n\n**Intensive Correction Orders (ICO)**\n- Strict supervision\n- Electronic monitoring\n- Curfews\n\n**Community Correction Orders (CCO)**\n- Counselling\n- Community service\n- Behavioural conditions\n\n**Conditional Release Orders (CRO)**\n- Lower-level offences\n- Sometimes no conviction recorded"
+    },
+    {
+      "type": "text",
+      "content": "**Effectiveness of Imprisonment**\n\nImprisonment is legally a last resort.\n\n**Advantages:**\n- Immediate community protection\n- Punishment for serious crimes\n\n**Disadvantages:**\n- High recidivism\n- Limited rehabilitation\n- High economic cost\n- May worsen criminal behaviour (especially young offenders)"
+    },
+    {
+      "type": "text",
+      "content": "**Alternatives to Court**\n\n**Mediation** — Neutral facilitator helps parties reach agreement.\n\n**Conciliation** — Third party suggests solutions.\n\n**Arbitration** — Binding decision by independent party.\n\n**Restorative Justice** — Victim and offender repair harm collaboratively.\n\n**Benefits:**\n- Faster resolution\n- Lower cost\n- Improved satisfaction\n- Better rehabilitation outcomes"
+    },
+    {
+      "type": "text",
+      "content": "**Mandatory Sentencing**\n\nParliament sets minimum penalties → judges have no discretion.\n\n**Arguments for:**\n- Consistency\n- Deterrence\n\n**Arguments against:**\n- Unfair outcomes\n- Ignores circumstances\n- Undermines judicial independence"
+    },
+    {
+      "type": "text",
+      "content": "**Extended Response Practice**\n\n**Question:** Assess whether alternatives to imprisonment are more effective than custodial sentences.\n\n*(Use your notes to plan and write your response.)*"
+    },
+    {
+      "type": "flashcard",
+      "caption": "Week 5 — Access to Law",
+      "cards": [
+        { "front": "What is access to the law?", "back": "Ability to use the legal system to defend rights and seek justice." },
+        { "front": "Major barrier to justice?", "back": "Cost." },
+        { "front": "What does Legal Aid NSW do?", "back": "Provides low-cost or free legal assistance." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Week 5 — Purposes of Sentencing",
+      "cards": [
+        { "front": "Purpose of punishment?", "back": "Reflect seriousness of offence." },
+        { "front": "Purpose of deterrence?", "back": "Prevent future offending." },
+        { "front": "Purpose of rehabilitation?", "back": "Reform offender behaviour." },
+        { "front": "Purpose of denunciation?", "back": "Public condemnation of crime." },
+        { "front": "Purpose of community protection?", "back": "Protect society from harm." },
+        { "front": "Most severe punishment?", "back": "Imprisonment." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Week 5 — Community Orders",
+      "cards": [
+        { "front": "ICO meaning?", "back": "Intensive supervision in community." },
+        { "front": "CCO meaning?", "back": "Community-based behavioural order." },
+        { "front": "CRO meaning?", "back": "Low-level conditional order." },
+        { "front": "Why imprisonment criticised?", "back": "High reoffending and cost." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Week 5 — Alternatives and Mandatory Sentencing",
+      "cards": [
+        { "front": "Mediation outcome imposed?", "back": "No." },
+        { "front": "Arbitration decision?", "back": "Binding." },
+        { "front": "Restorative justice focuses on?", "back": "Repairing harm." },
+        { "front": "Mandatory sentencing removes?", "back": "Judicial discretion." }
+      ]
+    }
+  ]
+}

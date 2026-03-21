@@ -96,7 +96,7 @@ const Home = () => {
               </span>
               <h1 className="text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[0.9] mb-10 text-black dark:text-white tracking-tighter">
                 Financial literacy <br />
-                <span className="text-zinc-400 dark:text-zinc-700">for schools.</span>
+                <span className="text-zinc-600 dark:text-zinc-400">for schools.</span>
               </h1>
               <p className="text-xl leading-relaxed mb-12 text-zinc-500 dark:text-zinc-400 font-medium max-w-md">
                 Bridging the literacy gap with professional, structured learning modules tailored for the Australian context.
@@ -121,14 +121,21 @@ const Home = () => {
                   transformStyle: 'preserve-3d',
                 }}
               >
-                <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 shadow-2xl p-1">
+                <Link to={featuredCourses[0] ? `/courses/${featuredCourses[0].id}` : '/courses'} className="block group/card">
+                <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 shadow-2xl p-1 group-hover/card:border-brand/50 transition-colors">
                   <div className="bg-zinc-50 dark:bg-zinc-900 px-8 py-6 flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800">
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand mb-1">Module 01</p>
-                      <h3 className="text-lg font-extrabold text-black dark:text-white uppercase tracking-tight">Income & Taxation</h3>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand mb-1">
+                        {featuredCourses[0] ? 'Module 01' : 'Sample'}
+                      </p>
+                      <h3 className="text-lg font-extrabold text-black dark:text-white uppercase tracking-tight line-clamp-1">
+                        {featuredCourses[0]?.modules?.[0]?.title || 'Financial Foundations'}
+                      </h3>
                     </div>
                     <div className="w-10 h-10 border border-brand/20 flex items-center justify-center text-brand font-bold text-xs">
-                      1/4
+                      {featuredCourses[0]?.modules?.[0]?.lessons?.length
+                        ? `1/${featuredCourses[0].modules.length}`
+                        : '—'}
                     </div>
                   </div>
 
@@ -144,8 +151,8 @@ const Home = () => {
                           <p className="font-bold text-sm text-black dark:text-white uppercase tracking-wide leading-tight">{item.title}</p>
                           <p className="text-xs mt-1 text-zinc-500 dark:text-zinc-400 font-medium">{item.sub}</p>
                         </div>
-                      </div>
-                    ))}
+                      ));
+                    })()}
                   </div>
 
                   <div className="px-8 py-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
@@ -153,6 +160,7 @@ const Home = () => {
                       <div className="text-[10px] font-bold uppercase tracking-widest text-brand">Start Lesson →</div>
                   </div>
                 </div>
+              </Link>
               </div>
             </div>
           </div>
@@ -166,7 +174,7 @@ const Home = () => {
             <img src={cfcLogo} alt="CFC" className="h-6 w-auto dark:invert" />
             <div className="flex gap-10 items-center">
               {['Structured', 'Standardised', 'Integrated'].map((label) => (
-                <span key={label} className="text-[10px] font-bold uppercase tracking-[0.3em] text-black dark:text-white border-b border-black/20 pb-1">
+                <span key={label} className="text-[10px] font-bold uppercase tracking-[0.3em] text-black dark:text-white border-b border-black/20 dark:border-white/30 pb-1">
                   {label}
                 </span>
               ))}
@@ -291,7 +299,7 @@ const Home = () => {
               ))
             ) : (
               <div className="col-span-full py-20 text-center border border-dashed border-zinc-200 dark:border-zinc-800">
-                <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs italic">Loading Library...</p>
+                <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest text-xs italic">Loading Library...</p>
               </div>
             )}
           </div>
@@ -363,7 +371,7 @@ const Home = () => {
                     <span className="text-sm font-bold uppercase tracking-widest text-black dark:text-white group-hover:text-brand transition-colors">
                       {item.question}
                     </span>
-                    <span className={`text-xl font-bold transition-transform duration-500 ${openFaq.has(index) ? 'rotate-45 text-brand' : 'text-zinc-300'}`}>
+                    <span className={`text-xl font-bold transition-transform duration-500 ${openFaq.has(index) ? 'rotate-45 text-brand' : 'text-zinc-500 dark:text-zinc-400'}`}>
                       +
                     </span>
                   </button>

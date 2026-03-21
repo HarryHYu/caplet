@@ -88,24 +88,6 @@
     position: relative;
   }
 
-  /* Background texture overlay (uses /public/light1.jpg and /public/dark1.jpg) */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background-image: url('/light1.jpg');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.28;
-    z-index: -1;
-  }
-
-  .dark body::before {
-    background-image: url('/dark1.jpg');
-    opacity: 0.34;
-  }
-
   h1,
   h2,
   h3,
@@ -159,7 +141,7 @@
 
   .page-section-dark {
     background-color: rgba(3, 3, 4, 0.9);
-    color: var(--text-contrast);
+    color: #FAFAFA;
     backdrop-filter: blur(12px);
   }
 
