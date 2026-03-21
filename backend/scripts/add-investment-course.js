@@ -8,10 +8,10 @@ if (!process.env.DATABASE_URL) {
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-const { sequelize } = require('./config/database');
-const Course = require('./models/Course');
-const Module = require('./models/Module');
-const Lesson = require('./models/Lesson');
+const { sequelize } = require('../config/database');
+const Course = require('../models/Course');
+const Module = require('../models/Module');
+const Lesson = require('../models/Lesson');
 
 const addInvestmentCourse = async () => {
   try {
@@ -250,4 +250,3 @@ if (require.main === module) {
 }
 
 module.exports = addInvestmentCourse;
-

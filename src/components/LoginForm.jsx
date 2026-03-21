@@ -65,8 +65,9 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             value={formData.email}
             onChange={handleChange}
             required
-            placeholder="IDENTIFIER@TERMINAL.COM"
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold uppercase tracking-widest text-xs placeholder:text-text-muted/30"
+            autoComplete="username"
+            placeholder="identifier@terminal.com"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold tracking-widest text-xs placeholder:text-text-muted/30"
           />
         </div>
 
@@ -83,6 +84,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             value={formData.password}
             onChange={handleChange}
             required
+            autoComplete="current-password"
             placeholder="••••••••••••"
             className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs placeholder:text-text-muted/30"
           />

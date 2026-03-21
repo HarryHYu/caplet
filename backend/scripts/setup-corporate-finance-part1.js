@@ -16,6 +16,7 @@ const COURSE = {
   category: 'corporate-finance',
   level: 'intermediate',
   duration: 180,
+  thumbnail: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=3111&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   isPublished: false,
   isFree: true,
   tags: ['corporate-finance', 'stakeholders', 'esg', 'risk-return']
@@ -49,7 +50,8 @@ async function run() {
     course = await Course.create(COURSE);
     console.log('Created course:', course.title);
   } else {
-    console.log('Using existing course:', course.title);
+    await course.update(COURSE);
+    console.log('Updated existing course:', course.title);
   }
 
   const modules = [];

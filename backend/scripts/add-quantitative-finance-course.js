@@ -10,10 +10,10 @@ if (!process.env.DATABASE_URL) {
 
 process.env.NODE_ENV = 'production';
 
-const { sequelize } = require('./config/database');
-const Course = require('./models/Course');
-const Module = require('./models/Module');
-const Lesson = require('./models/Lesson');
+const { sequelize } = require('../config/database');
+const Course = require('../models/Course');
+const Module = require('../models/Module');
+const Lesson = require('../models/Lesson');
 
 const addQuantitativeFinanceCourse = async () => {
   try {
@@ -23,7 +23,7 @@ const addQuantitativeFinanceCourse = async () => {
     const existingCourses = await Course.findAll({
       where: { title: 'QUANTITATIVE FINANCE' }
     });
-    
+
     if (existingCourses.length > 1) {
       console.log(`Found ${existingCourses.length} duplicate course(s). Removing...`);
       for (let i = 1; i < existingCourses.length; i++) {
@@ -327,4 +327,3 @@ if (require.main === module) {
 }
 
 module.exports = addQuantitativeFinanceCourse;
-

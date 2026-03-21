@@ -1,4 +1,4 @@
-const { Course, Module, Lesson, User } = require('./models');
+const { Course, Module, Lesson, User } = require('../models');
 
 const seedProductionDatabase = async () => {
   try {

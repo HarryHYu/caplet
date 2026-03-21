@@ -1,4 +1,4 @@
-# CAPLET.md
+# Caplet Overview.md
 
 **Caplet** — *Think with Clarity. Spend with Confidence.*
 
@@ -10,7 +10,7 @@ This is the core project description for Caplet. It serves as the primary refere
 
 ## Project Overview
 
-Caplet ([capletedu.org](https://capletedu.org)) is a **free financial education platform for Australians**, bridging the financial literacy gap through structured courses, financial calculators, classroom tools, and an AI-powered financial advisor.
+Caplet ([capletedu.org](https://capletedu.org)) is a **free financial education platform for Australians**, bridging the financial literacy gap through structured courses, financial calculators, classroom tools, and an AI-powered financial literacy assistant.
 
 **Monorepo structure:**
 - **Frontend** — React 19 + Vite + Tailwind CSS (project root), deployed to Vercel
@@ -20,7 +20,7 @@ Caplet ([capletedu.org](https://capletedu.org)) is a **free financial education 
 1. **Courses** — Australian-focused curriculum (budgeting, tax, super, investing, corporate finance). Slide-based lessons with quizzes and auto-enrollment.
 2. **Tools** — 10 free financial calculators tailored to Australian context (Tax, GST, Salary, Super, Budget, Savings, Emergency Fund, Loan, Mortgage, Compound Interest).
 3. **Classes** — Classroom management for teachers and students (invite codes, assignments, announcements, submissions).
-4. **AI Financial Advisor** — Chat-first dashboard powered by GPT-4o. Extracts income/expenses/debts/goals from conversation, generates personalized financial plans.
+4. **AI Financial Literacy Assistant** — Chat-first dashboard powered by GPT-4o. Extracts income/expenses/debts/goals from conversation to generate personalised financial education and learning plans. This is an educational tool only — not financial advice.
 5. **Survey** — Anonymous financial literacy survey with results dashboard.
 
 ---
@@ -115,7 +115,7 @@ The frontend `ApiService` connects to the production backend at `caplet-producti
 | `JWT_SECRET` | Secret for JWT signing — use a long, random string |
 | `NODE_ENV` | `production` or `development` |
 | `FRONTEND_URL` | Frontend URL for CORS (e.g. `https://capletedu.org`) |
-| `OPENAI_API_KEY` | OpenAI API key for the AI financial advisor |
+| `OPENAI_API_KEY` | OpenAI API key for the AI financial literacy assistant |
 
 See [`docs/deployment.md`](./docs/deployment.md) for full setup instructions.
 

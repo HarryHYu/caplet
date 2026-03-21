@@ -71,6 +71,21 @@ const User = sequelize.define('User', {
     set(value) {
       this.setDataValue('preferences', JSON.stringify(value));
     }
+  },
+  onboarded: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  onboardingData: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    get() {
+      const value = this.getDataValue('onboardingData');
+      return value ? JSON.parse(value) : null;
+    },
+    set(value) {
+      this.setDataValue('onboardingData', value ? JSON.stringify(value) : null);
+    }
   }
 }, {
   tableName: 'users',

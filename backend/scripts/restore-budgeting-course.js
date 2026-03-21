@@ -1,5 +1,5 @@
 // Script to restore Budgeting 101 course with actual content
-const { Course, Module, Lesson } = require('./models');
+const { Course, Module, Lesson } = require('../models');
 require('dotenv').config();
 
 const restoreBudgetingCourse = async () => {
@@ -154,4 +154,3 @@ if (require.main === module) {
 }
 
 module.exports = restoreBudgetingCourse;
-

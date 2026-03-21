@@ -46,7 +46,7 @@
 | Node.js + Express 5 | RESTful API server |
 | PostgreSQL | Production database (via Railway) — **mandatory**, no SQLite fallback |
 | Sequelize ORM | Database management; syncs with `{ alter: true }` on every server start |
-| OpenAI API (GPT-4o → GPT-4-turbo → GPT-3.5-turbo) | AI financial advisor with model fallback |
+| OpenAI API (GPT-4o → GPT-4-turbo → GPT-3.5-turbo) | AI financial literacy assistant with model fallback (educational tool only — not financial advice) |
 | JWT | Authentication |
 | bcryptjs | Password hashing (12 rounds) |
 | express-validator | Input validation |
@@ -80,7 +80,7 @@ The DB syncs with `{ alter: true }` on every server start — there are **no sep
 The flat config (`eslint.config.js`) has separate rule sets for `src/**` (browser/React) and `backend/**` (Node.js). Unused vars prefixed with uppercase or underscore are allowed: `varsIgnorePattern: '^[A-Z_]'`.
 
 ### AI Unified Prompt
-The AI financial advisor uses a single API call that simultaneously extracts financial data, merges it with existing state, and generates a response. See [database.md](./database.md) for the data models and the main [README.md](./README.md) for the full AI flow.
+The AI financial literacy assistant uses a single API call that simultaneously extracts financial data, merges it with existing state, and generates an educational response. This is an educational tool only — it does not provide financial advice. See [database.md](./database.md) for the data models and the main [README.md](./README.md) for the full AI flow.
 
 ---
 
@@ -174,7 +174,7 @@ caplet/
 | File | Purpose |
 |---|---|
 | `backend/services/aiService.js` | Core AI logic — unified prompt system, model fallback |
-| `backend/routes/financial.js` | Financial advisor API endpoints, data extraction logic |
+| `backend/routes/financial.js` | Financial literacy assistant API endpoints, data extraction logic |
 | `backend/models/index.js` | All model associations |
 | `src/pages/Dashboard.jsx` | Chat-first UI, message management, financial snapshot |
 | `src/services/api.js` | All frontend API calls (single source of truth) |
