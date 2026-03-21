@@ -2,11 +2,6 @@
 // Use production database - requires DATABASE_URL environment variable
 require('dotenv').config();
 
-if (!process.env.DATABASE_URL) {
-  console.error('❌ Error: DATABASE_URL environment variable is required');
-  console.error('Please set DATABASE_URL before running this script');
-  process.exit(1);
-}
 
 process.env.NODE_ENV = 'production';
 
