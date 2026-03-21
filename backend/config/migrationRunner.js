@@ -13,10 +13,11 @@ const umzug = new Umzug({
     resolve: ({ name, path: migrationPath, context }) => {
       // eslint-disable-next-line global-require
       const migration = require(migrationPath);
+      const Sequelize = require('sequelize');
       return {
         name,
-        up: async () => migration.up(context),
-        down: async () => migration.down(context)
+        up: async () => migration.up(context, Sequelize),
+        down: async () => migration.down(context, Sequelize)
       };
     }
   },
