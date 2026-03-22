@@ -8,9 +8,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Outfit"', 'system-ui', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         body: ['"Outfit"', 'system-ui', 'sans-serif'],
-        serif: ['"Outfit"', 'sans-serif'],
+        serif: ['"Lora"', 'Georgia', 'serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
         // Monochrome Scale
@@ -36,6 +37,14 @@ export default {
           light: '#3385FF',
           dark: '#0052CC',
           soft: 'rgba(0, 102, 255, 0.05)',
+        },
+        // Caplet Landing Page Specific
+        caplet: {
+          ocean: '#1B3F6B', /* Kept blue theme */
+          sky: '#2563EB',
+          parchment: '#FAF8F5', /* Warm off-white */
+          sand: '#EAE4DB', /* Sandy neutral */
+          ink: '#36312D', /* Warm dark charcoal instead of stark black */
         },
         // Design system tokens — CSS variable backed
         accent: {
