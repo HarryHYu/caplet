@@ -1,0 +1,86 @@
+{
+  "courseTitle": "Slide Types Demo",
+  "courseCategory": "other",
+  "courseLevel": "beginner",
+  "courseShortDescription": "Demonstrates all lesson slide types: text, video, image, question, flashcard, matching, fill-in-blank, ordering.",
+  "courseDescription": "A test course showing every slide type available in Caplet lessons. Use this to verify layouts and behaviour.",
+  "courseDuration": 15,
+  "moduleTitle": "All Slide Types",
+  "lessonTitle": "Feature Demo",
+  "lessonOrder": 1,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Slide Types Demo**\n\nThis lesson showcases every slide type in order:\n\n1. **Text** (this slide)\n2. Video\n3. Image\n4. Flashcard\n5. Matching\n6. Fill-in-blank\n7. Ordering\n8. Question (MCQ)"
+    },
+    {
+      "type": "video",
+      "content": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "caption": "Sample video embed"
+    },
+    {
+      "type": "image",
+      "content": "https://via.placeholder.com/800x450/0066FF/FFFFFF?text=Sample+Image+Slide",
+      "caption": "Placeholder image – replace with real URL in production"
+    },
+    {
+      "type": "flashcard",
+      "caption": "Key terms",
+      "cards": [
+        { "front": "What is a flashcard?", "back": "A card with a question on one side and answer on the other. Tap to flip." },
+        { "front": "How many slide types exist?", "back": "Eight: text, video, image, question, flashcard, matching, fillblank, ordering." }
+      ]
+    },
+    {
+      "type": "matching",
+      "caption": "Match terms to definitions",
+      "pairs": [
+        { "left": "Text slide", "right": "Markdown content with optional caption" },
+        { "left": "Video slide", "right": "Embedded YouTube player" },
+        { "left": "Flashcard slide", "right": "Flip cards with prev/next navigation" }
+      ]
+    },
+    {
+      "type": "fillblank",
+      "caption": "Complete the sentence",
+      "template": "Caplet supports {{0}} slide types, including {{1}}, {{2}}, and {{3}}.",
+      "blanks": ["eight", "text", "video", "flashcard"],
+      "alternatives": [
+        ["eight", "8"],
+        ["text", "text slides"],
+        ["video", "video slides"],
+        ["flashcard", "flashcards"]
+      ]
+    },
+    {
+      "type": "ordering",
+      "prompt": "Order the slide types as they appear in this lesson:",
+      "caption": "Correct sequence",
+      "items": [
+        "Text",
+        "Video",
+        "Image",
+        "Flashcard",
+        "Matching",
+        "Fill-in-blank",
+        "Ordering"
+      ],
+      "correctOrder": [0, 1, 2, 3, 4, 5, 6]
+    },
+    {
+      "type": "question",
+      "question": "Which slide type lets you match terms to definitions?",
+      "options": ["Text", "Flashcard", "Matching", "Video"],
+      "correctIndex": 2,
+      "explanation": "The matching slide displays pairs of terms and definitions for the user to connect."
+    },
+    {
+      "type": "question",
+      "question": "Fill-in-blank slides use which template syntax for blanks?",
+      "options": ["{0}", "{{0}}", "[blank]", "__0__"],
+      "correctIndex": 1,
+      "explanation": "Use {{0}}, {{1}}, etc. in the template to create blank slots."
+    }
+  ],
+  "quiz": []
+}

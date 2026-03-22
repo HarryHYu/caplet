@@ -11,14 +11,14 @@
  *   5. Creates sample announcements.
  */
 
-const { sequelize } = require('./config/database');
-const User = require('./models/User');
-const Classroom = require('./models/Classroom');
-const ClassMembership = require('./models/ClassMembership');
-const Assignment = require('./models/Assignment');
-const ClassAnnouncement = require('./models/ClassAnnouncement');
-const Course = require('./models/Course');
-const Lesson = require('./models/Lesson');
+const { sequelize } = require('../config/database');
+const User = require('../models/User');
+const Classroom = require('../models/Classroom');
+const ClassMembership = require('../models/ClassMembership');
+const Assignment = require('../models/Assignment');
+const ClassAnnouncement = require('../models/ClassAnnouncement');
+const Course = require('../models/Course');
+const Lesson = require('../models/Lesson');
 
 const generateCode = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

@@ -1,3 +1,4 @@
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
 const PROD_API_BASE_URL = 'https://caplet-production.up.railway.app/api';
 const DEV_API_BASE_URLS = [
   'http://localhost:5002/api',
@@ -170,6 +171,13 @@ class ApiService {
     return this.request(`/users/${userId}`);
   }
 
+  async completeOnboarding(onboardingData) {
+    return this.request('/users/complete-onboarding', {
+      method: 'POST',
+      body: JSON.stringify(onboardingData),
+    });
+  }
+
   // Progress
   async updateLessonProgress(lessonId, progressData) {
     return this.request(`/progress/lesson/${lessonId}`, {
@@ -208,6 +216,10 @@ class ApiService {
 
   async getSurveyStats() {
     return this.request('/survey/stats');
+  }
+
+  async getMetrics() {
+    return this.request('/metrics');
   }
 
   // Classes & assignments
@@ -363,6 +375,24 @@ class ApiService {
   async deleteAllData() {
     return this.request('/financial/delete-all-data', {
       method: 'DELETE',
+    });
+  }
+
+  // Chat History
+  async getChatHistory() {
+    return this.request('/chat/history');
+  }
+
+  async saveChatMessage(role, content) {
+    return this.request('/chat/message', {
+      method: 'POST',
+      body: JSON.stringify({ role, content })
+    });
+  }
+
+  async clearChatHistory() {
+    return this.request('/chat/history', {
+      method: 'DELETE'
     });
   }
 

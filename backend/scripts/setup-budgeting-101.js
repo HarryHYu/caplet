@@ -1,5 +1,5 @@
 // Script to delete all courses/lessons and create Budgeting 101 course
-const { Course, Module, Lesson } = require('./models');
+const { Course, Module, Lesson } = require('../models');
 require('dotenv').config();
 
 const setupBudgeting101 = async () => {
@@ -188,4 +188,3 @@ if (require.main === module) {
 }
 
 module.exports = setupBudgeting101;
-

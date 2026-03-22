@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../contexts/CoursesContext';
 import api from '../services/api';
+import OnboardingWizard from '../components/OnboardingWizard';
 import {
     BookOpenIcon,
     AcademicCapIcon,
@@ -17,6 +18,9 @@ export default function Dashboard() {
     const [userProgress, setUserProgress] = useState([]);
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [introMessage, setIntroMessage] = useState('');
+    const [messages, setMessages] = useState([]);
 
     useEffect(() => {
         if (!hasFetched && !coursesLoading) {
@@ -27,11 +31,19 @@ export default function Dashboard() {
     }, [coursesLoading, fetchCourses, hasFetched]);
 
     useEffect(() => {
+        // Show onboarding if user hasn't completed it
+        if (user && !user.onboarded) {
+            setShowOnboarding(true);
+        }
+    }, [user]);
+
+    useEffect(() => {
         const fetchData = async () => {
             try {
-                const [progressData, classesData] = await Promise.all([
+                const [progressData, classesData, chatHistoryData] = await Promise.all([
                     api.getUserProgress(),
-                    api.getClasses()
+                    api.getClasses(),
+                    api.getChatHistory()
                 ]);
                 // /progress returns { progress: [...] }
                 setUserProgress(progressData?.progress || []);
@@ -41,6 +53,8 @@ export default function Dashboard() {
                     ...(classesData?.student || [])
                 ];
                 setClasses(allClasses);
+                // Load chat history
+                setMessages(chatHistoryData?.messages || []);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             } finally {
@@ -71,13 +85,19 @@ export default function Dashboard() {
         return 'Good evening';
     };
 
-    const shouldHideCourseLogo = (course) => {
-        const title = (course?.title || '').toLowerCase();
-        return title.includes('corporate finance part 1');
-    };
 
     return (
         <div className="min-h-screen bg-surface-body py-20 selection:bg-accent selection:text-white">
+            {showOnboarding && (
+                <OnboardingWizard
+                    onComplete={(message) => {
+                        setIntroMessage(message);
+                        setShowOnboarding(false);
+                        // Refresh user data to reflect onboarded status
+                        window.location.reload();
+                    }}
+                />
+            )}
             <div className="container-custom">
                 {/* Header Section */}
                 <header className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text">
@@ -127,15 +147,13 @@ export default function Dashboard() {
                                 <span className="section-kicker">Resume Stream</span>
                                 <div className="mt-8 group relative overflow-hidden bg-surface-raised border border-line-soft p-12 transition-all hover:shadow-2xl">
                                     <div className="flex flex-col md:flex-row gap-12 items-center">
-                                        {!shouldHideCourseLogo(lastAccessedCourse) && (
-                                            <div className="w-40 h-40 shrink-0 bg-surface-soft p-1 border border-line-soft">
-                                                <img
-                                                    src={lastAccessedCourse.thumbnail || 'https://placehold.co/400x400'}
-                                                    alt=""
-                                                    className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
-                                                />
-                                            </div>
-                                        )}
+                                        <div className="w-40 h-40 shrink-0 bg-surface-soft p-1 border border-line-soft">
+                                            <img
+                                                src={lastAccessedCourse.thumbnail || 'https://placehold.co/400x400'}
+                                                alt=""
+                                                className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
+                                            />
+                                        </div>
                                         <div className="flex-1">
                                             <h3 className="text-4xl font-serif italic mb-6">{lastAccessedCourse.title}</h3>
                                             <div className="w-full bg-surface-soft h-1 mb-8 overflow-hidden">

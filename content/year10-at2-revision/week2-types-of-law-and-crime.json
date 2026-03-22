@@ -1,0 +1,94 @@
+{
+  "courseTitle": "Year 10 AT2 Revision",
+  "courseCategory": "other",
+  "courseLevel": "intermediate",
+  "courseShortDescription": "Revision lessons and interactive tools for Year 10 AT2.",
+  "courseDescription": "Revision materials for Year 10 AT2. Contains revision lessons and interactive tools (flashcards, matching, etc.).",
+  "courseDuration": 60,
+  "moduleTitle": "Revision",
+  "lessonTitle": "Week 2 — Types of Law and Crime",
+  "lessonOrder": 2,
+  "slides": [
+    {
+      "type": "text",
+      "content": "**Week 2 — Types of Law and Crime**\n\nDetailed Study Revision Notes\n\n**Public Law vs Private Law**\n\nLaw can be divided into public law (state vs individuals) and private law (disputes between individuals or organisations)."
+    },
+    {
+      "type": "text",
+      "content": "**Public Law**\n\nRegulates relationships between individuals and the state.\n\n**Purpose:**\n- Protect public interest\n- Maintain social order\n\n**Key features:**\n- State prosecutes\n- Punishment imposed (fine/imprisonment)\n- Concerned with harm to society\n\n**Areas:**\n- Criminal law\n- Constitutional law\n- Administrative law\n- Industrial law"
+    },
+    {
+      "type": "text",
+      "content": "**Private Law**\n\nRegulates disputes between individuals or organisations.\n\n**Purpose:**\n- Protect individual rights\n- Provide remedies\n\n**Key features:**\n- Individual initiates action\n- No government prosecution\n- Outcome usually compensation\n\n**Areas:**\n- Contract law\n- Tort law\n- Property law\n- Family law"
+    },
+    {
+      "type": "text",
+      "content": "**Civil Law vs Criminal Law**\n\n**Criminal Law**\n- Wrong against society\n- Prosecuted by the state\n- Standard of proof: beyond reasonable doubt\n- Outcome: punishment (fine/imprisonment)\n- Focus: deterrence + protection of society\n\n**Civil Law**\n- Wrong against an individual\n- Initiated by private party\n- Standard of proof: balance of probabilities\n- Outcome: damages/compensation\n- Focus: restoring loss"
+    },
+    {
+      "type": "text",
+      "content": "**Definition of Crime**\n\nA crime is an act or omission that:\n- Harms society\n- Is punishable by the state\n\n**Classification of Offences**\n\n**Summary Offences**\n- Less serious\n- Local Court\n- Magistrate\n- No jury\n\n**Indictable Offences**\n- Serious offences\n- Higher courts\n- Judge and jury"
+    },
+    {
+      "type": "text",
+      "content": "**Parties in Criminal Cases**\n\n- **Accused** — person charged\n- **Defendant** — accused during trial\n- **Victim** — harmed person\n- **Witness** — gives evidence\n- **Prosecution** — represents the state"
+    },
+    {
+      "type": "text",
+      "content": "**Elements of a Crime**\n\n**Actus Reus (Guilty act)**\n- Physical conduct occurred\n- Voluntary\n- Done by accused\n\n**Mens Rea (Guilty mind)**\n- Intention or awareness of wrongdoing\n\nBoth generally required for conviction."
+    },
+    {
+      "type": "text",
+      "content": "**Legal Capacity**\n\nAbility to be legally responsible.\n\n- **Adult** — full responsibility\n- **Minor** — limited responsibility"
+    },
+    {
+      "type": "flashcard",
+      "caption": "Types of Law — Public vs Private",
+      "cards": [
+        { "front": "What does public law regulate?", "back": "Relationship between individuals and the state." },
+        { "front": "Who prosecutes public law matters?", "back": "The state." },
+        { "front": "What is the main purpose of private law?", "back": "Protect individual rights and provide remedies." },
+        { "front": "Who initiates private law action?", "back": "The affected individual or organisation." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Types of Law — Criminal vs Civil",
+      "cards": [
+        { "front": "Difference between criminal and civil law?", "back": "Criminal = offence against society; Civil = dispute between individuals." },
+        { "front": "Standard of proof in criminal law?", "back": "Beyond reasonable doubt." },
+        { "front": "Standard of proof in civil law?", "back": "Balance of probabilities." },
+        { "front": "Outcome of criminal law?", "back": "Punishment." },
+        { "front": "Outcome of civil law?", "back": "Compensation/damages." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Types of Law — Crime and Courts",
+      "cards": [
+        { "front": "Define a crime.", "back": "Act or omission harmful to society and punishable by the state." },
+        { "front": "Where are summary offences heard?", "back": "Local Court." },
+        { "front": "Where are indictable offences heard?", "back": "Higher courts with jury." },
+        { "front": "Who represents the state?", "back": "Prosecution." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Types of Law — Elements and Parties",
+      "cards": [
+        { "front": "What is actus reus?", "back": "The guilty act." },
+        { "front": "What is mens rea?", "back": "The guilty mind." },
+        { "front": "What must exist for most convictions?", "back": "Actus reus + mens rea." },
+        { "front": "Who is the accused during the trial called?", "back": "Defendant." }
+      ]
+    },
+    {
+      "type": "flashcard",
+      "caption": "Types of Law — Legal Capacity",
+      "cards": [
+        { "front": "What is legal capacity?", "back": "Ability to be legally responsible." },
+        { "front": "Do minors have full legal capacity?", "back": "No, limited responsibility." }
+      ]
+    }
+  ]
+}

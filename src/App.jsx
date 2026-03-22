@@ -31,6 +31,7 @@ import SettingsProfile from './pages/SettingsProfile';
 import SettingsAccount from './pages/SettingsAccount';
 import UserProfile from './pages/UserProfile';
 import Terms from './pages/Terms';
+import Metrics from './pages/Metrics';
 import NotFound from './pages/NotFound';
 
 function FullPageSpinner() {
@@ -98,6 +99,7 @@ function App() {
                   </Route>
                   <Route path="/profile/:userId" element={<UserProfile />} />
                   <Route path="/terms" element={<Terms />} />
+                  <Route path="/metrics" element={<Metrics />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

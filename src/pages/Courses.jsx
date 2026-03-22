@@ -125,7 +125,7 @@ const Courses = () => {
                 onClick={() => handleCourseClick(course.id)}
                 className="bg-surface-body p-12 group cursor-pointer transition-all duration-700 hover:bg-surface-raised flex flex-col"
               >
-                <div className="flex justify-between items-start mb-16">
+                <div className="flex justify-between items-start mb-12">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">
                     {course.level || 'Beginner'}
                   </span>
@@ -134,6 +134,14 @@ const Courses = () => {
                       In Progress
                     </span>
                   )}
+                </div>
+
+                <div className="aspect-[16/9] w-full mb-12 overflow-hidden bg-surface-soft border border-line-soft">
+                  <img
+                    src={course.thumbnail || `https://placehold.co/600x400?text=${encodeURIComponent(course.title)}`}
+                    alt={course.title}
+                    className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                  />
                 </div>
 
                 <h3 className="text-2xl font-bold uppercase tracking-tighter mb-8 group-hover:text-accent transition-colors duration-500">

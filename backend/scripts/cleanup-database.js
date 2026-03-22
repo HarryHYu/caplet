@@ -2,7 +2,7 @@
 // - Deletes user-generated education data (progress, surveys)
 // - Drops legacy/unused tables (financial advisor tables no longer used)
 // PostgreSQL only (Railway). Requires DATABASE_URL.
-const { sequelize, UserProgress, Survey } = require('./models');
+const { sequelize, UserProgress, Survey } = require('../models');
 require('dotenv').config();
 
 // Tables we do NOT need (legacy or moved to another app). Only these are dropped.
@@ -58,4 +58,3 @@ if (require.main === module) {
 }
 
 module.exports = cleanupDatabase;
-

@@ -1,17 +1,13 @@
 // Script to add Basics of Investment course
 require('dotenv').config();
 
-if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL is not set. Please set it before running this script.');
-  process.exit(1);
-}
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-const { sequelize } = require('./config/database');
-const Course = require('./models/Course');
-const Module = require('./models/Module');
-const Lesson = require('./models/Lesson');
+const { sequelize } = require('../config/database');
+const Course = require('../models/Course');
+const Module = require('../models/Module');
+const Lesson = require('../models/Lesson');
 
 const addInvestmentCourse = async () => {
   try {
@@ -250,4 +246,3 @@ if (require.main === module) {
 }
 
 module.exports = addInvestmentCourse;
-

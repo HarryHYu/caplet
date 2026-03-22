@@ -72,8 +72,9 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
               value={formData.firstName}
               onChange={handleChange}
               required
-              placeholder="FIRST"
-              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold uppercase tracking-widest text-xs placeholder:text-text-muted/30"
+              autoComplete="given-name"
+              placeholder="First Name"
+              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold tracking-widest text-xs placeholder:text-text-muted/30"
             />
           </div>
 
@@ -88,8 +89,9 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
               value={formData.lastName}
               onChange={handleChange}
               required
-              placeholder="LAST"
-              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold uppercase tracking-widest text-xs placeholder:text-text-muted/30"
+              autoComplete="family-name"
+              placeholder="Surname"
+              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold tracking-widest text-xs placeholder:text-text-muted/30"
             />
           </div>
         </div>
@@ -135,8 +137,9 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
             value={formData.email}
             onChange={handleChange}
             required
-            placeholder="IDENTIFIER@TERMINAL.COM"
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold uppercase tracking-widest text-xs placeholder:text-text-muted/30"
+            autoComplete="email"
+            placeholder="identifier@terminal.com"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold tracking-widest text-xs placeholder:text-text-muted/30"
           />
         </div>
 
@@ -153,6 +156,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
               onChange={handleChange}
               required
               minLength={6}
+              autoComplete="new-password"
               placeholder="••••••••"
               className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs placeholder:text-text-muted/30"
             />
@@ -169,6 +173,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
+              autoComplete="new-password"
               placeholder="••••••••"
               className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs placeholder:text-text-muted/30"
             />

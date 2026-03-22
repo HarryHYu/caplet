@@ -125,7 +125,10 @@ router.get('/history', authenticateToken, async (req, res) => {
 
 // Submit check-in
 router.post('/checkin', authenticateToken, [
-  body('message').notEmpty().trim().withMessage('Message is required'),
+  body('message')
+    .notEmpty().withMessage('Message is required')
+    .trim()
+    .isLength({ min: 1, max: 2000 }).withMessage('Message must be between 1 and 2000 characters'),
   body('monthlyExpenses').optional().isObject().custom((value) => {
     if (value === null || value === undefined) return true;
     if (typeof value !== 'object') return false;
@@ -134,6 +137,7 @@ router.post('/checkin', authenticateToken, [
   body('monthlyIncome').optional().custom((value) => {
     if (value === null || value === undefined || value === '') return true;
     const num = parseFloat(value);
+    // Allow zero as valid value
     return !isNaN(num) && isFinite(num);
   }).withMessage('Monthly income must be a valid number')
 ], async (req, res) => {
@@ -141,9 +145,9 @@ router.post('/checkin', authenticateToken, [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       console.error('Validation errors:', errors.array());
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Validation failed',
-        errors: errors.array() 
+        errors: errors.array()
       });
     }
 
@@ -171,8 +175,18 @@ router.post('/checkin', authenticateToken, [
 
     // Financial data will be extracted by AI in generateFinancialPlan
     // Prepare manual input if provided (takes priority)
-    const manualIncome = monthlyIncome ? parseFloat(monthlyIncome) : null;
+    // Note: Zero values are treated as valid (not skipped or defaulted)
+    const manualIncome = monthlyIncome !== null && monthlyIncome !== undefined && monthlyIncome !== ''
+      ? parseFloat(monthlyIncome)
+      : null;
     const manualExpenses = (monthlyExpenses && Object.keys(monthlyExpenses).length > 0) ? monthlyExpenses : null;
+
+    console.log('📝 Check-in submission:', {
+      userId: req.user.id,
+      messageLength: message ? message.length : 0,
+      manualIncome,
+      manualExpensesProvided: !!manualExpenses
+    });
 
     // Get or create summary
     let summary = await Summary.findOne({
@@ -193,6 +207,7 @@ router.post('/checkin', authenticateToken, [
     });
 
     // Generate response using AI - AI will extract data AND generate response in one call
+    console.log('🤖 Calling AI service for financial plan generation...');
     const aiResponse = await generateFinancialPlan({
       userId: req.user.id,
       state: {
@@ -217,19 +232,25 @@ router.post('/checkin', authenticateToken, [
         goalTimelines: previousPlan.goalTimelines
       } : null
     });
+    console.log('✅ AI response received successfully');
 
     // Now update financial state with AI-extracted data (if provided)
     // Priority: Manual input > AI extracted > Budget allocation > Keep existing
+    // IMPORTANT: All extracted financial data is for educational personalisation only
     const extractedData = aiResponse.extractedFinancialData;
     
     // Update income: manual takes priority, then AI extracted, then keep existing
-    if (manualIncome !== null) {
+    // Zero values are valid and should be preserved (e.g., unemployed user)
+    if (manualIncome !== null && manualIncome !== undefined) {
       state.monthlyIncome = manualIncome;
+      console.log('✅ Monthly income updated from manual input:', manualIncome);
     } else if (extractedData?.monthlyIncome !== null && extractedData?.monthlyIncome !== undefined) {
       state.monthlyIncome = parseFloat(extractedData.monthlyIncome);
+      console.log('✅ Monthly income updated from AI extraction:', extractedData.monthlyIncome);
     }
 
     // Update expenses: manual takes priority, then AI extracted, then budget allocation, then keep existing
+    // Gracefully handle missing/null/undefined fields — don't force data
     if (manualExpenses) {
       const totalExpenses = Object.values(manualExpenses).reduce(
         (sum, val) => sum + (parseFloat(val) || 0), 0
@@ -237,7 +258,7 @@ router.post('/checkin', authenticateToken, [
       state.monthlyExpenses = totalExpenses;
       console.log('✅ Expenses updated from manual input:', totalExpenses);
     } else if (extractedData?.expenses && Object.keys(extractedData.expenses).length > 0) {
-      // Filter out null values and calculate total
+      // Gracefully handle null/undefined values in expenses
       const validExpenses = Object.entries(extractedData.expenses).filter(([, val]) => val !== null && val !== undefined);
       const expensesObj = Object.fromEntries(validExpenses.map(([key, val]) => [key, parseFloat(val)]));
       const totalExpenses = Object.values(expensesObj).reduce((sum, val) => sum + (val || 0), 0);
@@ -271,31 +292,40 @@ router.post('/checkin', authenticateToken, [
       console.log('⚠️ No expenses data found - manual:', !!manualExpenses, 'extracted:', !!extractedData?.expenses, 'budget:', !!aiResponse.budgetAllocation);
     }
 
-    // Update accounts (merge, avoid duplicates) - only if extractedData exists
-    if (extractedData?.accounts && extractedData.accounts.length > 0) {
+    // Update accounts (merge, avoid duplicates) - only if extractedData exists and has valid accounts
+    if (extractedData?.accounts && Array.isArray(extractedData.accounts) && extractedData.accounts.length > 0) {
       const existingAccounts = state.accounts || [];
-      const newAccounts = extractedData.accounts.filter(newAcc => 
+      const newAccounts = extractedData.accounts.filter(newAcc =>
         !existingAccounts.some(existing => existing.name === newAcc.name)
       );
       state.accounts = [...existingAccounts, ...newAccounts];
+      if (newAccounts.length > 0) {
+        console.log('✅ Accounts updated from extracted data:', newAccounts.length, 'new accounts');
+      }
     }
 
-    // Update debts (merge, avoid duplicates) - only if extractedData exists
-    if (extractedData?.debts && extractedData.debts.length > 0) {
+    // Update debts (merge, avoid duplicates) - only if extractedData exists and has valid debts
+    if (extractedData?.debts && Array.isArray(extractedData.debts) && extractedData.debts.length > 0) {
       const existingDebts = state.debts || [];
-      const newDebts = extractedData.debts.filter(newDebt => 
+      const newDebts = extractedData.debts.filter(newDebt =>
         !existingDebts.some(existing => existing.name === newDebt.name)
       );
       state.debts = [...existingDebts, ...newDebts];
+      if (newDebts.length > 0) {
+        console.log('✅ Debts updated from extracted data:', newDebts.length, 'new debts');
+      }
     }
 
-    // Update goals (merge, avoid duplicates) - only if extractedData exists
-    if (extractedData?.goals && extractedData.goals.length > 0) {
+    // Update goals (merge, avoid duplicates) - only if extractedData exists and has valid goals
+    if (extractedData?.goals && Array.isArray(extractedData.goals) && extractedData.goals.length > 0) {
       const existingGoals = state.goals || [];
-      const newGoals = extractedData.goals.filter(newGoal => 
+      const newGoals = extractedData.goals.filter(newGoal =>
         !existingGoals.some(existing => existing.name === newGoal.name)
       );
       state.goals = [...existingGoals, ...newGoals];
+      if (newGoals.length > 0) {
+        console.log('✅ Goals updated from extracted data:', newGoals.length, 'new goals');
+      }
     }
 
     // Calculate savings rate

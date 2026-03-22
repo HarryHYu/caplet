@@ -90,8 +90,8 @@ These are ideas from user feedback — not yet implemented.
 
 | Tier | Description |
 |---|---|
-| **Free** | All courses, all tools, basic AI advice |
-| **Paid** | Detailed financial planning, coaching sessions, advanced AI features |
+| **Free** | All courses, all tools, basic AI literacy features |
+| **Paid** | Deeper financial learning plans, coaching sessions, advanced AI features |
 | **Affiliate** | Revenue from integrated services (real estate, cars, jobs) |
 | **Partnership** | School curriculum partnerships for courses |
 
@@ -137,7 +137,7 @@ Many users don't understand basic financial concepts. The AI currently assumes t
 ### Integration Complexity
 - Managing multiple third-party API integrations
 - Maintaining affiliate/partnership relationships
-- Legal and compliance considerations for financial advice
+- Legal and compliance considerations (platform provides education only, not financial advice)
 
 ### Monetization Timing
 - Determining the right time to introduce paid features

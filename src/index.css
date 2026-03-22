@@ -11,18 +11,18 @@
 
 :root {
   /* Surfaces */
-  --surface-body: #FAFAFA;
-  --surface-soft: #F4F4F5;
+  --surface-body: #FAF8F5; /* Warmer off-white */
+  --surface-soft: #F2EFEA;
   --surface-raised: #FFFFFF;
-  --surface-inverse: #09090B;
+  --surface-inverse: #2C2825;
 
   /* Typography */
-  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-body: 'Outfit', system-ui, sans-serif;
 
-  --text-primary: #09090B;
-  --text-muted: #3F3F46;
-  --text-dim: #71717A;
+  --text-primary: #2C2825; /* Warmer dark ink */
+  --text-muted: #5E5854;
+  --text-dim: #8A837E;
   --text-contrast: #FFFFFF;
 
   /* Lines */
@@ -46,22 +46,22 @@
 }
 
 .dark {
-  --surface-body: #050505;
-  --surface-soft: #0D0D0F;
-  --surface-raised: #111113;
-  --surface-inverse: #FAFAFA;
+  --surface-body: #24201E; /* Warm dark brown/charcoal */
+  --surface-soft: #2C2825;
+  --surface-raised: #36312D;
+  --surface-inverse: #FAF8F5;
 
-  --text-primary: #F4F4F5;
-  --text-muted: #D4D4D8;
-  --text-dim: #A1A1AA;
-  --text-contrast: #050505;
+  --text-primary: #FAF8F5;
+  --text-muted: #D1CBC5;
+  --text-dim: #A69E98;
+  --text-contrast: #24201E;
 
-  --line-soft: #1C1C1F;
-  --line-strong: #FAFAFA;
+  --line-soft: #3D3834;
+  --line-strong: #FAF8F5;
 
   --accent: #3385FF;
-  --accent-strong: #0050FF;
-  --accent-soft: rgba(0, 80, 255, 0.15);
+  --accent-strong: #1B3F6B;
+  --accent-soft: rgba(51, 133, 255, 0.15);
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
@@ -78,6 +78,19 @@
   body {
     color: var(--text-primary);
     overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   }
 
   h1,
@@ -236,6 +249,21 @@
 
   .reveal-up {
     animation: reveal-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes fadeSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-slide-up {
+    animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .stagger-1 {

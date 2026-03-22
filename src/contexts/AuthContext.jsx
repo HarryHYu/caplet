@@ -13,7 +13,9 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
+  const initialHasToken = !!localStorage.getItem('token');
   const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(initialHasToken);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -22,14 +24,19 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem('token');
         if (token) {
+          setIsAuthenticated(true);
           api.setToken(token);
           const userData = await api.getCurrentUser();
           setUser(userData.user);
+        } else {
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (error.status === 401) {
           api.clearToken();
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } finally {
         setLoading(false);
@@ -45,6 +52,7 @@ export const AuthProvider = ({ children }) => {
       const response = await api.login({ email, password });
       api.setToken(response.token);
       setUser(response.user);
+      setIsAuthenticated(true);
       return response;
     } catch (error) {
       setError(error.message);
@@ -58,6 +66,7 @@ export const AuthProvider = ({ children }) => {
       const response = await api.googleLogin(idToken);
       api.setToken(response.token);
       setUser(response.user);
+      setIsAuthenticated(true);
       return response;
     } catch (error) {
       setError(error.message);
@@ -71,6 +80,7 @@ export const AuthProvider = ({ children }) => {
       const response = await api.register(userData);
       api.setToken(response.token);
       setUser(response.user);
+      setIsAuthenticated(true);
       return response;
     } catch (error) {
       setError(error.message);
@@ -86,6 +96,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       api.clearToken();
       setUser(null);
+      setIsAuthenticated(false);
       setError(null);
     }
   };
@@ -111,7 +122,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
-    isAuthenticated: !!user,
+    isAuthenticated,
   };
 
   return (

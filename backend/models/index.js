@@ -11,6 +11,7 @@ const Assignment = require('./Assignment');
 const AssignmentSubmission = require('./AssignmentSubmission');
 const ClassAnnouncement = require('./ClassAnnouncement');
 const Comment = require('./Comment');
+const ChatMessage = require('./ChatMessage');
 
 // Define associations: Course → Module → Lesson
 Course.hasMany(Module, {
@@ -168,16 +169,27 @@ Comment.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
 
 Comment.belongsTo(User, { foreignKey: 'targetUserId', as: 'targetUser' });
 
+// Chat messages
+User.hasMany(ChatMessage, {
+  foreignKey: 'userId',
+  as: 'chatMessages',
+  onDelete: 'CASCADE'
+});
+ChatMessage.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
 // Sync database
+// NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
+// This sync() call is a no-op fallback (force: false prevents any schema changes).
+// All schema modifications should be made via migration files.
 const syncDatabase = async () => {
   try {
-    // Use sync() without alter to create missing tables only.
-    // ALTER TABLE causes issues in SQLite when there are unique constraints
-    // (e.g., users_backup email constraint violations).
-    // Use CAPLET_DB_ALTER=1 env to force alter when schema changes are needed.
-    const useAlter = process.env.CAPLET_DB_ALTER === '1';
-    await sequelize.sync(useAlter ? { alter: true } : {});
-    console.log('✅ Database synchronized successfully');
+    // Safe no-op: only creates tables if they don't exist, never modifies schema.
+    // Production servers use Umzug migrations exclusively.
+    await sequelize.sync({ force: false });
+    console.log('✅ Database initialization complete (migrations handled schema setup)');
   } catch (error) {
     console.error('❌ Database sync error:', error);
   }
@@ -197,5 +209,6 @@ module.exports = {
   AssignmentSubmission,
   ClassAnnouncement,
   Comment,
+  ChatMessage,
   syncDatabase
 };
