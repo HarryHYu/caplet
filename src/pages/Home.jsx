@@ -37,11 +37,12 @@ const Home = () => {
   // Jargon Transformation Logic
   const [jargonIndex, setJargonIndex] = useState(0);
   const jargons = [
-    { complex: "Amortization", plain: "The process of paying off a debt (like a loan or mortgage) over time through regular payments." },
-    { complex: "Capital Gains", plain: "The profit you make when you sell an asset (like stocks or property) for more than you paid for it." },
-    { complex: "Compound Interest", plain: "Interest calculated on the initial principal, which also includes all of the accumulated interest from previous periods." },
-    { complex: "Franking Credits", plain: "Tax credits that represent the tax already paid by a company on its profits, which can reduce the tax you owe on dividends." },
-    { complex: "Asset Allocation", plain: "Spreading your investments across different asset categories, such as stocks, bonds, and cash, to manage risk." }
+    { complex: "Amortization", plain: "Paying off a loan in regular chunks until it’s gone." },
+    { complex: "Capital Gains", plain: "The profit you make when you sell something for more than you bought it." },
+    { complex: "Compound Interest", plain: "Interest you earn on your original money, plus interest on the interest you've already earned." },
+    { complex: "Franking Credits", plain: "A tax discount for shareholders to prevent the same money being taxed twice." },
+    { complex: "Asset Allocation", plain: "Spreading your money across different things (like savings, property, or shares) to stay safe." },
+    { complex: "Securities", plain: "A fancy word for tradable financial assets like stocks, bonds, or shares." }
   ];
 
   useEffect(() => {
@@ -53,7 +54,7 @@ const Home = () => {
 
   // Card 1 Logic: Courses Shuffler
   const [courses, setCourses] = useState([
-    "Superannuation 101",
+    "Retirement Savings (Super) 101",
     "Budgeting Fundamentals",
     "Understanding Tax"
   ]);
@@ -516,7 +517,7 @@ const Home = () => {
                 },
                 { 
                   q: "Do I need to live in Australia?", 
-                  a: "Our content is deeply optimized for the Australian system (superannuation, tax brackets, HELP/HECS, etc.), but the core principles of cash flow and compound interest apply to everyone." 
+                  a: "Our content is deeply optimized for the Australian system (retirement savings, tax brackets, HELP/HECS, etc.), but the core principles of cash flow and compound interest apply to everyone." 
                 },
                 { 
                   q: "How often courses updated?", 

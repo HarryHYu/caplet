@@ -87,7 +87,7 @@ export default function Dashboard() {
 
 
     return (
-        <div className="min-h-screen bg-surface-body py-20 selection:bg-accent selection:text-white">
+        <div className="min-h-screen bg-surface-body pt-48 pb-20 selection:bg-accent selection:text-white">
             {showOnboarding && (
                 <OnboardingWizard
                     onComplete={(message) => {
@@ -107,15 +107,10 @@ export default function Dashboard() {
                             {getGreeting()}, {user?.firstName || 'Student'}.
                         </h1>
                         <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
-                            Your academic session is active. You have {inProgressCourses.length} active curriculum modules.
+                            Great to see you again. You have {inProgressCourses.length} active courses in progress.
                         </p>
                     </div>
-                    <div className="flex gap-4">
-                        <div className="px-6 py-4 bg-surface-soft border border-line-soft">
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim mb-1">Session ID</p>
-                            <p className="text-xs font-bold text-text-primary tracking-widest">AU-{Math.random().toString(36).substr(2, 6).toUpperCase()}</p>
-                        </div>
-                    </div>
+
                 </header>
 
                 {/* Stats Matrix */}
@@ -144,7 +139,7 @@ export default function Dashboard() {
                         {/* Resume Session */}
                         {lastAccessed && lastAccessedCourse && (
                             <div className="reveal-text stagger-2">
-                                <span className="section-kicker">Resume Stream</span>
+                                <span className="section-kicker">Continue Learning</span>
                                 <div className="mt-8 group relative overflow-hidden bg-surface-raised border border-line-soft p-12 transition-all hover:shadow-2xl">
                                     <div className="flex flex-col md:flex-row gap-12 items-center">
                                         <div className="w-40 h-40 shrink-0 bg-surface-soft p-1 border border-line-soft">
@@ -164,7 +159,7 @@ export default function Dashboard() {
                                             </div>
                                             <div className="flex justify-between items-end">
                                                 <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Progress: {lastAccessed.progressPercentage}%</span>
-                                                <Link to={`/courses/${lastAccessedCourse.id}`} className="btn-primary py-3 px-8 text-[9px]">
+                                                <Link to={`/courses/${lastAccessedCourse.id}`} className="btn-primary py-3 px-8 text-[15px]">
                                                     Continue Module
                                                 </Link>
                                             </div>
@@ -178,8 +173,8 @@ export default function Dashboard() {
                         <div className="reveal-text stagger-3">
                             <div className="flex items-end justify-between mb-8">
                                 <div>
-                                    <span className="section-kicker">Network</span>
-                                    <h2 className="text-4xl font-serif italic">My Academy.</h2>
+                                    <span className="section-kicker">Academy</span>
+                                    <h2 className="text-4xl font-serif italic">My Classes.</h2>
                                 </div>
                                 <Link to="/classes" className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">All Classes</Link>
                             </div>
@@ -232,7 +227,7 @@ export default function Dashboard() {
                                 <blockquote className="text-sm font-medium leading-relaxed text-zinc-400 mb-8 italic">
                                     "Compound interest is the eighth wonder of the world. He who understands it, earns it... he who doesn't... pays it."
                                 </blockquote>
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-accent">Protocol: Einstein-8</p>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-accent">Source: Albert Einstein</p>
                             </div>
                         </div>
                     </div>
