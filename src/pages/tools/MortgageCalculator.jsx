@@ -24,7 +24,6 @@ const MortgageCalculator = () => {
     const monthlyRate = rate / 100 / 12;
     const numPayments = years * 12;
 
-    // Monthly payment: M = P * [r(1+r)^n] / [(1+r)^n - 1]
     const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
       (Math.pow(1 + monthlyRate, numPayments) - 1);
 
@@ -44,142 +43,149 @@ const MortgageCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen py-24">
-      <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
-        <div className="container-custom">
-          <div className="max-w-4xl">
-            <div className="flex items-center justify-between mb-8 animate-slide-up">
-              <div>
-                <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-4">
-                  Financial Tools
-                </p>
-                <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
-                  Mortgage <br />Calculator.
-                </h1>
-                <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest leading-relaxed max-w-xl">
-                  Scenario analysis for home loan repayments, interest, and frequency changes.
-                </p>
-              </div>
-              <Link to="/tools" className="text-[10px] font-black text-zinc-400 hover:text-brand uppercase tracking-widest transition-colors mb-auto">
-                ← Back to Tools
-              </Link>
+    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
+      <div className="container-custom">
+        <header className="mb-24 reveal-text">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+            <div>
+              <span className="section-kicker">Instruments &rarr; Mortgage</span>
+              <h1 className="text-6xl md:text-8xl mb-8">
+                Equity <br />Strategist.
+              </h1>
+              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
+                Simulate property acquisition debt and optimize your long-term capital allocation strategies.
+              </p>
             </div>
+            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
+              &larr; Back to Instruments
+            </Link>
           </div>
-        </div>
-      </section>
+          <div className="h-px w-full bg-line-soft" />
+        </header>
 
-      <section className="py-12">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-6xl">
-            <div className="lg:col-span-2 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900 p-10 reveal-up">
-              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Mortgage Parameters</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Loan Amount
-                  </label>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
+          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Acquisition Parameters</h2>
+            <form onSubmit={handleSubmit} className="space-y-16">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                  Property Loan Amount (AUD)
+                </label>
+                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
+                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
                   <input
                     type="number"
                     min="0"
                     step="10000"
                     value={loanAmount}
                     onChange={(e) => setLoanAmount(e.target.value)}
-                    placeholder="e.g. 500000"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0.00"
+                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                    Annual Rate (%)
+                  </label>
+                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={interestRate}
+                      onChange={(e) => setInterestRate(e.target.value)}
+                      placeholder="0.0"
+                      className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                    />
+                    <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Annual Interest Rate (%)
+                  <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                    Loan Term
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={interestRate}
-                    onChange={(e) => setInterestRate(e.target.value)}
-                    placeholder="e.g. 5.5"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      step="1"
+                      value={loanTerm}
+                      onChange={(e) => setLoanTerm(e.target.value)}
+                      placeholder="Years"
+                      className="w-full bg-transparent pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                    />
+                  </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Loan Term (years)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    step="1"
-                    value={loanTerm}
-                    onChange={(e) => setLoanTerm(e.target.value)}
-                    placeholder="e.g. 30"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+              <button type="submit" className="btn-primary w-full py-6 text-xs uppercase tracking-[0.3em] mt-8">
+                Generate Amortization Logic
+              </button>
+            </form>
+          </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white font-semibold transition-colors"
-                >
-                  Calculate Repayment
-                </button>
-              </form>
-            </div>
+          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Economic Projection</h2>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-inner border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Results</h2>
-              {result ? (
-                result.error ? (
-                  <p className="text-red-600 dark:text-red-400 text-sm">{result.error}</p>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="break-words">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Monthly Payment</p>
-                      <p className="text-2xl font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.monthlyPayment)}
-                      </p>
+            {result ? (
+              result.error ? (
+                <p className="text-[10px] font-bold text-accent uppercase tracking-widest relative z-10">{result.error}</p>
+              ) : (
+                <div className="space-y-12 relative z-10">
+                  <div>
+                    <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-4 italic">Standard Monthly Installment</p>
+                    <p className="text-5xl font-black tracking-tighter text-text-primary">
+                      {formatCurrency(result.monthlyPayment)}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-px bg-line-soft border border-line-soft">
+                    <div className="bg-surface-body p-6">
+                      <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mb-1">Weekly</p>
+                      <p className="text-lg font-bold">{formatCurrency(result.weeklyPayment)}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Weekly</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                          {formatCurrency(result.weeklyPayment)}
-                        </p>
+                    <div className="bg-surface-body p-6">
+                      <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mb-1">Fortnightly</p>
+                      <p className="text-lg font-bold">{formatCurrency(result.fortnightlyPayment)}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-10 border-t border-line-soft space-y-8">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-1">Aggregate Obligation</p>
+                        <p className="text-xl font-bold">{formatCurrency(result.totalPayments)}</p>
                       </div>
-                      <div className="p-3 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Fortnightly</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                          {formatCurrency(result.fortnightlyPayment)}
-                        </p>
+                      <div className="text-right">
+                        <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-1">Interest Layer</p>
+                        <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
                       </div>
                     </div>
-                    <div className="break-words">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount Payable</p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.totalPayments)}
-                      </p>
-                    </div>
-                    <div className="break-words">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Total Interest</p>
-                      <p className="text-lg font-semibold text-red-600 dark:text-red-400 break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.totalInterest)}
+
+                    <div className="pt-8 border-t border-line-soft">
+                      <p className="text-[10px] font-serif italic text-text-dim leading-relaxed">
+                        Property acquisition remains the primary mechanism for domestic capital accumulation. Repayment discipline is paramount.
                       </p>
                     </div>
                   </div>
-                )
-              ) : (
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Enter loan details to see your mortgage repayment schedule.
-                </p>
-              )}
-            </div>
+                </div>
+              )
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
+                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">EQUITY</div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Awaiting Financial Matrix</p>
+              </div>
+            )}
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

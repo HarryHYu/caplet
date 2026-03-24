@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
+const { Op, fn, col, where } = require('sequelize');
 const User = require('../models/User');
 
 const router = express.Router();
@@ -27,18 +28,62 @@ const normalizeGoogleNames = (payload = {}) => {
   return { firstName, lastName };
 };
 
-const findUserByEmailVariants = async (email) => {
-  let user = await User.findOne({ where: { email } });
-  if (!user) {
-    const [local, domain] = email.split('@');
-    if (domain && domain.toLowerCase() === 'gmail.com') {
-      const baseLocal = local.split('+')[0];
-      const altEmail = `${baseLocal.replace(/\./g, '')}@gmail.com`;
-      user = await User.findOne({ where: { email: altEmail } });
-    }
+const normalizeEmailInput = (email = '') => String(email).trim().toLowerCase();
+
+const splitEmail = (normalizedEmail) => {
+  const [local, domain] = normalizedEmail.split('@');
+  return {
+    local,
+    domain: domain?.toLowerCase()
+  };
+};
+
+const isGmailDomain = (domain) => domain === 'gmail.com' || domain === 'googlemail.com';
+
+const toCanonicalEmail = (normalizedEmail) => {
+  const { local, domain } = splitEmail(normalizedEmail);
+  if (!local || !domain) return normalizedEmail;
+
+  // Gmail addresses ignore dots and "+" subaddressing in the local part.
+  if (isGmailDomain(domain)) {
+    const baseLocal = local.split('+')[0];
+    const compactLocal = baseLocal.replace(/\./g, '');
+    return `${compactLocal}@gmail.com`;
   }
 
-  return user;
+  return normalizedEmail;
+};
+
+const normalizeEmailForStorage = (email) => toCanonicalEmail(normalizeEmailInput(email));
+
+const findUserByEmailVariants = async (email) => {
+  const normalizedEmail = normalizeEmailInput(email);
+  if (!normalizedEmail.includes('@')) return null;
+
+  const exactUser = await User.findOne({
+    where: where(fn('LOWER', col('email')), normalizedEmail)
+  });
+  if (exactUser) {
+    return exactUser;
+  }
+
+  const { domain } = splitEmail(normalizedEmail);
+  if (!isGmailDomain(domain)) return null;
+
+  const canonicalEmail = toCanonicalEmail(normalizedEmail);
+  const gmailUsers = await User.findAll({
+    where: {
+      [Op.or]: [
+        where(fn('LOWER', col('email')), { [Op.like]: '%@gmail.com' }),
+        where(fn('LOWER', col('email')), { [Op.like]: '%@googlemail.com' })
+      ]
+    }
+  });
+
+  return gmailUsers.find((candidate) => {
+    const candidateCanonical = toCanonicalEmail(normalizeEmailInput(candidate.email));
+    return candidateCanonical === canonicalEmail;
+  }) || null;
 };
 
 // Register
@@ -61,9 +106,11 @@ router.post('/register', [
     }
 
     const { email, password, firstName, lastName, dateOfBirth, role } = req.body;
+    const normalizedEmail = normalizeEmailInput(email);
+    const storageEmail = normalizeEmailForStorage(email);
 
     // Check if user already exists
-    const existingUser = await findUserByEmailVariants(email);
+    const existingUser = await findUserByEmailVariants(normalizedEmail);
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
@@ -72,7 +119,7 @@ router.post('/register', [
     const userRole = role === 'instructor' ? 'instructor' : 'student';
 
     const user = await User.create({
-      email,
+      email: storageEmail,
       password,
       firstName,
       lastName,
@@ -110,9 +157,10 @@ router.post('/login', [
     }
 
     const { email, password } = req.body;
+    const normalizedEmail = normalizeEmailInput(email);
 
     // Find user (support gmail dot/subaddress variants)
-    const user = await findUserByEmailVariants(email);
+    const user = await findUserByEmailVariants(normalizedEmail);
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -161,13 +209,14 @@ router.post('/google', [
       return res.status(401).json({ message: 'Google account email is not verified' });
     }
 
-    const email = payload.email.toLowerCase();
+    const email = normalizeEmailInput(payload.email);
+    const storageEmail = normalizeEmailForStorage(payload.email);
     let user = await findUserByEmailVariants(email);
 
     if (!user) {
       const { firstName, lastName } = normalizeGoogleNames(payload);
       user = await User.create({
-        email,
+        email: storageEmail,
         password: crypto.randomBytes(32).toString('hex'),
         firstName,
         lastName,
@@ -205,14 +254,14 @@ router.post('/google', [
 router.get('/me', async (req, res) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findByPk(decoded.userId);
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Invalid token' });
     }

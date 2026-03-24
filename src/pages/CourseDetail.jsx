@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,11 +19,13 @@ const CourseDetail = () => {
         setLoading(true);
         const courseResponse = await api.getCourse(courseId);
         setCourse(courseResponse);
-        try {
-          const prog = await api.getCourseProgress(courseId);
-          setProgress(prog);
-        } catch {
-          // ignore if not logged in
+        if (isAuthenticated) {
+          try {
+            const prog = await api.getCourseProgress(courseId);
+            setProgress(prog);
+          } catch {
+            // ignore when progress is unavailable
+          }
         }
       } catch (e) {
         setError(e.message);
@@ -30,34 +34,26 @@ const CourseDetail = () => {
       }
     };
     load();
-  }, [courseId]);
+  }, [courseId, isAuthenticated]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-            Loading course...
-          </p>
-        </div>
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (error || !course) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-4">Notice</span>
-          <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-6">
+          <p className="text-2xl font-bold mb-4">
             {error || 'Course not found'}
           </p>
-          <Link
-            to="/courses"
-            className="btn-secondary"
-          >
-            Return to Library
+          <p className="text-text-muted mb-8">The course you're looking for doesn't exist or may have been moved.</p>
+          <Link to="/courses" className="btn-primary py-3 px-8">
+            Back to Courses
           </Link>
         </div>
       </div>
@@ -73,134 +69,166 @@ const CourseDetail = () => {
   };
 
   return (
-    <div className="min-h-screen py-24">
+    <div className="min-h-screen bg-surface-body py-12 md:py-20">
       <div className="container-custom">
-        <div className="mb-10 animate-slide-up">
-          <button
-            onClick={() => navigate('/courses')}
-            className="mb-6 inline-flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-brand transition-colors"
-          >
-            ← Back to Courses
-          </button>
-          <span className="section-kicker mb-4">Course Details</span>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-4">
-            {course.title}
-          </h1>
-          {course.description && (
-            <p className="text-lg text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed max-w-2xl">
-              {course.description}
-            </p>
+        {/* Back link */}
+        <button
+          onClick={() => navigate('/courses')}
+          className="mb-8 inline-flex items-center gap-2 text-sm text-text-muted hover:text-accent transition-colors"
+        >
+          &larr; All Courses
+        </button>
+
+        {/* Course header */}
+        <div className="mb-12">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                {course.title}
+              </h1>
+              <p className="text-lg text-text-muted leading-relaxed max-w-2xl">
+                {course.description || course.shortDescription}
+              </p>
+            </div>
+            {course.thumbnail && (
+              <div className="w-full md:w-72 aspect-video rounded-xl overflow-hidden border border-line-soft shrink-0">
+                <img
+                  src={course.thumbnail}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Course info card */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
+          <div className="lg:col-span-8">
+            <div className="bg-surface-raised border border-line-soft rounded-xl p-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div>
+                  <p className="text-xs font-medium text-text-muted mb-1">Duration</p>
+                  <p className="text-lg font-semibold">{course.duration} minutes</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-text-muted mb-1">Lessons</p>
+                  <p className="text-lg font-semibold">{totalLessonCount} lessons</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-text-muted mb-1">Level</p>
+                  <p className="text-lg font-semibold capitalize">{course.level}</p>
+                </div>
+              </div>
+
+              {progress?.courseProgress && (
+                <div className="mb-8">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-text-muted">Your Progress</span>
+                    <span className="font-medium text-accent">{Math.round(progress.courseProgress.progressPercentage)}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-surface-soft rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${progress.courseProgress.progressPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={startCourse}
+                className="btn-primary py-3 px-10"
+              >
+                {progress?.courseProgress ? 'Continue Learning' : 'Start Course'}
+              </button>
+            </div>
+          </div>
+
+          {/* Learning outcomes or metadata sidebar */}
+          {course.learningOutcomes && course.learningOutcomes.length > 0 ? (
+            <aside className="lg:col-span-4 bg-accent/5 border border-accent/20 rounded-xl p-8">
+              <h3 className="text-sm font-semibold mb-4">What you'll learn</h3>
+              <ul className="space-y-3">
+                {course.learningOutcomes.map((outcome, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-text-muted">
+                    <span className="text-accent mt-0.5">&#10003;</span>
+                    <span>{outcome}</span>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          ) : (
+            <aside className="lg:col-span-4 bg-accent/5 border border-accent/20 rounded-xl p-8 flex flex-col justify-center">
+              <h3 className="text-sm font-semibold mb-2">About this course</h3>
+              <p className="text-sm text-text-muted leading-relaxed">
+                This course is part of Caplet's free financial education program. All modules are designed for clarity and practical understanding.
+              </p>
+            </aside>
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16 reveal-up" style={{ animationDelay: '120ms' }}>
-          <div className="lg:col-span-8">
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 mb-8">
-                <div className="space-y-3">
-                  <div className="flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-                    <span>Duration: {course.duration} Minutes</span>
-                    <span>Units: {totalLessonCount}</span>
-                    <span className="capitalize">Level: {course.level}</span>
-                  </div>
-                  {progress?.courseProgress && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                        <span>Course Progress</span>
-                        <span className="text-black dark:text-white">
-                          {Math.round(progress.courseProgress.progressPercentage)}%
-                        </span>
-                      </div>
-                      <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
-                        <div
-                          className="h-full bg-brand transition-all duration-1000"
-                          style={{ width: `${progress.courseProgress.progressPercentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={startCourse}
-                  className="btn-primary px-10 py-4 text-[10px] tracking-[0.25em]"
-                >
-                  Start Course
-                </button>
-              </div>
-              {course.thumbnail && (
-                <div className="mt-4">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.title}
-                    className="w-full max-w-xl aspect-video object-cover border border-zinc-100 dark:border-zinc-900"
-                  />
-                </div>
-              )}
-            </div>
+        {/* Modules list */}
+        <div>
+          <div className="flex items-end justify-between mb-6">
+            <h2 className="text-2xl font-bold">Modules</h2>
+            <p className="text-sm text-text-muted">{sortedModules.length} modules</p>
           </div>
 
-          <aside className="lg:col-span-4 space-y-6">
-            <div className="p-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900">
-              <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] mb-5">
-                Course Summary
-              </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed">
-                This course is part of the CapletEdu curriculum and is structured into modules and
-                lessons that can be used directly in the classroom.
-              </p>
-            </div>
-          </aside>
-        </div>
-
-        <div className="reveal-up" style={{ animationDelay: '200ms' }}>
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">
-              Modules ({sortedModules.length})
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
+          <div className="space-y-2">
             {sortedModules.map((mod, index) => {
               const moduleLessons = (mod.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
               const lessonCount = moduleLessons.length;
               const mp = progress?.moduleProgress?.find((m) => String(m.moduleId) === String(mod.id));
               const completedInModule = mp ? mp.completedLessons : 0;
               const totalInModule = mp ? mp.totalLessons : lessonCount;
-              const percentage =
-                totalInModule > 0 ? Math.round((completedInModule / totalInModule) * 100) : 0;
+              const percentage = totalInModule > 0 ? Math.round((completedInModule / totalInModule) * 100) : 0;
 
               return (
                 <Link
                   key={mod.id}
                   to={`/courses/${course.id}/modules/${mod.id}`}
-                  className="group bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 px-8 py-6 flex items-center justify-between hover:border-brand transition-all"
-                  style={{ animationDelay: `${index * 60}ms` }}
+                  className="group bg-surface-raised border border-line-soft rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between transition-colors duration-200 hover:border-accent/50 block"
                 >
-                  <div className="flex items-center gap-6 min-w-0">
-                    <span className="text-2xl font-black text-zinc-200 dark:text-zinc-800 tabular-nums">
-                      {String(index + 1).padStart(2, '0')}
+                  <div className="flex items-center gap-5 min-w-0 mb-4 md:mb-0">
+                    <span className="text-2xl font-bold text-text-dim w-8 text-right shrink-0">
+                      {index + 1}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-sm font-extrabold text-black dark:text-white uppercase tracking-tight mb-1 truncate">
+                      <h3 className="text-lg font-semibold text-text-primary mb-1 truncate group-hover:text-accent transition-colors">
                         {mod.title}
-                      </p>
-                      <p className="text-[10px] text-zinc-400 uppercase tracking-widest">
-                        {lessonCount} lesson{lessonCount !== 1 ? 's' : ''} · {percentage}% complete
-                      </p>
+                      </h3>
+                      <div className="flex items-center gap-3 text-sm text-text-muted">
+                        <span>{lessonCount} lessons</span>
+                        {percentage > 0 && (
+                          <>
+                            <span className="w-1 h-1 bg-text-dim rounded-full" />
+                            <span className={percentage === 100 ? 'text-green-600 dark:text-green-400 font-medium' : ''}>{percentage}% complete</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest group-hover:text-brand group-hover:translate-x-1 transition-all">
-                    View Module →
-                  </span>
+
+                  <div className="flex items-center gap-4">
+                    {percentage === 100 && (
+                      <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full">
+                        Complete
+                      </span>
+                    )}
+                    <span className="text-sm text-text-muted group-hover:text-accent transition-colors">
+                      View Module &rarr;
+                    </span>
+                  </div>
                 </Link>
               );
             })}
           </div>
 
           {sortedModules.length === 0 && (
-            <div className="mt-10 p-16 text-center border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-950">
-              <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
-                No modules available for this course yet.
+            <div className="py-20 text-center border border-line-soft rounded-xl bg-surface-soft">
+              <p className="text-lg text-text-muted">
+                No modules available yet.
               </p>
             </div>
           )}
@@ -209,5 +237,6 @@ const CourseDetail = () => {
     </div>
   );
 };
+
 
 export default CourseDetail;

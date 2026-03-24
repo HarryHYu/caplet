@@ -142,4 +142,41 @@ router.get('/:userId', authenticateToken, async (req, res) => {
   }
 });
 
+// Complete onboarding
+router.post('/complete-onboarding', authenticateToken, [
+  body('knowledgeLevel').optional().trim().isIn(['beginner', 'intermediate', 'advanced']),
+  body('goals').optional().isArray(),
+  body('incomeRange').optional().trim().isIn(['under-2k', '2k-4k', '4k-7k', '7k-10k', 'over-10k', 'prefer-not-to-say'])
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { knowledgeLevel, goals, incomeRange } = req.body;
+
+    const onboardingData = {
+      knowledgeLevel: knowledgeLevel || null,
+      goals: goals || [],
+      incomeRange: incomeRange || null,
+      completedAt: new Date().toISOString()
+    };
+
+    await req.user.update({
+      onboarded: true,
+      onboardingData
+    });
+
+    res.json({
+      success: true,
+      message: 'Onboarding completed successfully',
+      user: req.user.toJSON()
+    });
+  } catch (error) {
+    console.error('Complete onboarding error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 module.exports = router;

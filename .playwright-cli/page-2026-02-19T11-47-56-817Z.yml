@@ -1,0 +1,114 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet Logo Caplet." [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "Caplet Logo" [ref=e8]
+        - generic [ref=e9]: Caplet.
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Index" [ref=e12] [cursor=pointer]:
+            - /url: /
+          - link "Curriculum" [ref=e13] [cursor=pointer]:
+            - /url: /courses
+            - text: Curriculum
+          - link "Academy" [ref=e15] [cursor=pointer]:
+            - /url: /classes
+          - link "Instruments" [ref=e16] [cursor=pointer]:
+            - /url: /tools
+          - link "Contact" [ref=e17] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e19]:
+          - button "Toggle dark mode" [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - link "Join Academy" [ref=e23] [cursor=pointer]:
+            - /url: /login
+  - main [ref=e24]:
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]: Knowledge Registry
+        - heading "Curriculum." [level=1] [ref=e29]
+        - paragraph [ref=e30]: Browse our free financial education courses designed for Australian learners.
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - generic [ref=e33]: Level
+          - combobox [ref=e34]:
+            - option "All Levels" [selected]
+            - option "Beginner"
+            - option "Intermediate"
+            - option "Advanced"
+        - generic [ref=e35]:
+          - generic [ref=e36]: Search
+          - textbox "BY IDENTIFIER OR TITLE" [ref=e37]
+      - generic [ref=e38]:
+        - generic [ref=e39] [cursor=pointer]:
+          - generic [ref=e41]: intermediate
+          - heading "Corporate Finance PART 1" [level=3] [ref=e42]
+          - paragraph [ref=e43]: Stakeholders, corporate decision making, financial markets, ESG, risk and return.
+          - generic [ref=e44]:
+            - generic [ref=e45]:
+              - generic [ref=e46]: 180m
+              - generic [ref=e48]: 11 lessons
+            - generic [ref=e49]:
+              - generic [ref=e50]: Enter Lesson →
+              - img [ref=e51]
+        - generic [ref=e53] [cursor=pointer]:
+          - generic [ref=e55]: beginner
+          - heading "Test" [level=3] [ref=e56]
+          - paragraph [ref=e57]: d
+          - generic [ref=e58]:
+            - generic [ref=e59]:
+              - generic [ref=e60]: 10m
+              - generic [ref=e62]: 1 lessons
+            - generic [ref=e63]:
+              - generic [ref=e64]: Enter Lesson →
+              - img [ref=e65]
+  - contentinfo [ref=e67]:
+    - generic [ref=e68]:
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - link "Caplet." [ref=e71] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e74]: Caplet.
+          - paragraph [ref=e75]: Professional financial education designed for the Australian context. Structured learning, built for school integration.
+          - generic [ref=e76]:
+            - generic [ref=e77]: Compliance
+            - generic [ref=e78]: Literacy
+            - generic [ref=e79]: Application
+        - generic [ref=e80]:
+          - heading "Academy" [level=3] [ref=e81]
+          - list [ref=e82]:
+            - listitem [ref=e83]:
+              - link "Curriculum" [ref=e84] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e85]:
+              - link "Academy" [ref=e86] [cursor=pointer]:
+                - /url: /classes
+            - listitem [ref=e87]:
+              - link "Instruments" [ref=e88] [cursor=pointer]:
+                - /url: /tools
+        - generic [ref=e89]:
+          - heading "Resources" [level=3] [ref=e90]
+          - list [ref=e91]:
+            - listitem [ref=e92]:
+              - link "Terminal" [ref=e93] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e94]:
+              - link "Support" [ref=e95] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e96]:
+              - link "Security" [ref=e97] [cursor=pointer]:
+                - /url: /terms
+        - generic [ref=e98]:
+          - generic [ref=e99]: Current Status
+          - generic [ref=e102]: Network Active
+          - generic [ref=e103]:
+            - text: Deployment v4.2.0
+            - text: "Cluster: AU-SYD-1"
+      - generic [ref=e104]:
+        - paragraph [ref=e105]: © 2026 Caplet Education. Precision in Finance.
+        - generic [ref=e106]:
+          - link "Privacy Protocol" [ref=e107] [cursor=pointer]:
+            - /url: /terms
+          - link "Terms of Service" [ref=e108] [cursor=pointer]:
+            - /url: /terms

@@ -1,10 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import BackgroundTexture from './components/BackgroundTexture';
 import Home from './pages/Home';
 import Contact from './pages/Contact';
 import Tools from './pages/Tools';
@@ -22,6 +21,7 @@ import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModuleDetail from './pages/ModuleDetail';
 import LessonPlayer from './pages/LessonPlayer';
+import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Classes from './pages/Classes';
@@ -34,10 +34,30 @@ import Terms from './pages/Terms';
 import Metrics from './pages/Metrics';
 import NotFound from './pages/NotFound';
 
+function FullPageSpinner() {
+  return (
+    <div className="min-h-screen bg-surface-body flex items-center justify-center">
+      <div className="w-12 h-12 border-2 border-accent border-t-transparent animate-spin" />
+    </div>
+  );
+}
+
 function HomeOrRedirect() {
-  const { isAuthenticated } = useAuth();
-  if (isAuthenticated) return <Navigate to="/courses" replace />;
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <FullPageSpinner />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return <Home />;
+}
+
+function RequireAuth({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return <FullPageSpinner />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  return children;
 }
 
 function App() {
@@ -46,12 +66,12 @@ function App() {
       <AuthProvider>
         <CoursesProvider>
           <Router>
-            <BackgroundTexture />
-            <div className="relative z-10 min-h-screen flex flex-col">
+            <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow">
                 <Routes>
                   <Route path="/" element={<HomeOrRedirect />} />
+                  <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/tools" element={<Tools />} />
@@ -71,8 +91,8 @@ function App() {
                   <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
                   <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
                   <Route path="/classes" element={<Classes />} />
-                  <Route path="/classes/:classId" element={<ClassDetail />} />
-                  <Route path="/settings" element={<Settings />}>
+                  <Route path="/classes/:classId" element={<RequireAuth><ClassDetail /></RequireAuth>} />
+                  <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>}>
                     <Route index element={<Navigate to="/settings/profile" replace />} />
                     <Route path="profile" element={<SettingsProfile />} />
                     <Route path="account" element={<SettingsAccount />} />

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 const ModuleDetail = () => {
   const { courseId, moduleId } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [course, setCourse] = useState(null);
   const [module_, setModule_] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,11 +20,13 @@ const ModuleDetail = () => {
         setLoading(true);
         const courseResponse = await api.getCourse(courseId);
         setCourse(courseResponse);
-        try {
-          const prog = await api.getCourseProgress(courseId);
-          setProgress(prog);
-        } catch {
-          // ignore if not logged in
+        if (isAuthenticated) {
+          try {
+            const prog = await api.getCourseProgress(courseId);
+            setProgress(prog);
+          } catch {
+            // ignore when progress is unavailable
+          }
         }
       } catch (e) {
         setError(e.message);
@@ -31,7 +35,7 @@ const ModuleDetail = () => {
       }
     };
     load();
-  }, [courseId]);
+  }, [courseId, isAuthenticated]);
 
   useEffect(() => {
     if (!course?.modules) return;
@@ -41,24 +45,19 @@ const ModuleDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Loading module...</p>
-        </div>
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (error || !course) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-4">Notice</span>
-          <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-6">
-            {error || 'Course not found'}
-          </p>
-          <Link to="/courses" className="btn-secondary">Return to Library</Link>
+          <p className="text-2xl font-bold mb-4">{error || 'Course not found'}</p>
+          <p className="text-text-muted mb-8">The course you're looking for doesn't exist or may have been moved.</p>
+          <Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>
         </div>
       </div>
     );
@@ -66,19 +65,18 @@ const ModuleDetail = () => {
 
   if (!module_) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-surface-body flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-4">Notice</span>
-          <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-6">
-            Module not found
-          </p>
-          <Link to={`/courses/${courseId}`} className="btn-secondary">Back to Course</Link>
+          <p className="text-2xl font-bold mb-4">Module not found</p>
+          <p className="text-text-muted mb-8">This module doesn't exist or may have been moved.</p>
+          <Link to={`/courses/${courseId}`} className="btn-primary py-3 px-8">Back to Course</Link>
         </div>
       </div>
     );
   }
 
   const lessons = (module_.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
   const lessonHasContent = (l) => {
     const slides = l.slides;
     if (Array.isArray(slides) && slides.length > 0) return true;
@@ -89,99 +87,100 @@ const ModuleDetail = () => {
     if (l.videoUrl && String(l.videoUrl).trim()) return true;
     return false;
   };
+
   const isLessonComplete = (l) => {
     if (!lessonHasContent(l)) return false;
     return progress?.lessonProgress?.some((p) => String(p.lessonId) === String(l.id) && p.status === 'completed');
   };
+
   const completedInModule = lessons.filter(isLessonComplete).length;
   const totalInModule = lessons.length;
   const progressWidth = totalInModule > 0 ? (completedInModule / totalInModule) * 100 : 0;
 
   return (
-    <div className="min-h-screen py-24">
+    <div className="min-h-screen bg-surface-body py-12 md:py-20">
       <div className="container-custom">
-        <div className="mb-12 animate-slide-up">
-          <button
-            onClick={() => navigate(`/courses/${courseId}`)}
-            className="mb-8 inline-flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-brand transition-colors"
-          >
-            ← Back to Course
-          </button>
+        {/* Back link */}
+        <button
+          onClick={() => navigate(`/courses/${courseId}`)}
+          className="mb-8 inline-flex items-center gap-2 text-sm text-text-muted hover:text-accent transition-colors"
+        >
+          &larr; Course Overview
+        </button>
 
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
-            <div className="flex-1">
-              <span className="section-kicker mb-4">Module</span>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
-                {module_.title}.
-              </h1>
-              {module_.description && (
-                <p className="text-xl text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed max-w-2xl">
-                  {module_.description}
-                </p>
-              )}
+        {/* Module header */}
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12">
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+              {module_.title}
+            </h1>
+            {module_.description && (
+              <p className="text-lg text-text-muted leading-relaxed max-w-2xl">
+                {module_.description}
+              </p>
+            )}
+          </div>
+
+          {/* Progress summary */}
+          <div className="flex flex-col gap-3 min-w-[260px] p-6 bg-surface-raised border border-line-soft rounded-xl">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-muted">Progress</span>
+              <span className="font-medium text-accent">{completedInModule} of {totalInModule} completed</span>
             </div>
-
-            <div className="flex flex-col gap-4 min-w-[240px]">
-              <div className="flex items-center justify-between text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                <span>Progress</span>
-                <span className="text-black dark:text-white">{completedInModule} / {totalInModule}</span>
-              </div>
-              <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
-                <div
-                  className="h-full bg-brand transition-all duration-1000"
-                  style={{ width: `${progressWidth}%` }}
-                />
-              </div>
+            <div className="h-2 w-full bg-surface-soft rounded-full overflow-hidden">
+              <div
+                className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progressWidth}%` }}
+              />
             </div>
           </div>
         </div>
 
-        <div className="space-y-4 reveal-up" style={{ animationDelay: '100ms' }}>
-          <div className="border-b border-zinc-100 dark:border-zinc-900 pb-4 mb-8">
-            <h2 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">
-              Lessons ({lessons.length})
-            </h2>
+        {/* Lessons list */}
+        <div>
+          <div className="flex items-end justify-between mb-6">
+            <h2 className="text-2xl font-bold">Lessons</h2>
+            <p className="text-sm text-text-muted">{lessons.length} lessons</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {lessons.map((lesson) => (
+          <div className="space-y-2">
+            {lessons.map((lesson, idx) => (
               <Link
                 key={lesson.id}
                 to={`/courses/${courseId}/lessons/${lesson.id}`}
-                className="group flex items-center justify-between p-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 hover:border-brand transition-all"
+                className="group bg-surface-raised border border-line-soft rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between transition-colors duration-200 hover:border-accent/50 block"
               >
-                <div className="flex items-center gap-8 min-w-0">
-                  <span className="text-2xl font-black text-zinc-200 dark:text-zinc-800 tabular-nums">
-                    {String(lesson.order).padStart(2, '0')}
+                <div className="flex items-center gap-5 min-w-0 mb-4 md:mb-0">
+                  <span className="text-2xl font-bold text-text-dim w-8 text-right shrink-0">
+                    {lesson.order || idx + 1}
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-black text-black dark:text-white uppercase tracking-tight group-hover:text-brand transition-colors truncate">
+                    <h3 className="text-lg font-semibold text-text-primary mb-1 truncate group-hover:text-accent transition-colors">
                       {lesson.title}
                     </h3>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">
-                        {lesson.description || 'Lesson'}
-                      </span>
+                    <div className="flex items-center gap-3 text-sm text-text-muted">
+                      {lesson.description && <span>{lesson.description}</span>}
                       {isLessonComplete(lesson) && (
-                        <span className="inline-flex items-center gap-1.5 text-[8px] font-black text-brand uppercase tracking-widest">
-                          <span className="w-1 h-1 bg-brand rounded-full animate-pulse" />
-                          Verified
+                        <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2.5 py-0.5 rounded-full">
+                          Completed
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all">
-                  Start Lesson →
-                </span>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-text-muted group-hover:text-accent transition-colors">
+                    {isLessonComplete(lesson) ? 'Review' : 'Start Lesson'} &rarr;
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
 
           {lessons.length === 0 && (
-            <div className="p-20 text-center border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-950">
-              <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
-                No lessons available in this module yet.
+            <div className="py-20 text-center border border-line-soft rounded-xl bg-surface-soft">
+              <p className="text-lg text-text-muted">
+                No lessons available yet.
               </p>
             </div>
           )}
@@ -190,5 +189,6 @@ const ModuleDetail = () => {
     </div>
   );
 };
+
 
 export default ModuleDetail;

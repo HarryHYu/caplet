@@ -131,7 +131,7 @@ const ClassDetail = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-6">Sign In Required</span>
           <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
@@ -150,7 +150,7 @@ const ClassDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Loading class...</p>
@@ -161,7 +161,7 @@ const ClassDetail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center page-section-light">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-6 text-red-500">Error</span>
           <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
@@ -923,35 +923,6 @@ const ClassDetail = () => {
                               </Link>
                             )}
                           </div>
-                          {/* Teacher: who has completed this assignment */}
-                          {isTeacher && totalStudents > 0 && (
-                            <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800">
-                              <p className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest mb-3">
-                                Who has completed
-                              </p>
-                              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {students.map((s) => {
-                                  const sub = Array.isArray(a.submissions)
-                                    ? a.submissions.find((x) => x.studentId === s.id)
-                                    : null;
-                                  const done = sub?.status === 'completed';
-                                  return (
-                                    <li
-                                      key={s.id}
-                                      className={`flex items-center justify-between gap-2 text-[10px] font-medium ${done ? 'text-zinc-700 dark:text-zinc-300' : 'text-zinc-400 dark:text-zinc-500'}`}
-                                    >
-                                      <span className="truncate uppercase tracking-wide">
-                                        {s.firstName} {s.lastName}
-                                      </span>
-                                      <span className={`shrink-0 px-2 py-0.5 border text-[8px] font-bold uppercase ${done ? 'border-brand text-brand bg-brand/10' : 'border-zinc-200 dark:border-zinc-700 text-zinc-400'}`}>
-                                        {done ? (sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Done') : 'Not done'}
-                                      </span>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </div>
-                          )}
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4 min-w-[120px]">
                           {isTeacher ? (
@@ -981,18 +952,13 @@ const ClassDetail = () => {
                               {isCompleted ? 'Completed' : 'Not Started'}
                             </span>
                           )}
-                          {!isTeacher && !isCompleted && !a.lesson && (
+                          {!isTeacher && !isCompleted && (
                             <button
                               onClick={() => handleCompleteAssignment(a.id)}
                               className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold uppercase tracking-widest hover:bg-brand dark:hover:bg-brand dark:hover:text-white transition-all shadow-sm"
                             >
                               Mark Complete
                             </button>
-                          )}
-                          {!isTeacher && !isCompleted && a.lesson && (
-                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
-                              Complete the lesson above to verify.
-                            </p>
                           )}
                           {!isTeacher && isCompleted && !a.lesson && (
                             <button
@@ -1469,16 +1435,13 @@ const ClassDetail = () => {
                       }}
                       className="block w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-black dark:text-white text-[10px] font-bold uppercase tracking-widest focus:border-brand outline-none transition-all"
                     >
-                      <option value="">No lesson — general assignment</option>
+                      <option value="">NONE</option>
                       {availableLessons.map((l) => (
                         <option key={l.id} value={l.id}>
-                          {l.courseTitle} – {l.title}
+                          {l.courseTitle.toUpperCase()} – {l.title.toUpperCase()}
                         </option>
                       ))}
                     </select>
-                    {availableLessons.length === 0 && (
-                      <p className="text-[9px] text-zinc-400 mt-1">No lessons available. Publish a course with lessons to assign.</p>
-                    )}
                   </div>
                 </div>
 
@@ -1489,7 +1452,7 @@ const ClassDetail = () => {
                     className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black dark:hover:text-white transition-all order-2 sm:order-1"
                     disabled={submitting}
                   >
-                    Cancel
+                    Abort
                   </button>
                   <button
                     type="submit"

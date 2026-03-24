@@ -1,0 +1,74 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - link "Caplet Intelligence" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e10]: Caplet Intelligence
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - generic [ref=e14]: New Registry entry
+            - heading "Initialize node." [level=2] [ref=e15]
+            - paragraph [ref=e16]: Create your unique identifier within the Caplet Intelligence Registry.
+          - generic [ref=e17]:
+            - generic [ref=e18]:
+              - generic [ref=e19]:
+                - generic [ref=e20]: Given Name
+                - textbox "Given Name" [ref=e21]:
+                  - /placeholder: FIRST
+              - generic [ref=e22]:
+                - generic [ref=e23]: Surname
+                - textbox "Surname" [ref=e24]:
+                  - /placeholder: LAST
+            - generic [ref=e25]:
+              - generic [ref=e26]: Access Level
+              - generic [ref=e27]:
+                - button "Scholar" [ref=e28] [cursor=pointer]: Scholar
+                - button "Architect" [ref=e30] [cursor=pointer]
+            - generic [ref=e31]:
+              - generic [ref=e32]: Registry Email
+              - textbox "Registry Email" [ref=e33]:
+                - /placeholder: IDENTIFIER@TERMINAL.COM
+            - generic [ref=e34]:
+              - generic [ref=e35]:
+                - generic [ref=e36]: Security Key
+                - textbox "Security Key" [ref=e37]:
+                  - /placeholder: ••••••••
+              - generic [ref=e38]:
+                - generic [ref=e39]: Confirm Key
+                - textbox "Confirm Key" [ref=e40]:
+                  - /placeholder: ••••••••
+            - button "Request Entry →" [ref=e41] [cursor=pointer]:
+              - generic [ref=e42]: Request Entry
+              - generic [ref=e43]: →
+          - paragraph [ref=e45]:
+            - text: Existing Registry Entry?
+            - button "Access Gate" [ref=e46] [cursor=pointer]
+        - link "← Abort and Return Home" [ref=e48] [cursor=pointer]:
+          - /url: /
+    - generic [ref=e49]:
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]: Internal Protocol
+          - heading "Architecting the Future Ledger." [level=1] [ref=e55]:
+            - text: Architecting the
+            - text: Future Ledger.
+          - paragraph [ref=e56]: Join a global network of analysts and architects building the foundations of modern finance.
+        - generic [ref=e58]:
+          - generic [ref=e59]: Network Capabilities
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - heading "Curriculum." [level=3] [ref=e62]
+              - paragraph [ref=e63]: Proprietary technical modules validated by industry experts.
+            - generic [ref=e64]:
+              - heading "Registry." [level=3] [ref=e65]
+              - paragraph [ref=e66]: Immutable progress tracking and skill verification.
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - paragraph [ref=e71]: V. Identification
+            - text: v2.8.4-ALPHA
+          - generic [ref=e72]:
+            - paragraph [ref=e73]: Registry Latency
+            - text: 14MS / HK-1
+        - generic [ref=e76]: Core Active

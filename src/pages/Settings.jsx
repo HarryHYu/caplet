@@ -1,13 +1,11 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Settings = () => {
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
 
   if (!isAuthenticated) {
-    navigate('/');
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   const navItems = [
@@ -16,36 +14,39 @@ const Settings = () => {
   ];
 
   return (
-    <div className="min-h-screen py-24">
+    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <div className="mb-16 animate-slide-up">
-          <span className="section-kicker mb-6">Settings</span>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
-            Account <br />Settings.
+        <div className="mb-24 reveal-text">
+          <span className="section-kicker">Configuration</span>
+          <h1 className="text-6xl md:text-8xl mb-12">
+            Account<br />Settings.
           </h1>
+          <p className="text-xl text-text-muted font-serif italic max-w-xl leading-relaxed">
+            Manage your registry profile and system preferences.
+          </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-16">
-          <nav className="w-full md:w-64 flex-shrink-0 animate-slide-up" style={{ animationDelay: '100ms' }}>
-            <ul className="space-y-2">
+        <div className="flex flex-col md:flex-row gap-20 reveal-text stagger-1">
+          <nav className="w-full md:w-64 flex-shrink-0">
+            <ul className="space-y-px bg-line-soft border border-line-soft">
               {navItems.map((item) => (
                 <li key={item.path}>
                   <NavLink
                     to={item.path}
                     end={item.path === '/settings/profile'}
                     className={({ isActive }) =>
-                      `block p-6 border transition-all group ${isActive
-                        ? 'bg-black dark:bg-white border-black dark:border-white text-white dark:text-black'
-                        : 'bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700'
+                      `block p-8 transition-all group ${isActive
+                        ? 'bg-surface-inverse text-surface-body'
+                        : 'bg-surface-body text-text-dim hover:bg-surface-raised hover:text-text-primary'
                       }`
                     }
                   >
                     {({ isActive }) => (
                       <>
-                        <span className="block text-[10px] font-bold uppercase tracking-[0.2em] mb-1 leading-none transition-colors">
+                        <span className="block text-[10px] font-bold uppercase tracking-[0.3em] mb-2 leading-none">
                           {item.label}
                         </span>
-                        <span className={`block text-[9px] font-bold uppercase tracking-widest opacity-50 ${isActive ? 'text-white/70 dark:text-black/70' : 'text-zinc-500'}`}>
+                        <span className={`block text-[9px] font-bold uppercase tracking-widest ${isActive ? 'opacity-50' : 'text-text-dim'}`}>
                           {item.description}
                         </span>
                       </>
@@ -55,8 +56,8 @@ const Settings = () => {
               ))}
             </ul>
           </nav>
-          <main className="flex-1 min-w-0 animate-slide-up" style={{ animationDelay: '200ms' }}>
-            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-10">
+          <main className="flex-1 min-w-0 reveal-text stagger-2">
+            <div className="bg-surface-raised border border-line-soft p-12">
               <Outlet />
             </div>
           </main>

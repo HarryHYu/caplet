@@ -3,8 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { testConnection } = require('./config/database');
+const { runMigrations } = require('./config/migrationRunner');
 const { syncDatabase } = require('./models');
-const seedProductionDatabase = require('./seed-production');
+const seedProductionDatabase = require('./scripts/seed-production');
 require('dotenv').config();
 
 const app = express();
@@ -71,6 +72,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/survey', require('./routes/survey'));
 app.use('/api/metrics', require('./routes/metrics'));
 app.use('/api/classes', require('./routes/classes'));
+app.use('/api/chat', require('./routes/chat'));
 app.use('/api', require('./routes/proxy'));
 
 // Error handling middleware
@@ -93,15 +95,42 @@ const startServer = async () => {
   try {
     // Test database connection
     await testConnection();
-    
-    // Sync database models
+
+    // ==============================================================================
+    // DATABASE MIGRATIONS PATTERN
+    // ==============================================================================
+    // Schema changes are now managed via Umzug migrations, not Sequelize's sync().
+    // Every schema change (new table, column, index, constraint) must be:
+    //
+    // 1. Implemented as a new migration file in backend/migrations/NNN-*.js
+    // 2. Export `up()` and `down()` functions using queryInterface
+    // 3. Create after all existing migrations (increment NNN)
+    // 4. Tested locally before deployment
+    // 5. Applied automatically on server startup via runMigrations()
+    //
+    // Benefits:
+    // - Safe in production (no destructive ALTER TABLE with { alter: true })
+    // - Reversible (down() allows rolling back)
+    // - Auditable (git history of all schema changes)
+    // - Team-friendly (migrations can be code-reviewed)
+    //
+    // For new contributors:
+    // - Schema changes go in migrations/, NOT models/
+    // - Models define structure for ORM, migrations define database reality
+    // - Always test migrations in dev before pushing to production
+    // ==============================================================================
+
+    // Run database migrations
+    await runMigrations();
+
+    // Safe no-op fallback sync (force: false prevents any schema changes)
     await syncDatabase();
-    
+
     // Seed production database if in production
     if (process.env.NODE_ENV === 'production') {
       await seedProductionDatabase();
     }
-    
+
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Caplet API Server running on port ${PORT}`);

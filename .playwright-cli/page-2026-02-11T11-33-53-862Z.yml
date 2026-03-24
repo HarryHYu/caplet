@@ -1,0 +1,45 @@
+- main [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - paragraph [ref=e12]: Secure Access
+          - heading "Sign In" [level=2] [ref=e13]
+        - generic [ref=e14]:
+          - generic [ref=e15]:
+            - generic [ref=e16]:
+              - generic [ref=e17]: Institutional Email
+              - textbox "Institutional Email" [ref=e18]:
+                - /placeholder: name@institution.com
+            - generic [ref=e19]:
+              - generic [ref=e20]:
+                - generic [ref=e21]: Access Key
+                - button "Reset?" [ref=e22] [cursor=pointer]
+              - textbox "Access Key" [active] [ref=e23]:
+                - /placeholder: ••••••••
+            - button "Enter Terminal →" [ref=e24] [cursor=pointer]:
+              - generic [ref=e25]: Enter Terminal
+              - generic [ref=e26]: →
+          - generic [ref=e29]: Or continue with
+        - paragraph [ref=e33]:
+          - text: Not yet enrolled?
+          - button "Create Account" [ref=e34] [cursor=pointer]
+      - link "← Back to Home" [ref=e36] [cursor=pointer]:
+        - /url: /
+    - generic [ref=e37]:
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - generic [ref=e44]: Caplet
+          - img "Caplet" [ref=e46]
+        - generic [ref=e47]:
+          - heading "Financial logic for the modern era." [level=1] [ref=e48]:
+            - text: Financial logic
+            - text: for the modern era.
+          - paragraph [ref=e49]: Access your institutional terminal to manage curriculum, track student progress, and analyze financial literacy data.
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - paragraph [ref=e53]: System Status
+          - generic [ref=e56]: Operational
+        - generic [ref=e57]:
+          - paragraph [ref=e58]: Version
+          - text: v2.4.0-stable

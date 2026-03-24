@@ -10,7 +10,6 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
   const { login, error: authError } = useAuth();
   const [error, setError] = useState('');
 
-  // Sync with auth context error
   useEffect(() => {
     if (authError) setError(authError);
   }, [authError]);
@@ -31,103 +30,101 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
       await login(formData.email, formData.password);
       onSuccess?.();
     } catch (err) {
-      setError(err.message || 'Failed to sign in');
+      setError(err.message || 'Verification failed. Please check credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className={`w-full max-w-md mx-auto ${isPage ? '' : ''}`}>
-      <div className={`${isPage ? '' : 'mesh-card p-10 md:p-12 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 shadow-2xl relative overflow-hidden'}`}>
-        {/* Decorative corner element */}
-        {!isPage && <div className="absolute top-0 right-0 w-24 h-24 bg-brand/5 -mr-12 -mt-12 rotate-45 pointer-events-none" />}
+    <div className={`w-full mx-auto reveal-text ${isPage ? 'max-w-xl' : 'max-w-md'}`}>
+      <div className="mb-16">
+        <span className="section-kicker">Access Terminal</span>
+        <h2 className="text-5xl font-serif italic mb-4">
+          Welcome back.
+        </h2>
+        <p className="text-sm text-text-muted font-medium tracking-tight">Enter your credentials to synchronize with the Caplet Intelligence Registry.</p>
+      </div>
 
-        <div className="relative z-10">
-          <div className="mb-10 text-center">
-            <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-brand mb-4">Sign In</p>
-            <h2 className="text-4xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
-              Sign In
-            </h2>
+      {error && (
+        <div className="mb-10 p-6 bg-red-50 border-l-2 border-red-500 reveal-text animate-shake">
+          <span className="text-[9px] font-black uppercase tracking-[0.4em] text-red-500 block mb-2 italic">Status Error</span>
+          <p className="text-xs font-bold text-red-700 uppercase tracking-tight">{error}</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-12">
+        <div className="space-y-3">
+          <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+            Registry Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            autoComplete="username"
+            placeholder="identifier@terminal.com"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold tracking-widest text-xs placeholder:text-text-muted/30"
+          />
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+              Security Key
+            </label>
           </div>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            autoComplete="current-password"
+            placeholder="••••••••••••"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs placeholder:text-text-muted/30"
+          />
+        </div>
 
-          {error && (
-            <div className="mb-8 p-4 bg-rose-50 dark:bg-rose-900/10 border-l-4 border-rose-500 text-rose-700 dark:text-rose-400 text-xs font-bold uppercase tracking-wider animate-shake">
-              {error}
-            </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full btn-primary py-6 mt-8 flex items-center justify-center gap-4 group"
+        >
+          {loading ? (
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <span>login:</span>
+              <span className="group-hover:translate-x-2 transition-transform">→</span>
+            </>
           )}
+        </button>
+      </form>
 
-          <div className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  placeholder="your@email.com"
-                  className="w-full px-0 py-3 bg-transparent border-b-2 border-zinc-100 dark:border-zinc-800 focus:border-brand outline-none transition-all text-black dark:text-white font-medium"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-                    Password
-                  </label>
-                  <button type="button" className="text-[10px] font-bold text-brand uppercase tracking-widest hover:underline">
-                    Reset?
-                  </button>
-                </div>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  placeholder="••••••••"
-                  className="w-full px-0 py-3 bg-transparent border-b-2 border-zinc-100 dark:border-zinc-800 focus:border-brand outline-none transition-all text-black dark:text-white font-medium"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary py-4 mt-4 flex items-center justify-center gap-3 group"
-              >
-                {loading ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <span>Sign In</span>
-                    <span className="group-hover:translate-x-1 transition-transform">→</span>
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-
-          <div className="mt-12 text-center pt-8 border-t border-zinc-100 dark:border-zinc-900">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-              Don't have an account?{' '}
-              <button
-                onClick={onSwitchToRegister}
-                className="text-brand hover:underline"
-              >
-                Create Account
-              </button>
-            </p>
-          </div>
+      <div className="mt-20 pt-10 border-t border-line-soft space-y-4">
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim text-center">
+          New Registry Entry? {' '}
+          <button
+            onClick={onSwitchToRegister}
+            className="text-accent border-b border-accent/30 hover:border-accent transition-all"
+          >
+            Initialize Node
+          </button>
+        </p>
+        <div className="text-center">
+          <button type="button" className="text-[10px] font-black text-text-dim uppercase tracking-[0.3em] hover:text-accent transition-colors">
+            Recover Encrypted Key
+          </button>
         </div>
       </div>
     </div>
   );
 };
+
 
 export default LoginForm;

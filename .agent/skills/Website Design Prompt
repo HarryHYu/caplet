@@ -1,0 +1,129 @@
+# Caplet Landing Page — Creative Brief
+
+**Role:** World-Class Senior Creative Technologist & Lead Frontend Engineer
+**Objective:** Architect a high-fidelity, cinematic "1:1 Pixel Perfect" landing page for Caplet.
+**Aesthetic Identity:** "Grounded Clarity / Intellectual Warmth." The site should feel like a bridge between a university economics department and a well-designed independent magazine — trustworthy, sharp, never cold.
+
+---
+
+## 1. CORE DESIGN SYSTEM (STRICT)
+
+**Palette:**
+- Ocean (Primary): `#1B3F6B`
+- Sky (Accent/Highlight): `#2563EB`
+- Parchment (Background): `#F4F1E8`
+- Ink (Text/Dark sections): `#141414`
+
+**Typography:**
+- Headings: "Plus Jakarta Sans" & "Outfit" (tracking tight)
+- Drama/Emphasis: "Playfair Display" Italic — use for key financial concepts (e.g. *superannuation*, *compound interest*, *financial clarity*)
+- Data/Telemetry: Clean Monospace for calculator outputs, percentages, and numerical readouts
+
+**Visual Texture:**
+- Global CSS Noise overlay (SVG turbulence at 0.05 opacity) to eliminate flat digital gradients
+- Rounded container system: `rounded-[2rem]` to `rounded-[3rem]` throughout
+
+---
+
+## 2. COMPONENT ARCHITECTURE & BEHAVIOR
+
+### A. NAVBAR — The Floating Island
+Fixed, pill-shaped container.
+
+**Morphing Logic:** Transparent with white text at hero top. On scroll, transitions to a `white/60` glassmorphic blur with Ocean text and subtle border. Right side: "Get Started Free" pill button in Sky blue.
+
+---
+
+### B. HERO — "The System Was Not Built For You"
+- Height: `100dvh`
+- Background image: Moody overhead shot of open financial documents / desk at golden hour.
+- Overlay: Ocean `#1B3F6B` to `#0A0A0A` heavy gradient — image felt, not read
+- Layout: Content anchored to bottom-left third
+
+**Typography:**
+```
+"The system was not"       ← Bold Sans, smaller leading line
+"Built For You."           ← Massive Playfair Display Italic
+```
+
+**Sub-copy:** Free financial education, built for Australians.
+No jargon. No products to sell. No catch.
+
+**CTAs:**
+- "Start Learning — Free" (Sky blue pill, primary)
+- "Explore Courses ↓" (ghost/outline)
+
+**Animation:** GSAP staggered fade-up on all text elements. The sans/serif contrast is the visual anchor — preserve on all screen sizes.
+
+---
+
+### C. FEATURES — The Precision Micro-UI Dashboard
+
+Three interactive artifact cards. No standard feature cards.
+
+**Card 1 — Courses (Knowledge Shuffler)**
+Three overlapping white cards cycling vertically via `unshift(pop())` every 3 seconds.
+Spring-bounce transition: `cubic-bezier(0.34, 1.56, 0.64, 1)`
+Labels: `"Superannuation 101"` · `"Budgeting Fundamentals"` · `"Understanding Tax"`
+
+**Card 2 — AI Literacy Assistant (Telemetry Typewriter)**
+Live text feed cycling through:
+- `"Breaking down your tax bracket..."`
+- `"Explaining compound interest..."`
+- `"What is a franking credit?"`
+- `"Calculating your savings rate..."`
+- `"Understanding HECS repayments..."`
+
+Blinking Sky blue cursor. Small `"AI Assistant — Educational Only"` label with pulsing dot.
+
+**Card 3 — Calculators (Live Calculator Preview)**
+An automated SVG cursor enters frame, hovers over an income input, types `$85,000`, moves to a tax bracket output that populates via animated counter, then cursor moves to "Try the full calculator →" and clicks it. Same timing and spring physics as Card 1.
+
+---
+
+### D. PHILOSOPHY — The Manifesto
+High-contrast Ink `#141414` section. Parallaxing structural texture (paper/architectural — not biological).
+
+**Split-text GSAP reveal:**
+```
+"Most platforms profit from your confusion."
+"We exist to end it."
+```
+
+**Supporting body:** "Caplet is free. Always. No products. No upsells. No affiliate links buried in our content. Just structured financial education, built for Australians who deserve better."
+
+---
+
+### E. LEARNING PATH — Sticky Stacking Archive
+Vertical stack of 3 full-screen cards. As each new card scrolls into view, the card underneath scales to `0.9`, blur filter to `20px`, opacity to `0.5` via GSAP ScrollTrigger.
+
+**Card 1 — Foundations: "Understanding Your Money"**
+Animated artifact: A pie chart that builds itself — budgeting categories with monospace percentage labels in Sky blue.
+
+**Card 2 — Building Knowledge: "Tax, Super & Beyond"**
+Animated artifact: A horizontal timeline with milestone nodes that illuminate left to right: `Pay → Tax Withheld → Super Contribution → Net Income → Tax Return`. Each node pulses Sky blue on activation.
+
+**Card 3 — Taking Action: "Put It Into Practice"**
+Animated artifact: A compound interest curve that starts flat then bends dramatically upward, drawing itself over 3 seconds. Monospace counter increments to final value in Sky blue.
+
+---
+
+## 3. TRUST & COMPLIANCE ADDITIONS
+
+**Australian Trust Bar** — Thin bar above navbar:
+`🇦🇺  Built for Australians · Free forever · Educational content only — not financial advice`
+Small monospace, muted — answers credibility before users read the hero.
+
+**Footer CTA** — Full-width Sky blue-accented section before standard footer:
+`"Ready to actually understand your money?"`
+`"Start with any course — it's free."`
+
+---
+
+## 4. TECHNICAL STACK
+
+- GSAP + ScrollTrigger for all scroll and entrance animations
+- Google Fonts: Plus Jakarta Sans, Outfit, Playfair Display, JetBrains Mono (or similar monospace)
+- Tailwind CSS utility classes
+- SVG noise overlay via `<feTurbulence>` filter
+- All external images via Unsplash CDN

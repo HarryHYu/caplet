@@ -1,0 +1,132 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet Logo Caplet." [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "Caplet Logo" [ref=e8]
+        - generic [ref=e9]: Caplet.
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Index" [ref=e12] [cursor=pointer]:
+            - /url: /
+          - link "Curriculum" [ref=e14] [cursor=pointer]:
+            - /url: /courses
+          - link "Academy" [ref=e15] [cursor=pointer]:
+            - /url: /classes
+          - link "Instruments" [ref=e16] [cursor=pointer]:
+            - /url: /tools
+          - link "Contact" [ref=e17] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e19]:
+          - button "Toggle dark mode" [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - link "Join Academy" [ref=e23] [cursor=pointer]:
+            - /url: /login
+  - main [ref=e24]:
+    - generic [ref=e239]:
+      - button "← All Courses" [ref=e240] [cursor=pointer]
+      - generic [ref=e243]:
+        - heading "Corporate Finance PART 1" [level=1] [ref=e244]
+        - paragraph [ref=e245]: "Corporate Finance Part 1: Stakeholders and Corporate Decision Making, Firms and Financial Markets, ESG Markets, Fundamentals of Investing."
+      - generic [ref=e246]:
+        - generic [ref=e248]:
+          - generic [ref=e249]:
+            - generic [ref=e250]:
+              - paragraph [ref=e251]: Duration
+              - paragraph [ref=e252]: 180 minutes
+            - generic [ref=e253]:
+              - paragraph [ref=e254]: Lessons
+              - paragraph [ref=e255]: 11 lessons
+            - generic [ref=e256]:
+              - paragraph [ref=e257]: Level
+              - paragraph [ref=e258]: intermediate
+          - button "Start Course" [ref=e259] [cursor=pointer]
+        - complementary [ref=e260]:
+          - heading "About this course" [level=3] [ref=e261]
+          - paragraph [ref=e262]: This course is part of Caplet's free financial education program. All modules are designed for clarity and practical understanding.
+      - generic [ref=e263]:
+        - generic [ref=e264]:
+          - heading "Modules" [level=2] [ref=e265]
+          - paragraph [ref=e266]: 4 modules
+        - generic [ref=e267]:
+          - link "1 Stakeholders and Corporate Decision Making 3 lessons View Module →" [ref=e268] [cursor=pointer]:
+            - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/modules/38201d5f-dfe3-42f6-9b4d-5a33d5a21c6d
+            - generic [ref=e269]:
+              - generic [ref=e270]: "1"
+              - generic [ref=e271]:
+                - heading "Stakeholders and Corporate Decision Making" [level=3] [ref=e272]
+                - generic [ref=e274]: 3 lessons
+            - generic [ref=e276]: View Module →
+          - link "2 Firms and Financial Markets 3 lessons View Module →" [ref=e277] [cursor=pointer]:
+            - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/modules/5ce0b223-a056-40ad-88f3-57c903d14d97
+            - generic [ref=e278]:
+              - generic [ref=e279]: "2"
+              - generic [ref=e280]:
+                - heading "Firms and Financial Markets" [level=3] [ref=e281]
+                - generic [ref=e283]: 3 lessons
+            - generic [ref=e285]: View Module →
+          - link "3 ESG Markets 2 lessons View Module →" [ref=e286] [cursor=pointer]:
+            - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/modules/5cb7395b-e5fe-488c-915a-0e26f69a94b6
+            - generic [ref=e287]:
+              - generic [ref=e288]: "3"
+              - generic [ref=e289]:
+                - heading "ESG Markets" [level=3] [ref=e290]
+                - generic [ref=e292]: 2 lessons
+            - generic [ref=e294]: View Module →
+          - link "4 Fundamentals of Investing 3 lessons View Module →" [ref=e295] [cursor=pointer]:
+            - /url: /courses/cb47cccd-b6ed-4803-9d18-5aec67c76f5e/modules/ab14e8fb-2933-45fd-9717-6aab6424906c
+            - generic [ref=e296]:
+              - generic [ref=e297]: "4"
+              - generic [ref=e298]:
+                - heading "Fundamentals of Investing" [level=3] [ref=e299]
+                - generic [ref=e301]: 3 lessons
+            - generic [ref=e303]: View Module →
+  - contentinfo [ref=e196]:
+    - generic [ref=e197]:
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - link "Caplet." [ref=e200] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e203]: Caplet.
+          - paragraph [ref=e204]: Professional financial education designed for the Australian context. Structured learning, built for school integration.
+          - generic [ref=e205]:
+            - generic [ref=e206]: Compliance
+            - generic [ref=e207]: Literacy
+            - generic [ref=e208]: Application
+        - generic [ref=e209]:
+          - heading "Academy" [level=3] [ref=e210]
+          - list [ref=e211]:
+            - listitem [ref=e212]:
+              - link "Curriculum" [ref=e213] [cursor=pointer]:
+                - /url: /courses
+            - listitem [ref=e214]:
+              - link "Academy" [ref=e215] [cursor=pointer]:
+                - /url: /classes
+            - listitem [ref=e216]:
+              - link "Instruments" [ref=e217] [cursor=pointer]:
+                - /url: /tools
+        - generic [ref=e218]:
+          - heading "Resources" [level=3] [ref=e219]
+          - list [ref=e220]:
+            - listitem [ref=e221]:
+              - link "Terminal" [ref=e222] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e223]:
+              - link "Support" [ref=e224] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e225]:
+              - link "Security" [ref=e226] [cursor=pointer]:
+                - /url: /terms
+        - generic [ref=e227]:
+          - generic [ref=e228]: Current Status
+          - generic [ref=e231]: Network Active
+          - generic [ref=e232]:
+            - text: Deployment v4.2.0
+            - text: "Cluster: AU-SYD-1"
+      - generic [ref=e233]:
+        - paragraph [ref=e234]: © 2026 Caplet Education. Precision in Finance.
+        - generic [ref=e235]:
+          - link "Privacy Protocol" [ref=e236] [cursor=pointer]:
+            - /url: /terms
+          - link "Terms of Service" [ref=e237] [cursor=pointer]:
+            - /url: /terms

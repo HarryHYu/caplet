@@ -7,7 +7,11 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'No build step required for Node.js'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"]
   },
   "keywords": [],
   "author": "",
@@ -26,9 +30,12 @@
     "openai": "^6.9.1",
     "pg": "^8.16.3",
     "sequelize": "^6.37.7",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "umzug": "^3.8.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.2.2"
   }
 }

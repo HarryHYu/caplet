@@ -20,16 +20,13 @@ const SalaryCalculator = () => {
       return;
     }
 
-    // Calculate superannuation
     const superAmount = gross * (parseFloat(superRate) / 100);
-    const taxableIncome = gross; // Super is on top, not deducted from taxable income
+    const taxableIncome = gross;
 
-    // Calculate tax
     const incomeTax = calculateTax(taxableIncome);
     const medicare = includeMedicare ? taxableIncome * 0.02 : 0;
     const totalTax = incomeTax + medicare;
 
-    // Net pay (after tax, super is separate)
     const netPay = gross - totalTax;
     const takeHomeWithSuper = netPay + superAmount;
 
@@ -46,152 +43,140 @@ const SalaryCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen py-24">
-      <section className="border-b border-zinc-100 dark:border-zinc-900 mb-20 pb-20">
-        <div className="container-custom">
-          <div className="max-w-4xl">
-            <div className="flex items-center justify-between mb-8 animate-slide-up">
-              <div>
-                <p className="text-[10px] font-black text-brand uppercase tracking-[0.3em] mb-4">
-                  Financial Tools
-                </p>
-                <h1 className="text-4xl md:text-5xl font-extrabold text-black dark:text-white uppercase tracking-tighter">
-                  Salary <br />Calculator.
-                </h1>
-                <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest leading-relaxed max-w-xl">
-                  Take-home pay estimation including tax, Medicare, and superannuation.
-                </p>
-              </div>
-              <Link to="/tools" className="text-[10px] font-black text-zinc-400 hover:text-brand uppercase tracking-widest transition-colors mb-auto">
-                ← Back to Tools
-              </Link>
+    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
+      <div className="container-custom">
+        <header className="mb-24 reveal-text">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+            <div>
+              <span className="section-kicker">Instruments &rarr; Compensation</span>
+              <h1 className="text-6xl md:text-8xl mb-8">
+                Salary <br />Genesis.
+              </h1>
+              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
+                Synthesize your net liquidity and map the distribution of your total compensation package.
+              </p>
             </div>
+            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
+              &larr; Back to Instruments
+            </Link>
           </div>
-        </div>
-      </section>
+          <div className="h-px w-full bg-line-soft" />
+        </header>
 
-      <section className="py-12">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-6xl">
-            <div className="lg:col-span-2 bg-white dark:bg-black border border-zinc-100 dark:border-zinc-900 p-10 reveal-up">
-              <h2 className="text-[10px] font-black text-black dark:text-white uppercase tracking-[0.2em] mb-10">Compensation Inputs</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Gross Annual Salary
-                  </label>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
+          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Compensation Inputs</h2>
+            <form onSubmit={handleSubmit} className="space-y-16">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                  Gross Annual Revenue (AUD)
+                </label>
+                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
+                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
                   <input
                     type="number"
                     min="0"
                     step="1000"
                     value={grossSalary}
                     onChange={(e) => setGrossSalary(e.target.value)}
-                    placeholder="e.g. 80000"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0.00"
+                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
                     Superannuation Rate (%)
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="20"
-                    step="0.5"
-                    value={superRate}
-                    onChange={(e) => setSuperRate(e.target.value)}
-                    placeholder="e.g. 11"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Standard is 11% (2023-24)</p>
+                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      step="0.5"
+                      value={superRate}
+                      onChange={(e) => setSuperRate(e.target.value)}
+                      className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none"
+                    />
+                    <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                  </div>
+                  <p className="text-[9px] font-bold text-text-dim mt-4 uppercase tracking-[0.2em]">STATUTORY DEFAULT: 11% (23/24)</p>
                 </div>
 
-                <div className="flex items-center">
-                  <input
-                    id="medicare"
-                    type="checkbox"
-                    checked={includeMedicare}
-                    onChange={(e) => setIncludeMedicare(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-600"
-                  />
-                  <label htmlFor="medicare" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                    Include Medicare levy (2%)
-                  </label>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setIncludeMedicare(!includeMedicare)}
+                    className={`w-12 h-6 border transition-all relative ${includeMedicare ? 'border-accent bg-accent' : 'border-line-soft bg-surface-soft'}`}
+                  >
+                    <div className={`absolute top-1 bottom-1 w-4 transition-all ${includeMedicare ? 'right-1 bg-white' : 'left-1 bg-text-dim'}`} />
+                  </button>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-text-primary">Medicare Levy (2%)</span>
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white font-semibold transition-colors"
-                >
-                  Calculate
-                </button>
-              </form>
-            </div>
+              <button type="submit" className="btn-primary w-full py-6 text-xs uppercase tracking-[0.3em] mt-8">
+                Confirm Breakdown
+              </button>
+            </form>
+          </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-inner border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Results</h2>
-              {result ? (
-                result.error ? (
-                  <p className="text-red-600 dark:text-red-400 text-sm">{result.error}</p>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="break-words">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Gross Salary</p>
-                      <p className="text-2xl font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.gross)}
-                      </p>
+          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Net Projection</h2>
+
+            {result ? (
+              result.error ? (
+                <p className="text-[10px] font-bold text-accent uppercase tracking-widest relative z-10">{result.error}</p>
+              ) : (
+                <div className="space-y-12 relative z-10">
+                  <div>
+                    <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-4 italic">Annual Net Liquidity</p>
+                    <p className="text-5xl font-black tracking-tighter text-text-primary">
+                      {formatCurrency(result.netPay)}
+                    </p>
+                  </div>
+
+                  <div className="space-y-8 pt-10 border-t border-line-soft">
+                    <div className="flex justify-between items-end">
+                      <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest">Gross Annual</p>
+                      <p className="text-xl font-bold">{formatCurrency(result.gross)}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Income Tax</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                          {formatCurrency(result.incomeTax)}
-                        </p>
+
+                    <div className="grid grid-cols-2 gap-px bg-line-soft border border-line-soft">
+                      <div className="bg-surface-body p-6">
+                        <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mb-1">Income Tax</p>
+                        <p className="text-lg font-bold">{formatCurrency(result.incomeTax)}</p>
                       </div>
-                      <div className="p-3 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Medicare</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                          {formatCurrency(result.medicare)}
-                        </p>
+                      <div className="bg-surface-body p-6">
+                        <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mb-1">Medicare</p>
+                        <p className="text-lg font-bold">{formatCurrency(result.medicare)}</p>
                       </div>
                     </div>
-                    <div className="break-words">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Total Tax</p>
-                      <p className="text-lg font-semibold text-red-600 dark:text-red-400 break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.totalTax)}
-                      </p>
+
+                    <div className="flex justify-between items-end text-accent">
+                      <p className="text-[9px] font-bold uppercase tracking-widest">Superannuation ({result.superRate}%)</p>
+                      <p className="text-xl font-bold">{formatCurrency(result.superAmount)}</p>
                     </div>
-                    <div className="break-words">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Net Pay (After Tax)</p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.netPay)}
-                      </p>
-                    </div>
-                    <div className="break-words">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Superannuation ({result.superRate}%)</p>
-                      <p className="text-lg font-semibold text-blue-600 dark:text-blue-400 break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.superAmount)}
-                      </p>
-                    </div>
-                    <div className="break-words pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Total Package Value</p>
-                      <p className="text-xl font-semibold text-green-600 dark:text-green-400 break-words overflow-wrap-anywhere">
-                        {formatCurrency(result.takeHomeWithSuper)}
-                      </p>
+
+                    <div className="pt-8 border-t border-line-soft">
+                      <p className="text-[9px] font-black uppercase tracking-[0.4em] text-text-muted mb-4">Total Package Value</p>
+                      <p className="text-3xl font-black tracking-tight">{formatCurrency(result.takeHomeWithSuper)}</p>
                     </div>
                   </div>
-                )
-              ) : (
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  Enter your gross salary to see your take-home pay breakdown.
-                </p>
-              )}
-            </div>
+                </div>
+              )
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
+                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">NET</div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Awaiting Economic Logic</p>
+              </div>
+            )}
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

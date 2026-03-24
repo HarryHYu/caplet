@@ -1,79 +1,87 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const redirectPath = location.state?.from || '/dashboard';
 
     return (
-        <div className="min-h-screen flex text-black dark:text-white font-sans selection:bg-brand selection:text-white">
+        <div className="min-h-screen flex bg-surface-body selection:bg-accent selection:text-white">
             {/* Left Side - Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-zinc-50 dark:bg-black relative">
-                <div className="absolute top-6 left-6 lg:hidden">
-                    <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-black dark:bg-white rounded-sm p-1">
-                            <img src="/logo.png" alt="Caplet" className="w-full h-full object-contain invert dark:invert-0" />
-                        </div>
-                        <span className="font-bold text-lg tracking-tighter uppercase">Caplet</span>
-                    </div>
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-24 relative overflow-hidden border-r border-line-soft">
+                <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:40px_40px]" />
+
+                <div className="absolute top-12 left-12 reveal-text">
+                    <Link to="/" className="flex items-center gap-3 group">
+                        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-text-dim group-hover:text-accent transition-colors">
+                            Caplet Intelligence
+                        </span>
+                    </Link>
                 </div>
 
-                <div className="w-full max-w-md animate-slide-up">
+                <div className="w-full max-w-sm relative z-10">
                     <LoginForm
-                        onSuccess={() => navigate('/courses')}
+                        onSuccess={() => navigate(redirectPath, { replace: true })}
                         onSwitchToRegister={() => navigate('/register')}
                         isPage={true}
                     />
-                    <div className="mt-8 text-center">
-                        <a href="/" className="text-xs font-bold text-zinc-400 hover:text-black dark:hover:text-white uppercase tracking-widest transition-colors">
-                            ← Back to Home
-                        </a>
+                    <div className="mt-12 text-center lg:text-left reveal-text stagger-2">
+                        <Link to="/" className="text-[9px] font-black text-text-muted hover:text-accent uppercase tracking-[0.4em] transition-colors">
+                            ← Abort and Return Home
+                        </Link>
                     </div>
                 </div>
             </div>
 
             {/* Right Side - Brand & Aesthetic */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-zinc-900 overflow-hidden flex-col justify-between p-12 md:p-16 lg:p-20">
+            <div className="hidden lg:flex lg:w-1/2 relative bg-surface-inverse overflow-hidden flex-col justify-between p-24">
                 {/* Background Effects */}
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-brand/20 rounded-full blur-[120px] mix-blend-screen animate-blob"></div>
-                    <div className="absolute bottom-[-20%] left-[-20%] w-[60%] h-[60%] bg-indigo-500/10 rounded-full blur-[100px] mix-blend-screen animate-blob animation-delay-4000"></div>
-                </div>
+                <div className="absolute inset-0 opacity-10 grid-technical !bg-[size:50px_50px]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent opacity-30" />
 
                 {/* Content */}
-                <div className="relative z-10 antialiased text-right">
-                    <div className="flex items-center justify-end gap-3 mb-10">
-                        <span className="text-2xl font-extrabold tracking-tighter text-white uppercase">
-                            Caplet
-                        </span>
-                        <div className="bg-white p-2 rounded-sm border border-white/10 shadow-xl">
-                            <img src="/logo.png" alt="Caplet" className="h-8 w-8 object-contain" />
-                        </div>
+                <div className="relative z-10 reveal-text">
+                    <div className="mb-24">
+                        <span className="text-[10px] font-black uppercase tracking-[0.6em] text-accent opacity-80 mb-6 block">Internal Protocol</span>
+                        <h1 className="text-6xl xl:text-8xl text-surface-body leading-[0.85] mb-12">
+                            Mastering the <br />
+                            <span className="italic font-serif">Financial Engine.</span>
+                        </h1>
+                        <p className="text-xl text-surface-body/60 font-serif italic max-w-md leading-relaxed">
+                            Access a proprietary curriculum designed for the next generation of financial architects.
+                        </p>
                     </div>
 
-                    <div className="max-w-xl ml-auto">
-                        <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tighter leading-[0.95] mb-8">
-                            Financial education <br />
-                            <span className="text-zinc-500">for students.</span>
-                        </h1>
-                        <p className="text-lg text-zinc-400 font-medium leading-relaxed max-w-md ml-auto">
-                            Sign in to access courses, track your progress, and use our financial tools.
-                        </p>
+                    <div className="space-y-12">
+                        <div className="p-10 border border-surface-body/10 bg-surface-body/5 backdrop-blur-sm">
+                            <span className="section-kicker !text-accent opacity-100 mb-6">Current Network Status</span>
+                            <div className="flex items-end justify-between">
+                                <div>
+                                    <p className="text-4xl font-serif italic text-surface-body">Operational.</p>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-surface-body/40 mt-2">All Registry nodes at 100% capacity</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* Footer/Stat */}
-                <div className="relative z-10 border-t border-white/10 pt-8 mt-auto">
-                    <div className="flex items-center justify-end gap-10">
-                        <div className="text-right">
-                            <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Status</p>
-                            <div className="flex items-center justify-end gap-2">
-                                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                <span className="text-sm font-bold text-white uppercase tracking-wider">Online</span>
+                <div className="relative z-10 border-t border-surface-body/10 pt-10">
+                    <div className="flex items-center justify-between">
+                        <div className="flex gap-12">
+                            <div>
+                                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-surface-body/30 mb-2">V. Identification</p>
+                                <span className="text-xs font-bold text-surface-body uppercase tracking-widest">v2.8.4-ALPHA</span>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-surface-body/30 mb-2">Registry Latency</p>
+                                <span className="text-xs font-bold text-surface-body uppercase tracking-widest">14MS / HK-1</span>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Version</p>
-                            <span className="text-sm font-bold text-white uppercase tracking-wider">v2.4.0-stable</span>
+                        <div className="flex items-center gap-4">
+                            <span className="w-2 h-2 bg-accent rounded-full animate-pulse shadow-[0_0_10px_rgba(0,80,255,0.8)]"></span>
+                            <span className="text-[10px] font-black text-surface-body uppercase tracking-[0.4em]">Core Active</span>
                         </div>
                     </div>
                 </div>
@@ -81,5 +89,6 @@ const Login = () => {
         </div>
     );
 };
+
 
 export default Login;

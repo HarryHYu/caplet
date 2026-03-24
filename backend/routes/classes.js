@@ -406,17 +406,17 @@ router.get('/:id', authenticateToken, async (req, res) => {
     const includeSubmissions =
       membership.role === 'teacher'
         ? {
-            model: AssignmentSubmission,
-            as: 'submissions',
-            include: [{ model: User, as: 'student', attributes: ['id', 'firstName', 'lastName', 'email'] }],
-            required: false,
-          }
+          model: AssignmentSubmission,
+          as: 'submissions',
+          include: [{ model: User, as: 'student', attributes: ['id', 'firstName', 'lastName', 'email'] }],
+          required: false,
+        }
         : {
-            model: AssignmentSubmission,
-            as: 'submissions',
-            where: { studentId: req.user.id },
-            required: false,
-          };
+          model: AssignmentSubmission,
+          as: 'submissions',
+          where: { studentId: req.user.id },
+          required: false,
+        };
 
     const assignments = await Assignment.findAll({
       where: { classroomId: classroom.id },
@@ -447,11 +447,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
           submittedAt: s.submittedAt,
           student: s.student
             ? {
-                id: s.student.id,
-                firstName: s.student.firstName,
-                lastName: s.student.lastName,
-                email: s.student.email,
-              }
+              id: s.student.id,
+              firstName: s.student.firstName,
+              lastName: s.student.lastName,
+              email: s.student.email,
+            }
             : null,
         }));
         // Only include submissions for current members (exclude students who left)
@@ -504,11 +504,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
         createdAt: a.createdAt,
         author: a.author
           ? {
-              id: a.author.id,
-              firstName: a.author.firstName,
-              lastName: a.author.lastName,
-              email: a.author.email,
-            }
+            id: a.author.id,
+            firstName: a.author.firstName,
+            lastName: a.author.lastName,
+            email: a.author.email,
+          }
           : null,
       }));
     } catch (announcementError) {
@@ -903,11 +903,11 @@ router.post(
         createdAt: full.createdAt,
         author: full.author
           ? {
-              id: full.author.id,
-              firstName: full.author.firstName,
-              lastName: full.author.lastName,
-              email: full.author.email,
-            }
+            id: full.author.id,
+            firstName: full.author.firstName,
+            lastName: full.author.lastName,
+            email: full.author.email,
+          }
           : null,
       });
     } catch (error) {
@@ -1157,4 +1157,3 @@ router.delete('/:classId/assignments/:assignmentId/comments/:commentId', authent
 });
 
 module.exports = router;
-
