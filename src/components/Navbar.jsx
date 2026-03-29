@@ -35,7 +35,17 @@ const Navbar = () => {
   const homePath = isAuthenticated ? '/dashboard' : '/';
   const isActive = (path) => location.pathname === path;
 
-  if (['/login', '/register'].includes(location.pathname)) {
+  // Hide navbar on specific focus routes
+  const hidePaths = [
+    '/login', 
+    '/register'
+  ];
+  
+  const isHidden = hidePaths.includes(location.pathname) || 
+                   location.pathname.includes('/courses/') || 
+                   location.pathname.includes('/lessons/');
+
+  if (isHidden) {
     return null;
   }
 
@@ -62,7 +72,7 @@ const Navbar = () => {
             <img 
               src="/logo.png" 
               alt="Caplet Logo" 
-              className="w-10 h-10 object-contain transition-transform group-hover:scale-110"
+              className="w-10 h-10 object-contain transition-transform group-hover:scale-110 rounded-full overflow-hidden"
             />
             <span className="text-2xl font-serif italic font-bold tracking-tight">Caplet.</span>
           </Link>

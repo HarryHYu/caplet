@@ -39,24 +39,23 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
   return (
     <div className={`w-full mx-auto reveal-text ${isPage ? 'max-w-xl' : 'max-w-md'}`}>
       <div className="mb-16">
-        <span className="section-kicker">Access Terminal</span>
+        <span className="section-kicker">Login Page</span>
         <h2 className="text-5xl font-serif italic mb-4">
           Welcome back.
         </h2>
-        <p className="text-sm text-text-muted font-medium tracking-tight">Enter your credentials to synchronize with the Caplet Intelligence Registry.</p>
+        <p className="text-lg text-text-muted font-medium tracking-tight">Enter your username and password to access to classes and courses.</p>
       </div>
 
       {error && (
-        <div className="mb-10 p-6 bg-red-50 border-l-2 border-red-500 reveal-text animate-shake">
-          <span className="text-[9px] font-black uppercase tracking-[0.4em] text-red-500 block mb-2 italic">Status Error</span>
-          <p className="text-xs font-bold text-red-700 uppercase tracking-tight">{error}</p>
+        <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg reveal-text animate-shake">
+          <p className="text-sm font-medium text-red-700">{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-12">
-        <div className="space-y-3">
-          <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
-            Registry Email
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="space-y-2">
+          <label htmlFor="email" className="block text-sm font-medium text-text-dim">
+            Email Address
           </label>
           <input
             type="email"
@@ -66,15 +65,15 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             onChange={handleChange}
             required
             autoComplete="username"
-            placeholder="identifier@terminal.com"
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold tracking-widest text-xs placeholder:text-text-muted/30"
+            placeholder="you@example.com"
+            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-base placeholder:text-text-muted/30"
           />
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
-              Security Key
+            <label htmlFor="password" className="block text-sm font-medium text-text-dim">
+              Password
             </label>
           </div>
           <input
@@ -86,39 +85,39 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             required
             autoComplete="current-password"
             placeholder="••••••••••••"
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs placeholder:text-text-muted/30"
+            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-base placeholder:text-text-muted/30"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full btn-primary py-6 mt-8 flex items-center justify-center gap-4 group"
+          className="w-full btn-primary py-4 mt-8 flex items-center justify-center gap-2 group rounded-xl"
         >
           {loading ? (
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              <span>login:</span>
-              <span className="group-hover:translate-x-2 transition-transform">→</span>
+              <span className="font-semibold text-base">Login</span>
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
             </>
           )}
         </button>
       </form>
 
-      <div className="mt-20 pt-10 border-t border-line-soft space-y-4">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim text-center">
-          New Registry Entry? {' '}
+      <div className="mt-16 pt-8 border-t border-line-soft space-y-6">
+        <p className="text-sm font-medium text-text-dim text-center">
+          New to Caplet? {' '}
           <button
             onClick={onSwitchToRegister}
-            className="text-accent border-b border-accent/30 hover:border-accent transition-all"
+            className="text-accent hover:text-accent-strong transition-colors font-semibold"
           >
-            Initialize Node
+            Sign up for free
           </button>
         </p>
         <div className="text-center">
-          <button type="button" className="text-[10px] font-black text-text-dim uppercase tracking-[0.3em] hover:text-accent transition-colors">
-            Recover Encrypted Key
+          <button type="button" className="text-sm text-text-dim hover:text-accent transition-colors">
+            Forgot your password?
           </button>
         </div>
       </div>
