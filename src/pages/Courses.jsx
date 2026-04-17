@@ -4,6 +4,7 @@ import { useCourses } from '../contexts/CoursesContext';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import CapletLoader from '../components/CapletLoader';
 
 const CourseCover = ({ title, id }) => {
   // Generate a semi-stable pseudo-random gradient based on title
@@ -97,7 +98,7 @@ const Courses = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-accent border-t-transparent animate-spin"></div>
+        <CapletLoader message="Loading curriculum…" />
       </div>
     );
   }

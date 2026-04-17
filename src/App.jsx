@@ -33,19 +33,15 @@ import UserProfile from './pages/UserProfile';
 import Terms from './pages/Terms';
 import Metrics from './pages/Metrics';
 import NotFound from './pages/NotFound';
+import CapletLoader from './components/CapletLoader';
 
 function FullPageSpinner() {
   return (
     <div className="min-h-screen bg-caplet-sand flex flex-col items-center justify-center p-8">
       <div className="relative">
-        {/* Soft warmth pulse */}
-        <div className="absolute inset-0 bg-caplet-sky/10 blur-3xl animate-pulse rounded-full" />
-        
-        <div className="relative text-center space-y-4">
-          <div className="w-12 h-12 border-2 border-caplet-sky/30 border-t-caplet-sky rounded-full animate-spin mx-auto" />
-          <p className="text-xl font-serif italic text-caplet-ink mb-2 animate-pulse">
-            Getting things ready...
-          </p>
+        <div className="absolute inset-0 bg-caplet-sky/10 blur-3xl animate-pulse rounded-full scale-150" />
+        <div className="relative">
+          <CapletLoader message="Getting things ready..." />
         </div>
       </div>
     </div>

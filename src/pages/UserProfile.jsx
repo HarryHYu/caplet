@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import CapletLoader from '../components/CapletLoader';
 
 const UserProfile = () => {
   const { userId } = useParams();
@@ -38,8 +39,7 @@ const UserProfile = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-surface-body p-8">
-        <div className="w-12 h-12 border-2 border-accent/20 border-t-accent rounded-full animate-spin mb-6" />
-        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-text-dim animate-pulse">Syncing Registry...</span>
+        <CapletLoader message="Syncing registry…" />
       </div>
     );
   }

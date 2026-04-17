@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import CapletLoader from '../components/CapletLoader';
 
 const ClassDetail = () => {
   const { classId } = useParams();
@@ -151,10 +152,7 @@ const ClassDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center page-section-light">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Loading class...</p>
-        </div>
+        <CapletLoader message="Loading class…" />
       </div>
     );
   }

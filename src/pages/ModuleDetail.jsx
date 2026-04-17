@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import CapletLoader from '../components/CapletLoader';
 
 const ModuleDetail = () => {
   const { courseId, moduleId } = useParams();
@@ -46,7 +47,7 @@ const ModuleDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+        <CapletLoader message="Loading module…" />
       </div>
     );
   }

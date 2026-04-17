@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../contexts/CoursesContext';
 import api from '../services/api';
 import OnboardingWizard from '../components/OnboardingWizard';
+import CapletLoader from '../components/CapletLoader';
 import {
     BookOpenIcon,
     AcademicCapIcon,
@@ -68,7 +69,7 @@ export default function Dashboard() {
     if (loading || coursesLoading) {
         return (
             <div className="min-h-screen bg-surface-body flex items-center justify-center">
-                <div className="w-12 h-12 border-2 border-accent border-t-transparent animate-spin"></div>
+                <CapletLoader message="Loading your dashboard…" />
             </div>
         );
     }

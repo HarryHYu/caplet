@@ -1,7 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Footer = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const homePath = isAuthenticated ? '/dashboard' : '/';
 
   if (['/login', '/register'].includes(location.pathname)) {
     return null;
@@ -11,13 +14,15 @@ const Footer = () => {
     <footer className="bg-surface-body border-t border-line-soft">
       <div className="container-custom py-32">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-20">
-          {/* Brand Signature */}
+          {/* Brand Signature — same mark + wordmark as Navbar */}
           <div className="md:col-span-6">
-            <Link to="/" className="flex items-center gap-4 mb-12 group">
-              <div className="w-10 h-10 bg-text-primary flex items-center justify-center p-2 transition-transform duration-500 group-hover:rotate-90">
-                <div className="w-full h-full bg-accent" />
-              </div>
-              <span className="text-3xl font-black tracking-ultra text-text-primary uppercase font-serif italic">
+            <Link to={homePath} className="flex items-center gap-2 mb-12 group">
+              <img
+                src="/logo.png"
+                alt="Caplet Logo"
+                className="w-10 h-10 object-contain transition-transform group-hover:scale-110 rounded-full overflow-hidden"
+              />
+              <span className="text-2xl font-serif italic font-bold tracking-tight text-text-primary">
                 Caplet.
               </span>
             </Link>

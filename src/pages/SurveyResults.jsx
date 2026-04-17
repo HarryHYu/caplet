@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import api from '../services/api';
+import CapletLoader from '../components/CapletLoader';
 
 const COLORS = ['var(--color-text-primary)', 'var(--color-text-dim)', 'var(--color-line-soft)', 'var(--color-accent)', '#888', '#aaa', '#ccc'];
 
@@ -26,8 +27,7 @@ const SurveyResults = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-surface-body">
-        <div className="w-12 h-12 border border-line-soft border-t-accent animate-spin mb-8" />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted">Awaiting Data Harvest...</p>
+        <CapletLoader message="Loading survey results…" />
       </div>
     );
   }

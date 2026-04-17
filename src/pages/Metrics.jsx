@@ -13,6 +13,7 @@ import {
   Legend,
 } from 'recharts';
 import api from '../services/api';
+import CapletLoader from '../components/CapletLoader';
 
 const COLORS = ['#0066FF', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6'];
 
@@ -73,12 +74,7 @@ const Metrics = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-brand border-t-transparent mx-auto" />
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-            Loading metrics...
-          </p>
-        </div>
+        <CapletLoader message="Loading metrics…" />
       </div>
     );
   }

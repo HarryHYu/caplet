@@ -88,6 +88,7 @@ export default {
       animation: {
         'progress-indefinite': 'progress-indefinite 2s linear infinite',
         'card-in': 'card-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'caplet-logo-twist': 'capletLogoTwist 2s ease-in-out infinite',
       },
       keyframes: {
         'progress-indefinite': {
@@ -98,6 +99,12 @@ export default {
         'card-in': {
           '0%': { opacity: '0', transform: 'translateX(20px) scale(0.98)' },
           '100%': { opacity: '1', transform: 'translateX(0) scale(1)' },
+        },
+        capletLogoTwist: {
+          '0%, 100%': { transform: 'rotateY(0deg) rotateZ(0deg)' },
+          '25%': { transform: 'rotateY(90deg) rotateZ(-5deg)' },
+          '50%': { transform: 'rotateY(180deg) rotateZ(0deg)' },
+          '75%': { transform: 'rotateY(270deg) rotateZ(5deg)' },
         },
       },
     },
