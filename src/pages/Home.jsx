@@ -407,9 +407,6 @@ const Home = () => {
         </div>
       </section>
       <section ref={philosophyRef} className="py-32 md:py-48 bg-caplet-sand text-caplet-ink relative overflow-hidden">
-        {/* Parallax texture mockup */}
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#36312D 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        
         <div className="container-custom relative z-10">
           <div className="max-w-5xl">
             <h2 className="text-4xl sm:text-6xl md:text-7xl font-display font-bold tracking-tight mb-12 leading-[1.2]">

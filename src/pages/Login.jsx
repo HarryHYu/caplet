@@ -10,8 +10,6 @@ const Login = () => {
         <div className="min-h-screen flex bg-caplet-parchment">
             {/* Left Side - Form */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-24 relative overflow-hidden bg-white">
-                {/* Soft background texture */}
-                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#36312D 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
                 <div className="absolute top-12 left-12 reveal-text">
                     <Link to="/" className="flex items-center gap-3 group">
@@ -37,9 +35,6 @@ const Login = () => {
 
             {/* Right Side - Brand & Aesthetic */}
             <div className="hidden lg:flex lg:w-1/2 relative bg-caplet-sand overflow-hidden flex-col justify-center p-24">
-                {/* Background Texture */}
-                <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#36312D 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-                
                 <div className="relative z-10">
                     <div className="max-w-xl">
                         <span className="text-sm font-display font-bold text-caplet-sky mb-6 block uppercase tracking-widest">Our Mission</span>
