@@ -106,6 +106,11 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
         <div className="flex-1 h-px bg-caplet-ink/10" />
       </div>
 
+      <p className="text-sm text-caplet-ink/55 mb-6 leading-relaxed">
+        Signed up with Google only? Your account does not have a password yet — use Google above, or after you sign in once, open{' '}
+        <strong className="text-caplet-ink/80">Settings → Profile</strong> and set a password to enable email login too.
+      </p>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium text-caplet-ink/70">
