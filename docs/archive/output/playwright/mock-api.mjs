@@ -44,40 +44,22 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, { courses: [] });
   }
 
-  if (req.method === 'POST' && req.url === '/api/auth/register') {
-    if (!body || typeof body !== 'object') {
-      return send(res, 400, { message: 'Invalid request body' });
+  if (req.method === 'POST' && req.url === '/api/auth/google') {
+    if (!body || typeof body !== 'object' || !body.idToken) {
+      return send(res, 400, { errors: [{ msg: 'Google ID token is required' }] });
     }
-    const { email, password, firstName, lastName, role = 'student' } = body;
-    if (!email || !password || !firstName || !lastName) {
-      return send(res, 400, { message: 'Missing required registration fields' });
-    }
-    if (users.has(email)) {
-      return send(res, 400, { message: 'User already exists with this email' });
-    }
-    const user = { id: users.size + 1, email, firstName, lastName, role };
-    users.set(email, { ...user, password });
+    const email = `mock-user-${users.size + 1}@gmail.com`;
+    const user = {
+      id: `mock-${users.size + 1}`,
+      email,
+      firstName: 'Mock',
+      lastName: 'User',
+      role: 'student',
+    };
+    users.set(email, user);
     const token = `token-${user.id}`;
     tokens.set(token, user);
-    return send(res, 201, { message: 'User created successfully', token, user });
-  }
-
-  if (req.method === 'POST' && req.url === '/api/auth/login') {
-    if (!body || typeof body !== 'object') {
-      return send(res, 400, { message: 'Body must be an object with email/password' });
-    }
-    const { email, password } = body;
-    if (!email || !password) {
-      return send(res, 400, { message: 'Missing email or password' });
-    }
-    const existing = users.get(email);
-    if (!existing || existing.password !== password) {
-      return send(res, 401, { message: 'Invalid credentials' });
-    }
-    const { password: _p, ...user } = existing;
-    const token = `token-${user.id}`;
-    tokens.set(token, user);
-    return send(res, 200, { message: 'Login successful', token, user });
+    return send(res, 200, { message: 'Google login successful', token, user });
   }
 
   if (req.method === 'GET' && req.url === '/api/auth/me') {

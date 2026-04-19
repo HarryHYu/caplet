@@ -37,12 +37,11 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Update user profile (name, email, password, dateOfBirth, bio, role, preferences)
+// Update user profile (name, email, dateOfBirth, bio, role, preferences)
 router.put('/profile', authenticateToken, [
   body('firstName').optional().trim().isLength({ min: 1, max: 50 }),
   body('lastName').optional().trim().isLength({ min: 1, max: 50 }),
   body('email').optional().isEmail().normalizeEmail(),
-  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('dateOfBirth').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date (use YYYY-MM-DD)'),
   body('bio').optional().trim().isLength({ max: 1000 }),
   body('preferences').optional().isObject(),
@@ -54,7 +53,7 @@ router.put('/profile', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, email, password, dateOfBirth, bio, preferences, role } = req.body;
+    const { firstName, lastName, email, dateOfBirth, bio, preferences, role } = req.body;
 
     // If changing email, ensure it's not taken by another user
     if (email && email !== req.user.email) {
@@ -81,7 +80,6 @@ router.put('/profile', authenticateToken, [
     };
     if (email !== undefined) updates.email = email;
     if (dateOfBirth !== undefined) updates.dateOfBirth = dateOfBirth === '' ? null : dateOfBirth;
-    if (password && password.trim()) updates.password = password.trim();
 
     await req.user.update(updates);
 

@@ -9,5 +9,8 @@
       "headers": [{"key": "Cache-Control", "value": "no-cache, no-store, must-revalidate"}]
     }
   ],
-  "env": {"VITE_API_URL": "https://caplet-production.up.railway.app"}
+  "env": {
+    "VITE_API_URL": "https://caplet-production.up.railway.app",
+    "VITE_GOOGLE_CLIENT_ID": "392719147746-htpi2dg4gr5sn76sef30objnc7svj7he.apps.googleusercontent.com"
+  }
 }

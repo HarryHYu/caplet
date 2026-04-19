@@ -22,7 +22,6 @@ const Login = () => {
                 <div className="w-full max-w-sm relative z-10">
                     <LoginForm
                         onSuccess={() => navigate(redirectPath, { replace: true })}
-                        onSwitchToRegister={() => navigate('/register')}
                         isPage={true}
                     />
                     <div className="mt-12 text-center lg:text-left reveal-text stagger-2">

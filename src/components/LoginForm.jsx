@@ -1,36 +1,31 @@
 import { useEffect, useState } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
 
-const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+const LoginForm = ({ onSuccess, isPage = false }) => {
   const [loading, setLoading] = useState(false);
-  const { login, error: authError } = useAuth();
+  const { loginWithGoogle, error: authError } = useAuth();
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (authError) setError(authError);
   }, [authError]);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const idToken = credentialResponse.credential;
+    if (!idToken) {
+      setError('No credential returned from Google.');
+      return;
+    }
     setError('');
     setLoading(true);
-
     try {
-      await login(formData.email, formData.password);
+      await loginWithGoogle(idToken);
       onSuccess?.();
     } catch (err) {
-      setError(err.message || 'Verification failed. Please check credentials.');
+      setError(err.message || 'Sign-in failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -39,11 +34,13 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
   return (
     <div className={`w-full mx-auto reveal-text ${isPage ? 'max-w-xl' : 'max-w-md'}`}>
       <div className="mb-16">
-        <span className="section-kicker">Login Page</span>
+        <span className="section-kicker">Login</span>
         <h2 className="text-5xl font-serif italic mb-4">
           Welcome back.
         </h2>
-        <p className="text-lg text-text-muted font-medium tracking-tight">Enter your username and password to access to classes and courses.</p>
+        <p className="text-lg text-text-muted font-medium tracking-tight">
+          Sign in with your Google account to access classes and courses. New here? The same button creates your account.
+        </p>
       </div>
 
       {error && (
@@ -52,78 +49,41 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="space-y-2">
-          <label htmlFor="email" className="block text-sm font-medium text-text-dim">
-            Email Address
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            autoComplete="username"
-            placeholder="you@example.com"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-base placeholder:text-text-muted/30"
-          />
+      {!googleClientId ? (
+        <div className="p-6 border border-amber-200 bg-amber-50 rounded-xl text-sm text-amber-900">
+          <p className="font-medium mb-2">Google sign-in is not configured.</p>
+          <p className="text-amber-800/90">
+            Set <code className="text-xs bg-amber-100 px-1 rounded">VITE_GOOGLE_CLIENT_ID</code> in the frontend env and{' '}
+            <code className="text-xs bg-amber-100 px-1 rounded">GOOGLE_CLIENT_ID</code> for the API (same OAuth client ID). Restart the dev server after changing env files.
+          </p>
         </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label htmlFor="password" className="block text-sm font-medium text-text-dim">
-              Password
-            </label>
+      ) : (
+        <div className="relative flex flex-col items-stretch sm:items-start gap-4">
+          <div className={loading ? 'opacity-50 pointer-events-none' : ''}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google sign-in was cancelled or failed.')}
+              theme="outline"
+              size="large"
+              text="continue_with"
+              shape="rectangular"
+              width="320"
+            />
           </div>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            autoComplete="current-password"
-            placeholder="••••••••••••"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-base placeholder:text-text-muted/30"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full btn-primary py-4 mt-8 flex items-center justify-center gap-2 group rounded-xl"
-        >
-          {loading ? (
-            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <>
-              <span className="font-semibold text-base">Login</span>
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </>
+          {loading && (
+            <p className="text-sm text-text-dim flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-caplet-sky/30 border-t-caplet-sky rounded-full animate-spin inline-block" />
+              Signing you in…
+            </p>
           )}
-        </button>
-      </form>
-
-      <div className="mt-16 pt-8 border-t border-line-soft space-y-6">
-        <p className="text-sm font-medium text-text-dim text-center">
-          New to Caplet? {' '}
-          <button
-            onClick={onSwitchToRegister}
-            className="text-accent hover:text-accent-strong transition-colors font-semibold"
-          >
-            Sign up for free
-          </button>
-        </p>
-        <div className="text-center">
-          <button type="button" className="text-sm text-text-dim hover:text-accent transition-colors">
-            Forgot your password?
-          </button>
         </div>
-      </div>
+      )}
+
+      <p className="mt-12 text-sm text-text-dim text-center sm:text-left">
+        More sign-in options (for example Microsoft) may be added later.
+      </p>
     </div>
   );
 };
-
 
 export default LoginForm;

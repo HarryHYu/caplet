@@ -7,7 +7,6 @@ const SettingsProfile = () => {
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
     dateOfBirth: '',
     bio: '',
   });
@@ -20,7 +19,6 @@ const SettingsProfile = () => {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        password: '',
         dateOfBirth: user.dateOfBirth ? user.dateOfBirth.slice(0, 10) : '',
         bio: user.bio || '',
       });
@@ -44,11 +42,7 @@ const SettingsProfile = () => {
         dateOfBirth: form.dateOfBirth || null,
         bio: form.bio.trim() || null,
       };
-      if (form.password.trim()) {
-        payload.password = form.password;
-      }
       await updateProfile(payload);
-      setForm((prev) => ({ ...prev, password: '' }));
       setMessage({ type: 'success', text: 'Profile updated successfully.' });
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Failed to update profile.' });
@@ -119,23 +113,6 @@ const SettingsProfile = () => {
             onChange={handleChange}
             className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold text-xs uppercase tracking-widest"
           />
-        </div>
-        <div className="space-y-3">
-          <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
-            New Security Key
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Leave blank to keep current"
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs placeholder:text-text-muted/30"
-          />
-          <p className="mt-2 text-[9px] font-bold text-text-dim uppercase tracking-widest">
-            Minimum 6 characters required.
-          </p>
         </div>
         <div className="space-y-3">
           <label htmlFor="dateOfBirth" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
