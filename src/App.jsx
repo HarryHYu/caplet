@@ -34,6 +34,7 @@ import Terms from './pages/Terms';
 import Metrics from './pages/Metrics';
 import NotFound from './pages/NotFound';
 import CapletLoader from './components/CapletLoader';
+import { GOOGLE_OAUTH_CLIENT_ID } from './config/googleClient';
 
 function FullPageSpinner() {
   return (
@@ -66,12 +67,10 @@ function RequireAuth({ children }) {
   return children;
 }
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-
 function App() {
   return (
     <ThemeProvider>
-      <GoogleOAuthProvider clientId={googleClientId}>
+      <GoogleOAuthProvider clientId={GOOGLE_OAUTH_CLIENT_ID}>
       <AuthProvider>
         <CoursesProvider>
           <Router>

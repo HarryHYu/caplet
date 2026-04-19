@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
 const LoginForm = ({ onSuccess, isPage = false }) => {
   const [loading, setLoading] = useState(false);
   const { loginWithGoogle, error: authError } = useAuth();
@@ -49,35 +47,25 @@ const LoginForm = ({ onSuccess, isPage = false }) => {
         </div>
       )}
 
-      {!googleClientId ? (
-        <div className="p-6 border border-amber-200 bg-amber-50 rounded-xl text-sm text-amber-900">
-          <p className="font-medium mb-2">Google sign-in is not configured.</p>
-          <p className="text-amber-800/90">
-            Set <code className="text-xs bg-amber-100 px-1 rounded">VITE_GOOGLE_CLIENT_ID</code> in the frontend env and{' '}
-            <code className="text-xs bg-amber-100 px-1 rounded">GOOGLE_CLIENT_ID</code> for the API (same OAuth client ID). Restart the dev server after changing env files.
+      <div className="relative flex flex-col items-stretch sm:items-start gap-4">
+        <div className={loading ? 'opacity-50 pointer-events-none' : ''}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google sign-in was cancelled or failed.')}
+            theme="outline"
+            size="large"
+            text="continue_with"
+            shape="rectangular"
+            width="320"
+          />
+        </div>
+        {loading && (
+          <p className="text-sm text-text-dim flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-caplet-sky/30 border-t-caplet-sky rounded-full animate-spin inline-block" />
+            Signing you in…
           </p>
-        </div>
-      ) : (
-        <div className="relative flex flex-col items-stretch sm:items-start gap-4">
-          <div className={loading ? 'opacity-50 pointer-events-none' : ''}>
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setError('Google sign-in was cancelled or failed.')}
-              theme="outline"
-              size="large"
-              text="continue_with"
-              shape="rectangular"
-              width="320"
-            />
-          </div>
-          {loading && (
-            <p className="text-sm text-text-dim flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-caplet-sky/30 border-t-caplet-sky rounded-full animate-spin inline-block" />
-              Signing you in…
-            </p>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       <p className="mt-12 text-sm text-text-dim text-center sm:text-left">
         More sign-in options (for example Microsoft) may be added later.
