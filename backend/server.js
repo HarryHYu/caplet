@@ -73,6 +73,7 @@ app.use('/api/survey', require('./routes/survey'));
 app.use('/api/metrics', require('./routes/metrics'));
 app.use('/api/classes', require('./routes/classes'));
 app.use('/api/uploads', require('./routes/uploads'));
+app.use('/api/editor', require('./routes/editor'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api', require('./routes/proxy'));
 

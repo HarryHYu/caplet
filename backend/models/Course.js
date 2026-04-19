@@ -50,6 +50,16 @@ const Course = sequelize.define('Course', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  /** When set, course is a workspace draft and is hidden from public catalog APIs. */
+  workspaceId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'editor_workspaces',
+      key: 'id'
+    },
+    onDelete: 'CASCADE'
+  },
   isPublished: {
     type: DataTypes.BOOLEAN,
     defaultValue: false

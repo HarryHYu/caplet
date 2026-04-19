@@ -35,6 +35,7 @@ import Terms from './pages/Terms';
 import Metrics from './pages/Metrics';
 import Survey from './pages/Survey';
 import SurveyResults from './pages/SurveyResults';
+import Editor from './pages/Editor';
 import NotFound from './pages/NotFound';
 import CapletLoader from './components/CapletLoader';
 import { GOOGLE_OAUTH_CLIENT_ID } from './config/googleClient';
@@ -113,6 +114,7 @@ function App() {
                   <Route path="/metrics" element={<Metrics />} />
                   <Route path="/survey" element={<Survey />} />
                   <Route path="/survey-results" element={<SurveyResults />} />
+                  <Route path="/editor" element={<Editor />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

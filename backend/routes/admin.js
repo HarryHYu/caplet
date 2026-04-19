@@ -4,6 +4,8 @@ const Course = require('../models/Course');
 const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
 const UserProgress = require('../models/UserProgress');
+const EditorWorkspace = require('../models/EditorWorkspace');
+const { digestEditorCode, generateEditorCode } = require('../utils/editorCode');
 
 const router = express.Router();
 
@@ -369,6 +371,25 @@ router.delete('/lessons/:lessonId', authenticateToken, requireAdmin, async (req,
     res.json({ message: 'Lesson deleted' });
   } catch (e) {
     console.error('Admin delete lesson error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: create lesson editor workspace (returns plaintext code once; store securely)
+router.post('/editor-workspaces', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const plain = generateEditorCode();
+    const codeDigest = digestEditorCode(plain);
+    const ws = await EditorWorkspace.create({
+      label: req.body?.label || null,
+      codeDigest
+    });
+    res.status(201).json({
+      workspace: { id: ws.id, label: ws.label, createdAt: ws.createdAt },
+      code: plain
+    });
+  } catch (e) {
+    console.error('Admin create editor workspace error:', e);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

@@ -12,8 +12,19 @@ const AssignmentSubmission = require('./AssignmentSubmission');
 const ClassAnnouncement = require('./ClassAnnouncement');
 const Comment = require('./Comment');
 const ChatMessage = require('./ChatMessage');
+const EditorWorkspace = require('./EditorWorkspace');
 
 // Define associations: Course → Module → Lesson
+EditorWorkspace.hasMany(Course, {
+  foreignKey: 'workspaceId',
+  as: 'courses',
+  onDelete: 'CASCADE'
+});
+Course.belongsTo(EditorWorkspace, {
+  foreignKey: 'workspaceId',
+  as: 'workspace'
+});
+
 Course.hasMany(Module, {
   foreignKey: 'courseId',
   as: 'modules',
@@ -210,5 +221,6 @@ module.exports = {
   ClassAnnouncement,
   Comment,
   ChatMessage,
+  EditorWorkspace,
   syncDatabase
 };

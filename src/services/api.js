@@ -28,16 +28,32 @@ class ApiService {
     localStorage.removeItem('token');
   }
 
+  setEditorToken(token) {
+    if (typeof sessionStorage === 'undefined') return;
+    if (token) sessionStorage.setItem('editorToken', token);
+    else sessionStorage.removeItem('editorToken');
+  }
+
+  clearEditorToken() {
+    this.setEditorToken(null);
+  }
+
   async request(endpoint, options = {}) {
+    const { auth, ...rest } = options;
     const config = {
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...rest.headers,
       },
-      ...options,
+      ...rest,
     };
 
-    if (this.token) {
+    if (auth === 'editor') {
+      const et = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('editorToken') : null;
+      if (et) {
+        config.headers.Authorization = `Bearer ${et}`;
+      }
+    } else if (this.token) {
       config.headers.Authorization = `Bearer ${this.token}`;
     }
 
@@ -135,10 +151,94 @@ class ApiService {
    * S3 presigned upload — see docs/aws-s3-setup.md
    * @param {{ purpose: string, mimeType: string, classId?: string, lessonId?: string, courseId?: string }} body
    */
-  async presignUpload(body) {
+  async presignUpload(body, { useEditorToken = false } = {}) {
     return this.request('/uploads/presign', {
       method: 'POST',
       body: JSON.stringify(body),
+      ...(useEditorToken ? { auth: 'editor' } : {}),
+    });
+  }
+
+  // Lesson editor (code-gated workspace; token in sessionStorage)
+  async editorEnter(code) {
+    const data = await this.request('/editor/enter', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+    if (data?.token) this.setEditorToken(data.token);
+    return data;
+  }
+
+  async editorTree() {
+    return this.request('/editor/tree', { auth: 'editor' });
+  }
+
+  async editorCreateCourse(payload = {}) {
+    return this.request('/editor/courses', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
+  async editorUpdateCourse(courseId, payload) {
+    return this.request(`/editor/courses/${courseId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
+  async editorDeleteCourse(courseId) {
+    return this.request(`/editor/courses/${courseId}`, {
+      method: 'DELETE',
+      auth: 'editor',
+    });
+  }
+
+  async editorCreateModule(payload) {
+    return this.request('/editor/modules', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
+  async editorUpdateModule(moduleId, payload) {
+    return this.request(`/editor/modules/${moduleId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
+  async editorDeleteModule(moduleId) {
+    return this.request(`/editor/modules/${moduleId}`, {
+      method: 'DELETE',
+      auth: 'editor',
+    });
+  }
+
+  async editorCreateLesson(payload) {
+    return this.request('/editor/lessons', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
+  async editorUpdateLesson(lessonId, payload) {
+    return this.request(`/editor/lessons/${lessonId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
+  async editorDeleteLesson(lessonId) {
+    return this.request(`/editor/lessons/${lessonId}`, {
+      method: 'DELETE',
+      auth: 'editor',
     });
   }
 

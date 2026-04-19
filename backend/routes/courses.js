@@ -47,8 +47,10 @@ router.get('/', async (req, res) => {
   try {
     const { category, level, search, page = 1, limit = 10 } = req.query;
     
-    const whereClause = {};
-    
+    const whereClause = {
+      workspaceId: { [Op.is]: null }
+    };
+
     if (category) {
       whereClause.category = category;
     }
@@ -97,9 +99,27 @@ router.get('/:courseId/lessons/:lessonId', async (req, res) => {
   try {
     const { courseId, lessonId } = req.params;
     const row = await Lesson.findByPk(lessonId, {
-      include: [{ model: Module, as: 'module', attributes: ['id', 'courseId'], required: true }]
+      include: [
+        {
+          model: Module,
+          as: 'module',
+          attributes: ['id', 'courseId'],
+          required: true,
+          include: [
+            {
+              model: Course,
+              as: 'course',
+              attributes: ['id', 'workspaceId'],
+              required: true
+            }
+          ]
+        }
+      ]
     });
     if (!row || !row.module || row.module.courseId !== courseId) {
+      return res.status(404).json({ message: 'Lesson not found' });
+    }
+    if (row.module.course && row.module.course.workspaceId) {
       return res.status(404).json({ message: 'Lesson not found' });
     }
     const lesson = row.toJSON ? row.toJSON() : row;
@@ -129,6 +149,9 @@ router.get('/:id', async (req, res) => {
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
+    if (course.workspaceId) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
 
     res.json({ course: sortCourseContent(course.toJSON ? course.toJSON() : course) });
   } catch (error) {
@@ -141,6 +164,7 @@ router.get('/:id', async (req, res) => {
 router.get('/categories/list', async (req, res) => {
   try {
     const categories = await Course.findAll({
+      where: { workspaceId: { [Op.is]: null } },
       attributes: ['category'],
       group: ['category'],
       raw: true
@@ -159,6 +183,7 @@ router.get('/categories/list', async (req, res) => {
 router.get('/featured/list', async (req, res) => {
   try {
     const courses = await Course.findAll({
+      where: { workspaceId: { [Op.is]: null } },
       include: includeModulesWithLessons(),
       order: [['createdAt', 'DESC']],
       limit: 6

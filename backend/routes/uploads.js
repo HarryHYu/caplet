@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
-const { Classroom, ClassMembership, Lesson, Course } = require('../models');
+const { Classroom, ClassMembership, Lesson, Course, Module } = require('../models');
 const { presignPut, publicObjectUrl } = require('../services/s3Presign');
 
 const router = express.Router();
@@ -22,6 +22,10 @@ const authenticateToken = async (req, res, next) => {
     if (!token) return res.status(401).json({ message: 'No token provided' });
 
     const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.typ === 'editor' && decoded.wid) {
+      req.editorWorkspaceId = decoded.wid;
+      return next();
+    }
     const user = await User.findByPk(decoded.userId);
     if (!user) return res.status(401).json({ message: 'Invalid token' });
 
@@ -70,13 +74,19 @@ router.post(
       const { purpose, mimeType, classId, lessonId, courseId } = req.body;
       const ext = MIME_TO_EXT[mimeType];
       const id = crypto.randomUUID();
-      const uid = req.user.id;
+      const uid = req.user?.id;
 
       let key;
 
       if (purpose === 'avatar') {
+        if (!req.user) {
+          return res.status(401).json({ message: 'Login required for avatar uploads' });
+        }
         key = `uploads/users/${uid}/avatar-${id}.${ext}`;
       } else if (purpose === 'classLogo' || purpose === 'classBanner') {
+        if (!req.user) {
+          return res.status(401).json({ message: 'Login required for class uploads' });
+        }
         if (!classId) {
           return res.status(400).json({ message: 'classId is required for class logo/banner' });
         }
@@ -89,12 +99,30 @@ router.post(
         if (!lessonId) {
           return res.status(400).json({ message: 'lessonId is required for lesson images' });
         }
-        const lesson = await Lesson.findByPk(lessonId);
+        const lesson = await Lesson.findByPk(lessonId, {
+          include: [
+            {
+              model: Module,
+              as: 'module',
+              required: true,
+              include: [{ model: Course, as: 'course', required: true }]
+            }
+          ]
+        });
         if (!lesson) {
           return res.status(404).json({ message: 'Lesson not found' });
         }
-        if (req.user.role !== 'admin' && req.user.role !== 'instructor') {
-          return res.status(403).json({ message: 'Teacher or admin access required' });
+        const wsId = lesson.module?.course?.workspaceId;
+        if (req.editorWorkspaceId) {
+          if (!wsId || wsId !== req.editorWorkspaceId) {
+            return res.status(403).json({ message: 'Access denied' });
+          }
+        } else if (req.user) {
+          if (req.user.role !== 'admin' && req.user.role !== 'instructor') {
+            return res.status(403).json({ message: 'Teacher or admin access required' });
+          }
+        } else {
+          return res.status(401).json({ message: 'Invalid token' });
         }
         key = `uploads/lessons/${lessonId}/inline-${id}.${ext}`;
       } else if (purpose === 'courseCover') {
@@ -105,8 +133,16 @@ router.post(
         if (!course) {
           return res.status(404).json({ message: 'Course not found' });
         }
-        if (req.user.role !== 'admin' && req.user.role !== 'instructor') {
-          return res.status(403).json({ message: 'Teacher or admin access required' });
+        if (req.editorWorkspaceId) {
+          if (!course.workspaceId || course.workspaceId !== req.editorWorkspaceId) {
+            return res.status(403).json({ message: 'Access denied' });
+          }
+        } else if (req.user) {
+          if (req.user.role !== 'admin' && req.user.role !== 'instructor') {
+            return res.status(403).json({ message: 'Teacher or admin access required' });
+          }
+        } else {
+          return res.status(401).json({ message: 'Invalid token' });
         }
         key = `uploads/courses/${courseId}/cover-${id}.${ext}`;
       } else {
