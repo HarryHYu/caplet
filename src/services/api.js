@@ -131,6 +131,29 @@ class ApiService {
     return this.request('/auth/logout', { method: 'POST' });
   }
 
+  /**
+   * S3 presigned upload — see docs/aws-s3-setup.md
+   * @param {{ purpose: string, mimeType: string, classId?: string, lessonId?: string, courseId?: string }} body
+   */
+  async presignUpload(body) {
+    return this.request('/uploads/presign', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  /** PUT file bytes to presigned URL (no Authorization header — do not use api.request). */
+  async putToPresignedUrl(uploadUrl, file, contentType) {
+    const res = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file,
+    });
+    if (!res.ok) {
+      throw new Error(`Upload failed: ${res.status} ${res.statusText}`);
+    }
+  }
+
   // Courses
   async getCourses(params = {}) {
     const queryString = new URLSearchParams(params).toString();
