@@ -24,6 +24,7 @@ import ModuleDetail from './pages/ModuleDetail';
 import LessonPlayer from './pages/LessonPlayer';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Classes from './pages/Classes';
 import ClassDetail from './pages/ClassDetail';
 import Settings from './pages/Settings';
@@ -81,7 +82,7 @@ function App() {
                   <Route path="/" element={<HomeOrRedirect />} />
                   <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                   <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Navigate to="/login" replace />} />
+                  <Route path="/register" element={<Register />} />
                   <Route path="/tools" element={<Tools />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/tools/tax-calculator" element={<TaxCalculator />} />

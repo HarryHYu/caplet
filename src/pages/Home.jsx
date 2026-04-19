@@ -251,7 +251,7 @@ const Home = () => {
               No products. No catch. Just clarity.
             </p>
             <div className="hero-text-elem flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Link to="/login" className="bg-caplet-sky hover:bg-blue-700 text-white font-display font-semibold px-10 py-5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl w-full sm:w-auto text-center">
+              <Link to="/register" className="bg-caplet-sky hover:bg-blue-700 text-white font-display font-semibold px-10 py-5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl w-full sm:w-auto text-center">
                 Get Started Free
               </Link>
               <Link to="/courses" className="text-caplet-ink/60 hover:text-caplet-ink font-display font-bold text-sm uppercase tracking-widest transition-all duration-300 group py-4 px-6 md:px-0">

@@ -46,6 +46,34 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
+  const login = async (email, password) => {
+    try {
+      setError(null);
+      const response = await api.login({ email, password });
+      api.setToken(response.token);
+      setUser(response.user);
+      setIsAuthenticated(true);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      setError(null);
+      const response = await api.register(userData);
+      api.setToken(response.token);
+      setUser(response.user);
+      setIsAuthenticated(true);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
   const loginWithGoogle = async (idToken) => {
     try {
       setError(null);
@@ -89,6 +117,8 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     error,
+    login,
+    register,
     loginWithGoogle,
     logout,
     updateProfile,

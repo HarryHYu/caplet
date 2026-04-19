@@ -86,6 +86,100 @@ const findUserByEmailVariants = async (email) => {
   }) || null;
 };
 
+// Register (email + password)
+router.post('/register', [
+  body('email').isEmail().normalizeEmail({
+    gmail_remove_dots: false,
+    gmail_remove_subaddress: false,
+    outlookdotcom_remove_subaddress: false,
+    yahoo_remove_subaddress: false
+  }),
+  body('password').isLength({ min: 6 }),
+  body('firstName').trim().isLength({ min: 1, max: 50 }),
+  body('lastName').trim().isLength({ min: 1, max: 50 }),
+  body('role').optional().isIn(['student', 'instructor'])
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password, firstName, lastName, dateOfBirth, role } = req.body;
+    const normalizedEmail = normalizeEmailInput(email);
+    const storageEmail = normalizeEmailForStorage(email);
+
+    const existingUser = await findUserByEmailVariants(normalizedEmail);
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists with this email' });
+    }
+
+    const userRole = role === 'instructor' ? 'instructor' : 'student';
+
+    const user = await User.create({
+      email: storageEmail,
+      password,
+      firstName,
+      lastName,
+      dateOfBirth,
+      role: userRole
+    });
+
+    const token = generateToken(user.id);
+
+    res.status(201).json({
+      message: 'User created successfully',
+      token,
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Login (email + password) — same account as Google when email matches
+router.post('/login', [
+  body('email').isEmail().normalizeEmail({
+    gmail_remove_dots: false,
+    gmail_remove_subaddress: false,
+    outlookdotcom_remove_subaddress: false,
+    yahoo_remove_subaddress: false
+  }),
+  body('password').notEmpty()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+    const normalizedEmail = normalizeEmailInput(email);
+
+    const user = await findUserByEmailVariants(normalizedEmail);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const isValidPassword = await user.validatePassword(password);
+    if (!isValidPassword) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = generateToken(user.id);
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Login with Google ID token
 router.post('/google', [
   body('idToken').notEmpty().withMessage('Google ID token is required')

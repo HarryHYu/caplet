@@ -37,6 +37,83 @@ describe('Auth Routes', () => {
     jest.clearAllMocks();
   });
 
+  describe('POST /api/auth/register', () => {
+    it('should return 201 when data is valid', async () => {
+      const mockUser = {
+        id: 'id-1',
+        email: 'new@example.com',
+        firstName: 'A',
+        lastName: 'B',
+        toJSON() {
+          return { id: this.id, email: this.email, firstName: this.firstName, lastName: this.lastName };
+        },
+      };
+      User.findOne = jest.fn().mockResolvedValue(null);
+      User.create = jest.fn().mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'new@example.com',
+          password: 'secret12',
+          firstName: 'A',
+          lastName: 'B',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('token');
+      expect(User.create).toHaveBeenCalled();
+    });
+
+    it('should return 400 when email already exists', async () => {
+      User.findOne = jest.fn().mockResolvedValue({ id: 'x', email: 'exists@example.com' });
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'exists@example.com',
+          password: 'secret12',
+          firstName: 'A',
+          lastName: 'B',
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toMatch(/already exists/i);
+    });
+  });
+
+  describe('POST /api/auth/login', () => {
+    it('should return 200 when credentials are valid', async () => {
+      const mockUser = {
+        id: 'id-1',
+        email: 'user@example.com',
+        validatePassword: jest.fn().mockResolvedValue(true),
+        toJSON() {
+          return { id: this.id, email: this.email };
+        },
+      };
+      User.findOne = jest.fn().mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'user@example.com', password: 'correct' });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('token');
+      expect(mockUser.validatePassword).toHaveBeenCalledWith('correct');
+    });
+
+    it('should return 401 when user not found', async () => {
+      User.findOne = jest.fn().mockResolvedValue(null);
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'nope@example.com', password: 'x' });
+
+      expect(response.status).toBe(401);
+    });
+  });
+
   describe('POST /api/auth/google', () => {
     it('should return 400 when idToken is missing', async () => {
       const response = await request(app)

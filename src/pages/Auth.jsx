@@ -17,6 +17,7 @@ const Auth = () => {
           onSuccess={() => {
             navigate('/courses');
           }}
+          onSwitchToRegister={() => navigate('/register')}
         />
       </div>
     </section>

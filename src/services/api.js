@@ -101,6 +101,20 @@ class ApiService {
   }
 
   // Authentication
+  async register(userData) {
+    return this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async login(credentials) {
+    return this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  }
+
   async googleLogin(idToken) {
     return this.request('/auth/google', {
       method: 'POST',
