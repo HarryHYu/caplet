@@ -33,6 +33,8 @@ import SettingsAccount from './pages/SettingsAccount';
 import UserProfile from './pages/UserProfile';
 import Terms from './pages/Terms';
 import Metrics from './pages/Metrics';
+import Survey from './pages/Survey';
+import SurveyResults from './pages/SurveyResults';
 import NotFound from './pages/NotFound';
 import CapletLoader from './components/CapletLoader';
 import { GOOGLE_OAUTH_CLIENT_ID } from './config/googleClient';
@@ -109,6 +111,8 @@ function App() {
                   <Route path="/profile/:userId" element={<UserProfile />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/metrics" element={<Metrics />} />
+                  <Route path="/survey" element={<Survey />} />
+                  <Route path="/survey-results" element={<SurveyResults />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
