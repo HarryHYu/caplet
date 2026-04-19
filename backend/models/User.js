@@ -74,7 +74,7 @@ const User = sequelize.define('User', {
   },
   onboarded: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false
+    defaultValue: true
   },
   onboardingData: {
     type: DataTypes.TEXT,

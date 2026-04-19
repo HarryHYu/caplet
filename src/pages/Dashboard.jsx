@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../contexts/CoursesContext';
 import api from '../services/api';
-import OnboardingWizard from '../components/OnboardingWizard';
 import CapletLoader from '../components/CapletLoader';
 import {
     BookOpenIcon,
@@ -19,9 +18,6 @@ export default function Dashboard() {
     const [userProgress, setUserProgress] = useState([]);
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
-    const [showOnboarding, setShowOnboarding] = useState(false);
-    const [introMessage, setIntroMessage] = useState('');
-    const [messages, setMessages] = useState([]);
 
     useEffect(() => {
         if (!hasFetched && !coursesLoading) {
@@ -32,19 +28,11 @@ export default function Dashboard() {
     }, [coursesLoading, fetchCourses, hasFetched]);
 
     useEffect(() => {
-        // Show onboarding if user hasn't completed it
-        if (user && !user.onboarded) {
-            setShowOnboarding(true);
-        }
-    }, [user]);
-
-    useEffect(() => {
         const fetchData = async () => {
             try {
-                const [progressData, classesData, chatHistoryData] = await Promise.all([
+                const [progressData, classesData] = await Promise.all([
                     api.getUserProgress(),
                     api.getClasses(),
-                    api.getChatHistory()
                 ]);
                 // /progress returns { progress: [...] }
                 setUserProgress(progressData?.progress || []);
@@ -54,8 +42,6 @@ export default function Dashboard() {
                     ...(classesData?.student || [])
                 ];
                 setClasses(allClasses);
-                // Load chat history
-                setMessages(chatHistoryData?.messages || []);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             } finally {
@@ -89,16 +75,6 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-surface-body pt-48 pb-20 selection:bg-accent selection:text-white">
-            {showOnboarding && (
-                <OnboardingWizard
-                    onComplete={(message) => {
-                        setIntroMessage(message);
-                        setShowOnboarding(false);
-                        // Refresh user data to reflect onboarded status
-                        window.location.reload();
-                    }}
-                />
-            )}
             <div className="container-custom">
                 {/* Header Section */}
                 <header className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text">
