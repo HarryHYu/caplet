@@ -10,6 +10,10 @@ const Footer = () => {
     return null;
   }
 
+  if (/\/courses\/[^/]+\/lessons\/[^/]+/.test(location.pathname)) {
+    return null;
+  }
+
   return (
     <footer className="bg-surface-body border-t border-line-soft">
       <div className="container-custom py-32">

@@ -221,6 +221,96 @@
   .prose-editorial hr {
     @apply my-8 border-line-soft;
   }
+
+  /* Lesson reading mode — editorial, slightly larger, refined spacing.
+     Used inside the slide canvas on the lesson player. */
+  .prose-lesson {
+    @apply text-[17px] md:text-lg leading-[1.75] text-text-primary;
+    font-feature-settings: "ss01", "ss02", "kern";
+  }
+
+  .prose-lesson > * + * {
+    @apply mt-5;
+  }
+
+  .prose-lesson h1,
+  .prose-lesson h2,
+  .prose-lesson h3 {
+    font-family: var(--font-display);
+    @apply tracking-tight;
+  }
+
+  .prose-lesson h1 {
+    @apply text-3xl md:text-4xl font-bold mt-8 mb-4 leading-tight;
+  }
+
+  .prose-lesson h2 {
+    @apply text-2xl md:text-3xl font-bold mt-8 mb-3 leading-snug;
+  }
+
+  .prose-lesson h3 {
+    @apply text-xl md:text-2xl font-semibold mt-6 mb-3;
+  }
+
+  .prose-lesson p {
+    @apply leading-[1.75];
+  }
+
+  .prose-lesson strong {
+    @apply font-semibold text-text-primary;
+  }
+
+  .prose-lesson em {
+    font-family: var(--font-body);
+    @apply italic text-text-primary;
+  }
+
+  .prose-lesson ul {
+    @apply pl-0 space-y-3 list-none;
+  }
+
+  .prose-lesson ul > li {
+    @apply pl-7 relative leading-[1.7];
+  }
+
+  .prose-lesson ul > li::before {
+    content: '';
+    @apply absolute left-1 top-[0.7em] w-2 h-px bg-accent;
+  }
+
+  .prose-lesson ol {
+    @apply pl-6 space-y-3 list-decimal marker:text-accent marker:font-bold;
+  }
+
+  .prose-lesson blockquote {
+    font-family: var(--font-display);
+    @apply not-italic border-l-2 border-accent pl-6 my-6 text-text-muted;
+  }
+
+  .prose-lesson code {
+    @apply bg-surface-soft px-1.5 py-0.5 rounded text-[0.92em] font-mono text-accent;
+  }
+
+  .prose-lesson pre {
+    @apply bg-surface-soft p-5 rounded-2xl overflow-x-auto my-6 text-sm;
+  }
+
+  .prose-lesson a {
+    @apply text-accent underline underline-offset-4 transition-colors;
+    text-decoration-color: var(--accent-soft);
+  }
+
+  .prose-lesson a:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .prose-lesson hr {
+    @apply my-10 border-line-soft;
+  }
+
+  .prose-lesson img {
+    @apply rounded-2xl my-6 max-w-full;
+  }
 }
 
 @layer utilities {
@@ -316,6 +406,43 @@
 
   .animate-float {
     animation: float 6s ease-in-out infinite;
+  }
+
+  /* Lesson slide transition — opacity + lift + tiny blur release */
+  @keyframes lesson-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  .animate-lesson-slide-in {
+    animation: lesson-slide-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Soft expanding 'live' dot used in the lesson header */
+  @keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.6); opacity: 0.4; }
+  }
+
+  .animate-pulse-dot {
+    animation: pulse-dot 2.4s ease-in-out infinite;
+  }
+
+  /* Decorative tab notch background for the slide canvas (handles dark) */
+  .lesson-canvas-grain {
+    background-image:
+      radial-gradient(circle at 1px 1px, var(--line-soft) 1px, transparent 0);
+    background-size: 22px 22px;
+    background-position: 0 0;
+    opacity: 0.5;
   }
 
   @keyframes float {
