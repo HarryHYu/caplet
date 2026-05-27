@@ -63,6 +63,45 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// DB health — proves the app can query Postgres (Railway Data tab uses a separate SSH path).
+app.get('/health/db', async (req, res) => {
+  const { sequelize } = require('./config/database');
+  try {
+    const [[{ ok }]] = await sequelize.query('SELECT 1 AS ok');
+    const [migrations] = await sequelize.query(
+      'SELECT name FROM "SequelizeMeta" ORDER BY name'
+    );
+    const [legacy] = await sequelize.query(`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_name IN ('financial_plans', 'financial_states', 'check_ins', 'summaries')
+    `);
+    const [tables] = await sequelize.query(`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+      ORDER BY table_name
+    `);
+
+    res.json({
+      status: ok === 1 ? 'OK' : 'ERROR',
+      timestamp: new Date().toISOString(),
+      migrations: migrations.map((row) => row.name),
+      legacyFinancialTablesRemaining: legacy.map((row) => row.table_name),
+      tableCount: tables.length,
+      tables: tables.map((row) => row.table_name),
+    });
+  } catch (error) {
+    console.error('DB health check failed:', error);
+    res.status(503).json({
+      status: 'ERROR',
+      timestamp: new Date().toISOString(),
+      message: error.message,
+    });
+  }
+});
+
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/courses', require('./routes/courses'));
