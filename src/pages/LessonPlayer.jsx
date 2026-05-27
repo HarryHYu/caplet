@@ -15,7 +15,6 @@ function getYouTubeId(url) {
   return match ? match[1] : url;
 }
 
-// Build a flat, ordered list of lessons from course.modules
 function getFlatLessons(course) {
   if (!course?.modules) return [];
   return (course.modules || [])
@@ -46,17 +45,16 @@ function slideKindLabel(type) {
    Sub-components
    ────────────────────────────────────────────────────────────────────────── */
 
-// Slim ticker that shows one bar per slide — clickable, with state colors.
-function SlideTicker({ slides, currentIndex, quizScores, onJump }) {
+function SlideTicker({ slides, currentIndex, quizScores, visited, onJump }) {
   return (
     <div className="flex items-center gap-1.5 w-full">
       {slides.map((s, i) => {
         const isQuestion = s?.type === 'question';
         const answered = quizScores[String(i)];
         const isCurrent = i === currentIndex;
-        const isPast = i < currentIndex;
+        const wasVisited = i < currentIndex || visited.has(i);
         let bar = 'bg-line-soft';
-        if (isPast) bar = 'bg-accent/70';
+        if (wasVisited) bar = 'bg-accent';
         if (isCurrent) bar = 'bg-accent';
         if (isQuestion && answered === true) bar = 'bg-emerald-500';
         if (isQuestion && answered === false) bar = 'bg-rose-400';
@@ -69,7 +67,9 @@ function SlideTicker({ slides, currentIndex, quizScores, onJump }) {
             className="group relative flex-1 py-2"
           >
             <span
-              className={`block h-[3px] rounded-full transition-all duration-300 ${bar} ${isCurrent ? 'h-[5px]' : 'group-hover:h-[4px]'}`}
+              className={`block rounded-full transition-all duration-300 ${bar} ${
+                isCurrent ? 'h-[5px]' : 'h-[3px] group-hover:h-[4px]'
+              }`}
             />
           </button>
         );
@@ -128,11 +128,7 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
                           to={`/courses/${course.id}/lessons/${l.id}`}
                           onClick={onClose}
                           className={`block py-2 pr-2 text-sm leading-snug transition-colors ${
-                            active
-                              ? 'text-accent font-semibold'
-                              : done
-                                ? 'text-text-muted hover:text-text-primary'
-                                : 'text-text-muted hover:text-text-primary'
+                            active ? 'text-accent font-semibold' : 'text-text-muted hover:text-text-primary'
                           }`}
                         >
                           <span className="inline-flex items-center gap-2">
@@ -269,8 +265,11 @@ const LessonPlayer = () => {
   const [questionAnswer, setQuestionAnswer] = useState(null);
   const [questionSubmitted, setQuestionSubmitted] = useState(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
+  // Track slides the user has actually viewed in this session — keeps the
+  // ticker filled in solid blue even if they jump backward.
+  const [visited, setVisited] = useState(() => new Set([0]));
 
-  const slideRef = useRef(null);
+  const slideScrollRef = useRef(null);
 
   /* ---------- Data loading ---------- */
   useEffect(() => {
@@ -280,6 +279,7 @@ const LessonPlayer = () => {
         setLoading(true);
         setCurrentSlideIndex(0);
         setCompleted(false);
+        setVisited(new Set([0]));
         const [courseData, lessonData] = await Promise.all([
           api.getCourse(courseId),
           api.getLesson(courseId, lessonId).catch(() => null),
@@ -301,7 +301,13 @@ const LessonPlayer = () => {
             }
             const slides = parseSlides(current.slides);
             if (slides.length > 0 && lp && typeof lp.lastSlideIndex === 'number') {
-              setCurrentSlideIndex(Math.min(lp.lastSlideIndex, slides.length - 1));
+              const startIdx = Math.min(lp.lastSlideIndex, slides.length - 1);
+              setCurrentSlideIndex(startIdx);
+              // Pre-fill visited with all slides up to and including the
+              // last position so resumed lessons show full blue history.
+              const seen = new Set();
+              for (let i = 0; i <= startIdx; i++) seen.add(i);
+              setVisited(seen);
             }
           } catch (e) {
             console.warn('Progress update failed (non-blocking):', e?.message || e);
@@ -342,7 +348,6 @@ const LessonPlayer = () => {
     return set;
   }, [progress]);
 
-  const slidePct = hasSlides ? Math.round(((currentSlideIndex + 1) / slides.length) * 100) : 0;
   const coursePct = Math.round(progress?.courseProgress?.progressPercentage || 0);
 
   /* ---------- Actions ---------- */
@@ -351,13 +356,19 @@ const LessonPlayer = () => {
       if (!hasSlides) return;
       if (newIndex < 0 || newIndex >= slides.length) return;
       setCurrentSlideIndex(newIndex);
+      setVisited((prev) => {
+        if (prev.has(newIndex)) return prev;
+        const next = new Set(prev);
+        next.add(newIndex);
+        return next;
+      });
       setQuestionAnswer(null);
       setQuestionSubmitted(false);
       if (isAuthenticated && lesson?.id) {
         api.updateLessonProgress(lesson.id, { lastSlideIndex: newIndex }).catch(() => {});
       }
-      if (slideRef.current) {
-        slideRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      if (slideScrollRef.current) {
+        slideScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
     [hasSlides, slides.length, isAuthenticated, lesson?.id],
@@ -426,7 +437,7 @@ const LessonPlayer = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [hasSlides, currentSlideIndex, goToSlide, outlineOpen]);
 
-  /* ---------- Lock body scroll when outline is open ---------- */
+  /* ---------- Lock body scroll when outline open ---------- */
   useEffect(() => {
     if (outlineOpen) {
       const prev = document.body.style.overflow;
@@ -438,7 +449,7 @@ const LessonPlayer = () => {
   /* ---------- Loading & error states ---------- */
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+      <div className="min-h-[100dvh] pt-14 md:pt-16 bg-surface-body flex items-center justify-center">
         <CapletLoader message="Loading lesson…" />
       </div>
     );
@@ -446,7 +457,7 @@ const LessonPlayer = () => {
 
   if (error || !course || !lesson) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+      <div className="min-h-[100dvh] pt-14 md:pt-16 bg-surface-body flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
           <p className="text-2xl font-bold mb-4">{error || 'Lesson not found'}</p>
           <p className="text-text-muted mb-8">
@@ -463,20 +474,21 @@ const LessonPlayer = () => {
   const currentSlide = hasSlides ? slides[currentSlideIndex] : null;
   const isLastSlide = hasSlides && currentSlideIndex === slides.length - 1;
   const nextLesson = idx >= 0 && idx < flatLessons.length - 1 ? flatLessons[idx + 1] : null;
-  const prevLesson = idx > 0 ? flatLessons[idx - 1] : null;
 
   /* ──────────────────────────────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-surface-body text-text-primary flex flex-col">
-      {/* ───────────────── Header (focus-mode) ───────────────── */}
-      <header className="sticky top-0 z-40 bg-surface-body/85 backdrop-blur-xl border-b border-line-soft">
+    // The whole lesson view is locked to viewport height — no outer page scroll.
+    // The global Navbar (h-14/h-16) sits above; we offset for it with pt-14/md:pt-16.
+    <div className="h-[100dvh] pt-14 md:pt-16 bg-surface-body text-text-primary flex flex-col overflow-hidden">
+      {/* ─────── Lesson sub-header (sits below the global navbar) ─────── */}
+      <header className="shrink-0 bg-surface-body/95 backdrop-blur-md border-b border-line-soft">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
-          <div className="h-16 md:h-20 flex items-center justify-between gap-4">
+          <div className="h-14 md:h-16 flex items-center justify-between gap-4">
             {/* Left — exit + breadcrumbs */}
             <div className="flex items-center gap-3 md:gap-5 min-w-0">
               <Link
                 to={`/courses/${course.id}${containingModule ? `/modules/${containingModule.id}` : ''}`}
-                className="shrink-0 w-10 h-10 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-all duration-200 flex items-center justify-center group"
+                className="shrink-0 w-9 h-9 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-all duration-200 flex items-center justify-center group"
                 aria-label="Exit lesson"
               >
                 <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -514,10 +526,15 @@ const LessonPlayer = () => {
             </div>
 
             {/* Right — meta + outline trigger */}
-            <div className="flex items-center gap-2 md:gap-4 shrink-0">
+            <div className="flex items-center gap-2 md:gap-3 shrink-0">
               <div className="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-text-dim">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
                 Lesson {idx + 1} <span className="opacity-50">/</span> {flatLessons.length}
+              </div>
+
+              <div className="hidden lg:flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-text-dim">
+                <span className="opacity-50">·</span>
+                Course {coursePct}%
               </div>
 
               {completed && (
@@ -532,7 +549,7 @@ const LessonPlayer = () => {
               <button
                 type="button"
                 onClick={() => setOutlineOpen(true)}
-                className="inline-flex items-center gap-2 h-10 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors"
+                className="inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors"
                 aria-label="Open course outline"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -543,13 +560,14 @@ const LessonPlayer = () => {
             </div>
           </div>
 
-          {/* Ticker */}
+          {/* Ticker — visited slides are solid blue */}
           {hasSlides && (
-            <div className="pb-3">
+            <div className="pb-2.5">
               <SlideTicker
                 slides={slides}
                 currentIndex={currentSlideIndex}
                 quizScores={quizScores}
+                visited={visited}
                 onJump={goToSlide}
               />
             </div>
@@ -557,39 +575,40 @@ const LessonPlayer = () => {
         </div>
       </header>
 
-      {/* ───────────────── Main canvas ───────────────── */}
-      <main className="flex-1 relative">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 py-8 md:py-12">
-          {hasSlides ? (
-            <article className="relative">
-              {/* Slide kicker */}
-              <div className="mb-5 md:mb-7 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
-                <span className="font-mono text-accent">
-                  {String(currentSlideIndex + 1).padStart(2, '0')}
-                  <span className="opacity-50"> / </span>
-                  {String(slides.length).padStart(2, '0')}
-                </span>
-                <span className="w-6 h-px bg-line-soft" />
-                <span>{slideKindLabel(currentSlide?.type)}</span>
-                <span className="w-6 h-px bg-line-soft" />
-                <span className="text-text-dim/60">{slidePct}% through</span>
+      {/* ─────── Main canvas (flex-1, internal scroll only) ─────── */}
+      <main className="flex-1 min-h-0 flex flex-col">
+        {hasSlides ? (
+          <div className="flex-1 min-h-0 max-w-[1400px] w-full mx-auto px-4 md:px-8 lg:px-12 py-5 md:py-7 flex flex-col gap-4 md:gap-5">
+            {/* Slide kicker */}
+            <div className="shrink-0 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
+              <span className="font-mono text-accent">
+                {String(currentSlideIndex + 1).padStart(2, '0')}
+                <span className="opacity-50"> / </span>
+                {String(slides.length).padStart(2, '0')}
+              </span>
+              <span className="w-6 h-px bg-line-soft" />
+              <span>{slideKindLabel(currentSlide?.type)}</span>
+              <span className="w-6 h-px bg-line-soft hidden sm:block" />
+              <span className="text-text-dim/60 hidden sm:inline">
+                {Math.round(((currentSlideIndex + 1) / slides.length) * 100)}% through
+              </span>
+            </div>
+
+            {/* Slide canvas — fills the remaining space, scrolls internally */}
+            <div
+              key={currentSlideIndex}
+              className="animate-lesson-slide-in flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col"
+            >
+              {/* Decorative top notch */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none" />
+              <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none">
+                <div className="w-32 h-px bg-accent" />
               </div>
 
-              {/* Slide canvas */}
-              <div
-                ref={slideRef}
-                key={currentSlideIndex}
-                className="animate-lesson-slide-in relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden"
-              >
-                {/* Decorative top notch */}
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-                <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none">
-                  <div className="w-32 h-px bg-accent" />
-                </div>
-
-                <div className="p-6 md:p-12 lg:p-16 min-h-[400px] md:min-h-[520px]">
+              <div ref={slideScrollRef} className="flex-1 min-h-0 overflow-y-auto">
+                <div className="p-6 md:p-10 lg:p-14 min-h-full flex flex-col">
                   {currentSlide?.type === 'text' && (
-                    <div className="max-w-3xl mx-auto">
+                    <div className="max-w-3xl mx-auto w-full">
                       <div className="prose-lesson">
                         <ReactMarkdown>{currentSlide.content || ''}</ReactMarkdown>
                       </div>
@@ -602,7 +621,7 @@ const LessonPlayer = () => {
                   )}
 
                   {currentSlide?.type === 'image' && currentSlide.content && (
-                    <figure className="max-w-4xl mx-auto h-full flex flex-col justify-center gap-6">
+                    <figure className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center gap-6">
                       <div className="rounded-2xl overflow-hidden bg-surface-soft border border-line-soft">
                         <img
                           src={api.getProxiedImageSrc(currentSlide.content)}
@@ -619,7 +638,7 @@ const LessonPlayer = () => {
                   )}
 
                   {currentSlide?.type === 'video' && currentSlide.content && (
-                    <figure className="max-w-4xl mx-auto h-full flex flex-col justify-center gap-6">
+                    <figure className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center gap-6">
                       <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-line-soft shadow-lg">
                         <iframe
                           src={`https://www.youtube.com/embed/${getYouTubeId(currentSlide.content)}`}
@@ -639,103 +658,97 @@ const LessonPlayer = () => {
                   )}
 
                   {currentSlide?.type === 'question' && (
-                    <QuestionSlide
-                      slide={currentSlide}
-                      currentSlideIndex={currentSlideIndex}
-                      quizScores={quizScores}
-                      questionAnswer={questionAnswer}
-                      setQuestionAnswer={setQuestionAnswer}
-                      questionSubmitted={questionSubmitted}
-                      onSubmit={(isCorrect) => recordQuestionAnswer(currentSlideIndex, isCorrect)}
-                    />
+                    <div className="flex-1 flex items-center">
+                      <QuestionSlide
+                        slide={currentSlide}
+                        currentSlideIndex={currentSlideIndex}
+                        quizScores={quizScores}
+                        questionAnswer={questionAnswer}
+                        setQuestionAnswer={setQuestionAnswer}
+                        questionSubmitted={questionSubmitted}
+                        onSubmit={(isCorrect) => recordQuestionAnswer(currentSlideIndex, isCorrect)}
+                      />
+                    </div>
+                  )}
+
+                  {currentSlide && !['text', 'image', 'video', 'question'].includes(currentSlide.type) && (
+                    <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col items-center justify-center text-center gap-6">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-[0.25em]">
+                        {currentSlide.type || 'slide'}
+                      </div>
+                      {currentSlide.content ? (
+                        <div className="prose-lesson text-left w-full">
+                          <ReactMarkdown>{String(currentSlide.content)}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-text-muted font-serif italic text-lg">
+                          This slide type isn't available in the player yet.
+                        </p>
+                      )}
+                      {currentSlide.caption && (
+                        <p className="text-sm text-text-muted italic font-serif">{currentSlide.caption}</p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* Footer controls */}
-              <div className="mt-6 md:mt-8 flex items-center justify-between gap-4">
+            {/* Footer controls */}
+            <div className="shrink-0 flex items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => goToSlide(currentSlideIndex - 1)}
+                disabled={currentSlideIndex <= 0}
+                className="group inline-flex items-center gap-3 h-11 md:h-12 px-4 md:px-5 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <svg className="w-4 h-4 transition-transform group-enabled:group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] hidden sm:inline">Previous</span>
+              </button>
+
+              <div className="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-text-dim">
+                <kbd className="px-2 py-1 rounded border border-line-soft text-text-dim/80 font-mono text-[10px]">←</kbd>
+                <kbd className="px-2 py-1 rounded border border-line-soft text-text-dim/80 font-mono text-[10px]">→</kbd>
+                <span className="ml-1">to navigate</span>
+              </div>
+
+              {isLastSlide ? (
                 <button
                   type="button"
-                  onClick={() => goToSlide(currentSlideIndex - 1)}
-                  disabled={currentSlideIndex <= 0}
-                  className="group inline-flex items-center gap-3 h-12 px-4 md:px-5 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  onClick={markComplete}
+                  disabled={saving || completed}
+                  className="btn-primary h-11 md:h-12 px-6 md:px-8 rounded-full"
                 >
-                  <svg className="w-4 h-4 transition-transform group-enabled:group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] hidden sm:inline">Previous</span>
+                  {completed
+                    ? nextLesson
+                      ? 'Next Lesson →'
+                      : 'Lesson Completed'
+                    : saving
+                      ? 'Saving…'
+                      : nextLesson
+                        ? 'Complete & Continue'
+                        : 'Complete Lesson'}
                 </button>
-
-                <div className="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-text-dim">
-                  <kbd className="px-2 py-1 rounded border border-line-soft text-text-dim/80 font-mono text-[10px]">←</kbd>
-                  <kbd className="px-2 py-1 rounded border border-line-soft text-text-dim/80 font-mono text-[10px]">→</kbd>
-                  <span className="ml-1">to navigate</span>
-                </div>
-
-                {isLastSlide ? (
-                  <button
-                    type="button"
-                    onClick={markComplete}
-                    disabled={saving || completed}
-                    className="btn-primary h-12 px-6 md:px-8 rounded-full"
-                  >
-                    {completed
-                      ? nextLesson
-                        ? 'Next Lesson →'
-                        : 'Lesson Completed'
-                      : saving
-                        ? 'Saving…'
-                        : nextLesson
-                          ? 'Complete & Continue'
-                          : 'Complete Lesson'}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => goToSlide(currentSlideIndex + 1)}
-                    className="group inline-flex items-center gap-3 h-12 px-5 md:px-6 rounded-full bg-text-primary text-surface-body hover:opacity-90 active:opacity-100 transition-opacity"
-                  >
-                    <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Next</span>
-                    <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-
-              {/* Inter-lesson nav strip */}
-              <div className="mt-12 md:mt-16 pt-8 border-t border-line-soft grid grid-cols-1 md:grid-cols-2 gap-4">
-                {prevLesson ? (
-                  <Link
-                    to={`/courses/${course.id}/lessons/${prevLesson.id}`}
-                    className="group p-5 md:p-6 rounded-2xl border border-line-soft hover:border-accent/40 hover:bg-surface-raised transition-all"
-                  >
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-2 flex items-center gap-2">
-                      <span>← Previous Lesson</span>
-                    </p>
-                    <p className="text-base font-serif italic text-text-primary group-hover:text-accent transition-colors line-clamp-1">
-                      {prevLesson.title}
-                    </p>
-                  </Link>
-                ) : <div className="hidden md:block" />}
-
-                {nextLesson ? (
-                  <Link
-                    to={`/courses/${course.id}/lessons/${nextLesson.id}`}
-                    className="group p-5 md:p-6 rounded-2xl border border-line-soft hover:border-accent/40 hover:bg-surface-raised transition-all md:text-right"
-                  >
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-2 flex items-center md:justify-end gap-2">
-                      <span>Next Lesson →</span>
-                    </p>
-                    <p className="text-base font-serif italic text-text-primary group-hover:text-accent transition-colors line-clamp-1">
-                      {nextLesson.title}
-                    </p>
-                  </Link>
-                ) : <div className="hidden md:block" />}
-              </div>
-            </article>
-          ) : (
-            <article className="max-w-3xl mx-auto">
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => goToSlide(currentSlideIndex + 1)}
+                  className="group inline-flex items-center gap-3 h-11 md:h-12 px-5 md:px-6 rounded-full bg-text-primary text-surface-body hover:opacity-90 active:opacity-100 transition-opacity"
+                >
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Next</span>
+                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* No-slides fallback: legacy markdown content, scrollable */
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <article className="max-w-3xl mx-auto px-6 md:px-12 py-12">
               <header className="mb-12">
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent mb-4">Lesson</p>
                 <h1 className="text-4xl md:text-5xl font-display font-bold leading-[1.05] mb-6">{lesson.title}</h1>
@@ -761,28 +774,11 @@ const LessonPlayer = () => {
                 </button>
               </div>
             </article>
-          )}
-        </div>
-
-        {/* ───────────────── Floating progress badge (course-level) ───────────────── */}
-        <div className="hidden lg:block fixed bottom-6 left-6 z-30 pointer-events-none">
-          <div className="pointer-events-auto bg-surface-raised/90 backdrop-blur-md border border-line-soft rounded-2xl shadow-lg p-4 w-56">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-3">Course Progress</p>
-            <div className="flex items-end justify-between mb-2">
-              <span className="text-3xl font-serif italic text-text-primary leading-none">{coursePct}%</span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">complete</span>
-            </div>
-            <div className="h-1 bg-line-soft rounded-full overflow-hidden">
-              <div
-                className="h-full bg-accent transition-all duration-700 ease-out"
-                style={{ width: `${coursePct}%` }}
-              />
-            </div>
           </div>
-        </div>
+        )}
       </main>
 
-      {/* ───────────────── Outline drawer ───────────────── */}
+      {/* ─────── Outline drawer ─────── */}
       {outlineOpen && (
         <div className="fixed inset-0 z-50">
           <button
@@ -791,9 +787,7 @@ const LessonPlayer = () => {
             onClick={() => setOutlineOpen(false)}
             className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-slide-up"
           />
-          <aside
-            className="absolute top-0 right-0 h-full w-full sm:w-[420px] bg-surface-raised border-l border-line-soft shadow-2xl animate-card-in"
-          >
+          <aside className="absolute top-0 right-0 h-full w-full sm:w-[420px] bg-surface-raised border-l border-line-soft shadow-2xl animate-card-in">
             <OutlinePanel
               course={course}
               lesson={lesson}

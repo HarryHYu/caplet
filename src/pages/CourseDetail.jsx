@@ -70,7 +70,7 @@ const CourseDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-12 md:py-20">
+    <div className="min-h-screen bg-surface-body pt-24 md:pt-28 pb-12 md:pb-20">
       <div className="container-custom">
         {/* Back link */}
         <button
