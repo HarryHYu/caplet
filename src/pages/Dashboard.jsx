@@ -74,7 +74,7 @@ export default function Dashboard() {
 
 
     return (
-        <div className="min-h-screen bg-surface-body pt-48 pb-20 selection:bg-accent selection:text-white">
+        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
             <div className="container-custom">
                 {/* Header Section */}
                 <header className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text">

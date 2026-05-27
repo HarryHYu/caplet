@@ -77,7 +77,7 @@ const Survey = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
+      <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
         <div className="container-custom">
           <div className="max-w-2xl mx-auto bg-surface-raised border border-line-soft p-12 lg:p-20 text-center reveal-text">
             <div className="w-20 h-20 border border-line-soft flex items-center justify-center mx-auto mb-12">
@@ -105,7 +105,7 @@ const Survey = () => {
   }
 
   return (
-    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         <header className="mb-24 reveal-text max-w-4xl mx-auto">
           <span className="section-kicker">Observatory &rarr; Literacy</span>

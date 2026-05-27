@@ -14,7 +14,7 @@ const Settings = () => {
   ];
 
   return (
-    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         <div className="mb-24 reveal-text">
           <span className="section-kicker">Configuration</span>

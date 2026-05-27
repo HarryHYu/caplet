@@ -99,7 +99,7 @@ const ModuleDetail = () => {
   const progressWidth = totalInModule > 0 ? (completedInModule / totalInModule) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-surface-body pt-24 md:pt-28 pb-12 md:pb-20">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         {/* Back link */}
         <button

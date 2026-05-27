@@ -42,7 +42,7 @@ const GSTCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen py-32 bg-surface-body selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         <header className="mb-24 reveal-text">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
