@@ -177,18 +177,18 @@ export default function Editor() {
 
   if (!hasToken) {
     return (
-      <div className="min-h-screen bg-caplet-parchment py-16 px-4">
-        <div className="max-w-md mx-auto bg-white rounded-3xl border border-caplet-ink/10 shadow-lg p-8">
-          <p className="text-sm font-display uppercase tracking-widest text-caplet-sky mb-2">Lesson workspace</p>
-          <h1 className="text-2xl font-bold text-caplet-ink mb-2">Enter access code</h1>
-          <p className="text-sm text-caplet-ink/60 mb-6">
+      <div className="min-h-screen bg-surface-body py-16 px-4">
+        <div className="max-w-md mx-auto bg-white rounded-3xl border border-line-soft shadow-lg p-8">
+          <p className="text-sm font-display uppercase tracking-widest text-accent mb-2">Lesson workspace</p>
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Enter access code</h1>
+          <p className="text-sm text-text-muted mb-6">
             Use the code your admin shared. This page does not use your Caplet login.
           </p>
           <form onSubmit={handleEnter} className="space-y-4">
             <input
               type="password"
               autoComplete="off"
-              className="w-full rounded-xl border border-caplet-ink/15 px-4 py-3 text-caplet-ink"
+              className="w-full rounded-xl border border-line-soft px-4 py-3 text-text-primary"
               placeholder="Paste code"
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -197,12 +197,12 @@ export default function Editor() {
             <button
               type="submit"
               disabled={loading || !code.trim()}
-              className="w-full rounded-xl bg-caplet-sky text-white font-semibold py-3 hover:opacity-90 disabled:opacity-50"
+              className="btn-primary w-full"
             >
               {loading ? 'Checking…' : 'Continue'}
             </button>
           </form>
-          <Link to="/" className="inline-block mt-8 text-sm text-caplet-ink/50 hover:text-caplet-sky">
+          <Link to="/" className="inline-block mt-8 text-sm text-text-dim hover:text-accent">
             ← Back to home
           </Link>
         </div>
@@ -211,25 +211,25 @@ export default function Editor() {
   }
 
   return (
-    <div className="min-h-screen bg-caplet-sand py-10 px-4">
+    <div className="min-h-screen bg-surface-soft py-10 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-caplet-ink">Lesson editor</h1>
-            <p className="text-sm text-caplet-ink/60">Draft courses stay out of the public catalog until you publish them from admin tools later.</p>
+            <h1 className="text-2xl font-bold text-text-primary">Lesson editor</h1>
+            <p className="text-sm text-text-muted">Draft courses stay out of the public catalog until you publish them from admin tools later.</p>
           </div>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => reloadTree()}
-              className="rounded-xl border border-caplet-ink/15 bg-white px-4 py-2 text-sm font-medium text-caplet-ink"
+              className="rounded-xl border border-line-soft bg-white px-4 py-2 text-sm font-medium text-text-primary"
             >
               Refresh
             </button>
             <button
               type="button"
               onClick={leave}
-              className="rounded-xl border border-caplet-ink/15 bg-white px-4 py-2 text-sm font-medium text-caplet-ink"
+              className="rounded-xl border border-line-soft bg-white px-4 py-2 text-sm font-medium text-text-primary"
             >
               Leave workspace
             </button>
@@ -241,51 +241,51 @@ export default function Editor() {
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-caplet-ink">Courses</h2>
+              <h2 className="font-semibold text-text-primary">Courses</h2>
               <button
                 type="button"
                 onClick={addCourse}
                 disabled={loading}
-                className="text-sm font-medium text-caplet-sky hover:underline disabled:opacity-50"
+                className="text-sm font-medium text-accent hover:underline disabled:opacity-50"
               >
                 + Add course
               </button>
             </div>
             <div className="space-y-3">
               {courses.map((c) => (
-                <div key={c.id} className="rounded-2xl border border-caplet-ink/10 bg-white p-4 shadow-sm">
+                <div key={c.id} className="rounded-2xl border border-line-soft bg-white p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-medium text-caplet-ink">{c.title}</p>
-                      <p className="text-xs text-caplet-ink/50">{c.id}</p>
+                      <p className="font-medium text-text-primary">{c.title}</p>
+                      <p className="text-xs text-text-dim">{c.id}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => addModule(c.id)}
-                      className="shrink-0 text-xs font-medium text-caplet-sky hover:underline"
+                      className="shrink-0 text-xs font-medium text-accent hover:underline"
                     >
                       + Module
                     </button>
                   </div>
-                  <ul className="mt-3 space-y-2 border-t border-caplet-ink/5 pt-3">
+                  <ul className="mt-3 space-y-2 border-t border-line-soft pt-3">
                     {(c.modules || []).map((m) => (
                       <li key={m.id} className="text-sm">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium text-caplet-ink/80">{m.title}</span>
+                          <span className="font-medium text-text-primary/80">{m.title}</span>
                           <button
                             type="button"
                             onClick={() => addLesson(m.id)}
-                            className="text-xs text-caplet-sky hover:underline"
+                            className="text-xs text-accent hover:underline"
                           >
                             + Lesson
                           </button>
                         </div>
-                        <ul className="mt-1 ml-3 list-disc text-caplet-ink/70">
+                        <ul className="mt-1 ml-3 list-disc text-text-muted">
                           {(m.lessons || []).map((l) => (
                             <li key={l.id}>
                               <button
                                 type="button"
-                                className="text-left hover:text-caplet-sky"
+                                className="text-left hover:text-accent"
                                 onClick={() => openLesson(l, c.id, m.id)}
                               >
                                 {l.title}
@@ -299,32 +299,32 @@ export default function Editor() {
                 </div>
               ))}
               {!courses.length && !loading ? (
-                <p className="text-sm text-caplet-ink/50">No courses yet. Add one to get started.</p>
+                <p className="text-sm text-text-dim">No courses yet. Add one to get started.</p>
               ) : null}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-caplet-ink/10 bg-white p-6 shadow-sm min-h-[320px]">
+          <div className="rounded-2xl border border-line-soft bg-white p-6 shadow-sm min-h-[320px]">
             {!selected ? (
-              <p className="text-sm text-caplet-ink/50">Select a lesson to edit slides (JSON).</p>
+              <p className="text-sm text-text-dim">Select a lesson to edit slides (JSON).</p>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium uppercase tracking-wide text-caplet-ink/50 mb-1">
+                  <label className="block text-xs font-medium uppercase tracking-wide text-text-dim mb-1">
                     Lesson title
                   </label>
                   <input
-                    className="w-full rounded-xl border border-caplet-ink/15 px-3 py-2 text-sm"
+                    className="w-full rounded-xl border border-line-soft px-3 py-2 text-sm"
                     value={draftTitle}
                     onChange={(e) => setDraftTitle(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium uppercase tracking-wide text-caplet-ink/50 mb-1">
+                  <label className="block text-xs font-medium uppercase tracking-wide text-text-dim mb-1">
                     Slides (JSON array)
                   </label>
                   <textarea
-                    className="w-full min-h-[240px] rounded-xl border border-caplet-ink/15 px-3 py-2 font-mono text-xs leading-relaxed"
+                    className="w-full min-h-[240px] rounded-xl border border-line-soft px-3 py-2 font-mono text-xs leading-relaxed"
                     value={draftSlides}
                     onChange={(e) => setDraftSlides(e.target.value)}
                   />
@@ -334,16 +334,16 @@ export default function Editor() {
                     type="button"
                     onClick={saveLesson}
                     disabled={loading}
-                    className="rounded-xl bg-caplet-ink text-white px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+                    className="btn-primary"
                   >
                     Save lesson
                   </button>
-                  {saveMsg ? <span className="text-sm text-caplet-ink/60">{saveMsg}</span> : null}
+                  {saveMsg ? <span className="text-sm text-text-muted">{saveMsg}</span> : null}
                 </div>
-                <p className="text-xs text-caplet-ink/45">
-                  Supported slide types match the lesson player: <code className="text-caplet-ink">text</code>,{' '}
-                  <code className="text-caplet-ink">image</code>, <code className="text-caplet-ink">video</code>,{' '}
-                  <code className="text-caplet-ink">question</code>.
+                <p className="text-xs text-text-dim">
+                  Supported slide types match the lesson player: <code className="text-text-primary">text</code>,{' '}
+                  <code className="text-text-primary">image</code>, <code className="text-text-primary">video</code>,{' '}
+                  <code className="text-text-primary">question</code>.
                 </p>
               </div>
             )}
