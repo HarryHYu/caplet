@@ -240,6 +240,18 @@ class ApiService {
     });
   }
 
+  /**
+   * AI: paste notes → structured slides. Editor-gated.
+   * Returns { slides: [...], warnings: string[] }.
+   */
+  async aiGenerateLesson(payload) {
+    return this.request('/ai/generate-lesson', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
   /** PUT file bytes to presigned URL (no Authorization header — do not use api.request). */
   async putToPresignedUrl(uploadUrl, file, contentType) {
     const res = await fetch(uploadUrl, {
@@ -250,6 +262,21 @@ class ApiService {
     if (!res.ok) {
       throw new Error(`Upload failed: ${res.status} ${res.statusText}`);
     }
+  }
+
+  /**
+   * Convenience: presign + upload a lesson image and return the final public URL.
+   * Called from the editor where useEditorToken is required.
+   */
+  async uploadLessonImage(file, lessonId) {
+    if (!file) throw new Error('No file selected');
+    if (!lessonId) throw new Error('Save the lesson once before uploading images.');
+    const presign = await this.presignUpload(
+      { purpose: 'lessonImage', mimeType: file.type, lessonId },
+      { useEditorToken: true },
+    );
+    await this.putToPresignedUrl(presign.uploadUrl, file, file.type);
+    return presign.publicUrl;
   }
 
   // Courses

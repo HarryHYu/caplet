@@ -195,6 +195,60 @@ export function normalizeSlide(slide) {
 export const INTERACTIVE_TYPES = new Set(['choice', 'fillblank', 'match', 'order']);
 
 /**
+ * Blank starter shape for each slide type, used by the editor palette
+ * when a teacher adds a new slide of that type.
+ */
+export const SLIDE_DEFAULTS = {
+  text: () => ({ type: 'text', content: '', layout: 'default', tone: 'neutral' }),
+  media: () => ({ type: 'media', source: 'image', url: '', caption: '', aspect: 'auto' }),
+  choice: () => ({
+    type: 'choice',
+    question: '',
+    options: ['', ''],
+    correctIndices: [],
+    mode: 'single',
+    explanation: '',
+  }),
+  fillblank: () => ({
+    type: 'fillblank',
+    template: 'Fill in the blank: the answer is {{0}}.',
+    blanks: [{ answers: [''] }],
+    mode: 'textbox',
+    explanation: '',
+  }),
+  cards: () => ({
+    type: 'cards',
+    mode: 'carousel',
+    columns: 2,
+    cards: [{ front: '', back: '' }],
+  }),
+  match: () => ({
+    type: 'match',
+    pairs: [{ left: '', right: '' }, { left: '', right: '' }],
+  }),
+  order: () => ({ type: 'order', prompt: '', items: ['', '', ''] }),
+  table: () => ({ type: 'table', headers: 'row', rows: [['', ''], ['', '']] }),
+  divider: () => ({ type: 'divider', title: '', subtitle: '' }),
+};
+
+/**
+ * Teacher-facing palette: ordered list of slide types with a label and
+ * a one-line description. Used by the AddSlidePalette in the editor.
+ */
+export const SLIDE_PALETTE = [
+  { type: 'text',      label: 'Text',         desc: 'Reading / explanation' },
+  { type: 'media',     label: 'Image / Video', desc: 'Image, YouTube, audio or embed' },
+  { type: 'choice',    label: 'Choice',       desc: 'Multiple choice / select all' },
+  { type: 'choice-tf', label: 'True / False', desc: 'Two-option question' },
+  { type: 'fillblank', label: 'Fill blank',   desc: 'Type the missing words' },
+  { type: 'cards',     label: 'Flashcards',   desc: 'Front / back study cards' },
+  { type: 'match',     label: 'Match',        desc: 'Pair terms to definitions' },
+  { type: 'order',     label: 'Order',        desc: 'Put items in the right order' },
+  { type: 'table',     label: 'Table',        desc: 'Reference grid' },
+  { type: 'divider',   label: 'Divider',      desc: 'Section break / heading' },
+];
+
+/**
  * Friendly label shown under the slide kicker.
  */
 export function slideKindLabel(slide) {
