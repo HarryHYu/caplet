@@ -73,18 +73,12 @@ const Lesson = sequelize.define('Lesson', {
       this.setDataValue('metadata', JSON.stringify(value));
     }
   },
-  // Slide-based content (Khan/EP style): [{ type: 'text'|'image'|'video', content: string, caption?: string }]
-  // When present, LessonPlayer shows one slide at a time; otherwise falls back to content blob
+  // Slide-based content (Khan/EP style): [{ type, ...config }]
+  // Stored as JSONB in Postgres so we can query inside slide content later.
+  // Sequelize returns this as a native array/object — no JSON.parse needed.
   slides: {
-    type: DataTypes.TEXT,
+    type: DataTypes.JSONB,
     allowNull: true,
-    get() {
-      const value = this.getDataValue('slides');
-      return value ? JSON.parse(value) : null;
-    },
-    set(value) {
-      this.setDataValue('slides', value ? JSON.stringify(value) : null);
-    }
   }
 }, {
   tableName: 'lessons',
