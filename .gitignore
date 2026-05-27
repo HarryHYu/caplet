@@ -23,6 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 
+# Agent / assistant scratch (Claude Code, generic agent skills, etc.)
+.claude/
+.agent/
+AGENTS.md
+
 # Local DB (testing only; production uses PostgreSQL)
 caplet.db
 backend/caplet.db
