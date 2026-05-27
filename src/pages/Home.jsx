@@ -239,7 +239,7 @@ const Home = () => {
   return (
     <div className="bg-surface-body text-text-primary relative selection:bg-accent selection:text-white">
       {/* ================= SIMPLIFIED HERO ================= */}
-      <section ref={heroRef} className="relative pt-48 pb-24 md:pt-64 md:pb-40">
+      <section ref={heroRef} className="relative pt-32 pb-24 md:pt-40 md:pb-40">
         <div className="container-custom relative z-10 w-full text-center" ref={heroTextRef}>
           <div className="max-w-4xl mx-auto text-text-primary">
             <h1 className="hero-text-elem text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter mb-8">
