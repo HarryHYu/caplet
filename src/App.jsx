@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -53,6 +54,15 @@ function FullPageSpinner() {
   );
 }
 
+// Reset scroll to the top on every route change (entire site).
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+}
+
 function HomeOrRedirect() {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return <FullPageSpinner />;
@@ -78,6 +88,7 @@ function App() {
       <AuthProvider>
         <CoursesProvider>
           <Router>
+            <ScrollToTop />
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow">
