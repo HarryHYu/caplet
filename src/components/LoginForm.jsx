@@ -64,7 +64,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             <button
               type="button"
               onClick={onSwitchToRegister}
-              className="text-caplet-sky font-semibold hover:underline"
+              className="text-accent font-semibold hover:underline"
             >
               Create an account
             </button>
@@ -94,26 +94,26 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
         </div>
         {googleLoading && (
           <p className="text-sm text-text-dim flex items-center gap-2">
-            <span className="w-4 h-4 border-2 border-caplet-sky/30 border-t-caplet-sky rounded-full animate-spin inline-block" />
+            <span className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin inline-block" />
             Signing you in with Google…
           </p>
         )}
       </div>
 
       <div className="my-10 flex items-center gap-4">
-        <div className="flex-1 h-px bg-caplet-ink/10" />
-        <span className="text-xs font-medium uppercase tracking-widest text-caplet-ink/40">or</span>
-        <div className="flex-1 h-px bg-caplet-ink/10" />
+        <div className="flex-1 h-px bg-line-soft" />
+        <span className="text-xs font-medium uppercase tracking-widest text-text-dim">or</span>
+        <div className="flex-1 h-px bg-line-soft" />
       </div>
 
-      <p className="text-sm text-caplet-ink/55 mb-6 leading-relaxed">
+      <p className="text-sm text-text-muted mb-6 leading-relaxed">
         Signed up with Google only? Your account does not have a password yet — use Google above, or after you sign in once, open{' '}
-        <strong className="text-caplet-ink/80">Settings → Profile</strong> and set a password to enable email login too.
+        <strong className="text-text-primary/80">Settings → Profile</strong> and set a password to enable email login too.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label htmlFor="email" className="block text-sm font-medium text-caplet-ink/70">
+          <label htmlFor="email" className="block text-sm font-medium text-text-muted">
             Email
           </label>
           <input
@@ -124,11 +124,11 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             onChange={handleChange}
             required
             autoComplete="username"
-            className="w-full px-0 py-3 bg-transparent border-b border-caplet-ink/15 focus:border-caplet-sky outline-none transition-all text-caplet-ink"
+            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary"
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="password" className="block text-sm font-medium text-caplet-ink/70">
+          <label htmlFor="password" className="block text-sm font-medium text-text-muted">
             Password
           </label>
           <input
@@ -139,7 +139,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             onChange={handleChange}
             required
             autoComplete="current-password"
-            className="w-full px-0 py-3 bg-transparent border-b border-caplet-ink/15 focus:border-caplet-sky outline-none transition-all text-caplet-ink"
+            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary"
           />
         </div>
         <button
@@ -156,12 +156,12 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
       </form>
 
       {onSwitchToRegister && (
-        <p className="mt-10 text-sm text-caplet-ink/50 text-center sm:text-left">
+        <p className="mt-10 text-sm text-text-dim text-center sm:text-left">
           No account?{' '}
           <button
             type="button"
             onClick={onSwitchToRegister}
-            className="text-caplet-sky font-semibold hover:underline"
+            className="text-accent font-semibold hover:underline"
           >
             Sign up
           </button>

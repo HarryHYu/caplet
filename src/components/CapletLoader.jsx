@@ -16,7 +16,7 @@ export default function CapletLoader({ message, className = '' }) {
         />
       </div>
       {message ? (
-        <p className="text-center text-base font-serif italic text-caplet-ink dark:text-text-muted animate-pulse max-w-xs">
+        <p className="text-center text-base font-serif italic text-text-primary dark:text-text-muted animate-pulse max-w-xs">
           {message}
         </p>
       ) : null}
