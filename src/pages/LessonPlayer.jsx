@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
@@ -161,14 +161,14 @@ function QuestionSlide({ slide, currentSlideIndex, quizScores, questionAnswer, s
 
   return (
     <div className="max-w-2xl mx-auto w-full">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-[0.25em] mb-6">
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-[0.25em] mb-4">
         <span className="w-1.5 h-1.5 rounded-full bg-accent" />
         Check Yourself
       </div>
-      <h3 className="text-2xl md:text-3xl font-display font-bold leading-[1.25] text-text-primary mb-8">
+      <h3 className="text-xl md:text-2xl font-display font-bold leading-snug text-text-primary mb-5">
         {slide.question}
       </h3>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {options.map((option, optIdx) => {
           const chosen = selected === optIdx;
           const isTrulyCorrect = correctIndex === optIdx;
@@ -189,9 +189,9 @@ function QuestionSlide({ slide, currentSlideIndex, quizScores, questionAnswer, s
               type="button"
               disabled={showFeedback}
               onClick={() => setQuestionAnswer(optIdx)}
-              className={`group w-full text-left p-4 md:p-5 border rounded-2xl transition-all duration-200 flex items-center gap-4 ${classes}`}
+              className={`group w-full text-left px-3.5 py-3 md:px-4 md:py-3.5 border rounded-xl transition-all duration-200 flex items-center gap-3 ${classes}`}
             >
-              <span className={`w-9 h-9 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold tracking-wide ${
+              <span className={`w-8 h-8 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold tracking-wide ${
                 showFeedback && isTrulyCorrect ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' :
                 showFeedback && chosen && !isTrulyCorrect ? 'border-rose-400 text-rose-500 bg-rose-500/10' :
                 chosen ? 'border-accent text-accent bg-accent/10' :
@@ -199,14 +199,14 @@ function QuestionSlide({ slide, currentSlideIndex, quizScores, questionAnswer, s
               }`}>
                 {letter}
               </span>
-              <span className="text-[15px] md:text-base flex-1">{option}</span>
+              <span className="text-[14px] md:text-[15px] flex-1 leading-snug">{option}</span>
               {showFeedback && isTrulyCorrect && (
-                <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               )}
               {showFeedback && chosen && !isTrulyCorrect && (
-                <svg className="w-5 h-5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               )}
@@ -219,25 +219,25 @@ function QuestionSlide({ slide, currentSlideIndex, quizScores, questionAnswer, s
         <button
           type="button"
           onClick={() => onSubmit(selected === correctIndex)}
-          className="btn-primary w-full mt-6 py-3.5"
+          className="btn-primary w-full mt-4 py-3"
         >
           Submit Answer
         </button>
       )}
 
       {showFeedback && (
-        <div className={`mt-8 p-5 rounded-2xl border ${
+        <div className={`mt-5 p-4 rounded-xl border ${
           isActuallyCorrect
             ? 'bg-emerald-500/[0.06] border-emerald-500/30'
             : 'bg-rose-500/[0.05] border-rose-400/30'
         }`}>
-          <p className={`text-sm font-bold uppercase tracking-[0.2em] mb-2 ${
+          <p className={`text-xs font-bold uppercase tracking-[0.2em] mb-1.5 ${
             isActuallyCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
           }`}>
             {isActuallyCorrect ? 'Correct' : 'Not quite'}
           </p>
           {slide.explanation && (
-            <p className="text-[15px] leading-relaxed text-text-primary">{slide.explanation}</p>
+            <p className="text-sm leading-relaxed text-text-primary">{slide.explanation}</p>
           )}
         </div>
       )}
@@ -269,7 +269,6 @@ const LessonPlayer = () => {
   // ticker filled in solid blue even if they jump backward.
   const [visited, setVisited] = useState(() => new Set([0]));
 
-  const slideScrollRef = useRef(null);
 
   /* ---------- Data loading ---------- */
   useEffect(() => {
@@ -366,9 +365,6 @@ const LessonPlayer = () => {
       setQuestionSubmitted(false);
       if (isAuthenticated && lesson?.id) {
         api.updateLessonProgress(lesson.id, { lastSlideIndex: newIndex }).catch(() => {});
-      }
-      if (slideScrollRef.current) {
-        slideScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
     [hasSlides, slides.length, isAuthenticated, lesson?.id],
@@ -605,8 +601,8 @@ const LessonPlayer = () => {
                 <div className="w-32 h-px bg-accent" />
               </div>
 
-              <div ref={slideScrollRef} className="flex-1 min-h-0 overflow-y-auto">
-                <div className="p-6 md:p-10 lg:p-14 min-h-full flex flex-col">
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <div className="p-5 md:p-8 lg:p-12 h-full flex flex-col">
                   {currentSlide?.type === 'text' && (
                     <div className="max-w-3xl mx-auto w-full">
                       <div className="prose-lesson">
