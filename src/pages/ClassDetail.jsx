@@ -132,7 +132,7 @@ const ClassDetail = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center bg-surface-body">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-6">Sign In Required</span>
           <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">
@@ -151,7 +151,7 @@ const ClassDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center bg-surface-body">
         <CapletLoader message="Loading class…" />
       </div>
     );
@@ -159,7 +159,7 @@ const ClassDetail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center page-section-light">
+      <div className="min-h-screen flex items-center justify-center bg-surface-body">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-6 text-red-500">Error</span>
           <h2 className="text-3xl font-extrabold text-black dark:text-white uppercase tracking-tighter mb-6">

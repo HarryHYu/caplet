@@ -109,17 +109,9 @@
     @apply max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20;
   }
 
-  /* Section helpers */
-  .section-divider {
-    @apply w-full h-px bg-line-soft my-16;
-  }
-
+  /* Section kicker — the small uppercase accent label above a heading. */
   .section-kicker {
     @apply text-xs font-semibold uppercase tracking-wide text-accent mb-2 block;
-  }
-
-  .section-title {
-    @apply text-3xl md:text-4xl font-bold mb-8 tracking-tight;
   }
 
   /* Interactive Elements */
@@ -149,77 +141,6 @@
 
   .btn-secondary:active {
     @apply translate-y-0;
-  }
-
-  /* Cards */
-  .card-premium {
-    @apply p-8 bg-surface-raised border border-line-soft rounded-xl transition-all duration-300;
-  }
-
-  .card-premium:hover {
-    @apply shadow-lg -translate-y-1;
-    border-color: var(--accent);
-  }
-
-  /* Prose styling for lesson content (ReactMarkdown) */
-  .prose-editorial {
-    @apply text-base leading-relaxed text-text-primary;
-  }
-
-  .prose-editorial h1 {
-    @apply text-3xl font-bold mt-8 mb-4;
-  }
-
-  .prose-editorial h2 {
-    @apply text-2xl font-bold mt-8 mb-3;
-  }
-
-  .prose-editorial h3 {
-    @apply text-xl font-semibold mt-6 mb-3;
-  }
-
-  .prose-editorial p {
-    @apply mb-4 leading-relaxed;
-  }
-
-  .prose-editorial ul {
-    @apply list-disc pl-6 mb-4 space-y-2;
-  }
-
-  .prose-editorial ol {
-    @apply list-decimal pl-6 mb-4 space-y-2;
-  }
-
-  .prose-editorial li {
-    @apply leading-relaxed;
-  }
-
-  .prose-editorial strong {
-    @apply font-bold text-text-primary;
-  }
-
-  .prose-editorial blockquote {
-    @apply border-l-4 border-accent pl-4 my-4 italic text-text-muted;
-  }
-
-  .prose-editorial code {
-    @apply bg-surface-soft px-1.5 py-0.5 rounded text-sm font-mono;
-  }
-
-  .prose-editorial pre {
-    @apply bg-surface-soft p-4 rounded-lg overflow-x-auto mb-4;
-  }
-
-  .prose-editorial a {
-    @apply text-accent underline hover:text-accent-strong;
-  }
-
-  .prose-editorial img {
-    @apply rounded-lg my-4 max-w-full;
-  }
-
-  .prose-editorial hr {
-    @apply my-8 border-line-soft;
   }
 
   /* Lesson reading mode — editorial, slightly larger, refined spacing.
@@ -325,10 +246,6 @@
     animation: reveal-text 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
-  .reveal-up {
-    animation: reveal-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
   @keyframes fadeSlideUp {
     from {
       opacity: 0;
@@ -360,26 +277,10 @@
     animation-delay: 0.4s;
   }
 
-  .stagger-5 {
-    animation-delay: 0.5s;
-  }
-
   @keyframes reveal-text {
     from {
       opacity: 0;
       transform: translateY(10px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes reveal-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
     }
 
     to {
@@ -436,15 +337,6 @@
     animation: pulse-dot 2.4s ease-in-out infinite;
   }
 
-  /* Decorative tab notch background for the slide canvas (handles dark) */
-  .lesson-canvas-grain {
-    background-image:
-      radial-gradient(circle at 1px 1px, var(--line-soft) 1px, transparent 0);
-    background-size: 22px 22px;
-    background-position: 0 0;
-    opacity: 0.5;
-  }
-
   @keyframes float {
 
     0%,
@@ -474,9 +366,4 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent);
-}
-
-/* Utility Overrides */
-.text-balance {
-  text-wrap: balance;
 }

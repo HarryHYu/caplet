@@ -81,7 +81,7 @@ const UserProfile = () => {
 
             <div className="relative z-10">
               <div className="flex flex-col md:flex-row items-start md:items-center gap-10 mb-16 pb-16 border-b border-line-soft">
-                <div className="w-24 h-24 border border-line-soft bg-surface-body flex items-center justify-center text-4xl font-serif italic text-accent shadow-premium">
+                <div className="w-24 h-24 border border-line-soft bg-surface-body flex items-center justify-center text-4xl font-serif italic text-accent shadow-lg">
                   {initials}
                 </div>
                 <div>

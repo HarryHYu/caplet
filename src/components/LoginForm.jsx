@@ -75,7 +75,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
       </div>
 
       {error && (
-        <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg reveal-text animate-shake">
+        <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg reveal-text">
           <p className="text-sm font-medium text-red-700">{error}</p>
         </div>
       )}
