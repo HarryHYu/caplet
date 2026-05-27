@@ -43,9 +43,9 @@ import { GOOGLE_OAUTH_CLIENT_ID } from './config/googleClient';
 
 function FullPageSpinner() {
   return (
-    <div className="min-h-screen bg-caplet-sand flex flex-col items-center justify-center p-8">
+    <div className="min-h-screen bg-surface-soft flex flex-col items-center justify-center p-8">
       <div className="relative">
-        <div className="absolute inset-0 bg-caplet-sky/10 blur-3xl animate-pulse rounded-full scale-150" />
+        <div className="absolute inset-0 bg-accent/10 blur-3xl animate-pulse rounded-full scale-150" />
         <div className="relative">
           <CapletLoader message="Getting things ready..." />
         </div>

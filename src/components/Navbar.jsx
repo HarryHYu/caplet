@@ -203,8 +203,8 @@ const Navbar = () => {
      ────────────────────────────────────────────────────────────────────── */
   const applyGlass = scrolled;
   const navClasses = applyGlass
-    ? 'bg-white/80 dark:bg-black/60 backdrop-blur-md border border-black/10 dark:border-white/10 text-caplet-ink dark:text-white shadow-xl translate-y-2'
-    : 'bg-transparent border border-transparent text-caplet-ink translate-y-4';
+    ? 'bg-white/80 dark:bg-black/60 backdrop-blur-md border border-black/10 dark:border-white/10 text-text-primary dark:text-white shadow-xl translate-y-2'
+    : 'bg-transparent border border-transparent text-text-primary translate-y-4';
 
   return (
     <div className="fixed top-0 inset-x-0 z-50 flex flex-col items-center pointer-events-none">
@@ -259,13 +259,13 @@ const Navbar = () => {
                 <button
                   type="button"
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest bg-caplet-sky text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest bg-accent text-white px-4 py-2 rounded-full hover:bg-accent-strong transition-colors"
                 >
                   {user?.firstName || 'User'}
                 </button>
                 {showUserMenu && (
                   <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-surface-raised border border-line-soft rounded-2xl shadow-xl overflow-hidden py-2">
-                    <Link to="/settings" onClick={() => setShowUserMenu(false)} className="block px-4 py-2 text-sm text-caplet-ocean dark:text-white hover:bg-caplet-parchment dark:hover:bg-zinc-800">Settings</Link>
+                    <Link to="/settings" onClick={() => setShowUserMenu(false)} className="block px-4 py-2 text-sm text-accent-strong dark:text-white hover:bg-surface-body dark:hover:bg-zinc-800">Settings</Link>
                     <button type="button" onClick={logout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Sign Out</button>
                   </div>
                 )}
@@ -273,7 +273,7 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/login"
-                className="hidden md:inline-flex items-center justify-center bg-caplet-sky hover:bg-blue-700 text-white font-display font-semibold text-sm px-6 py-2.5 rounded-full transition-transform hover:-translate-y-0.5 active:translate-y-0 shadow-md"
+                className="hidden md:inline-flex items-center justify-center bg-accent hover:bg-accent-strong text-white font-display font-semibold text-sm px-6 py-2.5 rounded-full transition-transform hover:-translate-y-0.5 active:translate-y-0 shadow-md"
               >
                 Get Started Free
               </Link>
@@ -308,7 +308,7 @@ const Navbar = () => {
               <Link
                 to="/login"
                 onClick={() => setIsOpen(false)}
-                className="inline-flex items-center justify-center bg-caplet-sky text-white font-display font-semibold px-6 py-3 rounded-xl mt-4 text-center"
+                className="inline-flex items-center justify-center bg-accent text-white font-display font-semibold px-6 py-3 rounded-xl mt-4 text-center"
               >
                 Get Started Free
               </Link>
