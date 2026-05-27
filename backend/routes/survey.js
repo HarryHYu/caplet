@@ -43,20 +43,6 @@ router.post('/', [
   }
 });
 
-// Get all survey responses (admin only - optional, for analytics)
-router.get('/', async (req, res) => {
-  try {
-    const surveys = await Survey.findAll({
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.json({ surveys });
-  } catch (error) {
-    console.error('Get surveys error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
 // Get aggregated survey statistics
 router.get('/stats', async (req, res) => {
   try {

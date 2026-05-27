@@ -46,9 +46,10 @@ function sortCourseContent(course) {
 router.get('/', async (req, res) => {
   try {
     const { category, level, search, page = 1, limit = 10 } = req.query;
-    
+
     const whereClause = {
-      workspaceId: { [Op.is]: null }
+      workspaceId: { [Op.is]: null },
+      isPublished: true
     };
 
     if (category) {
@@ -109,7 +110,7 @@ router.get('/:courseId/lessons/:lessonId', async (req, res) => {
             {
               model: Course,
               as: 'course',
-              attributes: ['id', 'workspaceId'],
+              attributes: ['id', 'workspaceId', 'isPublished'],
               required: true
             }
           ]
@@ -119,7 +120,7 @@ router.get('/:courseId/lessons/:lessonId', async (req, res) => {
     if (!row || !row.module || row.module.courseId !== courseId) {
       return res.status(404).json({ message: 'Lesson not found' });
     }
-    if (row.module.course && row.module.course.workspaceId) {
+    if (row.module.course && (row.module.course.workspaceId || !row.module.course.isPublished)) {
       return res.status(404).json({ message: 'Lesson not found' });
     }
     const lesson = row.toJSON ? row.toJSON() : row;
@@ -146,10 +147,7 @@ router.get('/:id', async (req, res) => {
       include: includeModulesWithLessons()
     });
 
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-    if (course.workspaceId) {
+    if (!course || course.workspaceId || !course.isPublished) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
@@ -164,14 +162,14 @@ router.get('/:id', async (req, res) => {
 router.get('/categories/list', async (req, res) => {
   try {
     const categories = await Course.findAll({
-      where: { workspaceId: { [Op.is]: null } },
+      where: { workspaceId: { [Op.is]: null }, isPublished: true },
       attributes: ['category'],
       group: ['category'],
       raw: true
     });
 
     const categoryList = categories.map(cat => cat.category);
-    
+
     res.json({ categories: categoryList });
   } catch (error) {
     console.error('Get categories error:', error);
@@ -183,7 +181,7 @@ router.get('/categories/list', async (req, res) => {
 router.get('/featured/list', async (req, res) => {
   try {
     const courses = await Course.findAll({
-      where: { workspaceId: { [Op.is]: null } },
+      where: { workspaceId: { [Op.is]: null }, isPublished: true },
       include: includeModulesWithLessons(),
       order: [['createdAt', 'DESC']],
       limit: 6

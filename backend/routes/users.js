@@ -37,7 +37,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Update user profile (name, email, optional password, dateOfBirth, bio, role, preferences)
+// Update user profile (name, email, optional password, dateOfBirth, bio, preferences).
+// `role` is ignored even if sent — role changes happen via /api/admin/promote.
 router.put('/profile', authenticateToken, [
   body('firstName').optional().trim().isLength({ min: 1, max: 50 }),
   body('lastName').optional().trim().isLength({ min: 1, max: 50 }),
@@ -45,8 +46,7 @@ router.put('/profile', authenticateToken, [
   body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('dateOfBirth').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date (use YYYY-MM-DD)'),
   body('bio').optional().trim().isLength({ max: 1000 }),
-  body('preferences').optional().isObject(),
-  body('role').optional().isIn(['student', 'instructor'])
+  body('preferences').optional().isObject()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -54,7 +54,7 @@ router.put('/profile', authenticateToken, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, email, password, dateOfBirth, bio, preferences, role } = req.body;
+    const { firstName, lastName, email, password, dateOfBirth, bio, preferences } = req.body;
 
     // If changing email, ensure it's not taken by another user
     if (email && email !== req.user.email) {
@@ -64,20 +64,14 @@ router.put('/profile', authenticateToken, [
       }
     }
 
-    // Determine new role (admins keep role; others may switch student/instructor)
-    let newRole = req.user.role;
-    if (role && req.user.role !== 'admin') {
-      if (role === 'student' || role === 'instructor') {
-        newRole = role;
-      }
-    }
-
+    // NOTE: `role` is intentionally NOT read from req.body. Profile
+    // updates can never change a user's role. Role changes go through
+    // /api/admin/promote.
     const updates = {
       firstName: firstName !== undefined ? firstName : req.user.firstName,
       lastName: lastName !== undefined ? lastName : req.user.lastName,
       bio: bio !== undefined ? bio : req.user.bio,
-      preferences: preferences || req.user.preferences,
-      role: newRole
+      preferences: preferences || req.user.preferences
     };
     if (email !== undefined) updates.email = email;
     if (dateOfBirth !== undefined) updates.dateOfBirth = dateOfBirth === '' ? null : dateOfBirth;

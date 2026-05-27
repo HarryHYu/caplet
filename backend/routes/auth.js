@@ -96,8 +96,7 @@ router.post('/register', [
   }),
   body('password').isLength({ min: 6 }),
   body('firstName').trim().isLength({ min: 1, max: 50 }),
-  body('lastName').trim().isLength({ min: 1, max: 50 }),
-  body('role').optional().isIn(['student', 'instructor'])
+  body('lastName').trim().isLength({ min: 1, max: 50 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -105,7 +104,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, firstName, lastName, dateOfBirth, role } = req.body;
+    const { email, password, firstName, lastName, dateOfBirth } = req.body;
     const normalizedEmail = normalizeEmailInput(email);
     const storageEmail = normalizeEmailForStorage(email);
 
@@ -114,15 +113,16 @@ router.post('/register', [
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
-    const userRole = role === 'instructor' ? 'instructor' : 'student';
-
+    // Role is NOT accepted from the request body — every new account is
+    // a student. Elevation to instructor / admin happens through
+    // /api/admin/promote, never through self-service signup.
     const user = await User.create({
       email: storageEmail,
       password,
       firstName,
       lastName,
       dateOfBirth,
-      role: userRole
+      role: 'student'
     });
 
     const token = generateToken(user.id);
