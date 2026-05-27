@@ -6,7 +6,7 @@ const Lesson = require('../models/Lesson');
 const UserProgress = require('../models/UserProgress');
 const EditorWorkspace = require('../models/EditorWorkspace');
 const { digestEditorCode, generateEditorCode } = require('../utils/editorCode');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -226,9 +226,6 @@ router.post('/reset-progress', async (req, res) => {
   }
 });
 
-module.exports = router;
-
-
 // Admin: list courses (include unpublished)
 router.get('/courses', requireAdmin, async (req, res) => {
   try {
@@ -251,26 +248,6 @@ router.post('/courses', requireAdmin, async (req, res) => {
   } catch (e) {
     console.error('Admin create course error:', e);
     res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// Admin: reset all user progress (dangerous). Secured by ADMIN_BOOTSTRAP_TOKEN header.
-router.post('/reset-progress', async (req, res) => {
-  try {
-    const headerToken = req.header('X-Bootstrap-Token');
-    const expectedToken = process.env.ADMIN_BOOTSTRAP_TOKEN;
-
-    if (!expectedToken || headerToken !== expectedToken) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    // Truncate/destroy all progress
-    await UserProgress.destroy({ where: {}, truncate: true, cascade: true, restartIdentity: true });
-
-    return res.json({ message: 'All user progress has been reset' });
-  } catch (error) {
-    console.error('Reset progress error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -369,3 +346,4 @@ router.post('/editor-workspaces', requireAdmin, async (req, res) => {
   }
 });
 
+module.exports = router;
