@@ -14,39 +14,9 @@ export default {
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
-        // Monochrome Scale
-        black: '#000000',
-        white: '#FFFFFF',
-        zinc: {
-          50: '#FAFAFA',
-          100: '#F4F4F5',
-          200: '#E4E4E7',
-          300: '#D4D4D8',
-          400: '#A1A1AA',
-          500: '#71717A',
-          600: '#52525B',
-          700: '#3F3F46',
-          800: '#27272A',
-          900: '#18181B',
-          950: '#09090B',
-        },
-        dim: '#71717A',
-        // Brand Blue (legacy)
-        brand: {
-          DEFAULT: '#0066FF',
-          light: '#3385FF',
-          dark: '#0052CC',
-          soft: 'rgba(0, 102, 255, 0.05)',
-        },
-        // Caplet Landing Page Specific
-        caplet: {
-          ocean: '#1B3F6B', /* Kept blue theme */
-          sky: '#2563EB',
-          parchment: '#FAF8F5', /* Warm off-white */
-          sand: '#EAE4DB', /* Sandy neutral */
-          ink: '#36312D', /* Warm dark charcoal instead of stark black */
-        },
-        // Design system tokens — CSS variable backed
+        // Design system tokens — CSS variable backed (see src/index.css).
+        // All colors used in the app go through these tokens so dark mode
+        // is automatic and the palette can be changed in one place.
         accent: {
           DEFAULT: 'var(--accent)',
           strong: 'var(--accent-strong)',
