@@ -6,7 +6,6 @@ const { testConnection } = require('./config/database');
 const { runMigrations } = require('./config/migrationRunner');
 const { syncDatabase } = require('./models');
 const seedProductionDatabase = require('./scripts/seed-production');
-const { maybeRotateDbPassword } = require('./scripts/maybe-rotate-db-password');
 require('dotenv').config();
 
 const app = express();
@@ -98,10 +97,6 @@ const startServer = async () => {
   try {
     // Test database connection
     await testConnection();
-
-    // TEMPORARY: rotate Postgres password if ROTATE_DB_PASSWORD env var is set.
-    // See backend/scripts/maybe-rotate-db-password.js for details and removal plan.
-    await maybeRotateDbPassword();
 
     // ==============================================================================
     // DATABASE MIGRATIONS PATTERN
