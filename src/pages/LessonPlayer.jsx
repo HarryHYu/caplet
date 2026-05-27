@@ -4,16 +4,12 @@ import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import SlideRenderer from '../components/lesson/SlideRenderer';
+import { normalizeSlide, INTERACTIVE_TYPES, slideKindLabel } from '../lib/slideSchema';
 
 /* ──────────────────────────────────────────────────────────────────────────
    Helpers
    ────────────────────────────────────────────────────────────────────────── */
-
-function getYouTubeId(url) {
-  if (!url) return '';
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/);
-  return match ? match[1] : url;
-}
 
 function getFlatLessons(course) {
   if (!course?.modules) return [];
@@ -31,16 +27,6 @@ function parseSlides(raw) {
   return [];
 }
 
-function slideKindLabel(type) {
-  switch (type) {
-    case 'text': return 'Reading';
-    case 'image': return 'Visual';
-    case 'video': return 'Watch';
-    case 'question': return 'Check Yourself';
-    default: return 'Slide';
-  }
-}
-
 /* ──────────────────────────────────────────────────────────────────────────
    Sub-components
    ────────────────────────────────────────────────────────────────────────── */
@@ -49,15 +35,16 @@ function SlideTicker({ slides, currentIndex, quizScores, visited, onJump }) {
   return (
     <div className="flex items-center gap-1.5 w-full">
       {slides.map((s, i) => {
-        const isQuestion = s?.type === 'question';
+        const normalized = normalizeSlide(s);
+        const isInteractive = normalized && INTERACTIVE_TYPES.has(normalized.type);
         const answered = quizScores[String(i)];
         const isCurrent = i === currentIndex;
         const wasVisited = i < currentIndex || visited.has(i);
         let bar = 'bg-line-soft';
         if (wasVisited) bar = 'bg-accent';
         if (isCurrent) bar = 'bg-accent';
-        if (isQuestion && answered === true) bar = 'bg-emerald-500';
-        if (isQuestion && answered === false) bar = 'bg-rose-400';
+        if (isInteractive && answered === true) bar = 'bg-emerald-500';
+        if (isInteractive && answered === false) bar = 'bg-rose-400';
         return (
           <button
             key={i}
@@ -151,100 +138,6 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
   );
 }
 
-function QuestionSlide({ slide, currentSlideIndex, quizScores, questionAnswer, setQuestionAnswer, questionSubmitted, onSubmit }) {
-  const options = Array.isArray(slide.options) ? slide.options : [];
-  const correctIndex = typeof slide.correctIndex === 'number' ? slide.correctIndex : 0;
-  const alreadyAnswered = quizScores[String(currentSlideIndex)] !== undefined;
-  const selected = questionAnswer ?? (alreadyAnswered ? undefined : null);
-  const showFeedback = questionSubmitted || alreadyAnswered;
-  const isActuallyCorrect = alreadyAnswered ? quizScores[String(currentSlideIndex)] : (selected === correctIndex);
-
-  return (
-    <div className="max-w-2xl mx-auto w-full">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-[0.25em] mb-4">
-        <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-        Check Yourself
-      </div>
-      <h3 className="text-xl md:text-2xl font-display font-bold leading-snug text-text-primary mb-5">
-        {slide.question}
-      </h3>
-      <div className="space-y-2">
-        {options.map((option, optIdx) => {
-          const chosen = selected === optIdx;
-          const isTrulyCorrect = correctIndex === optIdx;
-          let classes = 'border-line-soft hover:border-accent/60 hover:bg-accent/5';
-          if (showFeedback && isTrulyCorrect) {
-            classes = 'border-emerald-500/60 bg-emerald-500/[0.07] text-text-primary';
-          } else if (showFeedback && chosen && !isTrulyCorrect) {
-            classes = 'border-rose-400/60 bg-rose-500/[0.06] text-text-primary';
-          } else if (showFeedback) {
-            classes = 'border-line-soft opacity-50';
-          } else if (chosen) {
-            classes = 'border-accent bg-accent/[0.06]';
-          }
-          const letter = String.fromCharCode(65 + optIdx);
-          return (
-            <button
-              key={optIdx}
-              type="button"
-              disabled={showFeedback}
-              onClick={() => setQuestionAnswer(optIdx)}
-              className={`group w-full text-left px-3.5 py-3 md:px-4 md:py-3.5 border rounded-xl transition-all duration-200 flex items-center gap-3 ${classes}`}
-            >
-              <span className={`w-8 h-8 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold tracking-wide ${
-                showFeedback && isTrulyCorrect ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' :
-                showFeedback && chosen && !isTrulyCorrect ? 'border-rose-400 text-rose-500 bg-rose-500/10' :
-                chosen ? 'border-accent text-accent bg-accent/10' :
-                'border-line-soft text-text-dim group-hover:border-accent group-hover:text-accent'
-              }`}>
-                {letter}
-              </span>
-              <span className="text-[14px] md:text-[15px] flex-1 leading-snug">{option}</span>
-              {showFeedback && isTrulyCorrect && (
-                <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-              {showFeedback && chosen && !isTrulyCorrect && (
-                <svg className="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {!showFeedback && selected !== null && selected !== undefined && (
-        <button
-          type="button"
-          onClick={() => onSubmit(selected === correctIndex)}
-          className="btn-primary w-full mt-4 py-3"
-        >
-          Submit Answer
-        </button>
-      )}
-
-      {showFeedback && (
-        <div className={`mt-5 p-4 rounded-xl border ${
-          isActuallyCorrect
-            ? 'bg-emerald-500/[0.06] border-emerald-500/30'
-            : 'bg-rose-500/[0.05] border-rose-400/30'
-        }`}>
-          <p className={`text-xs font-bold uppercase tracking-[0.2em] mb-1.5 ${
-            isActuallyCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
-          }`}>
-            {isActuallyCorrect ? 'Correct' : 'Not quite'}
-          </p>
-          {slide.explanation && (
-            <p className="text-sm leading-relaxed text-text-primary">{slide.explanation}</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ──────────────────────────────────────────────────────────────────────────
    Main component
    ────────────────────────────────────────────────────────────────────────── */
@@ -262,8 +155,6 @@ const LessonPlayer = () => {
   const [completed, setCompleted] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [progress, setProgress] = useState({ lessonProgress: [], courseProgress: null });
-  const [questionAnswer, setQuestionAnswer] = useState(null);
-  const [questionSubmitted, setQuestionSubmitted] = useState(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
   // Track slides the user has actually viewed in this session — keeps the
   // ticker filled in solid blue even if they jump backward.
@@ -361,8 +252,6 @@ const LessonPlayer = () => {
         next.add(newIndex);
         return next;
       });
-      setQuestionAnswer(null);
-      setQuestionSubmitted(false);
       if (isAuthenticated && lesson?.id) {
         api.updateLessonProgress(lesson.id, { lastSlideIndex: newIndex }).catch(() => {});
       }
@@ -399,7 +288,6 @@ const LessonPlayer = () => {
   const recordQuestionAnswer = useCallback(
     async (slideIndex, isCorrect) => {
       const key = String(slideIndex);
-      setQuestionSubmitted(true);
       if (isAuthenticated && lesson?.id) {
         await api
           .updateLessonProgress(lesson.id, { quizScores: { [key]: isCorrect }, lastSlideIndex: slideIndex })
@@ -583,7 +471,7 @@ const LessonPlayer = () => {
                 {String(slides.length).padStart(2, '0')}
               </span>
               <span className="w-6 h-px bg-line-soft" />
-              <span>{slideKindLabel(currentSlide?.type)}</span>
+              <span>{slideKindLabel(normalizeSlide(currentSlide))}</span>
               <span className="w-6 h-px bg-line-soft hidden sm:block" />
               <span className="text-text-dim/60 hidden sm:inline">
                 {Math.round(((currentSlideIndex + 1) / slides.length) * 100)}% through
@@ -601,91 +489,14 @@ const LessonPlayer = () => {
                 <div className="w-32 h-px bg-accent" />
               </div>
 
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <div className="p-5 md:p-8 lg:p-12 h-full flex flex-col">
-                  {currentSlide?.type === 'text' && (
-                    <div className="max-w-3xl mx-auto w-full">
-                      <div className="prose-lesson">
-                        <ReactMarkdown>{currentSlide.content || ''}</ReactMarkdown>
-                      </div>
-                      {currentSlide.caption && (
-                        <p className="mt-10 pt-6 border-t border-line-soft text-sm text-text-muted italic font-serif">
-                          {currentSlide.caption}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {currentSlide?.type === 'image' && currentSlide.content && (
-                    <figure className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center gap-6">
-                      <div className="rounded-2xl overflow-hidden bg-surface-soft border border-line-soft">
-                        <img
-                          src={api.getProxiedImageSrc(currentSlide.content)}
-                          alt={currentSlide.caption || ''}
-                          className="w-full h-auto"
-                        />
-                      </div>
-                      {currentSlide.caption && (
-                        <figcaption className="text-center text-sm font-serif italic text-text-muted">
-                          {currentSlide.caption}
-                        </figcaption>
-                      )}
-                    </figure>
-                  )}
-
-                  {currentSlide?.type === 'video' && currentSlide.content && (
-                    <figure className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center gap-6">
-                      <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-line-soft shadow-lg">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${getYouTubeId(currentSlide.content)}`}
-                          className="w-full h-full"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          title={currentSlide.caption || 'Video'}
-                        />
-                      </div>
-                      {currentSlide.caption && (
-                        <figcaption className="text-center text-sm font-serif italic text-text-muted">
-                          {currentSlide.caption}
-                        </figcaption>
-                      )}
-                    </figure>
-                  )}
-
-                  {currentSlide?.type === 'question' && (
-                    <div className="flex-1 flex items-center">
-                      <QuestionSlide
-                        slide={currentSlide}
-                        currentSlideIndex={currentSlideIndex}
-                        quizScores={quizScores}
-                        questionAnswer={questionAnswer}
-                        setQuestionAnswer={setQuestionAnswer}
-                        questionSubmitted={questionSubmitted}
-                        onSubmit={(isCorrect) => recordQuestionAnswer(currentSlideIndex, isCorrect)}
-                      />
-                    </div>
-                  )}
-
-                  {currentSlide && !['text', 'image', 'video', 'question'].includes(currentSlide.type) && (
-                    <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col items-center justify-center text-center gap-6">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-[0.25em]">
-                        {currentSlide.type || 'slide'}
-                      </div>
-                      {currentSlide.content ? (
-                        <div className="prose-lesson text-left w-full">
-                          <ReactMarkdown>{String(currentSlide.content)}</ReactMarkdown>
-                        </div>
-                      ) : (
-                        <p className="text-text-muted font-serif italic text-lg">
-                          This slide type isn't available in the player yet.
-                        </p>
-                      )}
-                      {currentSlide.caption && (
-                        <p className="text-sm text-text-muted italic font-serif">{currentSlide.caption}</p>
-                      )}
-                    </div>
-                  )}
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className="p-5 md:p-8 lg:p-12 min-h-full flex flex-col">
+                  <SlideRenderer
+                    slide={currentSlide}
+                    alreadyAnswered={quizScores[String(currentSlideIndex)] !== undefined}
+                    alreadyCorrect={quizScores[String(currentSlideIndex)] === true}
+                    onSubmit={(isCorrect) => recordQuestionAnswer(currentSlideIndex, isCorrect)}
+                  />
                 </div>
               </div>
             </div>

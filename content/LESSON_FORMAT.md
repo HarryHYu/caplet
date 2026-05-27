@@ -1,8 +1,10 @@
-# Lesson content format (for AI → import pipeline)
+# Lesson content format
 
-When you paste a lesson in the chat (with slides, video/image URLs, and quiz), the AI will return **one JSON file** in this format. Save it and run the import script to add the lesson to Caplet.
+A lesson is an ordered array of **slides**. Each slide is one of nine canonical types. The player renders them one at a time; interactive types (`choice`, `fillblank`, `match`, `order`) record a right/wrong score against the user's progress.
 
-## JSON structure
+The legacy short types (`image`, `video`, `audio`, `question`, `flashcard`, `matching`, `ordering`, `truefalse`) are still accepted on input — the server normalizes them into the canonical shape on save.
+
+## Top-level shape (for import / API)
 
 ```json
 {
@@ -15,47 +17,148 @@ When you paste a lesson in the chat (with slides, video/image URLs, and quiz), t
   "lessonTitle": "Understanding Stakeholders 1.0",
   "lessonOrder": 1,
   "slides": [
-    { "type": "text", "content": "Markdown or plain text...", "caption": "Optional" },
-    { "type": "video", "content": "https://www.youtube.com/watch?v=...", "caption": "Optional title" },
-    { "type": "image", "content": "https://example.com/image.jpg", "caption": "Optional caption" }
-  ],
-  "quiz": [
-    {
-      "question": "Who are shareholders?",
-      "options": ["A. ...", "B. ...", "C. People who own part of a company by buying shares", "D. ..."],
-      "correctIndex": 2
-    }
+    { "type": "text", "content": "Markdown or plain text..." }
   ]
 }
 ```
 
-## Field reference
+## The 9 canonical slide types
 
-| Field | Required | Notes |
-|-------|----------|--------|
-| `courseTitle` | Yes | Creates or matches course by title. |
-| `courseShortDescription` | No | Defaults to courseTitle if missing. |
-| `courseDescription` | No | Defaults to short description if missing. |
-| `courseCategory` | No | One of: budgeting, superannuation, tax, loans, investment, planning, corporate-finance, other. Default: `other`. |
-| `courseLevel` | No | beginner, intermediate, advanced. Default: `beginner`. |
-| `moduleTitle` | No | Module name (Course → Module → Lesson). Creates or matches module by title. Default: `Content`. |
-| `lessonTitle` | Yes | Lesson name. |
-| `lessonOrder` | No | 1-based order within module. Default: append. |
-| `slides` | Yes (for slide-based) | Array of content slides: `{ type: "text"|"image"|"video", content: string, caption?: string }`. You can also put question slides inline: `{ type: "question", question, options: string[], correctIndex: number, explanation?: string }`. |
-| `quiz` | No | Array of `{ question, options: string[], correctIndex: number, explanation?: string }` (0-based). On import, each quiz item is appended as a **separate slide** (type `question`), so the lesson is one linear flow: content slides then question slides. Progress is tracked by slide index; question answers are stored per slide. |
+### 1. `text` — written content
+```json
+{
+  "type": "text",
+  "content": "## Heading\nBody markdown.",
+  "caption": "Optional source / footnote",
+  "layout": "default",
+  "tone": "neutral"
+}
+```
+- `layout`: `default` | `hero` | `centered` | `callout`
+- `tone`: `neutral` | `info` | `tip` | `warning` | `example` | `quote`
 
-## Paste workflow
+### 2. `media` — image / video / audio / embed
+```json
+{
+  "type": "media",
+  "source": "image",
+  "url": "https://example.com/diagram.png",
+  "caption": "Optional caption",
+  "aspect": "auto"
+}
+```
+- `source`: `image` | `video` (YouTube link) | `audio` | `embed`
+- Legacy `{ "type": "image", "content": "..." }` and `{ "type": "video", "content": "..." }` still work.
 
-1. Paste your lesson text in the chat (with (SLIDE 1), (SLIDE 2), VIDEO: url, Image link: url, Q1/Q2/Correct: X).
-2. AI returns one JSON file in the format above.
-3. Save as e.g. `content/lessons/corporate-finance-stakeholders.json`.
-4. From repo root, run: `cd backend && node scripts/import-lesson.js ../content/lessons/corporate-finance-stakeholders.json`  
-   Or from `backend`: `node scripts/import-lesson.js ../content/example-lesson.json`
-5. Course and lesson appear in the DB. Publish the course and lesson in admin to show them on the site.
+### 3. `choice` — multiple choice / true-false
+```json
+{
+  "type": "choice",
+  "question": "Who are shareholders?",
+  "options": ["...", "...", "People who own shares", "..."],
+  "correctIndices": [2],
+  "mode": "single",
+  "explanation": "Optional feedback shown after submit."
+}
+```
+- `mode`: `single` (one right answer), `multiple` (select all that apply), `truefalse` (forces options to `["True", "False"]`).
+- Legacy `{ "type": "question", ..., "correctIndex": 2 }` is accepted.
 
-**Note:** The backend must have been run at least once (so the DB has the `slides` and `lastSlideIndex` columns) before running the import script.
+### 4. `fillblank` — fill in the blanks
+```json
+{
+  "type": "fillblank",
+  "template": "Adults have {{0}} bones. Babies have {{1}}.",
+  "blanks": [
+    { "answers": ["206"] },
+    { "answers": ["around 300", "300", "270"], "caseSensitive": false }
+  ],
+  "mode": "textbox",
+  "explanation": "Optional"
+}
+```
+- Use `{{0}}`, `{{1}}` placeholders in `template`.
+- Each blank in `blanks` lists acceptable answers. Optionally pass `options: ["a","b","c"]` and set `mode: "dropdown"` for multiple choice per blank.
 
-## Media
+### 5. `cards` — flashcards
+```json
+{
+  "type": "cards",
+  "mode": "carousel",
+  "columns": 2,
+  "cards": [
+    { "front": "Asset", "back": "Something you own that has value" },
+    { "front": "Liability", "back": "Something you owe" }
+  ],
+  "caption": "Optional"
+}
+```
+- `mode`: `carousel` (one at a time, tap to flip), `flip` (grid of flippable cards), `grid` (front+back shown together).
 
-- **Video**: use full URL (e.g. YouTube watch link). Stored as-is; player embeds it.
-- **Image**: use full URL. Stored as-is; displayed as `<img src="...">`.
+### 6. `match` — match the pairs
+```json
+{
+  "type": "match",
+  "pairs": [
+    { "left": "Asset", "right": "Something you own" },
+    { "left": "Liability", "right": "Something you owe" }
+  ],
+  "explanation": "Optional"
+}
+```
+The right-hand column is shuffled in the player.
+
+### 7. `order` — sort into the right order
+```json
+{
+  "type": "order",
+  "prompt": "Order these from largest to smallest.",
+  "items": ["Sun", "Earth", "Moon"],
+  "correctOrder": [0, 1, 2]
+}
+```
+- `items` is the canonical (correct) sequence by default; the player shuffles it.
+- `correctOrder` (optional) lets you list `items` in any order while specifying the correct sequence via indices into `items`.
+
+### 8. `table` — reference table
+```json
+{
+  "type": "table",
+  "headers": "row",
+  "rows": [
+    ["Year", "Population"],
+    ["2000", "6.1B"],
+    ["2020", "7.8B"]
+  ],
+  "align": ["left", "right"]
+}
+```
+- `headers`: `none` | `row` | `column` | `both`.
+
+### 9. `divider` — section break
+```json
+{ "type": "divider", "title": "Part 2: Practice", "subtitle": "Optional kicker" }
+```
+
+## Scoring
+
+| Type        | Records a quiz score? |
+|-------------|----------------------|
+| `text`      | No                   |
+| `media`     | No                   |
+| `choice`    | Yes (right/wrong)    |
+| `fillblank` | Yes (all blanks must match) |
+| `cards`     | No                   |
+| `match`     | Yes (all pairs must match) |
+| `order`     | Yes (sequence must equal `correctOrder`) |
+| `table`     | No                   |
+| `divider`   | No                   |
+
+Scores are stored per-slide on `UserProgress.quizScores` keyed by slide index.
+
+## Importing
+
+1. Save your lesson JSON, e.g. `content/lessons/my-lesson.json`.
+2. From the repo root:
+   `cd backend && node scripts/import-lesson.js ../content/lessons/my-lesson.json`
+3. Publish the course and lesson via the admin UI.

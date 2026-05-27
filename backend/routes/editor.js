@@ -6,8 +6,25 @@ const Lesson = require('../models/Lesson');
 const EditorWorkspace = require('../models/EditorWorkspace');
 const { digestEditorCode } = require('../utils/editorCode');
 const { JWT_SECRET } = require('../middleware/auth');
+const { validateSlides } = require('../utils/slideSchema');
 
 const router = express.Router();
+
+/**
+ * Normalize/validate the optional `slides` field on a lesson payload.
+ * Returns { ok: true, slides } where slides is the normalized array (or
+ * undefined if the caller didn't send any), or { ok: false, errors }.
+ *
+ * `null` and `[]` are both treated as "no slides" and allowed through.
+ */
+function processSlidesPayload(input) {
+  if (input === undefined) return { ok: true, slides: undefined };
+  if (input === null) return { ok: true, slides: null };
+  if (Array.isArray(input) && input.length === 0) return { ok: true, slides: [] };
+  const result = validateSlides(input);
+  if (!result.ok) return { ok: false, errors: result.errors };
+  return { ok: true, slides: result.slides };
+}
 
 const includeModulesWithLessons = () => [
   {
@@ -270,6 +287,11 @@ router.post('/lessons', async (req, res) => {
       nextOrder = (max ?? -1) + 1;
     }
 
+    const slidesResult = processSlidesPayload(body.slides ?? []);
+    if (!slidesResult.ok) {
+      return res.status(400).json({ message: 'Invalid slides', errors: slidesResult.errors });
+    }
+
     const lesson = await Lesson.create({
       moduleId,
       title: body.title || 'Untitled lesson',
@@ -280,7 +302,7 @@ router.post('/lessons', async (req, res) => {
       order: nextOrder,
       lessonType: body.lessonType || 'reading',
       isPublished: body.isPublished !== false,
-      slides: body.slides ?? []
+      slides: slidesResult.slides ?? []
     });
 
     const full = await loadWorkspaceCourse(mod.courseId, req.workspaceId);
@@ -308,12 +330,21 @@ router.put('/lessons/:lessonId', async (req, res) => {
 
     const allowed = [
       'title', 'description', 'content', 'videoUrl', 'duration', 'order',
-      'lessonType', 'isPublished', 'resources', 'metadata', 'slides'
+      'lessonType', 'isPublished', 'resources', 'metadata'
     ];
     const patch = {};
     allowed.forEach((k) => {
       if (req.body[k] !== undefined) patch[k] = req.body[k];
     });
+
+    if (req.body.slides !== undefined) {
+      const slidesResult = processSlidesPayload(req.body.slides);
+      if (!slidesResult.ok) {
+        return res.status(400).json({ message: 'Invalid slides', errors: slidesResult.errors });
+      }
+      patch.slides = slidesResult.slides;
+    }
+
     await lesson.update(patch);
 
     const full = await loadWorkspaceCourse(lesson.module.courseId, req.workspaceId);
