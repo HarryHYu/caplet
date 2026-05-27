@@ -15,34 +15,34 @@ import {
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 
-const COLORS = ['#0066FF', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6'];
+const COLORS = ['#0050FF', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6'];
 
 const StatCard = ({ label, value, sub, icon, accent }) => (
   <div
     className={`p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${
       accent
-        ? 'border-brand bg-brand/5 dark:bg-brand/10'
-        : 'border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950'
+        ? 'border-accent bg-accent/5 dark:bg-accent/10'
+        : 'border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body'
     }`}
   >
     <div className="flex items-start justify-between">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim dark:text-text-dim mb-1">
           {label}
         </p>
         <p
           className={`text-3xl md:text-4xl font-extrabold tracking-tight ${
-            accent ? 'text-brand' : 'text-black dark:text-white'
+            accent ? 'text-accent' : 'text-text-primary dark:text-text-primary'
           }`}
         >
           {value}
         </p>
         {sub && (
-          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mt-2">{sub}</p>
+          <p className="text-xs font-medium text-text-dim dark:text-text-dim mt-2">{sub}</p>
         )}
       </div>
       {icon && (
-        <div className="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 text-zinc-500">
+        <div className="p-3 rounded-xl bg-surface-soft dark:bg-text-primary/50 text-text-dim">
           {icon}
         </div>
       )}
@@ -109,15 +109,15 @@ const Metrics = () => {
         {/* Hero */}
         <section className="mb-16">
           <span className="section-kicker mb-4">Platform Analytics</span>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-black dark:text-white mb-4 tracking-tighter uppercase">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-text-primary dark:text-text-primary mb-4 tracking-tighter uppercase">
             Live <br />
-            <span className="text-brand">Metrics.</span>
+            <span className="text-accent">Metrics.</span>
           </h1>
-          <p className="text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl font-medium">
+          <p className="text-xl text-text-dim dark:text-text-dim max-w-2xl font-medium">
             Real-time platform statistics. Updated every 60 seconds.
           </p>
           {data.generatedAt && (
-            <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+            <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-text-dim">
               Last updated: {new Date(data.generatedAt).toLocaleString()}
             </p>
           )}
@@ -170,45 +170,45 @@ const Metrics = () => {
 
         {/* Secondary stats grid */}
         <section className="mb-20">
-          <h2 className="text-2xl font-extrabold text-black dark:text-white mb-8 uppercase tracking-tight">
+          <h2 className="text-2xl font-extrabold text-text-primary dark:text-text-primary mb-8 uppercase tracking-tight">
             Content & Engagement
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <div className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Modules</p>
-              <p className="text-2xl font-extrabold text-black dark:text-white">{data.content?.modules ?? 0}</p>
+            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Modules</p>
+              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.content?.modules ?? 0}</p>
             </div>
-            <div className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Lessons</p>
-              <p className="text-2xl font-extrabold text-black dark:text-white">{data.content?.lessons?.published ?? 0}</p>
+            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Lessons</p>
+              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.content?.lessons?.published ?? 0}</p>
             </div>
-            <div className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">In Progress</p>
-              <p className="text-2xl font-extrabold text-black dark:text-white">{data.progress?.inProgress ?? 0}</p>
+            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">In Progress</p>
+              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.progress?.inProgress ?? 0}</p>
             </div>
-            <div className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">This Week</p>
-              <p className="text-2xl font-extrabold text-brand">{data.progress?.lessonsCompletedThisWeek ?? 0}</p>
+            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">This Week</p>
+              <p className="text-2xl font-extrabold text-accent">{data.progress?.lessonsCompletedThisWeek ?? 0}</p>
             </div>
-            <div className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Assignments</p>
-              <p className="text-2xl font-extrabold text-black dark:text-white">{data.assignments?.total ?? 0}</p>
+            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Assignments</p>
+              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.assignments?.total ?? 0}</p>
             </div>
-            <div className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Completed</p>
-              <p className="text-2xl font-extrabold text-black dark:text-white">{data.assignments?.completions ?? 0}</p>
+            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Completed</p>
+              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.assignments?.completions ?? 0}</p>
             </div>
           </div>
         </section>
 
         {/* Users breakdown */}
         <section className="mb-20">
-          <h2 className="text-2xl font-extrabold text-black dark:text-white mb-8 uppercase tracking-tight">
+          <h2 className="text-2xl font-extrabold text-text-primary dark:text-text-primary mb-8 uppercase tracking-tight">
             Users
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="p-6 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">
+            <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
                 By Role
               </h3>
               {usersByRoleData.length > 0 ? (
@@ -232,21 +232,21 @@ const Metrics = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-zinc-500 py-8 text-center">No user data</p>
+                <p className="text-text-dim py-8 text-center">No user data</p>
               )}
             </div>
-            <div className="p-6 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">
+            <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
                 Growth
               </h3>
               <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-zinc-100 dark:border-zinc-800">
-                  <span className="text-zinc-600 dark:text-zinc-400">New this week</span>
-                  <span className="text-xl font-extrabold text-brand">{data.users?.newThisWeek ?? 0}</span>
+                <div className="flex justify-between items-center py-3 border-b border-line-soft dark:border-line-soft">
+                  <span className="text-text-muted dark:text-text-dim">New this week</span>
+                  <span className="text-xl font-extrabold text-accent">{data.users?.newThisWeek ?? 0}</span>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-zinc-100 dark:border-zinc-800">
-                  <span className="text-zinc-600 dark:text-zinc-400">New this month</span>
-                  <span className="text-xl font-extrabold text-black dark:text-white">{data.users?.newThisMonth ?? 0}</span>
+                <div className="flex justify-between items-center py-3 border-b border-line-soft dark:border-line-soft">
+                  <span className="text-text-muted dark:text-text-dim">New this month</span>
+                  <span className="text-xl font-extrabold text-text-primary dark:text-text-primary">{data.users?.newThisMonth ?? 0}</span>
                 </div>
               </div>
             </div>
@@ -255,8 +255,8 @@ const Metrics = () => {
 
         {/* Progress breakdown & Top courses */}
         <section className="mb-20 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="p-6 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">
+          <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
               Progress Distribution
             </h3>
             {progressPieData.length > 0 ? (
@@ -280,11 +280,11 @@ const Metrics = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-zinc-500 py-8 text-center">No progress data yet</p>
+              <p className="text-text-dim py-8 text-center">No progress data yet</p>
             )}
           </div>
-          <div className="p-6 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">
+          <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
               Top Courses by Completions
             </h3>
             {data.topCourses?.length > 0 ? (
@@ -304,47 +304,47 @@ const Metrics = () => {
                     tickFormatter={(v) => (v.length > 18 ? v.slice(0, 18) + '…' : v)}
                   />
                   <Tooltip />
-                  <Bar dataKey="completions" fill="#0066FF" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="completions" fill="#0050FF" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-zinc-500 py-8 text-center">No completion data yet</p>
+              <p className="text-text-dim py-8 text-center">No completion data yet</p>
             )}
           </div>
         </section>
 
         {/* Survey & Misc */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="p-6 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">
+          <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
               Survey Responses
             </h3>
             <div className="flex items-baseline gap-4">
-              <span className="text-4xl font-extrabold text-black dark:text-white">
+              <span className="text-4xl font-extrabold text-text-primary dark:text-text-primary">
                 {data.survey?.totalResponses ?? 0}
               </span>
-              <span className="text-zinc-500">responses</span>
+              <span className="text-text-dim">responses</span>
             </div>
             {data.survey?.averageConfidence > 0 && (
-              <p className="mt-2 text-sm text-zinc-500">
+              <p className="mt-2 text-sm text-text-dim">
                 Avg. confidence: {data.survey.averageConfidence}/10
               </p>
             )}
           </div>
-          <div className="p-6 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">
+          <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
               Engagement Reach
             </h3>
             <div className="space-y-2">
               <p>
-                <span className="text-zinc-500">Users with any progress:</span>{' '}
-                <span className="font-bold text-black dark:text-white">
+                <span className="text-text-dim">Users with any progress:</span>{' '}
+                <span className="font-bold text-text-primary dark:text-text-primary">
                   {data.progress?.uniqueUsersWithProgress ?? 0}
                 </span>
               </p>
               <p>
-                <span className="text-zinc-500">Total progress records:</span>{' '}
-                <span className="font-bold text-black dark:text-white">
+                <span className="text-text-dim">Total progress records:</span>{' '}
+                <span className="font-bold text-text-primary dark:text-text-primary">
                   {data.progress?.totalRecords ?? 0}
                 </span>
               </p>

@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Ba
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 
-const COLORS = ['var(--color-text-primary)', 'var(--color-text-dim)', 'var(--color-line-soft)', 'var(--color-accent)', '#888', '#aaa', '#ccc'];
+const COLORS = ['var(--text-primary)', 'var(--text-dim)', 'var(--line-soft)', 'var(--accent)', '#888', '#aaa', '#ccc'];
 
 const SurveyResults = () => {
   const [stats, setStats] = useState(null);
@@ -88,11 +88,6 @@ const SurveyResults = () => {
     });
   }
 
-  const renderLabel = (entry) => {
-    const percent = ((entry.value / stats.total) * 100).toFixed(1);
-    return `${entry.name} (${percent}%)`;
-  };
-
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
@@ -134,7 +129,7 @@ const SurveyResults = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="transparent" />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--surface-raised)', borderColor: 'var(--line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
                   <Legend verticalAlign="bottom" align="center" iconType="square" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -156,10 +151,10 @@ const SurveyResults = () => {
                     dataKey="value"
                   >
                     {tracksSpendingData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={['var(--color-accent)', 'var(--color-line-soft)'][index % 2]} stroke="transparent" />
+                      <Cell key={`cell-${index}`} fill={['var(--accent)', 'var(--line-soft)'][index % 2]} stroke="transparent" />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--surface-raised)', borderColor: 'var(--line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
                   <Legend verticalAlign="bottom" align="center" iconType="square" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -183,10 +178,10 @@ const SurveyResults = () => {
                     dataKey="value"
                   >
                     {taughtAtSchoolData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={['var(--color-text-primary)', 'var(--color-line-soft)'][index % 2]} stroke="transparent" />
+                      <Cell key={`cell-${index}`} fill={['var(--text-primary)', 'var(--line-soft)'][index % 2]} stroke="transparent" />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--surface-raised)', borderColor: 'var(--line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
                   <Legend verticalAlign="bottom" align="center" iconType="square" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -208,10 +203,10 @@ const SurveyResults = () => {
                     dataKey="value"
                   >
                     {termsConfusingData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={['var(--color-accent)', 'var(--color-text-dim)'][index % 2]} stroke="transparent" />
+                      <Cell key={`cell-${index}`} fill={['var(--accent)', 'var(--text-dim)'][index % 2]} stroke="transparent" />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--surface-raised)', borderColor: 'var(--line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
                   <Legend verticalAlign="bottom" align="center" iconType="square" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -235,20 +230,20 @@ const SurveyResults = () => {
           <div className="h-[300px] relative z-10">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={confidenceData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-line-soft)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--line-soft)" />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 10, fontWeight: 'bold', fill: 'var(--color-text-dim)' }}
+                  tick={{ fontSize: 10, fontWeight: 'bold', fill: 'var(--text-dim)' }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 10, fontWeight: 'bold', fill: 'var(--color-text-dim)' }}
+                  tick={{ fontSize: 10, fontWeight: 'bold', fill: 'var(--text-dim)' }}
                 />
-                <Tooltip cursor={{ fill: 'var(--color-surface-body)', opacity: 0.4 }} contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
-                <Bar dataKey="value" fill="var(--color-text-primary)" barSize={40} />
+                <Tooltip cursor={{ fill: 'var(--surface-body)', opacity: 0.4 }} contentStyle={{ backgroundColor: 'var(--surface-raised)', borderColor: 'var(--line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                <Bar dataKey="value" fill="var(--text-primary)" barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -260,7 +255,7 @@ const SurveyResults = () => {
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={helpfulExplanationsData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-line-soft)" />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--line-soft)" />
                 <XAxis type="number" hide />
                 <YAxis
                   dataKey="name"
@@ -268,10 +263,10 @@ const SurveyResults = () => {
                   width={180}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 9, fontWeight: 'black', fill: 'var(--color-text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                  tick={{ fontSize: 9, fontWeight: 'black', fill: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}
                 />
-                <Tooltip cursor={{ fill: 'var(--color-surface-raised)', opacity: 0.4 }} contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderColor: 'var(--color-line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
-                <Bar dataKey="value" fill="var(--color-accent)" barSize={20} />
+                <Tooltip cursor={{ fill: 'var(--surface-raised)', opacity: 0.4 }} contentStyle={{ backgroundColor: 'var(--surface-raised)', borderColor: 'var(--line-soft)', fontSize: '10px', fontWeight: 'bold' }} />
+                <Bar dataKey="value" fill="var(--accent)" barSize={20} />
               </BarChart>
             </ResponsiveContainer>
           </div>
