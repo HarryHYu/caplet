@@ -5,9 +5,9 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { Classroom, ClassMembership, Lesson, Course, Module } = require('../models');
 const { presignPut, publicObjectUrl } = require('../services/s3Presign');
+const { JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const MIME_TO_EXT = {
   'image/jpeg': 'jpg',
@@ -16,7 +16,12 @@ const MIME_TO_EXT = {
   'image/gif': 'gif'
 };
 
-const authenticateToken = async (req, res, next) => {
+/**
+ * Uploads can be authenticated with either a regular user JWT or an
+ * editor JWT (issued by /api/editor/enter). The editor variant only
+ * exposes req.editorWorkspaceId, not req.user.
+ */
+const authenticateUserOrEditor = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ message: 'No token provided' });
@@ -50,7 +55,7 @@ async function isTeacherInClass(userId, classroomId) {
  */
 router.post(
   '/presign',
-  authenticateToken,
+  authenticateUserOrEditor,
   [
     body('purpose').isIn(['avatar', 'classLogo', 'classBanner', 'lessonImage', 'courseCover']),
     body('mimeType').isIn(Object.keys(MIME_TO_EXT)),

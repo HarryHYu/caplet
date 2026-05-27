@@ -6,34 +6,9 @@ const Lesson = require('../models/Lesson');
 const UserProgress = require('../models/UserProgress');
 const EditorWorkspace = require('../models/EditorWorkspace');
 const { digestEditorCode, generateEditorCode } = require('../utils/editorCode');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
-
-// Auth middlewares (JWT + admin)
-const jwt = require('jsonwebtoken');
-const UserModel = require('../models/User');
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-const authenticateToken = async (req, res, next) => {
-  try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await UserModel.findByPk(decoded.userId);
-    if (!user) return res.status(401).json({ message: 'Invalid token' });
-    req.user = user;
-    next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid token' });
-  }
-};
-
-const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Admin access required' });
-  }
-  next();
-};
 
 // One-time bootstrap endpoint
 // Security: requires X-Bootstrap-Token header matching ADMIN_BOOTSTRAP_TOKEN
@@ -255,7 +230,7 @@ module.exports = router;
 
 
 // Admin: list courses (include unpublished)
-router.get('/courses', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/courses', requireAdmin, async (req, res) => {
   try {
     const courses = await Course.findAll({
       order: [['createdAt', 'DESC']],
@@ -269,7 +244,7 @@ router.get('/courses', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // Admin: create course
-router.post('/courses', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/courses', requireAdmin, async (req, res) => {
   try {
     const course = await Course.create(req.body);
     res.status(201).json({ course });
@@ -300,7 +275,7 @@ router.post('/reset-progress', async (req, res) => {
 });
 
 // Admin: update course
-router.put('/courses/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/courses/:id', requireAdmin, async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.id);
     if (!course) return res.status(404).json({ message: 'Course not found' });
@@ -313,7 +288,7 @@ router.put('/courses/:id', authenticateToken, requireAdmin, async (req, res) => 
 });
 
 // Admin: delete course
-router.delete('/courses/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/courses/:id', requireAdmin, async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.id);
     if (!course) return res.status(404).json({ message: 'Course not found' });
@@ -326,7 +301,7 @@ router.delete('/courses/:id', authenticateToken, requireAdmin, async (req, res) 
 });
 
 // Admin: create lesson (uses default module "Content" for the course)
-router.post('/courses/:courseId/lessons', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/courses/:courseId/lessons', requireAdmin, async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.courseId);
     if (!course) return res.status(404).json({ message: 'Course not found' });
@@ -350,7 +325,7 @@ router.post('/courses/:courseId/lessons', authenticateToken, requireAdmin, async
 });
 
 // Admin: update lesson
-router.put('/lessons/:lessonId', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/lessons/:lessonId', requireAdmin, async (req, res) => {
   try {
     const lesson = await Lesson.findByPk(req.params.lessonId);
     if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
@@ -363,7 +338,7 @@ router.put('/lessons/:lessonId', authenticateToken, requireAdmin, async (req, re
 });
 
 // Admin: delete lesson
-router.delete('/lessons/:lessonId', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/lessons/:lessonId', requireAdmin, async (req, res) => {
   try {
     const lesson = await Lesson.findByPk(req.params.lessonId);
     if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
@@ -376,7 +351,7 @@ router.delete('/lessons/:lessonId', authenticateToken, requireAdmin, async (req,
 });
 
 // Admin: create lesson editor workspace (returns plaintext code once; store securely)
-router.post('/editor-workspaces', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/editor-workspaces', requireAdmin, async (req, res) => {
   try {
     const plain = generateEditorCode();
     const codeDigest = digestEditorCode(plain);

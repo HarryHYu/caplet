@@ -8,27 +8,10 @@ const Course = require('../models/Course');
 const router = express.Router();
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-// Middleware to verify JWT token
-const authenticateToken = async (req, res, next) => {
-  try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findByPk(decoded.userId);
-    if (!user) return res.status(401).json({ message: 'Invalid token' });
-
-    req.user = user;
-    next();
-  } catch {
-    res.status(401).json({ message: 'Invalid token' });
-  }
-};
+const { requireAuth } = require('../middleware/auth');
 
 // Get current user's own profile (full)
-router.get('/profile', authenticateToken, async (req, res) => {
+router.get('/profile', requireAuth, async (req, res) => {
   try {
     res.json({ user: req.user.toJSON() });
   } catch (error) {
@@ -39,7 +22,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
 
 // Update user profile (name, email, optional password, dateOfBirth, bio, preferences).
 // `role` is ignored even if sent — role changes happen via /api/admin/promote.
-router.put('/profile', authenticateToken, [
+router.put('/profile', requireAuth, [
   body('firstName').optional().trim().isLength({ min: 1, max: 50 }),
   body('lastName').optional().trim().isLength({ min: 1, max: 50 }),
   body('email').optional().isEmail().normalizeEmail(),
@@ -90,7 +73,7 @@ router.put('/profile', authenticateToken, [
 });
 
 // Get user dashboard data (must be before /:userId)
-router.get('/dashboard', authenticateToken, async (req, res) => {
+router.get('/dashboard', requireAuth, async (req, res) => {
   try {
     const userProgress = await UserProgress.findAll({
       where: { userId: req.user.id },
@@ -121,7 +104,7 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
 });
 
 // Get another user's public profile (no email, no dateOfBirth)
-router.get('/:userId', authenticateToken, async (req, res) => {
+router.get('/:userId', requireAuth, async (req, res) => {
   try {
     const profileUser = await User.findByPk(req.params.userId, {
       attributes: ['id', 'firstName', 'lastName', 'bio', 'role', 'profilePicture'],
@@ -137,7 +120,7 @@ router.get('/:userId', authenticateToken, async (req, res) => {
 });
 
 // Complete onboarding
-router.post('/complete-onboarding', authenticateToken, [
+router.post('/complete-onboarding', requireAuth, [
   body('knowledgeLevel').optional().trim().isIn(['beginner', 'intermediate', 'advanced']),
   body('goals').optional().isArray(),
   body('incomeRange').optional().trim().isIn(['under-2k', '2k-4k', '4k-7k', '7k-10k', 'over-10k', 'prefer-not-to-say'])

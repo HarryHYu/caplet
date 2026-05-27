@@ -16,24 +16,7 @@ const { sequelize } = require('../config/database');
 
 const router = express.Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-// Auth middleware (same pattern as users route)
-const authenticateToken = async (req, res, next) => {
-  try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findByPk(decoded.userId);
-    if (!user) return res.status(401).json({ message: 'Invalid token' });
-
-    req.user = user;
-    next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid token' });
-  }
-};
+const { requireAuth } = require('../middleware/auth');
 
 const requireTeacher = (req, res, next) => {
   if (!req.user || (req.user.role !== 'instructor' && req.user.role !== 'admin')) {
@@ -73,7 +56,7 @@ const isClassOwner = (classroom, userId) => {
 };
 
 // Get all classes for current user (both teaching and enrolled)
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const memberships = await ClassMembership.findAll({
       where: { userId: req.user.id },
@@ -114,7 +97,7 @@ router.get('/', authenticateToken, async (req, res) => {
 // Create a new class (teachers only)
 router.post(
   '/',
-  authenticateToken,
+  requireAuth,
   requireTeacher,
   [body('name').trim().isLength({ min: 1, max: 100 })],
   async (req, res) => {
@@ -151,7 +134,7 @@ router.post(
 // Join a class by code (students only; teachers cannot join — only the owner can add them)
 router.post(
   '/join',
-  authenticateToken,
+  requireAuth,
   [body('code').trim().isLength({ min: 4 })],
   async (req, res) => {
     try {
@@ -200,7 +183,7 @@ router.post(
 );
 
 // Leave a class (students and class teachers; owner cannot leave — must delete class)
-router.post('/:id/leave', authenticateToken, async (req, res) => {
+router.post('/:id/leave', requireAuth, async (req, res) => {
   try {
     const classroom = await Classroom.findByPk(req.params.id);
     if (!classroom) {
@@ -253,7 +236,7 @@ router.post('/:id/leave', authenticateToken, async (req, res) => {
 });
 
 // Remove a member (student or teacher) — only class owner or admin
-router.delete('/:id/members/:userId', authenticateToken, async (req, res) => {
+router.delete('/:id/members/:userId', requireAuth, async (req, res) => {
   try {
     const classroom = await Classroom.findByPk(req.params.id);
     if (!classroom) {
@@ -306,7 +289,7 @@ router.delete('/:id/members/:userId', authenticateToken, async (req, res) => {
 // Add a teacher to the class — only class owner or admin
 router.post(
   '/:id/teachers',
-  authenticateToken,
+  requireAuth,
   [body('email').trim().isEmail()],
   async (req, res) => {
     try {
@@ -361,7 +344,7 @@ router.post(
 );
 
 // Delete a class (only class owner or admin)
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const classroom = await Classroom.findByPk(req.params.id);
     if (!classroom) {
@@ -383,7 +366,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 });
 
 // Get a single class with members and assignments
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', requireAuth, async (req, res) => {
   try {
     const classroom = await Classroom.findByPk(req.params.id);
     if (!classroom) {
@@ -611,7 +594,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // Create assignment for a class (teachers only)
 router.post(
   '/:id/assignments',
-  authenticateToken,
+  requireAuth,
   [body('title').trim().isLength({ min: 1, max: 200 })],
   async (req, res) => {
     try {
@@ -652,7 +635,7 @@ router.post(
 );
 
 // Delete assignment (teacher in class or admin)
-router.delete('/:classId/assignments/:assignmentId', authenticateToken, async (req, res) => {
+router.delete('/:classId/assignments/:assignmentId', requireAuth, async (req, res) => {
   try {
     const { classId, assignmentId } = req.params;
 
@@ -680,7 +663,7 @@ router.delete('/:classId/assignments/:assignmentId', authenticateToken, async (r
 });
 
 // Mark assignment as completed (student)
-router.post('/assignments/:id/complete', authenticateToken, async (req, res) => {
+router.post('/assignments/:id/complete', requireAuth, async (req, res) => {
   try {
     const assignment = await Assignment.findByPk(req.params.id);
     if (!assignment) {
@@ -734,7 +717,7 @@ router.post('/assignments/:id/complete', authenticateToken, async (req, res) => 
 });
 
 // Un-mark assignment as completed (undo)
-router.post('/assignments/:id/uncomplete', authenticateToken, async (req, res) => {
+router.post('/assignments/:id/uncomplete', requireAuth, async (req, res) => {
   try {
     const assignment = await Assignment.findByPk(req.params.id);
     if (!assignment) {
@@ -771,7 +754,7 @@ router.post('/assignments/:id/uncomplete', authenticateToken, async (req, res) =
 });
 
 // Auto-complete assignments linked to a lesson when a student finishes that lesson
-router.post('/lessons/:lessonId/complete', authenticateToken, async (req, res) => {
+router.post('/lessons/:lessonId/complete', requireAuth, async (req, res) => {
   try {
     const { lessonId } = req.params;
 
@@ -845,7 +828,7 @@ const classifyAttachment = (url) => {
 // Create announcement (teachers only)
 router.post(
   '/:id/announcements',
-  authenticateToken,
+  requireAuth,
   [body('content').trim().isLength({ min: 1 })],
   async (req, res) => {
     try {
@@ -918,7 +901,7 @@ router.post(
 );
 
 // Delete announcement (author, teacher in class, or admin)
-router.delete('/:classId/announcements/:announcementId', authenticateToken, async (req, res) => {
+router.delete('/:classId/announcements/:announcementId', requireAuth, async (req, res) => {
   try {
     const { classId, announcementId } = req.params;
 
@@ -949,7 +932,7 @@ router.delete('/:classId/announcements/:announcementId', authenticateToken, asyn
 });
 
 // ----- Comments on announcements (all public) -----
-router.get('/:classId/announcements/:announcementId/comments', authenticateToken, async (req, res) => {
+router.get('/:classId/announcements/:announcementId/comments', requireAuth, async (req, res) => {
   try {
     const { classId, announcementId } = req.params;
     const classroom = await Classroom.findByPk(classId);
@@ -977,7 +960,7 @@ router.get('/:classId/announcements/:announcementId/comments', authenticateToken
   }
 });
 
-router.post('/:classId/announcements/:announcementId/comments', authenticateToken, [body('content').trim().isLength({ min: 1 })], async (req, res) => {
+router.post('/:classId/announcements/:announcementId/comments', requireAuth, [body('content').trim().isLength({ min: 1 })], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -1014,7 +997,7 @@ router.post('/:classId/announcements/:announcementId/comments', authenticateToke
   }
 });
 
-router.delete('/:classId/announcements/:announcementId/comments/:commentId', authenticateToken, async (req, res) => {
+router.delete('/:classId/announcements/:announcementId/comments/:commentId', requireAuth, async (req, res) => {
   try {
     const { classId, announcementId, commentId } = req.params;
     const classroom = await Classroom.findByPk(classId);
@@ -1039,7 +1022,7 @@ router.delete('/:classId/announcements/:announcementId/comments/:commentId', aut
 });
 
 // ----- Comments on assignments (public class comments + private student-teacher) -----
-router.get('/:classId/assignments/:assignmentId/comments', authenticateToken, async (req, res) => {
+router.get('/:classId/assignments/:assignmentId/comments', requireAuth, async (req, res) => {
   try {
     const { classId, assignmentId } = req.params;
     const classroom = await Classroom.findByPk(classId);
@@ -1080,7 +1063,7 @@ router.get('/:classId/assignments/:assignmentId/comments', authenticateToken, as
   }
 });
 
-router.post('/:classId/assignments/:assignmentId/comments', authenticateToken, [body('content').trim().isLength({ min: 1 })], async (req, res) => {
+router.post('/:classId/assignments/:assignmentId/comments', requireAuth, [body('content').trim().isLength({ min: 1 })], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -1132,7 +1115,7 @@ router.post('/:classId/assignments/:assignmentId/comments', authenticateToken, [
   }
 });
 
-router.delete('/:classId/assignments/:assignmentId/comments/:commentId', authenticateToken, async (req, res) => {
+router.delete('/:classId/assignments/:assignmentId/comments/:commentId', requireAuth, async (req, res) => {
   try {
     const { classId, assignmentId, commentId } = req.params;
     const classroom = await Classroom.findByPk(classId);

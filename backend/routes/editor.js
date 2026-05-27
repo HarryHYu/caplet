@@ -5,9 +5,9 @@ const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
 const EditorWorkspace = require('../models/EditorWorkspace');
 const { digestEditorCode } = require('../utils/editorCode');
+const { JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const includeModulesWithLessons = () => [
   {

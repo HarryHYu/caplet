@@ -5,11 +5,10 @@ const { body, validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
 const { Op, fn, col, where } = require('sequelize');
 const User = require('../models/User');
+const { JWT_SECRET, requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
@@ -247,26 +246,8 @@ router.post('/google', [
 });
 
 // Get current user
-router.get('/me', async (req, res) => {
-  try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findByPk(decoded.userId);
-
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-
-    res.json({ user: user.toJSON() });
-  } catch (error) {
-    console.error('Auth error:', error);
-    res.status(401).json({ message: 'Invalid token' });
-  }
+router.get('/me', requireAuth, async (req, res) => {
+  res.json({ user: req.user.toJSON() });
 });
 
 // Logout (client-side token removal)

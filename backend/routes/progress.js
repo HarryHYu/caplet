@@ -1,39 +1,12 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const UserProgress = require('../models/UserProgress');
 const Course = require('../models/Course');
 const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
-const User = require('../models/User');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
-
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-// Middleware to verify JWT token
-const authenticateToken = async (req, res, next) => {
-  try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findByPk(decoded.userId);
-    
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-
-    req.user = user;
-    next();
-  } catch {
-    res.status(401).json({ message: 'Invalid token' });
-  }
-};
 
 // Helper: lesson has actual content (slides, text, or video)
 function lessonHasContent(lesson) {
@@ -50,7 +23,7 @@ function lessonHasContent(lesson) {
 }
 
 // Update lesson progress
-router.put('/lesson/:lessonId', authenticateToken, [
+router.put('/lesson/:lessonId', requireAuth, [
   body('status').optional().isIn(['not_started', 'in_progress', 'completed']),
   body('timeSpent').optional().isInt({ min: 0 }),
   body('notes').optional().isString(),
@@ -127,7 +100,7 @@ router.put('/lesson/:lessonId', authenticateToken, [
 });
 
 // Get course progress (creates progress tracking entry if not exists - courses are directly accessible)
-router.get('/course/:courseId', authenticateToken, async (req, res) => {
+router.get('/course/:courseId', requireAuth, async (req, res) => {
   try {
     const { courseId } = req.params;
 
@@ -244,7 +217,7 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
 });
 
 // Get all user progress
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const progress = await UserProgress.findAll({
       where: { userId: req.user.id },
@@ -269,7 +242,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Bookmark a lesson
-router.post('/bookmark/:lessonId', authenticateToken, async (req, res) => {
+router.post('/bookmark/:lessonId', requireAuth, async (req, res) => {
   try {
     const { lessonId } = req.params;
 
@@ -318,7 +291,7 @@ router.post('/bookmark/:lessonId', authenticateToken, async (req, res) => {
 });
 
 // Remove bookmark
-router.delete('/bookmark/:lessonId', authenticateToken, async (req, res) => {
+router.delete('/bookmark/:lessonId', requireAuth, async (req, res) => {
   try {
     const { lessonId } = req.params;
 
