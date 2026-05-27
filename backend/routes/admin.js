@@ -17,7 +17,12 @@ router.post('/bootstrap', async (req, res) => {
     const headerToken = req.header('X-Bootstrap-Token');
     const expectedToken = process.env.ADMIN_BOOTSTRAP_TOKEN;
 
-    // If a token is configured, enforce it. If no token configured, allow bootstrap
+    // In production, bootstrap always requires the token.
+    if (process.env.NODE_ENV === 'production' && !expectedToken) {
+      return res.status(503).json({ message: 'Bootstrap disabled in production' });
+    }
+
+    // If a token is configured, enforce it. If no token configured (dev only), allow bootstrap
     // ONLY if there is no existing admin (first-time setup safety).
     if (expectedToken) {
       if (headerToken !== expectedToken) {
@@ -179,20 +184,21 @@ router.post('/bootstrap', async (req, res) => {
   }
 });
 
-// Temporary: promote a user to admin (guarded by ADMIN_BOOTSTRAP_TOKEN; if missing, allow only specific emails)
+// Temporary: promote a user to admin (requires ADMIN_BOOTSTRAP_TOKEN)
 router.post('/promote', async (req, res) => {
   try {
     const headerToken = req.header('X-Bootstrap-Token');
     const expectedToken = process.env.ADMIN_BOOTSTRAP_TOKEN;
 
+    if (process.env.NODE_ENV === 'production' && !expectedToken) {
+      return res.status(503).json({ message: 'Promote disabled in production' });
+    }
+
     const { email } = req.body || {};
     if (!email) return res.status(400).json({ message: 'email required' });
 
-    if (expectedToken) {
-      if (headerToken !== expectedToken) return res.status(401).json({ message: 'Unauthorized' });
-    } else {
-      const allowedEmails = ['hhyu.direct@gmail.com', 'hhyudirect@gmail.com'];
-      if (!allowedEmails.includes(email)) return res.status(401).json({ message: 'Unauthorized' });
+    if (!expectedToken || headerToken !== expectedToken) {
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
     const user = await User.findOne({ where: { email } });

@@ -498,7 +498,7 @@ const ClassDetail = () => {
   };
 
   return (
-    <div className="min-h-screen py-24 px-6">
+    <div className="min-h-screen bg-surface-body py-32 px-6 selection:bg-accent selection:text-white">
       <div className="container-custom space-y-12">
         <div className="bg-surface-body border border-line-soft dark:border-line-soft p-10 animate-slide-up">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">

@@ -1,79 +1,56 @@
 const Contact = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-      {/* Hero Section */}
       <section className="mb-24">
         <div className="container-custom">
           <div className="reveal-text">
-            <span className="section-kicker mb-8">Communications</span>
+            <span className="section-kicker mb-8">Contact</span>
             <h1 className="text-6xl lg:text-8xl mb-10">
-              Technical <br />Inquiry.
+              Get in <br />touch.
             </h1>
             <p className="text-xl text-text-muted max-w-2xl font-serif italic leading-relaxed">
-              Synthesize your questions for curriculum integration, institutional partnerships, or platform architecture support.
+              Questions about curriculum, school partnerships, or the platform? We&apos;d love to hear from you.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Main Content */}
       <section className="pb-32 reveal-text stagger-1">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 bg-line-soft border border-line-soft">
-            <div className="bg-surface-body p-12 lg:p-20 flex flex-col justify-between min-h-[500px]">
-              <div className="relative z-10">
-                <span className="text-[10px] font-black uppercase tracking-[0.5em] text-accent mb-12 block">Terminal Channel</span>
-                <h2 className="text-4xl font-serif italic text-text-primary mb-8 leading-tight">
-                  Reach out to our <br />core architects.
+            <div className="bg-surface-body p-12 lg:p-20 flex flex-col justify-between min-h-[400px]">
+              <div>
+                <h2 className="text-4xl font-serif italic text-text-primary mb-6 leading-tight">
+                  Email us directly
                 </h2>
-                <p className="text-base text-text-muted font-medium tracking-tight max-w-sm mb-12">
-                  For protocol-level inquiries and partnership synchronization, our response window typically spans 24-48 standard hours.
+                <p className="text-base text-text-muted leading-relaxed max-w-sm mb-12">
+                  We typically respond within one to two business days.
                 </p>
-              </div>
-
-              <div className="space-y-12">
-                <div>
-                  <h3 className="text-[10px] font-black text-text-dim uppercase tracking-[0.4em] mb-4">
-                    Direct Registry
-                  </h3>
-                  <a
-                    href="mailto:contact@capletedu.org"
-                    className="text-3xl font-serif italic text-text-primary hover:text-accent transition-all duration-300 block border-b border-line-soft pb-4 w-fit"
-                  >
-                    contact@capletedu.org
-                  </a>
-                </div>
+                <a
+                  href="mailto:contact@capletedu.org"
+                  className="text-2xl md:text-3xl font-serif italic text-text-primary hover:text-accent transition-colors border-b border-line-soft pb-3 inline-block"
+                >
+                  contact@capletedu.org
+                </a>
               </div>
             </div>
 
-            <div className="bg-surface-raised p-12 lg:p-20 space-y-20 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
-
+            <div className="bg-surface-raised p-12 lg:p-20 space-y-12">
               <div>
-                <h3 className="text-[10px] font-black text-accent uppercase tracking-[0.4em] mb-12">
-                  Service Domains
+                <h3 className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-8">
+                  We can help with
                 </h3>
-                <div className="space-y-8">
-                  {[
-                    'Institutional curriculum integration',
-                    'Strategic educational partnerships',
-                    'Platform architecture maintenance',
-                    'Data-layer migration & updates'
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-6 group">
-                      <div className="w-4 h-px bg-text-dim group-hover:w-8 group-hover:bg-accent transition-all" />
-                      <span className="text-xs font-bold text-text-primary uppercase tracking-[0.2em]">{item}</span>
-                    </div>
-                  ))}
-                </div>
+                <ul className="space-y-4 text-sm text-text-muted">
+                  <li>Bringing Caplet into your school or class</li>
+                  <li>Partnerships and curriculum questions</li>
+                  <li>Platform support and feedback</li>
+                  <li>Content or accessibility issues</li>
+                </ul>
               </div>
 
-              <div className="pt-12 border-t border-line-soft">
-                <h3 className="text-[10px] font-black text-text-dim uppercase tracking-[0.4em] mb-6">
-                  Legal Disclaimer
-                </h3>
-                <p className="text-[10px] font-bold text-text-dim/60 leading-relaxed uppercase tracking-[0.2em]">
-                  Caplet provides technical resources for financial literacy. These resources do not constitute personalized financial advice. Institutional users must ensure regulatory alignment with local jurisdiction mandates.
+              <div className="pt-8 border-t border-line-soft">
+                <p className="text-xs text-text-dim leading-relaxed">
+                  Caplet provides financial literacy education only — not personalised financial advice. Schools and teachers remain responsible for meeting local requirements.
                 </p>
               </div>
             </div>
@@ -83,6 +60,5 @@ const Contact = () => {
     </div>
   );
 };
-
 
 export default Contact;

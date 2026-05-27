@@ -41,7 +41,7 @@ const EmergencyFund = () => {
         <header className="mb-24 reveal-text">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
-              <span className="section-kicker">Instruments &rarr; Risk Management</span>
+              <span className="section-kicker">Tools &rarr; Risk Management</span>
               <h1 className="text-6xl md:text-8xl mb-8">
                 Emergency <br />Fund.
               </h1>
@@ -50,7 +50,7 @@ const EmergencyFund = () => {
               </p>
             </div>
             <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
-              &larr; Back to Instruments
+              &larr; Back to tools
             </Link>
           </div>
           <div className="h-px w-full bg-line-soft" />
@@ -99,7 +99,7 @@ const EmergencyFund = () => {
 
               <div>
                 <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
-                  Liquid Assets at Registry
+                  Current savings
                 </label>
                 <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
@@ -136,7 +136,7 @@ const EmergencyFund = () => {
                       {formatCurrency(result.recommended)}
                     </p>
                     <p className="text-[10px] font-bold text-text-dim uppercase tracking-[0.2em] mt-4">
-                      Protocol: {result.months} Cycles @ {formatCurrency(result.monthlyExpenses)} / Cycle
+                      Covers {result.months} months at {formatCurrency(result.monthlyExpenses)}
                     </p>
                   </div>
 

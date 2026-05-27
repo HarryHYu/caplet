@@ -46,7 +46,7 @@ const BudgetPlanner = () => {
         <header className="mb-24 reveal-text">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
-              <span className="section-kicker">Instruments &rarr; Utility</span>
+              <span className="section-kicker">Tools &rarr; Utility</span>
               <h1 className="text-6xl md:text-8xl mb-8">
                 Budget<br />Planner.
               </h1>
@@ -55,7 +55,7 @@ const BudgetPlanner = () => {
               </p>
             </div>
             <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
-              &larr; Back to Instruments
+              &larr; Back to tools
             </Link>
           </div>
           <div className="h-px w-full bg-line-soft" />
@@ -64,7 +64,7 @@ const BudgetPlanner = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
           {/* Input Panel */}
           <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Transaction Matrix</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Your budget</h2>
 
             <form onSubmit={handleSubmit} className="space-y-16">
               <div>
@@ -168,7 +168,7 @@ const BudgetPlanner = () => {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
                 <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-4xl font-serif italic mb-8">?</div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Awaiting Input Data</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Add your income and expenses</p>
               </div>
             )}
           </div>

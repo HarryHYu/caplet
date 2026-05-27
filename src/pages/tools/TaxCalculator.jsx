@@ -66,7 +66,7 @@ const TaxCalculator = () => {
         <header className="mb-24 reveal-text">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
-              <span className="section-kicker">Instruments &rarr; Compliance</span>
+              <span className="section-kicker">Tools &rarr; Compliance</span>
               <h1 className="text-6xl md:text-8xl mb-8">
                 Tax <br />Architecture.
               </h1>
@@ -75,7 +75,7 @@ const TaxCalculator = () => {
               </p>
             </div>
             <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
-              &larr; Back to Instruments
+              &larr; Back to tools
             </Link>
           </div>
           <div className="h-px w-full bg-line-soft" />
@@ -169,7 +169,7 @@ const TaxCalculator = () => {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
                 <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">FISCAL</div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Awaiting Income Data</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Enter your income to see results</p>
               </div>
             )}
           </div>

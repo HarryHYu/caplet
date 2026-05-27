@@ -1,4 +1,3 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002';
 const PROD_API_BASE_URL = 'https://caplet-production.up.railway.app/api';
 const DEV_API_BASE_URLS = [
   'http://localhost:5002/api',
@@ -11,7 +10,6 @@ const API_BASE_URL = ENV_API_BASE_URL || (import.meta.env.DEV ? DEV_API_BASE_URL
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
-    console.log('API Service Initialized with Base URL:', this.baseURL); // Debug log
     this.baseURLCandidates = ENV_API_BASE_URL
       ? [ENV_API_BASE_URL]
       : (import.meta.env.DEV ? DEV_API_BASE_URLS : [PROD_API_BASE_URL]);
@@ -270,14 +268,6 @@ class ApiService {
     return res.lesson || res;
   }
 
-  async getCourseCategories() {
-    return this.request('/courses/categories/list');
-  }
-
-  async getFeaturedCourses() {
-    return this.request('/courses/featured/list');
-  }
-
   // User
   async getUserProfile() {
     return this.request('/users/profile');
@@ -294,13 +284,6 @@ class ApiService {
     return this.request(`/users/${userId}`);
   }
 
-  async completeOnboarding(onboardingData) {
-    return this.request('/users/complete-onboarding', {
-      method: 'POST',
-      body: JSON.stringify(onboardingData),
-    });
-  }
-
   // Progress
   async updateLessonProgress(lessonId, progressData) {
     return this.request(`/progress/lesson/${lessonId}`, {
@@ -315,18 +298,6 @@ class ApiService {
 
   async getUserProgress() {
     return this.request('/progress');
-  }
-
-  async bookmarkLesson(lessonId) {
-    return this.request(`/progress/bookmark/${lessonId}`, {
-      method: 'POST',
-    });
-  }
-
-  async removeBookmark(lessonId) {
-    return this.request(`/progress/bookmark/${lessonId}`, {
-      method: 'DELETE',
-    });
   }
 
   // Survey

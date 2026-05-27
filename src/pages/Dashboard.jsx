@@ -201,7 +201,7 @@ export default function Dashboard() {
                             <div className="relative z-10">
                                 <FireIcon className="w-10 h-10 text-accent mb-8" />
                                 <h4 className="text-xl font-serif italic mb-6">Daily Insight</h4>
-                                <blockquote className="text-sm font-medium leading-relaxed text-zinc-400 mb-8 italic">
+                                <blockquote className="text-sm font-medium leading-relaxed text-text-dim mb-8 italic">
                                     "Compound interest is the eighth wonder of the world. He who understands it, earns it... he who doesn't... pays it."
                                 </blockquote>
                                 <p className="text-[9px] font-bold uppercase tracking-widest text-accent">Source: Albert Einstein</p>

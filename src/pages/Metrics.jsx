@@ -104,7 +104,7 @@ const Metrics = () => {
   }));
 
   return (
-    <div className="min-h-screen py-16 pb-32">
+    <div className="min-h-screen bg-surface-body py-32 pb-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         {/* Hero */}
         <section className="mb-16">

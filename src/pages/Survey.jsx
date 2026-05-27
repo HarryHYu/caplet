@@ -85,14 +85,14 @@ const Survey = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <span className="section-kicker mb-4">Transmission Received</span>
-            <h2 className="text-4xl font-black mb-8 italic">Observation Recorded.</h2>
+            <span className="section-kicker mb-4">Thank you</span>
+            <h2 className="text-4xl font-black mb-8 italic">Response submitted.</h2>
             <p className="text-text-muted mb-12 font-serif italic leading-relaxed">
-              Your empirical data has been successfully ingested into our research matrix. This insight will inform future curriculum architecture.
+              Your answers help us improve Caplet for students and teachers.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link to="/survey-results" className="btn-primary text-xs uppercase tracking-widest px-10 py-4">
-                View Global Matrix
+                View results
               </Link>
               <Link to={isAuthenticated ? '/courses' : '/'} className="btn-secondary text-xs uppercase tracking-widest px-10 py-4">
                 {isAuthenticated ? 'Return to Academy' : 'Return Home'}
@@ -108,12 +108,12 @@ const Survey = () => {
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         <header className="mb-24 reveal-text max-w-4xl mx-auto">
-          <span className="section-kicker">Observatory &rarr; Literacy</span>
+          <span className="section-kicker">Research survey</span>
           <h1 className="text-6xl md:text-8xl mb-8">
-            Diagnostic <br />Analysis.
+            Financial literacy<br />survey.
           </h1>
           <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-            Contribute to our ongoing research into economic literacy and pedagogical optimization. All transmissions are anonymized.
+            Help us understand how people learn about money. Your responses are anonymous.
           </p>
           <div className="h-px w-full bg-line-soft mt-12" />
         </header>
@@ -285,7 +285,7 @@ const Survey = () => {
                   disabled={loading}
                   className="btn-primary w-full py-6 text-xs uppercase tracking-[0.4em] disabled:opacity-30 disabled:grayscale"
                 >
-                  {loading ? 'Transmitting Data...' : 'Submit Diagnostic'}
+                  {loading ? 'Submitting…' : 'Submit survey'}
                 </button>
                 <p className="text-center mt-8 text-[9px] font-serif italic text-text-dim">
                   In submission, you agree to anonymous data contribution for pedagogical enhancement.

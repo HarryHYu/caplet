@@ -44,16 +44,16 @@ const LoanRepayment = () => {
         <header className="mb-24 reveal-text">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
-              <span className="section-kicker">Instruments &rarr; Liability</span>
+              <span className="section-kicker">Tools &rarr; Liability</span>
               <h1 className="text-6xl md:text-8xl mb-8">
-                Repayment <br />Protocol.
+                Loan <br />repayments.
               </h1>
               <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
                 Analyze interest obligation and visualize the amortization of your debt-layer architecture.
               </p>
             </div>
             <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
-              &larr; Back to Instruments
+              &larr; Back to tools
             </Link>
           </div>
           <div className="h-px w-full bg-line-soft" />

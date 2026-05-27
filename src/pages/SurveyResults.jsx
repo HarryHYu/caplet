@@ -36,7 +36,7 @@ const SurveyResults = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-body">
         <div className="text-center max-w-md mx-auto px-6 reveal-text">
-          <span className="section-kicker mb-4 text-accent italic">Transmission Protocol Error</span>
+          <span className="section-kicker mb-4 text-accent italic">Unable to load results</span>
           <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
             {error}
           </p>
@@ -94,7 +94,7 @@ const SurveyResults = () => {
         <header className="mb-24 reveal-text">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
-              <span className="section-kicker">Observatory &rarr; Global Matrix</span>
+              <span className="section-kicker">Survey results</span>
               <h1 className="text-6xl md:text-8xl mb-8 font-black uppercase tracking-tighter">
                 Literacy <br />Spectrum.
               </h1>
@@ -103,7 +103,7 @@ const SurveyResults = () => {
               </p>
             </div>
             <div className="text-right">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim block mb-2 italic">Total Transmissions</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim block mb-2 italic">Total responses</span>
               <span className="text-6xl font-black text-accent leading-none">{stats.total}</span>
             </div>
           </div>
@@ -223,7 +223,7 @@ const SurveyResults = () => {
               <p className="text-sm font-serif italic text-text-dim">Distribution of perceived knowledge levels (1-10 Scale).</p>
             </div>
             <div className="text-right">
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-text-muted block mb-1">Matrix Average</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-text-muted block mb-1">Average confidence</span>
               <span className="text-4xl font-black text-accent">{stats.confidence.average}</span>
             </div>
           </div>
@@ -251,7 +251,7 @@ const SurveyResults = () => {
 
         {/* Helpful Explanations */}
         <div className="bg-surface-body border-x border-b border-line-soft p-12 lg:p-20 reveal-text stagger-4">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 italic">Pedagogical Preference Matrix</h2>
+          <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 italic">What helps people learn</h2>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={helpfulExplanationsData} layout="vertical">
@@ -274,7 +274,7 @@ const SurveyResults = () => {
 
         <footer className="mt-20 flex justify-between items-center text-[9px] font-black uppercase tracking-[0.4em] text-text-dim opacity-40">
           <span>Observation Cycle: 2024.A</span>
-          <span>Transmission Integrity: 100%</span>
+          <span>All responses anonymous</span>
         </footer>
       </div>
     </div>

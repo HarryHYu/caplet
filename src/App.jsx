@@ -81,6 +81,20 @@ function RequireAuth({ children }) {
   return children;
 }
 
+function RequireAdmin({ children }) {
+  const { user, isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return <FullPageSpinner />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  if (user?.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -122,10 +136,10 @@ function App() {
                   </Route>
                   <Route path="/profile/:userId" element={<UserProfile />} />
                   <Route path="/terms" element={<Terms />} />
-                  <Route path="/metrics" element={<Metrics />} />
+                  <Route path="/metrics" element={<RequireAdmin><Metrics /></RequireAdmin>} />
                   <Route path="/survey" element={<Survey />} />
-                  <Route path="/survey-results" element={<SurveyResults />} />
-                  <Route path="/editor" element={<Editor />} />
+                  <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />
+                  <Route path="/editor" element={<RequireAdmin><Editor /></RequireAdmin>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

@@ -265,7 +265,7 @@ const Navbar = () => {
                 </button>
                 {showUserMenu && (
                   <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-surface-raised border border-line-soft rounded-2xl shadow-xl overflow-hidden py-2">
-                    <Link to="/settings" onClick={() => setShowUserMenu(false)} className="block px-4 py-2 text-sm text-accent-strong dark:text-white hover:bg-surface-body dark:hover:bg-zinc-800">Settings</Link>
+                    <Link to="/settings" onClick={() => setShowUserMenu(false)} className="block px-4 py-2 text-sm text-accent-strong dark:text-white hover:bg-surface-body dark:hover:bg-surface-inverse/80">Settings</Link>
                     <button type="button" onClick={logout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Sign Out</button>
                   </div>
                 )}

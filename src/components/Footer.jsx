@@ -14,11 +14,14 @@ const Footer = () => {
     return null;
   }
 
+  if (['/editor', '/metrics', '/survey-results'].includes(location.pathname)) {
+    return null;
+  }
+
   return (
     <footer className="bg-surface-body border-t border-line-soft">
       <div className="container-custom py-32">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-20">
-          {/* Brand Signature — same mark + wordmark as Navbar */}
           <div className="md:col-span-6">
             <Link to={homePath} className="flex items-center gap-2 mb-12 group">
               <img
@@ -31,28 +34,20 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-xl font-serif italic text-text-muted mb-12 max-w-sm leading-relaxed">
-              Professional financial education designed for the Australian context. Structured learning, built for school integration.
+              Free financial education for Australians — courses, tools, and classroom-ready content.
             </p>
-            <div className="flex gap-4">
-              {['Compliance', 'Literacy', 'Application'].map(tag => (
-                <span key={tag} className="text-[9px] font-bold uppercase tracking-[0.3em] px-3 py-1 bg-surface-soft text-text-dim border border-line-soft">
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
 
-          {/* Navigation Columns */}
-          <div className="md:col-span-2">
-            <h3 className="text-[10px] font-bold text-accent uppercase tracking-[0.4em] mb-10">Academy</h3>
-            <ul className="space-y-6">
+          <div className="md:col-span-3">
+            <h3 className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-8">Learn</h3>
+            <ul className="space-y-4">
               {[
-                { label: 'Curriculum', path: '/courses' },
-                { label: 'Academy', path: '/classes' },
-                { label: 'Instruments', path: '/tools' }
+                { label: 'Courses', path: '/courses' },
+                { label: 'Classes', path: '/classes' },
+                { label: 'Tools', path: '/tools' },
               ].map(link => (
-                <li key={link.label}>
-                  <Link to={link.path} className="text-[11px] font-bold uppercase tracking-widest text-text-muted hover:text-accent transition-colors">
+                <li key={link.path}>
+                  <Link to={link.path} className="text-sm text-text-muted hover:text-accent transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -60,49 +55,32 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div className="md:col-span-2">
-            <h3 className="text-[10px] font-bold text-accent uppercase tracking-[0.4em] mb-10">Resources</h3>
-            <ul className="space-y-6">
+          <div className="md:col-span-3">
+            <h3 className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-8">Support</h3>
+            <ul className="space-y-4">
               {[
-                { label: 'My Dashboard', path: '/dashboard' },
-                { label: 'Support', path: '/contact' },
-                { label: 'Security', path: '/terms' }
+                { label: 'Dashboard', path: '/dashboard' },
+                { label: 'Contact', path: '/contact' },
+                { label: 'Terms & privacy', path: '/terms' },
               ].map(link => (
-                <li key={link.label}>
-                  <Link to={link.path} className="text-[11px] font-bold uppercase tracking-widest text-text-muted hover:text-accent transition-colors">
+                <li key={link.path}>
+                  <Link to={link.path} className="text-sm text-text-muted hover:text-accent transition-colors">
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
-
-          <div className="md:col-span-2 border-l border-line-soft pl-12 hidden lg:block">
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-4">Current Status</div>
-            <div className="flex items-center gap-2 mb-8">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold text-text-primary uppercase tracking-widest">Network Active</span>
-            </div>
-            <div className="text-[9px] text-text-dim leading-relaxed font-medium uppercase tracking-widest">
-              Deployment v4.2.0<br />
-              Cluster: AU-SYD-1
-            </div>
           </div>
         </div>
 
-        <div className="mt-32 pt-12 border-t border-line-soft flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
-            © {new Date().getFullYear()} Caplet Education. Precision in Finance.
+        <div className="mt-24 pt-8 border-t border-line-soft flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-text-dim">
+            © {new Date().getFullYear()} Caplet Education
           </p>
-          <div className="flex items-center gap-12 text-[10px] font-bold uppercase tracking-widest text-text-dim">
-            <Link to="/terms" className="hover:text-accent transition-colors">Privacy Protocol</Link>
-            <Link to="/terms" className="hover:text-accent transition-colors">Terms of Service</Link>
-          </div>
         </div>
       </div>
     </footer>
   );
 };
-
 
 export default Footer;
