@@ -1,12 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CAPLET DESIGN SYSTEM
-   Clean, readable, educational. Using "Outfit" typography.
+   Fonts are loaded once in index.html; this file just maps them to roles.
+
+   ROLES
+   -----
+   --font-body     Outfit              — default body text everywhere.
+   --font-display  Plus Jakarta Sans   — headlines, hero text, big numbers,
+                                          structural UI labels.
+   --font-serif    Lora                — editorial italic accents, the
+                                          wordmark, italic course / lesson
+                                          titles, blockquotes, kicker quotes.
+   --font-mono     JetBrains Mono      — code, kbd, numeric badges, slide
+                                          counters.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -17,8 +26,10 @@
   --surface-inverse: #2C2825;
 
   /* Typography */
-  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-body: 'Outfit', system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   --text-primary: #2C2825; /* Warmer dark ink */
   --text-muted: #5E5854;
@@ -84,8 +95,7 @@
   h1,
   h2,
   h3,
-  h4,
-  .font-serif {
+  h4 {
     font-family: var(--font-display);
     font-variant-numeric: tabular-nums;
   }
