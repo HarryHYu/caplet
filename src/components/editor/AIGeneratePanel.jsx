@@ -13,13 +13,13 @@ const FOCUS_OPTIONS = [
 const MODEL_OPTIONS = [
   {
     id: 'gpt-5.4-nano',
-    label: 'GPT-5.4 nano',
+    label: 'GPT-5.4 Nano',
     desc: 'Fastest & cheapest. Good for simple flashcards or quick summaries.',
     cost: 1,
   },
   {
     id: 'gpt-5.4-mini',
-    label: 'GPT-5.4 mini',
+    label: 'GPT-5.4 Mini',
     desc: 'Great balance of speed and quality. Recommended default.',
     cost: 2,
   },
@@ -30,9 +30,9 @@ const MODEL_OPTIONS = [
     cost: 3,
   },
   {
-    id: 'gpt-5.2-pro',
-    label: 'GPT-5.2 pro',
-    desc: 'Premium. Most detailed and nuanced output — use when quality matters most.',
+    id: 'gpt-5.5',
+    label: 'GPT-5.5',
+    desc: 'Most powerful. Best for nuanced, curriculum-accurate content.',
     cost: 4,
   },
 ];

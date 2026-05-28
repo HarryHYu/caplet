@@ -552,122 +552,103 @@ function CardsGrid({ cards, columns, caption, flip }) {
 
 function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
   const pairs = slide.pairs || [];
+  // rightCol[rowIdx] = which pair index's right text is currently in that row
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const rightOrder = useMemo(() => shuffle(pairs.map((_, i) => i)), [pairs.length]);
-  // slots[leftIdx] = rightIdx that was dropped onto it, or null
-  const [slots, setSlots] = useState(() => Object.fromEntries(pairs.map((_, i) => [i, null])));
-  const [dragging, setDragging] = useState(null); // rightIdx being dragged
+  const [rightCol, setRightCol] = useState(() => {
+    let s = shuffle(pairs.map((_, i) => i));
+    let safety = 0;
+    while (s.every((v, i) => v === i) && pairs.length > 1 && safety < 8) {
+      s = shuffle(pairs.map((_, i) => i));
+      safety++;
+    }
+    return s;
+  });
+  const [dragging, setDragging] = useState(null); // row index being dragged
+  const [dragOver, setDragOver] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const showFeedback = submitted || alreadyAnswered;
 
-  const allPaired = pairs.every((_, i) => slots[i] != null);
-  const allCorrect = pairs.every((_, i) => slots[i] === i);
+  const allCorrect = rightCol.every((pairIdx, rowIdx) => pairIdx === rowIdx);
   const isCorrect = submitted ? allCorrect : alreadyCorrect;
 
-  const onDragStart = (rightIdx) => setDragging(rightIdx);
-  const onDragEnd = () => setDragging(null);
-
-  const onDrop = (leftIdx) => {
-    if (showFeedback || dragging == null) return;
-    setSlots((prev) => {
-      const next = { ...prev };
-      // Clear any slot that already has this rightIdx
-      Object.keys(next).forEach((k) => { if (next[k] === dragging) next[k] = null; });
-      // If the target slot had something else, put it back to unassigned (it'll reappear in the pool)
-      next[leftIdx] = dragging;
+  const onDragStart = (row) => setDragging(row);
+  const onDragEnd = () => { setDragging(null); setDragOver(null); };
+  const onDragOverRow = (e, row) => { e.preventDefault(); setDragOver(row); };
+  const onDropRow = (toRow) => {
+    if (dragging == null || dragging === toRow || showFeedback) return;
+    setRightCol((prev) => {
+      const next = [...prev];
+      [next[dragging], next[toRow]] = [next[toRow], next[dragging]];
       return next;
     });
     setDragging(null);
+    setDragOver(null);
   };
-
-  // rightIdx values that haven't been placed yet
-  const unplaced = rightOrder.filter((ri) => !Object.values(slots).includes(ri));
 
   const submit = () => { setSubmitted(true); onSubmit(allCorrect); };
 
   return (
     <div className="max-w-3xl mx-auto w-full">
       <Kicker>Match</Kicker>
-      <p className="text-sm text-text-muted mb-4">Drag each item on the right to its match on the left.</p>
+      {!showFeedback && (
+        <p className="text-sm text-text-muted mb-4">Drag the right column to align each item with its match.</p>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-        {/* Left — fixed terms with drop zones */}
-        <div className="space-y-2">
-          {pairs.map((p, leftIdx) => {
-            const placed = slots[leftIdx];
-            const correct = placed === leftIdx;
-            let dropCls = 'border-line-soft';
-            if (dragging != null && !showFeedback) dropCls = 'border-accent/50 bg-accent/[0.03]';
-            if (showFeedback && placed != null && correct) dropCls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
-            if (showFeedback && placed != null && !correct) dropCls = 'border-rose-400/60 bg-rose-500/[0.06]';
+      <div className="space-y-2">
+        {pairs.map((p, rowIdx) => {
+          const rightPairIdx = rightCol[rowIdx];
+          const correct = rightPairIdx === rowIdx;
+          const isDraggingThisRow = dragging === rowIdx;
+          const isOverThisRow = dragOver === rowIdx && dragging !== rowIdx;
 
-            return (
-              <div
-                key={leftIdx}
-                onDragOver={(e) => { if (!showFeedback) e.preventDefault(); }}
-                onDrop={() => onDrop(leftIdx)}
-                className={`flex items-center gap-3 px-4 py-3 border-2 rounded-xl transition-all min-h-[52px] ${dropCls}`}
-              >
-                <span className="text-[10px] font-mono text-text-dim shrink-0">{String.fromCharCode(65 + leftIdx)}.</span>
-                <span className="flex-1 text-sm md:text-base">{p.left}</span>
-                {placed != null ? (
-                  <div
-                    draggable={!showFeedback}
-                    onDragStart={() => onDragStart(placed)}
-                    onDragEnd={onDragEnd}
-                    className={`shrink-0 px-3 py-1.5 rounded-lg border text-sm font-medium cursor-grab active:cursor-grabbing select-none ${
-                      showFeedback
-                        ? correct
-                          ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                          : 'border-rose-400/60 bg-rose-500/10 text-rose-600'
-                        : 'border-accent/50 bg-accent/10 text-accent'
-                    }`}
-                  >
-                    {pairs[placed].right}
-                    {showFeedback && (correct ? ' ✓' : ' ✗')}
-                  </div>
-                ) : (
-                  <div className="shrink-0 w-28 h-9 rounded-lg border border-dashed border-line-soft bg-surface-soft/50" />
-                )}
+          let leftCls = 'border-line-soft bg-surface-raised';
+          let rightCls = 'border-line-soft bg-surface-raised';
+
+          if (showFeedback && correct) {
+            leftCls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
+            rightCls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
+          } else if (showFeedback && !correct) {
+            leftCls = 'border-rose-400/60 bg-rose-500/[0.06]';
+            rightCls = 'border-rose-400/60 bg-rose-500/[0.06]';
+          } else if (isDraggingThisRow) {
+            rightCls = 'border-accent/50 bg-accent/10 opacity-50';
+          } else if (isOverThisRow) {
+            rightCls = 'border-accent bg-accent/[0.06] scale-[1.01]';
+          }
+
+          return (
+            <div key={rowIdx} className="flex items-stretch gap-2 md:gap-3">
+              {/* Left — fixed */}
+              <div className={`flex-1 flex items-center gap-2 px-4 py-3 border rounded-xl transition-all ${leftCls}`}>
+                <span className="text-[10px] font-mono text-text-dim shrink-0">{String.fromCharCode(65 + rowIdx)}.</span>
+                <span className="text-sm md:text-base">{p.left}</span>
               </div>
-            );
-          })}
-        </div>
 
-        {/* Right — draggable pool of unplaced items */}
-        <div className="flex flex-col gap-2">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1">Drag these →</p>
-          {unplaced.map((rightIdx) => (
-            <div
-              key={rightIdx}
-              draggable={!showFeedback}
-              onDragStart={() => onDragStart(rightIdx)}
-              onDragEnd={onDragEnd}
-              className={`px-4 py-3 border rounded-xl text-sm md:text-base bg-surface-raised select-none transition-all ${
-                showFeedback
-                  ? 'border-line-soft opacity-50'
-                  : dragging === rightIdx
-                    ? 'border-accent bg-accent/10 opacity-60 cursor-grabbing'
-                    : 'border-line-soft cursor-grab hover:border-accent/60 hover:bg-accent/[0.03] active:cursor-grabbing'
-              }`}
-            >
-              {pairs[rightIdx].right}
+              {/* Right — draggable */}
+              <div
+                draggable={!showFeedback}
+                onDragStart={() => onDragStart(rowIdx)}
+                onDragEnd={onDragEnd}
+                onDragOver={(e) => onDragOverRow(e, rowIdx)}
+                onDrop={() => onDropRow(rowIdx)}
+                className={`flex-1 flex items-center gap-2 px-4 py-3 border rounded-xl transition-all select-none ${rightCls} ${
+                  showFeedback ? '' : 'cursor-grab active:cursor-grabbing hover:border-accent/50'
+                }`}
+              >
+                {!showFeedback && (
+                  <span className="text-text-dim/40 shrink-0">⠿</span>
+                )}
+                <span className="flex-1 text-sm md:text-base">{pairs[rightPairIdx].right}</span>
+                {showFeedback && (correct ? <CheckIcon /> : <XIcon />)}
+              </div>
             </div>
-          ))}
-          {unplaced.length === 0 && !showFeedback && (
-            <p className="text-xs text-text-dim italic">All placed — drag from the left to rearrange.</p>
-          )}
-        </div>
+          );
+        })}
       </div>
 
       {!showFeedback && (
-        <button
-          type="button"
-          onClick={submit}
-          disabled={!allPaired}
-          className="btn-primary w-full mt-5 py-3 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {allPaired ? 'Check Matches' : `${pairs.length - Object.values(slots).filter(Boolean).length} left to place`}
+        <button type="button" onClick={submit} className="btn-primary w-full mt-5 py-3">
+          Check Matches
         </button>
       )}
       {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}

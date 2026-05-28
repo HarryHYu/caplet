@@ -45,7 +45,7 @@ function throttle(req, res, next) {
 }
 
 router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
-  const ALLOWED_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.2-pro'];
+  const ALLOWED_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
   const notes = (req.body?.notes ?? '').toString();
   const title = (req.body?.title ?? '').toString().slice(0, 200);
   const curriculum = (req.body?.curriculum ?? '').toString().slice(0, 200);
