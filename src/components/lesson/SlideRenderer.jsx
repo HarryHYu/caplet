@@ -415,12 +415,16 @@ function CardsCarousel({ cards, caption }) {
   const flippable = !!card.back;
 
   return (
-    <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col justify-center gap-6">
+    // flex-1 + min-h-0 keeps the whole component inside the slide boundary.
+    // The card fills remaining vertical space rather than using a fixed aspect ratio.
+    <div className="flex-1 min-h-0 flex flex-col gap-4 max-w-2xl mx-auto w-full">
       <Kicker>Flashcards · {i + 1} / {total}</Kicker>
+
+      {/* Card fills all remaining space */}
       <button
         type="button"
         onClick={() => flippable && setFlipped((v) => !v)}
-        className={`group relative w-full aspect-[16/10] rounded-2xl border border-line-soft bg-surface-raised shadow-lg flex items-center justify-center px-8 py-10 text-center transition-all ${
+        className={`group relative flex-1 min-h-0 rounded-2xl border border-line-soft bg-surface-raised shadow-lg flex flex-col items-center justify-center px-8 py-8 text-center transition-all ${
           flippable ? 'cursor-pointer hover:border-accent/60' : ''
         }`}
       >
@@ -431,7 +435,7 @@ function CardsCarousel({ cards, caption }) {
             className="absolute inset-0 w-full h-full object-cover opacity-15 rounded-2xl"
           />
         )}
-        <div className="relative">
+        <div className="relative max-w-lg">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-3">
             {flipped ? 'Back' : 'Front'}
           </p>
@@ -445,7 +449,9 @@ function CardsCarousel({ cards, caption }) {
           )}
         </div>
       </button>
-      <div className="flex items-center justify-between gap-3">
+
+      {/* Nav row — fixed height, never grows */}
+      <div className="shrink-0 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={() => { setI(Math.max(0, i - 1)); setFlipped(false); }}
@@ -456,9 +462,12 @@ function CardsCarousel({ cards, caption }) {
         </button>
         <div className="flex items-center gap-1.5">
           {cards.map((_, k) => (
-            <span
+            <button
               key={k}
-              className={`w-1.5 h-1.5 rounded-full ${k === i ? 'bg-accent' : 'bg-line-soft'}`}
+              type="button"
+              onClick={() => { setI(k); setFlipped(false); }}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${k === i ? 'bg-accent scale-125' : 'bg-line-soft hover:bg-text-dim'}`}
+              aria-label={`Card ${k + 1}`}
             />
           ))}
         </div>
@@ -472,7 +481,7 @@ function CardsCarousel({ cards, caption }) {
         </button>
       </div>
       {caption && (
-        <p className="text-center text-sm font-serif italic text-text-muted">{caption}</p>
+        <p className="shrink-0 text-center text-sm font-serif italic text-text-muted">{caption}</p>
       )}
     </div>
   );
@@ -545,97 +554,109 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
   const pairs = slide.pairs || [];
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const rightOrder = useMemo(() => shuffle(pairs.map((_, i) => i)), [pairs.length]);
-  const [pairings, setPairings] = useState({}); // { [leftIdx]: rightIdx }
-  const [selectedLeft, setSelectedLeft] = useState(null);
+  // slots[leftIdx] = rightIdx that was dropped onto it, or null
+  const [slots, setSlots] = useState(() => Object.fromEntries(pairs.map((_, i) => [i, null])));
+  const [dragging, setDragging] = useState(null); // rightIdx being dragged
   const [submitted, setSubmitted] = useState(false);
   const showFeedback = submitted || alreadyAnswered;
 
-  const handleLeft = (i) => {
-    if (showFeedback) return;
-    setSelectedLeft((prev) => (prev === i ? null : i));
-  };
-
-  const handleRight = (rightIdx) => {
-    if (showFeedback) return;
-    if (selectedLeft == null) return;
-    setPairings((prev) => {
-      const next = { ...prev };
-      // Remove any existing assignment of this rightIdx
-      Object.keys(next).forEach((k) => { if (next[k] === rightIdx) delete next[k]; });
-      next[selectedLeft] = rightIdx;
-      return next;
-    });
-    setSelectedLeft(null);
-  };
-
-  const allPaired = pairs.every((_, i) => pairings[i] != null);
-  const allCorrect = pairs.every((_, i) => pairings[i] === i);
+  const allPaired = pairs.every((_, i) => slots[i] != null);
+  const allCorrect = pairs.every((_, i) => slots[i] === i);
   const isCorrect = submitted ? allCorrect : alreadyCorrect;
 
-  const submit = () => {
-    setSubmitted(true);
-    onSubmit(allCorrect);
+  const onDragStart = (rightIdx) => setDragging(rightIdx);
+  const onDragEnd = () => setDragging(null);
+
+  const onDrop = (leftIdx) => {
+    if (showFeedback || dragging == null) return;
+    setSlots((prev) => {
+      const next = { ...prev };
+      // Clear any slot that already has this rightIdx
+      Object.keys(next).forEach((k) => { if (next[k] === dragging) next[k] = null; });
+      // If the target slot had something else, put it back to unassigned (it'll reappear in the pool)
+      next[leftIdx] = dragging;
+      return next;
+    });
+    setDragging(null);
   };
+
+  // rightIdx values that haven't been placed yet
+  const unplaced = rightOrder.filter((ri) => !Object.values(slots).includes(ri));
+
+  const submit = () => { setSubmitted(true); onSubmit(allCorrect); };
 
   return (
     <div className="max-w-3xl mx-auto w-full">
       <Kicker>Match</Kicker>
-      <p className="text-sm text-text-muted mb-5">
-        Click a term on the left, then click its match on the right.
-      </p>
+      <p className="text-sm text-text-muted mb-4">Drag each item on the right to its match on the left.</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+        {/* Left — fixed terms with drop zones */}
         <div className="space-y-2">
-          {pairs.map((p, i) => {
-            const paired = pairings[i] != null;
-            const correctMatch = pairings[i] === i;
-            let cls = 'border-line-soft hover:border-accent/60';
-            if (selectedLeft === i) cls = 'border-accent bg-accent/[0.06]';
-            else if (showFeedback && correctMatch) cls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
-            else if (showFeedback && paired) cls = 'border-rose-400/60 bg-rose-500/[0.06]';
-            else if (paired) cls = 'border-accent/40 bg-accent/[0.03]';
+          {pairs.map((p, leftIdx) => {
+            const placed = slots[leftIdx];
+            const correct = placed === leftIdx;
+            let dropCls = 'border-line-soft';
+            if (dragging != null && !showFeedback) dropCls = 'border-accent/50 bg-accent/[0.03]';
+            if (showFeedback && placed != null && correct) dropCls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
+            if (showFeedback && placed != null && !correct) dropCls = 'border-rose-400/60 bg-rose-500/[0.06]';
+
             return (
-              <button
-                key={i}
-                type="button"
-                disabled={showFeedback}
-                onClick={() => handleLeft(i)}
-                className={`w-full text-left px-4 py-3 border rounded-xl transition-all ${cls}`}
+              <div
+                key={leftIdx}
+                onDragOver={(e) => { if (!showFeedback) e.preventDefault(); }}
+                onDrop={() => onDrop(leftIdx)}
+                className={`flex items-center gap-3 px-4 py-3 border-2 rounded-xl transition-all min-h-[52px] ${dropCls}`}
               >
-                <span className="text-[10px] font-mono text-text-dim mr-2">{String.fromCharCode(65 + i)}.</span>
-                <span className="text-sm md:text-base">{p.left}</span>
-                {paired && (
-                  <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-accent">
-                    → {pairings[i] + 1}
-                  </span>
+                <span className="text-[10px] font-mono text-text-dim shrink-0">{String.fromCharCode(65 + leftIdx)}.</span>
+                <span className="flex-1 text-sm md:text-base">{p.left}</span>
+                {placed != null ? (
+                  <div
+                    draggable={!showFeedback}
+                    onDragStart={() => onDragStart(placed)}
+                    onDragEnd={onDragEnd}
+                    className={`shrink-0 px-3 py-1.5 rounded-lg border text-sm font-medium cursor-grab active:cursor-grabbing select-none ${
+                      showFeedback
+                        ? correct
+                          ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                          : 'border-rose-400/60 bg-rose-500/10 text-rose-600'
+                        : 'border-accent/50 bg-accent/10 text-accent'
+                    }`}
+                  >
+                    {pairs[placed].right}
+                    {showFeedback && (correct ? ' ✓' : ' ✗')}
+                  </div>
+                ) : (
+                  <div className="shrink-0 w-28 h-9 rounded-lg border border-dashed border-line-soft bg-surface-soft/50" />
                 )}
-              </button>
+              </div>
             );
           })}
         </div>
-        <div className="space-y-2">
-          {rightOrder.map((rightIdx, displayPos) => {
-            const usedByLeft = Object.keys(pairings).find((k) => pairings[k] === rightIdx);
-            const used = usedByLeft != null;
-            const correctMatch = used && Number(usedByLeft) === rightIdx;
-            let cls = 'border-line-soft hover:border-accent/60';
-            if (showFeedback && used && correctMatch) cls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
-            else if (showFeedback && used) cls = 'border-rose-400/60 bg-rose-500/[0.06]';
-            else if (used) cls = 'border-accent/40 bg-accent/[0.03]';
-            else if (selectedLeft != null) cls = 'border-accent/40 hover:border-accent';
-            return (
-              <button
-                key={rightIdx}
-                type="button"
-                disabled={showFeedback}
-                onClick={() => handleRight(rightIdx)}
-                className={`w-full text-left px-4 py-3 border rounded-xl transition-all ${cls}`}
-              >
-                <span className="text-[10px] font-mono text-text-dim mr-2">{displayPos + 1}.</span>
-                <span className="text-sm md:text-base">{pairs[rightIdx].right}</span>
-              </button>
-            );
-          })}
+
+        {/* Right — draggable pool of unplaced items */}
+        <div className="flex flex-col gap-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1">Drag these →</p>
+          {unplaced.map((rightIdx) => (
+            <div
+              key={rightIdx}
+              draggable={!showFeedback}
+              onDragStart={() => onDragStart(rightIdx)}
+              onDragEnd={onDragEnd}
+              className={`px-4 py-3 border rounded-xl text-sm md:text-base bg-surface-raised select-none transition-all ${
+                showFeedback
+                  ? 'border-line-soft opacity-50'
+                  : dragging === rightIdx
+                    ? 'border-accent bg-accent/10 opacity-60 cursor-grabbing'
+                    : 'border-line-soft cursor-grab hover:border-accent/60 hover:bg-accent/[0.03] active:cursor-grabbing'
+              }`}
+            >
+              {pairs[rightIdx].right}
+            </div>
+          ))}
+          {unplaced.length === 0 && !showFeedback && (
+            <p className="text-xs text-text-dim italic">All placed — drag from the left to rearrange.</p>
+          )}
         </div>
       </div>
 
@@ -646,14 +667,11 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
           disabled={!allPaired}
           className="btn-primary w-full mt-5 py-3 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {allPaired ? 'Check Matches' : `Pair all ${pairs.length} items`}
+          {allPaired ? 'Check Matches' : `${pairs.length - Object.values(slots).filter(Boolean).length} left to place`}
         </button>
       )}
-
       {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}
-      {slide.caption && (
-        <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>
-      )}
+      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>}
     </div>
   );
 }
@@ -665,8 +683,6 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
 function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
   const items = slide.items || [];
   const correctOrder = slide.correctOrder || items.map((_, i) => i);
-  // Build a shuffled starting arrangement that is guaranteed to differ from the
-  // correct sequence (so the activity isn't pre-solved).
   const [order, setOrder] = useState(() => {
     let shuffled = shuffle(items.map((_, i) => i));
     let safety = 0;
@@ -676,67 +692,73 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
     }
     return shuffled;
   });
+  const [dragging, setDragging] = useState(null); // position index being dragged
+  const [dragOver, setDragOver] = useState(null); // position index being hovered over
   const [submitted, setSubmitted] = useState(false);
   const showFeedback = submitted || alreadyAnswered;
 
-  const move = (idx, dir) => {
-    if (showFeedback) return;
-    const j = idx + dir;
-    if (j < 0 || j >= order.length) return;
-    const next = [...order];
-    [next[idx], next[j]] = [next[j], next[idx]];
-    setOrder(next);
+  const onDragStart = (pos) => setDragging(pos);
+  const onDragEnd = () => { setDragging(null); setDragOver(null); };
+  const onDragOverItem = (e, pos) => { e.preventDefault(); setDragOver(pos); };
+
+  const onDropItem = (toPos) => {
+    if (dragging == null || dragging === toPos || showFeedback) return;
+    setOrder((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(dragging, 1);
+      next.splice(toPos, 0, moved);
+      return next;
+    });
+    setDragging(null);
+    setDragOver(null);
   };
 
   const allCorrect = arraysEqual(order, correctOrder);
   const isCorrect = submitted ? allCorrect : alreadyCorrect;
-
-  const submit = () => {
-    setSubmitted(true);
-    onSubmit(allCorrect);
-  };
+  const submit = () => { setSubmitted(true); onSubmit(allCorrect); };
 
   return (
     <div className="max-w-2xl mx-auto w-full">
       <Kicker>Put in order</Kicker>
       {slide.prompt && (
-        <h3 className="text-lg md:text-xl font-display leading-snug text-text-primary mb-5">
+        <h3 className="text-lg md:text-xl font-display leading-snug text-text-primary mb-4">
           {slide.prompt}
         </h3>
+      )}
+      {!showFeedback && (
+        <p className="text-sm text-text-muted mb-4">Drag the rows into the correct order.</p>
       )}
       <ul className="space-y-2">
         {order.map((itemIdx, pos) => {
           const inRightSpot = correctOrder[pos] === itemIdx;
-          let cls = 'border-line-soft';
+          const isDragging = dragging === pos;
+          const isOver = dragOver === pos && dragging !== pos;
+          let cls = 'border-line-soft bg-surface-raised';
           if (showFeedback && inRightSpot) cls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
           else if (showFeedback) cls = 'border-rose-400/60 bg-rose-500/[0.06]';
+          else if (isDragging) cls = 'border-accent bg-accent/10 opacity-50';
+          else if (isOver) cls = 'border-accent bg-accent/[0.04] scale-[1.01]';
+
           return (
             <li
               key={itemIdx}
-              className={`flex items-center gap-3 px-4 py-3 border rounded-xl bg-surface-raised ${cls}`}
+              draggable={!showFeedback}
+              onDragStart={() => onDragStart(pos)}
+              onDragEnd={onDragEnd}
+              onDragOver={(e) => onDragOverItem(e, pos)}
+              onDrop={() => onDropItem(pos)}
+              className={`flex items-center gap-3 px-4 py-3 border rounded-xl transition-all select-none ${cls} ${
+                showFeedback ? '' : 'cursor-grab active:cursor-grabbing'
+              }`}
             >
-              <span className="text-[10px] font-mono text-text-dim w-5">{pos + 1}.</span>
+              {!showFeedback && (
+                <span className="text-text-dim/50 shrink-0 text-base leading-none">⠿</span>
+              )}
+              <span className="text-[10px] font-mono text-text-dim w-5 shrink-0">{pos + 1}.</span>
               <span className="flex-1 text-sm md:text-base">{items[itemIdx]}</span>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  disabled={pos === 0 || showFeedback}
-                  onClick={() => move(pos, -1)}
-                  className="w-8 h-8 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30"
-                  aria-label="Move up"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  disabled={pos === order.length - 1 || showFeedback}
-                  onClick={() => move(pos, 1)}
-                  className="w-8 h-8 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30"
-                  aria-label="Move down"
-                >
-                  ↓
-                </button>
-              </div>
+              {showFeedback && (
+                inRightSpot ? <CheckIcon /> : <XIcon />
+              )}
             </li>
           );
         })}
@@ -747,22 +769,16 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
           Check Order
         </button>
       )}
-
       {showFeedback && !allCorrect && (
         <div className="mt-4 text-sm text-text-muted">
           <p className="font-bold uppercase tracking-[0.2em] text-[10px] mb-1.5 text-rose-500">Correct order</p>
           <ol className="list-decimal list-inside space-y-0.5">
-            {correctOrder.map((i) => (
-              <li key={i}>{items[i]}</li>
-            ))}
+            {correctOrder.map((i) => <li key={i}>{items[i]}</li>)}
           </ol>
         </div>
       )}
-
       {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}
-      {slide.caption && (
-        <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>
-      )}
+      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>}
     </div>
   );
 }
