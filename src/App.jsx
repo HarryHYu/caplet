@@ -139,7 +139,7 @@ function App() {
                   <Route path="/metrics" element={<RequireAdmin><Metrics /></RequireAdmin>} />
                   <Route path="/survey" element={<Survey />} />
                   <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />
-                  <Route path="/editor" element={<RequireAdmin><Editor /></RequireAdmin>} />
+                  <Route path="/editor" element={<Editor />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
