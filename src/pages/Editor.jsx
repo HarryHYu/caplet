@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
-import { normalizeSlide, SLIDE_DEFAULTS, SLIDE_PALETTE, slideKindLabel } from '../lib/slideSchema';
+import { normalizeSlide, warnSlide, SLIDE_DEFAULTS, SLIDE_PALETTE, slideKindLabel } from '../lib/slideSchema';
 import SlideForm from '../components/editor/SlideForms';
 import AIGeneratePanel from '../components/editor/AIGeneratePanel';
 import LessonPreviewModal from '../components/editor/LessonPreviewModal';
@@ -103,7 +103,47 @@ function CodeEntry({ onEnter }) {
    Workspace tree (left rail)
    ────────────────────────────────────────────────────────────────────────── */
 
-function WorkspaceTree({ courses, selectedLessonId, onSelect, onAddCourse, onAddModule, onAddLesson, loading }) {
+function InlineRename({ value, onSave, className = '' }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  const commit = async () => {
+    setEditing(false);
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== value) await onSave(trimmed);
+    else setDraft(value);
+  };
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') { setDraft(value); setEditing(false); }
+        }}
+        className={`bg-transparent border-b border-accent focus:outline-none ${className}`}
+      />
+    );
+  }
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      title="Click to rename"
+      onClick={() => { setDraft(value); setEditing(true); }}
+      onKeyDown={(e) => e.key === 'Enter' && setEditing(true)}
+      className={`cursor-text hover:text-accent transition-colors ${className}`}
+    >
+      {value}
+    </span>
+  );
+}
+
+function WorkspaceTree({ courses, selectedLessonId, onSelect, onAddCourse, onAddModule, onAddLesson, onRenameCourse, onRenameModule, onTogglePublish, loading }) {
   return (
     <aside className="w-72 shrink-0 border-r border-line-soft bg-surface-soft/50 overflow-y-auto">
       <div className="p-4 sticky top-0 bg-surface-soft/95 backdrop-blur-md border-b border-line-soft flex items-center justify-between">
@@ -126,22 +166,42 @@ function WorkspaceTree({ courses, selectedLessonId, onSelect, onAddCourse, onAdd
         {courses.map((c) => (
           <div key={c.id} className="rounded-xl bg-surface-raised border border-line-soft p-3">
             <div className="flex items-start justify-between gap-2 mb-2">
-              <p className="text-sm font-bold text-text-primary truncate" title={c.title}>{c.title}</p>
-              <button
-                type="button"
-                onClick={() => onAddModule(c.id)}
-                className="shrink-0 text-[10px] font-bold uppercase tracking-[0.2em] text-accent hover:underline"
-              >
-                + Module
-              </button>
+              <InlineRename
+                value={c.title}
+                onSave={(title) => onRenameCourse(c.id, title)}
+                className="text-sm font-bold text-text-primary truncate flex-1 min-w-0"
+              />
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => onTogglePublish(c.id, c.isPublished)}
+                  title={c.isPublished ? 'Published — click to unpublish' : 'Draft — click to publish'}
+                  className={`text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border ${
+                    c.isPublished
+                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600'
+                      : 'border-line-soft text-text-dim hover:border-text-dim'
+                  }`}
+                >
+                  {c.isPublished ? 'Live' : 'Draft'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAddModule(c.id)}
+                  className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent hover:underline"
+                >
+                  + Module
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               {(c.modules || []).map((m) => (
                 <div key={m.id}>
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted truncate" title={m.title}>
-                      {m.title}
-                    </p>
+                    <InlineRename
+                      value={m.title}
+                      onSave={(title) => onRenameModule(m.id, title)}
+                      className="text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted truncate flex-1 min-w-0"
+                    />
                     <button
                       type="button"
                       onClick={() => onAddLesson(m.id)}
@@ -174,6 +234,7 @@ function WorkspaceTree({ courses, selectedLessonId, onSelect, onAddCourse, onAdd
           </div>
         ))}
       </div>
+      <p className="px-4 py-3 text-[10px] text-text-dim">Click any course or module name to rename it.</p>
     </aside>
   );
 }
@@ -213,10 +274,13 @@ function AddSlidePalette({ onAdd }) {
 function SlideCard({
   slide, index, total, expanded, onToggle, onMove, onDuplicate, onDelete, onChange, lessonId,
 }) {
+  const warnings = warnSlide(slide);
+  const hasWarning = warnings.length > 0;
+
   return (
     <div
       className={`rounded-2xl border bg-surface-raised transition-all ${
-        expanded ? 'border-accent shadow-lg' : 'border-line-soft'
+        expanded ? 'border-accent shadow-lg' : hasWarning ? 'border-amber-400/60' : 'border-line-soft'
       }`}
     >
       <div className="flex items-center gap-3 px-4 py-3">
@@ -230,6 +294,11 @@ function SlideCard({
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-[0.2em]">
               {slideKindLabel(slide)}
             </span>
+            {hasWarning && !expanded && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-600 text-[10px] font-bold uppercase tracking-[0.2em]">
+                ⚠ {warnings.length} issue{warnings.length > 1 ? 's' : ''}
+              </span>
+            )}
           </div>
           <p className="text-sm text-text-primary truncate" title={slideSummary(slide)}>
             {slideSummary(slide)}
@@ -274,7 +343,20 @@ function SlideCard({
         </div>
       </div>
       {expanded && (
-        <div className="border-t border-line-soft px-4 py-4">
+        <div className="border-t border-line-soft px-4 py-4 space-y-4">
+          {hasWarning && (
+            <div className="rounded-xl border border-amber-400/40 bg-amber-400/[0.06] px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600 mb-1">
+                Heads up
+              </p>
+              <ul className="space-y-0.5">
+                {warnings.map((w, i) => (
+                  <li key={i} className="text-xs text-amber-700 dark:text-amber-400">{w}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[10px] text-amber-600/70">You can still save — this is just a reminder.</p>
+            </div>
+          )}
           <SlideForm slide={slide} onChange={onChange} lessonId={lessonId} />
         </div>
       )}
@@ -392,7 +474,11 @@ function LessonBuilder({
         </div>
 
         {saveMsg && (
-          <p className={`mb-4 text-xs ${saveMsg.tone === 'error' ? 'text-rose-500' : 'text-emerald-500'}`}>
+          <p className={`mb-4 text-xs ${
+            saveMsg.tone === 'error' ? 'text-rose-500'
+            : saveMsg.tone === 'warn' ? 'text-amber-600'
+            : 'text-emerald-500'
+          }`}>
             {saveMsg.text}
           </p>
         )}
@@ -512,6 +598,33 @@ export default function Editor() {
     }
   };
 
+  const togglePublish = async (courseId, currentlyPublished) => {
+    try {
+      await api.editorUpdateCourse(courseId, { isPublished: !currentlyPublished });
+      await reload();
+    } catch (e) {
+      setGlobalError(e.message || 'Failed to update publish state');
+    }
+  };
+
+  const renameCourse = async (courseId, title) => {
+    try {
+      await api.editorUpdateCourse(courseId, { title });
+      await reload();
+    } catch (e) {
+      setGlobalError(e.message || 'Failed to rename course');
+    }
+  };
+
+  const renameModule = async (moduleId, title) => {
+    try {
+      await api.editorUpdateModule(moduleId, { title });
+      await reload();
+    } catch (e) {
+      setGlobalError(e.message || 'Failed to rename module');
+    }
+  };
+
   const addLesson = async (moduleId) => {
     try {
       const res = await api.editorCreateLesson({
@@ -533,14 +646,23 @@ export default function Editor() {
 
   const saveDraft = async () => {
     if (!selected?.lesson?.id || !draft) return;
+
+    // Collect frontend warnings but don't block saving — teachers can keep drafts.
+    const allWarnings = draft.slides.flatMap((s, i) =>
+      warnSlide(s).map((w) => `Slide ${i + 1}: ${w}`),
+    );
+    if (allWarnings.length) {
+      setSaveMsg({ tone: 'warn', text: `Saved with ${allWarnings.length} issue${allWarnings.length > 1 ? 's' : ''} — check highlighted slides.` });
+    }
+
     setSaving(true);
-    setSaveMsg(null);
+    if (!allWarnings.length) setSaveMsg(null);
     try {
       await api.editorUpdateLesson(selected.lesson.id, {
         title: draft.title,
         slides: strip(draft.slides),
       });
-      setSaveMsg({ tone: 'ok', text: 'Saved' });
+      if (!allWarnings.length) setSaveMsg({ tone: 'ok', text: 'Saved' });
       // Refresh tree and re-baseline dirty signature
       await reload();
       setOriginalSig(JSON.stringify({ title: draft.title, slides: strip(draft.slides) }));
@@ -642,6 +764,9 @@ export default function Editor() {
           onAddCourse={addCourse}
           onAddModule={addModule}
           onAddLesson={addLesson}
+          onRenameCourse={renameCourse}
+          onRenameModule={renameModule}
+          onTogglePublish={togglePublish}
           loading={loading}
         />
         <LessonBuilder

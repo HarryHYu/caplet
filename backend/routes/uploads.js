@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { Classroom, ClassMembership, Lesson, Course, Module } = require('../models');
-const { presignPut, publicObjectUrl } = require('../services/s3Presign');
+const { presignPost, publicObjectUrl, SIZE_LIMITS } = require('../services/s3Presign');
 const { JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
@@ -154,17 +154,16 @@ router.post(
         return res.status(400).json({ message: 'Invalid purpose' });
       }
 
-      const { uploadUrl, expiresIn } = await presignPut(key, mimeType);
+      const { uploadUrl, fields, expiresIn, maxBytes } = await presignPost(key, mimeType, purpose);
       const publicUrl = publicObjectUrl(key);
 
       return res.json({
         uploadUrl,
+        fields,
         key,
         publicUrl,
         expiresIn,
-        headers: {
-          'Content-Type': mimeType
-        }
+        maxBytes,
       });
     } catch (e) {
       console.error('Presign error:', e);

@@ -189,6 +189,63 @@ export function normalizeSlide(slide) {
 }
 
 /**
+ * Returns an array of human-readable problem strings for a single slide,
+ * or an empty array if the slide looks valid enough to save.
+ * This is intentionally lenient — it flags obvious empty fields but doesn't
+ * block saving so teachers can keep incomplete drafts.
+ */
+export function warnSlide(slide) {
+  const n = normalizeSlide(slide);
+  if (!n) return ['Not a valid slide object'];
+  const w = [];
+  switch (n.type) {
+    case 'text':
+      if (!n.content?.trim()) w.push('Text slide has no content');
+      break;
+    case 'media':
+      if (!n.url?.trim()) w.push(`${n.source || 'media'} slide has no URL`);
+      break;
+    case 'choice':
+      if (!n.question?.trim()) w.push('Question is blank');
+      if ((n.options || []).some((o) => !o?.trim())) w.push('One or more options are blank');
+      if (!n.correctIndices?.length) w.push('No correct answer marked');
+      break;
+    case 'fillblank':
+      if (!n.template?.trim()) w.push('Template is blank');
+      if (!n.blanks?.length) w.push('No blanks defined (use {{0}} in the template)');
+      n.blanks?.forEach((b, i) => {
+        if (!b.answers?.some((a) => a?.trim())) w.push(`Blank ${i + 1} has no answer`);
+      });
+      break;
+    case 'cards':
+      if (!n.cards?.length) w.push('No cards added');
+      n.cards?.forEach((c, i) => {
+        if (!c.front?.trim()) w.push(`Card ${i + 1} has no front text`);
+      });
+      break;
+    case 'match':
+      if ((n.pairs || []).length < 2) w.push('Match needs at least 2 pairs');
+      n.pairs?.forEach((p, i) => {
+        if (!p.left?.trim() || !p.right?.trim()) w.push(`Pair ${i + 1} is incomplete`);
+      });
+      break;
+    case 'order':
+      if ((n.items || []).length < 2) w.push('Order needs at least 2 items');
+      n.items?.forEach((it, i) => {
+        if (!it?.trim()) w.push(`Item ${i + 1} is blank`);
+      });
+      break;
+    case 'table':
+      if (!(n.rows || []).length) w.push('Table has no rows');
+      break;
+    case 'divider':
+      if (!n.title?.trim()) w.push('Divider has no title');
+      break;
+  }
+  return w;
+}
+
+/**
  * Slide types that produce a quizScores entry on completion.
  * Used to decide whether the ticker should show right/wrong colors.
  */

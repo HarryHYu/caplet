@@ -48,7 +48,6 @@ router.get('/', async (req, res) => {
     const { category, level, search, page = 1, limit = 10 } = req.query;
 
     const whereClause = {
-      workspaceId: { [Op.is]: null },
       isPublished: true
     };
 
@@ -120,7 +119,7 @@ router.get('/:courseId/lessons/:lessonId', async (req, res) => {
     if (!row || !row.module || row.module.courseId !== courseId) {
       return res.status(404).json({ message: 'Lesson not found' });
     }
-    if (row.module.course && (row.module.course.workspaceId || !row.module.course.isPublished)) {
+    if (row.module.course && !row.module.course.isPublished) {
       return res.status(404).json({ message: 'Lesson not found' });
     }
     const lesson = row.toJSON ? row.toJSON() : row;
@@ -147,7 +146,7 @@ router.get('/:id', async (req, res) => {
       include: includeModulesWithLessons()
     });
 
-    if (!course || course.workspaceId || !course.isPublished) {
+    if (!course || !course.isPublished) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
@@ -162,7 +161,7 @@ router.get('/:id', async (req, res) => {
 router.get('/categories/list', async (req, res) => {
   try {
     const categories = await Course.findAll({
-      where: { workspaceId: { [Op.is]: null }, isPublished: true },
+      where: { isPublished: true },
       attributes: ['category'],
       group: ['category'],
       raw: true
@@ -181,7 +180,7 @@ router.get('/categories/list', async (req, res) => {
 router.get('/featured/list', async (req, res) => {
   try {
     const courses = await Course.findAll({
-      where: { workspaceId: { [Op.is]: null }, isPublished: true },
+      where: { isPublished: true },
       include: includeModulesWithLessons(),
       order: [['createdAt', 'DESC']],
       limit: 6

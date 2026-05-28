@@ -252,15 +252,23 @@ class ApiService {
     });
   }
 
-  /** PUT file bytes to presigned URL (no Authorization header — do not use api.request). */
-  async putToPresignedUrl(uploadUrl, file, contentType) {
-    const res = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': contentType },
-      body: file,
-    });
+  /**
+   * Upload a file using a presigned POST (multipart/form-data).
+   * `presign` is the object returned by /uploads/presign — must have uploadUrl + fields.
+   * S3 enforces ContentLengthRange server-side; we also check client-side for a fast error.
+   */
+  async postToPresignedUrl(presign, file) {
+    if (presign.maxBytes && file.size > presign.maxBytes) {
+      const mb = (presign.maxBytes / 1024 / 1024).toFixed(0);
+      throw new Error(`File is too large. Maximum size is ${mb} MB.`);
+    }
+    const form = new FormData();
+    Object.entries(presign.fields || {}).forEach(([k, v]) => form.append(k, v));
+    form.append('file', file);
+    const res = await fetch(presign.uploadUrl, { method: 'POST', body: form });
     if (!res.ok) {
-      throw new Error(`Upload failed: ${res.status} ${res.statusText}`);
+      const text = await res.text().catch(() => '');
+      throw new Error(`Upload failed (${res.status})${text ? ': ' + text.slice(0, 120) : ''}`);
     }
   }
 
@@ -275,7 +283,7 @@ class ApiService {
       { purpose: 'lessonImage', mimeType: file.type, lessonId },
       { useEditorToken: true },
     );
-    await this.putToPresignedUrl(presign.uploadUrl, file, file.type);
+    await this.postToPresignedUrl(presign, file);
     return presign.publicUrl;
   }
 
