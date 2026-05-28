@@ -45,7 +45,7 @@ function throttle(req, res, next) {
 }
 
 router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
-  const ALLOWED_MODELS = ['gpt-4o-mini', 'gpt-4o', 'o4-mini', 'o3'];
+  const ALLOWED_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.2-pro'];
   const notes = (req.body?.notes ?? '').toString();
   const title = (req.body?.title ?? '').toString().slice(0, 200);
   const curriculum = (req.body?.curriculum ?? '').toString().slice(0, 200);
@@ -53,7 +53,7 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
   const focus = ['full', 'practice', 'flashcards', 'summary'].includes(req.body?.focus)
     ? req.body.focus
     : 'full';
-  const model = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-4o-mini';
+  const model = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
 
   if (!notes.trim() || notes.trim().length < 20) {
     return res.status(400).json({

@@ -85,9 +85,9 @@ async function generateLessonSlides(notes, opts = {}) {
     .filter(Boolean)
     .join('\n\n');
 
-  const chosenModel = opts.model || 'gpt-4o-mini';
-  // o-series reasoning models don't accept `temperature`
-  const isReasoning = chosenModel.startsWith('o');
+  const chosenModel = opts.model || 'gpt-5.4-mini';
+  // Pure reasoning models (o-series and bare gpt-5) don't accept `temperature`
+  const isReasoning = chosenModel.startsWith('o') || chosenModel === 'gpt-5';
 
   const completion = await client.chat.completions.create({
     model: chosenModel,

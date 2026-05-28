@@ -12,27 +12,27 @@ const FOCUS_OPTIONS = [
 // Ordered cheapest → smartest. Cost dots = 1–4.
 const MODEL_OPTIONS = [
   {
-    id: 'gpt-4o-mini',
-    label: 'GPT-4o mini',
-    desc: 'Fast & cheap. Fine for straightforward lessons.',
+    id: 'gpt-5.4-nano',
+    label: 'GPT-5.4 nano',
+    desc: 'Fastest & cheapest. Good for simple flashcards or quick summaries.',
     cost: 1,
   },
   {
-    id: 'gpt-4o',
-    label: 'GPT-4o',
-    desc: 'Noticeably better quality. Good for most lessons.',
+    id: 'gpt-5.4-mini',
+    label: 'GPT-5.4 mini',
+    desc: 'Great balance of speed and quality. Recommended default.',
     cost: 2,
   },
   {
-    id: 'o4-mini',
-    label: 'o4-mini',
-    desc: 'Reasoning model — stronger on tricky practice questions.',
+    id: 'gpt-5.4',
+    label: 'GPT-5.4',
+    desc: 'Frontier quality. Better at complex lessons and curriculum accuracy.',
     cost: 3,
   },
   {
-    id: 'o3',
-    label: 'o3',
-    desc: 'Most powerful. Best for nuanced, curriculum-accurate content.',
+    id: 'gpt-5.2-pro',
+    label: 'GPT-5.2 pro',
+    desc: 'Premium. Most detailed and nuanced output — use when quality matters most.',
     cost: 4,
   },
 ];
@@ -47,7 +47,7 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
   const [curriculum, setCurriculum] = useState('');
   const [audience, setAudience] = useState('');
   const [focus, setFocus] = useState('full');
-  const [model, setModel] = useState('gpt-4o-mini');
+  const [model, setModel] = useState('gpt-5.4-mini');
   const [pdfState, setPdfState] = useState(null); // null | 'extracting' | { name, chars }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
