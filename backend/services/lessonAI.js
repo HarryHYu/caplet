@@ -85,10 +85,14 @@ async function generateLessonSlides(notes, opts = {}) {
     .filter(Boolean)
     .join('\n\n');
 
+  const chosenModel = opts.model || 'gpt-4o-mini';
+  // o-series reasoning models don't accept `temperature`
+  const isReasoning = chosenModel.startsWith('o');
+
   const completion = await client.chat.completions.create({
-    model: opts.model || 'gpt-4o-mini',
+    model: chosenModel,
     response_format: { type: 'json_object' },
-    temperature: 0.5,
+    ...(isReasoning ? {} : { temperature: 0.5 }),
     messages: [
       { role: 'system', content: SYSTEM },
       { role: 'user', content: userMsg },

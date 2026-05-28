@@ -9,6 +9,34 @@ const FOCUS_OPTIONS = [
   { value: 'summary', label: 'Summary — key points, tables, dividers' },
 ];
 
+// Ordered cheapest → smartest. Cost dots = 1–4.
+const MODEL_OPTIONS = [
+  {
+    id: 'gpt-4o-mini',
+    label: 'GPT-4o mini',
+    desc: 'Fast & cheap. Fine for straightforward lessons.',
+    cost: 1,
+  },
+  {
+    id: 'gpt-4o',
+    label: 'GPT-4o',
+    desc: 'Noticeably better quality. Good for most lessons.',
+    cost: 2,
+  },
+  {
+    id: 'o4-mini',
+    label: 'o4-mini',
+    desc: 'Reasoning model — stronger on tricky practice questions.',
+    cost: 3,
+  },
+  {
+    id: 'o3',
+    label: 'o3',
+    desc: 'Most powerful. Best for nuanced, curriculum-accurate content.',
+    cost: 4,
+  },
+];
+
 const PLACEHOLDER_NOTES = `Examples of what works here:
 • Paste lecture notes, textbook paragraphs, or dot points
 • Describe a topic: "Explain opportunity cost for Year 11 Economics"
@@ -19,6 +47,7 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
   const [curriculum, setCurriculum] = useState('');
   const [audience, setAudience] = useState('');
   const [focus, setFocus] = useState('full');
+  const [model, setModel] = useState('gpt-4o-mini');
   const [pdfState, setPdfState] = useState(null); // null | 'extracting' | { name, chars }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -71,6 +100,7 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
         curriculum: curriculum.trim() || undefined,
         audience: audience.trim() || undefined,
         focus,
+        model,
       });
       onApply(res.slides || [], mode);
       setWarnings(res.warnings || []);
@@ -201,6 +231,48 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
               placeholder="e.g. Year 10 students, University first year, Adult beginners"
               className="w-full rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
+          </div>
+
+          {/* Model */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">
+              Model <span className="text-text-dim font-normal normal-case tracking-normal">(cheapest → smartest)</span>
+            </label>
+            <div className="space-y-1.5">
+              {MODEL_OPTIONS.map((m) => (
+                <label
+                  key={m.id}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-all ${
+                    model === m.id
+                      ? 'border-accent bg-accent/[0.06]'
+                      : 'border-line-soft hover:border-accent/40'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="model"
+                    value={m.id}
+                    checked={model === m.id}
+                    onChange={() => setModel(m.id)}
+                    className="accent-accent shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-text-primary">{m.label}</span>
+                      <span className="flex gap-0.5">
+                        {Array.from({ length: 4 }).map((_, k) => (
+                          <span
+                            key={k}
+                            className={`w-1.5 h-1.5 rounded-full ${k < m.cost ? 'bg-accent' : 'bg-line-soft'}`}
+                          />
+                        ))}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-text-dim leading-snug mt-0.5">{m.desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* Output focus */}
