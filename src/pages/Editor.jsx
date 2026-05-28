@@ -143,7 +143,7 @@ function InlineRename({ value, onSave, className = '' }) {
   );
 }
 
-function WorkspaceTree({ courses, selectedLessonId, onSelect, onAddCourse, onAddModule, onAddLesson, onRenameCourse, onRenameModule, onTogglePublish, loading }) {
+function WorkspaceTree({ courses, selectedLessonId, onSelect, onAddCourse, onAddModule, onAddLesson, onRenameCourse, onRenameModule, onTogglePublish, onDeleteCourse, onDeleteModule, loading }) {
   return (
     <aside className="w-72 shrink-0 border-r border-line-soft bg-surface-soft/50 overflow-y-auto">
       <div className="p-4 sticky top-0 bg-surface-soft/95 backdrop-blur-md border-b border-line-soft flex items-center justify-between">
@@ -171,27 +171,35 @@ function WorkspaceTree({ courses, selectedLessonId, onSelect, onAddCourse, onAdd
                 onSave={(title) => onRenameCourse(c.id, title)}
                 className="text-sm font-bold text-text-primary truncate flex-1 min-w-0"
               />
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => onTogglePublish(c.id, c.isPublished)}
-                  title={c.isPublished ? 'Published — click to unpublish' : 'Draft — click to publish'}
-                  className={`text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border ${
-                    c.isPublished
-                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600'
-                      : 'border-line-soft text-text-dim hover:border-text-dim'
-                  }`}
-                >
-                  {c.isPublished ? 'Live' : 'Draft'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onAddModule(c.id)}
-                  className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent hover:underline"
-                >
-                  + Module
-                </button>
-              </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onTogglePublish(c.id, c.isPublished)}
+                    title={c.isPublished ? 'Published — click to unpublish' : 'Draft — click to publish'}
+                    className={`text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border ${
+                      c.isPublished
+                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600'
+                        : 'border-line-soft text-text-dim hover:border-text-dim'
+                    }`}
+                  >
+                    {c.isPublished ? 'Live' : 'Draft'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onAddModule(c.id)}
+                    className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent hover:underline"
+                  >
+                    + Module
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteCourse(c.id, c.title)}
+                    className="text-[10px] text-text-dim hover:text-rose-500 transition-colors"
+                    title="Delete course"
+                  >
+                    ×
+                  </button>
+                </div>
             </div>
             <div className="space-y-2">
               {(c.modules || []).map((m) => (
@@ -202,13 +210,23 @@ function WorkspaceTree({ courses, selectedLessonId, onSelect, onAddCourse, onAdd
                       onSave={(title) => onRenameModule(m.id, title)}
                       className="text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted truncate flex-1 min-w-0"
                     />
-                    <button
-                      type="button"
-                      onClick={() => onAddLesson(m.id)}
-                      className="shrink-0 text-[10px] text-accent hover:underline"
-                    >
-                      + Lesson
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => onAddLesson(m.id)}
+                        className="text-[10px] text-accent hover:underline"
+                      >
+                        + Lesson
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteModule(m.id, m.title)}
+                        className="text-[10px] text-text-dim hover:text-rose-500 transition-colors"
+                        title="Delete module"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
                   <ul className="border-l border-line-soft pl-2 space-y-px">
                     {(m.lessons || []).map((l) => (
@@ -607,6 +625,28 @@ export default function Editor() {
     }
   };
 
+  const deleteCourse = async (courseId, title) => {
+    if (!window.confirm(`Delete course "${title}" and all its modules and lessons? This cannot be undone.`)) return;
+    try {
+      await api.editorDeleteCourse(courseId);
+      if (selected?.courseId === courseId) { setSelected(null); setDraft(null); setOriginalSig(''); }
+      await reload();
+    } catch (e) {
+      setGlobalError(e.message || 'Failed to delete course');
+    }
+  };
+
+  const deleteModule = async (moduleId, title) => {
+    if (!window.confirm(`Delete module "${title}" and all its lessons? This cannot be undone.`)) return;
+    try {
+      await api.editorDeleteModule(moduleId);
+      if (selected?.moduleId === moduleId) { setSelected(null); setDraft(null); setOriginalSig(''); }
+      await reload();
+    } catch (e) {
+      setGlobalError(e.message || 'Failed to delete module');
+    }
+  };
+
   const renameCourse = async (courseId, title) => {
     try {
       await api.editorUpdateCourse(courseId, { title });
@@ -767,6 +807,8 @@ export default function Editor() {
           onRenameCourse={renameCourse}
           onRenameModule={renameModule}
           onTogglePublish={togglePublish}
+          onDeleteCourse={deleteCourse}
+          onDeleteModule={deleteModule}
           loading={loading}
         />
         <LessonBuilder
