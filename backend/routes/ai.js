@@ -47,18 +47,23 @@ function throttle(req, res, next) {
 router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
   const notes = (req.body?.notes ?? '').toString();
   const title = (req.body?.title ?? '').toString().slice(0, 200);
+  const curriculum = (req.body?.curriculum ?? '').toString().slice(0, 200);
+  const audience = (req.body?.audience ?? '').toString().slice(0, 100);
+  const focus = ['full', 'practice', 'flashcards', 'summary'].includes(req.body?.focus)
+    ? req.body.focus
+    : 'full';
 
-  if (!notes.trim() || notes.trim().length < 30) {
+  if (!notes.trim() || notes.trim().length < 20) {
     return res.status(400).json({
-      message: 'Paste at least a paragraph of notes (30+ characters) to generate from.',
+      message: 'Add some notes or a topic description (at least 20 characters).',
     });
   }
-  if (notes.length > 12000) {
-    return res.status(400).json({ message: 'Notes are too long (max 12,000 characters).' });
+  if (notes.length > 14000) {
+    return res.status(400).json({ message: 'Notes are too long (max 14,000 characters).' });
   }
 
   try {
-    const out = await generateLessonSlides(notes, { title });
+    const out = await generateLessonSlides(notes, { title, curriculum, audience, focus });
     res.json(out);
   } catch (e) {
     const status = e.status || 502;

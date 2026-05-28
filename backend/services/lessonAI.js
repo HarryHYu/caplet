@@ -22,29 +22,42 @@ function getClient() {
   return _client;
 }
 
-const SYSTEM = `You generate Caplet lesson content as a strict JSON object {"slides": [ ... ]}.
+const SYSTEM = `You are an expert curriculum designer. Given source material and context, you output a structured lesson as a strict JSON object: {"slides": [ ... ]}.
 
-Each slide must be one of these types:
-- {"type":"divider","title":"...","subtitle":"..."}                                                     // section break
-- {"type":"text","content":"markdown","layout":"default|hero|centered|callout","tone":"neutral|info|tip|warning|example|quote"}
-- {"type":"choice","question":"...","options":["..."],"correctIndices":[0],"mode":"single|multiple|truefalse","explanation":"..."}
-- {"type":"fillblank","template":"The capital is {{0}}.","blanks":[{"answers":["Canberra","canberra"]}],"mode":"textbox|dropdown","explanation":"..."}
-- {"type":"cards","mode":"carousel","cards":[{"front":"Term","back":"Definition"}]}
-- {"type":"match","pairs":[{"left":"Term","right":"Definition"}]}
-- {"type":"order","prompt":"...","items":["Step 1","Step 2","Step 3"]}
-- {"type":"table","headers":"row","rows":[["Header","Header"],["cell","cell"]]}
+## Slide types (use ONLY these)
 
-Constraints:
-- Do NOT generate any "media" slides. Do NOT invent image or video URLs. The teacher will add visuals afterwards.
-- Aim for 8–14 slides total.
-- Mix reading slides (text) with practice activities (choice, fillblank, match, order, cards).
-- Always start with a divider or hero-layout text slide that introduces the topic.
-- For choice slides: correctIndices is always an array (even for single-answer), and indices are 0-based.
-- For order slides: list items in their correct sequence — the player shuffles them automatically.
-- For fillblank: use {{0}}, {{1}}, ... placeholders in the template and provide answers for each blank.
-- Keep markdown inside text.content lean (no HTML, no horizontal rules).
-- Use plain English suitable for high-school students unless the notes say otherwise.
-- Never include keys outside the schema above; return ONLY the JSON object {"slides":[...]}.`;
+{"type":"divider","title":"...","subtitle":"..."}
+{"type":"text","content":"markdown","layout":"default|hero|centered|callout","tone":"neutral|info|tip|warning|example|quote"}
+{"type":"choice","question":"...","options":["A","B","C","D"],"correctIndices":[0],"mode":"single|multiple|truefalse","explanation":"..."}
+{"type":"fillblank","template":"The capital is {{0}}.","blanks":[{"answers":["Canberra"]}],"mode":"textbox","explanation":"..."}
+{"type":"cards","mode":"carousel","cards":[{"front":"Term","back":"Definition"}]}
+{"type":"match","pairs":[{"left":"Term","right":"Definition"},{"left":"Term2","right":"Definition2"}]}
+{"type":"order","prompt":"Put in order","items":["First","Second","Third"]}
+{"type":"table","headers":"row","rows":[["Header","Header"],["cell","cell"]]}
+
+## Hard rules
+- Return ONLY the JSON object {"slides":[...]}. No prose, no markdown fences.
+- Do NOT generate "media" slides. Do NOT invent image or video URLs.
+- correctIndices is always an array of 0-based integers.
+- fillblank templates must contain {{0}}, {{1}}, ... placeholders matching the blanks array.
+- order items should be in the correct sequence — the player shuffles them.
+- match needs at least 2 pairs.
+- Keep markdown in text.content simple: headings, bold, bullet lists. No HTML, no horizontal rules.
+
+## Quality rules
+- Be accurate to the curriculum and syllabus terminology if one is specified.
+- Use correct technical vocabulary for the subject area.
+- Difficulty should match the audience/year level if specified.
+- Explanations on choice/fillblank slides should be concise and educational, not just "that's correct".
+- Tables should have a header row when comparing items.
+- Divider slides mark logical sections — use them to chunk the lesson.`;
+
+const FOCUS_INSTRUCTIONS = {
+  full: `Generate a complete lesson: start with an intro divider, 3–5 text reading slides with key concepts, then 4–6 varied practice activities (mix of choice, fillblank, match, order, and/or cards). End with a summary or review section. Aim for 10–16 slides.`,
+  practice: `Generate ONLY practice activities — no long reading slides. Use a variety of: choice (single and multiple), fillblank, match, order. 8–12 activity slides. Each must have a clear question/prompt and correct answers. Include brief explanations on every activity.`,
+  flashcards: `Generate ONLY a cards slide (mode: "carousel") with 10–20 cards covering key terms, definitions, formulas, or concepts from the material. Keep front text short (term/concept), back text concise but complete (definition/explanation). Optionally add 1–2 divider slides as section breaks if there are distinct topic areas.`,
+  summary: `Generate a reference-style lesson: divider slides to mark sections, text slides with layout "callout" for key points, tables for comparisons, and a final cards slide (mode: "grid") summarising the main concepts. Minimal practice questions. 8–12 slides.`,
+};
 
 async function generateLessonSlides(notes, opts = {}) {
   const client = getClient();
@@ -54,11 +67,20 @@ async function generateLessonSlides(notes, opts = {}) {
     throw err;
   }
 
+  const focus = opts.focus || 'full';
+  const focusInstruction = FOCUS_INSTRUCTIONS[focus] || FOCUS_INSTRUCTIONS.full;
+
+  const contextLines = [
+    opts.curriculum ? `Curriculum / syllabus: ${opts.curriculum}` : null,
+    opts.audience ? `Audience / year level: ${opts.audience}` : null,
+    opts.title ? `Lesson title: ${opts.title}` : null,
+  ].filter(Boolean);
+
   const userMsg = [
-    opts.title ? `Lesson title (context only): ${opts.title}` : null,
-    'Source notes:',
-    notes,
-    'Return strictly the JSON object {"slides":[...]}.',
+    contextLines.length ? `## Context\n${contextLines.join('\n')}` : null,
+    `## Output instructions\n${focusInstruction}`,
+    `## Source material\n${notes}`,
+    'Return ONLY the JSON object {"slides":[...]}.',
   ]
     .filter(Boolean)
     .join('\n\n');
