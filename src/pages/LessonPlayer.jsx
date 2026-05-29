@@ -156,9 +156,10 @@ const LessonPlayer = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [progress, setProgress] = useState({ lessonProgress: [], courseProgress: null });
   const [outlineOpen, setOutlineOpen] = useState(false);
-  // Track slides the user has actually viewed in this session — keeps the
-  // ticker filled in solid blue even if they jump backward.
   const [visited, setVisited] = useState(() => new Set([0]));
+  // Bumped on every navigation to re-trigger the slide-in animation on the
+  // visible content layer without unmounting the pre-rendered slides.
+  const [animKey, setAnimKey] = useState(0);
 
 
   /* ---------- Data loading ---------- */
@@ -246,6 +247,7 @@ const LessonPlayer = () => {
       if (!hasSlides) return;
       if (newIndex < 0 || newIndex >= slides.length) return;
       setCurrentSlideIndex(newIndex);
+      setAnimKey((k) => k + 1);
       setVisited((prev) => {
         if (prev.has(newIndex)) return prev;
         const next = new Set(prev);
@@ -355,7 +357,6 @@ const LessonPlayer = () => {
     );
   }
 
-  const currentSlide = hasSlides ? slides[currentSlideIndex] : null;
   const isLastSlide = hasSlides && currentSlideIndex === slides.length - 1;
   const nextLesson = idx >= 0 && idx < flatLessons.length - 1 ? flatLessons[idx + 1] : null;
 
@@ -471,7 +472,7 @@ const LessonPlayer = () => {
                 {String(slides.length).padStart(2, '0')}
               </span>
               <span className="w-6 h-px bg-line-soft" />
-              <span>{slideKindLabel(normalizeSlide(currentSlide))}</span>
+              <span>{slideKindLabel(normalizeSlide(slides[currentSlideIndex]))}</span>
               <span className="w-6 h-px bg-line-soft hidden sm:block" />
               <span className="text-text-dim/60 hidden sm:inline">
                 {Math.round(((currentSlideIndex + 1) / slides.length) * 100)}% through
@@ -479,26 +480,43 @@ const LessonPlayer = () => {
             </div>
 
             {/* Slide canvas — fills the remaining space, scrolls internally */}
-            <div
-              key={currentSlideIndex}
-              className="animate-lesson-slide-in flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col"
-            >
+            {/* Slide canvas — pre-renders current + next 2 slides so navigation
+                is instant. Hidden slides are positioned off-screen (not display:none)
+                so images/diagrams/iframes fully load before the user arrives. */}
+            <div className="flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden">
               {/* Decorative top notch */}
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none" />
-              <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none z-10">
                 <div className="w-32 h-px bg-accent" />
               </div>
 
-              <div className="flex-1 min-h-0 overflow-y-auto">
-                <div className="p-5 md:p-8 lg:p-12 min-h-full flex flex-col">
-                  <SlideRenderer
-                    slide={currentSlide}
-                    alreadyAnswered={quizScores[String(currentSlideIndex)] !== undefined}
-                    alreadyCorrect={quizScores[String(currentSlideIndex)] === true}
-                    onSubmit={(isCorrect) => recordQuestionAnswer(currentSlideIndex, isCorrect)}
-                  />
-                </div>
-              </div>
+              {/* Pre-render window: offsets -1, 0, +1, +2 relative to current */}
+              {[-1, 0, 1, 2].map((offset) => {
+                const i = currentSlideIndex + offset;
+                if (i < 0 || i >= slides.length) return null;
+                const isActive = offset === 0;
+                return (
+                  <div
+                    key={i}
+                    className={isActive ? 'absolute inset-0 overflow-y-auto' : 'absolute inset-0 overflow-hidden pointer-events-none'}
+                    style={isActive ? {} : { transform: 'translateX(100vw)', visibility: 'hidden' }}
+                    aria-hidden={!isActive}
+                  >
+                    {/* Re-key the animation wrapper on nav so slide-in fires each time */}
+                    <div
+                      key={isActive ? animKey : i}
+                      className={`${isActive ? 'animate-lesson-slide-in' : ''} min-h-full p-5 md:p-8 lg:p-12 flex flex-col`}
+                    >
+                      <SlideRenderer
+                        slide={slides[i]}
+                        alreadyAnswered={quizScores[String(i)] !== undefined}
+                        alreadyCorrect={quizScores[String(i)] === true}
+                        onSubmit={(isCorrect) => recordQuestionAnswer(i, isCorrect)}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Footer controls */}

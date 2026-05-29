@@ -1029,36 +1029,60 @@ function ChartSlide({ slide }) {
    Diagram (Mermaid)
    ────────────────────────────────────────────────────────────────────────── */
 
+// Module-level SVG cache so revisiting a diagram is instant (no re-render).
+const diagramSvgCache = new Map();
+
 function DiagramSlide({ slide }) {
   const ref = useRef(null);
+  const [status, setStatus] = useState(() =>
+    diagramSvgCache.has(slide.code) ? 'done' : 'loading',
+  );
   const [error, setError] = useState(null);
-  // Stable ID per mount so Mermaid doesn't collide across re-renders
   const id = useRef(`mmd-${Math.random().toString(36).slice(2)}`).current;
 
   useEffect(() => {
-    if (!slide.code?.trim() || !ref.current) return;
+    if (!slide.code?.trim()) return;
+
+    // Already cached — inject immediately without re-running Mermaid.
+    if (diagramSvgCache.has(slide.code)) {
+      if (ref.current) ref.current.innerHTML = diagramSvgCache.get(slide.code);
+      setStatus('done');
+      return;
+    }
+
     let mounted = true;
+    setStatus('loading');
     setError(null);
+
     import('mermaid').then((m) => {
       const mermaid = m.default;
       mermaid.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: 'inherit', fontSize: 15 });
-      mermaid.render(id, slide.code.trim()).then(({ svg }) => {
-        if (mounted && ref.current) ref.current.innerHTML = svg;
-      }).catch((err) => {
-        if (mounted) setError(err?.message || 'Diagram syntax error');
-      });
+      return mermaid.render(id, slide.code.trim());
+    }).then(({ svg }) => {
+      if (!mounted) return;
+      diagramSvgCache.set(slide.code, svg);
+      if (ref.current) ref.current.innerHTML = svg;
+      setStatus('done');
+    }).catch((err) => {
+      if (mounted) { setError(err?.message || 'Diagram syntax error'); setStatus('error'); }
     });
+
     return () => { mounted = false; };
   }, [slide.code, id]);
 
   return (
     <div className="max-w-3xl mx-auto w-full flex flex-col gap-4">
       <Kicker>Diagram</Kicker>
-      <div className="rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-8 overflow-x-auto">
+      <div className="rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-8 overflow-x-auto min-h-[180px] flex items-center justify-center">
         {error ? (
           <p className="text-sm text-rose-500 font-mono">{error}</p>
+        ) : status === 'loading' ? (
+          <div className="flex flex-col items-center gap-3 text-text-dim">
+            <span className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            <span className="text-[11px] uppercase tracking-[0.2em] font-bold">Rendering diagram…</span>
+          </div>
         ) : (
-          <div ref={ref} className="flex justify-center [&_svg]:max-w-full" />
+          <div ref={ref} className="w-full flex justify-center [&_svg]:max-w-full" />
         )}
       </div>
       {slide.caption && <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}
