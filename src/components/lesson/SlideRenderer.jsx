@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import {
   AreaChart, BarChart, LineChart, ScatterChart, PieChart,
   Area, Bar, Line, Scatter, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import api from '../../services/api';
 import { normalizeSlide } from '../../lib/slideSchema';
+import MathText from '../MathText';
 
 /* ──────────────────────────────────────────────────────────────────────────
    Shared helpers
@@ -55,7 +58,7 @@ function FeedbackBanner({ correct, explanation }) {
         {correct ? 'Correct' : 'Not quite'}
       </p>
       {explanation && (
-        <p className="text-sm leading-relaxed text-text-primary">{explanation}</p>
+        <p className="text-sm leading-relaxed text-text-primary"><MathText>{explanation}</MathText></p>
       )}
     </div>
   );
@@ -96,7 +99,7 @@ function TextSlide({ slide }) {
   return (
     <div className={wrapper}>
       <div className={`${proseClass} ${tone}`}>
-        <ReactMarkdown>{slide.content || ''}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{slide.content || ''}</ReactMarkdown>
       </div>
       {slide.caption && (
         <p className="mt-10 pt-6 border-t border-line-soft text-sm text-text-muted italic font-serif">
@@ -208,7 +211,7 @@ function ChoiceSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
         {slide.mode === 'truefalse' ? 'True or False' : multi ? 'Select all that apply' : 'Quick check'}
       </Kicker>
       <h3 className="text-xl md:text-2xl font-display font-bold leading-snug text-text-primary mb-5">
-        {slide.question}
+        <MathText>{slide.question}</MathText>
       </h3>
       <div className="space-y-2">
         {(slide.options || []).map((option, optIdx) => {
@@ -249,7 +252,7 @@ function ChoiceSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
               >
                 {letter}
               </span>
-              <span className="text-[14px] md:text-[15px] flex-1 leading-snug">{option}</span>
+              <span className="text-[14px] md:text-[15px] flex-1 leading-snug"><MathText>{option}</MathText></span>
               {showFeedback && trulyCorrect && <CheckIcon />}
               {showFeedback && chosen && !trulyCorrect && <XIcon />}
             </button>
@@ -320,7 +323,7 @@ function FillBlankSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
       <Kicker>Fill the blanks</Kicker>
       <div className="text-lg md:text-xl leading-loose text-text-primary font-serif mb-5">
         {parts.map((p, i) => {
-          if (p.text) return <span key={i}>{p.text}</span>;
+          if (p.text) return <MathText key={i}>{p.text}</MathText>;
           const idx = p.blank;
           const blank = slide.blanks[idx];
           if (!blank) return null;
@@ -445,7 +448,7 @@ function CardsCarousel({ cards, caption }) {
             {flipped ? 'Back' : 'Front'}
           </p>
           <div className="text-xl md:text-2xl font-display leading-snug text-text-primary">
-            {flipped ? card.back : card.front}
+            <MathText>{flipped ? card.back : card.front}</MathText>
           </div>
           {flippable && (
             <p className="mt-6 text-[10px] uppercase tracking-[0.25em] text-text-dim">
@@ -507,7 +510,7 @@ function FlipCard({ card }) {
         {flipped ? 'Back' : 'Front'}
       </p>
       <div className="flex-1 flex items-center text-base md:text-lg font-display text-text-primary">
-        {flipped ? card.back : card.front}
+        <MathText>{flipped ? card.back : card.front}</MathText>
       </div>
       {flippable && (
         <p className="mt-3 text-[10px] uppercase tracking-[0.25em] text-text-dim">Tap to flip</p>
@@ -538,8 +541,8 @@ function CardsGrid({ cards, columns, caption, flip }) {
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">
                 {String(i + 1).padStart(2, '0')}
               </p>
-              <p className="text-base md:text-lg font-display text-text-primary">{c.front}</p>
-              {c.back && <p className="text-sm text-text-muted leading-relaxed">{c.back}</p>}
+              <p className="text-base md:text-lg font-display text-text-primary"><MathText>{c.front}</MathText></p>
+              {c.back && <p className="text-sm text-text-muted leading-relaxed"><MathText>{c.back}</MathText></p>}
             </div>
           ),
         )}
@@ -625,7 +628,7 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
               {/* Left — fixed */}
               <div className={`flex-1 flex items-center gap-2 px-4 py-3 border rounded-xl transition-all ${leftCls}`}>
                 <span className="text-[10px] font-mono text-text-dim shrink-0">{String.fromCharCode(65 + rowIdx)}.</span>
-                <span className="text-sm md:text-base">{p.left}</span>
+                <span className="text-sm md:text-base"><MathText>{p.left}</MathText></span>
               </div>
 
               {/* Right — draggable */}
@@ -642,7 +645,7 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
                 {!showFeedback && (
                   <span className="text-text-dim/40 shrink-0">⠿</span>
                 )}
-                <span className="flex-1 text-sm md:text-base">{pairs[rightPairIdx].right}</span>
+                <span className="flex-1 text-sm md:text-base"><MathText>{pairs[rightPairIdx].right}</MathText></span>
                 {showFeedback && (correct ? <CheckIcon /> : <XIcon />)}
               </div>
             </div>
@@ -740,7 +743,7 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
                 <span className="text-text-dim/50 shrink-0 text-base leading-none">⠿</span>
               )}
               <span className="text-[10px] font-mono text-text-dim w-5 shrink-0">{pos + 1}.</span>
-              <span className="flex-1 text-sm md:text-base">{items[itemIdx]}</span>
+              <span className="flex-1 text-sm md:text-base"><MathText>{items[itemIdx]}</MathText></span>
               {showFeedback && (
                 inRightSpot ? <CheckIcon /> : <XIcon />
               )}
@@ -802,7 +805,7 @@ function TableSlide({ slide }) {
                         } text-${a}`}
                       >
                         <div className="prose-lesson prose-lesson-compact">
-                          <ReactMarkdown>{cell}</ReactMarkdown>
+                          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{cell}</ReactMarkdown>
                         </div>
                       </Tag>
                     );
@@ -1260,7 +1263,7 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
                   className={`w-36 min-h-[90px] rounded-xl border p-3 text-center transition-all select-none ${cardCls} ${showFeedback ? '' : 'cursor-grab active:cursor-grabbing hover:border-accent/50'}`}
                 >
                   {!showFeedback && <span className="block text-text-dim/30 text-xs mb-1">⠿</span>}
-                  <p className="text-sm font-medium text-text-primary leading-snug">{event.label}</p>
+                  <p className="text-sm font-medium text-text-primary leading-snug"><MathText>{event.label}</MathText></p>
                   {showFeedback && event.year && (
                     <p className={`mt-1.5 text-[11px] font-mono font-bold ${inRightSpot ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
                       {event.year}
@@ -1313,7 +1316,7 @@ function UnsupportedSlide({ slide }) {
       </div>
       {slide.content ? (
         <div className="prose-lesson text-left w-full">
-          <ReactMarkdown>{String(slide.content)}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{String(slide.content)}</ReactMarkdown>
         </div>
       ) : (
         <p className="text-text-muted font-serif italic text-lg">

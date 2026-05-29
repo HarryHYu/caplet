@@ -55,6 +55,13 @@ const SYSTEM = `You are an expert curriculum designer. Given source material and
 - diagram "code" must be valid Mermaid syntax. Use simple, well-formed diagrams.
 - Keep markdown in text.content simple: headings, bold, bullet lists. No HTML, no horizontal rules.
 
+## Mathematics formatting (IMPORTANT)
+- ALWAYS use LaTeX notation for any mathematical expression — never use ASCII approximations like x^2, a/b, sqrt(x), or *.
+- Inline math: wrap in single dollar signs → $x^2 + y^2 = r^2$, $\\frac{a}{b}$, $\\sqrt{x}$, $\\pi r^2$
+- Block/display math (for prominent equations on text slides): wrap in double dollar signs → $$E = mc^2$$
+- This applies everywhere: text slide content, choice questions and options, fillblank templates, flashcard fronts/backs, match pairs, order items, timeline labels, explanations.
+- Examples: use $\\frac{\\Delta Q}{\\Delta P}$ not ΔQ/ΔP; use $x^{-1}$ not x^-1; use $\\sum_{i=1}^{n} x_i$ not sum(x_i).
+
 ## Quality rules
 - Be accurate to the curriculum and syllabus terminology if one is specified.
 - Use correct technical vocabulary for the subject area.
