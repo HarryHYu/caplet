@@ -1,6 +1,6 @@
 # Lesson content format
 
-A lesson is an ordered array of **slides**. Each slide is one of nine canonical types. The player renders them one at a time; interactive types (`choice`, `fillblank`, `match`, `order`) record a right/wrong score against the user's progress.
+A lesson is an ordered array of **slides**. Each slide is one of fourteen canonical types. The player renders them one at a time; interactive types (`choice`, `fillblank`, `match`, `order`, `hotspot`, `timeline`) record a right/wrong score against the user's progress.
 
 The legacy short types (`image`, `video`, `audio`, `question`, `flashcard`, `matching`, `ordering`, `truefalse`) are still accepted on input — the server normalizes them into the canonical shape on save.
 
@@ -140,6 +140,82 @@ The right-hand column is shuffled in the player.
 { "type": "divider", "title": "Part 2: Practice", "subtitle": "Optional kicker" }
 ```
 
+### 10. `chart` — interactive data chart
+```json
+{
+  "type": "chart",
+  "chartType": "bar",
+  "title": "GDP Growth 2010–2020",
+  "data": [
+    { "x": "2010", "y": 2.5 },
+    { "x": "2015", "y": 3.1 },
+    { "x": "2020", "y": 1.8 }
+  ],
+  "xLabel": "Year",
+  "yLabel": "% Growth",
+  "caption": "Source: World Bank"
+}
+```
+- `chartType`: `bar` | `line` | `area` | `pie` | `scatter`.
+- For **pie**: data uses `{ "name": "Category", "value": 30 }` keys.
+- For all others: data uses `{ "x": "label", "y": number }` keys.
+
+### 11. `diagram` — Mermaid diagram
+```json
+{
+  "type": "diagram",
+  "code": "graph TD\n  Demand --> Price\n  Supply --> Price\n  Price --> Equilibrium",
+  "caption": "Supply and demand model"
+}
+```
+- `code` must be valid [Mermaid](https://mermaid.js.org/) syntax.
+- Supported: `graph`/`flowchart`, `sequenceDiagram`, `classDiagram`, `erDiagram`, `pie`, `mindmap`, `timeline`, `gantt`.
+
+### 12. `embed` — iframe embed (Desmos, PhET, GeoGebra, etc.)
+```json
+{
+  "type": "embed",
+  "url": "https://www.desmos.com/calculator",
+  "title": "Desmos Graph",
+  "aspect": "16:9",
+  "caption": "Explore the function below"
+}
+```
+- `aspect`: `16:9` | `4:3` | `1:1` | `tall`.
+- Common URLs: Desmos (`https://www.desmos.com/calculator`), GeoGebra (`https://www.geogebra.org/classic`), PhET sims (`https://phet.colorado.edu/sims/html/<name>/latest/<name>_en.html`).
+
+### 13. `hotspot` — click the correct region on an image
+```json
+{
+  "type": "hotspot",
+  "image": "https://...",
+  "question": "Click on the mitochondria",
+  "regions": [
+    { "id": 0, "label": "Mitochondria", "x": 45, "y": 30, "w": 10, "h": 8, "correct": true },
+    { "id": 1, "label": "Nucleus", "x": 20, "y": 50, "w": 15, "h": 12, "correct": false }
+  ],
+  "explanation": "The mitochondria produces ATP via cellular respiration."
+}
+```
+- `x`, `y`, `w`, `h` are **percentage** values (0–100) of the image dimensions.
+- At least one region must have `"correct": true`.
+
+### 14. `timeline` — drag events into chronological order
+```json
+{
+  "type": "timeline",
+  "prompt": "Put these events in chronological order",
+  "events": [
+    { "label": "World War I begins", "year": "1914" },
+    { "label": "Treaty of Versailles", "year": "1919" },
+    { "label": "Great Depression begins", "year": "1929" }
+  ],
+  "explanation": "WWI began in 1914 when..."
+}
+```
+- Events must be stored in the **correct chronological order** — the player shuffles them for the student.
+- `year` is optional but is revealed as feedback after submission.
+
 ## Scoring
 
 | Type        | Records a quiz score? |
@@ -149,10 +225,15 @@ The right-hand column is shuffled in the player.
 | `choice`    | Yes (right/wrong)    |
 | `fillblank` | Yes (all blanks must match) |
 | `cards`     | No                   |
-| `match`     | Yes (all pairs must match) |
+| `match`     | Yes (all pairs must align) |
 | `order`     | Yes (sequence must equal `correctOrder`) |
 | `table`     | No                   |
 | `divider`   | No                   |
+| `chart`     | No                   |
+| `diagram`   | No                   |
+| `embed`     | No                   |
+| `hotspot`   | Yes (clicked region must be correct) |
+| `timeline`  | Yes (sequence must be chronological) |
 
 Scores are stored per-slide on `UserProgress.quizScores` keyed by slide index.
 

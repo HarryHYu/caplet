@@ -34,29 +34,43 @@ const SYSTEM = `You are an expert curriculum designer. Given source material and
 {"type":"match","pairs":[{"left":"Term","right":"Definition"},{"left":"Term2","right":"Definition2"}]}
 {"type":"order","prompt":"Put in order","items":["First","Second","Third"]}
 {"type":"table","headers":"row","rows":[["Header","Header"],["cell","cell"]]}
+{"type":"chart","chartType":"bar|line|area|pie|scatter","title":"...","data":[{"x":"Label","y":42}],"xLabel":"...","yLabel":"...","caption":"..."}
+  - For pie charts use: "data":[{"name":"Category","value":30}]
+  - For bar/line/area/scatter use: "data":[{"x":"label","y":number}]
+{"type":"diagram","code":"graph TD\n  A[Start] --> B{Choice?}\n  B -->|Yes| C[Done]","caption":"..."}
+  - Use valid Mermaid syntax. Supported: graph/flowchart, sequenceDiagram, classDiagram, erDiagram, pie, mindmap, timeline, gantt.
+{"type":"timeline","prompt":"Put these events in order","events":[{"label":"Event name","year":"1914"},{"label":"Another event","year":"1919"}],"explanation":"..."}
+  - Store events in the CORRECT chronological order — the player shuffles them for the student.
+  - "year" is optional but helps students when shown as feedback after answering.
 
 ## Hard rules
 - Return ONLY the JSON object {"slides":[...]}. No prose, no markdown fences.
-- Do NOT generate "media" slides. Do NOT invent image or video URLs.
+- Do NOT generate "media", "embed", or "hotspot" slides — these require real image/video URLs.
 - correctIndices is always an array of 0-based integers.
 - fillblank templates must contain {{0}}, {{1}}, ... placeholders matching the blanks array.
 - order items should be in the correct sequence — the player shuffles them.
 - match needs at least 2 pairs.
+- timeline needs at least 2 events stored in the correct chronological order.
+- chart data must be a non-empty array. Pie chart data uses "name"/"value" keys; all others use "x"/"y" keys.
+- diagram "code" must be valid Mermaid syntax. Use simple, well-formed diagrams.
 - Keep markdown in text.content simple: headings, bold, bullet lists. No HTML, no horizontal rules.
 
 ## Quality rules
 - Be accurate to the curriculum and syllabus terminology if one is specified.
 - Use correct technical vocabulary for the subject area.
 - Difficulty should match the audience/year level if specified.
-- Explanations on choice/fillblank slides should be concise and educational, not just "that's correct".
+- Explanations on choice/fillblank/timeline slides should be concise and educational.
 - Tables should have a header row when comparing items.
-- Divider slides mark logical sections — use them to chunk the lesson.`;
+- Divider slides mark logical sections — use them to chunk the lesson.
+- Use chart slides when presenting numerical data or trends (e.g. GDP figures, population statistics, experimental results).
+- Use diagram slides for processes, relationships, hierarchies, or flows (e.g. supply/demand model, cell cycle, OSI model).
+- Use timeline slides for sequences of historical events, scientific discoveries, or procedural steps with dates.`;
 
 const FOCUS_INSTRUCTIONS = {
-  full: `Generate a complete lesson: start with an intro divider, 3–5 text reading slides with key concepts, then 4–6 varied practice activities (mix of choice, fillblank, match, order, and/or cards). End with a summary or review section. Aim for 10–16 slides.`,
-  practice: `Generate ONLY practice activities — no long reading slides. Use a variety of: choice (single and multiple), fillblank, match, order. 8–12 activity slides. Each must have a clear question/prompt and correct answers. Include brief explanations on every activity.`,
+  full: `Generate a complete lesson: start with an intro divider, 3–5 text/chart/diagram reading slides with key concepts, then 4–6 varied practice activities (mix of choice, fillblank, match, order, timeline, and/or cards). Use chart slides for any numerical data and diagram slides for processes or relationships. End with a summary or review section. Aim for 10–18 slides.`,
+  practice: `Generate ONLY practice activities — no long reading slides. Use a variety of: choice (single and multiple), fillblank, match, order, timeline. 8–12 activity slides. Each must have a clear question/prompt and correct answers. Include brief explanations on every activity.`,
   flashcards: `Generate ONLY a cards slide (mode: "carousel") with 10–20 cards covering key terms, definitions, formulas, or concepts from the material. Keep front text short (term/concept), back text concise but complete (definition/explanation). Optionally add 1–2 divider slides as section breaks if there are distinct topic areas.`,
-  summary: `Generate a reference-style lesson: divider slides to mark sections, text slides with layout "callout" for key points, tables for comparisons, and a final cards slide (mode: "grid") summarising the main concepts. Minimal practice questions. 8–12 slides.`,
+  summary: `Generate a reference-style lesson: divider slides to mark sections, text slides with layout "callout" for key points, tables for comparisons, chart slides for any numerical data, diagram slides for any processes or models, and a final cards slide (mode: "grid") summarising the main concepts. Minimal practice questions. 8–14 slides.`,
 };
 
 async function generateLessonSlides(notes, opts = {}) {

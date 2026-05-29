@@ -6,6 +6,7 @@
 
 export const CANONICAL_TYPES = [
   'text', 'media', 'choice', 'fillblank', 'cards', 'match', 'order', 'table', 'divider',
+  'chart', 'diagram', 'embed', 'hotspot', 'timeline',
 ];
 
 const MEDIA_SOURCES = ['image', 'video', 'audio', 'embed'];
@@ -15,6 +16,8 @@ const CARDS_MODES = ['carousel', 'grid', 'flip'];
 const TABLE_HEADERS = ['none', 'row', 'column', 'both'];
 const TEXT_LAYOUTS = ['default', 'hero', 'centered', 'callout'];
 const TEXT_TONES = ['neutral', 'info', 'tip', 'warning', 'example', 'quote'];
+const CHART_TYPES = ['bar', 'line', 'pie', 'area', 'scatter'];
+const EMBED_ASPECTS = ['16:9', '4:3', '1:1', 'tall'];
 
 const s = (v, d = '') => (v == null ? d : String(v));
 const arr = (v) => (Array.isArray(v) ? v : []);
@@ -183,6 +186,65 @@ export function normalizeSlide(slide) {
         subtitle: slide.subtitle || undefined,
       };
 
+    case 'chart':
+      return {
+        type: 'chart',
+        chartType: CHART_TYPES.includes(slide.chartType) ? slide.chartType : 'bar',
+        title: slide.title || undefined,
+        data: (Array.isArray(slide.data) ? slide.data : []).map((d) => ({ ...d })),
+        xLabel: slide.xLabel || undefined,
+        yLabel: slide.yLabel || undefined,
+        caption: slide.caption || undefined,
+      };
+
+    case 'diagram':
+      return {
+        type: 'diagram',
+        code: s(slide.code),
+        caption: slide.caption || undefined,
+      };
+
+    case 'embed':
+      return {
+        type: 'embed',
+        url: s(slide.url),
+        title: slide.title || undefined,
+        aspect: EMBED_ASPECTS.includes(slide.aspect) ? slide.aspect : '16:9',
+        caption: slide.caption || undefined,
+      };
+
+    case 'hotspot':
+      return {
+        type: 'hotspot',
+        image: s(slide.image || slide.url),
+        question: s(slide.question),
+        regions: (Array.isArray(slide.regions) ? slide.regions : []).map((r) => ({
+          id: Number(r.id ?? 0),
+          label: s(r.label),
+          x: Number(r.x ?? 0),
+          y: Number(r.y ?? 0),
+          w: Number(r.w ?? 10),
+          h: Number(r.h ?? 10),
+          correct: r.correct === true || r.correct === 'true',
+        })),
+        explanation: slide.explanation || undefined,
+        caption: slide.caption || undefined,
+      };
+
+    case 'timeline': {
+      const events = (Array.isArray(slide.events) ? slide.events : []).map((e) => ({
+        label: s(e?.label),
+        year: e?.year != null ? s(e.year) : undefined,
+      }));
+      return {
+        type: 'timeline',
+        prompt: slide.prompt || undefined,
+        events,
+        caption: slide.caption || undefined,
+        explanation: slide.explanation || undefined,
+      };
+    }
+
     default:
       return { ...slide };
   }
@@ -241,6 +303,25 @@ export function warnSlide(slide) {
     case 'divider':
       if (!n.title?.trim()) w.push('Divider has no title');
       break;
+    case 'chart':
+      if (!n.data?.length) w.push('Chart has no data');
+      break;
+    case 'diagram':
+      if (!n.code?.trim()) w.push('Diagram has no code');
+      break;
+    case 'embed':
+      if (!n.url?.trim()) w.push('Embed has no URL');
+      break;
+    case 'hotspot':
+      if (!n.image?.trim()) w.push('Hotspot has no image');
+      if (!n.question?.trim()) w.push('Hotspot has no question');
+      if (!n.regions?.length) w.push('Hotspot has no regions defined');
+      if (n.regions?.length && !n.regions.some((r) => r.correct)) w.push('No correct region marked');
+      break;
+    case 'timeline':
+      if (!n.events?.length || n.events.length < 2) w.push('Timeline needs at least 2 events');
+      n.events?.forEach((e, i) => { if (!e.label?.trim()) w.push(`Event ${i + 1} has no label`); });
+      break;
   }
   return w;
 }
@@ -249,7 +330,7 @@ export function warnSlide(slide) {
  * Slide types that produce a quizScores entry on completion.
  * Used to decide whether the ticker should show right/wrong colors.
  */
-export const INTERACTIVE_TYPES = new Set(['choice', 'fillblank', 'match', 'order']);
+export const INTERACTIVE_TYPES = new Set(['choice', 'fillblank', 'match', 'order', 'hotspot', 'timeline']);
 
 /**
  * Blank starter shape for each slide type, used by the editor palette
@@ -286,6 +367,46 @@ export const SLIDE_DEFAULTS = {
   order: () => ({ type: 'order', prompt: '', items: ['', '', ''] }),
   table: () => ({ type: 'table', headers: 'row', rows: [['', ''], ['', '']] }),
   divider: () => ({ type: 'divider', title: '', subtitle: '' }),
+  chart: () => ({
+    type: 'chart',
+    chartType: 'bar',
+    title: '',
+    data: [{ x: 'A', y: 10 }, { x: 'B', y: 20 }, { x: 'C', y: 15 }],
+    xLabel: '',
+    yLabel: '',
+    caption: '',
+  }),
+  diagram: () => ({
+    type: 'diagram',
+    code: 'graph TD\n  A[Start] --> B{Decision?}\n  B -->|Yes| C[Do it]\n  B -->|No| D[Skip]',
+    caption: '',
+  }),
+  embed: () => ({
+    type: 'embed',
+    url: '',
+    title: '',
+    aspect: '16:9',
+    caption: '',
+  }),
+  hotspot: () => ({
+    type: 'hotspot',
+    image: '',
+    question: 'Click on the correct area',
+    regions: [],
+    explanation: '',
+    caption: '',
+  }),
+  timeline: () => ({
+    type: 'timeline',
+    prompt: 'Put these events in the correct order',
+    events: [
+      { label: 'First event', year: '' },
+      { label: 'Second event', year: '' },
+      { label: 'Third event', year: '' },
+    ],
+    caption: '',
+    explanation: '',
+  }),
 };
 
 /**
@@ -301,6 +422,11 @@ export const SLIDE_PALETTE = [
   { type: 'cards',     label: 'Flashcards',   desc: 'Front / back study cards' },
   { type: 'match',     label: 'Match',        desc: 'Pair terms to definitions' },
   { type: 'order',     label: 'Order',        desc: 'Put items in the right order' },
+  { type: 'timeline',  label: 'Timeline',     desc: 'Drag events into chronological order' },
+  { type: 'hotspot',   label: 'Hotspot',      desc: 'Click the correct region on an image' },
+  { type: 'chart',     label: 'Chart',        desc: 'Bar, line, pie, area or scatter chart' },
+  { type: 'diagram',   label: 'Diagram',      desc: 'Flowchart or diagram (Mermaid syntax)' },
+  { type: 'embed',     label: 'Embed',        desc: 'Desmos, PhET, GeoGebra or any URL' },
   { type: 'table',     label: 'Table',        desc: 'Reference grid' },
   { type: 'divider',   label: 'Divider',      desc: 'Section break / heading' },
 ];
@@ -322,6 +448,13 @@ export function slideKindLabel(slide) {
     case 'cards': return slide.mode === 'carousel' ? 'Flashcards' : 'Cards';
     case 'match': return 'Match';
     case 'order': return 'Put in order';
+    case 'timeline': return 'Timeline';
+    case 'hotspot': return 'Hotspot';
+    case 'chart': return 'Chart';
+    case 'diagram': return 'Diagram';
+    case 'embed':
+      if (slide.title) return slide.title;
+      return 'Interactive';
     case 'table': return 'Reference';
     case 'divider': return 'Section';
     default: return 'Slide';

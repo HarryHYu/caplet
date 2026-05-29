@@ -1,5 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import {
+  AreaChart, BarChart, LineChart, ScatterChart, PieChart,
+  Area, Bar, Line, Scatter, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
 import api from '../../services/api';
 import { normalizeSlide } from '../../lib/slideSchema';
 
@@ -553,7 +558,6 @@ function CardsGrid({ cards, columns, caption, flip }) {
 function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
   const pairs = slide.pairs || [];
   // rightCol[rowIdx] = which pair index's right text is currently in that row
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const [rightCol, setRightCol] = useState(() => {
     let s = shuffle(pairs.map((_, i) => i));
     let safety = 0;
@@ -927,9 +931,378 @@ export default function SlideRenderer({ slide, alreadyAnswered = false, alreadyC
       return <TableSlide slide={normalized} />;
     case 'divider':
       return <DividerSlide slide={normalized} />;
+    case 'chart':
+      return <ChartSlide slide={normalized} />;
+    case 'diagram':
+      return <DiagramSlide slide={normalized} />;
+    case 'embed':
+      return <EmbedSlide slide={normalized} />;
+    case 'hotspot':
+      return (
+        <HotspotSlide
+          slide={normalized}
+          alreadyAnswered={alreadyAnswered}
+          alreadyCorrect={alreadyCorrect}
+          onSubmit={handleSubmit}
+        />
+      );
+    case 'timeline':
+      return (
+        <TimelineSlide
+          slide={normalized}
+          alreadyAnswered={alreadyAnswered}
+          alreadyCorrect={alreadyCorrect}
+          onSubmit={handleSubmit}
+        />
+      );
     default:
       return <UnsupportedSlide slide={normalized} />;
   }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Chart
+   ────────────────────────────────────────────────────────────────────────── */
+
+const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+function ChartSlide({ slide }) {
+  const { chartType, title, data, xLabel, yLabel, caption } = slide;
+
+  const chartContent = () => {
+    if (chartType === 'pie') {
+      return (
+        <PieChart>
+          <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="75%" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine>
+            {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+          </Pie>
+          <Tooltip />
+        </PieChart>
+      );
+    }
+    if (chartType === 'scatter') {
+      return (
+        <ScatterChart>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line-soft)" />
+          <XAxis dataKey="x" name={xLabel || 'X'} tick={{ fontSize: 12 }} label={xLabel ? { value: xLabel, position: 'insideBottom', offset: -5, fontSize: 12 } : undefined} />
+          <YAxis dataKey="y" name={yLabel || 'Y'} tick={{ fontSize: 12 }} label={yLabel ? { value: yLabel, angle: -90, position: 'insideLeft', fontSize: 12 } : undefined} />
+          <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+          <Scatter data={data} fill={CHART_COLORS[0]} />
+        </ScatterChart>
+      );
+    }
+    const ChartComp = chartType === 'line' ? LineChart : chartType === 'area' ? AreaChart : BarChart;
+    const DataComp = chartType === 'line' ? Line : chartType === 'area' ? Area : Bar;
+    const extraProps = chartType === 'area'
+      ? { fill: CHART_COLORS[0], fillOpacity: 0.2, stroke: CHART_COLORS[0] }
+      : chartType === 'line'
+        ? { stroke: CHART_COLORS[0], strokeWidth: 2, dot: { r: 4 } }
+        : { fill: CHART_COLORS[0], radius: [4, 4, 0, 0] };
+    return (
+      <ChartComp data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line-soft)" />
+        <XAxis dataKey="x" tick={{ fontSize: 12 }} label={xLabel ? { value: xLabel, position: 'insideBottom', offset: -5, fontSize: 12 } : undefined} />
+        <YAxis tick={{ fontSize: 12 }} label={yLabel ? { value: yLabel, angle: -90, position: 'insideLeft', fontSize: 12 } : undefined} />
+        <Tooltip />
+        <DataComp dataKey="y" {...extraProps} />
+      </ChartComp>
+    );
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto w-full flex flex-col gap-4">
+      {title && <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">{title}</h3>}
+      <div className="rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-6">
+        <ResponsiveContainer width="100%" height={320}>
+          {chartContent()}
+        </ResponsiveContainer>
+      </div>
+      {caption && <p className="text-center text-sm font-serif italic text-text-muted">{caption}</p>}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Diagram (Mermaid)
+   ────────────────────────────────────────────────────────────────────────── */
+
+function DiagramSlide({ slide }) {
+  const ref = useRef(null);
+  const [error, setError] = useState(null);
+  // Stable ID per mount so Mermaid doesn't collide across re-renders
+  const id = useRef(`mmd-${Math.random().toString(36).slice(2)}`).current;
+
+  useEffect(() => {
+    if (!slide.code?.trim() || !ref.current) return;
+    let mounted = true;
+    setError(null);
+    import('mermaid').then((m) => {
+      const mermaid = m.default;
+      mermaid.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: 'inherit', fontSize: 15 });
+      mermaid.render(id, slide.code.trim()).then(({ svg }) => {
+        if (mounted && ref.current) ref.current.innerHTML = svg;
+      }).catch((err) => {
+        if (mounted) setError(err?.message || 'Diagram syntax error');
+      });
+    });
+    return () => { mounted = false; };
+  }, [slide.code, id]);
+
+  return (
+    <div className="max-w-3xl mx-auto w-full flex flex-col gap-4">
+      <Kicker>Diagram</Kicker>
+      <div className="rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-8 overflow-x-auto">
+        {error ? (
+          <p className="text-sm text-rose-500 font-mono">{error}</p>
+        ) : (
+          <div ref={ref} className="flex justify-center [&_svg]:max-w-full" />
+        )}
+      </div>
+      {slide.caption && <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Embed (Desmos, PhET, GeoGebra, or any iframe-able URL)
+   ────────────────────────────────────────────────────────────────────────── */
+
+const ASPECT_CLASSES = {
+  '16:9': 'aspect-video',
+  '4:3':  'aspect-[4/3]',
+  '1:1':  'aspect-square',
+  'tall': 'aspect-[9/16] max-h-[80vh]',
+};
+
+function EmbedSlide({ slide }) {
+  const aspectClass = ASPECT_CLASSES[slide.aspect] || 'aspect-video';
+  return (
+    <div className="max-w-5xl mx-auto w-full flex flex-col gap-4">
+      {slide.title && <Kicker>{slide.title}</Kicker>}
+      <div className={`w-full ${aspectClass} rounded-2xl overflow-hidden border border-line-soft shadow-sm`}>
+        <iframe
+          src={slide.url}
+          title={slide.title || 'Interactive content'}
+          className="w-full h-full"
+          allow="fullscreen"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+        />
+      </div>
+      {slide.caption && <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Hotspot — click the correct region on an image
+   ────────────────────────────────────────────────────────────────────────── */
+
+function HotspotSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
+  const [selected, setSelected] = useState(null); // region id
+  const [submitted, setSubmitted] = useState(false);
+  const showFeedback = submitted || alreadyAnswered;
+
+  const handleClick = (region) => {
+    if (showFeedback) return;
+    setSelected(region.id);
+  };
+
+  const submit = () => {
+    if (selected == null) return;
+    const region = slide.regions.find((r) => r.id === selected);
+    const correct = region?.correct === true;
+    setSubmitted(true);
+    onSubmit(correct);
+  };
+
+  const isCorrect = submitted
+    ? slide.regions.find((r) => r.id === selected)?.correct === true
+    : alreadyCorrect;
+
+  return (
+    <div className="max-w-3xl mx-auto w-full">
+      <Kicker>Hotspot</Kicker>
+      <h3 className="text-lg md:text-xl font-display leading-snug text-text-primary mb-4">
+        {slide.question}
+      </h3>
+
+      <div className="relative w-full rounded-2xl overflow-hidden border border-line-soft select-none">
+        <img
+          src={api.getProxiedImageSrc(slide.image)}
+          alt="Hotspot activity"
+          className="w-full h-auto block"
+          draggable={false}
+        />
+        {slide.regions.map((region) => {
+          const isSelected = selected === region.id;
+          const isThisCorrect = region.correct;
+          let borderCls = 'border-white/50 hover:border-accent hover:bg-accent/10';
+          if (showFeedback && isSelected && isThisCorrect) borderCls = 'border-emerald-400 bg-emerald-400/20';
+          else if (showFeedback && isSelected && !isThisCorrect) borderCls = 'border-rose-400 bg-rose-400/20';
+          else if (showFeedback && isThisCorrect) borderCls = 'border-emerald-400/70 bg-emerald-400/10';
+          else if (isSelected) borderCls = 'border-accent bg-accent/10';
+
+          return (
+            <button
+              key={region.id}
+              type="button"
+              onClick={() => handleClick(region)}
+              style={{ left: `${region.x}%`, top: `${region.y}%`, width: `${region.w}%`, height: `${region.h}%` }}
+              className={`absolute border-2 rounded-lg transition-all cursor-pointer ${borderCls}`}
+              title={showFeedback ? region.label : undefined}
+            >
+              {showFeedback && isThisCorrect && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] flex items-center justify-center font-bold">✓</span>
+              )}
+              {showFeedback && isSelected && !isThisCorrect && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-bold">✗</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {!showFeedback && (
+        <button
+          type="button"
+          onClick={submit}
+          disabled={selected == null}
+          className="btn-primary w-full mt-5 py-3 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {selected == null ? 'Click a region to select' : 'Submit Answer'}
+        </button>
+      )}
+      {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}
+      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Timeline — drag events into chronological order
+   ────────────────────────────────────────────────────────────────────────── */
+
+function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
+  const events = slide.events || [];
+  const correctOrder = events.map((_, i) => i); // stored order IS correct order
+
+  const [order, setOrder] = useState(() => {
+    let s = shuffle(events.map((_, i) => i));
+    let safety = 0;
+    while (arraysEqual(s, correctOrder) && events.length > 1 && safety < 8) {
+      s = shuffle(events.map((_, i) => i));
+      safety++;
+    }
+    return s;
+  });
+  const [dragging, setDragging] = useState(null);
+  const [dragOver, setDragOver] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+  const showFeedback = submitted || alreadyAnswered;
+
+  const onDragStart = (pos) => setDragging(pos);
+  const onDragEnd = () => { setDragging(null); setDragOver(null); };
+  const onDragOverItem = (e, pos) => { e.preventDefault(); setDragOver(pos); };
+  const onDropItem = (toPos) => {
+    if (dragging == null || dragging === toPos || showFeedback) return;
+    setOrder((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(dragging, 1);
+      next.splice(toPos, 0, moved);
+      return next;
+    });
+    setDragging(null);
+    setDragOver(null);
+  };
+
+  const allCorrect = arraysEqual(order, correctOrder);
+  const isCorrect = submitted ? allCorrect : alreadyCorrect;
+  const submit = () => { setSubmitted(true); onSubmit(allCorrect); };
+
+  return (
+    <div className="max-w-4xl mx-auto w-full">
+      <Kicker>Timeline</Kicker>
+      {slide.prompt && (
+        <h3 className="text-lg md:text-xl font-display leading-snug text-text-primary mb-4">{slide.prompt}</h3>
+      )}
+      {!showFeedback && (
+        <p className="text-sm text-text-muted mb-5">Drag the events into the correct chronological order.</p>
+      )}
+
+      {/* Horizontal scrollable timeline */}
+      <div className="overflow-x-auto pb-2">
+        <div className="flex items-start gap-0 min-w-max">
+          {order.map((eventIdx, pos) => {
+            const event = events[eventIdx];
+            const inRightSpot = correctOrder[pos] === eventIdx;
+            const isDraggingThis = dragging === pos;
+            const isOver = dragOver === pos && dragging !== pos;
+
+            let cardCls = 'border-line-soft bg-surface-raised';
+            if (showFeedback && inRightSpot) cardCls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
+            else if (showFeedback) cardCls = 'border-rose-400/60 bg-rose-500/[0.06]';
+            else if (isDraggingThis) cardCls = 'border-accent bg-accent/10 opacity-50';
+            else if (isOver) cardCls = 'border-accent bg-accent/[0.05] scale-105';
+
+            return (
+              <div
+                key={eventIdx}
+                className="flex flex-col items-center"
+                style={{ width: '160px' }}
+              >
+                {/* Card */}
+                <div
+                  draggable={!showFeedback}
+                  onDragStart={() => onDragStart(pos)}
+                  onDragEnd={onDragEnd}
+                  onDragOver={(e) => onDragOverItem(e, pos)}
+                  onDrop={() => onDropItem(pos)}
+                  className={`w-36 min-h-[90px] rounded-xl border p-3 text-center transition-all select-none ${cardCls} ${showFeedback ? '' : 'cursor-grab active:cursor-grabbing hover:border-accent/50'}`}
+                >
+                  {!showFeedback && <span className="block text-text-dim/30 text-xs mb-1">⠿</span>}
+                  <p className="text-sm font-medium text-text-primary leading-snug">{event.label}</p>
+                  {showFeedback && event.year && (
+                    <p className={`mt-1.5 text-[11px] font-mono font-bold ${inRightSpot ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
+                      {event.year}
+                    </p>
+                  )}
+                </div>
+
+                {/* Connector line + position number */}
+                <div className="flex items-center w-full mt-2">
+                  <div className="flex-1 h-px bg-line-soft" />
+                  <span className="w-6 h-6 rounded-full border border-line-soft bg-surface-raised text-[10px] font-mono text-text-dim flex items-center justify-center shrink-0">
+                    {pos + 1}
+                  </span>
+                  <div className="flex-1 h-px bg-line-soft" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {!showFeedback && (
+        <button type="button" onClick={submit} className="btn-primary w-full mt-5 py-3">
+          Check Order
+        </button>
+      )}
+      {showFeedback && !allCorrect && (
+        <div className="mt-4 text-sm text-text-muted">
+          <p className="font-bold uppercase tracking-[0.2em] text-[10px] mb-2 text-rose-500">Correct order</p>
+          <ol className="flex flex-wrap gap-2">
+            {correctOrder.map((i) => (
+              <li key={i} className="px-2 py-1 rounded-lg bg-surface-raised border border-line-soft text-xs">
+                {i + 1}. {events[i].label}{events[i].year ? ` (${events[i].year})` : ''}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+      {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}
+      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+    </div>
+  );
 }
 
 function UnsupportedSlide({ slide }) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import api from '../../services/api';
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -811,6 +811,348 @@ function DividerForm({ slide, onChange }) {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
+   Chart editor
+   ────────────────────────────────────────────────────────────────────────── */
+
+function ChartForm({ slide, onChange }) {
+  const data = slide.data || [];
+
+  const setCell = (i, key, val) => {
+    const next = data.map((row, ri) => (ri === i ? { ...row, [key]: val } : row));
+    onChange({ data: next });
+  };
+  const addRow = () => {
+    const chartType = slide.chartType;
+    onChange({ data: [...data, chartType === 'pie' ? { name: '', value: 0 } : { x: '', y: 0 }] });
+  };
+  const removeRow = (i) => onChange({ data: data.filter((_, ri) => ri !== i) });
+
+  const isPie = slide.chartType === 'pie';
+
+  return (
+    <div className="space-y-3">
+      <Field label="Chart type">
+        <Select
+          value={slide.chartType || 'bar'}
+          onChange={(e) => onChange({ chartType: e.target.value })}
+          options={[
+            { value: 'bar', label: 'Bar chart' },
+            { value: 'line', label: 'Line chart' },
+            { value: 'area', label: 'Area chart' },
+            { value: 'pie', label: 'Pie chart' },
+            { value: 'scatter', label: 'Scatter plot' },
+          ]}
+        />
+      </Field>
+      <Field label="Title (optional)">
+        <TextInput value={slide.title || ''} onChange={(e) => onChange({ title: e.target.value })} />
+      </Field>
+      {!isPie && (
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="X-axis label">
+            <TextInput value={slide.xLabel || ''} onChange={(e) => onChange({ xLabel: e.target.value })} />
+          </Field>
+          <Field label="Y-axis label">
+            <TextInput value={slide.yLabel || ''} onChange={(e) => onChange({ yLabel: e.target.value })} />
+          </Field>
+        </div>
+      )}
+      <Field label="Data">
+        <div className="space-y-1.5 mb-2">
+          {data.map((row, i) => (
+            <div key={i} className="flex items-center gap-2">
+              {isPie ? (
+                <>
+                  <TextInput className="flex-1" placeholder="Name" value={row.name ?? ''} onChange={(e) => setCell(i, 'name', e.target.value)} />
+                  <TextInput className="w-24" placeholder="Value" type="number" value={row.value ?? ''} onChange={(e) => setCell(i, 'value', Number(e.target.value))} />
+                </>
+              ) : (
+                <>
+                  <TextInput className="flex-1" placeholder="X" value={row.x ?? ''} onChange={(e) => setCell(i, 'x', e.target.value)} />
+                  <TextInput className="w-24" placeholder="Y" type="number" value={row.y ?? ''} onChange={(e) => setCell(i, 'y', Number(e.target.value))} />
+                </>
+              )}
+              <button type="button" onClick={() => removeRow(i)} disabled={data.length <= 1} className="text-text-dim hover:text-rose-500 disabled:opacity-30 text-sm px-1">×</button>
+            </div>
+          ))}
+        </div>
+        <PillButton onClick={addRow} tone="primary">+ Add row</PillButton>
+      </Field>
+      <Field label="Caption (optional)">
+        <TextInput value={slide.caption || ''} onChange={(e) => onChange({ caption: e.target.value })} />
+      </Field>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Diagram editor (Mermaid)
+   ────────────────────────────────────────────────────────────────────────── */
+
+function DiagramForm({ slide, onChange }) {
+  return (
+    <div className="space-y-3">
+      <Field
+        label="Diagram code (Mermaid syntax)"
+        hint="Supports: graph, flowchart, sequenceDiagram, classDiagram, pie, gantt, erDiagram, mindmap"
+      >
+        <TextArea
+          rows={10}
+          className="font-mono text-xs"
+          placeholder={'graph TD\n  A[Start] --> B{Decision?}\n  B -->|Yes| C[Done]\n  B -->|No| A'}
+          value={slide.code || ''}
+          onChange={(e) => onChange({ code: e.target.value })}
+        />
+      </Field>
+      <p className="text-[11px] text-text-dim">
+        Learn Mermaid syntax at{' '}
+        <a href="https://mermaid.js.org/syntax/flowchart.html" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+          mermaid.js.org
+        </a>
+      </p>
+      <Field label="Caption (optional)">
+        <TextInput value={slide.caption || ''} onChange={(e) => onChange({ caption: e.target.value })} />
+      </Field>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Embed editor
+   ────────────────────────────────────────────────────────────────────────── */
+
+const EMBED_PRESETS = [
+  { label: 'Desmos graphing calculator', url: 'https://www.desmos.com/calculator' },
+  { label: 'GeoGebra classic', url: 'https://www.geogebra.org/classic' },
+  { label: 'PhET — projectile motion', url: 'https://phet.colorado.edu/sims/html/projectile-motion/latest/projectile-motion_en.html' },
+  { label: 'PhET — circuit construction', url: 'https://phet.colorado.edu/sims/html/circuit-construction-kit-dc/latest/circuit-construction-kit-dc_en.html' },
+  { label: 'PhET — wave on a string', url: 'https://phet.colorado.edu/sims/html/wave-on-a-string/latest/wave-on-a-string_en.html' },
+  { label: 'PhET — acid-base solutions', url: 'https://phet.colorado.edu/sims/html/acid-base-solutions/latest/acid-base-solutions_en.html' },
+];
+
+function EmbedForm({ slide, onChange }) {
+  return (
+    <div className="space-y-3">
+      <Field label="URL">
+        <TextInput
+          placeholder="https://www.desmos.com/calculator/..."
+          value={slide.url || ''}
+          onChange={(e) => onChange({ url: e.target.value })}
+        />
+      </Field>
+      <div className="space-y-1">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">Quick presets</p>
+        <div className="flex flex-wrap gap-1.5">
+          {EMBED_PRESETS.map((p) => (
+            <button
+              key={p.url}
+              type="button"
+              onClick={() => onChange({ url: p.url, title: p.label })}
+              className="px-2.5 py-1 rounded-full border border-line-soft text-[11px] text-text-muted hover:border-accent hover:text-accent transition-colors"
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <Field label="Display title (shown as kicker)">
+        <TextInput
+          placeholder="e.g. Desmos Graph, PhET Simulation"
+          value={slide.title || ''}
+          onChange={(e) => onChange({ title: e.target.value })}
+        />
+      </Field>
+      <Field label="Aspect ratio">
+        <Select
+          value={slide.aspect || '16:9'}
+          onChange={(e) => onChange({ aspect: e.target.value })}
+          options={[
+            { value: '16:9', label: '16:9 — widescreen (default)' },
+            { value: '4:3', label: '4:3 — square-ish' },
+            { value: '1:1', label: '1:1 — square' },
+            { value: 'tall', label: 'Tall — portrait (9:16)' },
+          ]}
+        />
+      </Field>
+      <Field label="Caption (optional)">
+        <TextInput value={slide.caption || ''} onChange={(e) => onChange({ caption: e.target.value })} />
+      </Field>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Hotspot editor — upload image, click to place regions
+   ────────────────────────────────────────────────────────────────────────── */
+
+function HotspotForm({ slide, onChange, lessonId }) {
+  const regions = slide.regions || [];
+  const imgRef = useRef(null);
+
+  const handleImageClick = (e) => {
+    if (!imgRef.current) return;
+    const rect = imgRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+    const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+    const newId = regions.length ? Math.max(...regions.map((r) => r.id)) + 1 : 0;
+    onChange({ regions: [...regions, { id: newId, label: `Region ${newId + 1}`, x: Number(x) - 5, y: Number(y) - 5, w: 10, h: 10, correct: false }] });
+  };
+
+  const updateRegion = (id, patch) => onChange({ regions: regions.map((r) => r.id === id ? { ...r, ...patch } : r) });
+  const removeRegion = (id) => onChange({ regions: regions.filter((r) => r.id !== id) });
+
+  return (
+    <div className="space-y-3">
+      <Field label="Question">
+        <TextInput
+          placeholder="Click on the mitochondria"
+          value={slide.question || ''}
+          onChange={(e) => onChange({ question: e.target.value })}
+        />
+      </Field>
+      <Field label="Image">
+        <ImagePicker value={slide.image || ''} onChange={(url) => onChange({ image: url })} lessonId={lessonId} />
+      </Field>
+
+      {slide.image && (
+        <>
+          <p className="text-[11px] text-text-dim">Click on the image below to add a region. Then edit each region's label, size, and whether it's correct.</p>
+          <div className="relative rounded-xl overflow-hidden border border-line-soft cursor-crosshair">
+            <img
+              ref={imgRef}
+              src={slide.image}
+              alt="Hotspot editor"
+              className="w-full h-auto block"
+              draggable={false}
+              onClick={handleImageClick}
+            />
+            {regions.map((r) => (
+              <div
+                key={r.id}
+                style={{ left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` }}
+                className={`absolute border-2 rounded-lg flex items-center justify-center text-[10px] font-bold text-white ${r.correct ? 'border-emerald-400 bg-emerald-400/30' : 'border-accent bg-accent/20'}`}
+              >
+                {r.id + 1}
+              </div>
+            ))}
+          </div>
+
+          {regions.length > 0 && (
+            <div className="space-y-2">
+              {regions.map((r) => (
+                <div key={r.id} className="p-3 rounded-xl border border-line-soft bg-surface-raised space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono text-text-dim w-6">{r.id + 1}.</span>
+                    <TextInput
+                      className="flex-1"
+                      placeholder="Label"
+                      value={r.label || ''}
+                      onChange={(e) => updateRegion(r.id, { label: e.target.value })}
+                    />
+                    <label className="flex items-center gap-1.5 text-[11px] text-text-muted shrink-0 cursor-pointer">
+                      <input type="checkbox" checked={!!r.correct} onChange={(e) => updateRegion(r.id, { correct: e.target.checked })} className="accent-accent" />
+                      Correct
+                    </label>
+                    <button type="button" onClick={() => removeRegion(r.id)} className="text-text-dim hover:text-rose-500 text-sm px-1">×</button>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {['x', 'y', 'w', 'h'].map((k) => (
+                      <label key={k} className="block">
+                        <span className="text-[10px] text-text-dim uppercase">{k === 'w' ? 'Width %' : k === 'h' ? 'Height %' : k.toUpperCase() + ' %'}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={0.5}
+                          value={r[k] ?? 0}
+                          onChange={(e) => updateRegion(r.id, { [k]: Number(e.target.value) })}
+                          className="w-full rounded-md border border-line-soft bg-surface-raised px-2 py-1 text-xs focus:border-accent focus:outline-none"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      <Field label="Explanation (shown after answer)">
+        <TextArea rows={2} value={slide.explanation || ''} onChange={(e) => onChange({ explanation: e.target.value })} />
+      </Field>
+      <Field label="Caption (optional)">
+        <TextInput value={slide.caption || ''} onChange={(e) => onChange({ caption: e.target.value })} />
+      </Field>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Timeline editor
+   ────────────────────────────────────────────────────────────────────────── */
+
+function TimelineForm({ slide, onChange }) {
+  const events = slide.events || [];
+
+  const updateEvent = (i, patch) => onChange({ events: events.map((e, ei) => (ei === i ? { ...e, ...patch } : e)) });
+  const addEvent = () => onChange({ events: [...events, { label: '', year: '' }] });
+  const removeEvent = (i) => onChange({ events: events.filter((_, ei) => ei !== i) });
+  const move = (i, dir) => {
+    const j = i + dir;
+    if (j < 0 || j >= events.length) return;
+    const next = [...events];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange({ events: next });
+  };
+
+  return (
+    <div className="space-y-3">
+      <Field label="Prompt (optional)">
+        <TextInput
+          placeholder="Put these events in the correct order"
+          value={slide.prompt || ''}
+          onChange={(e) => onChange({ prompt: e.target.value })}
+        />
+      </Field>
+      <Field label="Events (in correct chronological order — player shuffles them)" hint="Add the year/date to show after the student submits.">
+        <div className="space-y-2 mb-2">
+          {events.map((ev, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="flex flex-col gap-0.5 shrink-0">
+                <button type="button" disabled={i === 0} onClick={() => move(i, -1)} className="text-text-dim hover:text-text-primary disabled:opacity-20 text-xs leading-none">↑</button>
+                <button type="button" disabled={i === events.length - 1} onClick={() => move(i, 1)} className="text-text-dim hover:text-text-primary disabled:opacity-20 text-xs leading-none">↓</button>
+              </div>
+              <span className="text-[10px] font-mono text-text-dim w-5 shrink-0">{i + 1}.</span>
+              <TextInput
+                className="flex-1"
+                placeholder="Event label"
+                value={ev.label || ''}
+                onChange={(e) => updateEvent(i, { label: e.target.value })}
+              />
+              <TextInput
+                className="w-24"
+                placeholder="Year"
+                value={ev.year || ''}
+                onChange={(e) => updateEvent(i, { year: e.target.value })}
+              />
+              <button type="button" onClick={() => removeEvent(i)} disabled={events.length <= 2} className="text-text-dim hover:text-rose-500 disabled:opacity-30 text-sm px-1">×</button>
+            </div>
+          ))}
+        </div>
+        <PillButton onClick={addEvent} tone="primary">+ Add event</PillButton>
+      </Field>
+      <Field label="Explanation (shown after answer)">
+        <TextArea rows={2} value={slide.explanation || ''} onChange={(e) => onChange({ explanation: e.target.value })} />
+      </Field>
+      <Field label="Caption (optional)">
+        <TextInput value={slide.caption || ''} onChange={(e) => onChange({ caption: e.target.value })} />
+      </Field>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
    Dispatcher
    ────────────────────────────────────────────────────────────────────────── */
 
@@ -832,6 +1174,11 @@ export default function SlideForm({ slide, onChange, lessonId }) {
     case 'order': return <OrderForm slide={slide} onChange={update} />;
     case 'table': return <TableForm slide={slide} onChange={update} />;
     case 'divider': return <DividerForm slide={slide} onChange={update} />;
+    case 'chart': return <ChartForm slide={slide} onChange={update} />;
+    case 'diagram': return <DiagramForm slide={slide} onChange={update} />;
+    case 'embed': return <EmbedForm slide={slide} onChange={update} />;
+    case 'hotspot': return <HotspotForm slide={slide} onChange={update} lessonId={lessonId} />;
+    case 'timeline': return <TimelineForm slide={slide} onChange={update} />;
     default:
       return (
         <p className="text-sm text-text-muted italic">
