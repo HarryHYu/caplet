@@ -13,6 +13,7 @@ const ClassAnnouncement = require('./ClassAnnouncement');
 const Comment = require('./Comment');
 const ChatMessage = require('./ChatMessage');
 const EditorWorkspace = require('./EditorWorkspace');
+const SavedSlide = require('./SavedSlide');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -180,6 +181,14 @@ Comment.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
 
 Comment.belongsTo(User, { foreignKey: 'targetUserId', as: 'targetUser' });
 
+// Saved slides
+User.hasMany(SavedSlide, { foreignKey: 'userId', as: 'savedSlides', onDelete: 'CASCADE' });
+SavedSlide.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+Course.hasMany(SavedSlide, { foreignKey: 'courseId', as: 'savedSlides', onDelete: 'CASCADE' });
+SavedSlide.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+Lesson.hasMany(SavedSlide, { foreignKey: 'lessonId', as: 'savedSlides', onDelete: 'CASCADE' });
+SavedSlide.belongsTo(Lesson, { foreignKey: 'lessonId', as: 'lesson' });
+
 // Chat messages
 User.hasMany(ChatMessage, {
   foreignKey: 'userId',
@@ -222,5 +231,6 @@ module.exports = {
   Comment,
   ChatMessage,
   EditorWorkspace,
+  SavedSlide,
   syncDatabase
 };

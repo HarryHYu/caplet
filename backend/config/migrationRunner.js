@@ -9,7 +9,10 @@ const { sequelize } = require('./database');
  */
 const umzug = new Umzug({
   migrations: {
-    glob: path.join(__dirname, '../migrations/*.js'),
+    // Normalize to forward slashes: path.join produces backslashes on Windows,
+    // which the glob matcher fails to match (finds 0 migrations). On Linux this
+    // is a no-op (path.sep is already '/'), so production behavior is unchanged.
+    glob: path.join(__dirname, '../migrations/*.js').split(path.sep).join('/'),
     resolve: ({ name, path: migrationPath, context }) => {
       // eslint-disable-next-line global-require
       const migration = require(migrationPath);

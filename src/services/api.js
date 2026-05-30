@@ -477,6 +477,27 @@ class ApiService {
     });
   }
 
+  // Saved slides
+  async getSavedSlides() {
+    return this.request('/saved-slides');
+  }
+
+  async saveSlide(lessonId, courseId, slideIndex) {
+    return this.request('/saved-slides', {
+      method: 'POST',
+      body: JSON.stringify({ lessonId, courseId, slideIndex }),
+    });
+  }
+
+  async unsaveSlide(savedSlideId) {
+    return this.request(`/saved-slides/${savedSlideId}`, { method: 'DELETE' });
+  }
+
+  // Ask the AI to organize all flagged slides into revision categories.
+  async categorizeSavedSlides() {
+    return this.request('/saved-slides/categorize', { method: 'POST' });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');
