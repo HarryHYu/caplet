@@ -42,12 +42,12 @@ function slideToText(slide) {
 
 const SYSTEM = `You organize a student's flagged study slides into a small set of revision categories.
 Rules:
-- Choose between 2 and 6 categories total (fewer if there are few slides).
+- Choose between 1 and 6 categories total (fewer when there are few slides).
 - Category names are short topic labels in Title Case (e.g. "Compound Interest", "Budgeting Basics", "Tax & Deductions"). 1–4 words.
 - Group by subject/topic, not by slide type.
-- Every input slide must be assigned exactly one category.
+- Assign EVERY numbered slide exactly one category, referencing it by its number.
 - Reuse the same category name for related slides so groups are meaningful.
-Return ONLY a JSON object: {"assignments":[{"id":"<id>","category":"<label>"}]}.`;
+Return ONLY a JSON object: {"assignments":[{"item":<number>,"category":"<label>"}]} where <number> is the slide's number from the list.`;
 
 /**
  * @param {Array<{id:string, text:string, lessonTitle?:string, courseTitle?:string}>} items
@@ -63,11 +63,13 @@ async function categorizeSlides(items, opts = {}) {
   }
   if (!Array.isArray(items) || items.length === 0) return new Map();
 
+  // Reference slides by a simple 1-based number (not their UUID): models
+  // reliably echo small numbers, but often mangle long opaque IDs.
   const lines = items.map((it, i) => {
     const ctx = [it.courseTitle, it.lessonTitle].filter(Boolean).join(' / ');
-    return `${i + 1}. id=${it.id}${ctx ? ` [${ctx}]` : ''}: ${it.text || '(no text)'}`;
+    return `${i + 1}. ${ctx ? `[${ctx}] ` : ''}${it.text || '(no text)'}`;
   });
-  const userMsg = `Here are ${items.length} flagged slides. Assign each a revision category.\n\n${lines.join('\n')}\n\nReturn ONLY {"assignments":[{"id":"...","category":"..."}]}.`;
+  const userMsg = `Here are ${items.length} flagged slides, each with a number. Assign every slide a revision category.\n\n${lines.join('\n')}\n\nReturn ONLY {"assignments":[{"item":<number>,"category":"..."}]}.`;
 
   const chosenModel = opts.model || 'gpt-5.4-mini';
   const isReasoning = chosenModel.startsWith('o') || chosenModel === 'gpt-5';
@@ -93,11 +95,19 @@ async function categorizeSlides(items, opts = {}) {
   }
 
   const result = new Map();
-  const assignments = Array.isArray(parsed?.assignments) ? parsed.assignments : [];
-  const validIds = new Set(items.map((it) => it.id));
+  // Tolerate a few shapes: {assignments:[...]}, or a bare array.
+  const assignments = Array.isArray(parsed?.assignments)
+    ? parsed.assignments
+    : Array.isArray(parsed)
+      ? parsed
+      : [];
   for (const a of assignments) {
-    if (a && validIds.has(a.id) && typeof a.category === 'string' && a.category.trim()) {
-      result.set(a.id, a.category.trim().slice(0, 60));
+    if (!a || typeof a.category !== 'string' || !a.category.trim()) continue;
+    // Accept the slide number under any of these keys; map 1-based -> id.
+    const num = Number(a.item ?? a.number ?? a.index ?? a.id);
+    const idx = num - 1;
+    if (Number.isInteger(idx) && idx >= 0 && idx < items.length) {
+      result.set(items[idx].id, a.category.trim().slice(0, 60));
     }
   }
   return result;
