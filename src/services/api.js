@@ -498,6 +498,14 @@ class ApiService {
     return this.request('/saved-slides/categorize', { method: 'POST' });
   }
 
+  // Ask the AI to condense one category's flagged slides into a summary slideshow.
+  async summarizeSavedSlides(category) {
+    return this.request('/saved-slides/summarize', {
+      method: 'POST',
+      body: JSON.stringify({ category }),
+    });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');

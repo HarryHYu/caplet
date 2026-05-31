@@ -4,6 +4,7 @@ const Lesson = require('../models/Lesson');
 const Course = require('../models/Course');
 const { requireAuth } = require('../middleware/auth');
 const { categorizeSlides, slideToText } = require('../services/slideCategorizer');
+const { summarizeSlides } = require('../services/slideSummarizer');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -99,6 +100,44 @@ router.post('/categorize', async (req, res) => {
     res.status(status).json({
       message: e.message || 'Failed to categorize slides',
     });
+  }
+});
+
+// Condense the flagged slides in one category into a short AI summary
+// slideshow. Stateless — nothing is saved; the slides are returned for the
+// client to display. Body: { category }  ("Uncategorized" => uncategorized).
+router.post('/summarize', async (req, res) => {
+  try {
+    const category = (req.body?.category ?? '').toString();
+    const where = { userId: req.user.id };
+    if (category && category !== 'Uncategorized') {
+      where.category = category;
+    } else {
+      where.category = null;
+    }
+
+    const slides = await SavedSlide.findAll({
+      where,
+      include: [{ model: Lesson, as: 'lesson', attributes: ['id', 'title', 'slides'] }],
+      order: [['createdAt', 'ASC']],
+    });
+
+    if (slides.length === 0) {
+      return res.status(400).json({ message: 'No flagged slides in this category to summarize.' });
+    }
+
+    const items = slides.map((s) => {
+      const parsed = parseSlides(s.lesson?.slides);
+      const slide = parsed[s.slideIndex];
+      return { text: slideToText(slide) || s.lesson?.title || 'Slide' };
+    });
+
+    const summarySlides = await summarizeSlides(items, { topic: category });
+    res.json({ slides: summarySlides, category });
+  } catch (e) {
+    const status = e.status || 500;
+    console.error('Summarize saved slides error:', e.message || e);
+    res.status(status).json({ message: e.message || 'Failed to summarize slides' });
   }
 });
 
