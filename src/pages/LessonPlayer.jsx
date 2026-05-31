@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -144,6 +144,7 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
 
 const LessonPlayer = () => {
   const { courseId, lessonId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
@@ -157,9 +158,11 @@ const LessonPlayer = () => {
   const [progress, setProgress] = useState({ lessonProgress: [], courseProgress: null });
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [visited, setVisited] = useState(() => new Set([0]));
-  // Bumped on every navigation to re-trigger the slide-in animation on the
-  // visible content layer without unmounting the pre-rendered slides.
   const [animKey, setAnimKey] = useState(0);
+  // savedSlides: Map of slideIndex -> savedSlideId for the current lesson
+  const [savedSlides, setSavedSlides] = useState(new Map());
+  const [savingSlide, setSavingSlide] = useState(false);
+  const autoCategorizeTimer = useRef(null);
 
 
   /* ---------- Data loading ---------- */
@@ -171,6 +174,7 @@ const LessonPlayer = () => {
         setCurrentSlideIndex(0);
         setCompleted(false);
         setVisited(new Set([0]));
+        setSavedSlides(new Map());
         const [courseData, lessonData] = await Promise.all([
           api.getCourse(courseId),
           api.getLesson(courseId, lessonId).catch(() => null),
@@ -182,6 +186,16 @@ const LessonPlayer = () => {
         const current = lessonData || currentFromList;
         if (current && isAuthenticated) {
           try {
+            const savedData = await api.getSavedSlides().catch(() => null);
+            if (savedData?.savedSlides) {
+              const map = new Map();
+              savedData.savedSlides
+                .filter((s) => String(s.lessonId) === String(current.id))
+                .forEach((s) => map.set(s.slideIndex, s.id));
+              setSavedSlides(map);
+            }
+          } catch { /* non-blocking */ }
+          try {
             const prog = await api.getCourseProgress(courseId);
             setProgress(prog);
             const lp = prog?.lessonProgress?.find((p) => String(p.lessonId) === String(current.id));
@@ -191,11 +205,14 @@ const LessonPlayer = () => {
               setCompleted(true);
             }
             const slides = parseSlides(current.slides);
-            if (slides.length > 0 && lp && typeof lp.lastSlideIndex === 'number') {
-              const startIdx = Math.min(lp.lastSlideIndex, slides.length - 1);
+            const jumpTo = searchParams.get('slide');
+            const startIdx = jumpTo !== null
+              ? Math.min(Math.max(0, Number(jumpTo)), slides.length - 1)
+              : (slides.length > 0 && lp && typeof lp.lastSlideIndex === 'number')
+                ? Math.min(lp.lastSlideIndex, slides.length - 1)
+                : 0;
+            if (startIdx > 0) {
               setCurrentSlideIndex(startIdx);
-              // Pre-fill visited with all slides up to and including the
-              // last position so resumed lessons show full blue history.
               const seen = new Set();
               for (let i = 0; i <= startIdx; i++) seen.add(i);
               setVisited(seen);
@@ -286,6 +303,32 @@ const LessonPlayer = () => {
       setSaving(false);
     }
   }, [isAuthenticated, lesson, course, navigate]);
+
+  const toggleSaveSlide = useCallback(async () => {
+    if (!isAuthenticated || !lesson?.id || !course?.id) return;
+    setSavingSlide(true);
+    try {
+      const idx = currentSlideIndex;
+      if (savedSlides.has(idx)) {
+        await api.unsaveSlide(savedSlides.get(idx));
+        setSavedSlides((prev) => { const next = new Map(prev); next.delete(idx); return next; });
+      } else {
+        const res = await api.saveSlide(lesson.id, course.id, idx);
+        if (res?.savedSlide) {
+          setSavedSlides((prev) => new Map(prev).set(idx, res.savedSlide.id));
+          // Auto-organize into revision categories (debounced, best-effort).
+          if (autoCategorizeTimer.current) clearTimeout(autoCategorizeTimer.current);
+          autoCategorizeTimer.current = setTimeout(() => {
+            api.categorizeSavedSlides().catch(() => {});
+          }, 2000);
+        }
+      }
+    } catch (e) {
+      console.warn('Toggle save slide failed:', e?.message || e);
+    } finally {
+      setSavingSlide(false);
+    }
+  }, [isAuthenticated, lesson?.id, course?.id, currentSlideIndex, savedSlides]);
 
   const recordQuestionAnswer = useCallback(
     async (slideIndex, isCorrect) => {
@@ -465,18 +508,38 @@ const LessonPlayer = () => {
         {hasSlides ? (
           <div className="flex-1 min-h-0 max-w-[1400px] w-full mx-auto px-4 md:px-8 lg:px-12 py-5 md:py-7 flex flex-col gap-4 md:gap-5">
             {/* Slide kicker */}
-            <div className="shrink-0 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
-              <span className="font-mono text-accent">
-                {String(currentSlideIndex + 1).padStart(2, '0')}
-                <span className="opacity-50"> / </span>
-                {String(slides.length).padStart(2, '0')}
-              </span>
-              <span className="w-6 h-px bg-line-soft" />
-              <span>{slideKindLabel(normalizeSlide(slides[currentSlideIndex]))}</span>
-              <span className="w-6 h-px bg-line-soft hidden sm:block" />
-              <span className="text-text-dim/60 hidden sm:inline">
-                {Math.round(((currentSlideIndex + 1) / slides.length) * 100)}% through
-              </span>
+            <div className="shrink-0 flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-accent">
+                  {String(currentSlideIndex + 1).padStart(2, '0')}
+                  <span className="opacity-50"> / </span>
+                  {String(slides.length).padStart(2, '0')}
+                </span>
+                <span className="w-6 h-px bg-line-soft" />
+                <span>{slideKindLabel(normalizeSlide(slides[currentSlideIndex]))}</span>
+                <span className="w-6 h-px bg-line-soft hidden sm:block" />
+                <span className="text-text-dim/60 hidden sm:inline">
+                  {Math.round(((currentSlideIndex + 1) / slides.length) * 100)}% through
+                </span>
+              </div>
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  onClick={toggleSaveSlide}
+                  disabled={savingSlide}
+                  aria-label={savedSlides.has(currentSlideIndex) ? 'Remove saved slide' : 'Save slide'}
+                  className={`shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-full border transition-colors text-[10px] font-bold uppercase tracking-[0.2em] ${
+                    savedSlides.has(currentSlideIndex)
+                      ? 'border-accent text-accent bg-accent/10 hover:bg-accent/20'
+                      : 'border-line-soft text-text-muted hover:border-text-dim hover:text-text-primary'
+                  } disabled:opacity-50`}
+                >
+                  <svg className="w-3 h-3" fill={savedSlides.has(currentSlideIndex) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  <span className="hidden sm:inline">{savedSlides.has(currentSlideIndex) ? 'Saved' : 'Save'}</span>
+                </button>
+              )}
             </div>
 
             {/* Slide canvas — fills the remaining space, scrolls internally */}

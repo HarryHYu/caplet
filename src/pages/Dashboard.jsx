@@ -9,7 +9,8 @@ import {
     AcademicCapIcon,
     FireIcon,
     ArrowRightIcon,
-    CheckCircleIcon
+    CheckCircleIcon,
+    BookmarkIcon
 } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
@@ -18,6 +19,7 @@ export default function Dashboard() {
     const [userProgress, setUserProgress] = useState([]);
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
+    const [savedSlides, setSavedSlides] = useState([]);
 
     useEffect(() => {
         if (!hasFetched && !coursesLoading) {
@@ -30,18 +32,18 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [progressData, classesData] = await Promise.all([
+                const [progressData, classesData, savedSlidesData] = await Promise.all([
                     api.getUserProgress(),
                     api.getClasses(),
+                    api.getSavedSlides().catch(() => null),
                 ]);
-                // /progress returns { progress: [...] }
                 setUserProgress(progressData?.progress || []);
-                // /classes returns { teaching: [...], student: [...] }
                 const allClasses = [
                     ...(classesData?.teaching || []),
                     ...(classesData?.student || [])
                 ];
                 setClasses(allClasses);
+                setSavedSlides(savedSlidesData?.savedSlides || []);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             } finally {
@@ -193,6 +195,28 @@ export default function Dashboard() {
                                         <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
                                     </Link>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* Revision — its own section, mirrors "My Courses" */}
+                        <div className="reveal-text stagger-3">
+                            <span className="section-kicker">Revision</span>
+                            <div className="mt-8 space-y-6">
+                                <Link
+                                    to="/revision"
+                                    className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
+                                >
+                                    <div className="min-w-0 flex items-center gap-3">
+                                        <BookmarkIcon className="w-4 h-4 shrink-0 text-accent" />
+                                        <div className="min-w-0">
+                                            <p className="text-[11px] font-bold uppercase tracking-widest truncate group-hover:text-accent transition-colors">Archived slides</p>
+                                            <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mt-1">
+                                                {savedSlides.length} {savedSlides.length === 1 ? 'Slide' : 'Slides'} Flagged
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                                </Link>
                             </div>
                         </div>
 
