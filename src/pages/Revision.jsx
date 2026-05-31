@@ -2,8 +2,63 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import SlideRenderer from '../components/lesson/SlideRenderer';
 import { slideKindLabel, normalizeSlide } from '../lib/slideSchema';
-import { BookmarkIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { BookmarkIcon, ArrowRightIcon, SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
+
+// Modal slideshow showing an AI-generated summary of a category's slides.
+function SummaryModal({ open, loading, error, category, slides, onClose }) {
+    const [idx, setIdx] = useState(0);
+    useEffect(() => { setIdx(0); }, [slides]);
+    if (!open) return null;
+
+    const total = slides?.length || 0;
+    const current = total ? slides[Math.min(idx, total - 1)] : null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+            <div
+                className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden bg-surface-body border border-line-soft flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-center justify-between px-6 py-4 border-b border-line-soft">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <SparklesIcon className="w-4 h-4 text-accent shrink-0" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim truncate">
+                            Summary · {category}
+                        </span>
+                    </div>
+                    <button type="button" onClick={onClose} aria-label="Close summary"
+                        className="w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-text-primary hover:border-text-dim flex items-center justify-center">
+                        <XMarkIcon className="w-4 h-4" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 md:p-10 min-h-[260px] flex flex-col justify-center">
+                    {loading && <CapletLoader message="Summarizing with AI…" />}
+                    {!loading && error && (
+                        <p className="text-center text-rose-400 text-sm font-bold uppercase tracking-wider">{error}</p>
+                    )}
+                    {!loading && !error && current && <SlideRenderer slide={current} onSubmit={() => {}} />}
+                </div>
+
+                {!loading && !error && total > 1 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-line-soft">
+                        <button type="button" disabled={idx === 0} onClick={() => setIdx((i) => Math.max(0, i - 1))}
+                            className="text-[10px] font-bold uppercase tracking-widest text-text-dim hover:text-accent disabled:opacity-30">
+                            ← Prev
+                        </button>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">{Math.min(idx + 1, total)} / {total}</span>
+                        <button type="button" disabled={idx >= total - 1} onClick={() => setIdx((i) => Math.min(total - 1, i + 1))}
+                            className="text-[10px] font-bold uppercase tracking-widest text-text-dim hover:text-accent disabled:opacity-30">
+                            Next →
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 const CATEGORY_LABELS = {
     budgeting: 'Budgeting',
@@ -30,6 +85,8 @@ export default function Revision() {
     const [organizing, setOrganizing] = useState(false);
     const [organizeError, setOrganizeError] = useState(null);
     const [removingId, setRemovingId] = useState(null);
+    // Summary modal state.
+    const [summary, setSummary] = useState({ open: false, loading: false, error: null, category: '', slides: [] });
 
     const refetch = async () => {
         const data = await api.getSavedSlides().catch(() => null);
@@ -65,6 +122,16 @@ export default function Revision() {
             setOrganizeError(e?.message || 'Could not organize right now.');
         } finally {
             setOrganizing(false);
+        }
+    };
+
+    const handleSummarize = async (category) => {
+        setSummary({ open: true, loading: true, error: null, category, slides: [] });
+        try {
+            const res = await api.summarizeSavedSlides(category);
+            setSummary({ open: true, loading: false, error: null, category, slides: res?.slides || [] });
+        } catch (e) {
+            setSummary({ open: true, loading: false, error: e?.message || 'Could not summarize right now.', category, slides: [] });
         }
     };
 
@@ -130,9 +197,19 @@ export default function Revision() {
                     <div className="space-y-12">
                         {groups.map(([topic, slides]) => (
                             <div key={topic}>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-4">
-                                    {CATEGORY_LABELS[topic] || topic}
-                                </p>
+                                <div className="flex items-center justify-between mb-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
+                                        {CATEGORY_LABELS[topic] || topic}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSummarize(topic)}
+                                        className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-accent hover:opacity-70 transition-opacity"
+                                    >
+                                        <SparklesIcon className="w-3.5 h-3.5" />
+                                        Summarize
+                                    </button>
+                                </div>
                                 <div className="grid grid-cols-1 gap-px bg-line-soft border border-line-soft">
                                     {slides.map((s) => {
                                         const slide = getSlidePreview(s);
@@ -179,6 +256,15 @@ export default function Revision() {
                     </div>
                 )}
             </div>
+
+            <SummaryModal
+                open={summary.open}
+                loading={summary.loading}
+                error={summary.error}
+                category={CATEGORY_LABELS[summary.category] || summary.category}
+                slides={summary.slides}
+                onClose={() => setSummary((s) => ({ ...s, open: false }))}
+            />
         </div>
     );
 }
