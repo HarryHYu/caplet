@@ -163,9 +163,8 @@ const LessonPlayer = () => {
   // Floating Desmos calculator panel
   const [calcOpen, setCalcOpen] = useState(false);
   const [calcMode, setCalcMode] = useState('graphing'); // 'graphing' | 'scientific'
-  // Drag position — null means default CSS anchor (bottom-right)
-  const [calcPos, setCalcPos] = useState(null);
-  const calcDragRef = useRef(null);
+  const [calcPos, setCalcPos] = useState(null); // null = default CSS anchor (bottom-right)
+  const calcPanelRef = useRef(null);
   // savedSlides: Map of slideIndex -> savedSlideId for the current lesson
   const [savedSlides, setSavedSlides] = useState(new Map());
   const [savingSlide, setSavingSlide] = useState(false);
@@ -694,10 +693,11 @@ const LessonPlayer = () => {
           Always in the DOM so calculator state (expressions, viewport) is never
           lost. Slides off-screen when closed. Draggable via the header bar.
           ───────────────────────────────────────────────────────────────────── */}
-      {/* Panel is always mounted (never unmounts) so Desmos state is preserved.
-          Visibility is toggled with opacity + pointer-events only. */}
+      {/* Panel is always mounted so Desmos state is never lost.
+          Visibility toggled via opacity/pointerEvents only. */}
       <div
-        className="fixed z-40 flex flex-col transition-all duration-200 ease-out"
+        ref={calcPanelRef}
+        className="fixed z-40 flex flex-col transition-[opacity,transform] duration-200 ease-out"
         style={{
           width: 'min(480px, 100vw)',
           height: 'min(560px, calc(100dvh - 7rem))',
@@ -713,28 +713,45 @@ const LessonPlayer = () => {
         <div
           className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-surface-raised border border-b-0 border-line-soft rounded-t-2xl shadow-2xl select-none cursor-grab active:cursor-grabbing"
           onMouseDown={(e) => {
-            // Don't initiate drag on button clicks
             if (e.target.closest('button')) return;
             e.preventDefault();
-            const panelW = e.currentTarget.parentElement.offsetWidth;
-            const panelH = e.currentTarget.parentElement.offsetHeight;
-            const startX = e.clientX;
-            const startY = e.clientY;
-            const startPX = calcPos?.x ?? (window.innerWidth - panelW);
-            const startPY = calcPos?.y ?? (window.innerHeight - panelH);
+            const el = calcPanelRef.current;
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            const startMouseX = e.clientX;
+            const startMouseY = e.clientY;
+            const startLeft = rect.left;
+            const startTop = rect.top;
+            const panelW = rect.width;
+            const panelH = rect.height;
+
+            // Disable CSS transition during drag so it doesn't fight direct style updates.
+            el.style.transition = 'none';
+            // Switch to absolute left/top positioning immediately.
+            el.style.right = 'auto';
+            el.style.bottom = 'auto';
+            el.style.left = startLeft + 'px';
+            el.style.top = startTop + 'px';
 
             const onMove = (ev) => {
-              const nx = Math.max(0, Math.min(window.innerWidth - panelW, startPX + ev.clientX - startX));
-              const ny = Math.max(0, Math.min(window.innerHeight - panelH, startPY + ev.clientY - startY));
-              setCalcPos({ x: nx, y: ny });
+              const nx = Math.max(0, Math.min(window.innerWidth - panelW, startLeft + ev.clientX - startMouseX));
+              const ny = Math.max(0, Math.min(window.innerHeight - panelH, startTop + ev.clientY - startMouseY));
+              // Direct DOM update — zero React re-renders during drag.
+              el.style.left = nx + 'px';
+              el.style.top = ny + 'px';
             };
+
             const onUp = () => {
               window.removeEventListener('mousemove', onMove);
               window.removeEventListener('mouseup', onUp);
+              // Restore transition, sync final position to React state.
+              el.style.transition = '';
+              const final = el.getBoundingClientRect();
+              setCalcPos({ x: final.left, y: final.top });
             };
+
             window.addEventListener('mousemove', onMove);
             window.addEventListener('mouseup', onUp);
-            calcDragRef.current = onUp;
           }}
         >
           <div className="flex items-center gap-2">
