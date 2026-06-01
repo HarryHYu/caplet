@@ -1,64 +1,35 @@
 /**
- * MathText — renders a plain string that may contain LaTeX math delimiters.
+ * MathText — renders a string that may contain markdown and/or LaTeX math.
  *
- * Supported syntax (mirrors what the AI is instructed to output):
- *   Inline:  $x^2 + y^2 = r^2$
- *   Block:   $$\frac{a}{b}$$
+ * Supports:
+ *   Markdown:  **bold**, *italic*, `code`, etc.
+ *   Inline math:  $x^2 + y^2 = r^2$
+ *   Block math:   $$\frac{a}{b}$$
  *
- * Uses KaTeX to render math fragments; plain text is output as-is.
- * KaTeX output is inherently safe HTML (no script injection possible).
+ * Used for all non-prose slide fields (questions, options, card fronts/backs,
+ * match pairs, etc.) that come from AI-generated content.
  */
-import katex from 'katex';
-
-// Splits a string into alternating text / math tokens.
-// Returns [{ type:'text'|'math', content, display }]
-function tokenise(str) {
-  const tokens = [];
-  // Match $$…$$ first (display), then $…$ (inline).
-  const re = /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
-  let last = 0;
-  let m;
-  while ((m = re.exec(str)) !== null) {
-    if (m.index > last) tokens.push({ type: 'text', content: str.slice(last, m.index) });
-    const display = m[1] !== undefined;
-    tokens.push({ type: 'math', content: m[1] ?? m[2], display });
-    last = m.index + m[0].length;
-  }
-  if (last < str.length) tokens.push({ type: 'text', content: str.slice(last) });
-  return tokens;
-}
-
-function renderMath(tex, display) {
-  try {
-    return katex.renderToString(tex, { displayMode: display, throwOnError: false, output: 'html' });
-  } catch {
-    return tex;
-  }
-}
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 export default function MathText({ children, className }) {
   if (children == null) return null;
   const text = String(children);
 
-  // Fast path — no $ at all, just render the string.
-  if (!text.includes('$')) return <span className={className}>{text}</span>;
-
-  const tokens = tokenise(text);
-
   return (
     <span className={className}>
-      {tokens.map((tok, i) =>
-        tok.type === 'math' ? (
-          <span
-            key={i}
-            // KaTeX generates safe HTML — no user input reaches innerHTML.
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: renderMath(tok.content, tok.display) }}
-          />
-        ) : (
-          <span key={i}>{tok.content}</span>
-        ),
-      )}
+      <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+          // MathText is used inline — avoid block-level <p> wrappers.
+          // Use span.block so multiple paragraphs still stack visually.
+          p: ({ children: c }) => <span className="block">{c}</span>,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
     </span>
   );
 }
