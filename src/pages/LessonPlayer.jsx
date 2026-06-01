@@ -694,17 +694,19 @@ const LessonPlayer = () => {
           Always in the DOM so calculator state (expressions, viewport) is never
           lost. Slides off-screen when closed. Draggable via the header bar.
           ───────────────────────────────────────────────────────────────────── */}
+      {/* Panel is always mounted (never unmounts) so Desmos state is preserved.
+          Visibility is toggled with opacity + pointer-events only. */}
       <div
-        className="fixed z-40 flex flex-col transition-transform duration-200 ease-out"
+        className="fixed z-40 flex flex-col transition-all duration-200 ease-out"
         style={{
           width: 'min(480px, 100vw)',
           height: 'min(560px, calc(100dvh - 7rem))',
-          // Dragged position overrides default bottom-right anchor.
           ...(calcPos
             ? { left: calcPos.x, top: calcPos.y, bottom: 'auto', right: 'auto' }
             : { bottom: 0, right: 0 }),
-          // Slide off-screen to the right when closed — keeps Desmos mounted.
-          transform: calcOpen ? 'translateX(0)' : 'translateX(calc(100% + 16px))',
+          opacity: calcOpen ? 1 : 0,
+          pointerEvents: calcOpen ? 'auto' : 'none',
+          transform: calcOpen ? 'translateY(0)' : 'translateY(6px)',
         }}
       >
         {/* Header — drag handle + mode toggle + close */}
