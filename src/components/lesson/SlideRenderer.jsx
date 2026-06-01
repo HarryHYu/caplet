@@ -1072,7 +1072,9 @@ function ChartSlide({ slide }) {
 const diagramSvgCache = new Map();
 
 function DiagramSlide({ slide }) {
-  const ref = useRef(null);
+  // Store the SVG string in state so dangerouslySetInnerHTML always reflects it,
+  // even if the async render finishes before the 'done' div is in the DOM.
+  const [svgHtml, setSvgHtml] = useState(() => diagramSvgCache.get(slide.code) || null);
   const [status, setStatus] = useState(() =>
     diagramSvgCache.has(slide.code) ? 'done' : 'loading',
   );
@@ -1084,7 +1086,7 @@ function DiagramSlide({ slide }) {
 
     // Already cached — inject immediately without re-running Mermaid.
     if (diagramSvgCache.has(slide.code)) {
-      if (ref.current) ref.current.innerHTML = diagramSvgCache.get(slide.code);
+      setSvgHtml(diagramSvgCache.get(slide.code));
       setStatus('done');
       return;
     }
@@ -1092,6 +1094,7 @@ function DiagramSlide({ slide }) {
     let mounted = true;
     setStatus('loading');
     setError(null);
+    setSvgHtml(null);
 
     import('mermaid').then((m) => {
       const mermaid = m.default;
@@ -1100,7 +1103,7 @@ function DiagramSlide({ slide }) {
     }).then(({ svg }) => {
       if (!mounted) return;
       diagramSvgCache.set(slide.code, svg);
-      if (ref.current) ref.current.innerHTML = svg;
+      setSvgHtml(svg);
       setStatus('done');
     }).catch((err) => {
       if (mounted) { setError(err?.message || 'Diagram syntax error'); setStatus('error'); }
@@ -1121,7 +1124,10 @@ function DiagramSlide({ slide }) {
             <span className="text-[11px] uppercase tracking-[0.2em] font-bold">Rendering diagram…</span>
           </div>
         ) : (
-          <div ref={ref} className="w-full flex justify-center [&_svg]:max-w-full" />
+          <div
+            className="w-full flex justify-center [&_svg]:max-w-full"
+            dangerouslySetInnerHTML={{ __html: svgHtml || '' }}
+          />
         )}
       </div>
       {slide.caption && <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}

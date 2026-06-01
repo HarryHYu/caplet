@@ -1,17 +1,38 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import SlideRenderer from '../lesson/SlideRenderer';
 import { slideKindLabel, normalizeSlide } from '../../lib/slideSchema';
 
 /**
  * Full-screen preview that reuses the real SlideRenderer so what the
  * teacher sees here matches the LessonPlayer exactly.
+ *
+ * The slide container intentionally has NO key on it so SlideRenderer is
+ * never remounted on navigation — critical so Desmos and Mermaid keep their
+ * internal state / don't abort mid-render.  The slide-in animation is
+ * restarted via a DOM reflow trick in useLayoutEffect (same as LessonPlayer).
  */
 export default function LessonPreviewModal({ open, onClose, title, slides }) {
   const [index, setIndex] = useState(0);
+  const slideBoxRef = useRef(null);
 
   useEffect(() => {
     if (open) setIndex(0);
   }, [open]);
+
+  // Restart CSS slide-in animation on every navigation without remounting.
+  useLayoutEffect(() => {
+    const el = slideBoxRef.current;
+    if (!el) return;
+    el.style.animation = 'none';
+    // eslint-disable-next-line no-unused-expressions
+    el.offsetHeight;
+    el.style.animation = '';
+  }, [index]);
+
+  // Fire a resize after navigation so Desmos re-measures its container.
+  useEffect(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, [index]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -87,8 +108,9 @@ export default function LessonPreviewModal({ open, onClose, title, slides }) {
               <span>{slideKindLabel(normalized)}</span>
             </div>
 
+            {/* No key here — stable mount keeps Desmos/Mermaid alive across navigation */}
             <div
-              key={index}
+              ref={slideBoxRef}
               className="animate-lesson-slide-in flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
             >
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none" />
