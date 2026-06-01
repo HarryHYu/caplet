@@ -241,7 +241,8 @@ function normalizeSlide(slide) {
     case 'timeline': {
       const events = arr(slide.events).map((e) => ({
         label: s(e?.label),
-        year: e?.year != null ? s(e.year) : undefined,
+        // Strip any stray $ signs the AI may wrap around year values
+        year: e?.year != null ? s(e.year).replace(/^\$+|\$+$/g, '').trim() || undefined : undefined,
       }));
       return {
         type: 'timeline',

@@ -151,7 +151,9 @@ When to choose embed vs other types:
 - Do NOT generate "media" or "hotspot" slides — these require real image/video URLs uploaded by a teacher.
 - embed slides: ONLY use URLs from the approved providers listed above. NEVER fabricate URLs.
 - correctIndices must be an array of 0-based integers.
+- fillblank: NEVER place a {{blank}} inside a LaTeX math span ($...$ or $$...$$). The blank must sit outside all math delimiters. WRONG: "the vertex is at $({{0}}, {{1}})$" — CORRECT: "the vertex is at ({{0}}, {{1}})"
 - fillblank placeholder count ({{0}}, {{1}}, …) must exactly match the blanks array length.
+- timeline "year" field must be a plain text string like "1914" or "c. 1850" — NEVER wrap it in $ signs.
 - order and timeline items must be listed in the CORRECT sequence — the player shuffles them.
 - match needs ≥2 pairs; order needs ≥2 items; timeline needs ≥2 events.
 - chart data must be a non-empty array. Pie uses "name"/"value"; others use "x"/"y".

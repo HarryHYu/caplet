@@ -276,19 +276,37 @@ function ChoiceSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
    Fill in the blanks
    ────────────────────────────────────────────────────────────────────────── */
 
+function sanitizeFillBlankTemplate(template) {
+  // When AI puts a {{blank}} inside a $...$ or $$...$$ math span the blank
+  // marker breaks the LaTeX context and KaTeX throws/renders garbage.
+  // Strip the delimiters from any math span that contains a blank so the
+  // surrounding punctuation renders as plain text instead.
+  let t = template;
+  // Display math first (greedy-safe: $$...$$)
+  t = t.replace(/\$\$([\s\S]*?)\$\$/g, (match, inner) =>
+    /\{\{\d+\}\}/.test(inner) ? inner : match,
+  );
+  // Inline math ($...$) — [^$\n]+ avoids runaway matching
+  t = t.replace(/\$([^$\n]+?)\$/g, (match, inner) =>
+    /\{\{\d+\}\}/.test(inner) ? inner : match,
+  );
+  return t;
+}
+
 function parseFillBlankTemplate(template) {
   // Splits "There are {{0}} bones in {{1}}" into
   // [{text: "There are "}, {blank: 0}, {text: " bones in "}, {blank: 1}]
+  const sanitized = sanitizeFillBlankTemplate(template || '');
   const parts = [];
   const regex = /\{\{(\d+)\}\}/g;
   let last = 0;
   let m;
-  while ((m = regex.exec(template)) !== null) {
-    if (m.index > last) parts.push({ text: template.slice(last, m.index) });
+  while ((m = regex.exec(sanitized)) !== null) {
+    if (m.index > last) parts.push({ text: sanitized.slice(last, m.index) });
     parts.push({ blank: Number(m[1]) });
     last = m.index + m[0].length;
   }
-  if (last < template.length) parts.push({ text: template.slice(last) });
+  if (last < sanitized.length) parts.push({ text: sanitized.slice(last) });
   return parts;
 }
 
@@ -387,7 +405,7 @@ function FillBlankSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
             {slide.blanks.map((b, i) => (
               <li key={i}>
                 <span className="font-mono text-text-dim mr-2">{i + 1}.</span>
-                {b.answers.join(' / ')}
+                <MathText>{b.answers.join(' / ')}</MathText>
               </li>
             ))}
           </ul>
@@ -711,7 +729,7 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
       <Kicker>Put in order</Kicker>
       {slide.prompt && (
         <h3 className="text-lg md:text-xl font-display leading-snug text-text-primary mb-4">
-          {slide.prompt}
+          <MathText>{slide.prompt}</MathText>
         </h3>
       )}
       {!showFeedback && (
@@ -762,7 +780,7 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
         <div className="mt-4 text-sm text-text-muted">
           <p className="font-bold uppercase tracking-[0.2em] text-[10px] mb-1.5 text-rose-500">Correct order</p>
           <ol className="list-decimal list-inside space-y-0.5">
-            {correctOrder.map((i) => <li key={i}>{items[i]}</li>)}
+            {correctOrder.map((i) => <li key={i}><MathText>{items[i]}</MathText></li>)}
           </ol>
         </div>
       )}
@@ -1153,7 +1171,7 @@ function HotspotSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
     <div className="max-w-3xl mx-auto w-full">
       <Kicker>Hotspot</Kicker>
       <h3 className="text-lg md:text-xl font-display leading-snug text-text-primary mb-4">
-        {slide.question}
+        <MathText>{slide.question}</MathText>
       </h3>
 
       <div className="relative w-full rounded-2xl overflow-hidden border border-line-soft select-none">
@@ -1253,7 +1271,9 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
     <div className="max-w-4xl mx-auto w-full">
       <Kicker>Timeline</Kicker>
       {slide.prompt && (
-        <h3 className="text-lg md:text-xl font-display leading-snug text-text-primary mb-4">{slide.prompt}</h3>
+        <h3 className="text-lg md:text-xl font-display leading-snug text-text-primary mb-4">
+          <MathText>{slide.prompt}</MathText>
+        </h3>
       )}
       {!showFeedback && (
         <p className="text-sm text-text-muted mb-5">Drag the events into the correct chronological order.</p>
@@ -1293,7 +1313,7 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
                   <p className="text-sm font-medium text-text-primary leading-snug"><MathText>{event.label}</MathText></p>
                   {showFeedback && event.year && (
                     <p className={`mt-1.5 text-[11px] font-mono font-bold ${inRightSpot ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
-                      {event.year}
+                      {String(event.year).replace(/^\$+|\$+$/g, '')}
                     </p>
                   )}
                 </div>
@@ -1323,7 +1343,8 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
           <ol className="flex flex-wrap gap-2">
             {correctOrder.map((i) => (
               <li key={i} className="px-2 py-1 rounded-lg bg-surface-raised border border-line-soft text-xs">
-                {i + 1}. {events[i].label}{events[i].year ? ` (${events[i].year})` : ''}
+                {i + 1}. <MathText>{events[i].label}</MathText>
+                {events[i].year ? ` (${String(events[i].year).replace(/^\$+|\$+$/g, '')})` : ''}
               </li>
             ))}
           </ol>

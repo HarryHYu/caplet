@@ -234,7 +234,7 @@ export function normalizeSlide(slide) {
     case 'timeline': {
       const events = (Array.isArray(slide.events) ? slide.events : []).map((e) => ({
         label: s(e?.label),
-        year: e?.year != null ? s(e.year) : undefined,
+        year: e?.year != null ? s(e.year).replace(/^\$+|\$+$/g, '').trim() || undefined : undefined,
       }));
       return {
         type: 'timeline',
