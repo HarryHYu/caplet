@@ -677,6 +677,24 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
           Check Matches
         </button>
       )}
+      {showFeedback && !allCorrect && (
+        <div className="mt-4 text-sm text-text-muted">
+          <p className="font-bold uppercase tracking-[0.2em] text-[10px] mb-2 text-rose-500">Correct matches</p>
+          <div className="space-y-1.5">
+            {pairs.map((p, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                <span className="flex-1 px-2 py-1.5 rounded-lg bg-surface-soft border border-emerald-500/30 text-text-primary">
+                  <MathText>{p.left}</MathText>
+                </span>
+                <span className="text-text-dim shrink-0">→</span>
+                <span className="flex-1 px-2 py-1.5 rounded-lg bg-surface-soft border border-emerald-500/30 text-text-primary">
+                  <MathText>{p.right}</MathText>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}
       {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>}
     </div>
@@ -851,11 +869,11 @@ function DividerSlide({ slide }) {
     <div className="flex-1 flex flex-col items-center justify-center text-center gap-6 max-w-2xl mx-auto w-full">
       <span className="w-16 h-px bg-accent" />
       <h2 className="text-3xl md:text-5xl font-display font-bold leading-tight text-text-primary">
-        {slide.title}
+        <MathText>{slide.title}</MathText>
       </h2>
       {slide.subtitle && (
         <p className="text-base md:text-lg font-serif italic text-text-muted max-w-xl">
-          {slide.subtitle}
+          <MathText>{slide.subtitle}</MathText>
         </p>
       )}
       <span className="w-16 h-px bg-accent" />
@@ -1035,7 +1053,7 @@ function ChartSlide({ slide }) {
 
   return (
     <div className="max-w-3xl mx-auto w-full flex flex-col gap-4">
-      {title && <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">{title}</h3>}
+      {title && <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary"><MathText>{title}</MathText></h3>}
       <div className="rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-6">
         <ResponsiveContainer width="100%" height={320}>
           {chartContent()}
@@ -1132,8 +1150,8 @@ function EmbedSlide({ slide }) {
           src={slide.url}
           title={slide.title || 'Interactive content'}
           className="w-full h-full"
-          allow="fullscreen"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          allow="accelerometer; autoplay; fullscreen; microphone"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads"
         />
       </div>
       {slide.caption && <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}

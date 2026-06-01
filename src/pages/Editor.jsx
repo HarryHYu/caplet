@@ -33,11 +33,17 @@ function slideSummary(slide) {
     case 'media': return n.url ? `${n.source}: ${n.url}` : `(no ${n.source} url)`;
     case 'choice': return n.question || '(no question)';
     case 'fillblank': return n.template || '(no template)';
-    case 'cards': return `${n.cards.length} card${n.cards.length === 1 ? '' : 's'}`;
+    case 'cards': return `${n.cards.length} card${n.cards.length === 1 ? '' : 's'} · ${n.mode}`;
     case 'match': return `${n.pairs.length} pairs`;
     case 'order': return n.prompt || `${n.items.length} items`;
     case 'table': return `${n.rows.length} × ${n.rows[0]?.length || 0} table`;
     case 'divider': return n.title || '(no title)';
+    case 'chart': return `${n.chartType || 'bar'} chart${n.title ? ` · ${n.title}` : ''}`;
+    case 'diagram': return (n.code || '').split('\n')[0]?.slice(0, 60) || 'Diagram';
+    case 'embed': return n.title || n.url?.replace(/^https?:\/\//, '').slice(0, 60) || '(no url)';
+    case 'hotspot': return n.question || '(no question)';
+    case 'timeline': return n.prompt || `${(n.events || []).length} events`;
+    case 'desmos': return n.title || (n.expressions || []).map((e) => e.latex).join(', ').slice(0, 60) || 'Desmos graph';
     default: return n.type;
   }
 }

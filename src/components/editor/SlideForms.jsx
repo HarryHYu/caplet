@@ -399,18 +399,20 @@ function TrueFalseForm({ slide, onChange }) {
 
 function FillBlankForm({ slide, onChange }) {
   const blanks = slide.blanks || [];
-  // Sync the number of blanks to the count of {{N}} markers in the template
-  // whenever the template changes.
-  const syncBlanks = (template) => {
+  const mode = slide.mode || 'textbox';
+
+  // Keep blank count in sync with {{N}} markers in the template.
+  const syncBlanks = (template, currentBlanks) => {
     const matches = (template.match(/\{\{(\d+)\}\}/g) || []).map((s) => Number(s.slice(2, -2)));
     const max = matches.length ? Math.max(...matches) + 1 : 0;
     const next = [];
     for (let i = 0; i < max; i++) {
-      next.push(blanks[i] || { answers: [''] });
+      next.push(currentBlanks[i] || { answers: [''] });
     }
     return next;
   };
 
+  // Textbox helpers
   const setAnswer = (i, j, val) => {
     const next = blanks.map((b, k) => {
       if (k !== i) return b;
@@ -435,46 +437,145 @@ function FillBlankForm({ slide, onChange }) {
     onChange({ blanks: next });
   };
 
+  // Dropdown helpers
+  const setOption = (blankIdx, optIdx, val) => {
+    const next = blanks.map((b, k) => {
+      if (k !== blankIdx) return b;
+      const options = [...(b.options || [])];
+      options[optIdx] = val;
+      return { ...b, options };
+    });
+    onChange({ blanks: next });
+  };
+  const addOption = (blankIdx) => {
+    const next = blanks.map((b, k) =>
+      k === blankIdx ? { ...b, options: [...(b.options || ['']), ''] } : b,
+    );
+    onChange({ blanks: next });
+  };
+  const removeOption = (blankIdx, optIdx) => {
+    const next = blanks.map((b, k) => {
+      if (k !== blankIdx) return b;
+      const options = (b.options || []).filter((_, x) => x !== optIdx);
+      return { ...b, options: options.length ? options : [''] };
+    });
+    onChange({ blanks: next });
+  };
+  const setCorrectOption = (blankIdx, val) => {
+    const next = blanks.map((b, k) =>
+      k === blankIdx ? { ...b, answers: [val] } : b,
+    );
+    onChange({ blanks: next });
+  };
+
+  const onModeChange = (newMode) => {
+    // When switching to dropdown, pre-populate options from existing answers if possible.
+    if (newMode === 'dropdown') {
+      const next = blanks.map((b) => ({
+        ...b,
+        options: b.options?.length ? b.options : [...(b.answers || [''])],
+      }));
+      onChange({ mode: newMode, blanks: next });
+    } else {
+      onChange({ mode: newMode });
+    }
+  };
+
   return (
     <div className="space-y-3">
       <Field
         label="Template"
-        hint="Use {{0}}, {{1}}, … for each blank. Order matches the answer rows below."
+        hint="Use {{0}}, {{1}}, … for each blank. Order matches the blank editors below."
       >
         <TextArea
           rows={3}
           value={slide.template || ''}
-          onChange={(e) => onChange({ template: e.target.value, blanks: syncBlanks(e.target.value) })}
+          onChange={(e) => onChange({ template: e.target.value, blanks: syncBlanks(e.target.value, blanks) })}
           placeholder="The capital of Australia is {{0}}."
         />
       </Field>
+      <Field label="Input mode">
+        <Select
+          value={mode}
+          onChange={(e) => onModeChange(e.target.value)}
+          options={[
+            { value: 'textbox', label: 'Text input — student types the answer' },
+            { value: 'dropdown', label: 'Dropdown — student picks from a list' },
+          ]}
+        />
+      </Field>
       {blanks.map((b, i) => (
-        <div key={i} className="rounded-lg border border-line-soft p-3 bg-surface-soft/50">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">
-              Blank {i + 1} answers
-            </span>
-            <PillButton onClick={() => addAnswer(i)} tone="primary">+ Alt answer</PillButton>
-          </div>
-          <div className="space-y-1.5">
-            {(b.answers || ['']).map((ans, j) => (
-              <div key={j} className="flex items-center gap-2">
-                <TextInput
-                  value={ans}
-                  onChange={(e) => setAnswer(i, j, e.target.value)}
-                  placeholder={j === 0 ? 'Correct answer' : 'Alternative spelling / answer'}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeAnswer(i, j)}
-                  disabled={(b.answers || []).length <= 1}
-                  className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-rose-500 disabled:opacity-30"
-                >
-                  ×
-                </button>
+        <div key={i} className="rounded-lg border border-line-soft p-3 bg-surface-soft/50 space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">Blank {i + 1}</p>
+          {mode === 'dropdown' ? (
+            <>
+              <p className="text-[11px] text-text-dim">Add all choices. Click ✓ to mark the correct one.</p>
+              <div className="space-y-1.5">
+                {(b.options || ['']).map((opt, j) => {
+                  const isCorrect = (b.answers || [])[0] === opt && opt !== '';
+                  return (
+                    <div key={j} className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => opt && setCorrectOption(i, opt)}
+                        title="Mark as correct answer"
+                        className={`shrink-0 w-7 h-7 rounded-full border flex items-center justify-center text-xs font-bold transition-colors ${
+                          isCorrect
+                            ? 'border-emerald-500 bg-emerald-500/15 text-emerald-600'
+                            : 'border-line-soft text-text-dim hover:border-emerald-400 hover:text-emerald-500'
+                        }`}
+                      >
+                        ✓
+                      </button>
+                      <TextInput
+                        value={opt}
+                        onChange={(e) => setOption(i, j, e.target.value)}
+                        placeholder={`Choice ${j + 1}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeOption(i, j)}
+                        disabled={(b.options || []).length <= 1}
+                        className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-rose-500 disabled:opacity-30"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+              <PillButton onClick={() => addOption(i)} tone="primary">+ Add choice</PillButton>
+              {!(b.answers || [])[0] && (
+                <p className="text-[11px] text-amber-600">No correct answer marked — click ✓ next to the right choice.</p>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-text-dim">Accepted answers (first is primary)</span>
+                <PillButton onClick={() => addAnswer(i)} tone="primary">+ Alt answer</PillButton>
+              </div>
+              <div className="space-y-1.5">
+                {(b.answers || ['']).map((ans, j) => (
+                  <div key={j} className="flex items-center gap-2">
+                    <TextInput
+                      value={ans}
+                      onChange={(e) => setAnswer(i, j, e.target.value)}
+                      placeholder={j === 0 ? 'Correct answer' : 'Alternative spelling / phrasing'}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeAnswer(i, j)}
+                      disabled={(b.answers || []).length <= 1}
+                      className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-rose-500 disabled:opacity-30"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       ))}
       <Field label="Explanation (shown after answering)">
@@ -1017,29 +1118,25 @@ function PhETPickerModal({ onSelect, onClose }) {
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || '';
 
 function MapsBuilder({ onApply, onClose }) {
-  const [mode, setMode] = useState('search');
   const [query, setQuery] = useState('');
-  const [zoom, setZoom] = useState(10);
+  const [zoom, setZoom] = useState(12);
   const [mapType, setMapType] = useState('roadmap');
 
   const buildUrl = () => {
-    if (!MAPS_KEY) return null;
-    const base = 'https://www.google.com/maps/embed/v1';
-    const params = new URLSearchParams({ key: MAPS_KEY });
-    if (mode === 'search') {
-      params.set('q', query);
-    } else {
-      params.set('q', query);
-      params.set('zoom', zoom);
-      params.set('maptype', mapType);
-    }
-    return `${base}/${mode === 'satellite' ? 'place' : 'search'}?${params}`;
+    if (!MAPS_KEY || !query.trim()) return null;
+    const params = new URLSearchParams({
+      key: MAPS_KEY,
+      q: query.trim(),
+      zoom: String(zoom),
+      maptype: mapType,
+    });
+    return `https://www.google.com/maps/embed/v1/place?${params}`;
   };
 
   const apply = () => {
     const url = buildUrl();
     if (!url) return;
-    onApply({ url, title: query || 'Map', aspect: '16:9' });
+    onApply({ url, title: query.trim() || 'Map', aspect: '16:9' });
     onClose();
   };
 
