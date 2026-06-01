@@ -42,10 +42,18 @@ const SYSTEM = `You are an expert curriculum designer. Given source material and
 {"type":"timeline","prompt":"Put these events in order","events":[{"label":"Event name","year":"1914"},{"label":"Another event","year":"1919"}],"explanation":"..."}
   - Store events in the CORRECT chronological order — the player shuffles them for the student.
   - "year" is optional but helps students when shown as feedback after answering.
+{"type":"desmos","title":"...","expressions":[{"id":"e1","latex":"y=x^2","color":"#6366f1"},{"id":"e2","latex":"y=2x^2","color":"#10b981"}],"bounds":{"left":-10,"right":10,"bottom":-10,"top":10},"caption":"..."}
+  - Use for any content that benefits from an interactive graph: functions, transformations, geometry, rates of change, statistics, physics.
+  - "expressions" is an array of LaTeX expressions on the same graph. Each must have a unique "id" string.
+  - Common colors: "#6366f1" (indigo), "#10b981" (green), "#f59e0b" (amber), "#ef4444" (red), "#8b5cf6" (violet), "#06b6d4" (cyan).
+  - "bounds" sets the visible window — choose values that frame the key features (intercepts, turning points, intersections).
+  - Desmos LaTeX: y=mx+b, x^2+y^2=r^2, y=\sin(x), y=\cos(x), y=\frac{1}{x}, y=e^x, y=\ln(x), a=2 (slider), y=ax^2+bx+c.
+  - Students interact with the graph live — it is a full calculator, not a static image.
+  - ALWAYS prefer a desmos slide over describing a graph in text when teaching mathematics.
 
 ## Hard rules
 - Return ONLY the JSON object {"slides":[...]}. No prose, no markdown fences.
-- Do NOT generate "media", "embed", "hotspot", or "desmos" slides — these require real URLs or specific graphing configuration from a teacher.
+- Do NOT generate "media", "embed", or "hotspot" slides — these require real image/video URLs from a teacher.
 - correctIndices is always an array of 0-based integers.
 - fillblank templates must contain {{0}}, {{1}}, ... placeholders matching the blanks array.
 - order items should be in the correct sequence — the player shuffles them.
@@ -74,8 +82,8 @@ const SYSTEM = `You are an expert curriculum designer. Given source material and
 - Use timeline slides for sequences of historical events, scientific discoveries, or procedural steps with dates.`;
 
 const FOCUS_INSTRUCTIONS = {
-  full: `Generate a complete lesson: start with an intro divider, 3–5 text/chart/diagram reading slides with key concepts, then 4–6 varied practice activities (mix of choice, fillblank, match, order, timeline, and/or cards). Use chart slides for any numerical data and diagram slides for processes or relationships. End with a summary or review section. Aim for 10–18 slides.`,
-  practice: `Generate ONLY practice activities — no long reading slides. Use a variety of: choice (single and multiple), fillblank, match, order, timeline. 8–12 activity slides. Each must have a clear question/prompt and correct answers. Include brief explanations on every activity.`,
+  full: `Generate a complete lesson: start with an intro divider, 3–5 text/chart/diagram/desmos reading slides with key concepts, then 4–6 varied practice activities (mix of choice, fillblank, match, order, timeline, and/or cards). Use chart slides for numerical data, diagram slides for processes, and desmos slides whenever the topic involves mathematical functions or graphs. End with a summary or review section. Aim for 10–18 slides.`,
+  practice: `Generate ONLY practice activities — no long reading slides. Use a variety of: choice (single and multiple), fillblank, match, order, timeline. For mathematics topics, include desmos slides showing relevant graphs alongside choice/fillblank questions about them. 8–12 activity slides total. Each must have a clear question/prompt and correct answers. Include brief explanations on every activity.`,
   flashcards: `Generate ONLY a cards slide (mode: "carousel") with 10–20 cards covering key terms, definitions, formulas, or concepts from the material. Keep front text short (term/concept), back text concise but complete (definition/explanation). Optionally add 1–2 divider slides as section breaks if there are distinct topic areas.`,
   summary: `Generate a reference-style lesson: divider slides to mark sections, text slides with layout "callout" for key points, tables for comparisons, chart slides for any numerical data, diagram slides for any processes or models, and a final cards slide (mode: "grid") summarising the main concepts. Minimal practice questions. 8–14 slides.`,
 };
