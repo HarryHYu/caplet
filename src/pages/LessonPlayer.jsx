@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
@@ -140,6 +140,44 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
+   SlideAnimationWrapper
+   Wraps slide content with a restart-able slide-in animation without ever
+   unmounting its children. When `isActive` flips to true the CSS animation
+   is re-triggered via a synchronous DOM reflow in useLayoutEffect.
+   ────────────────────────────────────────────────────────────────────────── */
+
+function SlideAnimationWrapper({ isActive, children }) {
+  const ref = useRef(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || !isActive) return;
+    // Strip the animation, force a reflow, then restore so it replays from 0.
+    el.style.animation = 'none';
+    // eslint-disable-next-line no-unused-expressions
+    el.offsetHeight;
+    el.style.animation = '';
+  }, [isActive]);
+
+  useEffect(() => {
+    if (!isActive) return;
+    // Desmos (and other canvas/WebGL libs) may have skipped painting while the
+    // container was visibility:hidden. Firing a synthetic resize event after the
+    // slide becomes visible prompts them to re-measure and repaint.
+    window.dispatchEvent(new Event('resize'));
+  }, [isActive]);
+
+  return (
+    <div
+      ref={ref}
+      className={`min-h-full p-5 md:p-8 lg:p-12 flex flex-col${isActive ? ' animate-lesson-slide-in' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
    Main component
    ────────────────────────────────────────────────────────────────────────── */
 
@@ -159,7 +197,6 @@ const LessonPlayer = () => {
   const [progress, setProgress] = useState({ lessonProgress: [], courseProgress: null });
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [visited, setVisited] = useState(() => new Set([0]));
-  const [animKey, setAnimKey] = useState(0);
   // Floating Desmos calculator panel
   const [calcOpen, setCalcOpen] = useState(false);
   const [calcMode, setCalcMode] = useState('graphing'); // 'graphing' | 'scientific'
@@ -270,7 +307,6 @@ const LessonPlayer = () => {
       if (!hasSlides) return;
       if (newIndex < 0 || newIndex >= slides.length) return;
       setCurrentSlideIndex(newIndex);
-      setAnimKey((k) => k + 1);
       setVisited((prev) => {
         if (prev.has(newIndex)) return prev;
         const next = new Set(prev);
@@ -576,7 +612,11 @@ const LessonPlayer = () => {
                 <div className="w-32 h-px bg-accent" />
               </div>
 
-              {/* Pre-render window: offsets -1, 0, +1, +2 relative to current */}
+              {/* Pre-render window: offsets -1, 0, +1, +2 relative to current.
+                  All four slide wrappers share stable key={i} so SlideRenderer
+                  (and its Desmos/Mermaid children) is NEVER unmounted by a
+                  navigation event. The animation is restarted without remounting
+                  by SlideAnimationWrapper via a useLayoutEffect + DOM reflow. */}
               {[-1, 0, 1, 2].map((offset) => {
                 const i = currentSlideIndex + offset;
                 if (i < 0 || i >= slides.length) return null;
@@ -588,18 +628,14 @@ const LessonPlayer = () => {
                     style={isActive ? {} : { transform: 'translateX(100vw)', visibility: 'hidden' }}
                     aria-hidden={!isActive}
                   >
-                    {/* Re-key the animation wrapper on nav so slide-in fires each time */}
-                    <div
-                      key={isActive ? animKey : i}
-                      className={`${isActive ? 'animate-lesson-slide-in' : ''} min-h-full p-5 md:p-8 lg:p-12 flex flex-col`}
-                    >
+                    <SlideAnimationWrapper isActive={isActive}>
                       <SlideRenderer
                         slide={slides[i]}
                         alreadyAnswered={quizScores[String(i)] !== undefined}
                         alreadyCorrect={quizScores[String(i)] === true}
                         onSubmit={(isCorrect) => recordQuestionAnswer(i, isCorrect)}
                       />
-                    </div>
+                    </SlideAnimationWrapper>
                   </div>
                 );
               })}

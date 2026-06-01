@@ -1382,7 +1382,9 @@ function DesmosSlide({ slide }) {
   return (
     <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-4">
       {slide.title && (
-        <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">{slide.title}</h3>
+        <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">
+          <MathText>{slide.title}</MathText>
+        </h3>
       )}
       <div className="flex-1 min-h-0 rounded-2xl border border-line-soft overflow-hidden" style={{ minHeight: '420px' }}>
         <DesmosCalculator
@@ -1393,7 +1395,9 @@ function DesmosSlide({ slide }) {
         />
       </div>
       {slide.caption && (
-        <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>
+        <p className="text-center text-sm font-serif italic text-text-muted">
+          <MathText>{slide.caption}</MathText>
+        </p>
       )}
     </div>
   );
