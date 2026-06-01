@@ -6,7 +6,7 @@
 
 export const CANONICAL_TYPES = [
   'text', 'media', 'choice', 'fillblank', 'cards', 'match', 'order', 'table', 'divider',
-  'chart', 'diagram', 'embed', 'hotspot', 'timeline',
+  'chart', 'diagram', 'embed', 'hotspot', 'timeline', 'desmos',
 ];
 
 const MEDIA_SOURCES = ['image', 'video', 'audio', 'embed'];
@@ -245,6 +245,27 @@ export function normalizeSlide(slide) {
       };
     }
 
+    case 'desmos':
+      return {
+        type: 'desmos',
+        title: slide.title || undefined,
+        expressions: (Array.isArray(slide.expressions) ? slide.expressions : []).map((e) => ({
+          id: s(e?.id || e?.latex?.slice(0, 10) || 'expr'),
+          latex: s(e?.latex),
+          ...(e?.color ? { color: s(e.color) } : {}),
+          ...(e?.hidden ? { hidden: true } : {}),
+        })),
+        bounds: slide.bounds
+          ? {
+              left: Number(slide.bounds.left ?? -10),
+              right: Number(slide.bounds.right ?? 10),
+              bottom: Number(slide.bounds.bottom ?? -10),
+              top: Number(slide.bounds.top ?? 10),
+            }
+          : undefined,
+        caption: slide.caption || undefined,
+      };
+
     default:
       return { ...slide };
   }
@@ -321,6 +342,9 @@ export function warnSlide(slide) {
     case 'timeline':
       if (!n.events?.length || n.events.length < 2) w.push('Timeline needs at least 2 events');
       n.events?.forEach((e, i) => { if (!e.label?.trim()) w.push(`Event ${i + 1} has no label`); });
+      break;
+    case 'desmos':
+      // expressions are optional — a blank Desmos canvas is valid
       break;
   }
   return w;
@@ -407,6 +431,15 @@ export const SLIDE_DEFAULTS = {
     caption: '',
     explanation: '',
   }),
+  desmos: () => ({
+    type: 'desmos',
+    title: '',
+    expressions: [
+      { id: 'e1', latex: 'y=x^2', color: '#6366f1' },
+    ],
+    bounds: { left: -10, right: 10, bottom: -10, top: 10 },
+    caption: '',
+  }),
 };
 
 /**
@@ -426,7 +459,8 @@ export const SLIDE_PALETTE = [
   { type: 'hotspot',   label: 'Hotspot',      desc: 'Click the correct region on an image' },
   { type: 'chart',     label: 'Chart',        desc: 'Bar, line, pie, area or scatter chart' },
   { type: 'diagram',   label: 'Diagram',      desc: 'Flowchart or diagram (Mermaid syntax)' },
-  { type: 'embed',     label: 'Embed',        desc: 'Desmos, PhET, GeoGebra or any URL' },
+  { type: 'desmos',    label: 'Desmos Graph', desc: 'Interactive graphing calculator with pre-loaded expressions' },
+  { type: 'embed',     label: 'Embed',        desc: 'PhET, GeoGebra or any iframe URL' },
   { type: 'table',     label: 'Table',        desc: 'Reference grid' },
   { type: 'divider',   label: 'Divider',      desc: 'Section break / heading' },
 ];
@@ -452,6 +486,7 @@ export function slideKindLabel(slide) {
     case 'hotspot': return 'Hotspot';
     case 'chart': return 'Chart';
     case 'diagram': return 'Diagram';
+    case 'desmos': return slide.title || 'Desmos Graph';
     case 'embed':
       if (slide.title) return slide.title;
       return 'Interactive';

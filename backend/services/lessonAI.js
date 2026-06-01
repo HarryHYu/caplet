@@ -45,7 +45,7 @@ const SYSTEM = `You are an expert curriculum designer. Given source material and
 
 ## Hard rules
 - Return ONLY the JSON object {"slides":[...]}. No prose, no markdown fences.
-- Do NOT generate "media", "embed", or "hotspot" slides — these require real image/video URLs.
+- Do NOT generate "media", "embed", "hotspot", or "desmos" slides — these require real URLs or specific graphing configuration from a teacher.
 - correctIndices is always an array of 0-based integers.
 - fillblank templates must contain {{0}}, {{1}}, ... placeholders matching the blanks array.
 - order items should be in the correct sequence — the player shuffles them.

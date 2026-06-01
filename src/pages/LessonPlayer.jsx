@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import SlideRenderer from '../components/lesson/SlideRenderer';
+import DesmosCalculator from '../components/lesson/DesmosCalculator';
 import { normalizeSlide, INTERACTIVE_TYPES, slideKindLabel } from '../lib/slideSchema';
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -159,6 +160,9 @@ const LessonPlayer = () => {
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [visited, setVisited] = useState(() => new Set([0]));
   const [animKey, setAnimKey] = useState(0);
+  // Floating Desmos calculator panel
+  const [calcOpen, setCalcOpen] = useState(false);
+  const [calcMode, setCalcMode] = useState('graphing'); // 'graphing' | 'scientific'
   // savedSlides: Map of slideIndex -> savedSlideId for the current lesson
   const [savedSlides, setSavedSlides] = useState(new Map());
   const [savingSlide, setSavingSlide] = useState(false);
@@ -474,6 +478,23 @@ const LessonPlayer = () => {
                 </span>
               )}
 
+              {/* Calculator toggle */}
+              <button
+                type="button"
+                onClick={() => setCalcOpen((v) => !v)}
+                className={`inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border transition-colors ${
+                  calcOpen
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim'
+                }`}
+                aria-label="Toggle calculator"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 7h6M9 11h2m4 0h-2m-2 4h2M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+                </svg>
+                <span className="hidden md:inline text-[11px] font-bold uppercase tracking-[0.2em]">Calc</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setOutlineOpen(true)}
@@ -665,6 +686,50 @@ const LessonPlayer = () => {
           </div>
         )}
       </main>
+
+      {/* ─────── Floating Desmos calculator panel ─────── */}
+      {calcOpen && (
+        <div className="fixed bottom-0 right-0 z-40 flex flex-col"
+          style={{ width: 'min(480px, 100vw)', height: 'min(560px, calc(100dvh - 7rem))' }}>
+          {/* Panel chrome */}
+          <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-surface-raised border border-b-0 border-line-soft rounded-t-2xl shadow-2xl">
+            {/* Mode toggle */}
+            <div className="flex items-center gap-1 bg-surface-soft rounded-full p-0.5">
+              {['graphing', 'scientific'].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setCalcMode(m)}
+                  className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-[0.15em] transition-all ${
+                    calcMode === m
+                      ? 'bg-surface-raised shadow-sm text-text-primary'
+                      : 'text-text-dim hover:text-text-primary'
+                  }`}
+                >
+                  {m === 'graphing' ? 'Graphing' : 'Scientific'}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setCalcOpen(false)}
+              className="w-7 h-7 rounded-full border border-line-soft text-text-muted hover:text-text-primary flex items-center justify-center transition-colors"
+              aria-label="Close calculator"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          {/* Calculator itself */}
+          <div className="flex-1 min-h-0 border border-t-0 border-line-soft rounded-b-2xl overflow-hidden shadow-2xl">
+            <DesmosCalculator
+              mode={calcMode}
+              className="h-full bg-white"
+            />
+          </div>
+        </div>
+      )}
 
       {/* ─────── Outline drawer ─────── */}
       {outlineOpen && (

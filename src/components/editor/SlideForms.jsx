@@ -1153,6 +1153,101 @@ function TimelineForm({ slide, onChange }) {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
+   Desmos
+   ────────────────────────────────────────────────────────────────────────── */
+
+const EXPR_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+
+function DesmosForm({ slide, onChange }) {
+  const expressions = slide.expressions || [];
+  const bounds = slide.bounds || { left: -10, right: 10, bottom: -10, top: 10 };
+
+  const updateExpr = (i, patch) => {
+    const next = expressions.map((e, idx) => (idx === i ? { ...e, ...patch } : e));
+    onChange({ expressions: next });
+  };
+
+  const addExpr = () => {
+    const id = `e${expressions.length + 1}`;
+    onChange({ expressions: [...expressions, { id, latex: '', color: EXPR_COLORS[expressions.length % EXPR_COLORS.length] }] });
+  };
+
+  const removeExpr = (i) => onChange({ expressions: expressions.filter((_, idx) => idx !== i) });
+
+  const updateBounds = (key, val) => {
+    const parsed = parseFloat(val);
+    if (!Number.isNaN(parsed)) onChange({ bounds: { ...bounds, [key]: parsed } });
+  };
+
+  return (
+    <div className="space-y-4">
+      <Field label="Title (optional)">
+        <TextInput
+          placeholder="e.g. Explore the parabola"
+          value={slide.title || ''}
+          onChange={(e) => onChange({ title: e.target.value })}
+        />
+      </Field>
+
+      <Field
+        label="Expressions"
+        hint="Enter LaTeX. e.g. y=x^2  or  x^2+y^2=25  or  a=2 (slider)"
+      >
+        <div className="space-y-2 mb-2">
+          {expressions.map((expr, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                type="color"
+                value={expr.color || '#6366f1'}
+                onChange={(e) => updateExpr(i, { color: e.target.value })}
+                className="w-8 h-8 rounded cursor-pointer border border-line-soft shrink-0"
+                title="Expression colour"
+              />
+              <input
+                type="text"
+                value={expr.latex || ''}
+                onChange={(e) => updateExpr(i, { latex: e.target.value, id: expr.id || `e${i + 1}` })}
+                placeholder="LaTeX expression"
+                className="flex-1 rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm font-mono text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+              />
+              <button
+                type="button"
+                onClick={() => removeExpr(i)}
+                disabled={expressions.length <= 1}
+                className="text-text-dim hover:text-rose-500 disabled:opacity-30 text-sm px-1 shrink-0"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        <PillButton onClick={addExpr} tone="primary">+ Add expression</PillButton>
+      </Field>
+
+      <Field label="Viewport bounds (optional)" hint="Set the visible window of the graph.">
+        <div className="grid grid-cols-2 gap-2">
+          {[['left', 'Left (x min)'], ['right', 'Right (x max)'], ['bottom', 'Bottom (y min)'], ['top', 'Top (y max)']].map(([k, label]) => (
+            <label key={k} className="block">
+              <span className="block text-[10px] text-text-dim mb-1">{label}</span>
+              <TextInput
+                type="number"
+                value={bounds[k] ?? ''}
+                onChange={(e) => updateBounds(k, e.target.value)}
+                placeholder={k === 'left' || k === 'bottom' ? '-10' : '10'}
+              />
+            </label>
+          ))}
+        </div>
+      </Field>
+
+      <Field label="Caption (optional)">
+        <TextInput value={slide.caption || ''} onChange={(e) => onChange({ caption: e.target.value })} />
+      </Field>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
    Dispatcher
    ────────────────────────────────────────────────────────────────────────── */
 
@@ -1179,6 +1274,7 @@ export default function SlideForm({ slide, onChange, lessonId }) {
     case 'embed': return <EmbedForm slide={slide} onChange={update} />;
     case 'hotspot': return <HotspotForm slide={slide} onChange={update} lessonId={lessonId} />;
     case 'timeline': return <TimelineForm slide={slide} onChange={update} />;
+    case 'desmos': return <DesmosForm slide={slide} onChange={update} />;
     default:
       return (
         <p className="text-sm text-text-muted italic">

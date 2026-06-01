@@ -12,7 +12,7 @@
 
 const CANONICAL_TYPES = [
   'text', 'media', 'choice', 'fillblank', 'cards', 'match', 'order', 'table', 'divider',
-  'chart', 'diagram', 'embed', 'hotspot', 'timeline',
+  'chart', 'diagram', 'embed', 'hotspot', 'timeline', 'desmos',
 ];
 
 const MEDIA_SOURCES = ['image', 'video', 'audio', 'embed'];
@@ -252,6 +252,27 @@ function normalizeSlide(slide) {
       };
     }
 
+    case 'desmos':
+      return {
+        type: 'desmos',
+        title: slide.title || undefined,
+        expressions: arr(slide.expressions).map((e) => ({
+          id: s(e?.id || 'expr'),
+          latex: s(e?.latex),
+          ...(e?.color ? { color: s(e.color) } : {}),
+          ...(e?.hidden ? { hidden: true } : {}),
+        })),
+        bounds: slide.bounds
+          ? {
+              left: Number(slide.bounds.left ?? -10),
+              right: Number(slide.bounds.right ?? 10),
+              bottom: Number(slide.bounds.bottom ?? -10),
+              top: Number(slide.bounds.top ?? 10),
+            }
+          : undefined,
+        caption: slide.caption || undefined,
+      };
+
     default:
       // Unknown — pass through; player will render an "unsupported" placeholder.
       return { ...slide };
@@ -326,6 +347,9 @@ function validateSlide(slide, index) {
       break;
     case 'timeline':
       if (!n.events?.length || n.events.length < 2) errors.push(`slide ${index} (timeline): at least 2 events required`);
+      break;
+    case 'desmos':
+      // expressions are optional — a blank canvas is valid
       break;
   }
   return errors;
