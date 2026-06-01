@@ -98,6 +98,12 @@ const User = sequelize.define('User', {
     set(value) {
       this.setDataValue('avatarConfig', value ? JSON.stringify(value) : null);
     }
+  },
+  // Virtual currency wallet (coins) for the cosmetics shop.
+  coins: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 100
   }
 }, {
   tableName: 'users',
