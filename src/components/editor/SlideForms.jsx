@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import api from '../../services/api';
+import { PHET_SUBJECTS, getPhetEmbedUrl } from '../../lib/phetSims';
 
 /* ──────────────────────────────────────────────────────────────────────────
    Shared inputs
@@ -921,43 +922,243 @@ function DiagramForm({ slide, onChange }) {
    Embed editor
    ────────────────────────────────────────────────────────────────────────── */
 
-const EMBED_PRESETS = [
-  { label: 'Desmos graphing calculator', url: 'https://www.desmos.com/calculator' },
-  { label: 'GeoGebra classic', url: 'https://www.geogebra.org/classic' },
-  { label: 'PhET — projectile motion', url: 'https://phet.colorado.edu/sims/html/projectile-motion/latest/projectile-motion_en.html' },
-  { label: 'PhET — circuit construction', url: 'https://phet.colorado.edu/sims/html/circuit-construction-kit-dc/latest/circuit-construction-kit-dc_en.html' },
-  { label: 'PhET — wave on a string', url: 'https://phet.colorado.edu/sims/html/wave-on-a-string/latest/wave-on-a-string_en.html' },
-  { label: 'PhET — acid-base solutions', url: 'https://phet.colorado.edu/sims/html/acid-base-solutions/latest/acid-base-solutions_en.html' },
-];
+/* ── PhET Simulation Picker ─────────────────────────────────────────────── */
+
+function PhETPickerModal({ onSelect, onClose }) {
+  const [query, setQuery] = useState('');
+  const [activeSubject, setActiveSubject] = useState('All');
+
+  const subjects = ['All', ...PHET_SUBJECTS.map((s) => s.label)];
+
+  const filtered = PHET_SUBJECTS.flatMap((group) =>
+    (activeSubject === 'All' || group.label === activeSubject)
+      ? group.sims.filter(
+          (s) =>
+            !query ||
+            s.name.toLowerCase().includes(query.toLowerCase()) ||
+            s.desc.toLowerCase().includes(query.toLowerCase()),
+        ).map((s) => ({ ...s, subject: group.label }))
+      : [],
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button type="button" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-label="Close" />
+      <div className="relative z-10 bg-surface-raised border border-line-soft rounded-2xl shadow-2xl flex flex-col w-full max-w-3xl max-h-[85vh]">
+        {/* Header */}
+        <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-line-soft">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-accent mb-0.5">PhET Interactive Simulations</p>
+            <p className="text-sm text-text-muted">{filtered.length} simulations</p>
+          </div>
+          <button type="button" onClick={onClose} className="w-8 h-8 rounded-full border border-line-soft text-text-muted hover:text-text-primary flex items-center justify-center">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Search + subject filter */}
+        <div className="shrink-0 px-5 py-3 border-b border-line-soft space-y-2">
+          <input
+            type="search"
+            autoFocus
+            placeholder="Search simulations…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full rounded-lg border border-line-soft bg-surface-soft px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {subjects.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setActiveSubject(s)}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-[0.15em] transition-colors ${
+                  activeSubject === s
+                    ? 'bg-accent text-white'
+                    : 'border border-line-soft text-text-muted hover:border-accent hover:text-accent'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Grid */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {filtered.length === 0 ? (
+            <p className="text-center text-text-muted text-sm py-8">No simulations match "{query}"</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {filtered.map((sim) => (
+                <button
+                  key={sim.slug}
+                  type="button"
+                  onClick={() => onSelect(sim)}
+                  className="group text-left p-3 rounded-xl border border-line-soft bg-surface-soft hover:border-accent hover:bg-accent/[0.04] transition-all"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent/70 mb-1">{sim.subject}</p>
+                  <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors leading-snug">{sim.name}</p>
+                  <p className="text-[11px] text-text-dim mt-1 leading-snug">{sim.desc}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Google Maps URL Builder ────────────────────────────────────────────── */
+
+const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || '';
+
+function MapsBuilder({ onApply, onClose }) {
+  const [mode, setMode] = useState('search');
+  const [query, setQuery] = useState('');
+  const [zoom, setZoom] = useState(10);
+  const [mapType, setMapType] = useState('roadmap');
+
+  const buildUrl = () => {
+    if (!MAPS_KEY) return null;
+    const base = 'https://www.google.com/maps/embed/v1';
+    const params = new URLSearchParams({ key: MAPS_KEY });
+    if (mode === 'search') {
+      params.set('q', query);
+    } else {
+      params.set('q', query);
+      params.set('zoom', zoom);
+      params.set('maptype', mapType);
+    }
+    return `${base}/${mode === 'satellite' ? 'place' : 'search'}?${params}`;
+  };
+
+  const apply = () => {
+    const url = buildUrl();
+    if (!url) return;
+    onApply({ url, title: query || 'Map', aspect: '16:9' });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button type="button" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-label="Close" />
+      <div className="relative z-10 bg-surface-raised border border-line-soft rounded-2xl shadow-2xl w-full max-w-md p-5 space-y-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-accent mb-0.5">Google Maps</p>
+            <p className="text-sm text-text-muted">Search for a place or location</p>
+          </div>
+          <button type="button" onClick={onClose} className="w-8 h-8 rounded-full border border-line-soft text-text-muted hover:text-text-primary flex items-center justify-center">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {!MAPS_KEY && (
+          <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-sm text-amber-700 dark:text-amber-400">
+            <p className="font-bold mb-1">Maps API key not configured</p>
+            <p className="text-[12px]">Add <code className="font-mono bg-black/10 px-1 rounded">VITE_GOOGLE_MAPS_KEY</code> to your environment variables. Get a key from <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="underline">Google Cloud Console</a> → Maps Embed API.</p>
+          </div>
+        )}
+
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">Place or address</label>
+          <input
+            type="text"
+            autoFocus
+            placeholder="e.g. Amazon Rainforest, Brazil"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && query && apply()}
+            className="w-full rounded-lg border border-line-soft bg-surface-soft px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+          />
+        </div>
+
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">Map type</label>
+          <div className="flex gap-2">
+            {[['roadmap', 'Road'], ['satellite', 'Satellite'], ['terrain', 'Terrain']].map(([v, l]) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setMapType(v)}
+                className={`flex-1 py-2 rounded-lg border text-[11px] font-bold uppercase tracking-[0.15em] transition-colors ${
+                  mapType === v ? 'border-accent bg-accent/10 text-accent' : 'border-line-soft text-text-muted hover:border-accent/60'
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">Zoom level — {zoom}</label>
+          <input type="range" min={1} max={20} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="w-full accent-accent" />
+          <div className="flex justify-between text-[10px] text-text-dim mt-0.5"><span>World</span><span>City</span><span>Street</span></div>
+        </div>
+
+        <button
+          type="button"
+          onClick={apply}
+          disabled={!query || !MAPS_KEY}
+          className="btn-primary w-full py-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Insert map
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── EmbedForm ──────────────────────────────────────────────────────────── */
 
 function EmbedForm({ slide, onChange }) {
+  const [showPhet, setShowPhet] = useState(false);
+  const [showMaps, setShowMaps] = useState(false);
+
   return (
     <div className="space-y-3">
+      {/* Quick-insert buttons */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setShowPhet(true)}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-line-soft hover:border-accent hover:bg-accent/[0.04] transition-all text-sm font-bold text-text-primary"
+        >
+          <span className="text-base">🔬</span> Browse PhET Simulations
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowMaps(true)}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-line-soft hover:border-accent hover:bg-accent/[0.04] transition-all text-sm font-bold text-text-primary"
+        >
+          <span className="text-base">🗺️</span> Google Maps
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange({ url: 'https://www.geogebra.org/classic', title: 'GeoGebra' })}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-line-soft hover:border-accent hover:bg-accent/[0.04] transition-all text-sm font-bold text-text-primary"
+        >
+          <span className="text-base">📐</span> GeoGebra
+        </button>
+      </div>
+
       <Field label="URL">
         <TextInput
-          placeholder="https://www.desmos.com/calculator/..."
+          placeholder="https://phet.colorado.edu/sims/html/…"
           value={slide.url || ''}
           onChange={(e) => onChange({ url: e.target.value })}
         />
       </Field>
-      <div className="space-y-1">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">Quick presets</p>
-        <div className="flex flex-wrap gap-1.5">
-          {EMBED_PRESETS.map((p) => (
-            <button
-              key={p.url}
-              type="button"
-              onClick={() => onChange({ url: p.url, title: p.label })}
-              className="px-2.5 py-1 rounded-full border border-line-soft text-[11px] text-text-muted hover:border-accent hover:text-accent transition-colors"
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
       <Field label="Display title (shown as kicker)">
         <TextInput
-          placeholder="e.g. Desmos Graph, PhET Simulation"
+          placeholder="e.g. PhET: Wave on a String"
           value={slide.title || ''}
           onChange={(e) => onChange({ title: e.target.value })}
         />
@@ -977,6 +1178,22 @@ function EmbedForm({ slide, onChange }) {
       <Field label="Caption (optional)">
         <TextInput value={slide.caption || ''} onChange={(e) => onChange({ caption: e.target.value })} />
       </Field>
+
+      {showPhet && (
+        <PhETPickerModal
+          onSelect={(sim) => {
+            onChange({ url: getPhetEmbedUrl(sim.slug), title: `PhET: ${sim.name}`, aspect: '16:9' });
+            setShowPhet(false);
+          }}
+          onClose={() => setShowPhet(false)}
+        />
+      )}
+      {showMaps && (
+        <MapsBuilder
+          onApply={(patch) => onChange(patch)}
+          onClose={() => setShowMaps(false)}
+        />
+      )}
     </div>
   );
 }
