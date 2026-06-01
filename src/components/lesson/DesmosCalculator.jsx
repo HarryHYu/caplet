@@ -29,57 +29,40 @@ export default function DesmosCalculator({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let destroyed = false;
+    if (!containerRef.current) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
 
     loadDesmos()
       .then((Desmos) => {
-        if (destroyed || !containerRef.current) return;
+        if (cancelled || !containerRef.current) return;
 
-        // Destroy any previous instance (e.g. on mode switch).
-        calcRef.current?.destroy();
-
-        const defaultGraphing = {
-          border: false,
-          expressions: true,
-          keypad: true,
-          zoomButtons: true,
-          settingsMenu: true,
-        };
-
-        const defaultScientific = {
-          border: false,
-          keypad: true,
-        };
+        // Clear any stale DOM from a previous instance before mounting a new one.
+        containerRef.current.innerHTML = '';
 
         let calc;
         if (mode === 'scientific') {
           try {
             calc = Desmos.ScientificCalculator(containerRef.current, {
-              ...defaultScientific,
+              border: false,
+              keypad: true,
               ...options,
             });
           } catch {
-            // Demo key may not have scientific enabled — fall back to graphing.
+            // Demo key may not have scientific enabled — fall back gracefully.
             calc = Desmos.GraphingCalculator(containerRef.current, {
-              ...defaultGraphing,
-              ...options,
+              border: false, expressions: true, keypad: true,
+              zoomButtons: true, settingsMenu: true, ...options,
             });
           }
         } else {
           calc = Desmos.GraphingCalculator(containerRef.current, {
-            ...defaultGraphing,
-            ...options,
+            border: false, expressions: true, keypad: true,
+            zoomButtons: true, settingsMenu: true, ...options,
           });
-
-          // Load pre-defined expressions.
-          if (expressions.length > 0) {
-            calc.setExpressions(expressions);
-          }
-
-          // Set viewport bounds.
-          if (bounds) {
-            calc.setMathBounds(bounds);
-          }
+          if (expressions.length > 0) calc.setExpressions(expressions);
+          if (bounds) calc.setMathBounds(bounds);
         }
 
         calcRef.current = calc;
@@ -87,13 +70,14 @@ export default function DesmosCalculator({
         onReady?.(calc);
       })
       .catch((err) => {
-        if (!destroyed) setError(err.message);
+        if (!cancelled) { setError(err.message); setLoading(false); }
       });
 
     return () => {
-      destroyed = true;
-      // Don't destroy on unmount if the parent is just hiding the panel —
-      // destroy is called explicitly when mode switches above.
+      cancelled = true;
+      // Destroy fully on every mode change so the next effect starts clean.
+      calcRef.current?.destroy();
+      calcRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
