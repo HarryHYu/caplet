@@ -163,6 +163,9 @@ const LessonPlayer = () => {
   // Floating Desmos calculator panel
   const [calcOpen, setCalcOpen] = useState(false);
   const [calcMode, setCalcMode] = useState('graphing'); // 'graphing' | 'scientific'
+  // Drag position — null means default CSS anchor (bottom-right)
+  const [calcPos, setCalcPos] = useState(null);
+  const calcDragRef = useRef(null);
   // savedSlides: Map of slideIndex -> savedSlideId for the current lesson
   const [savedSlides, setSavedSlides] = useState(new Map());
   const [savingSlide, setSavingSlide] = useState(false);
@@ -687,12 +690,58 @@ const LessonPlayer = () => {
         )}
       </main>
 
-      {/* ─────── Floating Desmos calculator panel ─────── */}
-      {calcOpen && (
-        <div className="fixed bottom-0 right-0 z-40 flex flex-col"
-          style={{ width: 'min(480px, 100vw)', height: 'min(560px, calc(100dvh - 7rem))' }}>
-          {/* Panel chrome */}
-          <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-surface-raised border border-b-0 border-line-soft rounded-t-2xl shadow-2xl">
+      {/* ─────── Floating Desmos calculator panel ─────────────────────────────
+          Always in the DOM so calculator state (expressions, viewport) is never
+          lost. Slides off-screen when closed. Draggable via the header bar.
+          ───────────────────────────────────────────────────────────────────── */}
+      <div
+        className="fixed z-40 flex flex-col transition-transform duration-200 ease-out"
+        style={{
+          width: 'min(480px, 100vw)',
+          height: 'min(560px, calc(100dvh - 7rem))',
+          // Dragged position overrides default bottom-right anchor.
+          ...(calcPos
+            ? { left: calcPos.x, top: calcPos.y, bottom: 'auto', right: 'auto' }
+            : { bottom: 0, right: 0 }),
+          // Slide off-screen to the right when closed — keeps Desmos mounted.
+          transform: calcOpen ? 'translateX(0)' : 'translateX(calc(100% + 16px))',
+        }}
+      >
+        {/* Header — drag handle + mode toggle + close */}
+        <div
+          className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-surface-raised border border-b-0 border-line-soft rounded-t-2xl shadow-2xl select-none cursor-grab active:cursor-grabbing"
+          onMouseDown={(e) => {
+            // Don't initiate drag on button clicks
+            if (e.target.closest('button')) return;
+            e.preventDefault();
+            const panelW = e.currentTarget.parentElement.offsetWidth;
+            const panelH = e.currentTarget.parentElement.offsetHeight;
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const startPX = calcPos?.x ?? (window.innerWidth - panelW);
+            const startPY = calcPos?.y ?? (window.innerHeight - panelH);
+
+            const onMove = (ev) => {
+              const nx = Math.max(0, Math.min(window.innerWidth - panelW, startPX + ev.clientX - startX));
+              const ny = Math.max(0, Math.min(window.innerHeight - panelH, startPY + ev.clientY - startY));
+              setCalcPos({ x: nx, y: ny });
+            };
+            const onUp = () => {
+              window.removeEventListener('mousemove', onMove);
+              window.removeEventListener('mouseup', onUp);
+            };
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            calcDragRef.current = onUp;
+          }}
+        >
+          <div className="flex items-center gap-2">
+            {/* Drag grip indicator */}
+            <svg className="w-3.5 h-3.5 text-text-dim/50 shrink-0" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+              <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+              <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+            </svg>
             {/* Mode toggle */}
             <div className="flex items-center gap-1 bg-surface-soft rounded-full p-0.5">
               {['graphing', 'scientific'].map((m) => (
@@ -710,26 +759,23 @@ const LessonPlayer = () => {
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => setCalcOpen(false)}
-              className="w-7 h-7 rounded-full border border-line-soft text-text-muted hover:text-text-primary flex items-center justify-center transition-colors"
-              aria-label="Close calculator"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
-          {/* Calculator itself */}
-          <div className="flex-1 min-h-0 border border-t-0 border-line-soft rounded-b-2xl overflow-hidden shadow-2xl">
-            <DesmosCalculator
-              mode={calcMode}
-              className="h-full bg-white"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => setCalcOpen(false)}
+            className="w-7 h-7 rounded-full border border-line-soft text-text-muted hover:text-text-primary flex items-center justify-center transition-colors"
+            aria-label="Close calculator"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-      )}
+        {/* Calculator itself */}
+        <div className="flex-1 min-h-0 border border-t-0 border-line-soft rounded-b-2xl overflow-hidden shadow-2xl">
+          <DesmosCalculator mode={calcMode} className="h-full bg-white" />
+        </div>
+      </div>
 
       {/* ─────── Outline drawer ─────── */}
       {outlineOpen && (
