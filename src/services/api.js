@@ -506,6 +506,18 @@ class ApiService {
     });
   }
 
+  // Avatar
+  async getAvatar() {
+    return this.request('/avatar');
+  }
+
+  async saveAvatar(avatarConfig) {
+    return this.request('/avatar', {
+      method: 'PUT',
+      body: JSON.stringify({ avatarConfig }),
+    });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');

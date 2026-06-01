@@ -86,6 +86,18 @@ const User = sequelize.define('User', {
     set(value) {
       this.setDataValue('onboardingData', value ? JSON.stringify(value) : null);
     }
+  },
+  // Selected avatar customization options (DiceBear). JSON string, nullable.
+  avatarConfig: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    get() {
+      const value = this.getDataValue('avatarConfig');
+      return value ? JSON.parse(value) : null;
+    },
+    set(value) {
+      this.setDataValue('avatarConfig', value ? JSON.stringify(value) : null);
+    }
   }
 }, {
   tableName: 'users',
