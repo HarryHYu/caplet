@@ -25,6 +25,8 @@ export default function DesmosCalculator({
 }) {
   const containerRef = useRef(null);
   const calcRef = useRef(null);
+  // Persist state per mode so switching back restores work in progress.
+  const savedStates = useRef({ graphing: null, scientific: null });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,8 +63,19 @@ export default function DesmosCalculator({
             border: false, expressions: true, keypad: true,
             zoomButtons: true, settingsMenu: true, ...options,
           });
-          if (expressions.length > 0) calc.setExpressions(expressions);
-          if (bounds) calc.setMathBounds(bounds);
+          // Restore previous session if the user has been here before,
+          // otherwise load the teacher-defined expressions.
+          if (savedStates.current.graphing) {
+            calc.setState(savedStates.current.graphing);
+          } else {
+            if (expressions.length > 0) calc.setExpressions(expressions);
+            if (bounds) calc.setMathBounds(bounds);
+          }
+        }
+
+        // Restore scientific session if available.
+        if (mode === 'scientific' && savedStates.current.scientific) {
+          try { calc.setState(savedStates.current.scientific); } catch { /* incompatible state, ignore */ }
         }
 
         calcRef.current = calc;
@@ -75,9 +88,14 @@ export default function DesmosCalculator({
 
     return () => {
       cancelled = true;
-      // Destroy fully on every mode change so the next effect starts clean.
-      calcRef.current?.destroy();
-      calcRef.current = null;
+      // Snapshot state before destroying so we can restore it on next visit.
+      if (calcRef.current) {
+        try {
+          savedStates.current[mode] = calcRef.current.getState();
+        } catch { /* ignore if getState fails */ }
+        calcRef.current.destroy();
+        calcRef.current = null;
+      }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
