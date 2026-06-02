@@ -1387,16 +1387,21 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
 
 function DesmosSlide({ slide }) {
   return (
-    <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-4">
+    <div className="max-w-4xl mx-auto w-full flex flex-col gap-4">
       {slide.title && (
         <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">{slide.title}</h3>
       )}
-      <div className="flex-1 min-h-0 rounded-2xl border border-line-soft overflow-hidden" style={{ minHeight: '420px' }}>
+      {/* Use a concrete height so Desmos can measure the container correctly.
+          h-full/flex-1 chains don't resolve when ancestors only have min-height. */}
+      <div
+        className="rounded-2xl border border-line-soft overflow-hidden"
+        style={{ height: 'clamp(380px, calc(100dvh - 260px), 640px)' }}
+      >
         <DesmosCalculator
           mode="graphing"
           expressions={slide.expressions || []}
           bounds={slide.bounds || undefined}
-          className="h-full"
+          style={{ width: '100%', height: '100%' }}
         />
       </div>
       {slide.caption && (

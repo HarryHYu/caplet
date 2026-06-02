@@ -15,12 +15,12 @@ const DESMOS_VERSION = '1.9';
 let loadPromise = null;
 
 export function loadDesmos() {
+  // If already resolved (window.Desmos available), return immediately.
+  if (window.Desmos) return Promise.resolve(window.Desmos);
+  // Reuse an in-flight or successfully-resolved promise.
   if (loadPromise) return loadPromise;
 
   loadPromise = new Promise((resolve, reject) => {
-    // Already loaded (e.g. HMR re-run).
-    if (window.Desmos) { resolve(window.Desmos); return; }
-
     const script = document.createElement('script');
     script.src = `https://www.desmos.com/api/v${DESMOS_VERSION}/calculator.js?apiKey=${API_KEY}`;
     script.async = true;
@@ -28,7 +28,10 @@ export function loadDesmos() {
       if (window.Desmos) resolve(window.Desmos);
       else reject(new Error('Desmos API loaded but window.Desmos is undefined'));
     };
-    script.onerror = () => reject(new Error('Failed to load Desmos API script'));
+    script.onerror = () => {
+      loadPromise = null; // allow retry on next call
+      reject(new Error('Failed to load Desmos API script'));
+    };
     document.head.appendChild(script);
   });
 

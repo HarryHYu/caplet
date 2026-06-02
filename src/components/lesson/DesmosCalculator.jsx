@@ -21,6 +21,7 @@ export default function DesmosCalculator({
   bounds = null,
   options = {},
   className = '',
+  style = {},
   onReady = null,
 }) {
   const containerRef = useRef(null);
@@ -94,12 +95,9 @@ export default function DesmosCalculator({
 
     return () => {
       cancelled = true;
-      // Snapshot state before destroying so we can restore it on next visit.
       if (calcRef.current) {
-        try {
-          savedStates.current[mode] = calcRef.current.getState();
-        } catch { /* ignore if getState fails */ }
-        calcRef.current.destroy();
+        try { savedStates.current[mode] = calcRef.current.getState(); } catch { /* ignore */ }
+        try { calcRef.current.destroy(); } catch { /* ignore */ }
         calcRef.current = null;
       }
     };
@@ -115,7 +113,7 @@ export default function DesmosCalculator({
   }, [expressions, bounds, mode]);
 
   return (
-    <div className={`relative flex flex-col ${className}`}>
+    <div className={`relative ${className}`} style={{ ...style }}>
       {loading && !error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface-raised z-10">
           <span className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -129,7 +127,8 @@ export default function DesmosCalculator({
           <p className="text-sm text-rose-500 text-center px-4">{error}</p>
         </div>
       )}
-      <div ref={containerRef} className="flex-1 w-full" />
+      {/* Fill the entire allocated box so Desmos measures correct dimensions */}
+      <div ref={containerRef} className="absolute inset-0" />
     </div>
   );
 }

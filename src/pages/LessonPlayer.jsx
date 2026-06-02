@@ -589,7 +589,7 @@ const LessonPlayer = () => {
                   <div
                     key={i}
                     className={isActive ? 'absolute inset-0 overflow-y-auto' : 'absolute inset-0 overflow-hidden pointer-events-none'}
-                    style={isActive ? {} : { transform: 'translateX(100vw)', visibility: 'hidden' }}
+                    style={isActive ? {} : { transform: 'translateX(100vw)', opacity: 0 }}
                     aria-hidden={!isActive}
                   >
                     {/* No key change here — SlideRenderer (and all its children)
