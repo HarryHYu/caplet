@@ -1153,19 +1153,47 @@ const ASPECT_CLASSES = {
   'tall': 'aspect-[9/16] max-h-[80vh]',
 };
 
+function isEmbeddableUrl(url) {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    // Bare google.com / google.com/maps are the regular web app — not embeddable.
+    // Only the embed API path (maps/embed/v1/*) works in an iframe.
+    if (/^(www\.)?google\.com$/.test(u.hostname) && !u.pathname.startsWith('/maps/embed')) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function EmbedSlide({ slide }) {
   const aspectClass = ASPECT_CLASSES[slide.aspect] || 'aspect-video';
+  const embeddable = isEmbeddableUrl(slide.url);
   return (
     <div className="max-w-5xl mx-auto w-full flex flex-col gap-4">
       {slide.title && <Kicker>{slide.title}</Kicker>}
       <div className={`w-full ${aspectClass} rounded-2xl overflow-hidden border border-line-soft shadow-sm`}>
-        <iframe
-          src={slide.url}
-          title={slide.title || 'Interactive content'}
-          className="w-full h-full"
-          allow="accelerometer; autoplay; fullscreen; microphone"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads"
-        />
+        {embeddable ? (
+          <iframe
+            src={slide.url}
+            title={slide.title || 'Interactive content'}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; fullscreen; microphone"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-surface-raised text-center p-6">
+            <svg className="w-8 h-8 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            <p className="text-sm font-medium text-text-muted">This content cannot be embedded.</p>
+            {slide.url && (
+              <a href={slide.url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline break-all">
+                Open in new tab ↗
+              </a>
+            )}
+          </div>
+        )}
       </div>
       {slide.caption && <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}
     </div>
@@ -1392,6 +1420,19 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
    ────────────────────────────────────────────────────────────────────────── */
 
 function DesmosSlide({ slide }) {
+  // Stable references so DesmosCalculator's second useEffect doesn't fire on
+  // every parent re-render (slide.expressions || [] creates a new array each time).
+  const expressions = useMemo(
+    () => (Array.isArray(slide.expressions) && slide.expressions.length > 0 ? slide.expressions : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(slide.expressions)],
+  );
+  const bounds = useMemo(
+    () => slide.bounds || null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(slide.bounds)],
+  );
+
   return (
     <div className="max-w-4xl mx-auto w-full flex flex-col gap-4">
       {slide.title && (
@@ -1407,8 +1448,8 @@ function DesmosSlide({ slide }) {
       >
         <DesmosCalculator
           mode="graphing"
-          expressions={slide.expressions || []}
-          bounds={slide.bounds || undefined}
+          expressions={expressions}
+          bounds={bounds}
           style={{ width: '100%', height: '100%' }}
         />
       </div>

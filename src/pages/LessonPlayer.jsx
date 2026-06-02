@@ -392,9 +392,9 @@ const LessonPlayer = () => {
   useEffect(() => {
     const onKey = (e) => {
       if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
-      // Don't intercept arrow keys when focus is inside a Desmos calculator — Desmos
-      // uses them to pan the graph / move the expression cursor.
-      if (e.target && e.target.closest?.('.dcg-calculator-api-container, .dcg-graphpaper')) return;
+      // Only block arrow keys when a Desmos expression INPUT (text entry) is focused,
+      // not when the graph itself is focused (graph panning uses mouse, not arrow keys).
+      if (e.target && ['INPUT', 'TEXTAREA'].includes(e.target.tagName) && e.target.closest?.('.dcg-calculator-api-container')) return;
       if (e.key === 'Escape' && outlineOpen) {
         setOutlineOpen(false);
         return;
@@ -622,7 +622,7 @@ const LessonPlayer = () => {
                   The slide-in animation is driven by toggling the class on the
                   inner wrapper; CSS re-fires the animation each time the class
                   is (re-)added to an existing element. */}
-              {[-1, 0, 1, 2].map((offset) => {
+              {[-1, 0, 1].map((offset) => {
                 const i = currentSlideIndex + offset;
                 if (i < 0 || i >= slides.length) return null;
                 const isActive = offset === 0;
