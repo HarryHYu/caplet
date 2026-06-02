@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
@@ -135,44 +135,6 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
             </section>
           ))}
       </div>
-    </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   SlideAnimationWrapper
-   Wraps slide content with a restart-able slide-in animation without ever
-   unmounting its children. When `isActive` flips to true the CSS animation
-   is re-triggered via a synchronous DOM reflow in useLayoutEffect.
-   ────────────────────────────────────────────────────────────────────────── */
-
-function SlideAnimationWrapper({ isActive, children }) {
-  const ref = useRef(null);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el || !isActive) return;
-    // Strip the animation, force a reflow, then restore so it replays from 0.
-    el.style.animation = 'none';
-    // eslint-disable-next-line no-unused-expressions
-    el.offsetHeight;
-    el.style.animation = '';
-  }, [isActive]);
-
-  useEffect(() => {
-    if (!isActive) return;
-    // Desmos (and other canvas/WebGL libs) may have skipped painting while the
-    // container was visibility:hidden. Firing a synthetic resize event after the
-    // slide becomes visible prompts them to re-measure and repaint.
-    window.dispatchEvent(new Event('resize'));
-  }, [isActive]);
-
-  return (
-    <div
-      ref={ref}
-      className={`min-h-full p-5 md:p-8 lg:p-12 flex flex-col${isActive ? ' animate-lesson-slide-in' : ''}`}
-    >
-      {children}
     </div>
   );
 }
@@ -613,10 +575,12 @@ const LessonPlayer = () => {
               </div>
 
               {/* Pre-render window: offsets -1, 0, +1, +2 relative to current.
-                  All four slide wrappers share stable key={i} so SlideRenderer
-                  (and its Desmos/Mermaid children) is NEVER unmounted by a
-                  navigation event. The animation is restarted without remounting
-                  by SlideAnimationWrapper via a useLayoutEffect + DOM reflow. */}
+                  The outer div uses a stable key={i} so DesmosCalculator /
+                  DiagramSlide are never unmounted on navigation — they initialise
+                  once (while hidden) and simply become visible when active.
+                  The slide-in animation is driven by toggling the class on the
+                  inner wrapper; CSS re-fires the animation each time the class
+                  is (re-)added to an existing element. */}
               {[-1, 0, 1, 2].map((offset) => {
                 const i = currentSlideIndex + offset;
                 if (i < 0 || i >= slides.length) return null;
@@ -628,14 +592,16 @@ const LessonPlayer = () => {
                     style={isActive ? {} : { transform: 'translateX(100vw)', visibility: 'hidden' }}
                     aria-hidden={!isActive}
                   >
-                    <SlideAnimationWrapper isActive={isActive}>
+                    {/* No key change here — SlideRenderer (and all its children)
+                        stays mounted. Animation class is toggled to re-fire. */}
+                    <div className={`${isActive ? 'animate-lesson-slide-in' : ''} min-h-full p-5 md:p-8 lg:p-12 flex flex-col`}>
                       <SlideRenderer
                         slide={slides[i]}
                         alreadyAnswered={quizScores[String(i)] !== undefined}
                         alreadyCorrect={quizScores[String(i)] === true}
                         onSubmit={(isCorrect) => recordQuestionAnswer(i, isCorrect)}
                       />
-                    </SlideAnimationWrapper>
+                    </div>
                   </div>
                 );
               })}

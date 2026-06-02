@@ -79,8 +79,14 @@ export default function DesmosCalculator({
         }
 
         calcRef.current = calc;
-        setLoading(false);
         onReady?.(calc);
+        // Give the browser one layout pass before marking as loaded and
+        // resizing so Desmos correctly measures the container dimensions.
+        requestAnimationFrame(() => {
+          if (cancelled) return;
+          try { calc.resize(); } catch { /* ignore if already destroyed */ }
+          setLoading(false);
+        });
       })
       .catch((err) => {
         if (!cancelled) { setError(err.message); setLoading(false); }

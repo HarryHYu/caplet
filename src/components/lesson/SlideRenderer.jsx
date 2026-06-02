@@ -1072,9 +1072,7 @@ function ChartSlide({ slide }) {
 const diagramSvgCache = new Map();
 
 function DiagramSlide({ slide }) {
-  // Store the SVG string in state so dangerouslySetInnerHTML always reflects it,
-  // even if the async render finishes before the 'done' div is in the DOM.
-  const [svgHtml, setSvgHtml] = useState(() => diagramSvgCache.get(slide.code) || null);
+  const ref = useRef(null);
   const [status, setStatus] = useState(() =>
     diagramSvgCache.has(slide.code) ? 'done' : 'loading',
   );
@@ -1086,7 +1084,7 @@ function DiagramSlide({ slide }) {
 
     // Already cached — inject immediately without re-running Mermaid.
     if (diagramSvgCache.has(slide.code)) {
-      setSvgHtml(diagramSvgCache.get(slide.code));
+      if (ref.current) ref.current.innerHTML = diagramSvgCache.get(slide.code);
       setStatus('done');
       return;
     }
@@ -1094,7 +1092,6 @@ function DiagramSlide({ slide }) {
     let mounted = true;
     setStatus('loading');
     setError(null);
-    setSvgHtml(null);
 
     import('mermaid').then((m) => {
       const mermaid = m.default;
@@ -1103,7 +1100,7 @@ function DiagramSlide({ slide }) {
     }).then(({ svg }) => {
       if (!mounted) return;
       diagramSvgCache.set(slide.code, svg);
-      setSvgHtml(svg);
+      if (ref.current) ref.current.innerHTML = svg;
       setStatus('done');
     }).catch((err) => {
       if (mounted) { setError(err?.message || 'Diagram syntax error'); setStatus('error'); }
@@ -1115,19 +1112,23 @@ function DiagramSlide({ slide }) {
   return (
     <div className="max-w-3xl mx-auto w-full flex flex-col gap-4">
       <Kicker>Diagram</Kicker>
-      <div className="rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-8 overflow-x-auto min-h-[180px] flex items-center justify-center">
+      <div className="relative rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-8 overflow-x-auto min-h-[180px] flex items-center justify-center">
         {error ? (
           <p className="text-sm text-rose-500 font-mono">{error}</p>
-        ) : status === 'loading' ? (
-          <div className="flex flex-col items-center gap-3 text-text-dim">
-            <span className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-            <span className="text-[11px] uppercase tracking-[0.2em] font-bold">Rendering diagram…</span>
-          </div>
         ) : (
-          <div
-            className="w-full flex justify-center [&_svg]:max-w-full"
-            dangerouslySetInnerHTML={{ __html: svgHtml || '' }}
-          />
+          <>
+            {status === 'loading' && (
+              <div className="absolute flex flex-col items-center gap-3 text-text-dim">
+                <span className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <span className="text-[11px] uppercase tracking-[0.2em] font-bold">Rendering diagram…</span>
+              </div>
+            )}
+            {/* Always in DOM so ref is valid when Mermaid resolves */}
+            <div
+              ref={ref}
+              className={`w-full flex justify-center [&_svg]:max-w-full transition-opacity duration-300 ${status === 'done' ? 'opacity-100' : 'opacity-0'}`}
+            />
+          </>
         )}
       </div>
       {slide.caption && <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}
@@ -1388,9 +1389,7 @@ function DesmosSlide({ slide }) {
   return (
     <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-4">
       {slide.title && (
-        <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">
-          <MathText>{slide.title}</MathText>
-        </h3>
+        <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">{slide.title}</h3>
       )}
       <div className="flex-1 min-h-0 rounded-2xl border border-line-soft overflow-hidden" style={{ minHeight: '420px' }}>
         <DesmosCalculator
@@ -1401,9 +1400,7 @@ function DesmosSlide({ slide }) {
         />
       </div>
       {slide.caption && (
-        <p className="text-center text-sm font-serif italic text-text-muted">
-          <MathText>{slide.caption}</MathText>
-        </p>
+        <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>
       )}
     </div>
   );
