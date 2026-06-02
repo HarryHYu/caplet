@@ -1,5 +1,7 @@
 # Caplet
 
+Readme Update
+
 [![React](https://img.shields.io/badge/React-19.0-blue?logo=react)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-7.0-646CFF?logo=vite)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
