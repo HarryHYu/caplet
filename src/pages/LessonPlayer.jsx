@@ -161,6 +161,10 @@ const LessonPlayer = () => {
   const [visited, setVisited] = useState(() => new Set([0]));
   // Floating Desmos calculator panel
   const [calcOpen, setCalcOpen] = useState(false);
+  // Only mount the Desmos panel after the user has opened it at least once.
+  // This prevents a 2nd Desmos instance from existing before the user needs it,
+  // which was causing the slide's Desmos to flicker/crash and intercepting arrow keys.
+  const [calcEverOpened, setCalcEverOpened] = useState(false);
   const [calcMode, setCalcMode] = useState('graphing'); // 'graphing' | 'scientific'
   const [calcPos, setCalcPos] = useState(null); // null = default CSS anchor (bottom-right)
   const calcPanelRef = useRef(null);
@@ -481,7 +485,10 @@ const LessonPlayer = () => {
               {/* Calculator toggle */}
               <button
                 type="button"
-                onClick={() => setCalcOpen((v) => !v)}
+                onClick={() => {
+                  if (!calcOpen) setCalcEverOpened(true);
+                  setCalcOpen((v) => !v);
+                }}
                 className={`inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border transition-colors ${
                   calcOpen
                     ? 'border-accent bg-accent/10 text-accent'
@@ -692,23 +699,27 @@ const LessonPlayer = () => {
       </main>
 
       {/* ─────── Floating Desmos calculator panel ─────────────────────────────
-          Always in the DOM so calculator state (expressions, viewport) is never
-          lost. Slides off-screen when closed. Draggable via the header bar.
+          Lazy-mounted: only rendered after the user opens it the first time.
+          This prevents a second Desmos instance from loading alongside a Desmos
+          slide, which was causing the slide graph to flicker and arrow keys to
+          stop working (Desmos global keyboard listeners were intercepting them).
+          Once opened it stays mounted so state is never lost.
+          Slides completely off the right edge of the screen when closed using
+          translateX(calc(100vw + 100%)) — adapts to any screen size and dragged
+          position so it always fully disappears.
           ───────────────────────────────────────────────────────────────────── */}
-      {/* Panel is always mounted so Desmos state is never lost.
-          Visibility toggled via opacity/pointerEvents only. */}
+      {calcEverOpened && (
       <div
         ref={calcPanelRef}
-        className="fixed z-40 flex flex-col transition-[opacity,transform] duration-200 ease-out"
+        className="fixed z-40 flex flex-col transition-transform duration-300 ease-in-out"
         style={{
           width: 'min(480px, 100vw)',
           height: 'min(560px, calc(100dvh - 7rem))',
           ...(calcPos
             ? { left: calcPos.x, top: calcPos.y, bottom: 'auto', right: 'auto' }
             : { bottom: 0, right: 0 }),
-          opacity: calcOpen ? 1 : 0,
+          transform: calcOpen ? 'translateX(0)' : 'translateX(calc(100vw + 100%))',
           pointerEvents: calcOpen ? 'auto' : 'none',
-          transform: calcOpen ? 'translateY(0)' : 'translateY(6px)',
         }}
       >
         {/* Header — drag handle + mode toggle + close */}
@@ -797,6 +808,7 @@ const LessonPlayer = () => {
           <DesmosCalculator mode={calcMode} className="h-full bg-white" />
         </div>
       </div>
+      )}
 
       {/* ─────── Outline drawer ─────── */}
       {outlineOpen && (
