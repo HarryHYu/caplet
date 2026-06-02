@@ -1,4 +1,4 @@
-# Caplet
+# Caplet Education
 
 [![React](https://img.shields.io/badge/React-19.1-149ECA?logo=react)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-7.1-646CFF?logo=vite)](https://vite.dev/)
@@ -7,6 +7,8 @@
 [![Sequelize](https://img.shields.io/badge/Sequelize-6.37-52B0E7?logo=sequelize)](https://sequelize.org/)
 
 Caplet is a free education platform for Australian financial literacy and classroom learning. The app combines public course browsing, authenticated lesson progress, classroom tools, revision workflows, a code-gated lesson editor, and Australian financial calculators.
+
+<img width="1328" height="1057" alt="Screenshot 2026-06-02 at 5 55 11 PM" src="https://github.com/user-attachments/assets/2ab48122-b9f1-44b8-87e4-db65d79a0f31" />
 
 The repository is a single JavaScript monorepo:
 
