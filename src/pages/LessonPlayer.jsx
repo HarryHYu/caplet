@@ -58,6 +58,14 @@ function parseSlides(raw) {
   return [];
 }
 
+function isSafeToPrerender(slide) {
+  const n = normalizeSlide(slide);
+  if (!n) return true;
+  if (n.type === 'embed' || n.type === 'desmos' || n.type === 'diagram') return false;
+  if (n.type === 'media' && (n.source === 'video' || n.source === 'embed' || n.source === 'audio')) return false;
+  return true;
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
    Sub-components
    ────────────────────────────────────────────────────────────────────────── */
@@ -605,9 +613,9 @@ const LessonPlayer = () => {
             </div>
 
             {/* Slide canvas — fills the remaining space, scrolls internally */}
-            {/* Slide canvas — pre-renders current + next 2 slides so navigation
-                is instant. Hidden slides are positioned off-screen (not display:none)
-                so images/diagrams/iframes fully load before the user arrives. */}
+            {/* Slide canvas — pre-renders adjacent lightweight slides for smooth nav.
+                Heavy embeds (Desmos/PhET/iframes/diagram) only mount when active to
+                avoid browser/frame crashes from hidden pre-render instances. */}
             <div className="flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden">
               {/* Decorative top notch */}
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none z-10" />
@@ -615,17 +623,17 @@ const LessonPlayer = () => {
                 <div className="w-32 h-px bg-accent" />
               </div>
 
-              {/* Pre-render window: offsets -1, 0, +1, +2 relative to current.
-                  The outer div uses a stable key={i} so DesmosCalculator /
-                  DiagramSlide are never unmounted on navigation — they initialise
-                  once (while hidden) and simply become visible when active.
-                  The slide-in animation is driven by toggling the class on the
-                  inner wrapper; CSS re-fires the animation each time the class
-                  is (re-)added to an existing element. */}
+              {/* Pre-render window: offsets -1, 0, +1 relative to current.
+                  The outer div uses a stable key={i} so lightweight slides stay
+                  mounted while hidden; heavy slides are intentionally mounted only
+                  when active. The slide-in animation is driven by toggling the
+                  class on the inner wrapper. */}
               {[-1, 0, 1].map((offset) => {
                 const i = currentSlideIndex + offset;
                 if (i < 0 || i >= slides.length) return null;
                 const isActive = offset === 0;
+                const prerenderable = isSafeToPrerender(slides[i]);
+                if (!isActive && !prerenderable) return null;
                 return (
                   <div
                     key={i}
