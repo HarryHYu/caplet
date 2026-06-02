@@ -204,14 +204,21 @@ export function normalizeSlide(slide) {
         caption: slide.caption || undefined,
       };
 
-    case 'embed':
+    case 'embed': {
+      // Replace the Maps key placeholder that the AI uses with the real
+      // VITE_GOOGLE_MAPS_KEY at render time (frontend only).
+      const rawUrl = s(slide.url);
+      const resolvedUrl = rawUrl.includes('__MAPS_API_KEY__')
+        ? rawUrl.replace(/__MAPS_API_KEY__/g, import.meta.env.VITE_GOOGLE_MAPS_KEY || '')
+        : rawUrl;
       return {
         type: 'embed',
-        url: s(slide.url),
+        url: resolvedUrl,
         title: slide.title || undefined,
         aspect: EMBED_ASPECTS.includes(slide.aspect) ? slide.aspect : '16:9',
         caption: slide.caption || undefined,
       };
+    }
 
     case 'hotspot':
       return {

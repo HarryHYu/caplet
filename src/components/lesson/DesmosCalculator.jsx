@@ -108,8 +108,12 @@ export default function DesmosCalculator({
   useEffect(() => {
     const calc = calcRef.current;
     if (!calc || mode !== 'graphing') return;
-    calc.setExpressions(expressions);
-    if (bounds) calc.setMathBounds(bounds);
+    try {
+      calc.setExpressions(expressions);
+      if (bounds) calc.setMathBounds(bounds);
+    } catch (err) {
+      console.warn('DesmosCalculator: failed to update expressions', err);
+    }
   }, [expressions, bounds, mode]);
 
   return (

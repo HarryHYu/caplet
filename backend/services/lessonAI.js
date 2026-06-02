@@ -22,16 +22,17 @@ function getClient() {
   return _client;
 }
 
-// Build the system prompt. mapsKey is injected so the AI can construct
-// working Google Maps embed URLs (VITE_GOOGLE_MAPS_KEY is available as a
-// plain env var on the backend even though it starts with VITE_).
-function buildSystem(mapsKey) {
-  const mapsBlock = mapsKey
-    ? `**Google Maps** (API key available — you MAY generate these)
-  URL pattern: https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q={URL-encoded+location}&zoom={1-20}
+// Placeholder string the AI puts in Google Maps URLs.
+// The frontend replaces it with the real VITE_GOOGLE_MAPS_KEY at render time,
+// so the backend never needs to hold the key.
+const MAPS_KEY_PLACEHOLDER = '__MAPS_API_KEY__';
+
+// Build the system prompt.
+function buildSystem() {
+  const mapsBlock = `**Google Maps** — always available, always use this exact URL pattern:
+  https://www.google.com/maps/embed/v1/place?key=${MAPS_KEY_PLACEHOLDER}&q={URL-encoded+location}&zoom={1-20}
   Use zoom 10–14 for cities/regions, 15–18 for landmarks/buildings.
-  Example: {"type":"embed","url":"https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=Sydney+Opera+House&zoom=15","title":"Sydney Opera House","aspect":"16:9"}`
-    : `**Google Maps:** API key not configured — do NOT generate Google Maps embeds.`;
+  Example: {"type":"embed","url":"https://www.google.com/maps/embed/v1/place?key=${MAPS_KEY_PLACEHOLDER}&q=Sydney+Opera+House&zoom=15","title":"Sydney Opera House","aspect":"16:9"}`;
 
   return `You are an expert curriculum designer. Given source material and context, you output a structured lesson as a strict JSON object: {"slides": [ ... ]}.
 
@@ -249,7 +250,7 @@ async function generateLessonSlides(notes, opts = {}) {
   // Pure reasoning models (o-series and bare gpt-5) don't accept `temperature`
   const isReasoning = chosenModel.startsWith('o') || chosenModel === 'gpt-5';
 
-  const systemPrompt = buildSystem(process.env.VITE_GOOGLE_MAPS_KEY || '');
+  const systemPrompt = buildSystem();
 
   const completion = await client.chat.completions.create({
     model: chosenModel,

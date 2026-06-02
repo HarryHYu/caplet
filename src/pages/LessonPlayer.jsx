@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Component, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +7,36 @@ import CapletLoader from '../components/CapletLoader';
 import SlideRenderer from '../components/lesson/SlideRenderer';
 import DesmosCalculator from '../components/lesson/DesmosCalculator';
 import { normalizeSlide, INTERACTIVE_TYPES, slideKindLabel } from '../lib/slideSchema';
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SlideErrorBoundary — catches render/effect errors inside a single slide
+   so that a crash in one slide never breaks the navigation or other slides.
+   ────────────────────────────────────────────────────────────────────────── */
+class SlideErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(err) { return { error: err }; }
+  componentDidCatch(err) { console.error('SlideErrorBoundary caught:', err); }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
+          <p className="text-text-muted text-sm">This slide encountered an error.</p>
+          <button
+            type="button"
+            className="px-4 py-2 rounded-full border border-line-soft text-sm text-text-muted hover:text-text-primary transition-colors"
+            onClick={() => this.setState({ error: null })}
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 /* ──────────────────────────────────────────────────────────────────────────
    Helpers
@@ -362,6 +392,9 @@ const LessonPlayer = () => {
   useEffect(() => {
     const onKey = (e) => {
       if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+      // Don't intercept arrow keys when focus is inside a Desmos calculator — Desmos
+      // uses them to pan the graph / move the expression cursor.
+      if (e.target && e.target.closest?.('.dcg-calculator-api-container, .dcg-graphpaper')) return;
       if (e.key === 'Escape' && outlineOpen) {
         setOutlineOpen(false);
         return;
@@ -370,8 +403,9 @@ const LessonPlayer = () => {
       if (e.key === 'ArrowRight') goToSlide(currentSlideIndex + 1);
       else if (e.key === 'ArrowLeft') goToSlide(currentSlideIndex - 1);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // Use capture phase so this runs before Desmos's own bubble-phase listeners.
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [hasSlides, currentSlideIndex, goToSlide, outlineOpen]);
 
   /* ---------- Lock body scroll when outline open ---------- */
@@ -602,12 +636,14 @@ const LessonPlayer = () => {
                     {/* No key change here — SlideRenderer (and all its children)
                         stays mounted. Animation class is toggled to re-fire. */}
                     <div className={`${isActive ? 'animate-lesson-slide-in' : ''} min-h-full p-5 md:p-8 lg:p-12 flex flex-col`}>
-                      <SlideRenderer
-                        slide={slides[i]}
-                        alreadyAnswered={quizScores[String(i)] !== undefined}
-                        alreadyCorrect={quizScores[String(i)] === true}
-                        onSubmit={(isCorrect) => recordQuestionAnswer(i, isCorrect)}
-                      />
+                      <SlideErrorBoundary key={i}>
+                        <SlideRenderer
+                          slide={slides[i]}
+                          alreadyAnswered={quizScores[String(i)] !== undefined}
+                          alreadyCorrect={quizScores[String(i)] === true}
+                          onSubmit={(isCorrect) => recordQuestionAnswer(i, isCorrect)}
+                        />
+                      </SlideErrorBoundary>
                     </div>
                   </div>
                 );

@@ -1082,9 +1082,15 @@ function DiagramSlide({ slide }) {
   useEffect(() => {
     if (!slide.code?.trim()) return;
 
+    // Strip $...$ LaTeX delimiters — Mermaid can't render KaTeX so they show
+    // as raw text. Remove them so the math expression reads naturally instead.
+    const cleanCode = slide.code.trim()
+      .replace(/\$\$([^$]+)\$\$/g, '$1')
+      .replace(/\$([^$\n]+)\$/g, '$1');
+
     // Already cached — inject immediately without re-running Mermaid.
-    if (diagramSvgCache.has(slide.code)) {
-      if (ref.current) ref.current.innerHTML = diagramSvgCache.get(slide.code);
+    if (diagramSvgCache.has(cleanCode)) {
+      if (ref.current) ref.current.innerHTML = diagramSvgCache.get(cleanCode);
       setStatus('done');
       return;
     }
@@ -1096,10 +1102,10 @@ function DiagramSlide({ slide }) {
     import('mermaid').then((m) => {
       const mermaid = m.default;
       mermaid.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: 'inherit', fontSize: 15 });
-      return mermaid.render(id, slide.code.trim());
+      return mermaid.render(id, cleanCode);
     }).then(({ svg }) => {
       if (!mounted) return;
-      diagramSvgCache.set(slide.code, svg);
+      diagramSvgCache.set(cleanCode, svg);
       if (ref.current) ref.current.innerHTML = svg;
       setStatus('done');
     }).catch((err) => {
@@ -1389,7 +1395,9 @@ function DesmosSlide({ slide }) {
   return (
     <div className="max-w-4xl mx-auto w-full flex flex-col gap-4">
       {slide.title && (
-        <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">{slide.title}</h3>
+        <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">
+          <MathText>{slide.title}</MathText>
+        </h3>
       )}
       {/* Use a concrete height so Desmos can measure the container correctly.
           h-full/flex-1 chains don't resolve when ancestors only have min-height. */}
@@ -1405,7 +1413,9 @@ function DesmosSlide({ slide }) {
         />
       </div>
       {slide.caption && (
-        <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>
+        <p className="text-center text-sm font-serif italic text-text-muted">
+          <MathText>{slide.caption}</MathText>
+        </p>
       )}
     </div>
   );
