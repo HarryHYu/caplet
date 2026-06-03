@@ -113,6 +113,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const completeOnboarding = async (onboardingData) => {
+    try {
+      setError(null);
+      const response = await api.completeOnboarding(onboardingData);
+      setUser(response.user);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -122,6 +134,7 @@ export const AuthProvider = ({ children }) => {
     loginWithGoogle,
     logout,
     updateProfile,
+    completeOnboarding,
     isAuthenticated,
   };
 

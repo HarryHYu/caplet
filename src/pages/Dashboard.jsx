@@ -13,8 +13,7 @@ import {
     ArrowRightIcon,
     CheckCircleIcon,
     BookmarkIcon,
-    CalculatorIcon,
-    SparklesIcon,
+    SparklesIcon
 } from '@heroicons/react/24/outline';
 
 const SectionHeading = ({ kicker, title, action }) => (
@@ -137,48 +136,47 @@ export default function Dashboard() {
                     className="reveal-text"
                 />
 
-                {/* 2. Primary next action */}
-                <section className="reveal-text stagger-1">
-                    <SectionHeading kicker="Next action" title={hasProgress ? 'Resume your momentum.' : 'Start here.'} />
-                    <Card className="relative overflow-hidden p-10 md:p-12">
-                        <div className="absolute inset-0 opacity-40 grid-technical" />
-                        <div className="relative z-10 grid gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-                            <div>
-                                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-white">
-                                    {hasProgress ? <BookOpenIcon className="h-6 w-6" /> : <SparklesIcon className="h-6 w-6" />}
-                                </div>
-                                <span className="section-kicker">{hasProgress ? 'Continue learning' : 'Beginner recommendation'}</span>
-                                <h2 className="text-4xl md:text-5xl">
-                                    {nextCourse?.title || 'Explore the course library'}
-                                </h2>
-                                <p className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-text-muted">
-                                    {hasProgress && lastAccessed
-                                        ? `You were last working through this course and are ${Math.round(lastAccessed.progressPercentage || 0)}% complete.`
-                                        : 'A beginner course is the best first step before moving into calculators, revision, and class work.'}
-                                </p>
-                                {hasProgress && lastAccessed && <div className="mt-8 max-w-xl"><ProgressBar value={lastAccessed.progressPercentage} /></div>}
-                                <div className="mt-10 flex flex-wrap gap-4">
-                                    {nextCourse ? (
-                                        <Button to={`/courses/${nextCourse.id}`}>{hasProgress ? 'Continue module' : 'Start beginner course'}</Button>
-                                    ) : (
-                                        <Button to="/courses">Browse courses</Button>
-                                    )}
-                                    <Button to="/revision" tone="secondary">Review saved slides</Button>
+                </header>
+
+                {!user?.onboardingData && (
+                    <div className="mb-12 reveal-text stagger-1">
+                        <Link
+                            to="/onboarding"
+                            className="group flex flex-col gap-6 border border-line-soft bg-surface-raised p-8 transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-minimal-lg md:flex-row md:items-center md:justify-between"
+                        >
+                            <div className="flex items-start gap-5">
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                                    <SparklesIcon className="h-6 w-6" />
+                                </span>
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Optional onboarding</p>
+                                    <h2 className="mt-2 text-2xl font-bold tracking-tight text-text-primary">Personalise your Caplet path</h2>
+                                    <p className="mt-2 max-w-2xl text-sm leading-6 text-text-muted">
+                                        The backend currently keeps users active by default, so this starts as an opt-in path before global onboarding is enabled.
+                                    </p>
                                 </div>
                             </div>
-                            {!hasProgress && (
-                                <Card className="bg-surface-body p-8">
-                                    <span className="section-kicker">Practical tool</span>
-                                    <h3 className="text-2xl">Budget Planner or Savings Goal</h3>
-                                    <p className="mt-4 text-sm font-medium leading-relaxed text-text-muted">
-                                        Use the Budget Planner to map money coming in and going out, or the Savings Goal calculator to plan a target.
-                                    </p>
-                                    <div className="mt-8 flex flex-wrap gap-4">
-                                        <Button to="/tools" className="px-6 py-3">Open tools</Button>
-                                        <Button to="/courses" tone="secondary" className="px-6 py-3">View all courses</Button>
-                                    </div>
-                                </Card>
-                            )}
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-accent group-hover:translate-x-1 transition-transform">Start setup →</span>
+                        </Link>
+                    </div>
+                )}
+
+                {/* Stats Matrix */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-line-soft border border-line-soft mb-24 reveal-text stagger-1">
+                    {[
+                        { label: 'Modules Active', value: inProgressCourses.length, icon: BookOpenIcon },
+                        { label: 'Completed', value: completedCourses.length, icon: CheckCircleIcon },
+                        { label: 'Academy Classes', value: classes.length, icon: AcademicCapIcon },
+                        { label: 'Activity Index', value: 'High', icon: FireIcon }
+                    ].map((stat) => (
+                        <div key={stat.label} className="bg-surface-body p-10 group hover:bg-surface-raised transition-colors">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-8 flex justify-between items-center group-hover:text-accent transition-colors">
+                                {stat.label}
+                                <stat.icon className="w-4 h-4 opacity-20" />
+                            </p>
+                            <p className="text-5xl font-serif italic text-text-primary group-hover:translate-x-2 transition-transform duration-500">
+                                {stat.value}
+                            </p>
                         </div>
                     </Card>
                 </section>
