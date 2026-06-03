@@ -1,6 +1,23 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
+import Button from './ui/Button';
+import Input from './ui/Input';
+
+const ErrorMessage = ({ message }) => {
+  if (!message) return null;
+
+  return (
+    <div
+      className="mb-7 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 shadow-sm"
+      role="alert"
+      aria-live="polite"
+    >
+      <p className="text-sm font-semibold">We could not sign you in</p>
+      <p className="mt-1 text-sm leading-relaxed">{message}</p>
+    </div>
+  );
+};
 
 const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -25,7 +42,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
       await login(formData.email, formData.password);
       onSuccess?.();
     } catch (err) {
-      setError(err.message || 'Invalid email or password.');
+      setError(err.message || 'Invalid email or password. Please check your details and try again.');
     } finally {
       setPasswordLoading(false);
     }
@@ -34,7 +51,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
   const handleGoogleSuccess = async (credentialResponse) => {
     const idToken = credentialResponse.credential;
     if (!idToken) {
-      setError('No credential returned from Google.');
+      setError('Google did not return the credential we need. Please try again.');
       return;
     }
     setError('');
@@ -43,7 +60,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
       await loginWithGoogle(idToken);
       onSuccess?.();
     } catch (err) {
-      setError(err.message || 'Sign-in failed. Please try again.');
+      setError(err.message || 'Google sign-in failed. Please try again, or use your email and password.');
     } finally {
       setGoogleLoading(false);
     }
@@ -53,119 +70,95 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
 
   return (
     <div className={`w-full mx-auto reveal-text ${isPage ? 'max-w-xl' : 'max-w-md'}`}>
-      <div className="mb-12">
-        <span className="section-kicker">Login</span>
-        <h2 className="text-5xl font-serif italic mb-4">
-          Welcome back.
+      <div className="mb-8">
+        <span className="section-kicker">Welcome back</span>
+        <h2 className="text-4xl sm:text-5xl font-serif italic mb-4 text-text-primary">
+          Sign in to Caplet.
         </h2>
-        <p className="text-lg text-text-muted font-medium tracking-tight">
-          Use the same email for Google and password sign-in — it is one account. New here?{' '}
-          {onSwitchToRegister ? (
-            <button
-              type="button"
-              onClick={onSwitchToRegister}
-              className="text-accent font-semibold hover:underline"
-            >
-              Create an account
-            </button>
-          ) : (
-            'Create an account.'
-          )}
+        <p className="text-base leading-relaxed text-text-muted">
+          Pick up where you left off with lessons, calculators, and class progress saved to your account.
         </p>
       </div>
 
-      {error && (
-        <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg reveal-text">
-          <p className="text-sm font-medium text-red-700">{error}</p>
-        </div>
-      )}
+      <ErrorMessage message={error} />
 
-      <div className={`relative flex flex-col items-stretch sm:items-start gap-4 ${busy ? 'opacity-90' : ''}`}>
-        <div className={googleLoading ? 'pointer-events-none opacity-60' : ''}>
+      <div className={`rounded-3xl border border-line-soft bg-white/70 p-4 shadow-sm ${busy ? 'opacity-90' : ''}`}>
+        <div className="mb-3 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-bold text-text-primary">Continue with Google</p>
+            <p className="mt-1 text-xs leading-relaxed text-text-muted">
+              Fastest option if your Caplet account uses the same email.
+            </p>
+          </div>
+          {googleLoading && (
+            <span className="mt-1 h-4 w-4 rounded-full border-2 border-accent/30 border-t-accent animate-spin" aria-hidden="true" />
+          )}
+        </div>
+        <div className={`google-login-shell overflow-hidden rounded-2xl ${googleLoading ? 'pointer-events-none opacity-60' : ''}`}>
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
-            onError={() => setError('Google sign-in was cancelled or failed.')}
+            onError={() => setError('Google sign-in was cancelled or failed. Please try again.')}
             theme="outline"
             size="large"
             text="continue_with"
-            shape="rectangular"
-            width="320"
+            shape="pill"
+            width="360"
           />
         </div>
         {googleLoading && (
-          <p className="text-sm text-text-dim flex items-center gap-2">
-            <span className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin inline-block" />
+          <p className="mt-3 text-sm text-text-dim" aria-live="polite">
             Signing you in with Google…
           </p>
         )}
       </div>
 
-      <div className="my-10 flex items-center gap-4">
-        <div className="flex-1 h-px bg-line-soft" />
-        <span className="text-xs font-medium uppercase tracking-widest text-text-dim">or</span>
-        <div className="flex-1 h-px bg-line-soft" />
+      <div className="my-8 flex items-center gap-4" aria-hidden="true">
+        <div className="h-px flex-1 bg-line-soft" />
+        <span className="text-xs font-bold uppercase tracking-[0.2em] text-text-dim">or use email</span>
+        <div className="h-px flex-1 bg-line-soft" />
       </div>
 
-      <p className="text-sm text-text-muted mb-6 leading-relaxed">
-        Signed up with Google only? Your account does not have a password yet — use Google above, or after you sign in once, open{' '}
-        <strong className="text-text-primary/80">Settings → Profile</strong> and set a password to enable email login too.
-      </p>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="email" className="block text-sm font-medium text-text-muted">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            autoComplete="username"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary"
-          />
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="password" className="block text-sm font-medium text-text-muted">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            autoComplete="current-password"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary"
-          />
-        </div>
-        <button
+      <form onSubmit={handleSubmit} className="space-y-5" aria-busy={passwordLoading}>
+        <Input
+          type="email"
+          id="email"
+          name="email"
+          label="Email address"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          autoComplete="username"
+          placeholder="you@example.com"
+        />
+        <Input
+          type="password"
+          id="password"
+          name="password"
+          label="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          autoComplete="current-password"
+          placeholder="Enter your password"
+          hint="If you originally joined with Google, continue with Google above or set a password from Settings after signing in."
+        />
+        <Button
           type="submit"
           disabled={passwordLoading || googleLoading}
-          className="w-full btn-primary py-4 mt-2 flex items-center justify-center gap-2 rounded-xl disabled:opacity-50"
+          isLoading={passwordLoading}
+          className="w-full"
         >
-          {passwordLoading ? (
-            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <span className="font-semibold">Sign in with password</span>
-          )}
-        </button>
+          {passwordLoading ? 'Signing in…' : 'Sign in with password'}
+        </Button>
       </form>
 
       {onSwitchToRegister && (
-        <p className="mt-10 text-sm text-text-dim text-center sm:text-left">
-          No account?{' '}
-          <button
-            type="button"
-            onClick={onSwitchToRegister}
-            className="text-accent font-semibold hover:underline"
-          >
-            Sign up
-          </button>
-        </p>
+        <div className="mt-8 rounded-2xl bg-surface-soft/70 px-5 py-4 text-center text-sm text-text-muted">
+          New to Caplet?{' '}
+          <Button type="button" onClick={onSwitchToRegister} variant="ghost" className="-my-3 px-2 py-2">
+            Create an account
+          </Button>
+        </div>
       )}
     </div>
   );
