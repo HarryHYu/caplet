@@ -2,8 +2,40 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
 gsap.registerPlugin(ScrollTrigger);
+
+const JARGONS = [
+  { complex: "Amortization", plain: "Paying off a loan in regular chunks until it’s gone." },
+  { complex: "Capital Gains", plain: "The profit you make when you sell something for more than you bought it." },
+  { complex: "Compound Interest", plain: "Interest you earn on your original money, plus interest on the interest you've already earned." },
+  { complex: "Franking Credits", plain: "A tax discount for shareholders to prevent the same money being taxed twice." },
+  { complex: "Asset Allocation", plain: "Spreading your money across different things (like savings, property, or shares) to stay safe." },
+  { complex: "Securities", plain: "A fancy word for tradable financial assets like stocks, bonds, or shares." }
+];
+
+const TYPEWRITER_MESSAGES = [
+  "Breaking down your tax bracket...",
+  "Explaining compound interest...",
+  "What is a franking credit?",
+  "Calculating your savings rate...",
+  "Understanding HECS repayments..."
+];
+
+const usePrefersReducedMotion = () => {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    updatePreference();
+    mediaQuery.addEventListener('change', updatePreference);
+
+    return () => mediaQuery.removeEventListener('change', updatePreference);
+  }, []);
+
+  return prefersReducedMotion;
+};
 
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,14 +43,14 @@ const FAQItem = ({ question, answer }) => {
     <div className="border-b border-black/5 last:border-0">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-8 flex justify-between items-center text-left group transition-all"
+        className="w-full py-8 flex justify-between items-center text-left group transition-colors duration-200"
       >
-        <span className="text-xl md:text-2xl font-serif italic text-text-primary group-hover:text-accent-strong transition-colors">{question}</span>
+        <span className="text-xl md:text-2xl font-serif italic text-text-primary group-hover:text-accent-strong transition-colors duration-200">{question}</span>
         <span className={`w-8 h-8 rounded-full border border-black/10 flex items-center justify-center transition-transform duration-300 ${isOpen ? 'rotate-180 bg-accent text-white' : ''}`}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
         </span>
       </button>
-      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 pb-8' : 'max-h-0'}`}>
+      <div className={`overflow-hidden transition-[max-height,padding-bottom] duration-300 ease-out ${isOpen ? 'max-h-96 pb-8' : 'max-h-0'}`}>
         <p className="text-lg text-text-muted font-display font-medium leading-relaxed max-w-3xl">
           {answer}
         </p>
@@ -29,28 +61,23 @@ const FAQItem = ({ question, answer }) => {
 
 const Home = () => {
   const heroRef = useRef(null);
-  const heroTextRef = useRef(null);
   const philosophyRef = useRef(null);
   const learningPathRef = useRef(null);
   const jargonRef = useRef(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Jargon Transformation Logic
   const [jargonIndex, setJargonIndex] = useState(0);
-  const jargons = [
-    { complex: "Amortization", plain: "Paying off a loan in regular chunks until it’s gone." },
-    { complex: "Capital Gains", plain: "The profit you make when you sell something for more than you bought it." },
-    { complex: "Compound Interest", plain: "Interest you earn on your original money, plus interest on the interest you've already earned." },
-    { complex: "Franking Credits", plain: "A tax discount for shareholders to prevent the same money being taxed twice." },
-    { complex: "Asset Allocation", plain: "Spreading your money across different things (like savings, property, or shares) to stay safe." },
-    { complex: "Securities", plain: "A fancy word for tradable financial assets like stocks, bonds, or shares." }
-  ];
 
   useEffect(() => {
+    if (prefersReducedMotion) return undefined;
+
     const jargonInterval = setInterval(() => {
-      setJargonIndex(prev => (prev + 1) % jargons.length);
-    }, 4000);
+      setJargonIndex(prev => (prev + 1) % JARGONS.length);
+    }, 5000);
+
     return () => clearInterval(jargonInterval);
-  }, []);
+  }, [prefersReducedMotion]);
 
   // Card 1 Logic: Courses Shuffler
   const [courses, setCourses] = useState([
@@ -60,6 +87,8 @@ const Home = () => {
   ]);
 
   useEffect(() => {
+    if (prefersReducedMotion) return undefined;
+
     const interval = setInterval(() => {
       setCourses(prev => {
         const newArr = [...prev];
@@ -67,29 +96,27 @@ const Home = () => {
         newArr.unshift(last);
         return newArr;
       });
-    }, 3000);
+    }, 4500);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [prefersReducedMotion]);
 
   // Card 2 Logic: Telemetry Typewriter
   const [typewriterText, setTypewriterText] = useState("");
-  const messages = [
-    "Breaking down your tax bracket...",
-    "Explaining compound interest...",
-    "What is a franking credit?",
-    "Calculating your savings rate...",
-    "Understanding HECS repayments..."
-  ];
-
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setTypewriterText(TYPEWRITER_MESSAGES[0]);
+      return undefined;
+    }
+
     let msgIndex = 0;
     let charIndex = 0;
     let isDeleting = false;
     let timeout;
 
     const type = () => {
-      const currentMsg = messages[msgIndex];
-      
+      const currentMsg = TYPEWRITER_MESSAGES[msgIndex];
+
       if (isDeleting) {
         setTypewriterText(currentMsg.substring(0, charIndex - 1));
         charIndex--;
@@ -99,163 +126,131 @@ const Home = () => {
       }
 
       if (!isDeleting && charIndex === currentMsg.length) {
-        timeout = setTimeout(() => { isDeleting = true; type(); }, 2000);
+        timeout = setTimeout(() => { isDeleting = true; type(); }, 2600);
       } else if (isDeleting && charIndex === 0) {
         isDeleting = false;
-        msgIndex = (msgIndex + 1) % messages.length;
-        timeout = setTimeout(type, 500);
+        msgIndex = (msgIndex + 1) % TYPEWRITER_MESSAGES.length;
+        timeout = setTimeout(type, 700);
       } else {
-        timeout = setTimeout(type, isDeleting ? 30 : 70);
+        timeout = setTimeout(type, isDeleting ? 36 : 82);
       }
     };
 
     timeout = setTimeout(type, 1000);
     return () => clearTimeout(timeout);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [prefersReducedMotion]);
 
   // Card 3 Logic: Calculator Automation
   const [calcInput, setCalcInput] = useState("");
   const [calcOutput, setCalcOutput] = useState(0);
 
   useEffect(() => {
-    const runAnimation = async () => {
-      // Very basic mock of an automated calculator workflow
-      setCalcInput("");
-      setCalcOutput(0);
-      
-      await new Promise(r => setTimeout(r, 1000));
-      setCalcInput("$8");
-      await new Promise(r => setTimeout(r, 100));
-      setCalcInput("$85");
-      await new Promise(r => setTimeout(r, 100));
-      setCalcInput("$85,");
-      await new Promise(r => setTimeout(r, 100));
-      setCalcInput("$85,0");
-      await new Promise(r => setTimeout(r, 100));
+    if (prefersReducedMotion) {
       setCalcInput("$85,000");
+      setCalcOutput(19667);
+      return undefined;
+    }
 
-      await new Promise(r => setTimeout(r, 500));
-      
-      // Animate counter
-      let value = 0;
-      const target = 19667; // approx tax
-      const interval = setInterval(() => {
-        value += Math.floor(target / 20);
-        if (value >= target) {
-          setCalcOutput(target);
-          clearInterval(interval);
-        } else {
-          setCalcOutput(value);
-        }
-      }, 50);
+    let isCancelled = false;
+    let counterInterval;
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-      await new Promise(r => setTimeout(r, 3000));
-      // Loop
-      runAnimation();
+    const runAnimation = async () => {
+      while (!isCancelled) {
+        // Very basic mock of an automated calculator workflow
+        setCalcInput("");
+        setCalcOutput(0);
+
+        await sleep(1200);
+        if (isCancelled) break;
+        setCalcInput("$8");
+        await sleep(130);
+        if (isCancelled) break;
+        setCalcInput("$85");
+        await sleep(130);
+        if (isCancelled) break;
+        setCalcInput("$85,");
+        await sleep(130);
+        if (isCancelled) break;
+        setCalcInput("$85,0");
+        await sleep(130);
+        if (isCancelled) break;
+        setCalcInput("$85,000");
+
+        await sleep(650);
+        if (isCancelled) break;
+
+        // Animate counter
+        let value = 0;
+        const target = 19667; // approx tax
+        counterInterval = setInterval(() => {
+          value += Math.floor(target / 18);
+          if (value >= target) {
+            setCalcOutput(target);
+            clearInterval(counterInterval);
+          } else {
+            setCalcOutput(value);
+          }
+        }, 60);
+
+        await sleep(4200);
+      }
     };
 
     runAnimation();
-  }, []);
 
-  // GSAP Animations
+    return () => {
+      isCancelled = true;
+      clearInterval(counterInterval);
+    };
+  }, [prefersReducedMotion]);
+
+  // GSAP is limited to the sticky learning-card stack where scroll-linked
+  // transforms add spatial context beyond a simple CSS reveal.
   useEffect(() => {
+    if (prefersReducedMotion) return undefined;
+
     const ctx = gsap.context(() => {
-      // Hero Animations
-      gsap.fromTo('.hero-text-elem', 
-        { y: 50, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: 'power3.out', delay: 0.2 }
-      );
-
-      // Features Cards Reveal
-      gsap.fromTo('.feature-card',
-        { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          stagger: 0.2,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: '.feature-card',
-            start: 'top 80%',
-          }
-        }
-      );
-
-      // Philosophy Scroll Trigger
-      gsap.fromTo('.phil-text',
-        { y: 100, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1.2,
-          stagger: 0.2,
-          ease: 'power4.out',
-          scrollTrigger: {
-            trigger: philosophyRef.current,
-            start: 'top 70%',
-          }
-        }
-      );
-
-      // Learning Path Sticky Stacking
       const cards = gsap.utils.toArray('.learning-card');
       cards.forEach((card, i) => {
         if (i < cards.length - 1) {
           gsap.to(card, {
-            scale: 0.9,
-            opacity: 0.5,
-            filter: 'blur(20px)',
+            scale: 0.96,
+            opacity: 0.76,
             scrollTrigger: {
               trigger: cards[i + 1],
-              start: 'top 70%',
-              end: 'top top',
-              scrub: true,
+              start: 'top 72%',
+              end: 'top 24%',
+              scrub: 0.35,
             }
           });
         }
       });
-
-      // Jargon Reveal
-      gsap.fromTo('.jargon-box',
-        { scale: 0.8, opacity: 0 },
-        {
-          scale: 1,
-          opacity: 1,
-          duration: 1,
-          ease: 'back.out(1.7)',
-          scrollTrigger: {
-            trigger: jargonRef.current,
-            start: 'top 60%',
-          }
-        }
-      );
-    });
+    }, learningPathRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [prefersReducedMotion]);
 
   return (
     <div className="bg-surface-body text-text-primary relative selection:bg-accent selection:text-white">
       {/* ================= SIMPLIFIED HERO ================= */}
       <section ref={heroRef} className="relative pt-32 pb-24 md:pt-40 md:pb-40">
-        <div className="container-custom relative z-10 w-full text-center" ref={heroTextRef}>
+        <div className="container-custom relative z-10 w-full text-center">
           <div className="max-w-4xl mx-auto text-text-primary">
-            <h1 className="hero-text-elem text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter mb-8">
+            <h1 className="motion-reveal motion-stagger-1 text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter mb-8">
               Money,<br />
               <span className="font-serif italic font-medium text-accent-strong">Simplified.</span>
             </h1>
-            <p className="hero-text-elem text-xl sm:text-2xl font-display font-medium max-w-2xl mx-auto text-text-muted leading-relaxed mb-12">
+            <p className="motion-reveal motion-stagger-2 text-xl sm:text-2xl font-display font-medium max-w-2xl mx-auto text-text-muted leading-relaxed mb-12">
               Structured financial education for Australians.<br />
               No products. No catch. Just clarity.
             </p>
-            <div className="hero-text-elem flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Link to="/register" className="bg-accent hover:bg-accent-strong text-white font-display font-semibold px-10 py-5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl w-full sm:w-auto text-center">
+            <div className="motion-reveal motion-stagger-3 flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <Link to="/register" className="bg-accent hover:bg-accent-strong text-white font-display font-semibold px-10 py-5 rounded-full transition duration-200 hover:-translate-y-0.5 active:translate-y-0 shadow-xl w-full sm:w-auto text-center">
                 Get Started Free
               </Link>
-              <Link to="/courses" className="text-text-muted hover:text-text-primary font-display font-bold text-sm uppercase tracking-widest transition-all duration-300 group py-4 px-6 md:px-0">
-                Browse Registry <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span>
+              <Link to="/courses" className="text-text-muted hover:text-text-primary font-display font-bold text-sm uppercase tracking-widest transition-colors duration-200 group py-4 px-6 md:px-0">
+                Browse Registry <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">&rarr;</span>
               </Link>
             </div>
           </div>
@@ -268,7 +263,7 @@ const Home = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             {/* Card 1: Knowledge Shuffler */}
-            <div className="feature-card h-80 md:h-96 bg-white rounded-[2rem] p-8 shadow-sm border border-black/5 flex flex-col items-center justify-center relative overflow-hidden group">
+            <div className="motion-reveal motion-stagger-1 h-80 md:h-96 bg-white rounded-[2rem] p-8 shadow-sm border border-black/5 flex flex-col items-center justify-center relative overflow-hidden group">
               <div className="w-full flex justify-between absolute top-8 px-8">
                 <span className="text-xs font-mono tracking-widest text-accent-strong/50 uppercase">Knowledge Base</span>
                 <span className="w-2 h-2 rounded-full bg-accent-strong/20" />
@@ -277,7 +272,7 @@ const Home = () => {
                 {courses.map((course, i) => (
                   <div 
                     key={course}
-                    className="absolute w-full max-w-[280px] bg-surface-body border border-black/5 rounded-2xl p-6 shadow-sm flex items-center justify-center text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+                    className="absolute w-full max-w-[280px] bg-surface-body border border-black/5 rounded-2xl p-6 shadow-sm flex items-center justify-center text-center transition-[transform,opacity] duration-300 ease-out"
                     style={{
                       transform: `translateY(${i === 0 ? '0' : i === 1 ? '-16px' : '-32px'}) scale(${i === 0 ? 1 : i === 1 ? 0.95 : 0.9})`,
                       zIndex: courses.length - i,
@@ -291,10 +286,10 @@ const Home = () => {
             </div>
 
             {/* Card 2: AI Literarcy Assistant */}
-            <div className="h-80 md:h-96 bg-text-primary text-surface-body rounded-[2rem] p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+            <div className="motion-reveal motion-stagger-2 h-80 md:h-96 bg-text-primary text-surface-body rounded-[2rem] p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-mono tracking-widest text-accent uppercase flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   AI Assistant — Educational Only
                 </span>
               </div>
@@ -302,14 +297,14 @@ const Home = () => {
                 <p className="font-mono text-lg text-surface-body/90 leading-tight">
                   <span className="text-accent mr-2">&gt;</span>
                   {typewriterText}
-                  <span className="inline-block w-2 bg-accent h-5 animate-pulse ml-1 align-middle" />
+                  <span className="inline-block w-2 bg-accent h-5 ml-1 align-middle" />
                 </p>
               </div>
               <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-text-primary via-transparent to-transparent opacity-50" />
             </div>
 
             {/* Card 3: Live Calculator Preview */}
-            <div className="h-80 md:h-96 bg-white rounded-[2rem] p-8 shadow-sm border border-black/5 flex flex-col relative group">
+            <div className="motion-reveal motion-stagger-3 h-80 md:h-96 bg-white rounded-[2rem] p-8 shadow-sm border border-black/5 flex flex-col relative group">
               <div className="flex justify-between items-center mb-8">
                 <span className="text-[10px] font-mono tracking-widest text-accent-strong/50 uppercase">Live Telemetry</span>
               </div>
@@ -330,12 +325,12 @@ const Home = () => {
                 </div>
               </div>
 
-              <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-display font-bold text-accent-strong cursor-pointer hover:text-accent transition-colors">
+              <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-display font-bold text-accent-strong cursor-pointer hover:text-accent transition-colors duration-200">
                 Try the full calculator &rarr;
               </div>
 
               {/* Fake SVG Cursor */}
-              <div className="absolute w-8 h-8 pointer-events-none transition-all duration-1000 ease-in-out z-10" 
+              <div className="absolute w-8 h-8 pointer-events-none transition-[top,left,opacity] duration-500 ease-out z-10" 
                    style={{ 
                      top: calcInput ? '30%' : '75%', 
                      left: calcInput ? '60%' : '20%',
@@ -369,35 +364,35 @@ const Home = () => {
               </p>
             </div>
 
-            <div className="w-full lg:w-1/2 relative bg-surface-body rounded-[3rem] p-8 md:p-16 jargon-box shadow-2xl border border-black/5 min-h-[400px] flex flex-col justify-center transition-all duration-500 overflow-hidden">
+            <div className="w-full lg:w-1/2 relative bg-surface-body rounded-[3rem] p-8 md:p-16 motion-reveal shadow-2xl border border-black/5 min-h-[400px] flex flex-col justify-center transition-shadow duration-200 overflow-hidden">
               <div className="absolute top-0 right-0 p-8">
                 <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                  <span className="text-accent font-mono font-bold">{jargonIndex + 1}/{jargons.length}</span>
+                  <span className="text-accent font-mono font-bold">{jargonIndex + 1}/{JARGONS.length}</span>
                 </div>
               </div>
 
               <div className="relative h-full">
                 {/* Complex side */}
-                <div key={`complex-${jargons[jargonIndex].complex}`} className="animate-fade-slide-up">
+                <div key={`complex-${JARGONS[jargonIndex].complex}`} className="animate-fade-slide-up">
                   <span className="text-[10px] uppercase tracking-widest font-mono text-text-dim/40 mb-2 block">Complex Terminology</span>
                   <h3 className="text-3xl md:text-5xl font-display font-bold text-text-primary mb-12">
-                    {jargons[jargonIndex].complex}
+                    {JARGONS[jargonIndex].complex}
                   </h3>
                 </div>
 
                 {/* Arrow animation divider */}
                 <div className="w-full h-px bg-accent/20 mb-12 relative">
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-accent rounded-full animate-ping" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-accent rounded-full opacity-80" />
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white shadow-lg">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                   </div>
                 </div>
 
                 {/* Plain side */}
-                <div key={`plain-${jargons[jargonIndex].complex}`} className="animate-fade-slide-up" style={{ animationDelay: '150ms' }}>
+                <div key={`plain-${JARGONS[jargonIndex].complex}`} className="animate-fade-slide-up" style={{ animationDelay: '150ms' }}>
                   <span className="text-[10px] uppercase tracking-widest font-mono text-accent mb-2 block font-bold">In Plain English</span>
                   <p className="text-xl md:text-2xl font-serif italic text-accent-strong leading-relaxed">
-                    "{jargons[jargonIndex].plain}"
+                    "{JARGONS[jargonIndex].plain}"
                   </p>
                 </div>
               </div>
@@ -410,12 +405,12 @@ const Home = () => {
         <div className="container-custom relative z-10">
           <div className="max-w-5xl">
             <h2 className="text-4xl sm:text-6xl md:text-7xl font-display font-bold tracking-tight mb-12 leading-[1.2]">
-              <span className="block overflow-hidden"><span className="phil-text block py-3">Most platforms profit from</span></span>
-              <span className="block overflow-hidden"><span className="phil-text block py-3 font-serif italic text-accent-strong">your confusion.</span></span>
-              <span className="block overflow-hidden mt-2"><span className="phil-text block py-3">We exist to end it.</span></span>
+              <span className="block overflow-hidden"><span className="motion-reveal block py-3">Most platforms profit from</span></span>
+              <span className="block overflow-hidden"><span className="motion-reveal motion-stagger-1 block py-3 font-serif italic text-accent-strong">your confusion.</span></span>
+              <span className="block overflow-hidden mt-2"><span className="motion-reveal motion-stagger-2 block py-3">We exist to end it.</span></span>
             </h2>
             
-            <p className="phil-text text-lg sm:text-2xl font-display font-medium text-text-primary/80 max-w-3xl leading-relaxed">
+            <p className="motion-reveal motion-stagger-3 text-lg sm:text-2xl font-display font-medium text-text-primary/80 max-w-3xl leading-relaxed">
               Caplet is free. Always. No products. No upsells. No affiliate links buried in our content. Just structured financial education, built for Australians who deserve better.
             </p>
           </div>
@@ -452,7 +447,7 @@ const Home = () => {
               anim: "curve",
               desc: "From theory to reality. Learn how compound interest, risk profiles, and long-term planning translate into actual wealth creation."
             }
-          ].map((item, index) => (
+          ].map((item) => (
             <div key={item.kicker} className="learning-card sticky top-24 md:top-32 w-full max-w-6xl mx-auto h-[65vh] min-h-[500px] mb-24 rounded-[3rem] bg-white border border-black/5 shadow-2xl p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center overflow-hidden transform-gpu">
               
               <div className="w-full md:w-1/2 relative z-10">
@@ -470,7 +465,7 @@ const Home = () => {
               <div className="w-full md:w-1/2 h-full flex items-center justify-center bg-surface-body rounded-[2rem] border border-black/5 relative overflow-hidden group">
                 {/* Abstract Visuals depending on anim type */}
                 {item.anim === 'pie' && (
-                  <div className="relative w-64 h-64 rounded-full border-[16px] border-accent/20 border-t-accent border-r-accent-strong animate-spin transition-all duration-[10s]" />
+                  <div className="relative w-64 h-64 rounded-full border-[16px] border-accent/20 border-t-accent border-r-accent-strong rotate-45 transition-transform duration-300" />
                 )}
                 {item.anim === 'timeline' && (
                   <div className="w-3/4 h-2 bg-accent/20 rounded-full relative">
@@ -549,7 +544,7 @@ const Home = () => {
           <p className="text-xl md:text-2xl font-display font-medium text-white/80 mb-12">
             Start with any course! it's free.
           </p>
-          <Link to="/courses" className="inline-block bg-white text-accent font-display font-bold px-10 py-5 rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl">
+          <Link to="/courses" className="inline-block bg-white text-accent font-display font-bold px-10 py-5 rounded-full hover:-translate-y-0.5 active:translate-y-0 transition-transform duration-200 shadow-xl">
             View Curriculum
           </Link>
         </div>
