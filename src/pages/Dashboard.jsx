@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../contexts/CoursesContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 import {
     BookOpenIcon,
     AcademicCapIcon,
@@ -20,6 +22,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
     const [savedSlides, setSavedSlides] = useState([]);
+    const [dashboardError, setDashboardError] = useState(null);
 
     useEffect(() => {
         if (!hasFetched && !coursesLoading) {
@@ -46,6 +49,7 @@ export default function Dashboard() {
                 setSavedSlides(savedSlidesData?.savedSlides || []);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
+                setDashboardError(error?.message || 'Failed to load dashboard data');
             } finally {
                 setLoading(false);
             }
@@ -66,6 +70,24 @@ export default function Dashboard() {
     const completedCourses = userProgress?.filter(p => p.status === 'completed') || [];
     const lastAccessed = userProgress?.sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt))[0];
     const lastAccessedCourse = lastAccessed ? courses.find(c => c.id === lastAccessed.courseId) : null;
+
+    if (dashboardError) {
+        return (
+            <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+                <ErrorState
+                    title="Dashboard could not be loaded."
+                    message="We could not load your dashboard data right now. Please refresh the page to try again."
+                    details={dashboardError}
+                    action={(
+                        <button type="button" onClick={() => window.location.reload()} className="btn-primary py-3 px-8">
+                            Refresh Dashboard
+                        </button>
+                    )}
+                    className="max-w-xl w-full"
+                />
+            </div>
+        );
+    }
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -169,9 +191,13 @@ export default function Dashboard() {
                                         </Link>
                                     ))
                                 ) : (
-                                    <div className="bg-surface-body p-12 text-center text-text-dim uppercase tracking-widest text-[10px] font-bold italic">
-                                        No active enrollments detected.
-                                    </div>
+                                    <EmptyState
+                                        eyebrow="Academy"
+                                        title="No active classes yet."
+                                        message="Join or create a class to see recent academy activity here."
+                                        compact
+                                        className="bg-surface-body"
+                                    />
                                 )}
                             </div>
                         </div>
@@ -182,19 +208,28 @@ export default function Dashboard() {
                         <div className="reveal-text stagger-3">
                             <span className="section-kicker">My Courses</span>
                             <div className="mt-8 space-y-6">
-                                {courses.slice(0, 4).map(course => (
-                                    <Link
-                                        key={course.id}
-                                        to={`/courses/${course.id}`}
-                                        className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
-                                    >
-                                        <div className="min-w-0">
-                                            <p className="text-[11px] font-bold uppercase tracking-widest truncate group-hover:text-accent transition-colors">{course.title}</p>
-                                            <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mt-1">{course.duration}m Duration</p>
-                                        </div>
-                                        <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
-                                    </Link>
-                                ))}
+                                {courses.length > 0 ? (
+                                    courses.slice(0, 4).map(course => (
+                                        <Link
+                                            key={course.id}
+                                            to={`/courses/${course.id}`}
+                                            className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="text-[11px] font-bold uppercase tracking-widest truncate group-hover:text-accent transition-colors">{course.title}</p>
+                                                <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mt-1">{course.duration}m Duration</p>
+                                            </div>
+                                            <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                                        </Link>
+                                    ))
+                                ) : (
+                                    <EmptyState
+                                        eyebrow="Courses"
+                                        title="No courses available."
+                                        message="Published courses will appear here when available."
+                                        compact
+                                    />
+                                )}
                             </div>
                         </div>
 

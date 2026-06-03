@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
 const COLORS = ['var(--text-primary)', 'var(--text-dim)', 'var(--line-soft)', 'var(--accent)', '#888', '#aaa', '#ccc'];
 
@@ -34,13 +36,13 @@ const SurveyResults = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-body">
-        <div className="text-center max-w-md mx-auto px-6 reveal-text">
-          <span className="section-kicker mb-4 text-accent italic">Unable to load results</span>
-          <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
-            {error}
-          </p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-surface-body p-6">
+        <ErrorState
+          title="Survey results could not be loaded."
+          message="We could not load survey analytics right now. Please try again shortly."
+          details={error}
+          className="max-w-xl w-full reveal-text"
+        />
       </div>
     );
   }
@@ -49,13 +51,12 @@ const SurveyResults = () => {
     return (
       <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto bg-surface-raised border border-line-soft p-20 text-center reveal-text">
-            <span className="section-kicker mb-4">Observation Post</span>
-            <h1 className="text-4xl font-black mb-8 italic uppercase tracking-tighter">Null Result.</h1>
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.25em]">
-              No empirical responses have been logged in the current cycle.
-            </p>
-          </div>
+          <EmptyState
+            eyebrow="Observation post"
+            title="No survey responses yet."
+            message="No empirical responses have been logged in the current cycle."
+            className="max-w-4xl mx-auto reveal-text"
+          />
         </div>
       </div>
     );

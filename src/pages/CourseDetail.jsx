@@ -3,6 +3,8 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -45,18 +47,30 @@ const CourseDetail = () => {
     );
   }
 
-  if (error || !course) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-6">
-          <p className="text-2xl font-bold mb-4">
-            {error || 'Course not found'}
-          </p>
-          <p className="text-text-muted mb-8">The course you're looking for doesn't exist or may have been moved.</p>
-          <Link to="/courses" className="btn-primary py-3 px-8">
-            Back to Courses
-          </Link>
-        </div>
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <ErrorState
+          title="Course could not be loaded."
+          message="We could not load this course right now. Please return to the course library and try again."
+          details={error}
+          action={<Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>}
+          className="max-w-xl w-full"
+        />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <EmptyState
+          eyebrow="Course not found"
+          title="This course is unavailable."
+          message="The course you're looking for doesn't exist or may have been moved."
+          action={<Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>}
+          className="max-w-xl w-full"
+        />
       </div>
     );
   }
@@ -227,11 +241,13 @@ const CourseDetail = () => {
           </div>
 
           {sortedModules.length === 0 && (
-            <div className="py-20 text-center border border-line-soft rounded-xl bg-surface-soft">
-              <p className="text-lg text-text-muted">
-                No modules available yet.
-              </p>
-            </div>
+            <EmptyState
+              eyebrow="Modules"
+              title="No modules available yet."
+              message="This course has been published, but its module list is still empty."
+              compact
+              className="rounded-xl"
+            />
           )}
         </div>
       </div>

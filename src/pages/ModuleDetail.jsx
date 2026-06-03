@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
 const ModuleDetail = () => {
   const { courseId, moduleId } = useParams();
@@ -52,26 +54,44 @@ const ModuleDetail = () => {
     );
   }
 
-  if (error || !course) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-6">
-          <p className="text-2xl font-bold mb-4">{error || 'Course not found'}</p>
-          <p className="text-text-muted mb-8">The course you're looking for doesn't exist or may have been moved.</p>
-          <Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>
-        </div>
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <ErrorState
+          title="Module could not be loaded."
+          message="We could not load this module right now. Please return to the course and try again."
+          details={error}
+          action={<Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>}
+          className="max-w-xl w-full"
+        />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <EmptyState
+          eyebrow="Course not found"
+          title="This course is unavailable."
+          message="The course you're looking for doesn't exist or may have been moved."
+          action={<Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>}
+          className="max-w-xl w-full"
+        />
       </div>
     );
   }
 
   if (!module_) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-6">
-          <p className="text-2xl font-bold mb-4">Module not found</p>
-          <p className="text-text-muted mb-8">This module doesn't exist or may have been moved.</p>
-          <Link to={`/courses/${courseId}`} className="btn-primary py-3 px-8">Back to Course</Link>
-        </div>
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <EmptyState
+          eyebrow="Module not found"
+          title="This module is unavailable."
+          message="This module doesn't exist or may have been moved."
+          action={<Link to={`/courses/${courseId}`} className="btn-primary py-3 px-8">Back to Course</Link>}
+          className="max-w-xl w-full"
+        />
       </div>
     );
   }
@@ -179,11 +199,13 @@ const ModuleDetail = () => {
           </div>
 
           {lessons.length === 0 && (
-            <div className="py-20 text-center border border-line-soft rounded-xl bg-surface-soft">
-              <p className="text-lg text-text-muted">
-                No lessons available yet.
-              </p>
-            </div>
+            <EmptyState
+              eyebrow="Lessons"
+              title="No lessons available yet."
+              message="This module is ready, but lesson content has not been added yet."
+              compact
+              className="rounded-xl"
+            />
           )}
         </div>
       </div>

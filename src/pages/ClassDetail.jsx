@@ -3,6 +3,8 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
 const ClassDetail = () => {
   const { classId } = useParams();
@@ -157,27 +159,34 @@ const ClassDetail = () => {
     );
   }
 
-  if (error) {
+  if (error && !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-body">
-        <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-6 text-red-500">Error</span>
-          <h2 className="text-3xl font-extrabold text-text-primary uppercase tracking-tighter mb-6">
-            Something Went <br />Wrong.
-          </h2>
-          <p className="text-text-muted text-xs font-bold uppercase tracking-widest mb-10">{error}</p>
-          <button
-            onClick={() => navigate('/classes')}
-            className="btn-secondary"
-          >
-            Back to Classes
-          </button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-surface-body p-6">
+        <ErrorState
+          title="Class could not be loaded."
+          message="We could not load this class right now. Please return to your classes and try again."
+          details={error}
+          action={<button onClick={() => navigate('/classes')} className="btn-secondary">Back to Classes</button>}
+          className="max-w-xl w-full"
+        />
       </div>
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-body p-6">
+        <EmptyState
+          eyebrow="Class not found"
+          title="This class is unavailable."
+          message="The class you're looking for doesn't exist, or you may no longer have access."
+          action={<button onClick={() => navigate('/classes')} className="btn-secondary">Back to Classes</button>}
+          className="max-w-xl w-full"
+        />
+      </div>
+    );
+  }
+
 
   const { classroom, membership, members, assignments, announcements = [], leaderboard = [] } = data;
   const isTeacher = membership?.role === 'teacher';
@@ -562,9 +571,13 @@ const ClassDetail = () => {
         </div>
 
         {error && (
-          <div className="p-6 border border-red-500 text-red-500 text-[10px] font-bold uppercase tracking-widest bg-red-50/50 dark:bg-red-900/10 animate-fade-in">
-            Error: {error}
-          </div>
+          <ErrorState
+            title="Class update failed."
+            message="We could not complete the latest class action. The current class view is still available."
+            details={error}
+            compact
+            className="animate-fade-in"
+          />
         )}
 
         {/* Tab bar — only one "page" (Stream / Classwork / People) is shown below */}
@@ -651,13 +664,12 @@ const ClassDetail = () => {
 
               {/* Announcement cards — visible to both teachers and students */}
               {!Array.isArray(announcements) || announcements.length === 0 ? (
-                <div className="p-20 border border-line-soft dark:border-line-soft text-center bg-surface-soft">
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.3em]">
-                    {isTeacher
-                      ? 'No announcements yet. Post one to get started.'
-                      : 'No announcements yet.'}
-                  </p>
-                </div>
+                <EmptyState
+                  eyebrow="Stream"
+                  title="No announcements yet."
+                  message={isTeacher ? 'Post an announcement to start the class stream.' : 'Announcements from your teachers will appear here.'}
+                  compact
+                />
               ) : (
                 <div className="space-y-4">
                   {announcements.map((a) => {
@@ -871,11 +883,12 @@ const ClassDetail = () => {
             </div>
 
             {assignments.length === 0 ? (
-              <div className="p-20 border border-line-soft dark:border-line-soft text-center bg-surface-soft">
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.3em]">
-                  No assignments yet. Create one to get started.
-                </p>
-              </div>
+              <EmptyState
+                eyebrow="Classwork"
+                title="No assignments yet."
+                message={isTeacher ? 'Create an assignment to give students their next task.' : 'Assignments from your teachers will appear here.'}
+                compact
+              />
             ) : (
               <div className="grid grid-cols-1 gap-6">
                 {assignments.map((a) => {
@@ -1272,9 +1285,12 @@ const ClassDetail = () => {
                   Teachers
                 </h3>
                 {teachers.length === 0 ? (
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-7">
-                    No teachers in this class.
-                  </p>
+                  <EmptyState
+                    eyebrow="Teachers"
+                    title="No teachers listed."
+                    message="Teacher memberships will appear here once available."
+                    compact
+                  />
                 ) : (
                   <div className="space-y-3">
                     {teachers.map((t) => (
@@ -1312,9 +1328,12 @@ const ClassDetail = () => {
                   Students ({students.length})
                 </h3>
                 {students.length === 0 ? (
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-7">
-                    No students in this class yet.
-                  </p>
+                  <EmptyState
+                    eyebrow="Students"
+                    title="No students yet."
+                    message="Students will appear here after they join the class."
+                    compact
+                  />
                 ) : (
                   <div className="grid grid-cols-1 gap-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                     {students.map((s) => (

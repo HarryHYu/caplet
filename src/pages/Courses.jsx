@@ -5,8 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
-const CourseCover = ({ title, id }) => {
+const CourseCover = ({ title }) => {
   // Generate a semi-stable pseudo-random gradient based on title
   const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const hue1 = hash % 360;
@@ -105,9 +107,21 @@ const Courses = () => {
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         {error && (
-          <div className="mb-20 p-6 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-red-800 text-sm font-medium flex items-center gap-4 reveal-text">
-            {error}
-          </div>
+          <ErrorState
+            title="Course library could not be loaded."
+            message="We could not refresh the course list. Please try again or adjust your filters."
+            details={error}
+            action={(
+              <button
+                type="button"
+                onClick={() => fetchCourses(filters)}
+                className="btn-primary py-3 px-8"
+              >
+                Retry
+              </button>
+            )}
+            className="mb-20 reveal-text"
+          />
         )}
 
         {/* Header */}
@@ -215,17 +229,21 @@ const Courses = () => {
         </div>
 
         {courses.length === 0 && !loading && (
-          <div className="py-40 text-center border border-line-soft bg-surface-soft reveal-text">
-            <p className="text-text-dim font-bold uppercase tracking-[0.4em] text-[10px] animate-pulse mb-8">
-              Registry Query Null
-            </p>
-            <button
-              onClick={() => setFilters({ level: '', search: '' })}
-              className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-accent-strong transition-colors"
-            >
-              Clear Filters
-            </button>
-          </div>
+          <EmptyState
+            eyebrow="Registry query null"
+            title="No courses match this view."
+            message="Try clearing your filters or searching for another topic."
+            action={(
+              <button
+                type="button"
+                onClick={() => setFilters({ level: '', search: '' })}
+                className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-accent-strong transition-colors"
+              >
+                Clear Filters
+              </button>
+            )}
+            className="reveal-text"
+          />
         )}
       </div>
     </div>
