@@ -64,8 +64,7 @@ const GSTCalculator = () => {
                     placeholder="0.00"
                     className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
-                </div>
-              </div>
+                </FormRow>
 
               <div>
                 <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-8 block italic">

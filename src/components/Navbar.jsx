@@ -18,10 +18,10 @@ const Navbar = () => {
 
   const allNavItems = [
     { path: '/', label: 'Home', publicOnly: true },
-    { path: '/dashboard', label: 'My Dashboard', privateOnly: true },
-    { path: '/courses', label: 'Curriculum' },
-    { path: '/classes', label: 'Academy' },
-    { path: '/tools', label: 'Instruments' },
+    { path: '/dashboard', label: 'Dashboard', privateOnly: true },
+    { path: '/courses', label: 'Courses' },
+    { path: '/classes', label: 'Classes' },
+    { path: '/tools', label: 'Tools' },
   ];
 
   const navItems = allNavItems.filter((item) => {
@@ -35,6 +35,13 @@ const Navbar = () => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  const getNavLinkClass = (active) =>
+    `inline-flex items-center rounded-full border px-4 py-2 text-sm font-display font-semibold tracking-tight transition-all ${
+      active
+        ? 'border-accent/25 bg-accent/10 text-accent shadow-sm shadow-accent/5'
+        : 'border-transparent text-text-muted hover:border-line-soft hover:bg-surface-soft/80 hover:text-text-primary'
+    }`;
+
   // Hide navbar on auth pages only.
   const hidePaths = ['/login', '/register'];
   if (hidePaths.includes(location.pathname)) {
@@ -42,7 +49,7 @@ const Navbar = () => {
   }
 
   return (
-      <header className="fixed top-0 inset-x-0 z-50 bg-surface-body/90 dark:bg-surface-body/85 backdrop-blur-xl border-b border-line-soft text-text-primary">
+      <header className="fixed top-0 inset-x-0 z-50 bg-surface-body/90 dark:bg-surface-body/85 backdrop-blur-xl border-b border-line-soft/80 text-text-primary shadow-sm shadow-black/[0.03]">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
           <div className="h-14 md:h-16 flex items-center justify-between gap-4">
             {/* Logo */}
@@ -56,23 +63,20 @@ const Navbar = () => {
             </Link>
 
             {/* Desktop links */}
-            <nav className="hidden md:flex items-center gap-7 lg:gap-9">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`relative text-sm font-display font-medium tracking-tight transition-colors ${
-                    isActive(item.path)
-                      ? 'text-text-primary'
-                      : 'text-text-muted hover:text-text-primary'
-                  }`}
-                >
-                  {item.label}
-                  {isActive(item.path) && (
-                    <span className="absolute -bottom-[18px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent" />
-                  )}
-                </Link>
-              ))}
+            <nav className="hidden md:flex items-center gap-1.5 rounded-full border border-line-soft/80 bg-surface-raised/45 p-1 shadow-inner shadow-black/[0.02]" aria-label="Primary navigation">
+              {navItems.map((item) => {
+                const active = isActive(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={getNavLinkClass(active)}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </nav>
 
             {/* Actions */}
@@ -80,7 +84,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="p-2 text-text-muted hover:text-text-primary transition-colors"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line-soft/80 bg-surface-raised/70 text-text-muted shadow-sm shadow-black/[0.03] transition-all hover:border-accent/30 hover:bg-surface-soft hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 aria-label="Toggle dark mode"
               >
                 {isDark ? (
@@ -99,23 +103,30 @@ const Navbar = () => {
                   <button
                     type="button"
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] bg-accent text-white px-3.5 md:px-4 py-2 rounded-full hover:bg-accent-strong transition-colors"
+                    className="inline-flex h-10 items-center gap-2 rounded-full border border-accent/20 bg-accent px-3.5 md:px-4 text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-sm shadow-accent/20 transition-all hover:bg-accent-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    aria-expanded={showUserMenu}
+                    aria-haspopup="menu"
                   >
-                    {user?.firstName || 'User'}
+                    <span>{user?.firstName || 'User'}</span>
+                    <svg className={`w-3.5 h-3.5 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
                   {showUserMenu && (
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-surface-raised border border-line-soft rounded-2xl shadow-xl overflow-hidden py-2">
+                    <div className="absolute top-full right-0 mt-2 w-48 overflow-hidden rounded-2xl border border-line-soft bg-surface-raised py-2 shadow-xl" role="menu">
                       <Link
                         to="/settings"
                         onClick={() => setShowUserMenu(false)}
-                        className="block px-4 py-2 text-sm text-text-primary hover:bg-surface-soft"
+                        className="block px-4 py-2.5 text-sm font-display font-medium text-text-primary transition-colors hover:bg-surface-soft"
+                        role="menuitem"
                       >
                         Settings
                       </Link>
                       <button
                         type="button"
                         onClick={logout}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        className="w-full px-4 py-2.5 text-left text-sm font-display font-medium text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                        role="menuitem"
                       >
                         Sign Out
                       </button>
@@ -125,7 +136,7 @@ const Navbar = () => {
               ) : (
                 <Link
                   to="/login"
-                  className="hidden md:inline-flex items-center justify-center bg-accent hover:bg-accent-strong text-white font-display font-semibold text-sm px-5 py-2 rounded-full transition-colors"
+                  className="hidden h-10 items-center justify-center rounded-full border border-accent/20 bg-accent px-5 text-sm font-display font-semibold text-white shadow-sm shadow-accent/20 transition-all hover:bg-accent-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 md:inline-flex"
                 >
                   Get Started
                 </Link>
@@ -134,7 +145,7 @@ const Navbar = () => {
               {/* Mobile toggle */}
               <button
                 type="button"
-                className="md:hidden p-2 text-text-muted hover:text-text-primary"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line-soft/80 bg-surface-raised/70 text-text-muted shadow-sm shadow-black/[0.03] transition-all hover:border-accent/30 hover:bg-surface-soft hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 md:hidden"
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label={isOpen ? 'Close menu' : 'Open menu'}
               >
@@ -151,24 +162,28 @@ const Navbar = () => {
 
           {/* Mobile menu */}
           {isOpen && (
-            <div className="md:hidden border-t border-line-soft py-4 flex flex-col gap-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setIsOpen(false)}
-                  className={`px-2 py-2.5 text-base font-display font-medium rounded-lg ${
-                    isActive(item.path) ? 'text-accent' : 'text-text-primary'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <div className="md:hidden border-t border-line-soft/80 py-4">
+              <nav className="flex flex-col gap-1.5 rounded-2xl border border-line-soft/80 bg-surface-raised/45 p-1.5 shadow-inner shadow-black/[0.02]" aria-label="Mobile primary navigation">
+                {navItems.map((item) => {
+                  const active = isActive(item.path);
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setIsOpen(false)}
+                      className={getNavLinkClass(active)}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
               {!isAuthenticated && (
                 <Link
                   to="/login"
                   onClick={() => setIsOpen(false)}
-                  className="mt-2 inline-flex items-center justify-center bg-accent text-white font-display font-semibold px-6 py-3 rounded-xl text-center"
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-accent/20 bg-accent px-6 py-3 text-center font-display font-semibold text-white shadow-sm shadow-accent/20 transition-all hover:bg-accent-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Get Started
                 </Link>

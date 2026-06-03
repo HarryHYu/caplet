@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 import SlideRenderer from '../components/lesson/SlideRenderer';
 import { slideKindLabel, normalizeSlide } from '../lib/slideSchema';
 import { BookmarkIcon, ArrowRightIcon, SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -82,6 +84,7 @@ function getSlidePreview(savedSlide) {
 export default function Revision() {
     const [savedSlides, setSavedSlides] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [organizing, setOrganizing] = useState(false);
     const [organizeError, setOrganizeError] = useState(null);
     const [removingId, setRemovingId] = useState(null);
@@ -89,14 +92,21 @@ export default function Revision() {
     const [summary, setSummary] = useState({ open: false, loading: false, error: null, category: '', slides: [] });
 
     const refetch = async () => {
-        const data = await api.getSavedSlides().catch(() => null);
+        const data = await api.getSavedSlides();
         setSavedSlides(data?.savedSlides || []);
+        setError(null);
     };
 
     useEffect(() => {
         (async () => {
-            await refetch();
-            setLoading(false);
+            try {
+                await refetch();
+            } catch (e) {
+                console.error('Failed to load saved slides:', e);
+                setError(e?.message || 'Failed to load saved slides');
+            } finally {
+                setLoading(false);
+            }
         })();
     }, []);
 
@@ -151,6 +161,20 @@ export default function Revision() {
         return (
             <div className="min-h-screen bg-surface-body flex items-center justify-center">
                 <CapletLoader message="Loading your revision…" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+                <ErrorState
+                    title="Revision could not be loaded."
+                    message="We could not load your saved slides right now. Please try again shortly."
+                    details={error}
+                    action={<Link to="/courses" className="btn-primary py-3 px-8">Browse Courses</Link>}
+                    className="max-w-xl w-full"
+                />
             </div>
         );
     }

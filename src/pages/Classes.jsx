@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
 const Classes = () => {
   const { user, isAuthenticated } = useAuth();
@@ -128,10 +130,12 @@ const Classes = () => {
         </header>
 
         {error && (
-          <div className="mb-20 p-10 bg-red-50 text-red-800 text-[10px] font-bold uppercase tracking-widest border border-red-100 flex items-center gap-4 reveal-text">
-            <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-            Signal Error: {error}
-          </div>
+          <ErrorState
+            title="Classes could not be updated."
+            message="We hit a problem loading or updating your classes. Existing class data remains visible when available."
+            details={error}
+            className="mb-20 reveal-text"
+          />
         )}
 
         {isTeacher && (
@@ -140,11 +144,12 @@ const Classes = () => {
               Leadership Portfolio
             </h2>
             {classes.teaching.length === 0 ? (
-              <div className="p-24 border border-line-soft text-center bg-surface-soft">
-                <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest">
-                  No managed entities detected.
-                </p>
-              </div>
+              <EmptyState
+                eyebrow="Leadership portfolio"
+                title="No managed classes yet."
+                message="Create a class to organize students, announcements, and assignments."
+                compact
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft shadow-[0_24px_80px_rgba(15,23,42,0.05)]">
                 {classes.teaching.map((cls) => (
@@ -173,11 +178,12 @@ const Classes = () => {
             Enrollment Registry
           </h2>
           {classes.student.length === 0 ? (
-            <div className="p-24 border border-line-soft text-center bg-surface-soft">
-              <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest italic">
-                Awaiting first academy registration.
-              </p>
-            </div>
+            <EmptyState
+              eyebrow="Enrollment registry"
+              title="No class memberships yet."
+              message="Join a class with a code from your teacher to see it here."
+              compact
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft shadow-[0_24px_80px_rgba(15,23,42,0.05)]">
               {classes.student.map((cls) => (

@@ -1,64 +1,23 @@
-import { forwardRef } from 'react';
-import { cn } from './utils';
-
 const variantClasses = {
   primary:
-    'border-transparent bg-accent text-white shadow-minimal hover:bg-accent-strong hover:shadow-minimal-lg active:bg-accent-strong',
+    'border-transparent bg-accent text-white shadow-lg shadow-accent/20 hover:bg-accent-strong hover:shadow-xl hover:shadow-accent/25',
   secondary:
-    'border-line-soft bg-surface-raised text-text-primary shadow-minimal hover:border-text-dim hover:bg-surface-soft hover:shadow-minimal-lg',
-  soft:
-    'border-transparent bg-accent-soft text-accent hover:bg-accent hover:text-white active:bg-accent-strong',
+    'border-line-soft bg-white/80 text-text-primary shadow-sm hover:border-accent/40 hover:bg-accent/5 hover:text-accent',
   ghost:
-    'border-transparent bg-transparent text-text-muted hover:bg-surface-soft hover:text-text-primary',
-  inverse:
-    'border-transparent bg-surface-inverse text-text-contrast shadow-minimal hover:opacity-90 hover:shadow-minimal-lg',
-  danger:
-    'border-transparent bg-red-600 text-white shadow-minimal hover:bg-red-700 hover:shadow-minimal-lg dark:bg-red-500 dark:hover:bg-red-600',
+    'border-transparent bg-transparent text-accent hover:bg-accent/10',
 };
 
-const sizeClasses = {
-  sm: 'min-h-9 px-3 py-2 text-xs',
-  md: 'min-h-11 px-5 py-2.5 text-sm',
-  lg: 'min-h-12 px-7 py-3 text-base',
-  icon: 'h-10 w-10 p-0',
-};
-
-const Button = forwardRef(function Button(
-  {
-    as: Component = 'button',
-    children,
-    className,
-    disabled = false,
-    fullWidth = false,
-    size = 'md',
-    type,
-    variant = 'primary',
-    ...props
-  },
-  ref,
-) {
-  const isButton = Component === 'button';
-
-  return (
-    <Component
-      ref={ref}
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg border font-display font-semibold tracking-tight transition-all duration-200',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-body',
-        'disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50',
-        fullWidth && 'w-full',
-        sizeClasses[size] || sizeClasses.md,
-        variantClasses[variant] || variantClasses.primary,
-        className,
-      )}
-      disabled={isButton ? disabled : undefined}
-      aria-disabled={!isButton && disabled ? true : undefined}
-      type={isButton ? type || 'button' : undefined}
-      {...props}
-    >
-      {children}
-    </Component>
-  );
-});
+const Button = ({ children, className = '', variant = 'primary', isLoading = false, disabled = false, ...props }) => (
+  <button
+    className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-3.5 text-sm font-bold transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses[variant]} ${className}`}
+    disabled={disabled || isLoading}
+    {...props}
+  >
+    {isLoading ? (
+      <span className="h-5 w-5 rounded-full border-2 border-current/30 border-t-current animate-spin" aria-hidden="true" />
+    ) : null}
+    <span>{children}</span>
+  </button>
+);
 
 export default Button;

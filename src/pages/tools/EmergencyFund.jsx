@@ -80,23 +80,17 @@ const EmergencyFund = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
-                  Current savings
-                </label>
-                <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                  <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="100"
-                    value={currentSavings}
-                    onChange={(e) => setCurrentSavings(e.target.value)}
-                    placeholder="0"
-                    className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
-                  />
-                </div>
-              </div>
+              <FormRow label="Current savings" prefix="$" size="compact">
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={currentSavings}
+                  onChange={(e) => setCurrentSavings(e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                />
+              </FormRow>
 
               <button type="submit" className="btn-primary w-full py-6 text-xs uppercase tracking-[0.3em] mt-8">
                 Analyze Resilience

@@ -66,12 +66,7 @@ const SavingsGoal = () => {
       <CalculatorFormPanel title="Objective Parameters">
         <form onSubmit={handleSubmit} className="space-y-16">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
-                    Target Capital (AUD)
-                  </label>
-                  <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                    <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                <FormRow label="Target Capital (AUD)" prefix="$">
                     <input
                       type="number"
                       min="0"
@@ -81,8 +76,7 @@ const SavingsGoal = () => {
                       placeholder="0.00"
                       className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
-                  </div>
-                </div>
+                </FormRow>
 
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">

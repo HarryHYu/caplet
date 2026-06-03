@@ -1,6 +1,23 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
+import Button from './ui/Button';
+import Input from './ui/Input';
+
+const ErrorMessage = ({ message }) => {
+  if (!message) return null;
+
+  return (
+    <div
+      className="mb-7 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 shadow-sm"
+      role="alert"
+      aria-live="polite"
+    >
+      <p className="text-sm font-semibold">Please review your details</p>
+      <p className="mt-1 text-sm leading-relaxed">{message}</p>
+    </div>
+  );
+};
 
 const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
   const [formData, setFormData] = useState({
@@ -28,7 +45,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
   const handleGoogleSuccess = async (credentialResponse) => {
     const idToken = credentialResponse.credential;
     if (!idToken) {
-      setError('No credential returned from Google.');
+      setError('Google did not return the credential we need. Please try again.');
       return;
     }
     setError('');
@@ -37,7 +54,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
       await loginWithGoogle(idToken);
       onSuccess?.();
     } catch (err) {
-      setError(err.message || 'Sign-up failed. If you already have an account, try logging in.');
+      setError(err.message || 'Google sign-up failed. If you already have an account, try logging in.');
     } finally {
       setGoogleLoading(false);
     }
@@ -47,7 +64,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
     e.preventDefault();
     setError('');
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
+      setError('Passwords do not match. Please enter the same password in both password fields.');
       return;
     }
     setSubmitLoading(true);
@@ -61,153 +78,152 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
       });
       onSuccess?.();
     } catch (err) {
-      setError(err.message || 'Could not create account.');
+      setError(err.message || 'Could not create your account. Please check your details and try again.');
     } finally {
       setSubmitLoading(false);
     }
   };
 
+  const busy = googleLoading || submitLoading;
+
   return (
     <div className={`w-full mx-auto reveal-text ${isPage ? 'max-w-xl' : 'max-w-md'}`}>
-      <div className="mb-10">
-        <span className="section-kicker">Sign up</span>
-        <h2 className="text-5xl font-serif italic mb-4">
-          Join Caplet.
+      <div className="mb-8">
+        <span className="section-kicker">Start learning</span>
+        <h2 className="text-4xl sm:text-5xl font-serif italic mb-4 text-text-primary">
+          Create your account.
         </h2>
-        <p className="text-lg text-text-muted font-medium tracking-tight">
-          Google or email — same account if the email matches. Already registered?{' '}
-          {onSwitchToLogin ? (
-            <button
-              type="button"
-              onClick={onSwitchToLogin}
-              className="text-accent font-semibold hover:underline"
-            >
-              Log in
-            </button>
-          ) : null}
+        <p className="text-base leading-relaxed text-text-muted">
+          Join Caplet for guided money lessons, practical tools, and a calmer way to build financial confidence.
         </p>
       </div>
 
-      {error && (
-        <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
-          <p className="text-sm font-medium text-red-700">{error}</p>
-        </div>
-      )}
+      <ErrorMessage message={error} />
 
-      <div className={googleLoading ? 'pointer-events-none opacity-60' : ''}>
-        <GoogleLogin
-          onSuccess={handleGoogleSuccess}
-          onError={() => setError('Google sign-up was cancelled or failed.')}
-          theme="outline"
-          size="large"
-          text="continue_with"
-          shape="rectangular"
-          width="320"
-        />
-      </div>
-      {googleLoading && (
-        <p className="mt-3 text-sm text-text-dim flex items-center gap-2">
-          <span className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin inline-block" />
-          Continuing with Google…
-        </p>
-      )}
-
-      <div className="my-10 flex items-center gap-4">
-        <div className="flex-1 h-px bg-line-soft" />
-        <span className="text-xs font-medium uppercase tracking-widest text-text-dim">or</span>
-        <div className="flex-1 h-px bg-line-soft" />
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label htmlFor="reg-firstName" className="block text-sm font-medium text-text-muted">First name</label>
-            <input
-              id="reg-firstName"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              required
-              className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
-            />
+      <div className={`rounded-3xl border border-line-soft bg-white/70 p-4 shadow-sm ${busy ? 'opacity-90' : ''}`}>
+        <div className="mb-3 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-bold text-text-primary">Continue with Google</p>
+            <p className="mt-1 text-xs leading-relaxed text-text-muted">
+              We will connect it to an existing Caplet account if the email already matches.
+            </p>
           </div>
-          <div className="space-y-2">
-            <label htmlFor="reg-lastName" className="block text-sm font-medium text-text-muted">Last name</label>
-            <input
-              id="reg-lastName"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              required
-              className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
-            />
-          </div>
+          {googleLoading && (
+            <span className="mt-1 h-4 w-4 rounded-full border-2 border-accent/30 border-t-accent animate-spin" aria-hidden="true" />
+          )}
         </div>
-        <div className="space-y-2">
-          <label htmlFor="reg-email" className="block text-sm font-medium text-text-muted">Email</label>
-          <input
-            type="email"
-            id="reg-email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            autoComplete="email"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
+        <div className={`google-login-shell overflow-hidden rounded-2xl ${googleLoading ? 'pointer-events-none opacity-60' : ''}`}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google sign-up was cancelled or failed. Please try again.')}
+            theme="outline"
+            size="large"
+            text="continue_with"
+            shape="pill"
+            width="360"
           />
         </div>
-        <div className="space-y-2">
-          <label htmlFor="reg-role" className="block text-sm font-medium text-text-muted">I am a</label>
-          <select
+        {googleLoading && (
+          <p className="mt-3 text-sm text-text-dim" aria-live="polite">
+            Continuing with Google…
+          </p>
+        )}
+      </div>
+
+      <div className="my-8 flex items-center gap-4" aria-hidden="true">
+        <div className="h-px flex-1 bg-line-soft" />
+        <span className="text-xs font-bold uppercase tracking-[0.2em] text-text-dim">or use email</span>
+        <div className="h-px flex-1 bg-line-soft" />
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5" aria-busy={submitLoading}>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <Input
+            id="reg-firstName"
+            name="firstName"
+            label="First name"
+            value={formData.firstName}
+            onChange={handleChange}
+            required
+            autoComplete="given-name"
+            placeholder="Alex"
+          />
+          <Input
+            id="reg-lastName"
+            name="lastName"
+            label="Last name"
+            value={formData.lastName}
+            onChange={handleChange}
+            required
+            autoComplete="family-name"
+            placeholder="Taylor"
+          />
+        </div>
+        <Input
+          type="email"
+          id="reg-email"
+          name="email"
+          label="Email address"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          autoComplete="email"
+          placeholder="you@example.com"
+        />
+        <div className="relative">
+          <Input
+            as="select"
             id="reg-role"
             name="role"
+            label="I am a"
             value={formData.role}
             onChange={handleChange}
-            className="w-full py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
+            hint="This helps us tailor the language and classroom features you see."
           >
             <option value="student">Student / learner</option>
             <option value="instructor">Instructor / teacher</option>
-          </select>
+          </Input>
+          <span className="pointer-events-none absolute right-4 top-[2.9rem] text-text-dim" aria-hidden="true">
+            ▾
+          </span>
         </div>
-        <div className="space-y-2">
-          <label htmlFor="reg-password" className="block text-sm font-medium text-text-muted">Password (min 6 characters)</label>
-          <input
-            type="password"
-            id="reg-password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            minLength={6}
-            autoComplete="new-password"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
-          />
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="reg-confirm" className="block text-sm font-medium text-text-muted">Confirm password</label>
-          <input
-            type="password"
-            id="reg-confirm"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            autoComplete="new-password"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={submitLoading || googleLoading}
-          className="w-full btn-primary py-4 flex items-center justify-center gap-2 rounded-xl disabled:opacity-50"
-        >
-          {submitLoading ? (
-            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <span className="font-semibold">Create account</span>
-          )}
-        </button>
+        <Input
+          type="password"
+          id="reg-password"
+          name="password"
+          label="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          minLength={6}
+          autoComplete="new-password"
+          placeholder="Create a password"
+          hint="Use at least 6 characters."
+        />
+        <Input
+          type="password"
+          id="reg-confirm"
+          name="confirmPassword"
+          label="Confirm password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+          autoComplete="new-password"
+          placeholder="Re-enter your password"
+        />
+        <Button type="submit" disabled={submitLoading || googleLoading} isLoading={submitLoading} className="w-full">
+          {submitLoading ? 'Creating account…' : 'Create account'}
+        </Button>
       </form>
+
+      {onSwitchToLogin && (
+        <div className="mt-8 rounded-2xl bg-surface-soft/70 px-5 py-4 text-center text-sm text-text-muted">
+          Already have an account?{' '}
+          <Button type="button" onClick={onSwitchToLogin} variant="ghost" className="-my-3 px-2 py-2">
+            Log in
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

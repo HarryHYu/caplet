@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useCourses } from '../contexts/CoursesContext';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
-const CourseCover = ({ title, id }) => {
+const CourseCover = ({ title }) => {
   // Generate a semi-stable pseudo-random gradient based on title
   const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const hue1 = hash % 360;
@@ -44,7 +45,6 @@ const CourseCover = ({ title, id }) => {
 const Courses = () => {
   const { courses, loading, error, fetchCourses } = useCourses();
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     level: '',
     search: '',
@@ -89,76 +89,88 @@ const Courses = () => {
     }));
   };
 
-  const handleCourseClick = (courseId) => {
-    navigate(`/courses/${courseId}`);
-  };
+  const clearFilters = () => setFilters({ level: '', search: '' });
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <CapletLoader message="Loading curriculum…" />
-      </div>
-    );
+    return <LoadingState message="Loading curriculum…" />;
   }
 
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         {error && (
-          <div className="mb-20 p-6 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-red-800 text-sm font-medium flex items-center gap-4 reveal-text">
-            {error}
-          </div>
+          <ErrorState
+            title="Course library could not be loaded."
+            message="We could not refresh the course list. Please try again or adjust your filters."
+            details={error}
+            action={(
+              <button
+                type="button"
+                onClick={() => fetchCourses(filters)}
+                className="btn-primary py-3 px-8"
+              >
+                Retry
+              </button>
+            )}
+            className="mb-20 reveal-text"
+          />
         )}
 
-        {/* Header */}
-        <header className="mb-32 reveal-text">
-          <span className="section-kicker">Library</span>
-          <h1 className="text-6xl md:text-8xl mb-12">
-            Curriculum.
-          </h1>
-          <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
-            Browse our course library designed for Australian learners.
-          </p>
-        </header>
+        <PageHeader
+          kicker="Course library"
+          title="Curriculum."
+          description="Browse our course library designed for Australian learners. Filter by level, track your progress, and jump straight into the next lesson."
+        />
 
-        {/* Filters */}
-        <div className="mb-24 flex flex-col sm:flex-row gap-8 reveal-text stagger-1">
-          <div className="sm:w-48">
-            <label className="text-sm font-semibold text-text-dim mb-4 block">Level</label>
-            <select
-              value={filters.level}
-              onChange={(e) => handleFilterChange('level', e.target.value)}
-              className="w-full bg-surface-raised border border-line-soft px-6 py-4 rounded-xl text-sm font-medium outline-none focus:border-accent transition-colors"
-            >
-              <option value="">All Levels</option>
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
+        <section className="mb-14 rounded-[2rem] border border-line-soft bg-surface-raised p-6 md:p-8 reveal-text stagger-1" aria-label="Course filters">
+          <div className="flex flex-col sm:flex-row gap-6">
+            <div className="sm:w-56">
+              <label className="text-sm font-semibold text-text-dim mb-3 block">Level</label>
+              <select
+                value={filters.level}
+                onChange={(e) => handleFilterChange('level', e.target.value)}
+                className="w-full bg-surface-body border border-line-soft px-5 py-4 rounded-xl text-sm font-medium outline-none focus:border-accent transition-colors"
+              >
+                <option value="">All Levels</option>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="text-sm font-semibold text-text-dim mb-3 block">Search</label>
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                placeholder="Search by title..."
+                className="w-full bg-surface-body border border-line-soft px-5 py-4 rounded-xl text-sm font-medium outline-none focus:border-accent transition-colors placeholder:text-text-dim/40"
+              />
+            </div>
           </div>
-          <div className="flex-1">
-            <label className="text-sm font-semibold text-text-dim mb-4 block">Search</label>
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              placeholder="Search by title..."
-              className="w-full bg-surface-raised border border-line-soft px-6 py-4 rounded-xl text-sm font-medium outline-none focus:border-accent transition-colors placeholder:text-text-dim/30"
-            />
-          </div>
-        </div>
+        </section>
 
-        {/* Course grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-line-soft border border-line-soft reveal-text stagger-2">
-          {courses.map((course) => {
-            const progress = courseProgress[course.id] || 0;
-            const hasProgress = progress > 0;
-
-            return (
-              <div
+        {courses.length > 0 ? (
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 reveal-text stagger-2" aria-label="Courses">
+            {courses.map((course) => (
+              <CourseCard
                 key={course.id}
-                onClick={() => handleCourseClick(course.id)}
-                className="bg-surface-body p-12 group cursor-pointer transition-all duration-700 hover:bg-surface-raised flex flex-col"
+                course={course}
+                progress={courseProgress[course.id]}
+                to={`/courses/${course.id}`}
+                actionLabel={(courseProgress[course.id] || 0) > 0 ? 'Continue course' : 'View course'}
+              />
+            ))}
+          </section>
+        ) : (
+          <EmptyState
+            kicker="No courses found"
+            title="Try a broader search."
+            description="No courses match the current filters. Clear your search and level selection to return to the full curriculum."
+            action={(
+              <button
+                onClick={clearFilters}
+                className="btn-primary py-3 px-8"
               >
                 <div className="flex justify-between items-start mb-12">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">
@@ -215,17 +227,21 @@ const Courses = () => {
         </div>
 
         {courses.length === 0 && !loading && (
-          <div className="py-40 text-center border border-line-soft bg-surface-soft reveal-text">
-            <p className="text-text-dim font-bold uppercase tracking-[0.4em] text-[10px] animate-pulse mb-8">
-              Registry Query Null
-            </p>
-            <button
-              onClick={() => setFilters({ level: '', search: '' })}
-              className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-accent-strong transition-colors"
-            >
-              Clear Filters
-            </button>
-          </div>
+          <EmptyState
+            eyebrow="Registry query null"
+            title="No courses match this view."
+            message="Try clearing your filters or searching for another topic."
+            action={(
+              <button
+                type="button"
+                onClick={() => setFilters({ level: '', search: '' })}
+                className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-accent-strong transition-colors"
+              >
+                Clear Filters
+              </button>
+            )}
+            className="reveal-text"
+          />
         )}
       </div>
     </div>

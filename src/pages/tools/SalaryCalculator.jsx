@@ -65,8 +65,7 @@ const SalaryCalculator = () => {
                     placeholder="0.00"
                     className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
-                </div>
-              </div>
+                </FormRow>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>

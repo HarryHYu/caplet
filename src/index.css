@@ -54,6 +54,15 @@
   --radius-none: 0px;
   --radius-sm: 4px;
   --radius-md: 12px;
+
+  /* Motion: keep page-load reveals subtle, hover feedback quick, and avoid
+     stacking multiple attention-seeking animations in one viewport. Use GSAP
+     only for scroll-linked sequences that provide useful spatial context. */
+  --motion-duration-fast: 160ms;
+  --motion-duration-base: 220ms;
+  --motion-duration-reveal: 520ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dark {
@@ -126,7 +135,7 @@
 
   /* Interactive Elements */
   .btn-primary {
-    @apply px-8 py-3 bg-accent text-white font-semibold text-sm tracking-wide rounded-lg transition-all duration-200 flex items-center justify-center border border-transparent shadow-md;
+    @apply px-8 py-3 bg-accent text-white font-semibold text-sm tracking-wide rounded-lg transition duration-200 flex items-center justify-center border border-transparent shadow-md;
   }
 
   .btn-primary:hover {
@@ -142,7 +151,7 @@
   }
 
   .btn-secondary {
-    @apply px-8 py-3 bg-transparent text-text-primary border border-line-soft font-semibold text-sm tracking-wide rounded-lg transition-all duration-200 flex items-center justify-center;
+    @apply px-8 py-3 bg-transparent text-text-primary border border-line-soft font-semibold text-sm tracking-wide rounded-lg transition duration-200 flex items-center justify-center;
   }
 
   .btn-secondary:hover {
@@ -252,61 +261,53 @@
     background-size: 40px 40px;
   }
 
-  .reveal-text {
-    animation: reveal-text 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  .motion-reveal {
+    opacity: 0;
+    animation: motion-reveal var(--motion-duration-reveal) var(--motion-ease-reveal) forwards;
   }
 
-  @keyframes fadeSlideUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .motion-stagger-1 {
+    animation-delay: 80ms;
   }
 
-  .animate-fade-slide-up {
-    animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  .motion-stagger-2 {
+    animation-delay: 160ms;
+  }
+
+  .motion-stagger-3 {
+    animation-delay: 240ms;
+  }
+
+  .motion-stagger-4 {
+    animation-delay: 320ms;
+  }
+
+  .reveal-text,
+  .animate-fade-slide-up,
+  .animate-slide-up {
+    animation: motion-reveal var(--motion-duration-reveal) var(--motion-ease-reveal) forwards;
   }
 
   .stagger-1 {
-    animation-delay: 0.1s;
+    animation-delay: 80ms;
   }
 
   .stagger-2 {
-    animation-delay: 0.2s;
+    animation-delay: 160ms;
   }
 
   .stagger-3 {
-    animation-delay: 0.3s;
+    animation-delay: 240ms;
   }
 
   .stagger-4 {
-    animation-delay: 0.4s;
+    animation-delay: 320ms;
   }
 
-  @keyframes reveal-text {
+  @keyframes motion-reveal {
     from {
       opacity: 0;
-      transform: translateY(10px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.6s ease-out forwards;
-  }
-
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(12px);
     }
 
     to {
@@ -316,7 +317,7 @@
   }
 
   .animate-float {
-    animation: float 6s ease-in-out infinite;
+    animation: float 8s ease-in-out infinite;
   }
 
   /* Lesson slide transition — opacity + lift + tiny blur release */
@@ -355,6 +356,33 @@
     50% {
       transform: translateY(-10px);
     }
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .motion-reveal,
+  .reveal-text,
+  .animate-fade-slide-up,
+  .animate-slide-up,
+  .animate-lesson-slide-in {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .animate-float,
+  .animate-pulse-dot {
+    animation: none !important;
   }
 }
 
