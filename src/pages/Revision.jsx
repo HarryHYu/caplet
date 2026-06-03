@@ -18,9 +18,9 @@ function SummaryModal({ open, loading, error, category, slides, onClose }) {
     const current = total ? slides[Math.min(idx, total - 1)] : null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
             <div
-                className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden bg-surface-body border border-line-soft flex flex-col"
+                className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden bg-surface-body border border-line-soft shadow-[0_32px_120px_rgba(0,0,0,0.35)] flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between px-6 py-4 border-b border-line-soft">
@@ -180,13 +180,14 @@ export default function Revision() {
     }
 
     return (
-        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-            <div className="container-custom">
-                <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 reveal-text">
+        <div className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.025] grid-technical pointer-events-none" />
+            <div className="container-custom relative z-10">
+                <header className="mb-14 flex flex-col md:flex-row md:items-end justify-between gap-8 reveal-text border-b border-line-soft pb-10">
                     <div>
                         <span className="section-kicker">Revision</span>
-                        <h1 className="text-5xl md:text-7xl">Archived slides.</h1>
-                        <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
+                        <h1 className="text-5xl md:text-7xl tracking-tighter">Archived slides.</h1>
+                        <p className="mt-8 text-xl text-text-muted font-serif italic leading-relaxed max-w-xl">
                             Every slide you've flagged, organized into topics by AI.
                         </p>
                     </div>
@@ -195,7 +196,7 @@ export default function Revision() {
                             type="button"
                             onClick={handleOrganize}
                             disabled={organizing}
-                            className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-accent border border-accent px-5 py-3 hover:bg-accent hover:text-white transition-colors disabled:opacity-40"
+                            className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-accent border border-accent px-5 py-3 hover:bg-accent hover:text-white transition-colors disabled:opacity-40 shadow-sm"
                         >
                             <BookmarkIcon className="w-4 h-4" />
                             {organizing ? 'Organizing…' : 'Organize with AI'}
@@ -208,18 +209,20 @@ export default function Revision() {
                 )}
 
                 {savedSlides.length === 0 ? (
-                    <EmptyState
-                        eyebrow="Revision"
-                        title="No flagged slides yet."
-                        message="Save slides from lessons to build your personalized revision archive."
-                        icon={BookmarkIcon}
-                        action={<Link to="/courses" className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">Browse courses</Link>}
-                    />
+                    <div className="border border-line-soft bg-surface-raised/70 p-16 text-center shadow-[0_24px_80px_rgba(15,23,42,0.05)]">
+                        <BookmarkIcon className="w-8 h-8 text-text-dim mx-auto mb-6" />
+                        <p className="text-text-dim uppercase tracking-widest text-[11px] font-bold italic mb-8">
+                            No flagged slides yet.
+                        </p>
+                        <Link to="/courses" className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">
+                            Browse courses
+                        </Link>
+                    </div>
                 ) : (
-                    <div className="space-y-12">
+                    <div className="space-y-10">
                         {groups.map(([topic, slides]) => (
                             <div key={topic}>
-                                <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center justify-between mb-5 border-b border-line-soft pb-4">
                                     <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
                                         {CATEGORY_LABELS[topic] || topic}
                                     </p>
@@ -232,7 +235,7 @@ export default function Revision() {
                                         Summarize
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-1 gap-px bg-line-soft border border-line-soft">
+                                <div className="grid grid-cols-1 gap-px bg-line-soft border border-line-soft shadow-[0_18px_60px_rgba(15,23,42,0.05)]">
                                     {slides.map((s) => {
                                         const slide = getSlidePreview(s);
                                         const label = slide ? slideKindLabel(slide) : 'Slide';
@@ -240,7 +243,7 @@ export default function Revision() {
                                             ? String(slide.content).replace(/[#*`_[\]]/g, '').slice(0, 120)
                                             : null;
                                         return (
-                                            <div key={s.id} className="bg-surface-body p-6 flex items-start justify-between gap-4 group hover:bg-surface-raised transition-colors">
+                                            <div key={s.id} className="bg-surface-body/95 p-6 flex items-start justify-between gap-4 group hover:bg-surface-raised transition-colors">
                                                 <Link
                                                     to={`/courses/${s.courseId}/lessons/${s.lessonId}?slide=${s.slideIndex}`}
                                                     className="flex-1 min-w-0"

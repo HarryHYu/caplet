@@ -1,9 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import CalculatorShell from '../../components/tools/CalculatorShell';
-import CalculatorCard from '../../components/tools/CalculatorCard';
-import ResultPanel from '../../components/tools/ResultPanel';
-import FormRow from '../../components/tools/FormRow';
+import { CalculatorFormPanel, CalculatorResultPanel, CalculatorShell } from '../../components/tools';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
@@ -44,31 +40,19 @@ const BudgetPlanner = () => {
   };
 
   return (
-    <CalculatorShell>
-        {/* Header */}
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-            <div>
-              <span className="section-kicker">Tools &rarr; Utility</span>
-              <h1 className="text-6xl md:text-8xl mb-8">
-                Budget<br />Planner.
-              </h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Synthesize your monthly cash flow and track allocation across your primary cost centers.
-              </p>
-            </div>
-            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
-              &larr; Back to tools
-            </Link>
-          </div>
-          <div className="h-px w-full bg-line-soft" />
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <CalculatorCard title="Your budget">
-
-            <form onSubmit={handleSubmit} className="space-y-16">
-              <FormRow label="Net Monthly Income (AUD)" prefix="$" italic={false}>
+    <CalculatorShell
+      category="Utility"
+      title={<><span>Budget</span><br />Planner.</>}
+      description="Synthesize your monthly cash flow and track allocation across your primary cost centers."
+    >
+      <CalculatorFormPanel title="Your budget">
+        <form onSubmit={handleSubmit} className="space-y-16">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block">
+                  Net Monthly Income (AUD)
+                </label>
+                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
+                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
                   <input
                     type="number"
                     min="0"
@@ -106,10 +90,11 @@ const BudgetPlanner = () => {
                 Execute Calculation
               </button>
             </form>
-          </CalculatorCard>
+      </CalculatorFormPanel>
 
-          <ResultPanel title="Economic Summary" result={result} emptyIcon="?" emptyMessage="Add your income and expenses">
-            {result ? (
+      <CalculatorResultPanel title="Economic Summary">
+
+        {result ? (
               <div className="space-y-12 relative z-10">
                 <div className="grid grid-cols-2 gap-8">
                   <div>
@@ -155,9 +140,13 @@ const BudgetPlanner = () => {
                   ))}
                 </div>
               </div>
-            ) : null}
-          </ResultPanel>
-        </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
+                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-4xl font-serif italic mb-8">?</div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Add your income and expenses</p>
+              </div>
+            )}
+      </CalculatorResultPanel>
     </CalculatorShell>
   );
 };
