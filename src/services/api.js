@@ -315,6 +315,13 @@ class ApiService {
     });
   }
 
+  async completeOnboarding(onboardingData) {
+    return this.request('/users/complete-onboarding', {
+      method: 'POST',
+      body: JSON.stringify(onboardingData),
+    });
+  }
+
   async getPublicProfile(userId) {
     return this.request(`/users/${userId}`);
   }

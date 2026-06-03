@@ -24,6 +24,7 @@ import CourseDetail from './pages/CourseDetail';
 import ModuleDetail from './pages/ModuleDetail';
 import LessonPlayer from './pages/LessonPlayer';
 import Dashboard from './pages/Dashboard';
+import Onboarding from './pages/Onboarding';
 import Revision from './pages/Revision';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -110,6 +111,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<HomeOrRedirect />} />
                   <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                  <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
                   <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />

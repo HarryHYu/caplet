@@ -10,7 +10,8 @@ import {
     FireIcon,
     ArrowRightIcon,
     CheckCircleIcon,
-    BookmarkIcon
+    BookmarkIcon,
+    SparklesIcon
 } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
@@ -91,6 +92,29 @@ export default function Dashboard() {
                     </div>
 
                 </header>
+
+                {!user?.onboardingData && (
+                    <div className="mb-12 reveal-text stagger-1">
+                        <Link
+                            to="/onboarding"
+                            className="group flex flex-col gap-6 border border-line-soft bg-surface-raised p-8 transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-minimal-lg md:flex-row md:items-center md:justify-between"
+                        >
+                            <div className="flex items-start gap-5">
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                                    <SparklesIcon className="h-6 w-6" />
+                                </span>
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Optional onboarding</p>
+                                    <h2 className="mt-2 text-2xl font-bold tracking-tight text-text-primary">Personalise your Caplet path</h2>
+                                    <p className="mt-2 max-w-2xl text-sm leading-6 text-text-muted">
+                                        The backend currently keeps users active by default, so this starts as an opt-in path before global onboarding is enabled.
+                                    </p>
+                                </div>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-accent group-hover:translate-x-1 transition-transform">Start setup →</span>
+                        </Link>
+                    </div>
+                )}
 
                 {/* Stats Matrix */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-line-soft border border-line-soft mb-24 reveal-text stagger-1">
