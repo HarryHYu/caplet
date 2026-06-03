@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { CalculatorFormPanel, CalculatorResultPanel, CalculatorShell } from '../../components/tools';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
@@ -39,30 +39,13 @@ const LoanRepayment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-      <div className="container-custom">
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-            <div>
-              <span className="section-kicker">Tools &rarr; Liability</span>
-              <h1 className="text-6xl md:text-8xl mb-8">
-                Loan <br />repayments.
-              </h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Analyze interest obligation and visualize the amortization of your debt-layer architecture.
-              </p>
-            </div>
-            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
-              &larr; Back to tools
-            </Link>
-          </div>
-          <div className="h-px w-full bg-line-soft" />
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Liability Parameters</h2>
-            <form onSubmit={handleSubmit} className="space-y-16">
+    <CalculatorShell
+      category="Liability"
+      title={<>Loan <br />repayments.</>}
+      description="Analyze interest obligation and visualize the amortization of your debt-layer architecture."
+    >
+      <CalculatorFormPanel title="Liability Parameters">
+        <form onSubmit={handleSubmit} className="space-y-16">
               <div>
                 <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
                   Principal Amount (AUD)
@@ -78,8 +61,7 @@ const LoanRepayment = () => {
                     placeholder="0.00"
                     className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
-                </div>
-              </div>
+                </FormRow>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 <div>
@@ -124,13 +106,11 @@ const LoanRepayment = () => {
                 Confirm Repayment Cycle
               </button>
             </form>
-          </div>
+      </CalculatorFormPanel>
 
-          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Economic Outcome</h2>
+      <CalculatorResultPanel title="Economic Outcome">
 
-            {result ? (
+        {result ? (
               result.error ? (
                 <p className="text-[10px] font-bold text-accent uppercase tracking-widest relative z-10">{result.error}</p>
               ) : (
@@ -171,10 +151,8 @@ const LoanRepayment = () => {
                 <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Ready for Amortization</p>
               </div>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
+      </CalculatorResultPanel>
+    </CalculatorShell>
   );
 };
 

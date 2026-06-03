@@ -1,54 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowPathIcon, ArrowRightIcon, BookOpenIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useCourses } from '../contexts/CoursesContext';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import CapletLoader from '../components/CapletLoader';
+import { Badge, Button, Card, EmptyState, Input, PageHeader, PageShell, SectionHeader } from '../components/ui';
 
-const CourseCover = ({ title, id }) => {
-  // Generate a semi-stable pseudo-random gradient based on title
+const levelOptions = [
+  { value: '', label: 'All levels' },
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' },
+];
+
+const CourseCover = ({ title }) => {
   const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const hue1 = hash % 360;
-  const hue2 = (hue1 + 40) % 360;
+  const hue2 = (hue1 + 42) % 360;
   const hue3 = (hue1 + 180) % 360;
-  
+
   return (
-    <div className="relative w-full h-full overflow-hidden group-hover:scale-105 transition-transform duration-700">
-      <div 
-        className="absolute inset-0 opacity-80"
+    <div className="relative h-full w-full overflow-hidden rounded-xl bg-surface-soft">
+      <div
+        className="absolute inset-0 opacity-90 transition-transform duration-700 group-hover:scale-105"
         style={{
-          background: `linear-gradient(${hue1}deg, hsl(${hue1}, 70%, 85%) 0%, hsl(${hue2}, 70%, 90%) 50%, hsl(${hue3}, 70%, 95%) 100%)`
+          background: `linear-gradient(135deg, hsl(${hue1}, 72%, 82%) 0%, hsl(${hue2}, 72%, 90%) 52%, hsl(${hue3}, 68%, 94%) 100%)`,
         }}
       />
-      
-      {/* Abstract shapes */}
-      <div 
-        className="absolute top-[-20%] left-[-20%] w-[100%] h-[100%] rounded-full blur-[80px] mix-blend-multiply opacity-60"
-        style={{ background: `hsl(${hue2}, 80%, 75%)` }}
-      />
-      <div 
-        className="absolute bottom-[-30%] right-[-10%] w-[120%] h-[120%] rounded-full blur-[100px] mix-blend-screen opacity-40 animate-float"
-        style={{ background: `hsl(${hue3}, 60%, 85%)` }}
-      />
-      
-      {/* Decorative center element */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-10">
-        <span className="text-[12rem] font-serif italic select-none">{title.charAt(0)}</span>
-      </div>
-      
+      <div className="absolute -left-16 -top-16 h-48 w-48 rounded-full bg-white/40 blur-3xl" />
+      <div className="absolute -bottom-20 right-0 h-56 w-56 rounded-full bg-accent/20 blur-3xl" />
+      <span className="absolute bottom-5 right-6 select-none font-serif text-7xl italic text-white/45 dark:text-surface-inverse/35">
+        {title.charAt(0)}
+      </span>
     </div>
   );
 };
 
-const Courses = () => {
+export default function Courses() {
   const { courses, loading, error, fetchCourses } = useCourses();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({
-    level: '',
-    search: '',
-  });
+  const [filters, setFilters] = useState({ level: '', search: '' });
   const [courseProgress, setCourseProgress] = useState({});
 
   useEffect(() => {
@@ -56,180 +49,165 @@ const Courses = () => {
   }, [fetchCourses, filters]);
 
   useEffect(() => {
-    if (isAuthenticated && courses.length > 0) {
-      const fetchProgress = async () => {
-        try {
-          const progressMap = {};
-          const courseIds = [...new Set(courses.map(c => c.id))];
-          await Promise.all(
-            courseIds.map(async (courseId) => {
-              try {
-                const progress = await api.getCourseProgress(courseId);
-                if (progress.courseProgress) {
-                  progressMap[courseId] = progress.courseProgress.progressPercentage || 0;
-                }
-              } catch {
-                progressMap[courseId] = 0;
-              }
-            })
-          );
-          setCourseProgress(progressMap);
-        } catch (error) {
-          console.error('Error fetching progress:', error);
-        }
-      };
-      fetchProgress();
+    if (!isAuthenticated || courses.length === 0) {
+      setCourseProgress({});
+      return;
     }
+
+    const fetchProgress = async () => {
+      try {
+        const progressMap = {};
+        const courseIds = [...new Set(courses.map((course) => course.id))];
+        await Promise.all(
+          courseIds.map(async (courseId) => {
+            try {
+              const progress = await api.getCourseProgress(courseId);
+              progressMap[courseId] = progress.courseProgress?.progressPercentage || 0;
+            } catch {
+              progressMap[courseId] = 0;
+            }
+          }),
+        );
+        setCourseProgress(progressMap);
+      } catch (progressError) {
+        console.error('Error fetching progress:', progressError);
+      }
+    };
+
+    fetchProgress();
   }, [isAuthenticated, courses]);
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value,
-    }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleCourseClick = (courseId) => {
-    navigate(`/courses/${courseId}`);
-  };
+  const resetFilters = () => setFilters({ level: '', search: '' });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+      <PageShell spacing="sm" className="flex items-center justify-center">
         <CapletLoader message="Loading curriculum…" />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-      <div className="container-custom">
-        {error && (
-          <div className="mb-20 p-6 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-red-800 text-sm font-medium flex items-center gap-4 reveal-text">
-            {error}
-          </div>
-        )}
+    <PageShell spacing="md">
+      <PageHeader
+        eyebrow="Course library"
+        title="Curriculum built for clarity."
+        actions={<Button onClick={resetFilters} variant="secondary" size="sm"><ArrowPathIcon className="h-4 w-4" /> Reset</Button>}
+      >
+        Browse short, practical courses designed around Australian money decisions.
+      </PageHeader>
 
-        {/* Header */}
-        <header className="mb-32 reveal-text">
-          <span className="section-kicker">Library</span>
-          <h1 className="text-6xl md:text-8xl mb-12">
-            Curriculum.
-          </h1>
-          <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
-            Browse our course library designed for Australian learners.
-          </p>
-        </header>
+      {error && (
+        <EmptyState
+          icon={BookOpenIcon}
+          title="We could not load courses"
+          className="mb-10 border-red-500/30 bg-red-500/5"
+          action={<Button onClick={() => fetchCourses(filters)} variant="secondary">Try again</Button>}
+        >
+          {error}
+        </EmptyState>
+      )}
 
-        {/* Filters */}
-        <div className="mb-24 flex flex-col sm:flex-row gap-8 reveal-text stagger-1">
-          <div className="sm:w-48">
-            <label className="text-sm font-semibold text-text-dim mb-4 block">Level</label>
+      <Card padding="lg" className="mb-12">
+        <div className="grid gap-5 lg:grid-cols-[220px_1fr]">
+          <div>
+            <label htmlFor="course-level" className="mb-2 block text-sm font-semibold text-text-primary">Level</label>
             <select
+              id="course-level"
               value={filters.level}
-              onChange={(e) => handleFilterChange('level', e.target.value)}
-              className="w-full bg-surface-raised border border-line-soft px-6 py-4 rounded-xl text-sm font-medium outline-none focus:border-accent transition-colors"
+              onChange={(event) => handleFilterChange('level', event.target.value)}
+              className="min-h-12 w-full rounded-lg border border-line-soft bg-surface-raised px-4 py-3 text-text-primary shadow-minimal outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent"
             >
-              <option value="">All Levels</option>
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
+              {levelOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
           </div>
-          <div className="flex-1">
-            <label className="text-sm font-semibold text-text-dim mb-4 block">Search</label>
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              placeholder="Search by title..."
-              className="w-full bg-surface-raised border border-line-soft px-6 py-4 rounded-xl text-sm font-medium outline-none focus:border-accent transition-colors placeholder:text-text-dim/30"
-            />
-          </div>
+          <Input
+            id="course-search"
+            label="Search"
+            value={filters.search}
+            onChange={(event) => handleFilterChange('search', event.target.value)}
+            placeholder="Search by title, topic, or description…"
+            leading={<MagnifyingGlassIcon className="h-5 w-5" />}
+          />
         </div>
+      </Card>
 
-        {/* Course grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-line-soft border border-line-soft reveal-text stagger-2">
+      <SectionHeader
+        title="Available courses"
+        actions={<Badge variant="neutral">{courses.length} {courses.length === 1 ? 'course' : 'courses'}</Badge>}
+      />
+
+      {courses.length > 0 ? (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {courses.map((course) => {
             const progress = courseProgress[course.id] || 0;
             const hasProgress = progress > 0;
+            const lessonCount = (course.modules || []).reduce((sum, moduleItem) => sum + (moduleItem.lessons || []).length, 0);
 
             return (
-              <div
+              <Card
                 key={course.id}
-                onClick={() => handleCourseClick(course.id)}
-                className="bg-surface-body p-12 group cursor-pointer transition-all duration-700 hover:bg-surface-raised flex flex-col"
+                as="button"
+                type="button"
+                onClick={() => navigate(`/courses/${course.id}`)}
+                padding="none"
+                interactive
+                className="group flex h-full flex-col overflow-hidden text-left"
               >
-                <div className="flex justify-between items-start mb-12">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">
-                    {course.level || 'Beginner'}
-                  </span>
-                  {hasProgress && (
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
-                      In Progress
-                    </span>
-                  )}
+                <div className="aspect-[16/9] border-b border-line-soft">
+                  <CourseCover title={course.title} />
                 </div>
-
-                <div className="aspect-[16/9] w-full mb-12 overflow-hidden bg-surface-soft border border-line-soft rounded-[2rem]">
-                  <CourseCover title={course.title} id={course.id} />
-                </div>
-
-                <h3 className="text-2xl font-bold uppercase tracking-tighter mb-8 group-hover:text-accent transition-colors duration-500">
-                  {course.title}
-                </h3>
-
-                <p className="text-sm font-medium text-text-muted leading-relaxed mb-12 line-clamp-3">
-                  {course.shortDescription}
-                </p>
-
-                <div className="mt-auto">
-                  <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-text-dim mb-8">
-                    <span>{course.duration}m</span>
-                    <span className="w-1 h-1 bg-text-dim" />
-                    <span>{(course.modules || []).reduce((sum, m) => sum + (m.lessons || []).length, 0)} lessons</span>
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-5 flex items-center justify-between gap-3">
+                    <Badge variant="accent">{course.level || 'Beginner'}</Badge>
+                    {hasProgress && <Badge variant="success">In progress</Badge>}
                   </div>
-
+                  <h3 className="text-2xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">
+                    {course.title}
+                  </h3>
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-text-muted">
+                    {course.shortDescription || course.description || 'A focused Caplet course for building practical money confidence.'}
+                  </p>
+                  <div className="mt-6 flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-text-dim">
+                    {course.duration && <span>{course.duration}m</span>}
+                    {course.duration && <span className="h-1 w-1 rounded-full bg-text-dim" />}
+                    <span>{lessonCount} lessons</span>
+                  </div>
                   {isAuthenticated && hasProgress && (
-                    <div className="mb-8">
-                      <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-text-dim mb-3">
+                    <div className="mt-6">
+                      <div className="mb-2 flex justify-between text-xs font-semibold text-text-muted">
                         <span>Progress</span>
                         <span className="text-accent">{Math.round(progress)}%</span>
                       </div>
-                      <div className="w-full bg-surface-soft h-1 overflow-hidden">
-                        <div className="bg-accent h-full transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
+                      <div className="h-2 overflow-hidden rounded-full bg-surface-soft">
+                        <div className="h-full rounded-full bg-accent transition-all duration-700" style={{ width: `${progress}%` }} />
                       </div>
                     </div>
                   )}
-
-                  <div className="flex items-center justify-between pt-8 border-t border-line-soft">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] group-hover:text-accent transition-colors duration-500">
-                      {hasProgress ? 'Continue Module' : 'Enter Lesson'} &rarr;
-                    </span>
-                    <ArrowRightIcon className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-2 transition-all duration-500" />
+                  <div className="mt-auto flex items-center justify-between border-t border-line-soft pt-5 text-sm font-semibold text-text-primary">
+                    <span>{hasProgress ? 'Continue course' : 'View course'}</span>
+                    <ArrowRightIcon className="h-4 w-4 text-text-dim transition-all group-hover:translate-x-1 group-hover:text-accent" />
                   </div>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
-
-        {courses.length === 0 && !loading && (
-          <div className="py-40 text-center border border-line-soft bg-surface-soft reveal-text">
-            <p className="text-text-dim font-bold uppercase tracking-[0.4em] text-[10px] animate-pulse mb-8">
-              Registry Query Null
-            </p>
-            <button
-              onClick={() => setFilters({ level: '', search: '' })}
-              className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-accent-strong transition-colors"
-            >
-              Clear Filters
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+      ) : (
+        <EmptyState
+          icon={BookOpenIcon}
+          title="No courses match those filters"
+          action={<Button onClick={resetFilters} variant="secondary">Clear filters</Button>}
+        >
+          Try a broader search or reset the level filter to see the full curriculum.
+        </EmptyState>
+      )}
+    </PageShell>
   );
-};
-
-export default Courses;
+}

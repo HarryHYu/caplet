@@ -3,6 +3,8 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
 const ClassDetail = () => {
   const { classId } = useParams();
@@ -157,27 +159,34 @@ const ClassDetail = () => {
     );
   }
 
-  if (error) {
+  if (error && !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-body">
-        <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-6 text-red-500">Error</span>
-          <h2 className="text-3xl font-extrabold text-text-primary uppercase tracking-tighter mb-6">
-            Something Went <br />Wrong.
-          </h2>
-          <p className="text-text-muted text-xs font-bold uppercase tracking-widest mb-10">{error}</p>
-          <button
-            onClick={() => navigate('/classes')}
-            className="btn-secondary"
-          >
-            Back to Classes
-          </button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-surface-body p-6">
+        <ErrorState
+          title="Class could not be loaded."
+          message="We could not load this class right now. Please return to your classes and try again."
+          details={error}
+          action={<button onClick={() => navigate('/classes')} className="btn-secondary">Back to Classes</button>}
+          className="max-w-xl w-full"
+        />
       </div>
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-body p-6">
+        <EmptyState
+          eyebrow="Class not found"
+          title="This class is unavailable."
+          message="The class you're looking for doesn't exist, or you may no longer have access."
+          action={<button onClick={() => navigate('/classes')} className="btn-secondary">Back to Classes</button>}
+          className="max-w-xl w-full"
+        />
+      </div>
+    );
+  }
+
 
   const { classroom, membership, members, assignments, announcements = [], leaderboard = [] } = data;
   const isTeacher = membership?.role === 'teacher';
@@ -498,9 +507,10 @@ const ClassDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 px-6 selection:bg-accent selection:text-white">
-      <div className="container-custom space-y-12">
-        <div className="bg-surface-body border border-line-soft dark:border-line-soft p-10 animate-slide-up">
+    <div className="min-h-screen bg-surface-body py-28 px-6 selection:bg-accent selection:text-white relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.02] grid-technical pointer-events-none" />
+      <div className="container-custom space-y-10 relative z-10">
+        <div className="bg-surface-body/95 border border-line-soft dark:border-line-soft p-8 md:p-10 animate-slide-up shadow-[0_24px_80px_rgba(15,23,42,0.06)]">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
             <div className="flex-1">
               <button
@@ -509,21 +519,21 @@ const ClassDetail = () => {
               >
                 ← Back to Classes
               </button>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-text-primary uppercase tracking-tighter mb-4">
+              <h1 className="text-4xl md:text-6xl font-extrabold text-text-primary uppercase tracking-tighter mb-5 leading-none">
                 {classroom.name}
               </h1>
               {classroom.description ? (
-                <p className="text-xs font-bold text-text-muted uppercase tracking-widest leading-relaxed max-w-2xl">
+                <p className="text-sm font-serif italic text-text-muted leading-relaxed max-w-2xl">
                   {classroom.description}
                 </p>
               ) : null}
-              <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft border border-line-soft">
+              <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft/80 border border-line-soft">
                 <span className="text-[9px] font-extrabold text-text-dim uppercase tracking-widest">Class Code:</span>
                 <span className="font-mono font-bold text-text-primary text-xs">{classroom.code}</span>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-6">
-              <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft border border-line-soft min-w-[240px]">
+              <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft/80 border border-line-soft min-w-[240px]">
                 <div className={`w-10 h-10 rounded-sm bg-text-primary dark:bg-surface-raised flex items-center justify-center text-surface-body text-xs font-bold`}>
                   {getInitials(user)}
                 </div>
@@ -562,13 +572,17 @@ const ClassDetail = () => {
         </div>
 
         {error && (
-          <div className="p-6 border border-red-500 text-red-500 text-[10px] font-bold uppercase tracking-widest bg-red-50/50 dark:bg-red-900/10 animate-fade-in">
-            Error: {error}
-          </div>
+          <ErrorState
+            title="Class update failed."
+            message="We could not complete the latest class action. The current class view is still available."
+            details={error}
+            compact
+            className="animate-fade-in"
+          />
         )}
 
         {/* Tab bar — only one "page" (Stream / Classwork / People) is shown below */}
-        <nav className="flex gap-1 bg-surface-soft border border-line-soft p-1" aria-label="Class tabs">
+        <nav className="flex gap-1 bg-surface-soft/80 border border-line-soft p-1 shadow-sm overflow-x-auto" aria-label="Class tabs">
           <button
             type="button"
             onClick={() => setActiveTab('stream')}
@@ -606,7 +620,7 @@ const ClassDetail = () => {
             <div className="space-y-5">
               {/* Composer: teachers only (like Google Classroom) */}
               {isTeacher && (
-                <div className="bg-surface-body border border-line-soft dark:border-line-soft p-8 hover:border-accent transition-colors mb-12">
+                <div className="bg-surface-body/95 border border-line-soft dark:border-line-soft p-8 hover:border-accent transition-colors mb-12 shadow-[0_18px_60px_rgba(15,23,42,0.05)]">
                   <form onSubmit={handlePostAnnouncement}>
                     <div className="flex gap-6">
                       <div
@@ -651,13 +665,12 @@ const ClassDetail = () => {
 
               {/* Announcement cards — visible to both teachers and students */}
               {!Array.isArray(announcements) || announcements.length === 0 ? (
-                <div className="p-20 border border-line-soft dark:border-line-soft text-center bg-surface-soft">
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.3em]">
-                    {isTeacher
-                      ? 'No announcements yet. Post one to get started.'
-                      : 'No announcements yet.'}
-                  </p>
-                </div>
+                <EmptyState
+                  eyebrow="Stream"
+                  title="No announcements yet."
+                  message={isTeacher ? 'Post an announcement to start the class stream.' : 'Announcements from your teachers will appear here.'}
+                  compact
+                />
               ) : (
                 <div className="space-y-4">
                   {announcements.map((a) => {
@@ -871,11 +884,12 @@ const ClassDetail = () => {
             </div>
 
             {assignments.length === 0 ? (
-              <div className="p-20 border border-line-soft dark:border-line-soft text-center bg-surface-soft">
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.3em]">
-                  No assignments yet. Create one to get started.
-                </p>
-              </div>
+              <EmptyState
+                eyebrow="Classwork"
+                title="No assignments yet."
+                message={isTeacher ? 'Create an assignment to give students their next task.' : 'Assignments from your teachers will appear here.'}
+                compact
+              />
             ) : (
               <div className="grid grid-cols-1 gap-6">
                 {assignments.map((a) => {
@@ -1272,9 +1286,12 @@ const ClassDetail = () => {
                   Teachers
                 </h3>
                 {teachers.length === 0 ? (
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-7">
-                    No teachers in this class.
-                  </p>
+                  <EmptyState
+                    eyebrow="Teachers"
+                    title="No teachers listed."
+                    message="Teacher memberships will appear here once available."
+                    compact
+                  />
                 ) : (
                   <div className="space-y-3">
                     {teachers.map((t) => (
@@ -1312,9 +1329,12 @@ const ClassDetail = () => {
                   Students ({students.length})
                 </h3>
                 {students.length === 0 ? (
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-7">
-                    No students in this class yet.
-                  </p>
+                  <EmptyState
+                    eyebrow="Students"
+                    title="No students yet."
+                    message="Students will appear here after they join the class."
+                    compact
+                  />
                 ) : (
                   <div className="grid grid-cols-1 gap-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                     {students.map((s) => (
@@ -1351,7 +1371,7 @@ const ClassDetail = () => {
         {/* New assignment modal — overlay, not a tab */}
         {isTeacher && showNewAssignment && (
           <div className="fixed inset-0 bg-surface-raised/80 dark:bg-text-primary/80 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
-            <div className="bg-surface-body border border-line-soft shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-lg w-full max-h-[90vh] overflow-y-auto p-10 animate-in zoom-in-95 duration-300">
+            <div className="bg-surface-body border border-line-soft shadow-[0_32px_120px_rgba(0,0,0,0.28)] max-w-lg w-full max-h-[90vh] overflow-y-auto p-10 animate-in zoom-in-95 duration-300">
               <div className="flex items-start justify-between mb-10">
                 <div>
                   <span className="section-kicker mb-2">Create Assignment</span>
@@ -1468,7 +1488,7 @@ const ClassDetail = () => {
         {/* Add teacher modal — owner only */}
         {isOwner && showAddTeacher && (
           <div className="fixed inset-0 bg-surface-raised/80 dark:bg-text-primary/80 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
-            <div className="bg-surface-body border border-line-soft shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-md w-full p-10 animate-in zoom-in-95 duration-300">
+            <div className="bg-surface-body border border-line-soft shadow-[0_32px_120px_rgba(0,0,0,0.28)] max-w-md w-full p-10 animate-in zoom-in-95 duration-300">
               <div className="flex items-start justify-between mb-8">
                 <div>
                   <span className="section-kicker mb-2">Add Teacher</span>

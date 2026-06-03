@@ -1,17 +1,31 @@
-import Card from './Card';
-import { cn } from './utils';
+import { InboxIcon } from '@heroicons/react/24/outline';
 
-export default function EmptyState({ action, children, className, icon: Icon, title = 'Nothing here yet', ...props }) {
+export default function EmptyState({
+  eyebrow = 'Nothing here yet',
+  title = 'No results found.',
+  message = 'There is no data to show right now.',
+  action = null,
+  icon: Icon = InboxIcon,
+  className = '',
+  compact = false,
+}) {
   return (
-    <Card className={cn('flex flex-col items-center justify-center px-6 py-14 text-center', className)} {...props}>
-      {Icon && (
-        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent">
-          <Icon className="h-7 w-7" aria-hidden="true" />
-        </div>
-      )}
-      <h3 className="text-xl font-bold tracking-tight text-text-primary">{title}</h3>
-      {children && <div className="mt-3 max-w-md text-sm leading-6 text-text-muted">{children}</div>}
-      {action && <div className="mt-6 flex flex-wrap justify-center gap-3">{action}</div>}
-    </Card>
+    <div className={`border border-line-soft bg-surface-soft text-center ${compact ? 'p-10' : 'p-16 md:p-20'} ${className}`}>
+      {Icon ? <Icon className="w-8 h-8 text-text-dim mx-auto mb-6" aria-hidden="true" /> : null}
+      {eyebrow ? (
+        <span className="section-kicker mb-4 text-text-dim">
+          {eyebrow}
+        </span>
+      ) : null}
+      <h2 className="text-2xl md:text-4xl font-serif italic text-text-primary mb-5">
+        {title}
+      </h2>
+      {message ? (
+        <p className="text-sm font-medium text-text-muted max-w-xl mx-auto leading-relaxed">
+          {message}
+        </p>
+      ) : null}
+      {action ? <div className="mt-8 flex justify-center">{action}</div> : null}
+    </div>
   );
 }

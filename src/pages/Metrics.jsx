@@ -14,6 +14,8 @@ import {
 } from 'recharts';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
 const COLORS = ['#0050FF', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6'];
 
@@ -60,6 +62,7 @@ const Metrics = () => {
       try {
         const res = await api.getMetrics();
         setData(res);
+        setError(null);
       } catch (err) {
         setError(err.message || 'Failed to load metrics');
       } finally {
@@ -79,17 +82,31 @@ const Metrics = () => {
     );
   }
 
-  if (error) {
+  if (error && !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-500 dark:text-red-400 font-bold">{error}</p>
-        </div>
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <ErrorState
+          title="Metrics could not be loaded."
+          message="We could not load platform metrics right now. Please try again shortly."
+          details={error}
+          className="max-w-xl w-full"
+        />
       </div>
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <EmptyState
+          eyebrow="Metrics"
+          title="No metrics available."
+          message="Analytics have not been generated yet."
+          className="max-w-xl w-full"
+        />
+      </div>
+    );
+  }
 
   const progressPieData = [
     { name: 'Completed', value: data.progress.lessonsCompleted || 0, color: COLORS[1] },
@@ -232,7 +249,7 @@ const Metrics = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-text-dim py-8 text-center">No user data</p>
+                <EmptyState eyebrow="Users" title="No user data yet." message="Role distribution will appear once users are available." compact className="rounded-2xl" />
               )}
             </div>
             <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
@@ -280,7 +297,7 @@ const Metrics = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-text-dim py-8 text-center">No progress data yet</p>
+              <EmptyState eyebrow="Progress" title="No progress data yet." message="Lesson progress will appear as learners start courses." compact className="rounded-2xl" />
             )}
           </div>
           <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
@@ -308,7 +325,7 @@ const Metrics = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-text-dim py-8 text-center">No completion data yet</p>
+              <EmptyState eyebrow="Completions" title="No completion data yet." message="Top courses will appear once lessons are completed." compact className="rounded-2xl" />
             )}
           </div>
         </section>
