@@ -1,10 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  BookOpenIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+  RectangleStackIcon,
+} from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import { Badge, Button, Card, EmptyState, PageHeader, PageShell, SectionHeader, StatCard } from '../components/ui';
 
-const CourseDetail = () => {
+export default function CourseDetail() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -25,7 +35,7 @@ const CourseDetail = () => {
             const prog = await api.getCourseProgress(courseId);
             setProgress(prog);
           } catch {
-            // ignore when progress is unavailable
+            // Progress is optional for public course browsing.
           }
         }
       } catch (e) {
@@ -34,35 +44,35 @@ const CourseDetail = () => {
         setLoading(false);
       }
     };
+
     load();
   }, [courseId, isAuthenticated]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center">
+      <PageShell spacing="sm" className="flex items-center justify-center">
         <CapletLoader message="Loading course…" />
-      </div>
+      </PageShell>
     );
   }
 
   if (error || !course) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-6">
-          <p className="text-2xl font-bold mb-4">
-            {error || 'Course not found'}
-          </p>
-          <p className="text-text-muted mb-8">The course you're looking for doesn't exist or may have been moved.</p>
-          <Link to="/courses" className="btn-primary py-3 px-8">
-            Back to Courses
-          </Link>
-        </div>
-      </div>
+      <PageShell spacing="sm" className="flex items-center justify-center">
+        <EmptyState
+          icon={ExclamationTriangleIcon}
+          title={error || 'Course not found'}
+          action={<Button as={Link} to="/courses" variant="secondary">Back to courses</Button>}
+        >
+          The course you are looking for does not exist or may have been moved.
+        </EmptyState>
+      </PageShell>
     );
   }
 
   const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const totalLessonCount = sortedModules.reduce((sum, m) => sum + (m.lessons || []).length, 0);
+  const totalLessonCount = sortedModules.reduce((sum, moduleItem) => sum + (moduleItem.lessons || []).length, 0);
+  const courseProgress = Math.round(progress?.courseProgress?.progressPercentage || 0);
 
   const startCourse = () => {
     const firstModule = sortedModules[0];
@@ -70,174 +80,124 @@ const CourseDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-      <div className="container-custom">
-        {/* Back link */}
-        <button
-          onClick={() => navigate('/courses')}
-          className="mb-8 inline-flex items-center gap-2 text-sm text-text-muted hover:text-accent transition-colors"
-        >
-          &larr; All Courses
-        </button>
+    <PageShell spacing="md">
+      <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-8 -ml-3">
+        <ArrowLeftIcon className="h-4 w-4" /> All courses
+      </Button>
 
-        {/* Course header */}
-        <div className="mb-12">
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
-            <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                {course.title}
-              </h1>
-              <p className="text-lg text-text-muted leading-relaxed max-w-2xl">
-                {course.description || course.shortDescription}
-              </p>
-            </div>
-            {course.thumbnail && (
-              <div className="w-full md:w-72 aspect-video rounded-xl overflow-hidden border border-line-soft shrink-0">
-                <img
-                  src={course.thumbnail}
-                  alt={course.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-          </div>
-        </div>
+      <PageHeader
+        eyebrow={course.level || 'Course'}
+        title={course.title}
+        actions={
+          <Button onClick={startCourse} disabled={sortedModules.length === 0}>
+            {courseProgress > 0 ? 'Continue learning' : 'Start course'} <ArrowRightIcon className="h-4 w-4" />
+          </Button>
+        }
+      >
+        {course.description || course.shortDescription || 'A practical Caplet course designed for clear financial learning.'}
+      </PageHeader>
 
-        {/* Course info card */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
-          <div className="lg:col-span-8">
-            <div className="bg-surface-raised border border-line-soft rounded-xl p-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div>
-                  <p className="text-xs font-medium text-text-muted mb-1">Duration</p>
-                  <p className="text-lg font-semibold">{course.duration} minutes</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-text-muted mb-1">Lessons</p>
-                  <p className="text-lg font-semibold">{totalLessonCount} lessons</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-text-muted mb-1">Level</p>
-                  <p className="text-lg font-semibold capitalize">{course.level}</p>
-                </div>
-              </div>
-
-              {progress?.courseProgress && (
-                <div className="mb-8">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-text-muted">Your Progress</span>
-                    <span className="font-medium text-accent">{Math.round(progress.courseProgress.progressPercentage)}%</span>
-                  </div>
-                  <div className="h-2 w-full bg-surface-soft rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${progress.courseProgress.progressPercentage}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <button
-                onClick={startCourse}
-                className="btn-primary py-3 px-10"
-              >
-                {progress?.courseProgress ? 'Continue Learning' : 'Start Course'}
-              </button>
-            </div>
-          </div>
-
-          {/* Learning outcomes or metadata sidebar */}
-          {course.learningOutcomes && course.learningOutcomes.length > 0 ? (
-            <aside className="lg:col-span-4 bg-accent/5 border border-accent/20 rounded-xl p-8">
-              <h3 className="text-sm font-semibold mb-4">What you'll learn</h3>
-              <ul className="space-y-3">
-                {course.learningOutcomes.map((outcome, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-text-muted">
-                    <span className="text-accent mt-0.5">&#10003;</span>
-                    <span>{outcome}</span>
-                  </li>
-                ))}
-              </ul>
-            </aside>
-          ) : (
-            <aside className="lg:col-span-4 bg-accent/5 border border-accent/20 rounded-xl p-8 flex flex-col justify-center">
-              <h3 className="text-sm font-semibold mb-2">About this course</h3>
-              <p className="text-sm text-text-muted leading-relaxed">
-                This course is part of Caplet's free financial education program. All modules are designed for clarity and practical understanding.
-              </p>
-            </aside>
-          )}
-        </div>
-
-        {/* Modules list */}
-        <div>
-          <div className="flex items-end justify-between mb-6">
-            <h2 className="text-2xl font-bold">Modules</h2>
-            <p className="text-sm text-text-muted">{sortedModules.length} modules</p>
-          </div>
-
-          <div className="space-y-2">
-            {sortedModules.map((mod, index) => {
-              const moduleLessons = (mod.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-              const lessonCount = moduleLessons.length;
-              const mp = progress?.moduleProgress?.find((m) => String(m.moduleId) === String(mod.id));
-              const completedInModule = mp ? mp.completedLessons : 0;
-              const totalInModule = mp ? mp.totalLessons : lessonCount;
-              const percentage = totalInModule > 0 ? Math.round((completedInModule / totalInModule) * 100) : 0;
-
-              return (
-                <Link
-                  key={mod.id}
-                  to={`/courses/${course.id}/modules/${mod.id}`}
-                  className="group bg-surface-raised border border-line-soft rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between transition-colors duration-200 hover:border-accent/50 block"
-                >
-                  <div className="flex items-center gap-5 min-w-0 mb-4 md:mb-0">
-                    <span className="text-2xl font-bold text-text-dim w-8 text-right shrink-0">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-semibold text-text-primary mb-1 truncate group-hover:text-accent transition-colors">
-                        {mod.title}
-                      </h3>
-                      <div className="flex items-center gap-3 text-sm text-text-muted">
-                        <span>{lessonCount} lessons</span>
-                        {percentage > 0 && (
-                          <>
-                            <span className="w-1 h-1 bg-text-dim rounded-full" />
-                            <span className={percentage === 100 ? 'text-green-600 dark:text-green-400 font-medium' : ''}>{percentage}% complete</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {percentage === 100 && (
-                      <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full">
-                        Complete
-                      </span>
-                    )}
-                    <span className="text-sm text-text-muted group-hover:text-accent transition-colors">
-                      View Module &rarr;
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-
-          {sortedModules.length === 0 && (
-            <div className="py-20 text-center border border-line-soft rounded-xl bg-surface-soft">
-              <p className="text-lg text-text-muted">
-                No modules available yet.
-              </p>
-            </div>
-          )}
-        </div>
+      <div className="mb-14 grid gap-5 lg:grid-cols-3">
+        <StatCard icon={ClockIcon} label="Duration" value={course.duration ? `${course.duration}m` : 'Self-paced'} footer="Short lessons that fit around busy days." />
+        <StatCard icon={BookOpenIcon} label="Lessons" value={totalLessonCount} footer={`${sortedModules.length} ${sortedModules.length === 1 ? 'module' : 'modules'} in this pathway.`} />
+        <StatCard icon={RectangleStackIcon} label="Level" value={course.level || 'Beginner'} footer="Built with practical explanations and examples." />
       </div>
-    </div>
+
+      <div className="mb-16 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <Card padding="lg">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div>
+              <Badge variant="accent" className="mb-3">Course overview</Badge>
+              <h2 className="text-2xl font-bold tracking-tight text-text-primary">Your learning path</h2>
+            </div>
+            {isAuthenticated && <Badge variant={courseProgress === 100 ? 'success' : 'neutral'}>{courseProgress}% complete</Badge>}
+          </div>
+          {isAuthenticated ? (
+            <div>
+              <div className="mb-2 flex justify-between text-sm text-text-muted">
+                <span>Saved progress</span>
+                <span className="font-semibold text-accent">{courseProgress}%</span>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-surface-soft">
+                <div className="h-full rounded-full bg-accent transition-all duration-700" style={{ width: `${courseProgress}%` }} />
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm leading-6 text-text-muted">
+              You can preview the course publicly. Sign in to save your progress and continue modules from any device.
+            </p>
+          )}
+        </Card>
+
+        <Card padding="lg" variant="soft">
+          <h2 className="text-xl font-bold tracking-tight text-text-primary">What you will learn</h2>
+          {course.learningOutcomes?.length > 0 ? (
+            <ul className="mt-5 space-y-3">
+              {course.learningOutcomes.map((outcome) => (
+                <li key={outcome} className="flex items-start gap-3 text-sm leading-6 text-text-muted">
+                  <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+                  <span>{outcome}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm leading-6 text-text-muted">
+              This course focuses on clear explanations, practical examples, and confidence-building steps.
+            </p>
+          )}
+        </Card>
+      </div>
+
+      <SectionHeader
+        title="Modules"
+        actions={<Badge variant="neutral">{sortedModules.length} {sortedModules.length === 1 ? 'module' : 'modules'}</Badge>}
+      >
+        Work through the course in order, or jump into the module that matches what you need today.
+      </SectionHeader>
+
+      {sortedModules.length > 0 ? (
+        <div className="space-y-3">
+          {sortedModules.map((moduleItem, index) => {
+            const moduleLessons = (moduleItem.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            const lessonCount = moduleLessons.length;
+            const moduleProgress = progress?.moduleProgress?.find((item) => String(item.moduleId) === String(moduleItem.id));
+            const completedInModule = moduleProgress ? moduleProgress.completedLessons : 0;
+            const totalInModule = moduleProgress ? moduleProgress.totalLessons : lessonCount;
+            const percentage = totalInModule > 0 ? Math.round((completedInModule / totalInModule) * 100) : 0;
+
+            return (
+              <Card
+                key={moduleItem.id}
+                as={Link}
+                to={`/courses/${course.id}/modules/${moduleItem.id}`}
+                interactive
+                className="group grid gap-5 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-soft font-mono text-sm font-bold text-text-muted">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="truncate text-lg font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{moduleItem.title}</h3>
+                  <p className="mt-1 text-sm text-text-muted">{lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'}</p>
+                  {percentage > 0 && (
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-soft">
+                      <div className="h-full rounded-full bg-accent" style={{ width: `${percentage}%` }} />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-4 sm:justify-end">
+                  {percentage === 100 && <Badge variant="success">Complete</Badge>}
+                  <span className="text-sm font-semibold text-text-muted transition-colors group-hover:text-accent">View module →</span>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState icon={RectangleStackIcon} title="No modules available yet">
+          This course has been created, but its modules are not published yet. Check back soon.
+        </EmptyState>
+      )}
+    </PageShell>
   );
-};
-
-
-export default CourseDetail;
+}

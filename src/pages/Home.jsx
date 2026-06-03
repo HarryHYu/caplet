@@ -1,562 +1,228 @@
-import { useEffect, useRef, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import {
+  AcademicCapIcon,
+  ArrowRightIcon,
+  BanknotesIcon,
+  CalculatorIcon,
+  ChartBarSquareIcon,
+  ChatBubbleLeftRightIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/outline';
+import { Badge, Button, Card, PageShell, SectionHeader, StatCard } from '../components/ui';
 
-gsap.registerPlugin(ScrollTrigger);
+const jargonPairs = [
+  { complex: 'Amortisation', plain: 'Paying off a loan in regular chunks until it is gone.' },
+  { complex: 'Capital gains', plain: 'The profit you make when you sell something for more than you paid.' },
+  { complex: 'Compound interest', plain: 'Interest on your savings, plus interest on the interest already earned.' },
+  { complex: 'Franking credits', plain: 'A tax credit that can reduce double-taxing company profits.' },
+];
 
-const FAQItem = ({ question, answer }) => {
+const featuredCourses = [
+  'Budgeting Fundamentals',
+  'Understanding Tax',
+  'Superannuation 101',
+];
+
+const pillars = [
+  {
+    icon: ChatBubbleLeftRightIcon,
+    title: 'Plain-English lessons',
+    description: 'No jargon-first definitions. Each lesson starts with the real decision a learner is trying to make.',
+  },
+  {
+    icon: CalculatorIcon,
+    title: 'Practical tools',
+    description: 'Calculators and examples help learners test trade-offs with Australian assumptions and familiar language.',
+  },
+  {
+    icon: AcademicCapIcon,
+    title: 'Structured pathways',
+    description: 'Courses and modules build confidence step by step, from foundations through to more advanced concepts.',
+  },
+];
+
+const outcomes = [
+  'Build a budget that can survive real life.',
+  'Understand tax, super, loans, and investing basics.',
+  'Practise with calculators before making decisions.',
+  'Track progress through short, focused modules.',
+];
+
+const faqs = [
+  {
+    question: 'Is Caplet financial advice?',
+    answer:
+      'No. Caplet is education, not personal advice. We explain concepts clearly so learners can ask better questions and make more informed decisions.',
+  },
+  {
+    question: 'Who is Caplet for?',
+    answer:
+      'Anyone who wants a calmer introduction to money topics, especially Australian students, early-career learners, and teachers looking for accessible material.',
+  },
+  {
+    question: 'Do I need an account?',
+    answer:
+      'You can explore public pages without an account. Creating an account lets you save progress and continue courses where you left off.',
+  },
+];
+
+function FAQItem({ question, answer }) {
   const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="border-b border-black/5 last:border-0">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-8 flex justify-between items-center text-left group transition-all"
+    <Card padding="none" variant="flat" className="overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-6 px-5 py-5 text-left sm:px-6"
+        aria-expanded={isOpen}
       >
-        <span className="text-xl md:text-2xl font-serif italic text-text-primary group-hover:text-accent-strong transition-colors">{question}</span>
-        <span className={`w-8 h-8 rounded-full border border-black/10 flex items-center justify-center transition-transform duration-300 ${isOpen ? 'rotate-180 bg-accent text-white' : ''}`}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+        <span className="font-display text-lg font-semibold tracking-tight text-text-primary sm:text-xl">{question}</span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line-soft bg-surface-raised text-text-muted">
+          <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180 text-accent' : ''}`} />
         </span>
       </button>
-      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 pb-8' : 'max-h-0'}`}>
-        <p className="text-lg text-text-muted font-display font-medium leading-relaxed max-w-3xl">
-          {answer}
-        </p>
+      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-48' : 'max-h-0'}`}>
+        <p className="px-5 pb-5 text-sm leading-6 text-text-muted sm:px-6 sm:text-base">{answer}</p>
       </div>
-    </div>
+    </Card>
   );
-};
+}
 
-const Home = () => {
-  const heroRef = useRef(null);
-  const heroTextRef = useRef(null);
-  const philosophyRef = useRef(null);
-  const learningPathRef = useRef(null);
-  const jargonRef = useRef(null);
-
-  // Jargon Transformation Logic
+export default function Home() {
   const [jargonIndex, setJargonIndex] = useState(0);
-  const jargons = [
-    { complex: "Amortization", plain: "Paying off a loan in regular chunks until it’s gone." },
-    { complex: "Capital Gains", plain: "The profit you make when you sell something for more than you bought it." },
-    { complex: "Compound Interest", plain: "Interest you earn on your original money, plus interest on the interest you've already earned." },
-    { complex: "Franking Credits", plain: "A tax discount for shareholders to prevent the same money being taxed twice." },
-    { complex: "Asset Allocation", plain: "Spreading your money across different things (like savings, property, or shares) to stay safe." },
-    { complex: "Securities", plain: "A fancy word for tradable financial assets like stocks, bonds, or shares." }
-  ];
 
   useEffect(() => {
-    const jargonInterval = setInterval(() => {
-      setJargonIndex(prev => (prev + 1) % jargons.length);
-    }, 4000);
-    return () => clearInterval(jargonInterval);
+    const interval = window.setInterval(() => {
+      setJargonIndex((index) => (index + 1) % jargonPairs.length);
+    }, 3600);
+
+    return () => window.clearInterval(interval);
   }, []);
 
-  // Card 1 Logic: Courses Shuffler
-  const [courses, setCourses] = useState([
-    "Retirement Savings (Super) 101",
-    "Budgeting Fundamentals",
-    "Understanding Tax"
-  ]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCourses(prev => {
-        const newArr = [...prev];
-        const last = newArr.pop();
-        newArr.unshift(last);
-        return newArr;
-      });
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Card 2 Logic: Telemetry Typewriter
-  const [typewriterText, setTypewriterText] = useState("");
-  const messages = [
-    "Breaking down your tax bracket...",
-    "Explaining compound interest...",
-    "What is a franking credit?",
-    "Calculating your savings rate...",
-    "Understanding HECS repayments..."
-  ];
-
-  useEffect(() => {
-    let msgIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-    let timeout;
-
-    const type = () => {
-      const currentMsg = messages[msgIndex];
-      
-      if (isDeleting) {
-        setTypewriterText(currentMsg.substring(0, charIndex - 1));
-        charIndex--;
-      } else {
-        setTypewriterText(currentMsg.substring(0, charIndex + 1));
-        charIndex++;
-      }
-
-      if (!isDeleting && charIndex === currentMsg.length) {
-        timeout = setTimeout(() => { isDeleting = true; type(); }, 2000);
-      } else if (isDeleting && charIndex === 0) {
-        isDeleting = false;
-        msgIndex = (msgIndex + 1) % messages.length;
-        timeout = setTimeout(type, 500);
-      } else {
-        timeout = setTimeout(type, isDeleting ? 30 : 70);
-      }
-    };
-
-    timeout = setTimeout(type, 1000);
-    return () => clearTimeout(timeout);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Card 3 Logic: Calculator Automation
-  const [calcInput, setCalcInput] = useState("");
-  const [calcOutput, setCalcOutput] = useState(0);
-
-  useEffect(() => {
-    const runAnimation = async () => {
-      // Very basic mock of an automated calculator workflow
-      setCalcInput("");
-      setCalcOutput(0);
-      
-      await new Promise(r => setTimeout(r, 1000));
-      setCalcInput("$8");
-      await new Promise(r => setTimeout(r, 100));
-      setCalcInput("$85");
-      await new Promise(r => setTimeout(r, 100));
-      setCalcInput("$85,");
-      await new Promise(r => setTimeout(r, 100));
-      setCalcInput("$85,0");
-      await new Promise(r => setTimeout(r, 100));
-      setCalcInput("$85,000");
-
-      await new Promise(r => setTimeout(r, 500));
-      
-      // Animate counter
-      let value = 0;
-      const target = 19667; // approx tax
-      const interval = setInterval(() => {
-        value += Math.floor(target / 20);
-        if (value >= target) {
-          setCalcOutput(target);
-          clearInterval(interval);
-        } else {
-          setCalcOutput(value);
-        }
-      }, 50);
-
-      await new Promise(r => setTimeout(r, 3000));
-      // Loop
-      runAnimation();
-    };
-
-    runAnimation();
-  }, []);
-
-  // GSAP Animations
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Hero Animations
-      gsap.fromTo('.hero-text-elem', 
-        { y: 50, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: 'power3.out', delay: 0.2 }
-      );
-
-      // Features Cards Reveal
-      gsap.fromTo('.feature-card',
-        { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          stagger: 0.2,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: '.feature-card',
-            start: 'top 80%',
-          }
-        }
-      );
-
-      // Philosophy Scroll Trigger
-      gsap.fromTo('.phil-text',
-        { y: 100, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1.2,
-          stagger: 0.2,
-          ease: 'power4.out',
-          scrollTrigger: {
-            trigger: philosophyRef.current,
-            start: 'top 70%',
-          }
-        }
-      );
-
-      // Learning Path Sticky Stacking
-      const cards = gsap.utils.toArray('.learning-card');
-      cards.forEach((card, i) => {
-        if (i < cards.length - 1) {
-          gsap.to(card, {
-            scale: 0.9,
-            opacity: 0.5,
-            filter: 'blur(20px)',
-            scrollTrigger: {
-              trigger: cards[i + 1],
-              start: 'top 70%',
-              end: 'top top',
-              scrub: true,
-            }
-          });
-        }
-      });
-
-      // Jargon Reveal
-      gsap.fromTo('.jargon-box',
-        { scale: 0.8, opacity: 0 },
-        {
-          scale: 1,
-          opacity: 1,
-          duration: 1,
-          ease: 'back.out(1.7)',
-          scrollTrigger: {
-            trigger: jargonRef.current,
-            start: 'top 60%',
-          }
-        }
-      );
-    });
-
-    return () => ctx.revert();
-  }, []);
+  const currentJargon = jargonPairs[jargonIndex];
 
   return (
-    <div className="bg-surface-body text-text-primary relative selection:bg-accent selection:text-white">
-      {/* ================= SIMPLIFIED HERO ================= */}
-      <section ref={heroRef} className="relative pt-32 pb-24 md:pt-40 md:pb-40">
-        <div className="container-custom relative z-10 w-full text-center" ref={heroTextRef}>
-          <div className="max-w-4xl mx-auto text-text-primary">
-            <h1 className="hero-text-elem text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter mb-8">
-              Money,<br />
-              <span className="font-serif italic font-medium text-accent-strong">Simplified.</span>
+    <PageShell contained={false} spacing="sm" className="overflow-hidden">
+      <section className="relative border-b border-line-soft py-20 sm:py-24 lg:py-32">
+        <div className="absolute inset-0 grid-technical opacity-30" aria-hidden="true" />
+        <div className="container-custom relative grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div className="max-w-4xl">
+            <Badge variant="accent" className="mb-6">Financial literacy, made calmer</Badge>
+            <h1 className="text-5xl font-bold tracking-tight text-text-primary sm:text-6xl lg:text-7xl">
+              Learn money skills without the finance fog.
             </h1>
-            <p className="hero-text-elem text-xl sm:text-2xl font-display font-medium max-w-2xl mx-auto text-text-muted leading-relaxed mb-12">
-              Structured financial education for Australians.<br />
-              No products. No catch. Just clarity.
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-text-muted sm:text-xl">
+              Caplet turns Australian personal finance into friendly lessons, guided modules, and practical tools you can use before money decisions feel urgent.
             </p>
-            <div className="hero-text-elem flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Link to="/register" className="bg-accent hover:bg-accent-strong text-white font-display font-semibold px-10 py-5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl w-full sm:w-auto text-center">
-                Get Started Free
-              </Link>
-              <Link to="/courses" className="text-text-muted hover:text-text-primary font-display font-bold text-sm uppercase tracking-widest transition-all duration-300 group py-4 px-6 md:px-0">
-                Browse Registry <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span>
-              </Link>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Button as={Link} to="/courses" size="lg">
+                Explore courses <ArrowRightIcon className="h-5 w-5" />
+              </Button>
+              <Button as={Link} to="/tools" variant="secondary" size="lg">
+                Try calculators
+              </Button>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ================= FEATURES (Card Dashboard) ================= */}
-      <section className="py-24 md:py-40 bg-surface-body relative z-20 overflow-hidden">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Card 1: Knowledge Shuffler */}
-            <div className="feature-card h-80 md:h-96 bg-white rounded-[2rem] p-8 shadow-sm border border-black/5 flex flex-col items-center justify-center relative overflow-hidden group">
-              <div className="w-full flex justify-between absolute top-8 px-8">
-                <span className="text-xs font-mono tracking-widest text-accent-strong/50 uppercase">Knowledge Base</span>
-                <span className="w-2 h-2 rounded-full bg-accent-strong/20" />
+          <Card padding="lg" className="relative overflow-hidden">
+            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-accent-soft blur-3xl" aria-hidden="true" />
+            <div className="relative">
+              <div className="mb-8 flex items-center justify-between gap-4">
+                <Badge variant="neutral">Live lesson preview</Badge>
+                <SparklesIcon className="h-6 w-6 text-accent" />
               </div>
-              <div className="relative w-full h-32 mt-8 flex justify-center items-center">
-                {courses.map((course, i) => (
-                  <div 
-                    key={course}
-                    className="absolute w-full max-w-[280px] bg-surface-body border border-black/5 rounded-2xl p-6 shadow-sm flex items-center justify-center text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
-                    style={{
-                      transform: `translateY(${i === 0 ? '0' : i === 1 ? '-16px' : '-32px'}) scale(${i === 0 ? 1 : i === 1 ? 0.95 : 0.9})`,
-                      zIndex: courses.length - i,
-                      opacity: i === 0 ? 1 : i === 1 ? 0.6 : 0.3
-                    }}
-                  >
-                    <span className="font-serif italic text-xl text-text-primary">{course}</span>
+              <div className="rounded-xl border border-line-soft bg-surface-soft p-5">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-text-dim">Finance term</p>
+                <p className="mt-3 font-serif text-4xl italic text-text-primary">{currentJargon.complex}</p>
+              </div>
+              <div className="mt-4 rounded-xl border border-accent/20 bg-accent-soft p-5">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">Caplet translation</p>
+                <p className="mt-3 text-lg leading-7 text-text-primary">{currentJargon.plain}</p>
+              </div>
+              <div className="mt-8 space-y-3">
+                {featuredCourses.map((course, index) => (
+                  <div key={course} className="flex items-center justify-between rounded-lg border border-line-soft bg-surface-raised p-4">
+                    <span className="text-sm font-semibold text-text-primary">{course}</span>
+                    <Badge size="sm" variant={index === 0 ? 'accent' : 'neutral'}>{index === 0 ? 'Start' : 'Next'}</Badge>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Card 2: AI Literarcy Assistant */}
-            <div className="h-80 md:h-96 bg-text-primary text-surface-body rounded-[2rem] p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-mono tracking-widest text-accent uppercase flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  AI Assistant — Educational Only
-                </span>
-              </div>
-              <div className="flex-1 flex items-end pb-8">
-                <p className="font-mono text-lg text-surface-body/90 leading-tight">
-                  <span className="text-accent mr-2">&gt;</span>
-                  {typewriterText}
-                  <span className="inline-block w-2 bg-accent h-5 animate-pulse ml-1 align-middle" />
-                </p>
-              </div>
-              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-text-primary via-transparent to-transparent opacity-50" />
-            </div>
-
-            {/* Card 3: Live Calculator Preview */}
-            <div className="h-80 md:h-96 bg-white rounded-[2rem] p-8 shadow-sm border border-black/5 flex flex-col relative group">
-              <div className="flex justify-between items-center mb-8">
-                <span className="text-[10px] font-mono tracking-widest text-accent-strong/50 uppercase">Live Telemetry</span>
-              </div>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="text-xs font-display font-medium text-text-dim uppercase tracking-widest mb-2 block">Income Input</label>
-                  <div className="w-full bg-surface-body rounded-xl px-4 py-3 font-mono text-text-primary border border-black/5">
-                    {calcInput || " "}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-xs font-display font-medium text-text-dim uppercase tracking-widest mb-2 block">Est. Tax Outcome</label>
-                  <div className="w-full bg-accent/10 rounded-xl px-4 py-3 font-mono text-accent border border-accent/20">
-                    ${calcOutput.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-display font-bold text-accent-strong cursor-pointer hover:text-accent transition-colors">
-                Try the full calculator &rarr;
-              </div>
-
-              {/* Fake SVG Cursor */}
-              <div className="absolute w-8 h-8 pointer-events-none transition-all duration-1000 ease-in-out z-10" 
-                   style={{ 
-                     top: calcInput ? '30%' : '75%', 
-                     left: calcInput ? '60%' : '20%',
-                     opacity: 0.8 
-                   }}>
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 4L11.9616 22.396A1 1 0 0013.793 22.4542L16.2753 15.6558C16.3986 15.3178 16.6661 15.0503 17.0041 14.927L23.8024 12.4447A1 1 0 0023.7443 10.613L5.34825 2.65158" fill="#0036CC" />
-                  <path d="M4 4L11.9616 22.396A1 1 0 0013.793 22.4542L16.2753 15.6558C16.3986 15.3178 16.6661 15.0503 17.0041 14.927L23.8024 12.4447A1 1 0 0023.7443 10.613L5.34825 2.65158L4 4Z" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </div>
-
-          </div>
+          </Card>
         </div>
       </section>
 
-      {/* ================= JARGON TRANSFORMATION ================= */}
-      <section ref={jargonRef} className="py-24 md:py-40 bg-white relative overflow-hidden">
-        <div className="container-custom">
-          <div className="flex flex-col lg:flex-row items-center gap-16 md:gap-24">
-            
-            <div className="w-full lg:w-1/2">
-              <span className="text-xs font-mono font-bold tracking-[0.3em] text-accent uppercase mb-8 block">The Language Gap</span>
-              <h2 className="text-4xl md:text-6xl font-display font-bold mb-8 leading-tight text-text-primary">
-                We translate <br />
-                <span className="font-serif italic text-accent-strong">Industry Jargon</span> <br />
-                into Plain English.
-              </h2>
-              <p className="text-xl font-display font-medium text-text-muted leading-relaxed mb-12">
-                Finance is intentionally complex. We strip away the smoke and mirrors to give you the definitions that actually matter for your future.
-              </p>
-            </div>
-
-            <div className="w-full lg:w-1/2 relative bg-surface-body rounded-[3rem] p-8 md:p-16 jargon-box shadow-2xl border border-black/5 min-h-[400px] flex flex-col justify-center transition-all duration-500 overflow-hidden">
-              <div className="absolute top-0 right-0 p-8">
-                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                  <span className="text-accent font-mono font-bold">{jargonIndex + 1}/{jargons.length}</span>
-                </div>
-              </div>
-
-              <div className="relative h-full">
-                {/* Complex side */}
-                <div key={`complex-${jargons[jargonIndex].complex}`} className="animate-fade-slide-up">
-                  <span className="text-[10px] uppercase tracking-widest font-mono text-text-dim/40 mb-2 block">Complex Terminology</span>
-                  <h3 className="text-3xl md:text-5xl font-display font-bold text-text-primary mb-12">
-                    {jargons[jargonIndex].complex}
-                  </h3>
-                </div>
-
-                {/* Arrow animation divider */}
-                <div className="w-full h-px bg-accent/20 mb-12 relative">
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-accent rounded-full animate-ping" />
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white shadow-lg">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                </div>
-
-                {/* Plain side */}
-                <div key={`plain-${jargons[jargonIndex].complex}`} className="animate-fade-slide-up" style={{ animationDelay: '150ms' }}>
-                  <span className="text-[10px] uppercase tracking-widest font-mono text-accent mb-2 block font-bold">In Plain English</span>
-                  <p className="text-xl md:text-2xl font-serif italic text-accent-strong leading-relaxed">
-                    "{jargons[jargonIndex].plain}"
-                  </p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-      <section ref={philosophyRef} className="py-32 md:py-48 bg-surface-soft text-text-primary relative overflow-hidden">
-        <div className="container-custom relative z-10">
-          <div className="max-w-5xl">
-            <h2 className="text-4xl sm:text-6xl md:text-7xl font-display font-bold tracking-tight mb-12 leading-[1.2]">
-              <span className="block overflow-hidden"><span className="phil-text block py-3">Most platforms profit from</span></span>
-              <span className="block overflow-hidden"><span className="phil-text block py-3 font-serif italic text-accent-strong">your confusion.</span></span>
-              <span className="block overflow-hidden mt-2"><span className="phil-text block py-3">We exist to end it.</span></span>
-            </h2>
-            
-            <p className="phil-text text-lg sm:text-2xl font-display font-medium text-text-primary/80 max-w-3xl leading-relaxed">
-              Caplet is free. Always. No products. No upsells. No affiliate links buried in our content. Just structured financial education, built for Australians who deserve better.
-            </p>
-          </div>
+      <section className="container-custom py-16 sm:py-20">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard label="Course library" value="Free" trend="Public access" footer="Browse foundations before creating an account." />
+          <StatCard label="Learning style" value="Short" trend="Focused modules" footer="Designed for mobile review and classroom use." />
+          <StatCard label="Built for" value="AU" trend="Local context" footer="Examples reference Australian tax, super, and common terms." />
         </div>
       </section>
 
-      {/* ================= LEARNING PATH ================= */}
-      <section ref={learningPathRef} className="relative bg-surface-body pb-32">
-        <div className="container-custom py-24">
-          <div className="text-center mb-16">
-            <span className="uppercase text-xs font-mono tracking-widest text-accent-strong/60 font-bold">The Syllabus</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold mt-4">A structured path forward.</h2>
-          </div>
-        </div>
-
-        {/* Path Cards */}
-        <div className="w-full relative px-4 md:px-0">
-          {[
-            {
-              title: "Understanding Your Money",
-              kicker: "01. Foundations",
-              anim: "pie",
-              desc: "Build a rock-solid mental model of your cash flow. We demystify budgeting by focusing on systems, not restrictive rules."
-            },
-            {
-              title: "Tax, Super & Beyond",
-              kicker: "02. Building Knowledge",
-              anim: "timeline",
-              desc: "Navigate the Australian system. Finally understand what your payslip means, where your tax goes, and why your super balance matters today."
-            },
-            {
-              title: "Put It Into Practice",
-              kicker: "03. Taking Action",
-              anim: "curve",
-              desc: "From theory to reality. Learn how compound interest, risk profiles, and long-term planning translate into actual wealth creation."
-            }
-          ].map((item, index) => (
-            <div key={item.kicker} className="learning-card sticky top-24 md:top-32 w-full max-w-6xl mx-auto h-[65vh] min-h-[500px] mb-24 rounded-[3rem] bg-white border border-black/5 shadow-2xl p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center overflow-hidden transform-gpu">
-              
-              <div className="w-full md:w-1/2 relative z-10">
-                <span className="text-xs font-mono font-bold tracking-widest text-accent-strong/60 uppercase block mb-4">
-                  {item.kicker}
-                </span>
-                <h3 className="text-4xl md:text-5xl font-serif italic mb-6 text-text-primary">
-                  {item.title}
-                </h3>
-                <p className="text-lg text-text-muted leading-relaxed font-display font-medium">
-                  {item.desc}
-                </p>
+      <section className="container-custom py-16 sm:py-20">
+        <SectionHeader eyebrow="How it works" title="A better front door to financial confidence.">
+          The public experience now follows the same card, badge, button, and spacing system used across the product.
+        </SectionHeader>
+        <div className="grid gap-5 md:grid-cols-3">
+          {pillars.map(({ icon: PillarIcon, title, description }) => (
+            <Card key={title} padding="lg" interactive>
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+                {createElement(PillarIcon, { className: 'h-6 w-6', 'aria-hidden': true })}
               </div>
-              
-              <div className="w-full md:w-1/2 h-full flex items-center justify-center bg-surface-body rounded-[2rem] border border-black/5 relative overflow-hidden group">
-                {/* Abstract Visuals depending on anim type */}
-                {item.anim === 'pie' && (
-                  <div className="relative w-64 h-64 rounded-full border-[16px] border-accent/20 border-t-accent border-r-accent-strong animate-spin transition-all duration-[10s]" />
-                )}
-                {item.anim === 'timeline' && (
-                  <div className="w-3/4 h-2 bg-accent/20 rounded-full relative">
-                    <div className="absolute top-1/2 -translate-y-1/2 left-0 w-4 h-4 rounded-full bg-accent shadow-[0_0_15px_rgba(0,80,255,0.5)]" />
-                    <div className="absolute top-1/2 -translate-y-1/2 left-1/2 w-4 h-4 rounded-full bg-accent shadow-[0_0_15px_rgba(0,80,255,0.5)]" />
-                    <div className="absolute top-1/2 -translate-y-1/2 right-0 w-4 h-4 rounded-full bg-accent-strong shadow-[0_0_15px_rgba(0,54,204,0.5)]" />
-                  </div>
-                )}
-                {item.anim === 'curve' && (
-                  <div className="relative w-full h-full p-8 flex items-end">
-                    <svg viewBox="0 0 100 100" className="w-full h-full stroke-accent fill-none" preserveAspectRatio="none">
-                      <path d="M0,100 C40,90 60,60 100,0" strokeWidth="4" strokeLinecap="round" />
-                    </svg>
-                    <span className="absolute top-12 right-12 font-mono text-2xl font-bold text-accent-strong">$124,500</span>
-                  </div>
-                )}
-              </div>
-            </div>
+              <h3 className="text-xl font-bold tracking-tight text-text-primary">{title}</h3>
+              <p className="mt-3 text-sm leading-6 text-text-muted">{description}</p>
+            </Card>
           ))}
         </div>
       </section>
 
-      {/* ================= FAQ ================= */}
-      <section className="py-24 md:py-40 bg-surface-body border-t border-black/5 relative z-20">
-        <div className="container-custom">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-16">
-              <span className="uppercase text-xs font-mono tracking-[0.3em] text-accent font-bold mb-4 block">Common Questions</span>
-              <h2 className="text-4xl md:text-5xl font-display font-bold text-text-primary">Still curious?</h2>
-            </div>
-
-            <div className="bg-white rounded-[3rem] px-8 md:px-12 py-4 shadow-sm border border-black/5">
-              {[
-                { 
-                  q: "Is Caplet really free?", 
-                  a: "Yes, 100%. We believe financial literacy is a fundamental right. Caplet is funded independently, and we never sell your data or push affiliate financial products." 
-                },
-                { 
-                  q: "Is this financial advice?", 
-                  a: "Absolutely not. Caplet provide strictly educational material. We help you understand how the system works so you can make your own informed decisions or ask the right questions when talking to a professional." 
-                },
-                { 
-                  q: "Do I need to live in Australia?", 
-                  a: "Our content is deeply optimized for the Australian system (retirement savings, tax brackets, HELP/HECS, etc.), but the core principles of cash flow and compound interest apply to everyone." 
-                },
-                { 
-                  q: "How often courses updated?", 
-                  a: "Whenever policy changes (like new tax thresholds or super guarantee changes), we update the curriculum within 48 hours to ensure you're learning from the latest data." 
-                },
-                {
-                  q: "Where are the sources gathered from?",
-                  a: "Our courses and information are all verified and tightly linked to the NESA syllabus for schools, including Year 9 to 10 Commerce with its corresponding legal, economics and business topics."
-                },
-                {
-                  q: "Can I suggest courses and give feedback to Caplet?",
-                  a: "Yes, absolutely! We love hearing from our users. You can suggest new course topics or provide feedback on existing ones through our contact form."
-                },
-                {
-                  q: "How do I get started?",
-                  a: "Just click on any course that interests you, sign up for a free account, and you'll be able to start learning immediately."
-                }
-              ].map((faq, i) => (
-                <FAQItem key={i} question={faq.q} answer={faq.a} />
-              ))}
-            </div>
+      <section className="container-custom py-16 sm:py-20">
+        <Card padding="lg" variant="inverse" className="grid gap-10 overflow-hidden lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <Badge variant="inverse" className="mb-5">Foundation sprint</Badge>
+            <h2 className="text-3xl font-bold tracking-tight text-text-contrast sm:text-4xl">From confused to capable, one module at a time.</h2>
+            <p className="mt-5 text-base leading-7 text-text-contrast/75">
+              Start with a course, open a module, then practise with a tool. Caplet keeps the interface predictable so the learning can stay front and centre.
+            </p>
+            <Button as={Link} to="/courses" variant="primary" className="mt-8">
+              Start learning
+            </Button>
           </div>
+          <div className="grid gap-3">
+            {outcomes.map((outcome) => (
+              <div key={outcome} className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-text-contrast">
+                <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+                <span className="text-sm leading-6">{outcome}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      <section className="container-custom py-16 sm:py-20">
+        <SectionHeader eyebrow="Public questions" title="Answers before you sign in." />
+        <div className="grid gap-3">
+          {faqs.map((faq) => <FAQItem key={faq.question} {...faq} />)}
         </div>
       </section>
 
-      {/* ================= FOOTER CTA ================= */}
-      <section className="bg-accent text-white py-32 rounded-t-[3rem] -mt-10 relative z-30">
-        <div className="container-custom text-center max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-serif italic mb-8">
-            Ready to actually understand your money?
-          </h2>
-          <p className="text-xl md:text-2xl font-display font-medium text-white/80 mb-12">
-            Start with any course! it's free.
-          </p>
-          <Link to="/courses" className="inline-block bg-white text-accent font-display font-bold px-10 py-5 rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl">
-            View Curriculum
-          </Link>
-        </div>
+      <section className="container-custom pb-20 pt-10 sm:pb-28">
+        <Card padding="lg" className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <Badge variant="accent" className="mb-4">Ready when you are</Badge>
+            <h2 className="text-3xl font-bold tracking-tight text-text-primary">Choose a course and take the first small step.</h2>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button as={Link} to="/register">Create account</Button>
+            <Button as={Link} to="/courses" variant="secondary">Browse library</Button>
+          </div>
+        </Card>
       </section>
-
-    </div>
+    </PageShell>
   );
-};
-
-export default Home;
+}
