@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { EmptyState, LoadingState, PageHeader, ProgressBar } from '../components/course/CourseUI';
+import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
 const ModuleDetail = () => {
   const { courseId, moduleId } = useParams();
@@ -48,14 +50,29 @@ const ModuleDetail = () => {
     return <LoadingState message="Loading module…" />;
   }
 
-  if (error || !course) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center px-6 selection:bg-accent selection:text-white">
-        <EmptyState
-          kicker="Course unavailable"
-          title={error || 'Course not found'}
-          description="The course you're looking for doesn't exist or may have been moved. Return to the course library to keep learning."
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <ErrorState
+          title="Module could not be loaded."
+          message="We could not load this module right now. Please return to the course and try again."
+          details={error}
           action={<Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>}
+          className="max-w-xl w-full"
+        />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <EmptyState
+          eyebrow="Course not found"
+          title="This course is unavailable."
+          message="The course you're looking for doesn't exist or may have been moved."
+          action={<Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>}
+          className="max-w-xl w-full"
         />
       </div>
     );
@@ -63,12 +80,13 @@ const ModuleDetail = () => {
 
   if (!module_) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center px-6 selection:bg-accent selection:text-white">
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
         <EmptyState
-          kicker="Module unavailable"
-          title="Module not found"
-          description="This module doesn't exist or may have been moved. Return to the course overview to choose another module."
+          eyebrow="Module not found"
+          title="This module is unavailable."
+          message="This module doesn't exist or may have been moved."
           action={<Link to={`/courses/${courseId}`} className="btn-primary py-3 px-8">Back to Course</Link>}
+          className="max-w-xl w-full"
         />
       </div>
     );
@@ -161,19 +179,24 @@ const ModuleDetail = () => {
                         </div>
                       </div>
                     </div>
-                    <span className="text-sm text-text-muted group-hover:text-accent transition-colors whitespace-nowrap">
-                      {complete ? 'Review lesson' : 'Start Lesson'} &rarr;
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-text-muted group-hover:text-accent transition-colors">
+                    {isLessonComplete(lesson) ? 'Review' : 'Start Lesson'} &rarr;
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {lessons.length === 0 && (
             <EmptyState
-              kicker="No lessons yet"
-              title="This module is being prepared."
-              description="Lessons will appear here as soon as they are ready. Return to the course overview to explore another module."
-              action={<Link to={`/courses/${courseId}`} className="btn-primary py-3 px-8">Back to Course</Link>}
+              eyebrow="Lessons"
+              title="No lessons available yet."
+              message="This module is ready, but lesson content has not been added yet."
+              compact
+              className="rounded-xl"
             />
           )}
         </section>

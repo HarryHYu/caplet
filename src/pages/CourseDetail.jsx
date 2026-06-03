@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { EmptyState, LoadingState, PageHeader, ProgressBar } from '../components/course/CourseUI';
-import { formatDuration, formatLevel, getLessonCount } from '../components/course/courseUtils';
+import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -42,14 +43,29 @@ const CourseDetail = () => {
     return <LoadingState message="Loading course…" />;
   }
 
-  if (error || !course) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-surface-body flex items-center justify-center px-6 selection:bg-accent selection:text-white">
-        <EmptyState
-          kicker="Course unavailable"
-          title={error || 'Course not found'}
-          description="The course you're looking for doesn't exist or may have been moved. Return to the course library to keep learning."
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <ErrorState
+          title="Course could not be loaded."
+          message="We could not load this course right now. Please return to the course library and try again."
+          details={error}
           action={<Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>}
+          className="max-w-xl w-full"
+        />
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+        <EmptyState
+          eyebrow="Course not found"
+          title="This course is unavailable."
+          message="The course you're looking for doesn't exist or may have been moved."
+          action={<Link to="/courses" className="btn-primary py-3 px-8">Back to Courses</Link>}
+          className="max-w-xl w-full"
         />
       </div>
     );
@@ -214,16 +230,23 @@ const CourseDetail = () => {
                       <span className="text-sm text-text-muted group-hover:text-accent transition-colors whitespace-nowrap">
                         View Module &rarr;
                       </span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
+                    )}
+                    <span className="text-sm text-text-muted group-hover:text-accent transition-colors">
+                      View Module &rarr;
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {sortedModules.length === 0 && (
             <EmptyState
-              kicker="No modules yet"
-              title="This course is being prepared."
-              description="Modules will appear here as soon as they are available. Check back soon for the learning pathway."
+              eyebrow="Modules"
+              title="No modules available yet."
+              message="This course has been published, but its module list is still empty."
+              compact
+              className="rounded-xl"
             />
           )}
         </section>

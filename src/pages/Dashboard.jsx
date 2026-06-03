@@ -4,7 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../contexts/CoursesContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
-import { PageShell, PageHeader, Card, StatCard, EmptyState, Button } from '../components/ui';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
 import {
     BookOpenIcon,
     AcademicCapIcon,
@@ -42,6 +43,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
     const [savedSlides, setSavedSlides] = useState([]);
+    const [dashboardError, setDashboardError] = useState(null);
 
     useEffect(() => {
         if (!hasFetched && !coursesLoading) {
@@ -68,6 +70,7 @@ export default function Dashboard() {
                 setSavedSlides(savedSlidesData?.savedSlides || []);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
+                setDashboardError(error?.message || 'Failed to load dashboard data');
             } finally {
                 setLoading(false);
             }
@@ -95,6 +98,24 @@ export default function Dashboard() {
     const totalProgress = progressEntries.length
         ? Math.round(progressEntries.reduce((sum, item) => sum + (Number(item.progressPercentage) || 0), 0) / progressEntries.length)
         : 0;
+
+    if (dashboardError) {
+        return (
+            <div className="min-h-screen bg-surface-body flex items-center justify-center p-6">
+                <ErrorState
+                    title="Dashboard could not be loaded."
+                    message="We could not load your dashboard data right now. Please refresh the page to try again."
+                    details={dashboardError}
+                    action={(
+                        <button type="button" onClick={() => window.location.reload()} className="btn-primary py-3 px-8">
+                            Refresh Dashboard
+                        </button>
+                    )}
+                    className="max-w-xl w-full"
+                />
+            </div>
+        );
+    }
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -254,37 +275,47 @@ export default function Dashboard() {
                                             </div>
                                             <ArrowRightIcon className="h-5 w-5 text-text-dim transition-transform group-hover:translate-x-2" />
                                         </Link>
-                                    ))}
-                                </div>
-                            ) : (
-                                <EmptyState
-                                    title="No active enrollments"
-                                    description="Classes you teach or attend will appear here once available."
-                                    actions={<Button to="/classes" tone="secondary">View classes</Button>}
-                                />
-                            )}
-                        </section>
+                                    ))
+                                ) : (
+                                    <EmptyState
+                                        eyebrow="Academy"
+                                        title="No active classes yet."
+                                        message="Join or create a class to see recent academy activity here."
+                                        compact
+                                        className="bg-surface-body"
+                                    />
+                                )}
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="space-y-20 lg:col-span-4">
-                        {/* 6. Courses */}
-                        <section className="reveal-text stagger-3">
-                            <SectionHeading kicker="Courses" title="Library picks." />
-                            <div className="space-y-6">
-                                {courses.slice(0, 4).map(course => (
-                                    <Card
-                                        key={course.id}
-                                        as={Link}
-                                        to={`/courses/${course.id}`}
-                                        className="group flex w-full items-center justify-between gap-4 bg-surface-body px-5 py-4 transition-colors hover:bg-surface-raised"
-                                    >
-                                        <div className="min-w-0">
-                                            <p className="truncate text-[11px] font-bold uppercase tracking-widest transition-colors group-hover:text-accent">{course.title}</p>
-                                            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.3em] text-text-dim">{course.duration}m Duration</p>
-                                        </div>
-                                        <ArrowRightIcon className="h-4 w-4 shrink-0 text-text-dim transition-all group-hover:translate-x-1 group-hover:text-accent" />
-                                    </Card>
-                                ))}
+                    {/* Sidebar */}
+                    <div className="lg:col-span-4 space-y-20">
+                        <div className="reveal-text stagger-3">
+                            <span className="section-kicker">My Courses</span>
+                            <div className="mt-8 space-y-6">
+                                {courses.length > 0 ? (
+                                    courses.slice(0, 4).map(course => (
+                                        <Link
+                                            key={course.id}
+                                            to={`/courses/${course.id}`}
+                                            className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="text-[11px] font-bold uppercase tracking-widest truncate group-hover:text-accent transition-colors">{course.title}</p>
+                                                <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mt-1">{course.duration}m Duration</p>
+                                            </div>
+                                            <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                                        </Link>
+                                    ))
+                                ) : (
+                                    <EmptyState
+                                        eyebrow="Courses"
+                                        title="No courses available."
+                                        message="Published courses will appear here when available."
+                                        compact
+                                    />
+                                )}
                             </div>
                         </section>
 

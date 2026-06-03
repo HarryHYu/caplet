@@ -2,7 +2,45 @@ import { useState, useEffect } from 'react';
 import { useCourses } from '../contexts/CoursesContext';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { CourseCard, EmptyState, LoadingState, PageHeader } from '../components/course/CourseUI';
+import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import CapletLoader from '../components/CapletLoader';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
+
+const CourseCover = ({ title }) => {
+  // Generate a semi-stable pseudo-random gradient based on title
+  const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hue1 = hash % 360;
+  const hue2 = (hue1 + 40) % 360;
+  const hue3 = (hue1 + 180) % 360;
+  
+  return (
+    <div className="relative w-full h-full overflow-hidden group-hover:scale-105 transition-transform duration-700">
+      <div 
+        className="absolute inset-0 opacity-80"
+        style={{
+          background: `linear-gradient(${hue1}deg, hsl(${hue1}, 70%, 85%) 0%, hsl(${hue2}, 70%, 90%) 50%, hsl(${hue3}, 70%, 95%) 100%)`
+        }}
+      />
+      
+      {/* Abstract shapes */}
+      <div 
+        className="absolute top-[-20%] left-[-20%] w-[100%] h-[100%] rounded-full blur-[80px] mix-blend-multiply opacity-60"
+        style={{ background: `hsl(${hue2}, 80%, 75%)` }}
+      />
+      <div 
+        className="absolute bottom-[-30%] right-[-10%] w-[120%] h-[120%] rounded-full blur-[100px] mix-blend-screen opacity-40 animate-float"
+        style={{ background: `hsl(${hue3}, 60%, 85%)` }}
+      />
+      
+      {/* Decorative center element */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-10">
+        <span className="text-[12rem] font-serif italic select-none">{title.charAt(0)}</span>
+      </div>
+      
+    </div>
+  );
+};
 
 const Courses = () => {
   const { courses, loading, error, fetchCourses } = useCourses();
@@ -61,9 +99,21 @@ const Courses = () => {
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         {error && (
-          <div className="mb-12 p-6 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-red-800 text-sm font-medium flex items-center gap-4 reveal-text">
-            {error}
-          </div>
+          <ErrorState
+            title="Course library could not be loaded."
+            message="We could not refresh the course list. Please try again or adjust your filters."
+            details={error}
+            action={(
+              <button
+                type="button"
+                onClick={() => fetchCourses(filters)}
+                className="btn-primary py-3 px-8"
+              >
+                Retry
+              </button>
+            )}
+            className="mb-20 reveal-text"
+          />
         )}
 
         <PageHeader
@@ -122,9 +172,75 @@ const Courses = () => {
                 onClick={clearFilters}
                 className="btn-primary py-3 px-8"
               >
+                <div className="flex justify-between items-start mb-12">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">
+                    {course.level || 'Beginner'}
+                  </span>
+                  {hasProgress && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
+                      In Progress
+                    </span>
+                  )}
+                </div>
+
+                <div className="aspect-[16/9] w-full mb-12 overflow-hidden bg-surface-soft border border-line-soft rounded-[2rem]">
+                  <CourseCover title={course.title} id={course.id} />
+                </div>
+
+                <h3 className="text-2xl font-bold uppercase tracking-tighter mb-8 group-hover:text-accent transition-colors duration-500">
+                  {course.title}
+                </h3>
+
+                <p className="text-sm font-medium text-text-muted leading-relaxed mb-12 line-clamp-3">
+                  {course.shortDescription}
+                </p>
+
+                <div className="mt-auto">
+                  <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-text-dim mb-8">
+                    <span>{course.duration}m</span>
+                    <span className="w-1 h-1 bg-text-dim" />
+                    <span>{(course.modules || []).reduce((sum, m) => sum + (m.lessons || []).length, 0)} lessons</span>
+                  </div>
+
+                  {isAuthenticated && hasProgress && (
+                    <div className="mb-8">
+                      <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-text-dim mb-3">
+                        <span>Progress</span>
+                        <span className="text-accent">{Math.round(progress)}%</span>
+                      </div>
+                      <div className="w-full bg-surface-soft h-1 overflow-hidden">
+                        <div className="bg-accent h-full transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-8 border-t border-line-soft">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] group-hover:text-accent transition-colors duration-500">
+                      {hasProgress ? 'Continue Module' : 'Enter Lesson'} &rarr;
+                    </span>
+                    <ArrowRightIcon className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-2 transition-all duration-500" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {courses.length === 0 && !loading && (
+          <EmptyState
+            eyebrow="Registry query null"
+            title="No courses match this view."
+            message="Try clearing your filters or searching for another topic."
+            action={(
+              <button
+                type="button"
+                onClick={() => setFilters({ level: '', search: '' })}
+                className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-accent-strong transition-colors"
+              >
                 Clear Filters
               </button>
             )}
+            className="reveal-text"
           />
         )}
       </div>
