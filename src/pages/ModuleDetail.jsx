@@ -48,6 +48,10 @@ export default function ModuleDetail() {
   }, [course, moduleId]);
 
   if (loading) {
+    return <LoadingState message="Loading module…" />;
+  }
+
+  if (error) {
     return (
       <PageShell spacing="sm" className="flex items-center justify-center">
         <CapletLoader message="Loading module…" />
@@ -55,7 +59,7 @@ export default function ModuleDetail() {
     );
   }
 
-  if (error || !course) {
+  if (!course) {
     return (
       <PageShell spacing="sm" className="flex items-center justify-center">
         <EmptyState

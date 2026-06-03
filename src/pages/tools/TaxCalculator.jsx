@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { CalculatorFormPanel, CalculatorResultPanel, CalculatorShell } from '../../components/tools';
 
 const TAX_BRACKETS = [
   { threshold: 0, rate: 0, base: 0 },
@@ -61,30 +61,13 @@ const TaxCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-      <div className="container-custom">
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-            <div>
-              <span className="section-kicker">Tools &rarr; Compliance</span>
-              <h1 className="text-6xl md:text-8xl mb-8">
-                Tax <br />Architecture.
-              </h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Synthesize your fiscal obligation and optimize net outcome based on residency brackets.
-              </p>
-            </div>
-            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
-              &larr; Back to tools
-            </Link>
-          </div>
-          <div className="h-px w-full bg-line-soft" />
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Assessment Parameters</h2>
-            <form onSubmit={handleSubmit} className="space-y-16">
+    <CalculatorShell
+      category="Compliance"
+      title={<>Tax <br />Architecture.</>}
+      description="Synthesize your fiscal obligation and optimize net outcome based on residency brackets."
+    >
+      <CalculatorFormPanel title="Assessment Parameters">
+        <form onSubmit={handleSubmit} className="space-y-16">
               <div>
                 <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
                   Annual Taxable Income (AUD)
@@ -100,8 +83,7 @@ const TaxCalculator = () => {
                     placeholder="0.00"
                     className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
-                </div>
-              </div>
+                </FormRow>
 
               <div className="flex items-center gap-4 p-6 bg-surface-raised border border-line-soft">
                 <input
@@ -126,13 +108,11 @@ const TaxCalculator = () => {
                 Execute Assessment
               </button>
             </form>
-          </div>
+      </CalculatorFormPanel>
 
-          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Fiscal Summary</h2>
+      <CalculatorResultPanel title="Fiscal Summary">
 
-            {result ? (
+        {result ? (
               <div className="space-y-12 relative z-10">
                 <div>
                   <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-4 italic">Estimated Liability</p>
@@ -172,10 +152,8 @@ const TaxCalculator = () => {
                 <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Enter your income to see results</p>
               </div>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
+      </CalculatorResultPanel>
+    </CalculatorShell>
   );
 };
 

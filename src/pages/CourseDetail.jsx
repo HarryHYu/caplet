@@ -49,6 +49,10 @@ export default function CourseDetail() {
   }, [courseId, isAuthenticated]);
 
   if (loading) {
+    return <LoadingState message="Loading course…" />;
+  }
+
+  if (error) {
     return (
       <PageShell spacing="sm" className="flex items-center justify-center">
         <CapletLoader message="Loading course…" />
@@ -56,7 +60,7 @@ export default function CourseDetail() {
     );
   }
 
-  if (error || !course) {
+  if (!course) {
     return (
       <PageShell spacing="sm" className="flex items-center justify-center">
         <EmptyState

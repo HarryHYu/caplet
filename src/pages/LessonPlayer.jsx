@@ -449,16 +449,17 @@ const LessonPlayer = () => {
   return (
     // The whole lesson view is locked to viewport height — no outer page scroll.
     // The global Navbar (h-14/h-16) sits above; we offset for it with pt-14/md:pt-16.
-    <div className="h-[100dvh] pt-14 md:pt-16 bg-surface-body text-text-primary flex flex-col overflow-hidden">
+    <div className="h-[100dvh] pt-14 md:pt-16 bg-surface-body text-text-primary flex flex-col overflow-hidden relative">
       {/* ─────── Lesson sub-header (sits below the global navbar) ─────── */}
-      <header className="shrink-0 bg-surface-body/95 backdrop-blur-md border-b border-line-soft">
+      <div className="absolute inset-0 opacity-[0.018] grid-technical pointer-events-none" />
+      <header className="shrink-0 bg-surface-body/95 backdrop-blur-md border-b border-line-soft shadow-[0_10px_40px_rgba(15,23,42,0.04)] relative z-10">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
           <div className="h-14 md:h-16 flex items-center justify-between gap-4">
             {/* Left — exit + breadcrumbs */}
             <div className="flex items-center gap-3 md:gap-5 min-w-0">
               <Link
                 to={`/courses/${course.id}${containingModule ? `/modules/${containingModule.id}` : ''}`}
-                className="shrink-0 w-9 h-9 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-all duration-200 flex items-center justify-center group"
+                className="shrink-0 w-9 h-9 rounded-full border border-line-soft bg-surface-raised/60 text-text-muted hover:text-text-primary hover:border-text-dim transition-all duration-200 flex items-center justify-center group"
                 aria-label="Exit lesson"
               >
                 <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -566,7 +567,7 @@ const LessonPlayer = () => {
       </header>
 
       {/* ─────── Main canvas (flex-1, internal scroll only) ─────── */}
-      <main className="flex-1 min-h-0 flex flex-col">
+      <main className="flex-1 min-h-0 flex flex-col relative z-10">
         {hasSlides ? (
           <div className="flex-1 min-h-0 max-w-[1400px] w-full mx-auto px-4 md:px-8 lg:px-12 py-5 md:py-7 flex flex-col gap-4 md:gap-5">
             {/* Slide kicker */}
@@ -608,7 +609,7 @@ const LessonPlayer = () => {
             {/* Slide canvas — pre-renders current + next 2 slides so navigation
                 is instant. Hidden slides are positioned off-screen (not display:none)
                 so images/diagrams/iframes fully load before the user arrives. */}
-            <div className="flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden">
+            <div className="flex-1 min-h-0 relative bg-surface-raised/95 backdrop-blur-sm border border-line-soft rounded-[28px] shadow-[0_30px_80px_-32px_rgba(0,0,0,0.22)] dark:shadow-[0_30px_70px_-30px_rgba(0,0,0,0.75)] overflow-hidden">
               {/* Decorative top notch */}
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none z-10" />
               <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none z-10">
@@ -656,7 +657,7 @@ const LessonPlayer = () => {
                 type="button"
                 onClick={() => goToSlide(currentSlideIndex - 1)}
                 disabled={currentSlideIndex <= 0}
-                className="group inline-flex items-center gap-3 h-11 md:h-12 px-4 md:px-5 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="group inline-flex items-center gap-3 h-11 md:h-12 px-4 md:px-5 rounded-full border border-line-soft bg-surface-raised/60 text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 <svg className="w-4 h-4 transition-transform group-enabled:group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -691,7 +692,7 @@ const LessonPlayer = () => {
                 <button
                   type="button"
                   onClick={() => goToSlide(currentSlideIndex + 1)}
-                  className="group inline-flex items-center gap-3 h-11 md:h-12 px-5 md:px-6 rounded-full bg-text-primary text-surface-body hover:opacity-90 active:opacity-100 transition-opacity"
+                  className="group inline-flex items-center gap-3 h-11 md:h-12 px-5 md:px-6 rounded-full bg-text-primary text-surface-body hover:opacity-90 active:opacity-100 transition-opacity shadow-lg"
                 >
                   <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Next</span>
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
