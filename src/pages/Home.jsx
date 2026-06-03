@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -39,9 +39,11 @@ const usePrefersReducedMotion = () => {
 
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="border-b border-black/5 last:border-0">
-      <button 
+    <div className="border-b border-line-soft last:border-0">
+      <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="w-full py-8 flex justify-between items-center text-left group transition-colors duration-200"
       >
@@ -66,7 +68,7 @@ const Home = () => {
   const jargonRef = useRef(null);
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  // Jargon Transformation Logic
+const Home = () => {
   const [jargonIndex, setJargonIndex] = useState(0);
 
   useEffect(() => {
@@ -300,7 +302,6 @@ const Home = () => {
                   <span className="inline-block w-2 bg-accent h-5 ml-1 align-middle" />
                 </p>
               </div>
-              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-text-primary via-transparent to-transparent opacity-50" />
             </div>
 
             {/* Card 3: Live Calculator Preview */}
@@ -308,20 +309,23 @@ const Home = () => {
               <div className="flex justify-between items-center mb-8">
                 <span className="text-[10px] font-mono tracking-widest text-accent-strong/50 uppercase">Live Telemetry</span>
               </div>
-              
-              <div className="space-y-6">
+              <div className="space-y-6 p-6 md:p-8">
                 <div>
-                  <label className="text-xs font-display font-medium text-text-dim uppercase tracking-widest mb-2 block">Income Input</label>
-                  <div className="w-full bg-surface-body rounded-xl px-4 py-3 font-mono text-text-primary border border-black/5">
-                    {calcInput || " "}
-                  </div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-text-dim">Learner asks</p>
+                  <p className="mt-2 text-2xl font-serif italic text-text-primary">“What does compound interest actually mean?”</p>
                 </div>
-                
-                <div>
-                  <label className="text-xs font-display font-medium text-text-dim uppercase tracking-widest mb-2 block">Est. Tax Outcome</label>
-                  <div className="w-full bg-accent/10 rounded-xl px-4 py-3 font-mono text-accent border border-accent/20">
-                    ${calcOutput.toLocaleString()}
-                  </div>
+                <div className="rounded-lg border border-line-soft bg-surface-body p-5">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-accent">Caplet explains</p>
+                  <p className="mt-3 text-lg leading-relaxed text-text-muted">
+                    It is growth on your original money plus growth on earlier growth — useful to understand before comparing any product.
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  {['Course', 'Tool', 'Class'].map((item) => (
+                    <div key={item} className="rounded-lg bg-accent-soft px-3 py-4 text-sm font-bold text-accent">
+                      {item}
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -347,8 +351,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= JARGON TRANSFORMATION ================= */}
-      <section ref={jargonRef} className="py-24 md:py-40 bg-white relative overflow-hidden">
+      <section className="py-20 md:py-28">
         <div className="container-custom">
           <div className="flex flex-col lg:flex-row items-center gap-16 md:gap-24">
             
@@ -394,10 +397,9 @@ const Home = () => {
                   <p className="text-xl md:text-2xl font-serif italic text-accent-strong leading-relaxed">
                     "{JARGONS[jargonIndex].plain}"
                   </p>
-                </div>
-              </div>
+                </Card>
+              ))}
             </div>
-
           </div>
         </div>
       </section>
@@ -417,14 +419,22 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= LEARNING PATH ================= */}
-      <section ref={learningPathRef} className="relative bg-surface-body pb-32">
-        <div className="container-custom py-24">
-          <div className="text-center mb-16">
-            <span className="uppercase text-xs font-mono tracking-widest text-accent-strong/60 font-bold">The Syllabus</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold mt-4">A structured path forward.</h2>
+      <section className="bg-surface-soft py-20 md:py-28">
+        <div className="container-custom">
+          <SectionHeader kicker="How it works" title="A structured path from confusion to confidence." align="center">
+            The product surfaces support one learning journey: learn the concept, practise safely and decide what to explore next.
+          </SectionHeader>
+          <div className="grid gap-6 md:grid-cols-3">
+            {learningPath.map((item) => (
+              <Card key={item.step}>
+                <span className="font-mono text-sm font-bold text-accent">{item.step}</span>
+                <h3 className="mt-5 text-2xl font-display font-bold text-text-primary">{item.title}</h3>
+                <p className="mt-4 text-base leading-relaxed text-text-muted">{item.description}</p>
+              </Card>
+            ))}
           </div>
         </div>
+      </section>
 
         {/* Path Cards */}
         <div className="w-full relative px-4 md:px-0">
@@ -484,72 +494,32 @@ const Home = () => {
                 )}
               </div>
             </div>
-          ))}
+          </Card>
         </div>
       </section>
 
-      {/* ================= FAQ ================= */}
-      <section className="py-24 md:py-40 bg-surface-body border-t border-black/5 relative z-20">
+      <section className="border-t border-line-soft py-20 md:py-28">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-16">
-              <span className="uppercase text-xs font-mono tracking-[0.3em] text-accent font-bold mb-4 block">Common Questions</span>
-              <h2 className="text-4xl md:text-5xl font-display font-bold text-text-primary">Still curious?</h2>
-            </div>
-
-            <div className="bg-white rounded-[3rem] px-8 md:px-12 py-4 shadow-sm border border-black/5">
-              {[
-                { 
-                  q: "Is Caplet really free?", 
-                  a: "Yes, 100%. We believe financial literacy is a fundamental right. Caplet is funded independently, and we never sell your data or push affiliate financial products." 
-                },
-                { 
-                  q: "Is this financial advice?", 
-                  a: "Absolutely not. Caplet provide strictly educational material. We help you understand how the system works so you can make your own informed decisions or ask the right questions when talking to a professional." 
-                },
-                { 
-                  q: "Do I need to live in Australia?", 
-                  a: "Our content is deeply optimized for the Australian system (retirement savings, tax brackets, HELP/HECS, etc.), but the core principles of cash flow and compound interest apply to everyone." 
-                },
-                { 
-                  q: "How often courses updated?", 
-                  a: "Whenever policy changes (like new tax thresholds or super guarantee changes), we update the curriculum within 48 hours to ensure you're learning from the latest data." 
-                },
-                {
-                  q: "Where are the sources gathered from?",
-                  a: "Our courses and information are all verified and tightly linked to the NESA syllabus for schools, including Year 9 to 10 Commerce with its corresponding legal, economics and business topics."
-                },
-                {
-                  q: "Can I suggest courses and give feedback to Caplet?",
-                  a: "Yes, absolutely! We love hearing from our users. You can suggest new course topics or provide feedback on existing ones through our contact form."
-                },
-                {
-                  q: "How do I get started?",
-                  a: "Just click on any course that interests you, sign up for a free account, and you'll be able to start learning immediately."
-                }
-              ].map((faq, i) => (
-                <FAQItem key={i} question={faq.q} answer={faq.a} />
-              ))}
-            </div>
-          </div>
+          <SectionHeader kicker="Common questions" title="Still curious?" align="center" />
+          <Card className="mx-auto max-w-4xl py-2">
+            {faqs.map((faq) => (
+              <FAQItem key={faq.q} question={faq.q} answer={faq.a} />
+            ))}
+          </Card>
         </div>
       </section>
 
-      {/* ================= FOOTER CTA ================= */}
-      <section className="bg-accent text-white py-32 rounded-t-[3rem] -mt-10 relative z-30">
-        <div className="container-custom text-center max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-serif italic mb-8">
-            Ready to actually understand your money?
-          </h2>
-          <p className="text-xl md:text-2xl font-display font-medium text-white/80 mb-12">
-            Start with any course! it's free.
+      <section className="bg-accent py-20 text-white md:py-28">
+        <div className="container-custom mx-auto max-w-4xl text-center">
+          <h2 className="text-4xl font-display font-bold md:text-6xl">Start with the topic that feels least clear.</h2>
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/85 md:text-xl">
+            Courses, tools and classes are all built for education first — free to explore and designed to reduce pressure.
           </p>
           <Link to="/courses" className="inline-block bg-white text-accent font-display font-bold px-10 py-5 rounded-full hover:-translate-y-0.5 active:translate-y-0 transition-transform duration-200 shadow-xl">
             View Curriculum
           </Link>
         </div>
       </section>
-
     </div>
   );
 };

@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import CalculatorShell from '../../components/tools/CalculatorShell';
+import CalculatorCard from '../../components/tools/CalculatorCard';
+import ResultPanel from '../../components/tools/ResultPanel';
+import FormRow from '../../components/tools/FormRow';
 import { calculateTax } from './TaxCalculator';
 
 const formatCurrency = (value) =>
@@ -43,8 +47,7 @@ const SalaryCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-      <div className="container-custom">
+    <CalculatorShell>
         <header className="mb-24 reveal-text">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div>
@@ -64,15 +67,9 @@ const SalaryCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Compensation Inputs</h2>
+          <CalculatorCard title="Compensation Inputs">
             <form onSubmit={handleSubmit} className="space-y-16">
-              <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
-                  Gross Annual Revenue (AUD)
-                </label>
-                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+              <FormRow label="Gross Annual Revenue (AUD)" prefix="$">
                   <input
                     type="number"
                     min="0"
@@ -82,8 +79,7 @@ const SalaryCalculator = () => {
                     placeholder="0.00"
                     className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
-                </div>
-              </div>
+                </FormRow>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
@@ -121,12 +117,9 @@ const SalaryCalculator = () => {
                 Confirm Breakdown
               </button>
             </form>
-          </div>
+          </CalculatorCard>
 
-          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Net Projection</h2>
-
+          <ResultPanel title="Net Projection" result={result} emptyIcon="NET" emptyMessage="Enter your salary to see results">
             {result ? (
               result.error ? (
                 <p className="text-[10px] font-bold text-accent uppercase tracking-widest relative z-10">{result.error}</p>
@@ -168,16 +161,10 @@ const SalaryCalculator = () => {
                   </div>
                 </div>
               )
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
-                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">NET</div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Enter your salary to see results</p>
-              </div>
-            )}
-          </div>
+            ) : null}
+          </ResultPanel>
         </div>
-      </div>
-    </div>
+    </CalculatorShell>
   );
 };
 
