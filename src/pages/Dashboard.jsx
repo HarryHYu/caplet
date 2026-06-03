@@ -4,14 +4,36 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../contexts/CoursesContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import { PageShell, PageHeader, Card, StatCard, EmptyState, Button } from '../components/ui';
 import {
     BookOpenIcon,
     AcademicCapIcon,
     FireIcon,
     ArrowRightIcon,
     CheckCircleIcon,
-    BookmarkIcon
+    BookmarkIcon,
+    CalculatorIcon,
+    SparklesIcon,
 } from '@heroicons/react/24/outline';
+
+const SectionHeading = ({ kicker, title, action }) => (
+    <div className="mb-8 flex items-end justify-between gap-6">
+        <div>
+            <span className="section-kicker">{kicker}</span>
+            <h2 className="font-serif text-4xl italic">{title}</h2>
+        </div>
+        {action}
+    </div>
+);
+
+const ProgressBar = ({ value }) => (
+    <div className="h-1 w-full overflow-hidden bg-surface-soft">
+        <div
+            className="h-full bg-accent transition-all duration-1000 ease-out"
+            style={{ width: `${Math.min(Math.max(Number(value) || 0, 0), 100)}%` }}
+        />
+    </div>
+);
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -62,10 +84,17 @@ export default function Dashboard() {
         );
     }
 
-    const inProgressCourses = userProgress?.filter(p => p.status === 'in_progress') || [];
-    const completedCourses = userProgress?.filter(p => p.status === 'completed') || [];
-    const lastAccessed = userProgress?.sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt))[0];
+    const progressEntries = userProgress || [];
+    const inProgressCourses = progressEntries.filter(p => p.status === 'in_progress');
+    const completedCourses = progressEntries.filter(p => p.status === 'completed');
+    const lastAccessed = [...progressEntries].sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt))[0];
     const lastAccessedCourse = lastAccessed ? courses.find(c => c.id === lastAccessed.courseId) : null;
+    const beginnerCourse = courses.find(course => course.level?.toLowerCase() === 'beginner') || courses[0];
+    const hasProgress = progressEntries.length > 0;
+    const nextCourse = lastAccessedCourse || beginnerCourse;
+    const totalProgress = progressEntries.length
+        ? Math.round(progressEntries.reduce((sum, item) => sum + (Number(item.progressPercentage) || 0), 0) / progressEntries.length)
+        : 0;
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -74,166 +103,226 @@ export default function Dashboard() {
         return 'Good evening';
     };
 
-
     return (
-        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-            <div className="container-custom">
-                {/* Header Section */}
-                <header className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text">
-                    <div>
-                        <span className="section-kicker">Welcome back</span>
-                        <h1 className="text-5xl md:text-7xl">
-                            {getGreeting()}, {user?.firstName || 'Student'}.
-                        </h1>
-                        <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
-                            Great to see you again. You have {inProgressCourses.length} active courses in progress.
-                        </p>
-                    </div>
+        <PageShell>
+            <div className="space-y-24">
+                {/* 1. Greeting */}
+                <PageHeader
+                    kicker="Welcome back"
+                    title={`${getGreeting()}, ${user?.firstName || 'Student'}.`}
+                    description={hasProgress
+                        ? `You have ${inProgressCourses.length} active ${inProgressCourses.length === 1 ? 'course' : 'courses'} in progress. Pick up where you left off or review saved slides.`
+                        : 'Your dashboard is ready. Start with a beginner-friendly course or try a practical calculator.'}
+                    className="reveal-text"
+                />
 
-                </header>
-
-                {/* Stats Matrix */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-line-soft border border-line-soft mb-24 reveal-text stagger-1">
-                    {[
-                        { label: 'Modules Active', value: inProgressCourses.length, icon: BookOpenIcon },
-                        { label: 'Completed', value: completedCourses.length, icon: CheckCircleIcon },
-                        { label: 'Academy Classes', value: classes.length, icon: AcademicCapIcon },
-                        { label: 'Activity Index', value: 'High', icon: FireIcon }
-                    ].map((stat) => (
-                        <div key={stat.label} className="bg-surface-body p-10 group hover:bg-surface-raised transition-colors">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-8 flex justify-between items-center group-hover:text-accent transition-colors">
-                                {stat.label}
-                                <stat.icon className="w-4 h-4 opacity-20" />
-                            </p>
-                            <p className="text-5xl font-serif italic text-text-primary group-hover:translate-x-2 transition-transform duration-500">
-                                {stat.value}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
-                    {/* Main Feed */}
-                    <div className="lg:col-span-8 space-y-20">
-                        {/* Resume Session */}
-                        {lastAccessed && lastAccessedCourse && (
-                            <div className="reveal-text stagger-2">
-                                <span className="section-kicker">Continue Learning</span>
-                                <div className="mt-8 group relative overflow-hidden bg-surface-raised border border-line-soft p-12 transition-all hover:shadow-2xl">
-                                    <div className="flex flex-col md:flex-row gap-12 items-center">
-                                        <div className="w-40 h-40 shrink-0 bg-surface-soft p-1 border border-line-soft">
-                                            <img
-                                                src={lastAccessedCourse.thumbnail || 'https://placehold.co/400x400'}
-                                                alt=""
-                                                className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-4xl font-serif italic mb-6">{lastAccessedCourse.title}</h3>
-                                            <div className="w-full bg-surface-soft h-1 mb-8 overflow-hidden">
-                                                <div
-                                                    className="bg-accent h-full transition-all duration-1000 ease-out"
-                                                    style={{ width: `${lastAccessed.progressPercentage}%` }}
-                                                />
-                                            </div>
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Progress: {lastAccessed.progressPercentage}%</span>
-                                                <Link to={`/courses/${lastAccessedCourse.id}`} className="btn-primary py-3 px-8 text-[15px]">
-                                                    Continue Module
-                                                </Link>
-                                            </div>
-                                        </div>
+                {/* 2. Primary next action */}
+                <section className="reveal-text stagger-1">
+                    <SectionHeading kicker="Next action" title={hasProgress ? 'Resume your momentum.' : 'Start here.'} />
+                    <Card className="relative overflow-hidden p-10 md:p-12">
+                        <div className="absolute inset-0 opacity-40 grid-technical" />
+                        <div className="relative z-10 grid gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+                            <div>
+                                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-white">
+                                    {hasProgress ? <BookOpenIcon className="h-6 w-6" /> : <SparklesIcon className="h-6 w-6" />}
+                                </div>
+                                <span className="section-kicker">{hasProgress ? 'Continue learning' : 'Beginner recommendation'}</span>
+                                <h2 className="text-4xl md:text-5xl">
+                                    {nextCourse?.title || 'Explore the course library'}
+                                </h2>
+                                <p className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-text-muted">
+                                    {hasProgress && lastAccessed
+                                        ? `You were last working through this course and are ${Math.round(lastAccessed.progressPercentage || 0)}% complete.`
+                                        : 'A beginner course is the best first step before moving into calculators, revision, and class work.'}
+                                </p>
+                                {hasProgress && lastAccessed && <div className="mt-8 max-w-xl"><ProgressBar value={lastAccessed.progressPercentage} /></div>}
+                                <div className="mt-10 flex flex-wrap gap-4">
+                                    {nextCourse ? (
+                                        <Button to={`/courses/${nextCourse.id}`}>{hasProgress ? 'Continue module' : 'Start beginner course'}</Button>
+                                    ) : (
+                                        <Button to="/courses">Browse courses</Button>
+                                    )}
+                                    <Button to="/revision" tone="secondary">Review saved slides</Button>
+                                </div>
+                            </div>
+                            {!hasProgress && (
+                                <Card className="bg-surface-body p-8">
+                                    <span className="section-kicker">Practical tool</span>
+                                    <h3 className="text-2xl">Budget Planner or Savings Goal</h3>
+                                    <p className="mt-4 text-sm font-medium leading-relaxed text-text-muted">
+                                        Use the Budget Planner to map money coming in and going out, or the Savings Goal calculator to plan a target.
+                                    </p>
+                                    <div className="mt-8 flex flex-wrap gap-4">
+                                        <Button to="/tools" className="px-6 py-3">Open tools</Button>
+                                        <Button to="/courses" tone="secondary" className="px-6 py-3">View all courses</Button>
                                     </div>
-                                </div>
-                            </div>
-                        )}
+                                </Card>
+                            )}
+                        </div>
+                    </Card>
+                </section>
 
-                        {/* Recent Academy Enrollments */}
-                        <div className="reveal-text stagger-3">
-                            <div className="flex items-end justify-between mb-8">
-                                <div>
-                                    <span className="section-kicker">Academy</span>
-                                    <h2 className="text-4xl font-serif italic">My Classes.</h2>
-                                </div>
-                                <Link to="/classes" className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">All Classes</Link>
+                {/* Non-personalized start panel for users with no progress */}
+                {!hasProgress && (
+                    <section className="reveal-text stagger-2">
+                        <Card className="grid gap-px overflow-hidden bg-line-soft md:grid-cols-2">
+                            <div className="bg-surface-body p-10">
+                                <BookOpenIcon className="mb-8 h-8 w-8 text-accent" />
+                                <span className="section-kicker">Start here</span>
+                                <h3 className="text-3xl">Recommended beginner course</h3>
+                                <p className="mt-5 text-sm font-medium leading-relaxed text-text-muted">
+                                    {beginnerCourse?.title || 'Browse beginner lessons'} to build financial confidence from the basics.
+                                </p>
+                                <Button to="/courses" tone="secondary" className="mt-8 inline-flex px-6 py-3">Go to courses</Button>
                             </div>
-                            <div className="grid grid-cols-1 gap-px bg-line-soft border border-line-soft">
-                                {classes.length > 0 ? (
-                                    classes.slice(0, 3).map(cls => (
-                                        <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-body p-8 flex justify-between items-center group hover:bg-surface-raised transition-colors">
+                            <div className="bg-surface-body p-10">
+                                <CalculatorIcon className="mb-8 h-8 w-8 text-accent" />
+                                <span className="section-kicker">Try a calculator</span>
+                                <h3 className="text-3xl">Budget Planner or Savings Goal</h3>
+                                <p className="mt-5 text-sm font-medium leading-relaxed text-text-muted">
+                                    Plan a weekly budget or set a savings target with practical tools before starting revision.
+                                </p>
+                                <Button to="/tools" tone="secondary" className="mt-8 inline-flex px-6 py-3">Go to tools</Button>
+                            </div>
+                        </Card>
+                    </section>
+                )}
+
+                {/* 3. Progress summary */}
+                <section className="reveal-text stagger-2">
+                    <SectionHeading kicker="Progress" title="Your learning summary." />
+                    <div className="grid grid-cols-1 gap-px border border-line-soft bg-line-soft md:grid-cols-4">
+                        <StatCard label="Modules active" value={inProgressCourses.length} icon={BookOpenIcon} />
+                        <StatCard label="Completed" value={completedCourses.length} icon={CheckCircleIcon} />
+                        <StatCard label="Academy classes" value={classes.length} icon={AcademicCapIcon} />
+                        <StatCard label="Average progress" value={`${totalProgress}%`} icon={FireIcon} />
+                    </div>
+                </section>
+
+                <div className="grid grid-cols-1 gap-20 lg:grid-cols-12">
+                    <div className="space-y-20 lg:col-span-8">
+                        {/* 4. Continue learning */}
+                        <section className="reveal-text stagger-3">
+                            <SectionHeading
+                                kicker="Continue learning"
+                                title="Courses in motion."
+                                action={<Link to="/courses" className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">All Courses</Link>}
+                            />
+                            {inProgressCourses.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-px border border-line-soft bg-line-soft">
+                                    {inProgressCourses.slice(0, 3).map(progress => {
+                                        const course = courses.find(c => c.id === progress.courseId);
+                                        if (!course) return null;
+
+                                        return (
+                                            <Link key={progress.courseId} to={`/courses/${course.id}`} className="group bg-surface-body p-8 transition-colors hover:bg-surface-raised">
+                                                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                                                    <div>
+                                                        <p className="text-xl font-bold uppercase tracking-tight transition-colors group-hover:text-accent">{course.title}</p>
+                                                        <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">Progress: {Math.round(progress.progressPercentage || 0)}%</p>
+                                                    </div>
+                                                    <ArrowRightIcon className="h-5 w-5 text-text-dim transition-transform group-hover:translate-x-2" />
+                                                </div>
+                                                <div className="mt-6"><ProgressBar value={progress.progressPercentage} /></div>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <EmptyState
+                                    title="No courses in progress yet"
+                                    description="Start a beginner course from the library to populate this section."
+                                    actions={<Button to="/courses">Browse courses</Button>}
+                                />
+                            )}
+                        </section>
+
+                        {/* 5. Classes */}
+                        <section className="reveal-text stagger-3">
+                            <SectionHeading
+                                kicker="Classes"
+                                title="Academy spaces."
+                                action={<Link to="/classes" className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">All Classes</Link>}
+                            />
+                            {classes.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-px border border-line-soft bg-line-soft">
+                                    {classes.slice(0, 3).map(cls => (
+                                        <Link key={cls.id} to={`/classes/${cls.id}`} className="group flex items-center justify-between bg-surface-body p-8 transition-colors hover:bg-surface-raised">
                                             <div>
-                                                <p className="text-lg font-bold uppercase tracking-tight group-hover:text-accent transition-colors">{cls.name}</p>
-                                                <p className="text-[10px] font-bold text-text-dim uppercase tracking-[0.2em] mt-1">{cls.code}</p>
+                                                <p className="text-lg font-bold uppercase tracking-tight transition-colors group-hover:text-accent">{cls.name}</p>
+                                                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">{cls.code}</p>
                                             </div>
-                                            <ArrowRightIcon className="w-5 h-5 text-text-dim group-hover:translate-x-2 transition-transform" />
+                                            <ArrowRightIcon className="h-5 w-5 text-text-dim transition-transform group-hover:translate-x-2" />
                                         </Link>
-                                    ))
-                                ) : (
-                                    <div className="bg-surface-body p-12 text-center text-text-dim uppercase tracking-widest text-[10px] font-bold italic">
-                                        No active enrollments detected.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <EmptyState
+                                    title="No active enrollments"
+                                    description="Classes you teach or attend will appear here once available."
+                                    actions={<Button to="/classes" tone="secondary">View classes</Button>}
+                                />
+                            )}
+                        </section>
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="lg:col-span-4 space-y-20">
-                        <div className="reveal-text stagger-3">
-                            <span className="section-kicker">My Courses</span>
-                            <div className="mt-8 space-y-6">
+                    <div className="space-y-20 lg:col-span-4">
+                        {/* 6. Courses */}
+                        <section className="reveal-text stagger-3">
+                            <SectionHeading kicker="Courses" title="Library picks." />
+                            <div className="space-y-6">
                                 {courses.slice(0, 4).map(course => (
-                                    <Link
+                                    <Card
                                         key={course.id}
+                                        as={Link}
                                         to={`/courses/${course.id}`}
-                                        className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
+                                        className="group flex w-full items-center justify-between gap-4 bg-surface-body px-5 py-4 transition-colors hover:bg-surface-raised"
                                     >
                                         <div className="min-w-0">
-                                            <p className="text-[11px] font-bold uppercase tracking-widest truncate group-hover:text-accent transition-colors">{course.title}</p>
-                                            <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mt-1">{course.duration}m Duration</p>
+                                            <p className="truncate text-[11px] font-bold uppercase tracking-widest transition-colors group-hover:text-accent">{course.title}</p>
+                                            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.3em] text-text-dim">{course.duration}m Duration</p>
                                         </div>
-                                        <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
-                                    </Link>
+                                        <ArrowRightIcon className="h-4 w-4 shrink-0 text-text-dim transition-all group-hover:translate-x-1 group-hover:text-accent" />
+                                    </Card>
                                 ))}
                             </div>
-                        </div>
+                        </section>
 
-                        {/* Revision — its own section, mirrors "My Courses" */}
-                        <div className="reveal-text stagger-3">
-                            <span className="section-kicker">Revision</span>
-                            <div className="mt-8 space-y-6">
-                                <Link
-                                    to="/revision"
-                                    className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
-                                >
-                                    <div className="min-w-0 flex items-center gap-3">
-                                        <BookmarkIcon className="w-4 h-4 shrink-0 text-accent" />
-                                        <div className="min-w-0">
-                                            <p className="text-[11px] font-bold uppercase tracking-widest truncate group-hover:text-accent transition-colors">Archived slides</p>
-                                            <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mt-1">
-                                                {savedSlides.length} {savedSlides.length === 1 ? 'Slide' : 'Slides'} Flagged
-                                            </p>
-                                        </div>
+                        {/* 7. Revision */}
+                        <section className="reveal-text stagger-3">
+                            <SectionHeading kicker="Revision" title="Saved for later." />
+                            <Card
+                                as={Link}
+                                to="/revision"
+                                className="group flex w-full items-center justify-between gap-4 bg-surface-body px-5 py-4 transition-colors hover:bg-surface-raised"
+                            >
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <BookmarkIcon className="h-4 w-4 shrink-0 text-accent" />
+                                    <div className="min-w-0">
+                                        <p className="truncate text-[11px] font-bold uppercase tracking-widest transition-colors group-hover:text-accent">Archived slides</p>
+                                        <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.3em] text-text-dim">
+                                            {savedSlides.length} {savedSlides.length === 1 ? 'Slide' : 'Slides'} Flagged
+                                        </p>
                                     </div>
-                                    <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
-                                </Link>
-                            </div>
-                        </div>
+                                </div>
+                                <ArrowRightIcon className="h-4 w-4 shrink-0 text-text-dim transition-all group-hover:translate-x-1 group-hover:text-accent" />
+                            </Card>
+                        </section>
 
-                        <div className="bg-surface-inverse p-12 text-surface-body relative overflow-hidden group">
+                        <Card className="relative overflow-hidden bg-surface-inverse p-12 text-surface-body">
                             <div className="absolute inset-0 opacity-10 grid-technical !bg-[size:40px_40px]" />
                             <div className="relative z-10">
-                                <FireIcon className="w-10 h-10 text-accent mb-8" />
-                                <h4 className="text-xl font-serif italic mb-6">Daily Insight</h4>
-                                <blockquote className="text-sm font-medium leading-relaxed text-text-dim mb-8 italic">
-                                    "Compound interest is the eighth wonder of the world. He who understands it, earns it... he who doesn't... pays it."
+                                <FireIcon className="mb-8 h-10 w-10 text-accent" />
+                                <h4 className="mb-6 font-serif text-xl italic">Daily Insight</h4>
+                                <blockquote className="mb-8 text-sm font-medium italic leading-relaxed text-text-dim">
+                                    &quot;Compound interest is the eighth wonder of the world. He who understands it, earns it... he who doesn't... pays it.&quot;
                                 </blockquote>
                                 <p className="text-[9px] font-bold uppercase tracking-widest text-accent">Source: Albert Einstein</p>
                             </div>
-                        </div>
+                        </Card>
                     </div>
                 </div>
             </div>
-        </div>
+        </PageShell>
     );
 }
