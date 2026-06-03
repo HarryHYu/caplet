@@ -498,9 +498,10 @@ const ClassDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 px-6 selection:bg-accent selection:text-white">
-      <div className="container-custom space-y-12">
-        <div className="bg-surface-body border border-line-soft dark:border-line-soft p-10 animate-slide-up">
+    <div className="min-h-screen bg-surface-body py-28 px-6 selection:bg-accent selection:text-white relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.02] grid-technical pointer-events-none" />
+      <div className="container-custom space-y-10 relative z-10">
+        <div className="bg-surface-body/95 border border-line-soft dark:border-line-soft p-8 md:p-10 animate-slide-up shadow-[0_24px_80px_rgba(15,23,42,0.06)]">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
             <div className="flex-1">
               <button
@@ -509,21 +510,21 @@ const ClassDetail = () => {
               >
                 ← Back to Classes
               </button>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-text-primary uppercase tracking-tighter mb-4">
+              <h1 className="text-4xl md:text-6xl font-extrabold text-text-primary uppercase tracking-tighter mb-5 leading-none">
                 {classroom.name}
               </h1>
               {classroom.description ? (
-                <p className="text-xs font-bold text-text-muted uppercase tracking-widest leading-relaxed max-w-2xl">
+                <p className="text-sm font-serif italic text-text-muted leading-relaxed max-w-2xl">
                   {classroom.description}
                 </p>
               ) : null}
-              <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft border border-line-soft">
+              <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft/80 border border-line-soft">
                 <span className="text-[9px] font-extrabold text-text-dim uppercase tracking-widest">Class Code:</span>
                 <span className="font-mono font-bold text-text-primary text-xs">{classroom.code}</span>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-6">
-              <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft border border-line-soft min-w-[240px]">
+              <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft/80 border border-line-soft min-w-[240px]">
                 <div className={`w-10 h-10 rounded-sm bg-text-primary dark:bg-surface-raised flex items-center justify-center text-surface-body text-xs font-bold`}>
                   {getInitials(user)}
                 </div>
@@ -568,7 +569,7 @@ const ClassDetail = () => {
         )}
 
         {/* Tab bar — only one "page" (Stream / Classwork / People) is shown below */}
-        <nav className="flex gap-1 bg-surface-soft border border-line-soft p-1" aria-label="Class tabs">
+        <nav className="flex gap-1 bg-surface-soft/80 border border-line-soft p-1 shadow-sm overflow-x-auto" aria-label="Class tabs">
           <button
             type="button"
             onClick={() => setActiveTab('stream')}
@@ -606,7 +607,7 @@ const ClassDetail = () => {
             <div className="space-y-5">
               {/* Composer: teachers only (like Google Classroom) */}
               {isTeacher && (
-                <div className="bg-surface-body border border-line-soft dark:border-line-soft p-8 hover:border-accent transition-colors mb-12">
+                <div className="bg-surface-body/95 border border-line-soft dark:border-line-soft p-8 hover:border-accent transition-colors mb-12 shadow-[0_18px_60px_rgba(15,23,42,0.05)]">
                   <form onSubmit={handlePostAnnouncement}>
                     <div className="flex gap-6">
                       <div
@@ -1351,7 +1352,7 @@ const ClassDetail = () => {
         {/* New assignment modal — overlay, not a tab */}
         {isTeacher && showNewAssignment && (
           <div className="fixed inset-0 bg-surface-raised/80 dark:bg-text-primary/80 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
-            <div className="bg-surface-body border border-line-soft shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-lg w-full max-h-[90vh] overflow-y-auto p-10 animate-in zoom-in-95 duration-300">
+            <div className="bg-surface-body border border-line-soft shadow-[0_32px_120px_rgba(0,0,0,0.28)] max-w-lg w-full max-h-[90vh] overflow-y-auto p-10 animate-in zoom-in-95 duration-300">
               <div className="flex items-start justify-between mb-10">
                 <div>
                   <span className="section-kicker mb-2">Create Assignment</span>
@@ -1468,7 +1469,7 @@ const ClassDetail = () => {
         {/* Add teacher modal — owner only */}
         {isOwner && showAddTeacher && (
           <div className="fixed inset-0 bg-surface-raised/80 dark:bg-text-primary/80 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
-            <div className="bg-surface-body border border-line-soft shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-md w-full p-10 animate-in zoom-in-95 duration-300">
+            <div className="bg-surface-body border border-line-soft shadow-[0_32px_120px_rgba(0,0,0,0.28)] max-w-md w-full p-10 animate-in zoom-in-95 duration-300">
               <div className="flex items-start justify-between mb-8">
                 <div>
                   <span className="section-kicker mb-2">Add Teacher</span>

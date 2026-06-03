@@ -92,16 +92,17 @@ const Classes = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-      <div className="container-custom">
+    <div className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.025] grid-technical pointer-events-none" />
+      <div className="container-custom relative z-10">
         {/* Header Section */}
-        <header className="mb-32 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text">
+        <header className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text border-b border-line-soft pb-12">
           <div>
             <span className="section-kicker">Faculty Admissions</span>
-            <h1 className="text-6xl md:text-8xl mb-12">
+            <h1 className="text-6xl md:text-8xl mb-10 tracking-tighter leading-none">
               The Academy.
             </h1>
-            <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
+            <p className="text-xl md:text-2xl text-text-muted font-serif italic max-w-2xl leading-relaxed">
               Collaborative learning environments structured for peer progression and academic leadership.
             </p>
           </div>
@@ -134,8 +135,8 @@ const Classes = () => {
         )}
 
         {isTeacher && (
-          <section className="mb-32 reveal-text stagger-1">
-            <h2 className="text-[11px] font-bold text-accent uppercase tracking-[0.5em] mb-12 border-b border-line-soft pb-6">
+          <section className="mb-24 reveal-text stagger-1">
+            <h2 className="text-[11px] font-bold text-accent uppercase tracking-[0.5em] mb-8 border-b border-line-soft pb-6">
               Leadership Portfolio
             </h2>
             {classes.teaching.length === 0 ? (
@@ -145,9 +146,9 @@ const Classes = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft shadow-[0_24px_80px_rgba(15,23,42,0.05)]">
                 {classes.teaching.map((cls) => (
-                  <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-body p-12 group transition-all duration-700 hover:bg-surface-raised flex flex-col justify-between">
+                  <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-body/95 p-10 md:p-12 group transition-all duration-700 hover:bg-surface-raised flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start mb-12">
                         <h3 className="text-3xl font-serif italic group-hover:translate-x-2 transition-transform duration-700">{cls.name}</h3>
@@ -168,7 +169,7 @@ const Classes = () => {
         )}
 
         <section className="reveal-text stagger-2">
-          <h2 className="text-[11px] font-bold text-accent uppercase tracking-[0.5em] mb-12 border-b border-line-soft pb-6">
+          <h2 className="text-[11px] font-bold text-accent uppercase tracking-[0.5em] mb-8 border-b border-line-soft pb-6">
             Enrollment Registry
           </h2>
           {classes.student.length === 0 ? (
@@ -178,9 +179,9 @@ const Classes = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft shadow-[0_24px_80px_rgba(15,23,42,0.05)]">
               {classes.student.map((cls) => (
-                <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-body p-12 group transition-all duration-700 hover:bg-surface-raised flex flex-col justify-between">
+                <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-body/95 p-10 md:p-12 group transition-all duration-700 hover:bg-surface-raised flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-12">
                       <h3 className="text-3xl font-serif italic group-hover:translate-x-2 transition-transform duration-700">{cls.name}</h3>
@@ -201,8 +202,8 @@ const Classes = () => {
 
         {/* Modals */}
         {showCreate && (
-          <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-2xl flex items-center justify-center z-50 p-6 reveal-text">
-            <div className="bg-surface-raised border border-line-soft max-w-lg w-full p-16 shadow-2xl">
+          <div className="fixed inset-0 bg-surface-body/90 backdrop-blur-2xl flex items-center justify-center z-50 p-6 reveal-text">
+            <div className="bg-surface-raised border border-line-soft max-w-lg w-full p-10 md:p-16 shadow-[0_32px_120px_rgba(0,0,0,0.25)]">
               <div className="flex items-center justify-between mb-16">
                 <h2 className="text-4xl font-serif italic uppercase tracking-tight">Create Entity.</h2>
                 <button onClick={() => setShowCreate(false)} className="text-text-dim hover:text-accent transition-colors">
@@ -238,8 +239,8 @@ const Classes = () => {
         )}
 
         {showJoin && (
-          <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-3xl flex items-center justify-center z-50 p-6 reveal-text">
-            <div className="bg-surface-raised border border-line-soft max-w-sm w-full p-16 shadow-2xl">
+          <div className="fixed inset-0 bg-surface-body/90 backdrop-blur-3xl flex items-center justify-center z-50 p-6 reveal-text">
+            <div className="bg-surface-raised border border-line-soft max-w-sm w-full p-10 md:p-16 shadow-[0_32px_120px_rgba(0,0,0,0.25)]">
               <div className="flex items-center justify-between mb-16">
                 <h2 className="text-4xl font-serif italic uppercase tracking-tight">Access.</h2>
                 <button onClick={() => setShowJoin(false)} className="text-text-dim hover:text-accent transition-colors">
