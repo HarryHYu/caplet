@@ -530,6 +530,22 @@ class ApiService {
     });
   }
 
+  // Games
+  async getGames() {
+    return this.request('/games');
+  }
+
+  async getGame(key) {
+    return this.request(`/games/${key}`);
+  }
+
+  async saveGame(key, state) {
+    return this.request(`/games/${key}`, {
+      method: 'PUT',
+      body: JSON.stringify({ state }),
+    });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');
