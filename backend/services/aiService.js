@@ -95,7 +95,7 @@ Remember: You are an educational tool. Never position yourself as a financial ad
  * @returns {Promise<Object>} AI response with extracted data
  */
 async function generateFinancialPlan(params) {
-  const { userId, state, checkIn, summary, previousPlan } = params;
+  const { state, checkIn, summary, previousPlan } = params;
 
   try {
     // Build context message for the AI
@@ -107,7 +107,7 @@ async function generateFinancialPlan(params) {
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(response);
-    } catch (e) {
+    } catch {
       console.error('Failed to parse AI response as JSON:', response);
       // Fallback: wrap response in basic structure
       parsedResponse = {
@@ -231,6 +231,10 @@ function buildContextMessage(state, checkIn, summary, previousPlan) {
 
   if (checkIn.monthlyExpenses && Object.keys(checkIn.monthlyExpenses).length > 0) {
     message += `\nUser provided monthly expenses breakdown: ${JSON.stringify(checkIn.monthlyExpenses)}`;
+  }
+
+  if (previousPlan) {
+    message += `\n\nPrevious Plan Context: ${JSON.stringify(previousPlan)}`;
   }
 
   // Add summary context if exists

@@ -2,6 +2,7 @@ const variantClasses = {
   default: 'border-line-soft bg-surface-soft text-text-muted',
   accent: 'border-accent/20 bg-accent/10 text-accent',
   strong: 'border-accent bg-accent text-white',
+  inverse: 'border-white/10 bg-white/10 text-white',
 };
 
 const Badge = ({ children, variant = 'default', className = '' }) => (

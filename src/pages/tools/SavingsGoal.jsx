@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalculatorFormPanel, CalculatorResultPanel, CalculatorShell } from '../../components/tools';
+import { CalculatorFormPanel, CalculatorResultPanel, CalculatorShell, FormRow } from '../../components/tools';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);

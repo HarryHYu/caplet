@@ -13,8 +13,10 @@ import {
     ArrowRightIcon,
     CheckCircleIcon,
     BookmarkIcon,
-    SparklesIcon
+    SparklesIcon,
+    CalculatorIcon
 } from '@heroicons/react/24/outline';
+import { Button, Card, PageHeader, PageShell, StatCard } from '../components/ui';
 
 const SectionHeading = ({ kicker, title, action }) => (
     <div className="mb-8 flex items-end justify-between gap-6">
@@ -89,11 +91,8 @@ export default function Dashboard() {
     const progressEntries = userProgress || [];
     const inProgressCourses = progressEntries.filter(p => p.status === 'in_progress');
     const completedCourses = progressEntries.filter(p => p.status === 'completed');
-    const lastAccessed = [...progressEntries].sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt))[0];
-    const lastAccessedCourse = lastAccessed ? courses.find(c => c.id === lastAccessed.courseId) : null;
     const beginnerCourse = courses.find(course => course.level?.toLowerCase() === 'beginner') || courses[0];
     const hasProgress = progressEntries.length > 0;
-    const nextCourse = lastAccessedCourse || beginnerCourse;
     const totalProgress = progressEntries.length
         ? Math.round(progressEntries.reduce((sum, item) => sum + (Number(item.progressPercentage) || 0), 0) / progressEntries.length)
         : 0;
@@ -136,8 +135,6 @@ export default function Dashboard() {
                     className="reveal-text"
                 />
 
-                </header>
-
                 {!user?.onboardingData && (
                     <div className="mb-12 reveal-text stagger-1">
                         <Link
@@ -160,26 +157,6 @@ export default function Dashboard() {
                         </Link>
                     </div>
                 )}
-
-                {/* Stats Matrix */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-line-soft border border-line-soft mb-24 reveal-text stagger-1">
-                    {[
-                        { label: 'Modules Active', value: inProgressCourses.length, icon: BookOpenIcon },
-                        { label: 'Completed', value: completedCourses.length, icon: CheckCircleIcon },
-                        { label: 'Academy Classes', value: classes.length, icon: AcademicCapIcon },
-                        { label: 'Activity Index', value: 'High', icon: FireIcon }
-                    ].map((stat) => (
-                        <div key={stat.label} className="bg-surface-body p-10 group hover:bg-surface-raised transition-colors">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-8 flex justify-between items-center group-hover:text-accent transition-colors">
-                                {stat.label}
-                                <stat.icon className="w-4 h-4 opacity-20" />
-                            </p>
-                            <p className="text-5xl font-serif italic text-text-primary group-hover:translate-x-2 transition-transform duration-500">
-                                {stat.value}
-                            </p>
-                        </div>
-                    </Card>
-                </section>
 
                 {/* Non-personalized start panel for users with no progress */}
                 {!hasProgress && (
@@ -251,7 +228,7 @@ export default function Dashboard() {
                                 <EmptyState
                                     title="No courses in progress yet"
                                     description="Start a beginner course from the library to populate this section."
-                                    actions={<Button to="/courses">Browse courses</Button>}
+                                    action={<Button to="/courses">Browse courses</Button>}
                                 />
                             )}
                         </section>
@@ -273,23 +250,23 @@ export default function Dashboard() {
                                             </div>
                                             <ArrowRightIcon className="h-5 w-5 text-text-dim transition-transform group-hover:translate-x-2" />
                                         </Link>
-                                    ))
-                                ) : (
-                                    <EmptyState
-                                        eyebrow="Academy"
-                                        title="No active classes yet."
-                                        message="Join or create a class to see recent academy activity here."
-                                        compact
-                                        className="bg-surface-body"
-                                    />
-                                )}
-                            </div>
-                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <EmptyState
+                                    eyebrow="Academy"
+                                    title="No active classes yet."
+                                    message="Join or create a class to see recent academy activity here."
+                                    compact
+                                    className="bg-surface-body"
+                                />
+                            )}
+                        </section>
                     </div>
 
                     {/* Sidebar */}
                     <div className="lg:col-span-4 space-y-20">
-                        <div className="reveal-text stagger-3">
+                        <section className="reveal-text stagger-3">
                             <span className="section-kicker">My Courses</span>
                             <div className="mt-8 space-y-6">
                                 {courses.length > 0 ? (
