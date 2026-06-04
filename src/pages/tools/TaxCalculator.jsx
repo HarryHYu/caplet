@@ -83,7 +83,8 @@ const TaxCalculator = () => {
                     placeholder="0.00"
                     className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
-                </FormRow>
+                </div>
+              </div>
 
               <div className="flex items-center gap-4 p-6 bg-surface-raised border border-line-soft">
                 <input
