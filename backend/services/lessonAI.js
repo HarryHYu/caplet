@@ -1,19 +1,22 @@
 /**
- * Lesson AI — turn pasted notes into a structured array of slides
- * conforming to backend/utils/slideSchema.js.
+ * Lesson AI — two-stage pipeline
  *
- * Intentionally separate from services/aiService.js (which handles the
- * unrelated financial-coach pipeline). We use OpenAI's strict JSON mode
- * so the response is always parseable; then we run it through the same
- * schema validator the editor uses to guarantee the player can render it.
+ * Stage 1 (Planner): given notes + context, a powerful model plans the full
+ *   lesson as structured human-readable text. No JSON — just clear, complete
+ *   content for every slide.
+ *
+ * Stage 2 (Formatter): gpt-5.4-mini converts the plan to valid JSON slides
+ *   conforming to backend/utils/slideSchema.js. This is a pure transcription
+ *   task — no creative work — so a fast cheap model is all that's needed.
+ *
+ * Separating the two jobs means Stage 1 can think freely without worrying
+ * about schema correctness, and Stage 2 can apply the schema without having
+ * to invent content.
  */
 
 const OpenAI = require('openai');
 const { validateSlides } = require('../utils/slideSchema');
 
-// Lazy: don't construct the OpenAI client until we actually need it, so
-// the server can boot without OPENAI_API_KEY (the /api/ai/generate-lesson
-// route returns 503 in that case).
 let _client = null;
 function getClient() {
   if (_client) return _client;
@@ -22,96 +25,141 @@ function getClient() {
   return _client;
 }
 
-// Placeholder string the AI puts in Google Maps URLs.
-// The frontend replaces it with the real VITE_GOOGLE_MAPS_KEY at render time,
-// so the backend never needs to hold the key.
 const MAPS_KEY_PLACEHOLDER = '__MAPS_API_KEY__';
 
-// Build the system prompt.
-function buildSystem() {
-  const mapsBlock = `**Google Maps** — always available, always use this exact URL pattern:
-  https://www.google.com/maps/embed/v1/place?key=${MAPS_KEY_PLACEHOLDER}&q={URL-encoded+location}&zoom={1-20}
-  Use zoom 10–14 for cities/regions, 15–18 for landmarks/buildings.
-  Example: {"type":"embed","url":"https://www.google.com/maps/embed/v1/place?key=${MAPS_KEY_PLACEHOLDER}&q=Sydney+Opera+House&zoom=15","title":"Sydney Opera House","aspect":"16:9"}`;
+// Stage 2 is always a formatting task — use the fast model regardless of
+// what the user chose for Stage 1.
+const FORMATTER_MODEL = 'gpt-5.4-mini';
 
-  return `You are an expert curriculum designer. Given source material and context, you output a structured lesson as a strict JSON object: {"slides": [ ... ]}.
+/* ─── Stage 1: Lesson Planner system prompt ─────────────────────────────── */
 
-## Slide types (use ONLY these)
+const PLANNER_SYSTEM = `You are an expert curriculum designer. Given source material, context, and output instructions, you plan a complete detailed lesson.
 
-### Divider — section break / title card
-{"type":"divider","title":"Section Title","subtitle":"Optional subtitle or description"}
+A second AI will convert your plan to JSON exactly — so write complete, unambiguous content for every slide. NEVER use placeholders like "add content here" or "describe X". Write the actual content.
 
-### Text — reading slide with formatted content
-{"type":"text","content":"## Heading\\n\\nParagraph with **bold** and $x^2$ math.","layout":"default","tone":"neutral"}
-  - layout: "default" (standard), "hero" (large centred intro), "centered" (centred body), "callout" (highlighted box)
-  - tone: "neutral", "info", "tip", "warning", "example", "quote"
+## Output format
 
-### Choice — multiple-choice or true/false question
-{"type":"choice","question":"What is $\\\\frac{d}{dx}[x^2]$?","options":["$x$","$2x$","$2$","$x^2$"],"correctIndices":[1],"mode":"single","explanation":"Power rule: bring the exponent down and reduce by 1."}
-  - mode: "single" (one correct), "multiple" (tick all that apply), "truefalse" (options are always True/False)
-  - correctIndices: 0-based array of correct option indices
+Write each slide as a block starting with:
+  SLIDE N [type | option: value | option: value]
+followed by its fields, then a separator line containing only ---
 
-### Fill-in-the-blank — typed or dropdown answer
-Textbox: {"type":"fillblank","template":"Supply shifts {{0}} when input costs rise, and {{1}} when technology improves.","blanks":[{"answers":["left","to the left"]},{"answers":["right","to the right"]}],"mode":"textbox","explanation":"..."}
-Dropdown: {"type":"fillblank","template":"The mitochondria is the {{0}} of the cell.","blanks":[{"answers":["powerhouse"],"options":["nucleus","powerhouse","membrane","ribosome"]}],"mode":"dropdown","explanation":"..."}
-  - {{0}}, {{1}}, … placeholders must exactly match the blanks array length.
-  - For dropdown: add "options" array to each blank (must include the correct answer).
-  - "answers": all accepted correct answers (case-insensitive by default).
+Number slides sequentially (SLIDE 1, SLIDE 2, …). Use ONLY the types listed below.
 
-### Flashcards — term/definition cards
-Carousel (flip one at a time — active recall): {"type":"cards","mode":"carousel","cards":[{"front":"Term or question","back":"Definition or answer"}]}
-Grid (all visible — reference spread): {"type":"cards","mode":"grid","columns":2,"cards":[{"front":"Term","back":"Definition"}]}
-  - Use carousel for active recall practice; grid for end-of-section reference.
-  - "columns": 1–4, defaults to 2.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [divider]
+title: Section Title
+subtitle: Optional subtitle
+────────────────────────────────────────────────────────────────────────
+SLIDE N [text | layout: default | tone: neutral]
+  layout options: default · hero · centered · callout
+  tone   options: neutral · info · tip · warning · example · quote
+content:
+Write the full educational text here in markdown.
+Use ## for headings, **bold**, - for bullet lists.
+Use $formula$ for ALL math — NEVER write x^2 or a/b in plain text.
+Use $$formula$$ for a prominent standalone equation.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [choice | mode: single]
+  mode options: single (one correct) · multiple (tick all that apply) · truefalse
+question: Full question text. Use $math$ for any formulas.
+option A: First option
+option B: Second option
+option C: Third option
+option D: Fourth option
+correct: B
+explanation: Why B is correct. Why the other options are wrong.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [fillblank | mode: textbox]
+  mode options: textbox · dropdown
+template: Sentence with {{0}} and {{1}} markers. NEVER put {{N}} inside $math$ delimiters.
+blank 0 answers: primaryAnswer, alternativeAnswer, anotherAccepted
+blank 1 answers: answer1, answer2
+explanation: Optional explanation of the correct answers.
 
-### Match — drag-and-drop matching pairs
-{"type":"match","pairs":[{"left":"Mitosis","right":"Cell division for growth"},{"left":"Meiosis","right":"Cell division for reproduction"},{"left":"Apoptosis","right":"Programmed cell death"}],"explanation":"..."}
-  - Needs ≥2 pairs. Right-side items are shuffled for the student.
-
-### Order — drag-and-drop sequencing
-{"type":"order","prompt":"Place these steps in the correct order.","items":["First","Second","Third","Fourth"],"explanation":"..."}
-  - Items must be listed in the CORRECT order — the player shuffles them.
-  - Needs ≥2 items.
-
-### Table — structured comparison or data
-{"type":"table","headers":"row","rows":[["Feature","Option A","Option B"],["Speed","Fast","Slow"],["Cost","High","Low"]]}
-  - headers: "none", "row" (first row = header), "column" (first col = header), "both"
-
-### Chart — data visualisation
-Bar/line/area/scatter: {"type":"chart","chartType":"bar","title":"GDP Growth (%)","data":[{"x":"2020","y":2.1},{"x":"2021","y":5.8}],"xLabel":"Year","yLabel":"Growth (%)","caption":"..."}
-Pie: {"type":"chart","chartType":"pie","title":"Energy Mix","data":[{"name":"Solar","value":32},{"name":"Wind","value":28},{"name":"Coal","value":40}],"caption":"..."}
-  - chartType: "bar", "line", "area", "pie", "scatter"
-  - Bar/line/area/scatter: data uses {"x": string|number, "y": number}
-  - Pie: data uses {"name": string, "value": number}
-
-### Mermaid diagram — process, flow, or relationship
-{"type":"diagram","code":"graph TD\\n  A[Stimulus] --> B{Receptor}\\n  B -->|Nerve impulse| C[Effector]\\n  C --> D[Response]","caption":"..."}
-  - Supported: graph/flowchart, sequenceDiagram, classDiagram, erDiagram, pie, mindmap, timeline, gantt.
-  - Keep diagrams simple and well-formed.
-
-### Timeline drag — chronological ordering activity
-{"type":"timeline","prompt":"Drag these events into the correct chronological order.","events":[{"label":"Archduke Franz Ferdinand assassinated","year":"1914"},{"label":"Treaty of Versailles signed","year":"1919"},{"label":"League of Nations founded","year":"1920"}],"explanation":"..."}
-  - Events must be listed in the CORRECT order — the player shuffles them.
-  - "year" is optional but shown as feedback. Needs ≥2 events.
-
-### Desmos interactive graph
-{"type":"desmos","title":"Exploring Quadratic Functions","expressions":[{"id":"e1","latex":"y=ax^2+bx+c","color":"#6366f1"},{"id":"a","latex":"a=1"},{"id":"b","latex":"b=0"},{"id":"c","latex":"c=0"}],"bounds":{"left":-10,"right":10,"bottom":-15,"top":15},"caption":"Use the sliders to see how each coefficient changes the parabola."}
-  - Use for any content that benefits from an interactive graph: functions, transformations, geometry, rates of change, physics.
-  - "expressions": array of LaTeX expressions on one shared graph. Each must have a unique "id".
-  - Sliders: define a variable as its own expression — e.g. {"id":"a","latex":"a=1"} — students can drag it.
-  - Colors: "#6366f1" indigo, "#10b981" green, "#f59e0b" amber, "#ef4444" red, "#8b5cf6" violet, "#06b6d4" cyan.
-  - "bounds": frame the key features (intercepts, turning points, asymptotes, intersections).
-  - Valid Desmos LaTeX: y=mx+b, y=\\\\frac{1}{x}, y=\\\\sin(x), y=e^x, y=\\\\ln(x), x^2+y^2=r^2, y=\\\\sqrt{x}.
-  - ALWAYS prefer desmos over describing a graph in text for mathematics or physics content.
-
-### Embed — interactive simulation or map (iframe)
-{"type":"embed","url":"...","title":"...","aspect":"16:9","caption":"..."}
-  - aspect: "16:9" (default), "4:3", "1:1", "tall"
-  - Use ONLY from the approved providers below — NEVER invent or guess URLs.
-
-**PhET Interactive Simulations** (free, HTML5, no login required)
-  URL pattern: https://phet.colorado.edu/sims/html/{slug}/latest/{slug}_en.html
-  Slugs by subject —
+  For dropdown mode, also include accepted options per blank:
+blank 0 options: opt1, opt2, opt3, correctAnswer
+────────────────────────────────────────────────────────────────────────
+SLIDE N [cards | mode: carousel]
+  mode options: carousel (flip one at a time — active recall) · grid (all visible — reference)
+  columns: 2   (grid only, 1–4)
+card 1: FRONT: Term or short question | BACK: Definition or answer
+card 2: FRONT: ... | BACK: ...
+caption: Optional caption.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [match]
+pair 1: Left item → Right item
+pair 2: Left item → Right item
+pair 3: Left item → Right item
+explanation: Optional.
+  Needs ≥2 pairs.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [order]
+prompt: Put these steps in the correct order.
+1. First step (this is the correct position 1)
+2. Second step (correct position 2)
+3. Third step (correct position 3)
+explanation: Optional.
+  List items in the CORRECT order — the player shuffles them for the student.
+  Needs ≥2 items.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [table | headers: row]
+  headers options: none · row (first row = header) · column (first col = header) · both
+row 1: Header A | Header B | Header C
+row 2: Value1 | Value2 | Value3
+row 3: Value1 | Value2 | Value3
+caption: Optional.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [chart | chartType: bar]
+  chartType options: bar · line · area · pie · scatter
+title: Chart Title
+xLabel: X-axis label  (not used for pie)
+yLabel: Y-axis label  (not used for pie)
+  bar/line/area/scatter data — write as x→y pairs:
+data: 2020→2.1, 2021→5.8, 2022→3.2
+  pie data — write as name→value pairs:
+data: Solar→32, Wind→28, Coal→40
+caption: Optional.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [diagram]
+code:
+graph TD
+  A[Start] --> B{Decision?}
+  B -->|Yes| C[Do it]
+  B -->|No| D[Skip]
+caption: Optional.
+  Supported Mermaid types: graph/flowchart, sequenceDiagram, classDiagram, erDiagram,
+  mindmap, timeline, gantt, pie. Keep diagrams simple and syntactically valid.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [timeline]
+prompt: Drag these events into the correct chronological order.
+event 1: Event label (1914)
+event 2: Event label (1919)
+event 3: Event label (1920)
+explanation: Optional.
+  List events in the CORRECT chronological order — player shuffles them.
+  Year is plain text like "1914" or "c. 1850" — NEVER wrap in $ signs.
+  Needs ≥2 events.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [desmos]
+title: Graph title
+expression e1: y=a*x^2+b*x+c (color: #6366f1)
+expression a: a=1
+expression b: b=0
+expression c: c=0
+bounds: left=-10, right=10, bottom=-15, top=15
+caption: Use the sliders to explore how each coefficient changes the parabola.
+  Use for: mathematical functions, geometric shapes, rates of change, physics.
+  Slider variables: define as a separate expression, e.g. "expression a: a=1".
+  Students can drag slider variables interactively.
+  Valid LaTeX: y=mx+b, y=\\frac{1}{x}, y=\\sin(x), y=e^x, y=\\ln(x), x^2+y^2=r^2
+  Colors: #6366f1 indigo · #10b981 green · #f59e0b amber · #ef4444 red · #8b5cf6 violet
+  ALWAYS prefer desmos over describing a graph in text for maths or physics content.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [embed | provider: phet]
+slug: projectile-motion
+title: PhET: Projectile Motion
+aspect: 16:9
+  Use for live science/maths experiments. Approved slugs:
   Physics: forces-and-motion-basics, projectile-motion, energy-skate-park, pendulum-lab,
     masses-and-springs, balancing-act, collision-lab, gravity-and-orbits, keplers-laws,
     gravity-force-lab, wave-on-a-string, wave-interference, sound, bending-light,
@@ -124,101 +172,178 @@ Pie: {"type":"chart","chartType":"pie","title":"Energy Mix","data":[{"name":"Sol
     balancing-chemical-equations, reactions-and-rates, concentration, molarity,
     beers-law-lab, gas-properties, diffusion
   Biology: natural-selection, gene-expression-essentials, population-genetics
-  Earth Science: plate-tectonics, greenhouse-effect
+  Earth: plate-tectonics, greenhouse-effect
   Maths: graphing-lines, graphing-slope-intercept, graphing-quadratics, function-builder,
     area-model-algebra, area-model-introduction, fractions-intro
-  Example: {"type":"embed","url":"https://phet.colorado.edu/sims/html/projectile-motion/latest/projectile-motion_en.html","title":"PhET: Projectile Motion","aspect":"16:9"}
+────────────────────────────────────────────────────────────────────────
+SLIDE N [embed | provider: geogebra]
+app: geometry
+title: GeoGebra Geometry
+aspect: 16:9
+  app options: graphing · geometry · 3d · scientific · classic
+  Use geometry for compass/ruler constructions; use desmos slide for graphing functions.
+────────────────────────────────────────────────────────────────────────
+SLIDE N [embed | provider: maps]
+location: Sydney+Opera+House
+zoom: 15
+title: Sydney Opera House
+aspect: 16:9
+  zoom: 10–14 for cities/regions, 15–18 for landmarks/buildings.
+────────────────────────────────────────────────────────────────────────
 
-**GeoGebra** (interactive maths — geometry, graphing, algebra)
-  Use these pre-built app URLs:
-    Graphing calculator: https://www.geogebra.org/graphing
-    Geometry tool:       https://www.geogebra.org/geometry
-    3D Calculator:       https://www.geogebra.org/3d
-    Scientific calc:     https://www.geogebra.org/scientific
-    Classic (all-in-one):https://www.geogebra.org/classic
-  Example: {"type":"embed","url":"https://www.geogebra.org/geometry","title":"GeoGebra Geometry","aspect":"16:9"}
-
-${mapsBlock}
-
-When to choose embed vs other types:
-  - PhET: live physics/chemistry/biology experiments where interaction beats a diagram.
-  - GeoGebra geometry tool: geometric constructions (compass, ruler, angles) — prefer over desmos for these.
-  - GeoGebra graphing: use desmos slide instead — desmos has better slider/expression support.
-  - Google Maps: geography, spatial context, location-based case studies.
-  - Do NOT use embed when a desmos, diagram, or chart slide would serve the same purpose better.
-
-## Hard rules
-- Return ONLY the JSON object {"slides":[...]}. No prose, no markdown fences.
-- Do NOT generate "media" or "hotspot" slides — these require real image/video URLs uploaded by a teacher.
-- embed slides: ONLY use URLs from the approved providers listed above. NEVER fabricate URLs.
-- correctIndices must be an array of 0-based integers.
-- fillblank: NEVER place a {{blank}} inside a LaTeX math span ($...$ or $$...$$). The blank must sit outside all math delimiters. WRONG: "the vertex is at $({{0}}, {{1}})$" — CORRECT: "the vertex is at ({{0}}, {{1}})"
-- fillblank placeholder count ({{0}}, {{1}}, …) must exactly match the blanks array length.
-- timeline "year" field must be a plain text string like "1914" or "c. 1850" — NEVER wrap it in $ signs.
-- order and timeline items must be listed in the CORRECT sequence — the player shuffles them.
-- match needs ≥2 pairs; order needs ≥2 items; timeline needs ≥2 events.
-- chart data must be a non-empty array. Pie uses "name"/"value"; others use "x"/"y".
-- diagram code must be valid Mermaid syntax.
-- Desmos expression ids must be unique strings within each slide.
-- text.content markdown: headings (##, ###), bold (**), italic (*), bullet lists (-), inline code. No HTML, no horizontal rules (---).
-
-## Mathematics formatting (CRITICAL)
-- ALWAYS use LaTeX for every mathematical expression — never ASCII: no x^2, no a/b, no sqrt(x), no *.
-- Inline math: single dollar signs → $x^2 + y^2 = r^2$, $\\\\frac{a}{b}$, $\\\\sqrt{x}$, $\\\\pi r^2$
-- Display math (prominent standalone equations): double dollar signs → $$E = mc^2$$
-- Applies EVERYWHERE: text content, choice questions/options, fillblank templates/blanks, card fronts/backs, match pairs, order items, table cells, timeline labels, explanations.
-- CORRECT: $\\\\frac{\\\\Delta Q}{\\\\Delta P}$ — WRONG: ΔQ/ΔP
-- CORRECT: $x^{-1}$ — WRONG: x^-1
-- CORRECT: $\\\\vec{F} = m\\\\vec{a}$ — WRONG: F = ma (when vectors matter)
-- CORRECT: $\\\\log_2(n)$ — WRONG: log2(n)
+## Mathematics — CRITICAL
+- ALWAYS use LaTeX for every mathematical expression, formula, and symbol.
+- Inline:   $x^2 + y^2 = r^2$   $\\frac{a}{b}$   $\\sqrt{x}$   $\\pi r^2$   $\\vec{F} = m\\vec{a}$
+- Display:  $$E = mc^2$$
+- NEVER use ASCII math: no x^2, no a/b, no sqrt(x), no F=ma (write $F=ma$).
+- Applies to ALL fields: questions, options, card fronts/backs, table cells, labels, etc.
 
 ## Quality rules
 - Match curriculum terminology and difficulty exactly to the specified syllabus and year level.
-- Use correct technical vocabulary for the subject area.
-- Explanations should explain the WHY — not just restate the correct answer.
-- Divider slides mark logical sections — use them to chunk the lesson.
-- Tables: use "headers":"row" for comparisons; "both" when both rows and columns have labels.
-- Chart slides: for numerical data, statistics, trends (GDP, population, experimental results).
-- Diagram slides: for processes, systems, hierarchies, flows (cell cycle, supply/demand, OSI model).
-- Timeline slides: for ordered historical events, discoveries, or procedural steps with dates.
-- Desmos slides: for any mathematical function, geometric shape, or interactive exploration.
-- Embed PhET: for science simulations where live interactivity is the point.
-- Embed GeoGebra geometry: for geometric constructions requiring compass/ruler tools.
-- Cards carousel: active recall; cards grid: reference summary at end of a section.
-- Fillblank dropdown: when the answer set is small and fixed (reduces ambiguity).
-- Match slides: vocabulary, equation↔name, cause↔effect — better than a plain text list.`;
+- Write full sentences and paragraphs — not "content about X" or "explanation here".
+- Every question must have plausible distractors and a genuinely educational explanation.
+- Use dividers to chunk the lesson into logical sections.
+- For science/maths topics: always consider whether a desmos or PhET embed slide would be better than describing something in text.`;
+
+/* ─── Stage 2: JSON Formatter system prompt ──────────────────────────────── */
+
+function buildFormatterSystem() {
+  return `You are a JSON formatter. Convert the lesson plan below EXACTLY to the slide JSON schema.
+Do NOT add slides, remove slides, rephrase content, or invent material.
+Preserve every question, answer, explanation, and expression precisely as written in the plan.
+Your only job is to apply the correct JSON structure and field names.
+
+## Slide JSON schemas — use ONLY these
+
+### divider
+{"type":"divider","title":"Section Title","subtitle":"Optional subtitle"}
+
+### text
+{"type":"text","content":"## Heading\\n\\nBody with $math$ and **bold**.","layout":"default","tone":"neutral"}
+layout: "default" | "hero" | "centered" | "callout"
+tone: "neutral" | "info" | "tip" | "warning" | "example" | "quote"
+content: markdown string — headings ##/###, **bold**, *italic*, - bullets, $inline$, $$display$$
+
+### choice
+{"type":"choice","question":"...","options":["A text","B text","C text","D text"],"correctIndices":[1],"mode":"single","explanation":"..."}
+mode: "single" | "multiple" | "truefalse"
+correctIndices: 0-based integer array  (A=0, B=1, C=2, D=3, E=4)
+
+### fillblank
+Textbox: {"type":"fillblank","template":"Sentence with {{0}} and {{1}}.","blanks":[{"answers":["ans1","alt2"]},{"answers":["ans"]}],"mode":"textbox","explanation":"..."}
+Dropdown: {"type":"fillblank","template":"The {{0}} of the cell.","blanks":[{"answers":["mitochondria"],"options":["nucleus","mitochondria","membrane","ribosome"]}],"mode":"dropdown","explanation":"..."}
+CRITICAL: {{N}} must NEVER appear inside $...$ or $$...$$ in the template string.
+Placeholder count must exactly match the blanks array length.
+
+### cards
+{"type":"cards","mode":"carousel","cards":[{"front":"Term","back":"Definition"}]}
+{"type":"cards","mode":"grid","columns":2,"cards":[{"front":"Term","back":"Definition"}]}
+
+### match
+{"type":"match","pairs":[{"left":"Mitosis","right":"Cell division for growth"},{"left":"Meiosis","right":"Cell division for reproduction"}],"explanation":"..."}
+Needs ≥2 pairs.
+
+### order
+{"type":"order","prompt":"Put these in order.","items":["First","Second","Third"],"explanation":"..."}
+items must be in CORRECT order — player shuffles them. Needs ≥2 items.
+
+### table
+{"type":"table","headers":"row","rows":[["H1","H2","H3"],["v1","v2","v3"]]}
+headers: "none" | "row" | "column" | "both"
+
+### chart
+Bar/line/area/scatter: {"type":"chart","chartType":"bar","title":"...","data":[{"x":"2020","y":2.1},{"x":"2021","y":5.8}],"xLabel":"Year","yLabel":"Growth (%)","caption":"..."}
+Pie: {"type":"chart","chartType":"pie","title":"...","data":[{"name":"Solar","value":32},{"name":"Wind","value":28}],"caption":"..."}
+chartType: "bar" | "line" | "area" | "pie" | "scatter"
+
+### diagram
+{"type":"diagram","code":"graph TD\\n  A[Start] --> B{Decision?}\\n  B -->|Yes| C[Do it]","caption":"..."}
+code must be valid Mermaid syntax.
+
+### timeline
+{"type":"timeline","prompt":"...","events":[{"label":"Franz Ferdinand assassinated","year":"1914"},{"label":"Treaty of Versailles","year":"1919"}],"explanation":"..."}
+Events must be in CORRECT chronological order (player shuffles them). Needs ≥2 events.
+year: plain text string — NEVER wrap in $ signs.
+
+### desmos
+{"type":"desmos","title":"...","expressions":[{"id":"e1","latex":"y=a*x^2+b*x+c","color":"#6366f1"},{"id":"a","latex":"a=1"},{"id":"b","latex":"b=0"}],"bounds":{"left":-10,"right":10,"bottom":-15,"top":15},"caption":"..."}
+Expression ids must be unique strings. Colors: #6366f1 indigo, #10b981 green, #f59e0b amber, #ef4444 red, #8b5cf6 violet, #06b6d4 cyan.
+
+### embed — PhET
+{"type":"embed","url":"https://phet.colorado.edu/sims/html/{slug}/latest/{slug}_en.html","title":"PhET: Name","aspect":"16:9"}
+
+### embed — GeoGebra
+{"type":"embed","url":"https://www.geogebra.org/{app}","title":"GeoGebra ...","aspect":"16:9"}
+app: graphing | geometry | 3d | scientific | classic
+
+### embed — Google Maps
+{"type":"embed","url":"https://www.google.com/maps/embed/v1/place?key=${MAPS_KEY_PLACEHOLDER}&q={URL-encoded+location}&zoom={1-20}","title":"...","aspect":"16:9"}
+
+## Hard rules
+- Return ONLY {"slides":[...]}. No prose, no markdown fences, no extra keys.
+- Do NOT generate "media" or "hotspot" slides — these require real uploaded image URLs.
+- correctIndices must be a 0-based integer array.
+- Pie chart data uses "name"/"value"; all others use "x"/"y".
+- Desmos expression ids must be unique strings within each slide.
+- timeline year must be a plain string, never wrapped in $ signs.
+- match needs ≥2 pairs; order needs ≥2 items; timeline needs ≥2 events.
+- fillblank: {{N}} must NOT appear inside LaTeX delimiters $...$ or $$...$$.
+- embed: ONLY use the approved URL patterns above. Never fabricate or guess URLs.`;
 }
 
-const FOCUS_INSTRUCTIONS = {
-  full: `Generate a complete lesson with these phases:
-1. Intro: one hero-layout text slide or divider to set the scene.
-2. Content (4–6 slides): mix text, chart, diagram, table, desmos, and embed slides. Use desmos for mathematical functions/graphs. Use PhET embeds for science experiments. Use chart slides for data. Use diagram slides for processes.
-3. Practice (4–6 slides): varied activities — choice (single and multiple), fillblank (textbox and dropdown), match, order, timeline. For maths/science include a desmos or PhET embed slide paired with a question.
-4. Summary: one cards (mode:"carousel") or cards (mode:"grid") slide.
-Aim for 12–18 slides total. Use divider slides to separate phases.`,
+/* ─── Stage 1 API call ───────────────────────────────────────────────────── */
 
-  practice: `Generate ONLY practice activity slides — no reading/content slides. Rules:
-- Variety: choice (single AND multiple), fillblank (textbox AND dropdown), match, order, timeline.
-- For maths/science: include at least one desmos or PhET embed slide showing a concept, immediately followed by a question about it.
-- Every activity must have a clear question/prompt, correct answers, and a brief genuinely educational explanation.
-- 8–12 activity slides total (not counting desmos/embed slides).`,
+async function runStage1(client, notes, opts, slideCount) {
+  const contextLines = [
+    opts.curriculum ? `Curriculum / syllabus: ${opts.curriculum}` : null,
+    opts.audience   ? `Audience / year level: ${opts.audience}`   : null,
+    opts.title      ? `Lesson title: ${opts.title}`               : null,
+  ].filter(Boolean);
 
-  flashcards: `Generate flashcard content:
-- One cards slide with mode "carousel" containing 12–20 cards.
-- Front: short term, concept, formula, or question. Back: concise but complete definition or explanation.
-- If there are distinct topic areas, add 1–2 divider slides as section breaks.
-- Do NOT add other slide types.`,
+  const userMsg = [
+    contextLines.length ? `## Context\n${contextLines.join('\n')}` : null,
+    `## Target\nPlan approximately ${slideCount} slides total.`,
+    opts.outputDescription ? `## Output instructions\n${opts.outputDescription.trim()}` : null,
+    `## Source material\n${notes}`,
+    'Write the complete lesson plan now. Number slides SLIDE 1, SLIDE 2, … and separate each with ---',
+  ].filter(Boolean).join('\n\n');
 
-  summary: `Generate a condensed reference-style lesson:
-- Divider slides to label each section.
-- Text slides with layout "callout" and tone "tip" or "info" for key takeaways.
-- Table slides for comparisons.
-- Chart slides for numerical data or statistics.
-- Diagram slides for processes, systems, or models.
-- Desmos slides for mathematical functions or relationships.
-- End with a cards (mode:"grid", columns:2) slide summarising the most important terms.
-- Minimal practice questions — this is a reference, not a quiz. 8–14 slides total.`,
-};
+  const completion = await client.chat.completions.create({
+    model: opts.model || 'gpt-5.4-mini',
+    messages: [
+      { role: 'system', content: PLANNER_SYSTEM },
+      { role: 'user',   content: userMsg },
+    ],
+  });
+
+  return completion.choices?.[0]?.message?.content?.trim() || '';
+}
+
+/* ─── Stage 2 API call ───────────────────────────────────────────────────── */
+
+async function runStage2(client, plan) {
+  const userMsg = [
+    'Convert the lesson plan below to JSON exactly. Do not add, remove, or rephrase any content.',
+    '',
+    '## Lesson plan',
+    plan,
+    '',
+    'Return ONLY {"slides":[...]}.',
+  ].join('\n');
+
+  const completion = await client.chat.completions.create({
+    model: FORMATTER_MODEL,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: buildFormatterSystem() },
+      { role: 'user',   content: userMsg },
+    ],
+  });
+
+  return completion.choices?.[0]?.message?.content || '{}';
+}
+
+/* ─── Main export ────────────────────────────────────────────────────────── */
 
 async function generateLessonSlides(notes, opts = {}) {
   const client = getClient();
@@ -228,46 +353,24 @@ async function generateLessonSlides(notes, opts = {}) {
     throw err;
   }
 
-  const focus = opts.focus || 'full';
-  const focusInstruction = FOCUS_INSTRUCTIONS[focus] || FOCUS_INSTRUCTIONS.full;
+  const slideCount = Math.min(Math.max(Number(opts.slideCount) || 15, 3), 50);
 
-  const contextLines = [
-    opts.curriculum ? `Curriculum / syllabus: ${opts.curriculum}` : null,
-    opts.audience ? `Audience / year level: ${opts.audience}` : null,
-    opts.title ? `Lesson title: ${opts.title}` : null,
-  ].filter(Boolean);
+  // ── Stage 1: plan ──────────────────────────────────────────────────────
+  const plan = await runStage1(client, notes, opts, slideCount);
+  if (!plan) {
+    const err = new Error('AI planning stage returned no content. Try again.');
+    err.status = 502;
+    throw err;
+  }
 
-  const userMsg = [
-    contextLines.length ? `## Context\n${contextLines.join('\n')}` : null,
-    `## Output instructions\n${focusInstruction}`,
-    `## Source material\n${notes}`,
-    'Return ONLY the JSON object {"slides":[...]}.',
-  ]
-    .filter(Boolean)
-    .join('\n\n');
+  // ── Stage 2: format ────────────────────────────────────────────────────
+  const text = await runStage2(client, plan);
 
-  const chosenModel = opts.model || 'gpt-5.4-mini';
-  // Pure reasoning models (o-series and bare gpt-5) don't accept `temperature`
-  const isReasoning = chosenModel.startsWith('o') || chosenModel === 'gpt-5';
-
-  const systemPrompt = buildSystem();
-
-  const completion = await client.chat.completions.create({
-    model: chosenModel,
-    response_format: { type: 'json_object' },
-    ...(isReasoning ? {} : { temperature: 0.5 }),
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMsg },
-    ],
-  });
-
-  const text = completion.choices?.[0]?.message?.content || '{}';
   let parsed;
   try {
     parsed = JSON.parse(text);
   } catch {
-    const err = new Error('AI returned non-JSON output. Try again or shorten the notes.');
+    const err = new Error('AI formatting stage returned non-JSON output. Try again.');
     err.status = 502;
     throw err;
   }
@@ -287,23 +390,24 @@ async function generateLessonSlides(notes, opts = {}) {
   const result = validateSlides(slides);
   if (result.ok) return { slides: result.slides, warnings: [] };
 
-  // Salvage: drop any individual slide that fails validation rather than
-  // throwing the whole lesson away.
-  const valid = [];
+  // Salvage: drop individual invalid slides rather than failing everything.
+  const valid   = [];
   const dropped = [];
   slides.forEach((s, i) => {
     const single = validateSlides([s]);
     if (single.ok) valid.push(s);
     else dropped.push({ index: i, errors: single.errors });
   });
+
   if (!valid.length) {
     const err = new Error('AI output failed schema validation.');
     err.status = 502;
     err.details = result.errors;
     throw err;
   }
+
   return {
-    slides: validateSlides(valid).slides,
+    slides:   validateSlides(valid).slides,
     warnings: dropped.map((d) => `Dropped slide ${d.index}: ${d.errors.join('; ')}`),
   };
 }
