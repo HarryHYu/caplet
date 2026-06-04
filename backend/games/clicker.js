@@ -17,13 +17,13 @@ const OFFLINE_CAP_SECONDS = 8 * 3600; // cap idle earnings to 8h
 
 // Auto-investments (generators). Original values.
 const GENERATORS = [
-  { id: 'piggybank', name: 'Piggy Bank', icon: '🐷', baseCost: 15, baseCps: 0.1, requiredStage: 1 },
-  { id: 'savings', name: 'Savings Account', icon: '🏦', baseCost: 120, baseCps: 1, requiredStage: 1 },
-  { id: 'termdeposit', name: 'Term Deposit', icon: '📜', baseCost: 1300, baseCps: 8, requiredStage: 2 },
-  { id: 'bonds', name: 'Government Bonds', icon: '🧾', baseCost: 14000, baseCps: 47, requiredStage: 3 },
-  { id: 'stocks', name: 'Stock Portfolio', icon: '📈', baseCost: 200000, baseCps: 260, requiredStage: 4 },
-  { id: 'property', name: 'Property', icon: '🏠', baseCost: 3300000, baseCps: 1400, requiredStage: 5 },
-  { id: 'indexfund', name: 'Index Fund', icon: '🌐', baseCost: 51000000, baseCps: 7800, requiredStage: 6 },
+  { id: 'piggybank', name: 'Piggy Bank', icon: '🐷', baseCost: 15, baseCps: 0.1, requiredStage: 1, desc: 'Spare change adds up — slow but steady.' },
+  { id: 'savings', name: 'Savings Account', icon: '🏦', baseCost: 120, baseCps: 1, requiredStage: 1, desc: 'Earns a little interest while you sleep.' },
+  { id: 'termdeposit', name: 'Term Deposit', icon: '📜', baseCost: 1300, baseCps: 8, requiredStage: 2, desc: 'Lock money away for a bigger, fixed return.' },
+  { id: 'bonds', name: 'Government Bonds', icon: '🧾', baseCost: 14000, baseCps: 47, requiredStage: 3, desc: 'Reliable income, backed by the government.' },
+  { id: 'stocks', name: 'Stock Portfolio', icon: '📈', baseCost: 200000, baseCps: 260, requiredStage: 4, desc: 'Higher risk, higher reward growth.' },
+  { id: 'property', name: 'Property', icon: '🏠', baseCost: 3300000, baseCps: 1400, requiredStage: 5, desc: 'Bricks and mortar paying rent around the clock.' },
+  { id: 'indexfund', name: 'Index Fund', icon: '🌐', baseCost: 51000000, baseCps: 7800, requiredStage: 6, desc: 'Own a slice of the entire market.' },
 ];
 
 // One-off upgrades (multipliers).
@@ -46,7 +46,7 @@ function stageFromLessons(n) {
 }
 
 function defaultState() {
-  return { gameCoins: 0, generators: {}, upgrades: [], totalClicks: 0, lastSaved: Date.now() };
+  return { gameCoins: 0, total: 0, generators: {}, upgrades: [], totalClicks: 0, goldClicks: 0, lastSaved: Date.now() };
 }
 
 // Clamp/whitelist incoming state so a client can't store nonsense / cheat wildly.
@@ -69,9 +69,11 @@ function sanitizeState(raw) {
     : [];
   return {
     gameCoins: num(s.gameCoins, 1e21),
+    total: num(s.total, 1e21),
     generators,
     upgrades,
     totalClicks: Math.floor(num(s.totalClicks, 1e15)),
+    goldClicks: Math.floor(num(s.goldClicks, 1e12)),
     lastSaved: Math.min(num(s.lastSaved, Date.now()), Date.now()) || Date.now(),
   };
 }
