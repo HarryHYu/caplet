@@ -637,16 +637,20 @@ const LessonPlayer = () => {
                 return (
                   <div
                     key={i}
-                    className={isActive ? 'absolute inset-0 overflow-y-auto' : 'absolute inset-0 overflow-hidden pointer-events-none'}
+                    className={`absolute inset-0 overflow-hidden${!isActive ? ' pointer-events-none' : ''}`}
                     style={isActive ? {} : { transform: 'translateX(100vw)', opacity: 0 }}
                     aria-hidden={!isActive}
                   >
-                    {/* No key change here — SlideRenderer (and all its children)
-                        stays mounted. Animation class is toggled to re-fire. */}
-                    <div className={`${isActive ? 'animate-lesson-slide-in' : ''} min-h-full p-5 md:p-8 lg:p-12 flex flex-col`}>
+                    {/* No key change here — SlideRenderer stays mounted.
+                        Animation class is toggled to re-fire CSS animation.
+                        Padding and scroll are managed inside SlideRenderer
+                        via variant="player" so full-bleed slides can fill
+                        the canvas without padding. */}
+                    <div className={`${isActive ? 'animate-lesson-slide-in' : ''} h-full flex flex-col`}>
                       <SlideErrorBoundary key={i}>
                         <SlideRenderer
                           slide={slides[i]}
+                          variant="player"
                           alreadyAnswered={quizScores[String(i)] !== undefined}
                           alreadyCorrect={quizScores[String(i)] === true}
                           onSubmit={(isCorrect) => recordQuestionAnswer(i, isCorrect)}

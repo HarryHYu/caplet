@@ -95,9 +95,9 @@ export default function LessonPreviewModal({ open, onClose, title, slides }) {
               <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none">
                 <div className="w-32 h-px bg-accent" />
               </div>
-              <div className="flex-1 min-h-0 overflow-y-auto">
-                <div className="p-5 md:p-8 lg:p-12 min-h-full flex flex-col">
-                  <SlideRenderer slide={slide} />
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                <div className="h-full flex flex-col">
+                  <SlideRenderer slide={slide} variant="player" />
                 </div>
               </div>
             </div>

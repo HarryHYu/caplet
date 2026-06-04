@@ -917,89 +917,60 @@ function XIcon() {
  * sub-slide owns its own scratch state. Mount/unmount is driven by the parent
  * via a `key` on the wrapping element so navigating between slides resets state.
  */
-export default function SlideRenderer({ slide, alreadyAnswered = false, alreadyCorrect = false, onSubmit }) {
+// Types that fill the full slide canvas in player mode — they manage their
+// own internal padding and do not get the standard padded wrapper.
+const FULL_BLEED_TYPES = new Set(['embed', 'desmos', 'diagram']);
+
+function buildSlideContent(normalized, { handleSubmit, alreadyAnswered, alreadyCorrect }) {
+  switch (normalized.type) {
+    case 'text':     return <TextSlide slide={normalized} />;
+    case 'media':    return <MediaSlide slide={normalized} />;
+    case 'choice':
+      return <ChoiceSlide slide={normalized} alreadyAnswered={alreadyAnswered} alreadyCorrect={alreadyCorrect} onSubmit={handleSubmit} />;
+    case 'fillblank':
+      return <FillBlankSlide slide={normalized} alreadyAnswered={alreadyAnswered} alreadyCorrect={alreadyCorrect} onSubmit={handleSubmit} />;
+    case 'cards':    return <CardsSlide slide={normalized} />;
+    case 'match':
+      return <MatchSlide slide={normalized} alreadyAnswered={alreadyAnswered} alreadyCorrect={alreadyCorrect} onSubmit={handleSubmit} />;
+    case 'order':
+      return <OrderSlide slide={normalized} alreadyAnswered={alreadyAnswered} alreadyCorrect={alreadyCorrect} onSubmit={handleSubmit} />;
+    case 'table':    return <TableSlide slide={normalized} />;
+    case 'divider':  return <DividerSlide slide={normalized} />;
+    case 'chart':    return <ChartSlide slide={normalized} />;
+    case 'diagram':  return <DiagramSlide slide={normalized} />;
+    case 'embed':    return <EmbedSlide slide={normalized} />;
+    case 'hotspot':
+      return <HotspotSlide slide={normalized} alreadyAnswered={alreadyAnswered} alreadyCorrect={alreadyCorrect} onSubmit={handleSubmit} />;
+    case 'timeline':
+      return <TimelineSlide slide={normalized} alreadyAnswered={alreadyAnswered} alreadyCorrect={alreadyCorrect} onSubmit={handleSubmit} />;
+    case 'desmos':   return <DesmosSlide slide={normalized} />;
+    default:         return <UnsupportedSlide slide={normalized} />;
+  }
+}
+
+export default function SlideRenderer({ slide, variant = '', alreadyAnswered = false, alreadyCorrect = false, onSubmit }) {
   const normalized = useMemo(() => normalizeSlide(slide), [slide]);
   if (!normalized) return null;
 
-  const noop = () => {};
-  const handleSubmit = onSubmit || noop;
+  const handleSubmit = onSubmit || (() => {});
+  const el = buildSlideContent(normalized, { handleSubmit, alreadyAnswered, alreadyCorrect });
 
-  switch (normalized.type) {
-    case 'text':
-      return <TextSlide slide={normalized} />;
-    case 'media':
-      return <MediaSlide slide={normalized} />;
-    case 'choice':
-      return (
-        <ChoiceSlide
-          slide={normalized}
-          alreadyAnswered={alreadyAnswered}
-          alreadyCorrect={alreadyCorrect}
-          onSubmit={handleSubmit}
-        />
-      );
-    case 'fillblank':
-      return (
-        <FillBlankSlide
-          slide={normalized}
-          alreadyAnswered={alreadyAnswered}
-          alreadyCorrect={alreadyCorrect}
-          onSubmit={handleSubmit}
-        />
-      );
-    case 'cards':
-      return <CardsSlide slide={normalized} />;
-    case 'match':
-      return (
-        <MatchSlide
-          slide={normalized}
-          alreadyAnswered={alreadyAnswered}
-          alreadyCorrect={alreadyCorrect}
-          onSubmit={handleSubmit}
-        />
-      );
-    case 'order':
-      return (
-        <OrderSlide
-          slide={normalized}
-          alreadyAnswered={alreadyAnswered}
-          alreadyCorrect={alreadyCorrect}
-          onSubmit={handleSubmit}
-        />
-      );
-    case 'table':
-      return <TableSlide slide={normalized} />;
-    case 'divider':
-      return <DividerSlide slide={normalized} />;
-    case 'chart':
-      return <ChartSlide slide={normalized} />;
-    case 'diagram':
-      return <DiagramSlide slide={normalized} />;
-    case 'embed':
-      return <EmbedSlide slide={normalized} />;
-    case 'hotspot':
-      return (
-        <HotspotSlide
-          slide={normalized}
-          alreadyAnswered={alreadyAnswered}
-          alreadyCorrect={alreadyCorrect}
-          onSubmit={handleSubmit}
-        />
-      );
-    case 'timeline':
-      return (
-        <TimelineSlide
-          slide={normalized}
-          alreadyAnswered={alreadyAnswered}
-          alreadyCorrect={alreadyCorrect}
-          onSubmit={handleSubmit}
-        />
-      );
-    case 'desmos':
-      return <DesmosSlide slide={normalized} />;
-    default:
-      return <UnsupportedSlide slide={normalized} />;
+  // variant="player": this component is inside LessonPlayer (or the preview modal).
+  // Full-bleed types fill the entire canvas and manage their own padding.
+  // All other types get a padded, internally-scrollable container so the nav
+  // controls outside the canvas are never obscured.
+  if (variant === 'player') {
+    if (FULL_BLEED_TYPES.has(normalized.type)) return el;
+    return (
+      <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5 md:px-8 md:py-8 lg:px-12 lg:py-12 flex flex-col">
+        {el}
+      </div>
+    );
   }
+
+  // Default (Revision panel, etc.): return the element as-is; the caller
+  // provides its own padding and scroll container.
+  return el;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -1052,14 +1023,14 @@ function ChartSlide({ slide }) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto w-full flex flex-col gap-4">
-      {title && <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary"><MathText>{title}</MathText></h3>}
-      <div className="rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-6">
-        <ResponsiveContainer width="100%" height={320}>
+    <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col gap-4">
+      {title && <h3 className="shrink-0 text-lg md:text-xl font-display font-semibold text-text-primary"><MathText>{title}</MathText></h3>}
+      <div className="flex-1 min-h-[200px] rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-6">
+        <ResponsiveContainer width="100%" height="100%">
           {chartContent()}
         </ResponsiveContainer>
       </div>
-      {caption && <p className="text-center text-sm font-serif italic text-text-muted">{caption}</p>}
+      {caption && <p className="shrink-0 text-center text-sm font-serif italic text-text-muted">{caption}</p>}
     </div>
   );
 }
@@ -1116,15 +1087,17 @@ function DiagramSlide({ slide }) {
   }, [slide.code, id]);
 
   return (
-    <div className="max-w-3xl mx-auto w-full flex flex-col gap-4">
-      <Kicker>Diagram</Kicker>
-      <div className="relative rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-8 overflow-x-auto min-h-[180px] flex items-center justify-center">
+    <div className="h-full flex flex-col px-5 py-4 md:px-8 md:py-6 lg:px-12 lg:py-8">
+      <div className="shrink-0 mb-2"><Kicker>Diagram</Kicker></div>
+      {/* flex-1 lets the diagram fill remaining canvas height.
+          overflow-auto allows panning wide/tall diagrams without outer scroll. */}
+      <div className="flex-1 min-h-0 relative rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-6 overflow-auto flex items-center justify-center">
         {error ? (
           <p className="text-sm text-rose-500 font-mono">{error}</p>
         ) : (
           <>
             {status === 'loading' && (
-              <div className="absolute flex flex-col items-center gap-3 text-text-dim">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-text-dim">
                 <span className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                 <span className="text-[11px] uppercase tracking-[0.2em] font-bold">Rendering diagram…</span>
               </div>
@@ -1137,7 +1110,7 @@ function DiagramSlide({ slide }) {
           </>
         )}
       </div>
-      {slide.caption && <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+      {slide.caption && <p className="shrink-0 mt-2 text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}
     </div>
   );
 }
@@ -1167,12 +1140,15 @@ function isEmbeddableUrl(url) {
 }
 
 function EmbedSlide({ slide }) {
-  const aspectClass = ASPECT_CLASSES[slide.aspect] || 'aspect-video';
   const embeddable = isEmbeddableUrl(slide.url);
   return (
-    <div className="max-w-5xl mx-auto w-full flex flex-col gap-4">
-      {slide.title && <Kicker>{slide.title}</Kicker>}
-      <div className={`w-full ${aspectClass} rounded-2xl overflow-hidden border border-line-soft shadow-sm`}>
+    <div className="h-full flex flex-col">
+      {slide.title && (
+        <div className="shrink-0 px-5 pt-4 pb-1 md:px-8">
+          <Kicker>{slide.title}</Kicker>
+        </div>
+      )}
+      <div className="flex-1 min-h-0 overflow-hidden">
         {embeddable ? (
           <iframe
             src={slide.url}
@@ -1195,7 +1171,11 @@ function EmbedSlide({ slide }) {
           </div>
         )}
       </div>
-      {slide.caption && <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+      {slide.caption && (
+        <p className="shrink-0 px-5 py-2 md:px-8 text-center text-sm font-serif italic text-text-muted">
+          {slide.caption}
+        </p>
+      )}
     </div>
   );
 }
@@ -1420,8 +1400,8 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
    ────────────────────────────────────────────────────────────────────────── */
 
 function DesmosSlide({ slide }) {
-  // Stable references so DesmosCalculator's second useEffect doesn't fire on
-  // every parent re-render (slide.expressions || [] creates a new array each time).
+  // Stable references so DesmosCalculator's reactive useEffect doesn't fire
+  // on every parent re-render (slide.expressions || [] creates a new array).
   const expressions = useMemo(
     () => (Array.isArray(slide.expressions) && slide.expressions.length > 0 ? slide.expressions : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1434,18 +1414,17 @@ function DesmosSlide({ slide }) {
   );
 
   return (
-    <div className="max-w-4xl mx-auto w-full flex flex-col gap-4">
+    <div className="h-full flex flex-col">
       {slide.title && (
-        <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">
-          <MathText>{slide.title}</MathText>
-        </h3>
+        <div className="shrink-0 px-5 pt-4 pb-1 md:px-8">
+          <h3 className="text-lg md:text-xl font-display font-semibold text-text-primary">
+            <MathText>{slide.title}</MathText>
+          </h3>
+        </div>
       )}
-      {/* Use a concrete height so Desmos can measure the container correctly.
-          h-full/flex-1 chains don't resolve when ancestors only have min-height. */}
-      <div
-        className="rounded-2xl border border-line-soft overflow-hidden"
-        style={{ height: 'clamp(380px, calc(100dvh - 260px), 640px)' }}
-      >
+      {/* flex-1 min-h-0 lets Desmos fill the remaining canvas height.
+          The parent chain is all flex-col so this resolves correctly. */}
+      <div className="flex-1 min-h-0 overflow-hidden">
         <DesmosCalculator
           mode="graphing"
           expressions={expressions}
@@ -1454,9 +1433,11 @@ function DesmosSlide({ slide }) {
         />
       </div>
       {slide.caption && (
-        <p className="text-center text-sm font-serif italic text-text-muted">
-          <MathText>{slide.caption}</MathText>
-        </p>
+        <div className="shrink-0 px-5 py-2 md:px-8">
+          <p className="text-center text-sm font-serif italic text-text-muted">
+            <MathText>{slide.caption}</MathText>
+          </p>
+        </div>
       )}
     </div>
   );
