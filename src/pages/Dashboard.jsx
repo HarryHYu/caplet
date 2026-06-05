@@ -67,6 +67,15 @@ export default function Dashboard() {
     const lastAccessed = userProgress?.sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt))[0];
     const lastAccessedCourse = lastAccessed ? courses.find(c => c.id === lastAccessed.courseId) : null;
 
+    // Compute real course progress percentage from local lesson data (no extra API call needed).
+    const lastCourseAllLessons = (lastAccessedCourse?.modules || []).flatMap(m => m.lessons || []);
+    const lastCourseCompleted = userProgress.filter(
+        p => String(p.courseId) === String(lastAccessedCourse?.id) && p.status === 'completed' && p.lessonId
+    ).length;
+    const lastCoursePct = lastCourseAllLessons.length > 0
+        ? Math.round((lastCourseCompleted / lastCourseAllLessons.length) * 100)
+        : 0;
+
     const getGreeting = () => {
         const hour = new Date().getHours();
         if (hour >= 5 && hour < 12) return 'Good morning';
@@ -98,7 +107,7 @@ export default function Dashboard() {
                         { label: 'Modules Active', value: inProgressCourses.length, icon: BookOpenIcon },
                         { label: 'Completed', value: completedCourses.length, icon: CheckCircleIcon },
                         { label: 'Academy Classes', value: classes.length, icon: AcademicCapIcon },
-                        { label: 'Activity Index', value: 'High', icon: FireIcon }
+                        { label: 'Saved Slides', value: savedSlides.length, icon: BookmarkIcon }
                     ].map((stat) => (
                         <div key={stat.label} className="bg-surface-body p-10 group hover:bg-surface-raised transition-colors">
                             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-8 flex justify-between items-center group-hover:text-accent transition-colors">
@@ -133,11 +142,11 @@ export default function Dashboard() {
                                             <div className="w-full bg-surface-soft h-1 mb-8 overflow-hidden">
                                                 <div
                                                     className="bg-accent h-full transition-all duration-1000 ease-out"
-                                                    style={{ width: `${lastAccessed.progressPercentage}%` }}
+                                                    style={{ width: `${lastCoursePct}%` }}
                                                 />
                                             </div>
                                             <div className="flex justify-between items-end">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Progress: {lastAccessed.progressPercentage}%</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Progress: {lastCoursePct}%</span>
                                                 <Link to={`/courses/${lastAccessedCourse.id}`} className="btn-primary py-3 px-8 text-[15px]">
                                                     Continue Module
                                                 </Link>

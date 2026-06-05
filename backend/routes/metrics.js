@@ -1,10 +1,11 @@
 /**
  * Public metrics endpoint — aggregated platform statistics.
- * No auth required; useful for transparency and public dashboards.
+ * Not linked in the UI; accessible by direct URL only.
  */
 const express = require('express');
 const { Op } = require('sequelize');
 const {
+  sequelize,
   User,
   Course,
   Module,
@@ -15,6 +16,8 @@ const {
   ClassMembership,
   Assignment,
   AssignmentSubmission,
+  SavedSlide,
+  ChatMessage,
 } = require('../models');
 
 const router = express.Router();
@@ -22,16 +25,13 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const now = new Date();
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneWeekAgo  = new Date(now.getTime() - 7  * 24 * 60 * 60 * 1000);
     const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    // Users
+    // ── Users ──────────────────────────────────────────────────────────────
     const [totalUsers, usersByRole, usersThisWeek, usersThisMonth] = await Promise.all([
       User.count(),
-      User.findAll({
-        attributes: ['role'],
-        raw: true,
-      }).then((rows) => {
+      User.findAll({ attributes: ['role'], raw: true }).then((rows) => {
         const map = { student: 0, instructor: 0, admin: 0 };
         rows.forEach((r) => { map[r.role] = (map[r.role] || 0) + 1; });
         return map;
@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
       User.count({ where: { createdAt: { [Op.gte]: oneMonthAgo } } }),
     ]);
 
-    // Content
+    // ── Content ────────────────────────────────────────────────────────────
     const [totalCourses, publishedCourses, totalModules, totalLessons, publishedLessons] = await Promise.all([
       Course.count(),
       Course.count({ where: { isPublished: true } }),
@@ -49,35 +49,49 @@ router.get('/', async (req, res) => {
       Lesson.count({ where: { isPublished: true } }),
     ]);
 
-    // Progress (lesson completions, in-progress, etc.)
-    const progressCounts = await UserProgress.findAll({
-      attributes: ['status'],
-      raw: true,
-    }).then((rows) => {
-      const map = { not_started: 0, in_progress: 0, completed: 0 };
-      rows.forEach((r) => { map[r.status] = (map[r.status] || 0) + 1; });
-      return map;
-    });
+    // Count total individual slides stored across all lessons (Postgres JSONB).
+    let totalSlides = 0;
+    try {
+      const dialect = sequelize.getDialect();
+      if (dialect === 'postgres') {
+        const [[row]] = await sequelize.query(`
+          SELECT COALESCE(SUM(jsonb_array_length(slides)), 0)::int AS total
+          FROM lessons
+          WHERE slides IS NOT NULL
+            AND jsonb_typeof(slides) = 'array'
+        `);
+        totalSlides = row?.total ?? 0;
+      } else {
+        // SQLite — iterate in memory
+        const rows = await Lesson.findAll({ attributes: ['slides'], raw: true });
+        for (const r of rows) {
+          const s = typeof r.slides === 'string' ? (() => { try { return JSON.parse(r.slides); } catch { return null; } })() : r.slides;
+          if (Array.isArray(s)) totalSlides += s.length;
+        }
+      }
+    } catch { /* non-fatal */ }
 
-    const lessonsCompletedThisWeek = await UserProgress.count({
-      where: {
-        status: 'completed',
-        completedAt: { [Op.gte]: oneWeekAgo },
-      },
-    });
+    // ── Progress ───────────────────────────────────────────────────────────
+    const progressCounts = await UserProgress.findAll({ attributes: ['status'], raw: true })
+      .then((rows) => {
+        const map = { not_started: 0, in_progress: 0, completed: 0 };
+        rows.forEach((r) => { map[r.status] = (map[r.status] || 0) + 1; });
+        return map;
+      });
 
-    const uniqueUsersWithProgress = await UserProgress.count({
-      distinct: true,
-      col: 'userId',
-    });
+    const [lessonsCompletedThisWeek, uniqueUsersWithProgress, uniqueUsersCompleted, totalMinutesSpent] = await Promise.all([
+      UserProgress.count({
+        where: { status: 'completed', completedAt: { [Op.gte]: oneWeekAgo } },
+      }),
+      UserProgress.count({ distinct: true, col: 'userId' }),
+      UserProgress.count({ distinct: true, col: 'userId', where: { status: 'completed' } }),
+      UserProgress.sum('timeSpent').then((v) => v || 0),
+    ]);
 
-    const uniqueUsersCompleted = await UserProgress.count({
-      distinct: true,
-      col: 'userId',
-      where: { status: 'completed' },
-    });
+    // ── Saved slides ───────────────────────────────────────────────────────
+    const totalSavedSlides = await SavedSlide.count();
 
-    // Classes & assignments
+    // ── Classes & assignments ──────────────────────────────────────────────
     const [totalClasses, totalClassMembers, totalAssignments, assignmentCompletions] = await Promise.all([
       Classroom.count(),
       ClassMembership.count(),
@@ -85,7 +99,13 @@ router.get('/', async (req, res) => {
       AssignmentSubmission.count({ where: { status: 'completed' } }),
     ]);
 
-    // Survey
+    // ── Chat (AI assistant messages) ───────────────────────────────────────
+    let totalChatMessages = 0;
+    try {
+      totalChatMessages = await ChatMessage.count();
+    } catch { /* table might not exist in some envs */ }
+
+    // ── Survey ─────────────────────────────────────────────────────────────
     let surveyTotal = 0;
     let surveyConfidence = 0;
     try {
@@ -94,40 +114,28 @@ router.get('/', async (req, res) => {
       if (surveys.length > 0) {
         surveyConfidence = (surveys.reduce((s, x) => s + (x.confidence || 0), 0) / surveys.length).toFixed(1);
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
 
-    // Top courses by completions (approximate via progress)
-    const courseProgress = await UserProgress.findAll({
+    // ── Top courses by completions ─────────────────────────────────────────
+    const courseProgressRows = await UserProgress.findAll({
       where: { status: 'completed', courseId: { [Op.ne]: null } },
       attributes: ['courseId'],
       raw: true,
     }).then((rows) => {
       const map = {};
-      rows.forEach((r) => {
-        const id = r.courseId;
-        map[id] = (map[id] || 0) + 1;
-      });
+      rows.forEach((r) => { map[r.courseId] = (map[r.courseId] || 0) + 1; });
       return Object.entries(map)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10)
         .map(([id, count]) => ({ courseId: id, completions: count }));
     });
 
-    const courseIds = courseProgress.map((c) => c.courseId);
+    const courseIds = courseProgressRows.map((c) => c.courseId);
     const coursesById = courseIds.length
-      ? (await Course.findAll({
-          where: { id: courseIds },
-          attributes: ['id', 'title'],
-          raw: true,
-        })).reduce((acc, c) => {
-          acc[c.id] = c.title;
-          return acc;
-        }, {})
+      ? (await Course.findAll({ where: { id: courseIds }, attributes: ['id', 'title'], raw: true }))
+          .reduce((acc, c) => { acc[c.id] = c.title; return acc; }, {})
       : {};
-
-    const topCourses = courseProgress.map((c) => ({
+    const topCourses = courseProgressRows.map((c) => ({
       title: coursesById[c.courseId] || 'Unknown',
       completions: c.completions,
     }));
@@ -144,6 +152,7 @@ router.get('/', async (req, res) => {
         courses: { total: totalCourses, published: publishedCourses },
         modules: totalModules,
         lessons: { total: totalLessons, published: publishedLessons },
+        totalSlides,
       },
       progress: {
         lessonsCompleted: progressCounts.completed || 0,
@@ -153,6 +162,11 @@ router.get('/', async (req, res) => {
         lessonsCompletedThisWeek,
         uniqueUsersWithProgress,
         uniqueUsersCompleted,
+        totalMinutesSpent,
+      },
+      engagement: {
+        savedSlides: totalSavedSlides,
+        chatMessages: totalChatMessages,
       },
       classes: {
         total: totalClasses,

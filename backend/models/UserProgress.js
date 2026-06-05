@@ -35,14 +35,6 @@ const UserProgress = sequelize.define('UserProgress', {
     type: DataTypes.ENUM('not_started', 'in_progress', 'completed'),
     defaultValue: 'not_started'
   },
-  progressPercentage: {
-    type: DataTypes.DECIMAL(5, 2),
-    defaultValue: 0.00,
-    validate: {
-      min: 0,
-      max: 100
-    }
-  },
   timeSpent: {
     type: DataTypes.INTEGER, // in minutes
     defaultValue: 0

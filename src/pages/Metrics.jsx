@@ -1,359 +1,267 @@
 import { useEffect, useState } from 'react';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 
-const COLORS = ['#0050FF', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6'];
+/* ── tiny helpers ─────────────────────────────────────────────────────────── */
 
-const StatCard = ({ label, value, sub, icon, accent }) => (
-  <div
-    className={`p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${
-      accent
-        ? 'border-accent bg-accent/5 dark:bg-accent/10'
-        : 'border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body'
-    }`}
-  >
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim dark:text-text-dim mb-1">
-          {label}
-        </p>
-        <p
-          className={`text-3xl md:text-4xl font-extrabold tracking-tight ${
-            accent ? 'text-accent' : 'text-text-primary dark:text-text-primary'
-          }`}
-        >
-          {value}
-        </p>
-        {sub && (
-          <p className="text-xs font-medium text-text-dim dark:text-text-dim mt-2">{sub}</p>
-        )}
-      </div>
-      {icon && (
-        <div className="p-3 rounded-xl bg-surface-soft dark:bg-text-primary/50 text-text-dim">
-          {icon}
-        </div>
-      )}
-    </div>
-  </div>
-);
+function fmtMinutes(mins) {
+  if (!mins) return '0 min';
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
 
-const Metrics = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+function fmtNum(n) {
+  if (n === null || n === undefined) return '—';
+  return Number(n).toLocaleString();
+}
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.getMetrics();
-        setData(res);
-      } catch (err) {
-        setError(err.message || 'Failed to load metrics');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-    const interval = setInterval(load, 60000); // Refresh every minute
-    return () => clearInterval(interval);
-  }, []);
+function timeAgo(iso) {
+  if (!iso) return '';
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <CapletLoader message="Loading metrics…" />
-      </div>
-    );
-  }
+/* ── stat block (editorial grid cell) ────────────────────────────────────── */
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-500 dark:text-red-400 font-bold">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  const progressPieData = [
-    { name: 'Completed', value: data.progress.lessonsCompleted || 0, color: COLORS[1] },
-    { name: 'In Progress', value: data.progress.inProgress || 0, color: COLORS[0] },
-    { name: 'Not Started', value: data.progress.notStarted || 0, color: COLORS[7] },
-  ].filter((d) => d.value > 0);
-
-  const usersByRoleData = Object.entries(data.users.byRole || {}).map(([name, value], i) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    value,
-    color: COLORS[i % COLORS.length],
-  }));
-
+function StatCell({ label, value, sub, accent }) {
   return (
-    <div className="min-h-screen bg-surface-body py-32 pb-32 selection:bg-accent selection:text-white">
-      <div className="container-custom">
-        {/* Hero */}
-        <section className="mb-16">
-          <span className="section-kicker mb-4">Platform Analytics</span>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-text-primary dark:text-text-primary mb-4 tracking-tighter uppercase">
-            Live <br />
-            <span className="text-accent">Metrics.</span>
-          </h1>
-          <p className="text-xl text-text-dim dark:text-text-dim max-w-2xl font-medium">
-            Real-time platform statistics. Updated every 60 seconds.
-          </p>
-          {data.generatedAt && (
-            <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-text-dim">
-              Last updated: {new Date(data.generatedAt).toLocaleString()}
-            </p>
-          )}
-        </section>
+    <div className={`bg-surface-body p-10 group hover:bg-surface-raised transition-colors ${accent ? 'border-t-2 border-accent' : ''}`}>
+      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-8 group-hover:text-accent transition-colors">
+        {label}
+      </p>
+      <p className={`text-5xl font-serif italic transition-transform duration-500 group-hover:translate-x-2 ${accent ? 'text-accent' : 'text-text-primary'}`}>
+        {value}
+      </p>
+      {sub && <p className="mt-4 text-xs font-medium text-text-dim">{sub}</p>}
+    </div>
+  );
+}
 
-        {/* Key stats — big numbers */}
-        <section className="mb-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            label="Total Users"
-            value={data.users?.total ?? 0}
-            sub={`+${data.users?.newThisWeek ?? 0} this week`}
-            accent
-            icon={
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            }
-          />
-          <StatCard
-            label="Lessons Completed"
-            value={data.progress?.lessonsCompleted ?? 0}
-            sub={`${data.progress?.uniqueUsersCompleted ?? 0} users completed at least one`}
-            icon={
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            }
-          />
-          <StatCard
-            label="Courses"
-            value={data.content?.courses?.published ?? 0}
-            sub={`${data.content?.courses?.total ?? 0} total`}
-            icon={
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            }
-          />
-          <StatCard
-            label="Classes"
-            value={data.classes?.total ?? 0}
-            sub={`${data.classes?.totalMembers ?? 0} total members`}
-            icon={
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            }
-          />
-        </section>
+/* ── inline bar (replaces pie for role breakdown) ────────────────────────── */
 
-        {/* Secondary stats grid */}
-        <section className="mb-20">
-          <h2 className="text-2xl font-extrabold text-text-primary dark:text-text-primary mb-8 uppercase tracking-tight">
-            Content & Engagement
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Modules</p>
-              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.content?.modules ?? 0}</p>
-            </div>
-            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Lessons</p>
-              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.content?.lessons?.published ?? 0}</p>
-            </div>
-            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">In Progress</p>
-              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.progress?.inProgress ?? 0}</p>
-            </div>
-            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">This Week</p>
-              <p className="text-2xl font-extrabold text-accent">{data.progress?.lessonsCompletedThisWeek ?? 0}</p>
-            </div>
-            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Assignments</p>
-              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.assignments?.total ?? 0}</p>
-            </div>
-            <div className="p-4 rounded-xl border border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Completed</p>
-              <p className="text-2xl font-extrabold text-text-primary dark:text-text-primary">{data.assignments?.completions ?? 0}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Users breakdown */}
-        <section className="mb-20">
-          <h2 className="text-2xl font-extrabold text-text-primary dark:text-text-primary mb-8 uppercase tracking-tight">
-            Users
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
-                By Role
-              </h3>
-              {usersByRoleData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={usersByRoleData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {usersByRoleData.map((entry, i) => (
-                        <Cell key={i} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-text-dim py-8 text-center">No user data</p>
-              )}
-            </div>
-            <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
-                Growth
-              </h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-line-soft dark:border-line-soft">
-                  <span className="text-text-muted dark:text-text-dim">New this week</span>
-                  <span className="text-xl font-extrabold text-accent">{data.users?.newThisWeek ?? 0}</span>
-                </div>
-                <div className="flex justify-between items-center py-3 border-b border-line-soft dark:border-line-soft">
-                  <span className="text-text-muted dark:text-text-dim">New this month</span>
-                  <span className="text-xl font-extrabold text-text-primary dark:text-text-primary">{data.users?.newThisMonth ?? 0}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Progress breakdown & Top courses */}
-        <section className="mb-20 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
-              Progress Distribution
-            </h3>
-            {progressPieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie
-                    data={progressPieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {progressPieData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-text-dim py-8 text-center">No progress data yet</p>
-            )}
-          </div>
-          <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
-              Top Courses by Completions
-            </h3>
-            {data.topCourses?.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart
-                  data={data.topCourses}
-                  layout="vertical"
-                  margin={{ top: 0, right: 20, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272A" opacity={0.3} />
-                  <XAxis type="number" tick={{ fill: '#71717A', fontSize: 10 }} />
-                  <YAxis
-                    dataKey="title"
-                    type="category"
-                    width={120}
-                    tick={{ fill: '#71717A', fontSize: 9 }}
-                    tickFormatter={(v) => (v.length > 18 ? v.slice(0, 18) + '…' : v)}
-                  />
-                  <Tooltip />
-                  <Bar dataKey="completions" fill="#0050FF" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-text-dim py-8 text-center">No completion data yet</p>
-            )}
-          </div>
-        </section>
-
-        {/* Survey & Misc */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
-              Survey Responses
-            </h3>
-            <div className="flex items-baseline gap-4">
-              <span className="text-4xl font-extrabold text-text-primary dark:text-text-primary">
-                {data.survey?.totalResponses ?? 0}
-              </span>
-              <span className="text-text-dim">responses</span>
-            </div>
-            {data.survey?.averageConfidence > 0 && (
-              <p className="mt-2 text-sm text-text-dim">
-                Avg. confidence: {data.survey.averageConfidence}/10
-              </p>
-            )}
-          </div>
-          <div className="p-6 rounded-2xl border-2 border-line-soft dark:border-line-soft bg-surface-raised dark:bg-surface-body">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-text-dim mb-4">
-              Engagement Reach
-            </h3>
-            <div className="space-y-2">
-              <p>
-                <span className="text-text-dim">Users with any progress:</span>{' '}
-                <span className="font-bold text-text-primary dark:text-text-primary">
-                  {data.progress?.uniqueUsersWithProgress ?? 0}
-                </span>
-              </p>
-              <p>
-                <span className="text-text-dim">Total progress records:</span>{' '}
-                <span className="font-bold text-text-primary dark:text-text-primary">
-                  {data.progress?.totalRecords ?? 0}
-                </span>
-              </p>
-            </div>
-          </div>
-        </section>
+function InlineBar({ label, value, total, color }) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div className="py-6 border-b border-line-soft last:border-0">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-xs font-bold uppercase tracking-widest text-text-muted">{label}</span>
+        <span className="text-sm font-bold text-text-primary">{fmtNum(value)} <span className="text-text-dim font-normal">({pct}%)</span></span>
+      </div>
+      <div className="h-1 bg-surface-soft overflow-hidden rounded-full">
+        <div className="h-full transition-all duration-1000 ease-out rounded-full" style={{ width: `${pct}%`, background: color }} />
       </div>
     </div>
   );
-};
+}
 
-export default Metrics;
+/* ── main component ───────────────────────────────────────────────────────── */
+
+export default function Metrics() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(null);
+
+  const load = async () => {
+    try {
+      const res = await api.getMetrics();
+      setData(res);
+      setLastRefresh(new Date());
+      setError(null);
+    } catch (err) {
+      setError(err.message || 'Failed to load metrics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-surface-body">
+      <CapletLoader message="Loading metrics…" />
+    </div>
+  );
+
+  if (error) return (
+    <div className="min-h-screen flex items-center justify-center bg-surface-body">
+      <p className="text-text-muted font-mono text-sm">{error}</p>
+    </div>
+  );
+
+  if (!data) return null;
+
+  const totalUsers = data.users?.total ?? 0;
+  const roleData = Object.entries(data.users?.byRole || {})
+    .map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }));
+
+  const topCourses = (data.topCourses || []).map((c, i) => ({ ...c, fill: i === 0 ? '#0050FF' : '#3B82F6' }));
+
+  const completionRate = data.progress?.uniqueUsersWithProgress
+    ? Math.round((data.progress.uniqueUsersCompleted / data.progress.uniqueUsersWithProgress) * 100)
+    : 0;
+
+  return (
+    <div className="min-h-screen bg-surface-body text-text-primary py-32 selection:bg-accent selection:text-white">
+      <div className="container-custom">
+
+        {/* ── header ── */}
+        <header className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div>
+            <span className="section-kicker">Platform Analytics</span>
+            <h1 className="text-5xl md:text-7xl">
+              Caplet<br />
+              <span className="font-serif italic">Metrics.</span>
+            </h1>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">Auto-refreshes every 60s</p>
+            {lastRefresh && (
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mt-1">
+                Updated {timeAgo(lastRefresh)}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={load}
+              className="mt-4 text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-0.5 hover:text-text-primary hover:border-text-primary transition-colors"
+            >
+              Refresh now
+            </button>
+          </div>
+        </header>
+
+        {/* ── tier 1: hero numbers ── */}
+        <section className="mb-24">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-line-soft border border-line-soft">
+            <StatCell label="Total Users" value={fmtNum(totalUsers)} sub={`+${data.users?.newThisWeek ?? 0} this week`} accent />
+            <StatCell label="Lessons Completed" value={fmtNum(data.progress?.lessonsCompleted)} sub={`${data.progress?.lessonsCompletedThisWeek ?? 0} in the last 7 days`} />
+            <StatCell label="Published Courses" value={fmtNum(data.content?.courses?.published)} sub={`${data.content?.courses?.total ?? 0} total incl. drafts`} />
+            <StatCell label="Slides Created" value={fmtNum(data.content?.totalSlides)} sub={`across ${data.content?.lessons?.total ?? 0} lessons`} />
+          </div>
+        </section>
+
+        {/* ── tier 2: secondary numbers ── */}
+        <section className="mb-24">
+          <span className="section-kicker">Breakdown</span>
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-line-soft border border-line-soft">
+            {[
+              { label: 'New this month', value: fmtNum(data.users?.newThisMonth) },
+              { label: 'Modules', value: fmtNum(data.content?.modules) },
+              { label: 'In Progress', value: fmtNum(data.progress?.inProgress) },
+              { label: 'Saved Slides', value: fmtNum(data.engagement?.savedSlides) },
+              { label: 'Classes', value: fmtNum(data.classes?.total) },
+              { label: 'Class Members', value: fmtNum(data.classes?.totalMembers) },
+              { label: 'Assignments', value: fmtNum(data.assignments?.total) },
+              { label: 'Assignments Done', value: fmtNum(data.assignments?.completions) },
+              { label: 'Chat Messages', value: fmtNum(data.engagement?.chatMessages) },
+              { label: 'Time Spent', value: fmtMinutes(data.progress?.totalMinutesSpent) },
+              { label: 'Survey Responses', value: fmtNum(data.survey?.totalResponses) },
+              { label: 'Avg Confidence', value: data.survey?.averageConfidence > 0 ? `${data.survey.averageConfidence}/10` : '—' },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-surface-body p-6 hover:bg-surface-raised transition-colors group">
+                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-text-dim mb-4 group-hover:text-accent transition-colors">{label}</p>
+                <p className="text-2xl font-serif italic text-text-primary">{value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── tier 3: users × engagement ── */}
+        <section className="mb-24 grid grid-cols-1 lg:grid-cols-2 gap-px bg-line-soft border border-line-soft">
+
+          {/* users by role */}
+          <div className="bg-surface-body p-10">
+            <span className="section-kicker">Users by Role</span>
+            <div className="mt-6">
+              <InlineBar label="Students" value={data.users?.byRole?.student ?? 0} total={totalUsers} color="#0050FF" />
+              <InlineBar label="Instructors" value={data.users?.byRole?.instructor ?? 0} total={totalUsers} color="#10B981" />
+              <InlineBar label="Admins" value={data.users?.byRole?.admin ?? 0} total={totalUsers} color="#F59E0B" />
+            </div>
+          </div>
+
+          {/* engagement reach */}
+          <div className="bg-surface-body p-10">
+            <span className="section-kicker">Engagement Reach</span>
+            <div className="mt-6 space-y-0">
+              {[
+                { label: 'Users with any progress', value: data.progress?.uniqueUsersWithProgress ?? 0 },
+                { label: 'Users completed ≥1 lesson', value: data.progress?.uniqueUsersCompleted ?? 0 },
+                { label: 'Lesson completion rate', value: `${completionRate}%` },
+                { label: 'Total progress records', value: fmtNum(data.progress?.totalRecords) },
+              ].map(({ label, value }) => (
+                <div key={label} className="py-5 border-b border-line-soft last:border-0 flex justify-between items-center">
+                  <span className="text-xs font-medium text-text-muted">{label}</span>
+                  <span className="text-lg font-serif italic text-text-primary">{fmtNum(value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── tier 4: top courses bar chart ── */}
+        {topCourses.length > 0 && (
+          <section className="mb-24">
+            <span className="section-kicker">Top Courses</span>
+            <p className="text-sm text-text-dim mb-8 mt-2">Ranked by total lesson completions.</p>
+            <div className="border border-line-soft bg-surface-body p-10">
+              <ResponsiveContainer width="100%" height={Math.max(180, topCourses.length * 44)}>
+                <BarChart
+                  data={topCourses}
+                  layout="vertical"
+                  margin={{ top: 0, right: 24, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line-soft)" opacity={0.4} horizontal={false} />
+                  <XAxis type="number" tick={{ fill: 'var(--color-text-dim)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis
+                    dataKey="title"
+                    type="category"
+                    width={150}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tickFormatter={(v) => (v.length > 22 ? v.slice(0, 22) + '…' : v)}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--color-surface-raised)',
+                      border: '1px solid var(--color-line-soft)',
+                      borderRadius: 0,
+                      fontSize: 12,
+                    }}
+                    cursor={{ fill: 'var(--color-surface-raised)' }}
+                  />
+                  <Bar dataKey="completions" radius={0} maxBarSize={20}>
+                    {topCourses.map((_, i) => (
+                      <Cell key={i} fill={i === 0 ? '#0050FF' : '#27272A'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+        )}
+
+        {/* ── footer stamp ── */}
+        <footer className="border-t border-line-soft pt-8 text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim flex justify-between">
+          <span>Caplet · Internal Analytics</span>
+          <span>{data.generatedAt ? new Date(data.generatedAt).toLocaleString() : ''}</span>
+        </footer>
+
+      </div>
+    </div>
+  );
+}
