@@ -138,25 +138,6 @@ router.get('/:courseId/lessons/:lessonId', async (req, res) => {
   }
 });
 
-// Get single course with lessons
-router.get('/:id', async (req, res) => {
-  try {
-    const course = await Course.findOne({
-      where: { id: req.params.id },
-      include: includeModulesWithLessons()
-    });
-
-    if (!course || !course.isPublished) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-
-    res.json({ course: sortCourseContent(course.toJSON ? course.toJSON() : course) });
-  } catch (error) {
-    console.error('Get course error:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
 // Get course categories
 router.get('/categories/list', async (req, res) => {
   try {
@@ -190,6 +171,25 @@ router.get('/featured/list', async (req, res) => {
     res.json({ courses: sorted });
   } catch (error) {
     console.error('Get featured courses error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get single course with lessons — must come AFTER all static paths (/categories/list etc.)
+router.get('/:id', async (req, res) => {
+  try {
+    const course = await Course.findOne({
+      where: { id: req.params.id },
+      include: includeModulesWithLessons()
+    });
+
+    if (!course || !course.isPublished) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    res.json({ course: sortCourseContent(course.toJSON ? course.toJSON() : course) });
+  } catch (error) {
+    console.error('Get course error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
