@@ -114,6 +114,9 @@ export default function Dashboard() {
                         <Link to="/shop" className="inline-flex items-center gap-1.5 text-sm font-bold text-amber-500 hover:opacity-70 transition-opacity" title="Open the shop">
                             🪙 {avatar?.coins ?? 0}
                         </Link>
+                        <Link to="/games" className="text-[10px] font-bold uppercase tracking-widest text-text-dim hover:text-accent transition-colors" title="Play games">
+                            🎮 Games →
+                        </Link>
                     </div>
                 </header>
 
