@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
 
-const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
+const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [googleLoading, setGoogleLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -52,14 +52,15 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
   const busy = googleLoading || passwordLoading;
 
   return (
-    <div className={`w-full mx-auto reveal-text ${isPage ? 'max-w-xl' : 'max-w-md'}`}>
-      <div className="mb-12">
-        <span className="section-kicker">Login</span>
-        <h2 className="text-5xl font-serif italic mb-4">
+    <div className="w-full">
+
+      {/* Heading */}
+      <div className="mb-8">
+        <h2 className="text-4xl font-display font-bold text-text-primary tracking-tight mb-2">
           Welcome back.
         </h2>
-        <p className="text-lg text-text-muted font-medium tracking-tight">
-          Use the same email for Google and password sign-in — it is one account. New here?{' '}
+        <p className="text-sm text-text-muted">
+          New here?{' '}
           {onSwitchToRegister ? (
             <button
               type="button"
@@ -69,19 +70,21 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
               Create an account
             </button>
           ) : (
-            'Create an account.'
+            <span className="text-accent font-semibold">Create an account.</span>
           )}
         </p>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg reveal-text">
-          <p className="text-sm font-medium text-red-700">{error}</p>
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 
-      <div className={`relative flex flex-col items-stretch sm:items-start gap-4 ${busy ? 'opacity-90' : ''}`}>
-        <div className={googleLoading ? 'pointer-events-none opacity-60' : ''}>
+      {/* Google */}
+      <div className={`w-full ${busy ? 'opacity-80' : ''}`}>
+        <div className={`w-full [&>div]:w-full [&>div>div]:w-full ${googleLoading ? 'pointer-events-none opacity-60' : ''}`}>
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => setError('Google sign-in was cancelled or failed.')}
@@ -89,30 +92,27 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             size="large"
             text="continue_with"
             shape="rectangular"
-            width="320"
+            width="384"
           />
         </div>
         {googleLoading && (
-          <p className="text-sm text-text-dim flex items-center gap-2">
+          <p className="text-sm text-text-dim flex items-center gap-2 mt-3">
             <span className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin inline-block" />
             Signing you in with Google…
           </p>
         )}
       </div>
 
-      <div className="my-10 flex items-center gap-4">
+      {/* Divider */}
+      <div className="my-7 flex items-center gap-4">
         <div className="flex-1 h-px bg-line-soft" />
         <span className="text-xs font-medium uppercase tracking-widest text-text-dim">or</span>
         <div className="flex-1 h-px bg-line-soft" />
       </div>
 
-      <p className="text-sm text-text-muted mb-6 leading-relaxed">
-        Signed up with Google only? Your account does not have a password yet — use Google above, or after you sign in once, open{' '}
-        <strong className="text-text-primary/80">Settings → Profile</strong> and set a password to enable email login too.
-      </p>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
+      {/* Email + password form */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1.5">
           <label htmlFor="email" className="block text-sm font-medium text-text-muted">
             Email
           </label>
@@ -124,10 +124,11 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             onChange={handleChange}
             required
             autoComplete="username"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary"
+            placeholder="you@example.com"
+            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <label htmlFor="password" className="block text-sm font-medium text-text-muted">
             Password
           </label>
@@ -139,34 +140,23 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, isPage = false }) => {
             onChange={handleChange}
             required
             autoComplete="current-password"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary"
+            placeholder="••••••••"
+            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
           />
         </div>
         <button
           type="submit"
-          disabled={passwordLoading || googleLoading}
-          className="w-full btn-primary py-4 mt-2 flex items-center justify-center gap-2 rounded-xl disabled:opacity-50"
+          disabled={busy}
+          className="w-full btn-primary py-4 text-base rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {passwordLoading ? (
             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <span className="font-semibold">Sign in with password</span>
+            <span>Sign in</span>
           )}
         </button>
       </form>
 
-      {onSwitchToRegister && (
-        <p className="mt-10 text-sm text-text-dim text-center sm:text-left">
-          No account?{' '}
-          <button
-            type="button"
-            onClick={onSwitchToRegister}
-            className="text-accent font-semibold hover:underline"
-          >
-            Sign up
-          </button>
-        </p>
-      )}
     </div>
   );
 };

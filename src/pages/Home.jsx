@@ -8,13 +8,13 @@ gsap.registerPlugin(ScrollTrigger);
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="border-b border-black/5 last:border-0">
-      <button 
+    <div className="border-b border-line-soft last:border-0">
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full py-8 flex justify-between items-center text-left group transition-all"
       >
-        <span className="text-xl md:text-2xl font-serif italic text-text-primary group-hover:text-accent-strong transition-colors">{question}</span>
-        <span className={`w-8 h-8 rounded-full border border-black/10 flex items-center justify-center transition-transform duration-300 ${isOpen ? 'rotate-180 bg-accent text-white' : ''}`}>
+        <span className="text-xl md:text-2xl font-serif italic text-text-primary group-hover:text-accent transition-colors">{question}</span>
+        <span className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isOpen ? 'rotate-180 bg-accent text-white border-transparent' : 'border-line-soft text-text-muted'}`}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
         </span>
       </button>
@@ -239,8 +239,10 @@ const Home = () => {
   return (
     <div className="bg-surface-body text-text-primary relative selection:bg-accent selection:text-white">
       {/* ================= SIMPLIFIED HERO ================= */}
-      <section ref={heroRef} className="relative pt-32 pb-24 md:pt-40 md:pb-40">
-        <div className="container-custom relative z-10 w-full text-center" ref={heroTextRef}>
+      <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden">
+        <div className="absolute inset-0 grid-technical opacity-40 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-surface-body pointer-events-none" />
+        <div className="container-custom relative z-10 w-full text-center py-32" ref={heroTextRef}>
           <div className="max-w-4xl mx-auto text-text-primary">
             <h1 className="hero-text-elem text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter mb-8">
               Money,<br />
@@ -263,12 +265,16 @@ const Home = () => {
       </section>
 
       {/* ================= FEATURES (Card Dashboard) ================= */}
-      <section className="py-24 md:py-40 bg-surface-body relative z-20 overflow-hidden">
+      <section className="py-24 md:py-40 bg-surface-soft relative z-20 overflow-hidden">
         <div className="container-custom">
+          <div className="mb-16">
+            <span className="text-xs font-mono font-bold tracking-[0.3em] text-accent uppercase mb-4 block">The Platform</span>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary">Everything you need to learn.</h2>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             {/* Card 1: Knowledge Shuffler */}
-            <div className="feature-card h-80 md:h-96 bg-white rounded-[2rem] p-8 shadow-sm border border-black/5 flex flex-col items-center justify-center relative overflow-hidden group">
+            <div className="feature-card h-80 md:h-96 bg-surface-raised rounded-[2rem] p-8 shadow-sm border border-line-soft flex flex-col items-center justify-center relative overflow-hidden group">
               <div className="w-full flex justify-between absolute top-8 px-8">
                 <span className="text-xs font-mono tracking-widest text-accent-strong/50 uppercase">Knowledge Base</span>
                 <span className="w-2 h-2 rounded-full bg-accent-strong/20" />
@@ -277,7 +283,7 @@ const Home = () => {
                 {courses.map((course, i) => (
                   <div 
                     key={course}
-                    className="absolute w-full max-w-[280px] bg-surface-body border border-black/5 rounded-2xl p-6 shadow-sm flex items-center justify-center text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+                    className="absolute w-full max-w-[280px] bg-surface-soft border border-line-soft rounded-2xl p-6 shadow-sm flex items-center justify-center text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
                     style={{
                       transform: `translateY(${i === 0 ? '0' : i === 1 ? '-16px' : '-32px'}) scale(${i === 0 ? 1 : i === 1 ? 0.95 : 0.9})`,
                       zIndex: courses.length - i,
@@ -291,7 +297,7 @@ const Home = () => {
             </div>
 
             {/* Card 2: AI Literarcy Assistant */}
-            <div className="h-80 md:h-96 bg-text-primary text-surface-body rounded-[2rem] p-8 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+            <div className="h-80 md:h-96 bg-text-primary dark:bg-[#0d1117] text-surface-body rounded-[2rem] p-8 shadow-sm border border-transparent dark:border-line-soft flex flex-col justify-between relative overflow-hidden group">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-mono tracking-widest text-accent uppercase flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
@@ -299,17 +305,17 @@ const Home = () => {
                 </span>
               </div>
               <div className="flex-1 flex items-end pb-8">
-                <p className="font-mono text-lg text-surface-body/90 leading-tight">
+                <p className="font-mono text-lg text-surface-body/90 dark:text-text-primary leading-tight">
                   <span className="text-accent mr-2">&gt;</span>
                   {typewriterText}
                   <span className="inline-block w-2 bg-accent h-5 animate-pulse ml-1 align-middle" />
                 </p>
               </div>
-              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-text-primary via-transparent to-transparent opacity-50" />
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-text-primary dark:from-[#0d1117] via-transparent to-transparent opacity-50" />
             </div>
 
             {/* Card 3: Live Calculator Preview */}
-            <div className="h-80 md:h-96 bg-white rounded-[2rem] p-8 shadow-sm border border-black/5 flex flex-col relative group">
+            <div className="h-80 md:h-96 bg-surface-raised rounded-[2rem] p-8 shadow-sm border border-line-soft flex flex-col relative group">
               <div className="flex justify-between items-center mb-8">
                 <span className="text-[10px] font-mono tracking-widest text-accent-strong/50 uppercase">Live Telemetry</span>
               </div>
@@ -317,7 +323,7 @@ const Home = () => {
               <div className="space-y-6">
                 <div>
                   <label className="text-xs font-display font-medium text-text-dim uppercase tracking-widest mb-2 block">Income Input</label>
-                  <div className="w-full bg-surface-body rounded-xl px-4 py-3 font-mono text-text-primary border border-black/5">
+                  <div className="w-full bg-surface-soft rounded-xl px-4 py-3 font-mono text-text-primary border border-line-soft">
                     {calcInput || " "}
                   </div>
                 </div>
@@ -353,7 +359,7 @@ const Home = () => {
       </section>
 
       {/* ================= JARGON TRANSFORMATION ================= */}
-      <section ref={jargonRef} className="py-24 md:py-40 bg-white relative overflow-hidden">
+      <section ref={jargonRef} className="py-24 md:py-40 bg-surface-body relative overflow-hidden">
         <div className="container-custom">
           <div className="flex flex-col lg:flex-row items-center gap-16 md:gap-24">
             
@@ -369,7 +375,7 @@ const Home = () => {
               </p>
             </div>
 
-            <div className="w-full lg:w-1/2 relative bg-surface-body rounded-[3rem] p-8 md:p-16 jargon-box shadow-2xl border border-black/5 min-h-[400px] flex flex-col justify-center transition-all duration-500 overflow-hidden">
+            <div className="w-full lg:w-1/2 relative bg-surface-raised rounded-[3rem] p-8 md:p-16 jargon-box shadow-2xl border border-line-soft min-h-[400px] flex flex-col justify-center transition-all duration-500 overflow-hidden">
               <div className="absolute top-0 right-0 p-8">
                 <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
                   <span className="text-accent font-mono font-bold">{jargonIndex + 1}/{jargons.length}</span>
@@ -453,7 +459,7 @@ const Home = () => {
               desc: "From theory to reality. Learn how compound interest, risk profiles, and long-term planning translate into actual wealth creation."
             }
           ].map((item, index) => (
-            <div key={item.kicker} className="learning-card sticky top-24 md:top-32 w-full max-w-6xl mx-auto h-[65vh] min-h-[500px] mb-24 rounded-[3rem] bg-white border border-black/5 shadow-2xl p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center overflow-hidden transform-gpu">
+            <div key={item.kicker} className="learning-card sticky top-24 md:top-32 w-full max-w-6xl mx-auto h-[65vh] min-h-[500px] mb-24 rounded-[3rem] bg-surface-raised border border-line-soft shadow-2xl p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center overflow-hidden transform-gpu">
               
               <div className="w-full md:w-1/2 relative z-10">
                 <span className="text-xs font-mono font-bold tracking-widest text-accent-strong/60 uppercase block mb-4">
@@ -467,7 +473,7 @@ const Home = () => {
                 </p>
               </div>
               
-              <div className="w-full md:w-1/2 h-full flex items-center justify-center bg-surface-body rounded-[2rem] border border-black/5 relative overflow-hidden group">
+              <div className="w-full md:w-1/2 h-full flex items-center justify-center bg-surface-soft rounded-[2rem] border border-line-soft relative overflow-hidden group">
                 {/* Abstract Visuals depending on anim type */}
                 {item.anim === 'pie' && (
                   <div className="relative w-64 h-64 rounded-full border-[16px] border-accent/20 border-t-accent border-r-accent-strong animate-spin transition-all duration-[10s]" />
@@ -494,7 +500,7 @@ const Home = () => {
       </section>
 
       {/* ================= FAQ ================= */}
-      <section className="py-24 md:py-40 bg-surface-body border-t border-black/5 relative z-20">
+      <section className="py-24 md:py-40 bg-surface-body border-t border-line-soft relative z-20">
         <div className="container-custom">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
@@ -502,7 +508,7 @@ const Home = () => {
               <h2 className="text-4xl md:text-5xl font-display font-bold text-text-primary">Still curious?</h2>
             </div>
 
-            <div className="bg-white rounded-[3rem] px-8 md:px-12 py-4 shadow-sm border border-black/5">
+            <div className="bg-surface-raised rounded-[3rem] px-8 md:px-12 py-4 shadow-sm border border-line-soft">
               {[
                 { 
                   q: "Is Caplet really free?", 
