@@ -16,6 +16,11 @@ router.get('/:key', async (req, res) => {
   try {
     const game = getGame(req.params.key);
     if (!game) return res.status(404).json({ message: 'Game not found' });
+    // Some games (e.g. realestate) have their own route + shared world and no
+    // generic saved state.
+    if (typeof game.defaultState !== 'function') {
+      return res.status(400).json({ message: 'This game uses its own endpoints.' });
+    }
 
     const row = await GameState.findOne({ where: { userId: req.user.id, gameKey: game.key } });
     const state = row?.state || game.defaultState();
@@ -33,6 +38,9 @@ router.put('/:key', async (req, res) => {
   try {
     const game = getGame(req.params.key);
     if (!game) return res.status(404).json({ message: 'Game not found' });
+    if (typeof game.sanitizeState !== 'function') {
+      return res.status(400).json({ message: 'This game uses its own endpoints.' });
+    }
 
     const clean = game.sanitizeState(req.body?.state);
     const [row, created] = await GameState.findOrCreate({

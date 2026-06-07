@@ -104,6 +104,18 @@ const User = sequelize.define('User', {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 100
+  },
+  // Caplet Coin — account-level soft currency, earned by completing lessons.
+  capletCoins: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
+  },
+  // Caplet Gems — premium currency (microtransactions). Balance only for now.
+  capletGems: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
   }
 }, {
   tableName: 'users',

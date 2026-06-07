@@ -16,6 +16,7 @@ const EditorWorkspace = require('./EditorWorkspace');
 const SavedSlide = require('./SavedSlide');
 const UserItem = require('./UserItem');
 const GameState = require('./GameState');
+const Property = require('./Property');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -199,6 +200,10 @@ UserItem.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 User.hasMany(GameState, { foreignKey: 'userId', as: 'gameStates', onDelete: 'CASCADE' });
 GameState.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Real estate properties (owner is nullable; SET NULL on user delete)
+User.hasMany(Property, { foreignKey: 'ownerId', as: 'properties', onDelete: 'SET NULL' });
+Property.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
+
 // Chat messages
 User.hasMany(ChatMessage, {
   foreignKey: 'userId',
@@ -244,5 +249,6 @@ module.exports = {
   SavedSlide,
   UserItem,
   GameState,
+  Property,
   syncDatabase
 };
