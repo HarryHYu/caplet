@@ -103,13 +103,18 @@ export default function Dashboard() {
                         </p>
                     </div>
 
-                    {/* Avatar + level */}
-                    <Link to="/avatar" className="group flex flex-col items-center gap-3 shrink-0" title="Customize your avatar">
-                        <Avatar config={avatar?.avatarConfig} size={96} level={avatar?.level} showLevel={avatar?.level != null} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim group-hover:text-accent transition-colors">
-                            Customize →
-                        </span>
-                    </Link>
+                    {/* Avatar + level + coins */}
+                    <div className="flex flex-col items-center gap-3 shrink-0">
+                        <Link to="/avatar" className="group flex flex-col items-center gap-2" title="Customize your avatar">
+                            <Avatar config={avatar?.avatarConfig} size={96} level={avatar?.level} showLevel={avatar?.level != null} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim group-hover:text-accent transition-colors">
+                                Customize →
+                            </span>
+                        </Link>
+                        <Link to="/shop" className="inline-flex items-center gap-1.5 text-sm font-bold text-amber-500 hover:opacity-70 transition-opacity" title="Open the shop">
+                            🪙 {avatar?.coins ?? 0}
+                        </Link>
+                    </div>
                 </header>
 
                 {/* Stats Matrix */}

@@ -26,6 +26,7 @@ import LessonPlayer from './pages/LessonPlayer';
 import Dashboard from './pages/Dashboard';
 import Revision from './pages/Revision';
 import AvatarCustomizer from './pages/AvatarCustomizer';
+import Shop from './pages/Shop';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Classes from './pages/Classes';
@@ -113,6 +114,7 @@ function App() {
                   <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                   <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
                   <Route path="/avatar" element={<RequireAuth><AvatarCustomizer /></RequireAuth>} />
+                  <Route path="/shop" element={<RequireAuth><Shop /></RequireAuth>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/tools" element={<Tools />} />

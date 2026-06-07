@@ -518,6 +518,18 @@ class ApiService {
     });
   }
 
+  // Shop
+  async getShop() {
+    return this.request('/shop');
+  }
+
+  async purchaseItem(itemId) {
+    return this.request('/shop/purchase', {
+      method: 'POST',
+      body: JSON.stringify({ itemId }),
+    });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');
