@@ -4,7 +4,9 @@
  * a route for each, and the Games hub lists them (metadata comes from the API).
  */
 import ClickerGame from '../pages/games/ClickerGame';
+import RealEstate from '../pages/games/RealEstate';
 
 export const GAMES = [
   { key: 'clicker', path: '/games/clicker', Component: ClickerGame },
+  { key: 'realestate', path: '/games/realestate', Component: RealEstate },
 ];

@@ -4,8 +4,12 @@
  * section scales to many games without touching the route code.
  */
 const clicker = require('./clicker');
+const realestate = require('./realestate');
 
-const GAMES = [clicker];
+// Some games are state-based (clicker → /api/games/:key with game_states).
+// Others (realestate) have their own route + shared world; they appear in the
+// hub listing but don't use the generic state endpoints.
+const GAMES = [clicker, realestate];
 
 const BY_KEY = Object.fromEntries(GAMES.map((g) => [g.key, g]));
 

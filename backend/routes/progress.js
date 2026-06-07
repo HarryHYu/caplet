@@ -4,7 +4,9 @@ const UserProgress = require('../models/UserProgress');
 const Course = require('../models/Course');
 const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
+const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
+const { coinsForLevel } = require('../config/currency');
 
 const router = express.Router();
 
@@ -70,6 +72,9 @@ router.put('/lesson/:lessonId', requireAuth, [
       });
     }
 
+    // Track whether this lesson was already completed (so we only award once).
+    const wasCompleted = progress.status === 'completed';
+
     // Update progress
     const updateData = {};
     if (status) updateData.status = status;
@@ -89,9 +94,19 @@ router.put('/lesson/:lessonId', requireAuth, [
 
     await progress.update(updateData);
 
+    // Award Caplet Coins the first time a lesson is completed, scaled by the
+    // course's difficulty level. Additive — only ever increases the balance.
+    let coinsAwarded = 0;
+    if (status === 'completed' && !wasCompleted) {
+      const course = await Course.findByPk(courseId, { attributes: ['level'] });
+      coinsAwarded = coinsForLevel(course?.level);
+      await User.increment({ capletCoins: coinsAwarded }, { where: { id: req.user.id } });
+    }
+
     res.json({
       message: 'Progress updated successfully',
-      progress
+      progress,
+      coinsAwarded
     });
   } catch (error) {
     console.error('Update progress error:', error);

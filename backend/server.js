@@ -119,6 +119,8 @@ app.use('/api/saved-slides', require('./routes/savedSlides'));
 app.use('/api/avatar', require('./routes/avatar'));
 app.use('/api/shop', require('./routes/shop'));
 app.use('/api/games', require('./routes/games'));
+app.use('/api/currency', require('./routes/currency'));
+app.use('/api/realestate', require('./routes/realestate'));
 app.use('/api', require('./routes/proxy'));
 
 // Error handling middleware

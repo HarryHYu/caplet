@@ -546,6 +546,31 @@ class ApiService {
     });
   }
 
+  // Currency (Caplet Coins + Gems)
+  async getCurrency() {
+    return this.request('/currency');
+  }
+
+  // Real estate (Caplet Estates)
+  async getRealEstate() {
+    return this.request('/realestate');
+  }
+
+  async buyProperty(id) {
+    return this.request(`/realestate/${id}/buy`, { method: 'POST' });
+  }
+
+  async sellProperty(id) {
+    return this.request(`/realestate/${id}/sell`, { method: 'POST' });
+  }
+
+  async customizeProperty(id, { houseStyle, houseColor }) {
+    return this.request(`/realestate/${id}/customize`, {
+      method: 'PUT',
+      body: JSON.stringify({ houseStyle, houseColor }),
+    });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');
