@@ -551,7 +551,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
         )}
 
         {/* Textarea */}
-        <div className="px-4 pt-3.5 pb-2">
+        <div className="px-4 pt-3.5 pb-2.5">
           <textarea
             ref={inputRef}
             rows={1}
@@ -567,7 +567,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
         </div>
 
         {/* Bottom toolbar */}
-        <div className="flex items-center gap-1.5 px-3 pb-2.5 pt-0">
+        <div className="flex items-center gap-2 px-4 pb-3 pt-0">
           <button
             type="button"
             onClick={triggerSlash}
@@ -669,7 +669,7 @@ export default function AIChatPanel({ messages, loading, onSubmit, onAddSlide, o
       <div className="flex-1 min-h-0 overflow-y-auto relative">
         <div className="sticky top-0 h-5 bg-gradient-to-b from-surface-body to-transparent pointer-events-none z-10 -mb-5" />
 
-        <div className="px-3.5 pt-3 pb-4 space-y-3.5">
+        <div className="px-4 pt-3 pb-5 space-y-4">
           {isEmpty ? (
             <div className="flex flex-col items-center justify-center min-h-[200px] py-12 text-center px-5">
               <AIAvatar size="lg" className="mb-3.5" />
@@ -693,7 +693,7 @@ export default function AIChatPanel({ messages, loading, onSubmit, onAddSlide, o
       </div>
 
       {/* Input footer */}
-      <div className="shrink-0 px-3 pb-3 pt-2 border-t border-line-soft relative">
+      <div className="shrink-0 px-4 pb-4 pt-2.5 border-t border-line-soft relative">
         <div className="absolute -top-6 inset-x-0 h-6 bg-gradient-to-b from-transparent to-surface-body pointer-events-none" />
         <ChatInput
           onSubmit={onSubmit}

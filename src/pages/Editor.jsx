@@ -695,7 +695,7 @@ export default function Editor() {
   const [showAI, setShowAI] = useState(false);
   const [aiMessages, setAiMessages] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
-  const [panelWidth, setPanelWidth] = useState(320);
+  const [panelWidth, setPanelWidth] = useState(420);
 
   const reload = useCallback(async () => {
     setLoading(true);
