@@ -773,7 +773,7 @@ export default function Editor() {
     window.addEventListener('mouseup', onUp);
   }, [panelWidth]);
 
-  const handleAISubmit = useCallback(async (text, model) => {
+  const handleAISubmit = useCallback(async (text, model, formatterModel) => {
     setAiMessages((m) => [...m, { id: Date.now(), role: 'user', text }]);
     setAiLoading(true);
     try {
@@ -782,6 +782,7 @@ export default function Editor() {
         lessonTitle: draft?.title || '',
         existingSlideCount: draft?.slides?.length || 0,
         model,
+        formatterModel,
       });
       if (res.action === 'generate' && res.slides?.length) {
         const newSlides = res.slides.map(decorate);

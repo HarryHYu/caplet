@@ -44,7 +44,8 @@ function throttle(req, res, next) {
 }
 
 router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
-  const ALLOWED_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
+  const ALLOWED_MODELS    = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
+  const FORMATTER_MODELS  = ['gpt-5.4-nano', 'gpt-5.4-mini'];
 
   const notes             = (req.body?.notes ?? '').toString();
   const title             = (req.body?.title ?? '').toString().slice(0, 200);
@@ -53,6 +54,7 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
   const outputDescription = (req.body?.outputDescription ?? '').toString().slice(0, 2000);
   const slideCount        = Math.min(Math.max(parseInt(req.body?.slideCount, 10) || 15, 3), 50);
   const model             = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
+  const formatterModel    = FORMATTER_MODELS.includes(req.body?.formatterModel) ? req.body.formatterModel : 'gpt-5.4-mini';
 
   if (!notes.trim() || notes.trim().length < 20) {
     return res.status(400).json({
@@ -71,6 +73,7 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
       outputDescription,
       slideCount,
       model,
+      formatterModel,
     });
     res.json(out);
   } catch (e) {
@@ -86,11 +89,13 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
 // Conversational chat: interprets a natural-language message and either
 // generates slides (action="generate") or answers the question (action="message").
 router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
-  const ALLOWED_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
-  const message        = (req.body?.message ?? '').toString().trim().slice(0, 2000);
-  const lessonTitle    = (req.body?.lessonTitle ?? '').toString().slice(0, 200);
-  const existingCount  = parseInt(req.body?.existingSlideCount, 10) || 0;
-  const model          = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
+  const ALLOWED_MODELS   = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
+  const FORMATTER_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini'];
+  const message          = (req.body?.message ?? '').toString().trim().slice(0, 2000);
+  const lessonTitle      = (req.body?.lessonTitle ?? '').toString().slice(0, 200);
+  const existingCount    = parseInt(req.body?.existingSlideCount, 10) || 0;
+  const model            = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
+  const formatterModel   = FORMATTER_MODELS.includes(req.body?.formatterModel) ? req.body.formatterModel : 'gpt-5.4-mini';
 
   if (!message) return res.status(400).json({ message: 'Message is required.' });
 
@@ -128,7 +133,7 @@ router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
     if (intent_parsed.action === 'generate') {
       const notes = intent_parsed.notes || message;
       const slideCount = Math.min(Math.max(parseInt(intent_parsed.slideCount, 10) || 5, 1), 15);
-      const out = await generateLessonSlides(notes, { title: lessonTitle, slideCount, model });
+      const out = await generateLessonSlides(notes, { title: lessonTitle, slideCount, model, formatterModel });
       return res.json({ action: 'generate', slides: out.slides, warnings: out.warnings || [] });
     }
 

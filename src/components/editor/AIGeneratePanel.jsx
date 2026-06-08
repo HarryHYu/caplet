@@ -64,6 +64,19 @@ const MODEL_OPTIONS = [
   },
 ];
 
+const FORMATTER_OPTIONS = [
+  {
+    id: 'gpt-5.4-mini',
+    label: 'GPT-5.4 Mini',
+    desc: 'Faster JSON formatting. Recommended.',
+  },
+  {
+    id: 'gpt-5.4-nano',
+    label: 'GPT-5.4 Nano',
+    desc: 'Cheapest formatting option.',
+  },
+];
+
 const PLACEHOLDER_NOTES = `Examples of what works here:
 • Paste lecture notes, textbook paragraphs, or dot points
 • Describe a topic: "Explain opportunity cost for Year 11 Economics"
@@ -84,6 +97,7 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
   const [outputDesc, setOutputDesc] = useState('');
   const [slideCount, setSlideCount] = useState(15);
   const [model, setModel] = useState('gpt-5.4-mini');
+  const [formatterModel, setFormatterModel] = useState('gpt-5.4-mini');
   const [pdfState, setPdfState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
@@ -149,6 +163,7 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
         outputDescription: outputDesc.trim() || undefined,
         slideCount,
         model,
+        formatterModel,
       });
       onApply(res.slides || [], mode);
       setWarnings(res.warnings || []);
@@ -386,6 +401,43 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
                         ))}
                       </span>
                     </div>
+                    <p className="text-xs text-text-dim leading-snug mt-0.5">{m.desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Stage 2 formatter model */}
+          <div>
+            <label className="block text-sm font-semibold text-text-muted mb-2">
+              Stage 2 model <span className="text-text-dim font-normal">(JSON formatting pass)</span>
+            </label>
+            <div className="space-y-1.5">
+              {FORMATTER_OPTIONS.map((m) => (
+                <label
+                  key={m.id}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-all duration-150 ${
+                    formatterModel === m.id
+                      ? 'border-accent/60 bg-accent/[0.04]'
+                      : 'border-line-soft hover:border-accent/40'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="formatterModel"
+                    value={m.id}
+                    checked={formatterModel === m.id}
+                    onChange={() => setFormatterModel(m.id)}
+                    className="sr-only"
+                  />
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-150 ${
+                    formatterModel === m.id ? 'border-accent' : 'border-line-soft'
+                  }`}>
+                    {formatterModel === m.id && <div className="w-1.5 h-1.5 rounded-full bg-accent" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-sm font-medium transition-colors duration-150 ${formatterModel === m.id ? 'text-text-primary' : 'text-text-muted'}`}>{m.label}</span>
                     <p className="text-xs text-text-dim leading-snug mt-0.5">{m.desc}</p>
                   </div>
                 </label>

@@ -2,10 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { SLASH_COMMANDS } from '../../lib/slideCommands';
 
 const MODEL_OPTIONS = [
-  { id: 'gpt-5.4-nano', short: 'Nano', desc: 'Fastest & cheapest' },
-  { id: 'gpt-5.4-mini', short: 'Mini', desc: 'Recommended' },
-  { id: 'gpt-5.4',      short: 'Standard', desc: 'Higher quality' },
-  { id: 'gpt-5.5',      short: 'Max', desc: 'Most powerful' },
+  { id: 'gpt-5.4-nano', short: 'GPT-5.4 Nano', desc: 'Fastest & cheapest' },
+  { id: 'gpt-5.4-mini', short: 'GPT-5.4 Mini', desc: 'Recommended default' },
+  { id: 'gpt-5.4',      short: 'GPT-5.4',      desc: 'Higher quality' },
+  { id: 'gpt-5.5',      short: 'GPT-5.5',      desc: 'Most powerful' },
+];
+
+const FORMATTER_OPTIONS = [
+  { id: 'gpt-5.4-mini', short: 'GPT-5.4 Mini', desc: 'Faster formatting' },
+  { id: 'gpt-5.4-nano', short: 'GPT-5.4 Nano', desc: 'Cheapest formatting' },
 ];
 
 /* ── AI avatar ─────────────────────────────────────────────────────────────── */
@@ -171,9 +176,9 @@ function SlashMenu({ filter, onSelect, activeIndex }) {
   );
 }
 
-/* ── Model picker dropdown ────────────────────────────────────────────────────── */
+/* ── Combined model picker (Stage 1 + Stage 2) ────────────────────────────────── */
 
-function ModelPicker({ model, onChange }) {
+function ModelPicker({ model, onChange, formatterModel, onFormatterChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const current = MODEL_OPTIONS.find((m) => m.id === model) || MODEL_OPTIONS[1];
@@ -184,6 +189,12 @@ function ModelPicker({ model, onChange }) {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
+
+  const CheckIcon = () => (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-accent shrink-0">
+      <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 
   return (
     <div ref={ref} className="relative">
@@ -204,15 +215,16 @@ function ModelPicker({ model, onChange }) {
 
       {open && (
         <div
-          className="absolute bottom-full left-0 mb-1.5 w-48 bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30"
+          className="absolute bottom-full left-0 mb-1.5 w-52 bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30"
           style={{ boxShadow: '0 -8px 32px rgba(0,0,0,0.12), 0 -1px 8px rgba(0,0,0,0.06)' }}
         >
-          <p className="px-3 pt-2.5 pb-1.5 text-[9px] font-bold text-text-dim uppercase tracking-[0.1em]">Model</p>
+          {/* Stage 1 */}
+          <p className="px-3 pt-2.5 pb-1 text-[9px] font-bold text-text-dim uppercase tracking-[0.1em]">Stage 1 — Planning</p>
           {MODEL_OPTIONS.map((opt) => (
             <button
               key={opt.id}
               type="button"
-              onMouseDown={(e) => { e.preventDefault(); onChange(opt.id); setOpen(false); }}
+              onMouseDown={(e) => { e.preventDefault(); onChange(opt.id); }}
               className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors duration-75 ${
                 opt.id === model ? 'bg-accent/[0.06]' : 'hover:bg-surface-soft/60'
               }`}
@@ -223,11 +235,29 @@ function ModelPicker({ model, onChange }) {
                 </span>
                 <span className="block text-[10px] text-text-dim leading-snug">{opt.desc}</span>
               </div>
-              {opt.id === model && (
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-accent shrink-0">
-                  <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
+              {opt.id === model && <CheckIcon />}
+            </button>
+          ))}
+
+          {/* Stage 2 */}
+          <div className="mx-3 my-1.5 border-t border-line-soft" />
+          <p className="px-3 pb-1 text-[9px] font-bold text-text-dim uppercase tracking-[0.1em]">Stage 2 — Formatting</p>
+          {FORMATTER_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); onFormatterChange(opt.id); }}
+              className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors duration-75 ${
+                opt.id === formatterModel ? 'bg-accent/[0.06]' : 'hover:bg-surface-soft/60'
+              }`}
+            >
+              <div>
+                <span className={`block text-[12px] font-semibold leading-tight ${opt.id === formatterModel ? 'text-accent' : 'text-text-muted'}`}>
+                  {opt.short}
+                </span>
+                <span className="block text-[10px] text-text-dim leading-snug">{opt.desc}</span>
+              </div>
+              {opt.id === formatterModel && <CheckIcon />}
             </button>
           ))}
           <div className="h-1" />
@@ -239,7 +269,7 @@ function ModelPicker({ model, onChange }) {
 
 /* ── Chat input ──────────────────────────────────────────────────────────────── */
 
-export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onModelChange, placeholder, className = '' }) {
+export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onModelChange, formatterModel, onFormatterModelChange, placeholder, className = '' }) {
   const [input, setInput] = useState('');
   const [showMenu, setShowMenu] = useState(false);
   const [menuFilter, setMenuFilter] = useState('');
@@ -287,7 +317,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
       const cmd = SLASH_COMMANDS.find((c) => c.slug === slug);
       if (cmd) { applyCommand(cmd); return; }
     }
-    onSubmit(text, model);
+    onSubmit(text, model, formatterModel);
     setInput('');
     setShowMenu(false);
     if (inputRef.current) inputRef.current.style.height = 'auto';
@@ -357,7 +387,12 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
             <span className="text-[11px] font-medium tracking-wide">Slide</span>
           </button>
 
-          <ModelPicker model={model} onChange={onModelChange} />
+          <ModelPicker
+            model={model}
+            onChange={onModelChange}
+            formatterModel={formatterModel}
+            onFormatterChange={onFormatterModelChange}
+          />
 
           <div className="flex-1" />
 
@@ -404,6 +439,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
 
 export default function AIChatPanel({ messages, loading, onSubmit, onAddSlide, onClear }) {
   const [model, setModel] = useState('gpt-5.4-mini');
+  const [formatterModel, setFormatterModel] = useState('gpt-5.4-mini');
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -452,6 +488,8 @@ export default function AIChatPanel({ messages, loading, onSubmit, onAddSlide, o
           loading={loading}
           model={model}
           onModelChange={setModel}
+          formatterModel={formatterModel}
+          onFormatterModelChange={setFormatterModel}
         />
       </div>
     </div>

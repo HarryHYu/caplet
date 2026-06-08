@@ -27,9 +27,8 @@ function getClient() {
 
 const MAPS_KEY_PLACEHOLDER = '__MAPS_API_KEY__';
 
-// Stage 2 is always a formatting task — use the fast model regardless of
-// what the user chose for Stage 1.
-const FORMATTER_MODEL = 'gpt-5.4-mini';
+// Default Stage 2 model — overridable per request via opts.formatterModel.
+const FORMATTER_MODEL_DEFAULT = 'gpt-5.4-mini';
 
 /* ─── Stage 1: Lesson Planner system prompt ─────────────────────────────── */
 
@@ -321,7 +320,7 @@ async function runStage1(client, notes, opts, slideCount) {
 
 /* ─── Stage 2 API call ───────────────────────────────────────────────────── */
 
-async function runStage2(client, plan) {
+async function runStage2(client, plan, formatterModel) {
   const userMsg = [
     'Convert the lesson plan below to JSON exactly. Do not add, remove, or rephrase any content.',
     '',
@@ -332,7 +331,7 @@ async function runStage2(client, plan) {
   ].join('\n');
 
   const completion = await client.chat.completions.create({
-    model: FORMATTER_MODEL,
+    model: formatterModel || FORMATTER_MODEL_DEFAULT,
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: buildFormatterSystem() },
@@ -364,7 +363,7 @@ async function generateLessonSlides(notes, opts = {}) {
   }
 
   // ── Stage 2: format ────────────────────────────────────────────────────
-  const text = await runStage2(client, plan);
+  const text = await runStage2(client, plan, opts.formatterModel);
 
   let parsed;
   try {
