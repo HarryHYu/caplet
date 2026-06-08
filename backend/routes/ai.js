@@ -106,7 +106,7 @@ router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
     // Intent classification always uses mini — it's a simple routing task.
     const intent = await client.chat.completions.create({
       model: 'gpt-5.4-mini',
-      max_tokens: 400,
+      max_completion_tokens: 400,
       messages: [
         {
           role: 'system',

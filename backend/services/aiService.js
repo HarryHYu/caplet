@@ -170,7 +170,7 @@ async function callAI(message) {
 
       const response = await client.messages.create({
         model: model,
-        max_tokens: 2048,
+        max_completion_tokens: 2048,
         system: SYSTEM_PROMPT,
         messages: [
           {
