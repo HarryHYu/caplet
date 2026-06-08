@@ -352,7 +352,7 @@ async function generateLessonSlides(notes, opts = {}) {
     throw err;
   }
 
-  const slideCount = Math.min(Math.max(Number(opts.slideCount) || 15, 3), 50);
+  const slideCount = Math.min(Math.max(Number(opts.slideCount) || 15, 1), 50);
 
   // ── Stage 1: plan ──────────────────────────────────────────────────────
   const plan = await runStage1(client, notes, opts, slideCount);

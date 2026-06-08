@@ -52,7 +52,7 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
   const curriculum        = (req.body?.curriculum ?? '').toString().slice(0, 200);
   const audience          = (req.body?.audience ?? '').toString().slice(0, 100);
   const outputDescription = (req.body?.outputDescription ?? '').toString().slice(0, 2000);
-  const slideCount        = Math.min(Math.max(parseInt(req.body?.slideCount, 10) || 15, 3), 50);
+  const slideCount        = Math.min(Math.max(parseInt(req.body?.slideCount, 10) || 15, 1), 50);
   const model             = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
   const formatterModel    = FORMATTER_MODELS.includes(req.body?.formatterModel) ? req.body.formatterModel : 'gpt-5.4-mini';
 
