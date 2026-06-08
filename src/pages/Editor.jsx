@@ -773,8 +773,8 @@ export default function Editor() {
     window.addEventListener('mouseup', onUp);
   }, [panelWidth]);
 
-  const handleAISubmit = useCallback(async (text, model, formatterModel) => {
-    setAiMessages((m) => [...m, { id: Date.now(), role: 'user', text }]);
+  const handleAISubmit = useCallback(async (text, model, formatterModel, attachedText, slideCount, attachmentMeta) => {
+    setAiMessages((m) => [...m, { id: Date.now(), role: 'user', text, attachment: attachmentMeta }]);
     setAiLoading(true);
     try {
       const res = await api.aiLessonChat({
@@ -783,6 +783,8 @@ export default function Editor() {
         existingSlideCount: draft?.slides?.length || 0,
         model,
         formatterModel,
+        notes: attachedText || undefined,
+        slideCount: slideCount || undefined,
       });
       if (res.action === 'generate' && res.slides?.length) {
         const newSlides = res.slides.map(decorate);

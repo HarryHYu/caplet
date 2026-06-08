@@ -92,12 +92,17 @@ router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
   const ALLOWED_MODELS   = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
   const FORMATTER_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini'];
   const message          = (req.body?.message ?? '').toString().trim().slice(0, 2000);
+  const notes            = (req.body?.notes ?? '').toString().slice(0, 30000); // attachment / pasted content
   const lessonTitle      = (req.body?.lessonTitle ?? '').toString().slice(0, 200);
   const existingCount    = parseInt(req.body?.existingSlideCount, 10) || 0;
   const model            = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
   const formatterModel   = FORMATTER_MODELS.includes(req.body?.formatterModel) ? req.body.formatterModel : 'gpt-5.4-mini';
+  const slideCount       = req.body?.slideCount ? Math.min(Math.max(parseInt(req.body.slideCount, 10) || 10, 1), 40) : null;
 
   if (!message) return res.status(400).json({ message: 'Message is required.' });
+  if (notes.length + message.length > 30000) {
+    return res.status(400).json({ message: 'Content too long — max 30,000 characters total.' });
+  }
 
   const client = getClient();
   if (!client) return res.status(503).json({ message: 'AI not available — OPENAI_API_KEY not set.' });
@@ -131,9 +136,11 @@ router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
     }
 
     if (intent_parsed.action === 'generate') {
-      const notes = intent_parsed.notes || message;
-      const slideCount = Math.min(Math.max(parseInt(intent_parsed.slideCount, 10) || 5, 1), 15);
-      const out = await generateLessonSlides(notes, { title: lessonTitle, slideCount, model, formatterModel });
+      // Combine attachment/notes with the AI-extracted description; prefer full notes if available.
+      const generationContent = [notes, intent_parsed.notes || message].filter(Boolean).join('\n\n') || message;
+      // Use the user's explicit slide count from the slider; fall back to AI-extracted suggestion.
+      const resolvedSlideCount = slideCount || Math.min(Math.max(parseInt(intent_parsed.slideCount, 10) || 5, 1), 40);
+      const out = await generateLessonSlides(generationContent, { title: lessonTitle, slideCount: resolvedSlideCount, model, formatterModel });
       return res.json({ action: 'generate', slides: out.slides, warnings: out.warnings || [] });
     }
 

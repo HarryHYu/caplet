@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { SLASH_COMMANDS } from '../../lib/slideCommands';
+import { extractPdfText } from '../../lib/pdfExtract';
 
 const MODEL_OPTIONS = [
   { id: 'gpt-5.4-nano', short: 'GPT-5.4 Nano', desc: 'Fastest & cheapest' },
@@ -37,21 +38,33 @@ export function Bubble({ msg }) {
   if (isUser) {
     return (
       <div className="flex justify-end animate-msg-in">
-        {isSlashCmd ? (
-          <span className="font-mono text-[11px] font-semibold text-accent bg-accent/[0.07] border border-accent/20 px-3 py-1.5 rounded-full select-none tracking-wide">
-            {msg.text.trim()}
-          </span>
-        ) : (
-          <div
-            className="max-w-[84%] text-white text-[15px] px-4 py-2.5 rounded-[18px] rounded-br-[5px] leading-[1.65]"
-            style={{
-              background: 'var(--accent)',
-              boxShadow: '0 2px 14px rgba(0, 80, 255, 0.2)',
-            }}
-          >
-            {msg.text}
-          </div>
-        )}
+        <div className={`flex flex-col items-end gap-1.5 ${isSlashCmd ? '' : 'max-w-[84%]'}`}>
+          {msg.attachment && (
+            <div className="flex items-center gap-1.5 bg-accent/[0.07] border border-accent/15 text-accent px-2.5 py-1 rounded-xl text-[11px]">
+              {msg.attachment.type === 'pdf' ? (
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="0.5" width="9" height="11" rx="1.2" stroke="currentColor" strokeWidth="1.1"/><path d="M3.5 4h5M3.5 6h5M3.5 8h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/></svg>
+              ) : (
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="1.5" width="9" height="9" rx="1.2" stroke="currentColor" strokeWidth="1.1"/><path d="M3.5 5h5M3.5 7h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/></svg>
+              )}
+              <span className="font-semibold truncate" style={{ maxWidth: 130 }}>
+                {msg.attachment.type === 'pdf' ? msg.attachment.name : 'Pasted text'}
+              </span>
+              <span className="text-text-dim">{msg.attachment.chars.toLocaleString()} chars</span>
+            </div>
+          )}
+          {isSlashCmd ? (
+            <span className="font-mono text-[11px] font-semibold text-accent bg-accent/[0.07] border border-accent/20 px-3 py-1.5 rounded-full select-none tracking-wide">
+              {msg.text.trim()}
+            </span>
+          ) : (
+            <div
+              className="text-white text-[15px] px-4 py-2.5 rounded-[18px] rounded-br-[5px] leading-[1.65]"
+              style={{ background: 'var(--accent)', boxShadow: '0 2px 14px rgba(0, 80, 255, 0.2)' }}
+            >
+              {msg.text}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -267,6 +280,64 @@ function ModelPicker({ model, onChange, formatterModel, onFormatterChange }) {
   );
 }
 
+/* ── Slide count picker ───────────────────────────────────────────────────────── */
+
+function SlideCountPicker({ slideCount, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-lg border text-[11px] font-medium transition-all duration-150 ${
+          open
+            ? 'border-accent/40 bg-accent/[0.06] text-accent'
+            : 'border-transparent text-text-dim hover:text-accent hover:bg-accent/[0.06] hover:border-accent/20'
+        }`}
+      >
+        ~{slideCount}
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
+          <path d="M1.5 3L4 5.5L6.5 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          className="absolute bottom-full left-0 mb-1.5 w-52 bg-surface-raised border border-line-soft rounded-xl z-30 p-3"
+          style={{ boxShadow: '0 -8px 32px rgba(0,0,0,0.12), 0 -1px 8px rgba(0,0,0,0.06)' }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.1em]">Slide count</p>
+            <span className="text-[11px] font-bold text-accent tabular-nums">{slideCount}</span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={40}
+            value={slideCount}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="w-full accent-accent h-1.5 cursor-pointer"
+          />
+          <div className="flex justify-between text-[9px] text-text-dim mt-1">
+            <span>1</span>
+            <span className="text-text-dim/50">approx.</span>
+            <span>40</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Chat input ──────────────────────────────────────────────────────────────── */
 
 export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onModelChange, formatterModel, onFormatterModelChange, placeholder, className = '' }) {
@@ -274,11 +345,23 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
   const [showMenu, setShowMenu] = useState(false);
   const [menuFilter, setMenuFilter] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [attachedContent, setAttachedContent] = useState(null); // { type, name?, chars, text }
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState('');
+  const [slideCount, setSlideCount] = useState(10);
   const inputRef = useRef(null);
+  const fileRef = useRef(null);
+
+  const MAX_CHARS = 30000;
+  const PASTE_THRESHOLD = 600;
+  const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
 
   const filteredCmds = SLASH_COMMANDS.filter(
     (c) => !menuFilter || c.slug.startsWith(menuFilter) || c.label.toLowerCase().startsWith(menuFilter),
   );
+
+  const totalChars = input.length + (attachedContent?.text?.length || 0);
+  const overLimit = totalChars > MAX_CHARS;
 
   const resize = () => {
     const el = inputRef.current;
@@ -309,16 +392,63 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
     }
   };
 
+  const handlePaste = (e) => {
+    const text = e.clipboardData?.getData?.('text') || '';
+    if (text.length > PASTE_THRESHOLD) {
+      e.preventDefault();
+      setPdfError('');
+      setAttachedContent({ type: 'paste', chars: text.length, text });
+    }
+  };
+
+  const handlePdf = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPdfError('');
+    if (file.type !== 'application/pdf') {
+      setPdfError('Only PDF files are supported.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setPdfError('File too large — max 10 MB.');
+      e.target.value = '';
+      return;
+    }
+    setIsPdfLoading(true);
+    try {
+      const text = await extractPdfText(file);
+      if (!text.trim()) throw new Error('No text could be extracted. It may be image-based — try pasting the text instead.');
+      setPdfError('');
+      setAttachedContent({ type: 'pdf', name: file.name, chars: text.length, text });
+    } catch (err) {
+      setPdfError(err.message || 'PDF extraction failed.');
+    } finally {
+      setIsPdfLoading(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeAttachment = () => {
+    setAttachedContent(null);
+    setPdfError('');
+  };
+
   const handleSend = () => {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || isPdfLoading || overLimit) return;
     if (text.startsWith('/')) {
       const slug = text.slice(1).toLowerCase();
       const cmd = SLASH_COMMANDS.find((c) => c.slug === slug);
       if (cmd) { applyCommand(cmd); return; }
     }
-    onSubmit(text, model, formatterModel);
+    const attachmentMeta = attachedContent
+      ? { type: attachedContent.type, name: attachedContent.name, chars: attachedContent.chars }
+      : undefined;
+    onSubmit(text, model, formatterModel, attachedContent?.text || '', slideCount, attachmentMeta);
     setInput('');
+    setAttachedContent(null);
+    setPdfError('');
     setShowMenu(false);
     if (inputRef.current) inputRef.current.style.height = 'auto';
   };
@@ -342,11 +472,22 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
     setTimeout(resize, 0);
   };
 
-  const canSend = !!input.trim() && !loading;
+  const canSend = !!input.trim() && !loading && !isPdfLoading && !overLimit;
 
   return (
     <div className={`relative ${className}`}>
       {showMenu && <SlashMenu filter={menuFilter} onSelect={applyCommand} activeIndex={activeIndex} />}
+
+      {/* PDF / validation error */}
+      {pdfError && (
+        <div className="mb-1.5 px-3 py-2 rounded-xl border border-rose-400/30 bg-rose-500/[0.05] text-[12px] text-rose-500 flex items-start gap-2">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0 mt-[1px]">
+            <circle cx="6" cy="6" r="5.25" stroke="currentColor" strokeWidth="1.3"/>
+            <path d="M6 4v3M6 8.5v.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+          {pdfError}
+        </div>
+      )}
 
       <div
         className="bg-surface-raised border border-line-soft rounded-[20px] transition-all duration-200 focus-within:border-accent/40"
@@ -360,6 +501,41 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
           }
         }}
       >
+        {/* Attachment chip */}
+        {(attachedContent || isPdfLoading) && (
+          <div className="px-3 pt-2.5">
+            {isPdfLoading ? (
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-soft border border-line-soft">
+                <span className="w-3.5 h-3.5 border-[1.5px] border-accent border-t-transparent rounded-full animate-spin shrink-0" />
+                <span className="text-[12px] text-text-dim">Extracting PDF…</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-accent/[0.05] border border-accent/15">
+                {attachedContent.type === 'pdf' ? (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-accent shrink-0">
+                    <rect x="1.5" y="0.5" width="9" height="11" rx="1.2" stroke="currentColor" strokeWidth="1.1"/>
+                    <path d="M3.5 4h5M3.5 6h5M3.5 8h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                  </svg>
+                ) : (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-accent shrink-0">
+                    <rect x="1.5" y="1.5" width="9" height="9" rx="1.2" stroke="currentColor" strokeWidth="1.1"/>
+                    <path d="M3.5 5h5M3.5 7h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                  </svg>
+                )}
+                <span className="flex-1 min-w-0 text-[12px] font-semibold text-accent truncate">
+                  {attachedContent.type === 'pdf' ? attachedContent.name : 'Pasted text'}
+                </span>
+                <span className="text-[11px] text-text-dim shrink-0">{attachedContent.chars.toLocaleString()} chars</span>
+                <button
+                  type="button"
+                  onClick={removeAttachment}
+                  className="shrink-0 text-text-dim hover:text-rose-500 transition-colors duration-150 text-base leading-none ml-0.5"
+                >×</button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Textarea */}
         <div className="px-4 pt-3.5 pb-2">
           <textarea
@@ -368,10 +544,11 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
             value={input}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder={placeholder || 'Ask AI or describe what to add…'}
             className="w-full bg-transparent text-[15px] text-text-primary placeholder:text-text-dim/50 resize-none focus:outline-none leading-[1.6] overflow-hidden"
             style={{ minHeight: '22px', maxHeight: '128px' }}
-            disabled={loading}
+            disabled={loading || isPdfLoading}
           />
         </div>
 
@@ -393,6 +570,29 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
             formatterModel={formatterModel}
             onFormatterChange={onFormatterModelChange}
           />
+
+          <SlideCountPicker slideCount={slideCount} onChange={setSlideCount} />
+
+          {/* PDF upload */}
+          <button
+            type="button"
+            title="Upload PDF"
+            onClick={() => fileRef.current?.click()}
+            disabled={isPdfLoading}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-text-dim hover:text-accent hover:bg-accent/[0.06] border border-transparent transition-all duration-150 disabled:opacity-40"
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M2 9.5v1.5h9V9.5M6.5 8.5V1M4 3.5L6.5 1l2.5 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={handlePdf} />
+
+          {/* Char counter — shows when approaching limit */}
+          {totalChars > 20000 && (
+            <span className={`text-[10px] tabular-nums font-medium ${overLimit ? 'text-rose-500' : 'text-amber-500'}`}>
+              {totalChars.toLocaleString()}/30k
+            </span>
+          )}
 
           <div className="flex-1" />
 
