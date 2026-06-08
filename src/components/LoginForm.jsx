@@ -77,8 +77,8 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+        <div className="mb-6 p-4 bg-surface-error border border-line-error rounded-xl">
+          <p className="text-sm font-medium text-text-error">{error}</p>
         </div>
       )}
 
@@ -106,7 +106,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
       {/* Divider */}
       <div className="my-7 flex items-center gap-4">
         <div className="flex-1 h-px bg-line-soft" />
-        <span className="text-xs font-medium uppercase tracking-widest text-text-dim">or</span>
+        <span className="text-xs font-medium text-text-dim">or</span>
         <div className="flex-1 h-px bg-line-soft" />
       </div>
 
@@ -150,7 +150,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
           className="w-full btn-primary py-4 text-base rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {passwordLoading ? (
-            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="w-5 h-5 border-2 border-text-contrast/30 border-t-text-contrast rounded-full animate-spin" />
           ) : (
             <span>Sign in</span>
           )}

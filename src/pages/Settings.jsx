@@ -43,10 +43,10 @@ const Settings = () => {
                   >
                     {({ isActive }) => (
                       <>
-                        <span className="block text-[10px] font-bold uppercase tracking-[0.3em] mb-2 leading-none">
+                        <span className="block text-sm font-medium mb-2 leading-none">
                           {item.label}
                         </span>
-                        <span className={`block text-[9px] font-bold uppercase tracking-widest ${isActive ? 'opacity-50' : 'text-text-dim'}`}>
+                        <span className={`block text-xs font-medium ${isActive ? 'opacity-50' : 'text-text-dim'}`}>
                           {item.description}
                         </span>
                       </>

@@ -24,7 +24,7 @@ const Terms = () => {
             </div>
 
             <div className="pt-10 border-t border-line-soft">
-              <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest">
+              <p className="text-xs font-medium text-text-dim">
                 Last updated: February 2026
               </p>
             </div>

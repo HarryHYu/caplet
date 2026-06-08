@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import api from '../../services/api';
 import { extractPdfText } from '../../lib/pdfExtract';
 
-/* ─── Preset output-format descriptions ─────────────────────────────────── */
-
 const PRESETS = [
   {
     label: 'Full lesson',
@@ -38,8 +36,6 @@ const PRESETS = [
     text: 'Generate a comprehensive in-depth lesson covering the topic exhaustively. Explain every concept in text, supported by charts, Desmos graphs, diagrams, and PhET simulations where relevant. Follow with a full range of varied practice activities. Maximum depth and breadth — prioritise quality and completeness over brevity.',
   },
 ];
-
-/* ─── Model options ──────────────────────────────────────────────────────── */
 
 const MODEL_OPTIONS = [
   {
@@ -81,8 +77,6 @@ const LOADING_STAGES = [
   'Finishing up…',
 ];
 
-/* ─── Component ──────────────────────────────────────────────────────────── */
-
 export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply }) {
   const [notes, setNotes] = useState('');
   const [curriculum, setCurriculum] = useState('');
@@ -90,14 +84,13 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
   const [outputDesc, setOutputDesc] = useState('');
   const [slideCount, setSlideCount] = useState(15);
   const [model, setModel] = useState('gpt-5.4-mini');
-  const [pdfState, setPdfState] = useState(null); // null | 'extracting' | { name, chars, text }
+  const [pdfState, setPdfState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
   const [error, setError] = useState('');
   const [warnings, setWarnings] = useState([]);
   const fileRef = useRef(null);
 
-  // Cycle through loading stage messages while generating.
   useEffect(() => {
     if (!loading) { setLoadingStage(0); return; }
     setLoadingStage(0);
@@ -108,8 +101,6 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
     }, 7000);
     return () => clearInterval(id);
   }, [loading]);
-
-  if (!open) return null;
 
   const totalChars = notes.length + (pdfState?.chars || 0);
 
@@ -170,18 +161,31 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
   };
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className={`fixed inset-0 z-50 ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+      {/* Overlay */}
       <button
         type="button"
         aria-label="Close AI panel"
         onClick={onClose}
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`}
       />
-      <aside className="absolute top-0 right-0 h-full w-full sm:w-[520px] bg-surface-raised border-l border-line-soft shadow-2xl flex flex-col">
+
+      {/* Slide-in panel */}
+      <aside className={`absolute top-0 right-0 h-full w-full sm:w-[520px] bg-surface-raised border-l border-line-soft shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+
+        {/* Accent top stripe */}
+        <div className="h-px bg-gradient-to-r from-accent/80 via-accent/30 to-transparent shrink-0" />
 
         {/* Header */}
-        <header className="shrink-0 px-6 pt-6 pb-4 border-b border-line-soft">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent mb-1">AI assist</p>
+        <header className="shrink-0 px-6 pt-5 pb-4 border-b border-line-soft">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center shrink-0">
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                <path d="M5 0.75 L5.95 3.8 L9 5 L5.95 6.2 L5 9.25 L4.05 6.2 L1 5 L4.05 3.8 Z" fill="white" />
+              </svg>
+            </div>
+            <p className="text-xs font-semibold text-accent">AI assist</p>
+          </div>
           <h2 className="text-xl font-serif italic text-text-primary">Generate slides</h2>
           <p className="mt-1 text-sm text-text-muted">
             Paste notes, upload a PDF, or describe what you want. Uses a two-pass AI pipeline for better accuracy — you review and save.
@@ -193,7 +197,7 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
 
           {/* Notes */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">
+            <label className="block text-sm font-semibold text-text-muted mb-2">
               Notes or topic <span className="text-rose-400">*</span>
             </label>
             <textarea
@@ -201,15 +205,15 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={PLACEHOLDER_NOTES}
-              className="w-full rounded-lg border border-line-soft bg-surface-body px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none"
+              className="w-full rounded-xl border border-line-soft bg-surface-body px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none"
             />
             <div className="flex items-center justify-between mt-1">
-              <span className={`text-[11px] tabular-nums ${totalChars > 28000 ? 'text-amber-500 font-medium' : 'text-text-dim'}`}>
+              <span className={`text-xs tabular-nums ${totalChars > 28000 ? 'text-amber-500 font-medium' : 'text-text-dim'}`}>
                 {totalChars.toLocaleString()} / 30,000 chars
                 {totalChars > 28000 && ' — getting long'}
               </span>
               {pdfState?.text && (
-                <span className="text-[11px] text-text-dim">
+                <span className="text-xs text-text-dim">
                   incl. {pdfState.chars.toLocaleString()} from PDF
                 </span>
               )}
@@ -218,8 +222,8 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
 
           {/* PDF upload */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">
-              PDF <span className="text-text-dim font-normal normal-case tracking-normal">(optional)</span>
+            <label className="block text-sm font-semibold text-text-muted mb-2">
+              PDF <span className="text-text-dim font-normal">(optional)</span>
             </label>
             {pdfState === 'extracting' ? (
               <div className="flex items-center gap-2 text-sm text-text-muted py-2">
@@ -234,58 +238,56 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
                 <span className="flex-1 min-w-0 text-sm text-text-primary truncate" title={pdfState.name}>
                   {pdfState.name}
                 </span>
-                <span className="text-[11px] text-text-dim shrink-0">{pdfState.chars.toLocaleString()} chars</span>
-                <button type="button" onClick={removePdf} className="text-text-dim hover:text-rose-500 shrink-0 text-base leading-none">×</button>
+                <span className="text-xs text-text-dim shrink-0">{pdfState.chars.toLocaleString()} chars</span>
+                <button type="button" onClick={removePdf} className="text-text-dim hover:text-rose-500 shrink-0 text-base leading-none transition-colors duration-150">×</button>
               </div>
             ) : (
               <>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="w-full py-2.5 rounded-lg border border-dashed border-line-soft text-sm text-text-muted hover:border-accent hover:text-accent transition-colors"
+                  className="w-full py-2.5 rounded-lg border border-dashed border-line-soft text-sm text-text-muted hover:border-accent hover:text-accent transition-colors duration-150"
                 >
                   Upload PDF
                 </button>
                 <input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={handlePdf} />
-                <p className="mt-1 text-[11px] text-text-dim">Text-based PDFs only. Scanned / image PDFs won't extract well.</p>
+                <p className="mt-1 text-xs text-text-dim">Text-based PDFs only. Scanned / image PDFs won't extract well.</p>
               </>
             )}
           </div>
 
           {/* Curriculum */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">
-              Curriculum / syllabus <span className="text-text-dim font-normal normal-case tracking-normal">(optional but recommended)</span>
+            <label className="block text-sm font-semibold text-text-muted mb-2">
+              Curriculum / syllabus <span className="text-text-dim font-normal">(optional but recommended)</span>
             </label>
             <input
               type="text"
               value={curriculum}
               onChange={(e) => setCurriculum(e.target.value)}
               placeholder="e.g. NSW Year 11 Economics 2025, AP Physics 1, GCSE Chemistry AQA"
-              className="w-full rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
           </div>
 
           {/* Audience */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">
-              Audience / year level <span className="text-text-dim font-normal normal-case tracking-normal">(optional)</span>
+            <label className="block text-sm font-semibold text-text-muted mb-2">
+              Audience / year level <span className="text-text-dim font-normal">(optional)</span>
             </label>
             <input
               type="text"
               value={audience}
               onChange={(e) => setAudience(e.target.value)}
               placeholder="e.g. Year 10 students, University first year, Adult beginners"
-              className="w-full rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
           </div>
 
           {/* Slide count */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">
-                Slide count
-              </label>
+              <label className="text-sm font-semibold text-text-muted">Slide count</label>
               <span className="text-sm font-bold text-accent tabular-nums w-8 text-right">{slideCount}</span>
             </div>
             <input
@@ -297,7 +299,7 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
               onChange={(e) => setSlideCount(Number(e.target.value))}
               className="w-full accent-accent h-1.5 cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-text-dim mt-1">
+            <div className="flex justify-between text-xs text-text-dim mt-1">
               <span>3</span>
               <span className="text-text-dim/50">target — AI may vary slightly</span>
               <span>50</span>
@@ -306,22 +308,26 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
 
           {/* Output format */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-2">
-              Output format <span className="text-text-dim font-normal normal-case tracking-normal">(optional)</span>
+            <label className="block text-sm font-medium text-text-muted mb-2">
+              Output format <span className="text-text-dim font-normal">(optional)</span>
             </label>
-            {/* Preset chips — clicking fills the textarea, user can then edit */}
             <div className="flex flex-wrap gap-1.5 mb-2">
               {PRESETS.map((p) => (
                 <button
                   key={p.label}
                   type="button"
                   onClick={() => setOutputDesc(p.text)}
-                  className={`px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all ${
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-sm font-medium transition-all duration-150 ${
                     outputDesc === p.text
-                      ? 'border-accent bg-accent/10 text-accent'
-                      : 'border-line-soft text-text-muted hover:border-accent/50 hover:text-text-primary'
+                      ? 'border-accent/70 bg-accent/10 text-accent'
+                      : 'border-line-soft text-text-muted hover:border-accent/40 hover:text-text-primary'
                   }`}
                 >
+                  {outputDesc === p.text && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="shrink-0">
+                      <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
                   {p.label}
                 </button>
               ))}
@@ -331,22 +337,22 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
               value={outputDesc}
               onChange={(e) => setOutputDesc(e.target.value)}
               placeholder="Describe what you want — type of slides, structure, tone, how many of each type, what to include or skip… Presets above fill this box as a starting point you can edit."
-              className="w-full rounded-lg border border-line-soft bg-surface-body px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none"
+              className="w-full rounded-xl border border-line-soft bg-surface-body px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none"
             />
           </div>
 
           {/* Model */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">
-              Model <span className="text-text-dim font-normal normal-case tracking-normal">(cheapest → smartest, used for the planning pass)</span>
+            <label className="block text-sm font-semibold text-text-muted mb-2">
+              Model <span className="text-text-dim font-normal">(cheapest → smartest, used for the planning pass)</span>
             </label>
             <div className="space-y-1.5">
               {MODEL_OPTIONS.map((m) => (
                 <label
                   key={m.id}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-all duration-150 ${
                     model === m.id
-                      ? 'border-accent bg-accent/[0.06]'
+                      ? 'border-accent/60 bg-accent/[0.04]'
                       : 'border-line-soft hover:border-accent/40'
                   }`}
                 >
@@ -356,21 +362,31 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
                     value={m.id}
                     checked={model === m.id}
                     onChange={() => setModel(m.id)}
-                    className="accent-accent shrink-0"
+                    className="sr-only"
                   />
+                  {/* Custom radio indicator */}
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-150 ${
+                    model === m.id ? 'border-accent' : 'border-line-soft'
+                  }`}>
+                    {model === m.id && <div className="w-1.5 h-1.5 rounded-full bg-accent" />}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-text-primary">{m.label}</span>
-                      <span className="flex gap-0.5">
+                      <span className={`text-sm font-medium transition-colors duration-150 ${model === m.id ? 'text-text-primary' : 'text-text-muted'}`}>{m.label}</span>
+                      <span className="flex gap-0.5 items-center">
                         {Array.from({ length: 4 }).map((_, k) => (
                           <span
                             key={k}
-                            className={`w-1.5 h-1.5 rounded-full ${k < m.cost ? 'bg-accent' : 'bg-line-soft'}`}
+                            className={`rounded-full transition-all duration-150 ${
+                              k < m.cost
+                                ? `bg-accent ${k === m.cost - 1 ? 'w-2 h-2' : 'w-1.5 h-1.5'}`
+                                : 'w-1.5 h-1.5 bg-line-soft'
+                            }`}
                           />
                         ))}
                       </span>
                     </div>
-                    <p className="text-[11px] text-text-dim leading-snug mt-0.5">{m.desc}</p>
+                    <p className="text-xs text-text-dim leading-snug mt-0.5">{m.desc}</p>
                   </div>
                 </label>
               ))}
@@ -384,12 +400,12 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
             </div>
           )}
 
-          {/* Warnings (slides dropped) */}
+          {/* Warnings */}
           {warnings.length > 0 && (
             <div className="rounded-xl border border-amber-400/40 bg-amber-500/[0.06] p-3 text-xs text-amber-700 dark:text-amber-400 space-y-1">
-              <p className="font-bold uppercase tracking-[0.2em] text-[10px]">Some slides were skipped</p>
+              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Some slides were skipped</p>
               {warnings.map((w, i) => <p key={i}>{w}</p>)}
-              <button type="button" onClick={onClose} className="mt-1 text-accent hover:underline text-[11px]">
+              <button type="button" onClick={onClose} className="mt-1 text-accent hover:underline text-sm transition-colors duration-150">
                 Close and review →
               </button>
             </div>
@@ -399,17 +415,35 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
         {/* Footer */}
         <footer className="shrink-0 px-6 py-4 border-t border-line-soft space-y-3">
           {loading && (
-            <div className="flex items-center gap-2 text-[11px] text-text-dim">
-              <span className="w-3.5 h-3.5 border-[1.5px] border-accent border-t-transparent rounded-full animate-spin shrink-0" />
-              <span className="font-medium">{LOADING_STAGES[loadingStage]}</span>
-              <span className="opacity-50 ml-auto">2-pass AI pipeline</span>
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="w-3.5 h-3.5 border-[1.5px] border-accent border-t-transparent rounded-full animate-spin shrink-0" />
+                <span className="font-medium text-text-primary">{LOADING_STAGES[loadingStage]}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${
+                      loadingStage > i * 2 + 1 ? 'bg-accent'
+                        : loadingStage >= i * 2 ? 'bg-accent animate-pulse'
+                        : 'bg-line-soft'
+                    }`} />
+                    {i < 2 && (
+                      <div className={`w-6 h-px transition-colors duration-700 ${loadingStage > i * 2 + 1 ? 'bg-accent/60' : 'bg-line-soft'}`} />
+                    )}
+                  </div>
+                ))}
+                <span className="ml-1 text-[11px] text-text-dim font-medium">
+                  {loadingStage < 2 ? 'Planning' : loadingStage < 4 ? 'Building' : 'Finishing'}
+                </span>
+              </div>
             </div>
           )}
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-full border border-line-soft text-[11px] font-bold uppercase tracking-[0.2em] text-text-muted hover:text-text-primary hover:border-text-dim transition-colors"
+              className="px-4 py-2 rounded-full border border-line-soft text-sm font-medium text-text-muted hover:text-text-primary hover:border-text-dim transition-colors duration-150"
             >
               Cancel
             </button>
@@ -418,7 +452,7 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
               type="button"
               onClick={() => submit('append')}
               disabled={loading || pdfState === 'extracting'}
-              className="px-4 py-2 rounded-full border border-line-soft text-[11px] font-bold uppercase tracking-[0.2em] text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-40 transition-colors"
+              className="px-4 py-2 rounded-full border border-line-soft text-sm font-medium text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-40 transition-colors duration-150"
             >
               Append
             </button>
@@ -426,7 +460,7 @@ export default function AIGeneratePanel({ open, onClose, lessonTitle, onApply })
               type="button"
               onClick={() => submit('replace')}
               disabled={loading || pdfState === 'extracting'}
-              className="btn-primary px-5 py-2 text-[11px] font-bold uppercase tracking-[0.2em] disabled:opacity-40"
+              className="btn-primary px-5 py-2 text-sm font-medium disabled:opacity-40"
             >
               Generate lesson
             </button>

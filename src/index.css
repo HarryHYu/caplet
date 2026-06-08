@@ -45,6 +45,11 @@
   --accent-strong: #0036CC;
   --accent-soft: rgba(0, 80, 255, 0.05);
 
+  /* Error */
+  --text-error: #B91C1C;
+  --surface-error: rgba(220, 38, 38, 0.06);
+  --border-error: rgba(220, 38, 38, 0.15);
+
   /* Shadows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
   --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.04);
@@ -73,6 +78,11 @@
   --accent: #3385FF;
   --accent-strong: #85B8FF;
   --accent-soft: rgba(51, 133, 255, 0.15);
+
+  /* Error */
+  --text-error: #FCA5A5;
+  --surface-error: rgba(239, 68, 68, 0.1);
+  --border-error: rgba(239, 68, 68, 0.2);
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
@@ -117,6 +127,15 @@
 @layer components {
   .container-custom {
     @apply max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20;
+  }
+
+  /* Subtle grid texture for the lesson builder canvas */
+  .lesson-grid-bg {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--line-soft) 28%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--line-soft) 28%, transparent) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
   }
 
   /* Section kicker — the small uppercase accent label above a heading. */

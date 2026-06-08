@@ -55,7 +55,7 @@ const GSTCalculator = () => {
                 Execute goods and services tax transformations with 10% statutory precision for the Australian jurisdiction.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
+            <Link to="/tools" className="btn-secondary text-sm px-8">
               &larr; Back to tools
             </Link>
           </div>
@@ -64,10 +64,10 @@ const GSTCalculator = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
           <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Transaction Parameters</h2>
+            <h2 className="text-sm font-semibold text-text-muted mb-16">Transaction Parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-16">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block italic">
+                <label className="text-sm font-semibold text-text-dim mb-4 block italic">
                   Amount (AUD)
                 </label>
                 <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
@@ -85,7 +85,7 @@ const GSTCalculator = () => {
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-8 block italic">
+                <label className="text-sm font-semibold text-text-dim mb-8 block italic">
                   Operator Mode
                 </label>
                 <div className="flex gap-12">
@@ -105,7 +105,7 @@ const GSTCalculator = () => {
                         onChange={(e) => setCalculationType(e.target.value)}
                         className="hidden"
                       />
-                      <span className={`text-xs font-bold uppercase tracking-widest transition-colors ${calculationType === type.id ? 'text-text-primary' : 'text-text-dim group-hover:text-text-muted'}`}>
+                      <span className={`text-xs font-bold transition-colors ${calculationType === type.id ? 'text-text-primary' : 'text-text-dim group-hover:text-text-muted'}`}>
                         {type.label}
                       </span>
                     </label>
@@ -113,7 +113,7 @@ const GSTCalculator = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full py-6 text-xs uppercase tracking-[0.3em] mt-8">
+              <button type="submit" className="btn-primary w-full py-6 text-sm mt-8">
                 Confirm Transformation
               </button>
             </form>
@@ -121,26 +121,26 @@ const GSTCalculator = () => {
 
           <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
             <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Output Log</h2>
+            <h2 className="text-sm font-semibold text-text-muted mb-16 relative z-10">Output Log</h2>
 
             {result ? (
               result.error ? (
-                <p className="text-[10px] font-bold text-accent uppercase tracking-widest relative z-10">{result.error}</p>
+                <p className="text-sm font-medium text-accent relative z-10">{result.error}</p>
               ) : (
                 <div className="space-y-12 relative z-10">
                   <div className="space-y-8">
                     <div>
-                      <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-2 italic">Principal Input</p>
+                      <p className="text-xs font-medium text-text-dim mb-2 italic">Principal Input</p>
                       <p className="text-2xl font-bold tracking-tight">{formatCurrency(result.originalAmount)}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mb-2 italic">Tax Derivative (10%)</p>
+                      <p className="text-xs font-medium text-text-dim mb-2 italic">Tax Derivative (10%)</p>
                       <p className="text-2xl font-bold tracking-tight">{formatCurrency(result.gst)}</p>
                     </div>
                   </div>
 
                   <div className="pt-10 border-t border-line-soft">
-                    <p className="text-[9px] font-bold text-accent uppercase tracking-[0.4em] mb-4">
+                    <p className="text-xs font-bold text-accent mb-4">
                       {result.type === 'add' ? 'Gross Aggregation' : 'Net Extraction'}
                     </p>
                     <p className="text-5xl font-black tracking-tighter text-text-primary">
@@ -149,7 +149,7 @@ const GSTCalculator = () => {
                   </div>
 
                   <div className="pt-12 border-t border-line-soft">
-                    <p className="text-[10px] font-serif italic text-text-dim leading-relaxed">
+                    <p className="text-xs font-serif italic text-text-dim leading-relaxed">
                       "Taxation is the price which we pay for civilization, for our social, civil and political institutions."
                     </p>
                   </div>
@@ -158,7 +158,7 @@ const GSTCalculator = () => {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
                 <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">GST</div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Enter an amount to see results</p>
+                <p className="text-sm font-medium">Enter an amount to see results</p>
               </div>
             )}
           </div>

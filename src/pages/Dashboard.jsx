@@ -110,7 +110,7 @@ export default function Dashboard() {
                         { label: 'Saved Slides', value: savedSlides.length, icon: BookmarkIcon }
                     ].map((stat) => (
                         <div key={stat.label} className="bg-surface-body p-10 group hover:bg-surface-raised transition-colors">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-8 flex justify-between items-center group-hover:text-accent transition-colors">
+                            <p className="text-sm font-medium text-text-dim mb-8 flex justify-between items-center group-hover:text-accent transition-colors">
                                 {stat.label}
                                 <stat.icon className="w-4 h-4 opacity-20" />
                             </p>
@@ -146,7 +146,7 @@ export default function Dashboard() {
                                                 />
                                             </div>
                                             <div className="flex justify-between items-end">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Progress: {lastCoursePct}%</span>
+                                                <span className="text-sm font-medium text-text-dim">Progress: {lastCoursePct}%</span>
                                                 <Link to={`/courses/${lastAccessedCourse.id}`} className="btn-primary py-3 px-8 text-[15px]">
                                                     Continue Module
                                                 </Link>
@@ -164,21 +164,21 @@ export default function Dashboard() {
                                     <span className="section-kicker">Academy</span>
                                     <h2 className="text-4xl font-serif italic">My Classes.</h2>
                                 </div>
-                                <Link to="/classes" className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">All Classes</Link>
+                                <Link to="/classes" className="text-sm font-medium text-accent border-b border-accent pb-1">All Classes</Link>
                             </div>
                             <div className="grid grid-cols-1 gap-px bg-line-soft border border-line-soft">
                                 {classes.length > 0 ? (
                                     classes.slice(0, 3).map(cls => (
                                         <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-body p-8 flex justify-between items-center group hover:bg-surface-raised transition-colors">
                                             <div>
-                                                <p className="text-lg font-bold uppercase tracking-tight group-hover:text-accent transition-colors">{cls.name}</p>
-                                                <p className="text-[10px] font-bold text-text-dim uppercase tracking-[0.2em] mt-1">{cls.code}</p>
+                                                <p className="text-lg font-bold group-hover:text-accent transition-colors">{cls.name}</p>
+                                                <p className="text-xs font-medium text-text-dim mt-1">{cls.code}</p>
                                             </div>
                                             <ArrowRightIcon className="w-5 h-5 text-text-dim group-hover:translate-x-2 transition-transform" />
                                         </Link>
                                     ))
                                 ) : (
-                                    <div className="bg-surface-body p-12 text-center text-text-dim uppercase tracking-widest text-[10px] font-bold italic">
+                                    <div className="bg-surface-body p-12 text-center text-text-dim text-sm font-medium italic">
                                         No active enrollments detected.
                                     </div>
                                 )}
@@ -198,8 +198,8 @@ export default function Dashboard() {
                                         className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
                                     >
                                         <div className="min-w-0">
-                                            <p className="text-[11px] font-bold uppercase tracking-widest truncate group-hover:text-accent transition-colors">{course.title}</p>
-                                            <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mt-1">{course.duration}m Duration</p>
+                                            <p className="text-sm font-medium truncate group-hover:text-accent transition-colors">{course.title}</p>
+                                            <p className="text-xs font-medium text-text-dim mt-1">{course.duration}m</p>
                                         </div>
                                         <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
                                     </Link>
@@ -218,8 +218,8 @@ export default function Dashboard() {
                                     <div className="min-w-0 flex items-center gap-3">
                                         <BookmarkIcon className="w-4 h-4 shrink-0 text-accent" />
                                         <div className="min-w-0">
-                                            <p className="text-[11px] font-bold uppercase tracking-widest truncate group-hover:text-accent transition-colors">Archived slides</p>
-                                            <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.3em] mt-1">
+                                            <p className="text-sm font-medium truncate group-hover:text-accent transition-colors">Archived slides</p>
+                                            <p className="text-xs font-medium text-text-dim mt-1">
                                                 {savedSlides.length} {savedSlides.length === 1 ? 'Slide' : 'Slides'} Flagged
                                             </p>
                                         </div>
@@ -237,7 +237,7 @@ export default function Dashboard() {
                                 <blockquote className="text-sm font-medium leading-relaxed text-text-dim mb-8 italic">
                                     "Compound interest is the eighth wonder of the world. He who understands it, earns it... he who doesn't... pays it."
                                 </blockquote>
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-accent">Source: Albert Einstein</p>
+                                <p className="text-xs font-medium text-accent">Source: Albert Einstein</p>
                             </div>
                         </div>
                     </div>

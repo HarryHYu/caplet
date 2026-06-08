@@ -412,4 +412,4 @@ async function generateLessonSlides(notes, opts = {}) {
   };
 }
 
-module.exports = { generateLessonSlides };
+module.exports = { generateLessonSlides, getClient };

@@ -6,7 +6,7 @@ import api from '../services/api';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import CapletLoader from '../components/CapletLoader';
 
-const CourseCover = ({ title, id }) => {
+const CourseCover = ({ title }) => {
   // Generate a semi-stable pseudo-random gradient based on title
   const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const hue1 = hash % 360;
@@ -161,11 +161,11 @@ const Courses = () => {
                 className="bg-surface-body p-12 group cursor-pointer transition-all duration-700 hover:bg-surface-raised flex flex-col"
               >
                 <div className="flex justify-between items-start mb-12">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">
+                  <span className="text-sm font-medium text-accent border-b border-accent pb-1">
                     {course.level || 'Beginner'}
                   </span>
                   {hasProgress && (
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
+                    <span className="text-sm font-medium text-accent">
                       In Progress
                     </span>
                   )}
@@ -175,7 +175,7 @@ const Courses = () => {
                   <CourseCover title={course.title} id={course.id} />
                 </div>
 
-                <h3 className="text-2xl font-bold uppercase tracking-tighter mb-8 group-hover:text-accent transition-colors duration-500">
+                <h3 className="text-2xl font-bold mb-8 group-hover:text-accent transition-colors duration-500">
                   {course.title}
                 </h3>
 
@@ -184,7 +184,7 @@ const Courses = () => {
                 </p>
 
                 <div className="mt-auto">
-                  <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-text-dim mb-8">
+                  <div className="flex items-center gap-4 text-sm font-medium text-text-dim mb-8">
                     <span>{course.duration}m</span>
                     <span className="w-1 h-1 bg-text-dim" />
                     <span>{(course.modules || []).reduce((sum, m) => sum + (m.lessons || []).length, 0)} lessons</span>
@@ -192,7 +192,7 @@ const Courses = () => {
 
                   {isAuthenticated && hasProgress && (
                     <div className="mb-8">
-                      <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-text-dim mb-3">
+                      <div className="flex justify-between text-sm font-medium text-text-dim mb-3">
                         <span>Progress</span>
                         <span className="text-accent">{Math.round(progress)}%</span>
                       </div>
@@ -203,7 +203,7 @@ const Courses = () => {
                   )}
 
                   <div className="flex items-center justify-between pt-8 border-t border-line-soft">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] group-hover:text-accent transition-colors duration-500">
+                    <span className="text-sm font-medium group-hover:text-accent transition-colors duration-500">
                       {hasProgress ? 'Continue Module' : 'Enter Lesson'} &rarr;
                     </span>
                     <ArrowRightIcon className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-2 transition-all duration-500" />
@@ -216,12 +216,12 @@ const Courses = () => {
 
         {courses.length === 0 && !loading && (
           <div className="py-40 text-center border border-line-soft bg-surface-soft reveal-text">
-            <p className="text-text-dim font-bold uppercase tracking-[0.4em] text-[10px] animate-pulse mb-8">
+            <p className="text-text-dim font-medium text-sm animate-pulse mb-8">
               Registry Query Null
             </p>
             <button
               onClick={() => setFilters({ level: '', search: '' })}
-              className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-accent-strong transition-colors"
+              className="text-sm font-medium text-accent hover:text-accent-strong transition-colors"
             >
               Clear Filters
             </button>

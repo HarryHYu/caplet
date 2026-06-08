@@ -6,53 +6,115 @@ const tools = [
     title: 'Income Tax Calculator',
     description: 'Estimate your annual Australian income tax, Medicare levy, and net pay.',
     path: '/tools/tax-calculator',
+    category: 'Tax & Income',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+      </svg>
+    ),
   },
   {
-    title: 'Budget Planner',
-    description: 'Plan your monthly budget and track spending across different categories.',
-    path: '/tools/budget-planner',
-  },
-  {
-    title: 'Savings Goal Calculator',
-    description: 'Calculate how long it will take to reach your savings goal with contributions and interest.',
-    path: '/tools/savings-goal',
-  },
-  {
-    title: 'Loan Repayment Calculator',
-    description: 'Calculate monthly loan repayments, total interest, and total amount payable.',
-    path: '/tools/loan-repayment',
-  },
-  {
-    title: 'Compound Interest Calculator',
-    description: 'See how your money grows with compound interest and regular contributions.',
-    path: '/tools/compound-interest',
-  },
-  {
-    title: 'Mortgage Calculator',
-    description: 'Calculate home loan repayments, total interest, and explore different payment frequencies.',
-    path: '/tools/mortgage',
-  },
-  {
-    title: 'Super Contribution Calculator',
-    description: 'Project your superannuation balance with employer and personal contributions.',
-    path: '/tools/super-contribution',
+    title: 'Salary Calculator',
+    description: 'Calculate your take-home pay from gross salary, including tax, Medicare, and super.',
+    path: '/tools/salary',
+    category: 'Tax & Income',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    ),
   },
   {
     title: 'GST Calculator',
     description: 'Add or remove GST (10%) from amounts for Australian Goods and Services Tax calculations.',
     path: '/tools/gst',
+    category: 'Tax & Income',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
   },
   {
-    title: 'Salary Calculator',
-    description: 'Calculate your take-home pay from gross salary, including tax, Medicare, and superannuation.',
-    path: '/tools/salary',
+    title: 'Budget Planner',
+    description: 'Plan your monthly budget and track spending across different categories.',
+    path: '/tools/budget-planner',
+    category: 'Budgeting',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+      </svg>
+    ),
   },
   {
     title: 'Emergency Fund Calculator',
     description: 'Calculate how much you should have in your emergency fund to cover unexpected expenses.',
     path: '/tools/emergency-fund',
-  }
+    category: 'Budgeting',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Savings Goal Calculator',
+    description: 'Calculate how long it takes to reach your savings goal with contributions and interest.',
+    path: '/tools/savings-goal',
+    category: 'Savings & Growth',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Compound Interest Calculator',
+    description: 'See how your money grows with compound interest and regular contributions over time.',
+    path: '/tools/compound-interest',
+    category: 'Savings & Growth',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Super Contribution Calculator',
+    description: 'Project your superannuation balance with employer and personal contributions.',
+    path: '/tools/super-contribution',
+    category: 'Savings & Growth',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Loan Repayment Calculator',
+    description: 'Calculate monthly loan repayments, total interest, and total amount payable.',
+    path: '/tools/loan-repayment',
+    category: 'Debt & Loans',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Mortgage Calculator',
+    description: 'Calculate home loan repayments, total interest, and explore different payment frequencies.',
+    path: '/tools/mortgage',
+    category: 'Debt & Loans',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
 ];
+
+const categories = ['Tax & Income', 'Budgeting', 'Savings & Growth', 'Debt & Loans'];
 
 const Tools = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,79 +122,138 @@ const Tools = () => {
   const filteredTools = tools.filter(tool => {
     const query = searchQuery.toLowerCase();
     return tool.title.toLowerCase().includes(query) ||
-      tool.description.toLowerCase().includes(query);
+      tool.description.toLowerCase().includes(query) ||
+      tool.category.toLowerCase().includes(query);
   });
+
+  const isSearching = searchQuery.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
-      <section className="mb-24">
-        <div className="container-custom">
-          <div className="reveal-text">
-            <span className="section-kicker mb-8">Tools</span>
-            <h1 className="text-6xl lg:text-8xl mb-10">
-              Financial <br />calculators.
-            </h1>
-            <p className="text-xl text-text-muted max-w-2xl font-serif italic leading-relaxed">
-              Free calculators for tax, budgeting, loans, super, and more — built for Australian rules and rates.
-            </p>
-          </div>
-        </div>
-      </section>
+      <div className="container-custom">
 
-      <section className="pb-32">
-        <div className="container-custom">
-          <div className="mb-16 reveal-text stagger-1">
-            <div className="relative max-w-xl">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search calculators…"
-                className="w-full px-6 py-4 bg-surface-raised border border-line-soft text-text-primary text-sm focus:border-accent outline-none transition-all placeholder:text-text-dim"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-text-dim hover:text-accent transition-colors"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </div>
-
-          {filteredTools.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5 bg-line-soft border border-line-soft reveal-text stagger-2">
-              {filteredTools.map((tool) => (
-                <Link
-                  key={tool.path}
-                  to={tool.path}
-                  className="group bg-surface-body p-12 lg:p-14 relative overflow-hidden flex flex-col min-h-[320px] transition-all hover:bg-surface-soft"
-                >
-                  <h3 className="text-2xl font-serif italic text-text-primary mb-4 group-hover:text-accent transition-colors">
-                    {tool.title}
-                  </h3>
-                  <p className="text-sm text-text-muted leading-relaxed line-clamp-3 mb-8 flex-1">
-                    {tool.description}
-                  </p>
-                  <span className="text-xs font-bold uppercase tracking-widest text-accent">
-                    Open calculator →
-                  </span>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-24 bg-surface-raised border border-line-soft reveal-text">
-              <p className="text-text-muted font-serif italic">
-                No calculators match your search. Try a different term.
+        {/* Header */}
+        <header className="mb-16 reveal-text">
+          <span className="section-kicker mb-8">Instruments</span>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div>
+              <h1 className="text-6xl lg:text-8xl mb-10">
+                Financial <br />calculators.
+              </h1>
+              <p className="text-xl text-text-muted max-w-xl font-serif italic leading-relaxed">
+                Free calculators for tax, budgeting, loans, super, and more — built for Australian rules and rates.
               </p>
             </div>
-          )}
+            <div className="shrink-0 text-right hidden md:block">
+              <span className="text-5xl font-black text-text-primary/10 font-mono">{tools.length}</span>
+              <p className="text-xs font-medium text-text-dim mt-1">calculators</p>
+            </div>
+          </div>
+        </header>
+
+        {/* Search */}
+        <div className="mb-16 reveal-text stagger-1">
+          <div className="relative max-w-lg">
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search calculators…"
+              className="w-full pl-11 pr-10 py-3 bg-surface-raised border border-line-soft text-text-primary text-sm focus:border-accent outline-none transition-all rounded-xl placeholder:text-text-dim"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-surface-soft hover:bg-line-soft text-text-dim hover:text-text-primary transition-all"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
-      </section>
+
+        {/* Tool grid — searched */}
+        {isSearching ? (
+          filteredTools.length > 0 ? (
+            <div className="reveal-text stagger-2">
+              <p className="text-xs font-medium text-text-dim mb-8">{filteredTools.length} result{filteredTools.length !== 1 ? 's' : ''}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filteredTools.map(tool => (
+                  <ToolCard key={tool.path} tool={tool} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="py-24 text-center border border-line-soft bg-surface-soft reveal-text">
+              <p className="text-text-muted font-serif italic text-lg mb-2">No match found.</p>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-sm font-medium text-accent hover:text-accent-strong transition-colors"
+              >
+                Clear search
+              </button>
+            </div>
+          )
+        ) : (
+          /* Grouped by category */
+          <div className="space-y-16 reveal-text stagger-2">
+            {categories.map(cat => {
+              const group = tools.filter(t => t.category === cat);
+              return (
+                <div key={cat}>
+                  <div className="flex items-center gap-4 mb-6">
+                    <h2 className="text-sm font-semibold text-text-primary">{cat}</h2>
+                    <div className="flex-1 h-px bg-line-soft" />
+                    <span className="text-xs font-medium text-text-dim">{group.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {group.map(tool => (
+                      <ToolCard key={tool.path} tool={tool} />
+                    ))}
+                </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 };
+
+const ToolCard = ({ tool }) => (
+  <Link
+    to={tool.path}
+    className="group flex flex-col gap-4 p-6 bg-surface-body border border-line-soft rounded-xl hover:border-text-dim hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-all duration-200"
+  >
+    <div className="flex items-start justify-between">
+      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-soft text-text-dim group-hover:bg-accent-soft group-hover:text-accent transition-all duration-200">
+        {tool.icon}
+      </div>
+      <svg
+        className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200"
+        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7v10" />
+      </svg>
+    </div>
+
+    <div className="flex-1">
+      <h3 className="text-base font-semibold text-text-primary mb-1.5 group-hover:text-accent transition-colors duration-200">
+        {tool.title}
+      </h3>
+      <p className="text-sm text-text-muted leading-relaxed line-clamp-2">
+        {tool.description}
+      </p>
+    </div>
+  </Link>
+);
 
 export default Tools;

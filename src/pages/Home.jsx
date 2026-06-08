@@ -11,11 +11,12 @@ const FAQItem = ({ question, answer }) => {
     <div className="border-b border-line-soft last:border-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
         className="w-full py-8 flex justify-between items-center text-left group transition-all"
       >
         <span className="text-xl md:text-2xl font-serif italic text-text-primary group-hover:text-accent transition-colors">{question}</span>
         <span className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isOpen ? 'rotate-180 bg-accent text-white border-transparent' : 'border-line-soft text-text-muted'}`}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+          <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
         </span>
       </button>
       <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 pb-8' : 'max-h-0'}`}>
@@ -119,43 +120,52 @@ const Home = () => {
   const [calcOutput, setCalcOutput] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+    let activeInterval = null;
+
     const runAnimation = async () => {
-      // Very basic mock of an automated calculator workflow
+      if (cancelled) return;
       setCalcInput("");
       setCalcOutput(0);
-      
-      await new Promise(r => setTimeout(r, 1000));
+
+      const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+      await delay(1000); if (cancelled) return;
       setCalcInput("$8");
-      await new Promise(r => setTimeout(r, 100));
+      await delay(100); if (cancelled) return;
       setCalcInput("$85");
-      await new Promise(r => setTimeout(r, 100));
+      await delay(100); if (cancelled) return;
       setCalcInput("$85,");
-      await new Promise(r => setTimeout(r, 100));
+      await delay(100); if (cancelled) return;
       setCalcInput("$85,0");
-      await new Promise(r => setTimeout(r, 100));
+      await delay(100); if (cancelled) return;
       setCalcInput("$85,000");
 
-      await new Promise(r => setTimeout(r, 500));
-      
-      // Animate counter
+      await delay(500); if (cancelled) return;
+
       let value = 0;
-      const target = 19667; // approx tax
-      const interval = setInterval(() => {
+      const target = 19667;
+      activeInterval = setInterval(() => {
+        if (cancelled) { clearInterval(activeInterval); return; }
         value += Math.floor(target / 20);
         if (value >= target) {
           setCalcOutput(target);
-          clearInterval(interval);
+          clearInterval(activeInterval);
         } else {
           setCalcOutput(value);
         }
       }, 50);
 
-      await new Promise(r => setTimeout(r, 3000));
-      // Loop
+      await delay(3000); if (cancelled) return;
       runAnimation();
     };
 
     runAnimation();
+
+    return () => {
+      cancelled = true;
+      if (activeInterval) clearInterval(activeInterval);
+    };
   }, []);
 
   // GSAP Animations
@@ -237,7 +247,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="bg-surface-body text-text-primary relative selection:bg-accent selection:text-white">
+    <div className="bg-surface-body text-text-primary relative selection:bg-accent selection:text-text-contrast">
       {/* ================= SIMPLIFIED HERO ================= */}
       <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden">
         <div className="absolute inset-0 grid-technical opacity-40 pointer-events-none" />
@@ -256,7 +266,7 @@ const Home = () => {
               <Link to="/register" className="bg-accent hover:bg-accent-strong text-white font-display font-semibold px-10 py-5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl w-full sm:w-auto text-center">
                 Get Started Free
               </Link>
-              <Link to="/courses" className="text-text-muted hover:text-text-primary font-display font-bold text-sm uppercase tracking-widest transition-all duration-300 group py-4 px-6 md:px-0">
+              <Link to="/courses" className="text-text-muted hover:text-text-primary font-display font-bold text-sm transition-all duration-300 group py-4 px-6 md:px-0">
                 Browse Registry <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span>
               </Link>
             </div>
@@ -268,7 +278,7 @@ const Home = () => {
       <section className="py-24 md:py-40 bg-surface-soft relative z-20 overflow-hidden">
         <div className="container-custom">
           <div className="mb-16">
-            <span className="text-xs font-mono font-bold tracking-[0.3em] text-accent uppercase mb-4 block">The Platform</span>
+            <span className="text-xs font-mono font-bold text-accent mb-4 block">The Platform</span>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary">Everything you need to learn.</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -276,7 +286,7 @@ const Home = () => {
             {/* Card 1: Knowledge Shuffler */}
             <div className="feature-card h-80 md:h-96 bg-surface-raised rounded-[2rem] p-8 shadow-sm border border-line-soft flex flex-col items-center justify-center relative overflow-hidden group">
               <div className="w-full flex justify-between absolute top-8 px-8">
-                <span className="text-xs font-mono tracking-widest text-accent-strong/50 uppercase">Knowledge Base</span>
+                <span className="text-xs font-mono text-accent-strong/50">Knowledge Base</span>
                 <span className="w-2 h-2 rounded-full bg-accent-strong/20" />
               </div>
               <div className="relative w-full h-32 mt-8 flex justify-center items-center">
@@ -297,39 +307,39 @@ const Home = () => {
             </div>
 
             {/* Card 2: AI Literarcy Assistant */}
-            <div className="h-80 md:h-96 bg-text-primary dark:bg-[#0d1117] text-surface-body rounded-[2rem] p-8 shadow-sm border border-transparent dark:border-line-soft flex flex-col justify-between relative overflow-hidden group">
+            <div className="h-80 md:h-96 bg-surface-inverse text-text-contrast rounded-[2rem] p-8 shadow-sm border border-transparent dark:border-line-soft flex flex-col justify-between relative overflow-hidden group">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-mono tracking-widest text-accent uppercase flex items-center gap-2">
+                <span className="text-xs font-mono text-accent flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                   AI Assistant — Educational Only
                 </span>
               </div>
               <div className="flex-1 flex items-end pb-8">
-                <p className="font-mono text-lg text-surface-body/90 dark:text-text-primary leading-tight">
+                <p className="font-mono text-lg text-text-contrast/90 leading-tight">
                   <span className="text-accent mr-2">&gt;</span>
                   {typewriterText}
                   <span className="inline-block w-2 bg-accent h-5 animate-pulse ml-1 align-middle" />
                 </p>
               </div>
-              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-text-primary dark:from-[#0d1117] via-transparent to-transparent opacity-50" />
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-surface-inverse via-transparent to-transparent opacity-50" />
             </div>
 
             {/* Card 3: Live Calculator Preview */}
             <div className="h-80 md:h-96 bg-surface-raised rounded-[2rem] p-8 shadow-sm border border-line-soft flex flex-col relative group">
               <div className="flex justify-between items-center mb-8">
-                <span className="text-[10px] font-mono tracking-widest text-accent-strong/50 uppercase">Live Telemetry</span>
+                <span className="text-xs font-mono text-accent-strong/50">Live Telemetry</span>
               </div>
               
               <div className="space-y-6">
                 <div>
-                  <label className="text-xs font-display font-medium text-text-dim uppercase tracking-widest mb-2 block">Income Input</label>
+                  <label className="text-xs font-display font-medium text-text-dim mb-2 block">Income Input</label>
                   <div className="w-full bg-surface-soft rounded-xl px-4 py-3 font-mono text-text-primary border border-line-soft">
                     {calcInput || " "}
                   </div>
                 </div>
                 
                 <div>
-                  <label className="text-xs font-display font-medium text-text-dim uppercase tracking-widest mb-2 block">Est. Tax Outcome</label>
+                  <label className="text-xs font-display font-medium text-text-dim mb-2 block">Est. Tax Outcome</label>
                   <div className="w-full bg-accent/10 rounded-xl px-4 py-3 font-mono text-accent border border-accent/20">
                     ${calcOutput.toLocaleString()}
                   </div>
@@ -348,7 +358,7 @@ const Home = () => {
                      opacity: 0.8 
                    }}>
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 4L11.9616 22.396A1 1 0 0013.793 22.4542L16.2753 15.6558C16.3986 15.3178 16.6661 15.0503 17.0041 14.927L23.8024 12.4447A1 1 0 0023.7443 10.613L5.34825 2.65158" fill="#0036CC" />
+                  <path d="M4 4L11.9616 22.396A1 1 0 0013.793 22.4542L16.2753 15.6558C16.3986 15.3178 16.6661 15.0503 17.0041 14.927L23.8024 12.4447A1 1 0 0023.7443 10.613L5.34825 2.65158" fill="var(--accent-strong)" />
                   <path d="M4 4L11.9616 22.396A1 1 0 0013.793 22.4542L16.2753 15.6558C16.3986 15.3178 16.6661 15.0503 17.0041 14.927L23.8024 12.4447A1 1 0 0023.7443 10.613L5.34825 2.65158L4 4Z" stroke="white" strokeWidth="2" strokeLinejoin="round" />
                 </svg>
               </div>
@@ -364,7 +374,7 @@ const Home = () => {
           <div className="flex flex-col lg:flex-row items-center gap-16 md:gap-24">
             
             <div className="w-full lg:w-1/2">
-              <span className="text-xs font-mono font-bold tracking-[0.3em] text-accent uppercase mb-8 block">The Language Gap</span>
+              <span className="text-xs font-mono font-bold text-accent mb-8 block">The Language Gap</span>
               <h2 className="text-4xl md:text-6xl font-display font-bold mb-8 leading-tight text-text-primary">
                 We translate <br />
                 <span className="font-serif italic text-accent-strong">Industry Jargon</span> <br />
@@ -385,7 +395,7 @@ const Home = () => {
               <div className="relative h-full">
                 {/* Complex side */}
                 <div key={`complex-${jargons[jargonIndex].complex}`} className="animate-fade-slide-up">
-                  <span className="text-[10px] uppercase tracking-widest font-mono text-text-dim/40 mb-2 block">Complex Terminology</span>
+                  <span className="text-xs font-mono text-text-dim/40 mb-2 block">Complex Terminology</span>
                   <h3 className="text-3xl md:text-5xl font-display font-bold text-text-primary mb-12">
                     {jargons[jargonIndex].complex}
                   </h3>
@@ -401,7 +411,7 @@ const Home = () => {
 
                 {/* Plain side */}
                 <div key={`plain-${jargons[jargonIndex].complex}`} className="animate-fade-slide-up" style={{ animationDelay: '150ms' }}>
-                  <span className="text-[10px] uppercase tracking-widest font-mono text-accent mb-2 block font-bold">In Plain English</span>
+                  <span className="text-xs font-mono text-accent mb-2 block font-bold">In Plain English</span>
                   <p className="text-xl md:text-2xl font-serif italic text-accent-strong leading-relaxed">
                     "{jargons[jargonIndex].plain}"
                   </p>
@@ -432,7 +442,7 @@ const Home = () => {
       <section ref={learningPathRef} className="relative bg-surface-body pb-32">
         <div className="container-custom py-24">
           <div className="text-center mb-16">
-            <span className="uppercase text-xs font-mono tracking-widest text-accent-strong/60 font-bold">The Syllabus</span>
+            <span className="text-xs font-mono text-accent-strong/60 font-bold">The Syllabus</span>
             <h2 className="text-4xl md:text-5xl font-display font-bold mt-4">A structured path forward.</h2>
           </div>
         </div>
@@ -458,11 +468,11 @@ const Home = () => {
               anim: "curve",
               desc: "From theory to reality. Learn how compound interest, risk profiles, and long-term planning translate into actual wealth creation."
             }
-          ].map((item, index) => (
+          ].map((item) => (
             <div key={item.kicker} className="learning-card sticky top-24 md:top-32 w-full max-w-6xl mx-auto h-[65vh] min-h-[500px] mb-24 rounded-[3rem] bg-surface-raised border border-line-soft shadow-2xl p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center overflow-hidden transform-gpu">
               
               <div className="w-full md:w-1/2 relative z-10">
-                <span className="text-xs font-mono font-bold tracking-widest text-accent-strong/60 uppercase block mb-4">
+                <span className="text-xs font-mono font-bold text-accent-strong/60 block mb-4">
                   {item.kicker}
                 </span>
                 <h3 className="text-4xl md:text-5xl font-serif italic mb-6 text-text-primary">
@@ -504,7 +514,7 @@ const Home = () => {
         <div className="container-custom">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
-              <span className="uppercase text-xs font-mono tracking-[0.3em] text-accent font-bold mb-4 block">Common Questions</span>
+              <span className="text-xs font-mono text-accent font-bold mb-4 block">Common Questions</span>
               <h2 className="text-4xl md:text-5xl font-display font-bold text-text-primary">Still curious?</h2>
             </div>
 
@@ -555,7 +565,7 @@ const Home = () => {
           <p className="text-xl md:text-2xl font-display font-medium text-white/80 mb-12">
             Start with any course! it's free.
           </p>
-          <Link to="/courses" className="inline-block bg-white text-accent font-display font-bold px-10 py-5 rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl">
+          <Link to="/courses" className="inline-block bg-surface-raised text-accent font-display font-bold px-10 py-5 rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl">
             View Curriculum
           </Link>
         </div>

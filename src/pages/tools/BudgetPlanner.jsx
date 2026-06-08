@@ -54,7 +54,7 @@ const BudgetPlanner = () => {
                 Synthesize your monthly cash flow and track allocation across your primary cost centers.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-xs uppercase tracking-widest px-8">
+            <Link to="/tools" className="btn-secondary text-sm px-8">
               &larr; Back to tools
             </Link>
           </div>
@@ -64,11 +64,11 @@ const BudgetPlanner = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
           {/* Input Panel */}
           <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16">Your budget</h2>
+            <h2 className="text-sm font-semibold text-text-muted mb-16">Your budget</h2>
 
             <form onSubmit={handleSubmit} className="space-y-16">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block">
+                <label className="text-sm font-semibold text-text-dim mb-4 block">
                   Net Monthly Income (AUD)
                 </label>
                 <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
@@ -88,7 +88,7 @@ const BudgetPlanner = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 {Object.keys(expenses).map((key) => (
                   <div key={key}>
-                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim mb-4 block">
+                    <label className="text-sm font-semibold text-text-dim mb-4 block">
                       {key} Account
                     </label>
                     <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
@@ -107,7 +107,7 @@ const BudgetPlanner = () => {
                 ))}
               </div>
 
-              <button type="submit" className="btn-primary w-full py-6 text-xs uppercase tracking-[0.3em] mt-12">
+              <button type="submit" className="btn-primary w-full py-6 text-xs mt-12">
                 Execute Calculation
               </button>
             </form>
@@ -117,41 +117,41 @@ const BudgetPlanner = () => {
           <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
             <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
 
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted mb-16 relative z-10">Economic Summary</h2>
+            <h2 className="text-sm font-semibold text-text-muted mb-16 relative z-10">Economic Summary</h2>
 
             {result ? (
               <div className="space-y-12 relative z-10">
                 <div className="grid grid-cols-2 gap-8">
                   <div>
-                    <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mb-2">Total Income</p>
+                    <p className="text-xs font-medium text-text-dim mb-2">Total Income</p>
                     <p className="text-3xl font-bold tracking-tight">{formatCurrency(result.income)}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest mb-2">Total Outflow</p>
+                    <p className="text-xs font-medium text-text-dim mb-2">Total Outflow</p>
                     <p className="text-3xl font-bold tracking-tight">{formatCurrency(result.totalExpenses)}</p>
                   </div>
                 </div>
 
                 <div className="bg-surface-body p-10 border border-line-soft">
-                  <p className="text-[9px] font-bold text-accent uppercase tracking-[0.3em] mb-4">
+                  <p className="text-xs font-bold text-accent mb-4">
                     {result.remaining >= 0 ? 'Surplus Logic' : 'Deficit Warning'}
                   </p>
                   <p className={`text-5xl font-black tracking-tighter ${result.remaining >= 0 ? 'text-text-primary' : 'text-accent'}`}>
                     {formatCurrency(Math.abs(result.remaining))}
                   </p>
-                  <div className="mt-8 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
+                  <div className="mt-8 flex justify-between items-center text-xs font-bold">
                     <span className="text-text-muted">Economic Retention</span>
                     <span className="text-accent">{((result.remaining / result.income) * 100 || 0).toFixed(1)}%</span>
                   </div>
                 </div>
 
                 <div className="space-y-6 pt-12 border-t border-line-soft">
-                  <p className="text-[10px] font-black text-text-dim uppercase tracking-[0.3em] mb-8">Allocation Breakdown</p>
+                  <p className="text-xs font-black text-text-dim mb-8">Allocation Breakdown</p>
                   {result.breakdown.map((item) => (
                     item.amount > 0 && (
                       <div key={item.category}>
                         <div className="flex justify-between items-end mb-3">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-text-primary">{item.category}</span>
+                          <span className="text-xs font-bold tracking-wider text-text-primary">{item.category}</span>
                           <span className="text-xs font-bold font-serif italic">{formatCurrency(item.amount)}</span>
                         </div>
                         <div className="w-full bg-surface-soft h-1 overflow-hidden">
@@ -168,7 +168,7 @@ const BudgetPlanner = () => {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
                 <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-4xl font-serif italic mb-8">?</div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Add your income and expenses</p>
+                <p className="text-sm font-medium">Add your income and expenses</p>
               </div>
             )}
           </div>

@@ -252,6 +252,14 @@ class ApiService {
     });
   }
 
+  async aiLessonChat(payload) {
+    return this.request('/ai/lesson-chat', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
   /**
    * Upload a file using a presigned POST (multipart/form-data).
    * `presign` is the object returned by /uploads/presign — must have uploadUrl + fields.

@@ -9,11 +9,11 @@ import { PHET_SUBJECTS, getPhetEmbedUrl } from '../../lib/phetSims';
 function Field({ label, hint, children }) {
   return (
     <label className="block">
-      <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">
+      <span className="block text-sm font-semibold text-text-muted mb-2">
         {label}
       </span>
       {children}
-      {hint && <span className="block mt-1 text-[11px] text-text-dim">{hint}</span>}
+      {hint && <span className="block mt-1.5 text-sm text-text-dim">{hint}</span>}
     </label>
   );
 }
@@ -22,7 +22,7 @@ function TextInput(props) {
   return (
     <input
       {...props}
-      className={`w-full rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 ${props.className || ''}`}
+      className={`w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-[border-color,box-shadow] duration-150 ${props.className || ''}`}
     />
   );
 }
@@ -31,7 +31,7 @@ function TextArea(props) {
   return (
     <textarea
       {...props}
-      className={`w-full rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 ${props.className || ''}`}
+      className={`w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-[border-color,box-shadow] duration-150 ${props.className || ''}`}
     />
   );
 }
@@ -42,7 +42,7 @@ function Select({ value, onChange, options, ...rest }) {
       value={value}
       onChange={onChange}
       {...rest}
-      className="w-full rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+      className="w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-[border-color,box-shadow] duration-150 cursor-pointer"
     >
       {options.map((o) =>
         typeof o === 'string' ? (
@@ -67,7 +67,7 @@ function PillButton({ children, onClick, disabled, tone = 'default', type = 'but
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-[0.2em] transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${cls}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-150 active:scale-[0.95] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 ${cls}`}
     >
       {children}
     </button>
@@ -106,7 +106,7 @@ export function ImagePicker({ value, onChange, lessonId }) {
         <button
           type="button"
           onClick={() => setTab('url')}
-          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${
+          className={`px-3 py-1 rounded-full text-sm font-medium ${
             tab === 'url' ? 'bg-accent text-white' : 'text-text-muted border border-line-soft'
           }`}
         >
@@ -115,7 +115,7 @@ export function ImagePicker({ value, onChange, lessonId }) {
         <button
           type="button"
           onClick={() => setTab('upload')}
-          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] ${
+          className={`px-3 py-1 rounded-full text-sm font-medium ${
             tab === 'upload' ? 'bg-accent text-white' : 'text-text-muted border border-line-soft'
           }`}
         >
@@ -139,10 +139,10 @@ export function ImagePicker({ value, onChange, lessonId }) {
             className="block w-full text-sm text-text-muted file:mr-3 file:px-3 file:py-1.5 file:rounded-full file:border-0 file:bg-accent file:text-white file:text-xs file:font-bold file:uppercase file:tracking-[0.2em] file:cursor-pointer disabled:opacity-50"
           />
           {!lessonId && (
-            <p className="mt-1 text-[11px] text-text-dim">Save the lesson once before uploading.</p>
+            <p className="mt-1 text-xs text-text-dim">Save the lesson once before uploading.</p>
           )}
-          {uploading && <p className="mt-1 text-[11px] text-text-dim">Uploading…</p>}
-          {error && <p className="mt-1 text-[11px] text-rose-500">{error}</p>}
+          {uploading && <p className="mt-1 text-xs text-text-dim">Uploading…</p>}
+          {error && <p className="mt-1 text-xs text-rose-500">{error}</p>}
         </div>
       )}
       {value && tab === 'url' && (
@@ -299,7 +299,7 @@ function ChoiceForm({ slide, onChange }) {
       </Field>
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">Options</span>
+          <span className="text-xs font-semibold text-text-dim">Options</span>
           <PillButton onClick={addOption} tone="primary" disabled={options.length >= 8}>+ Add</PillButton>
         </div>
         <div className="space-y-2">
@@ -337,7 +337,7 @@ function ChoiceForm({ slide, onChange }) {
             );
           })}
         </div>
-        <p className="mt-1.5 text-[11px] text-text-dim">
+        <p className="mt-1.5 text-xs text-text-dim">
           Click the letter to mark an option correct. {mode === 'multiple' ? 'You can mark multiple.' : 'Pick one.'}
         </p>
       </div>
@@ -506,10 +506,10 @@ function FillBlankForm({ slide, onChange }) {
       </Field>
       {blanks.map((b, i) => (
         <div key={i} className="rounded-lg border border-line-soft p-3 bg-surface-soft/50 space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">Blank {i + 1}</p>
+          <p className="text-xs font-semibold text-text-dim">Blank {i + 1}</p>
           {mode === 'dropdown' ? (
             <>
-              <p className="text-[11px] text-text-dim">Add all choices. Click ✓ to mark the correct one.</p>
+              <p className="text-xs text-text-dim">Add all choices. Click ✓ to mark the correct one.</p>
               <div className="space-y-1.5">
                 {(b.options || ['']).map((opt, j) => {
                   const isCorrect = (b.answers || [])[0] === opt && opt !== '';
@@ -546,13 +546,13 @@ function FillBlankForm({ slide, onChange }) {
               </div>
               <PillButton onClick={() => addOption(i)} tone="primary">+ Add choice</PillButton>
               {!(b.answers || [])[0] && (
-                <p className="text-[11px] text-amber-600">No correct answer marked — click ✓ next to the right choice.</p>
+                <p className="text-xs text-amber-600">No correct answer marked — click ✓ next to the right choice.</p>
               )}
             </>
           ) : (
             <>
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-text-dim">Accepted answers (first is primary)</span>
+                <span className="text-xs text-text-dim">Accepted answers (first is primary)</span>
                 <PillButton onClick={() => addAnswer(i)} tone="primary">+ Alt answer</PillButton>
               </div>
               <div className="space-y-1.5">
@@ -622,19 +622,19 @@ function CardsForm({ slide, onChange, lessonId }) {
       </div>
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">Cards</span>
+          <span className="text-xs font-semibold text-text-dim">Cards</span>
           <PillButton onClick={addCard} tone="primary">+ Add card</PillButton>
         </div>
         <div className="space-y-2">
           {cards.map((c, i) => (
             <div key={i} className="rounded-lg border border-line-soft p-3 bg-surface-soft/50 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono text-text-dim">Card {i + 1}</span>
+                <span className="text-xs font-mono text-text-dim">Card {i + 1}</span>
                 <button
                   type="button"
                   onClick={() => removeCard(i)}
                   disabled={cards.length <= 1}
-                  className="text-[11px] text-text-dim hover:text-rose-500 disabled:opacity-30"
+                  className="text-xs text-text-dim hover:text-rose-500 disabled:opacity-30"
                 >
                   Remove
                 </button>
@@ -683,13 +683,13 @@ function MatchForm({ slide, onChange }) {
     <div className="space-y-3">
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">Pairs</span>
+          <span className="text-xs font-semibold text-text-dim">Pairs</span>
           <PillButton onClick={addPair} tone="primary">+ Add pair</PillButton>
         </div>
         <div className="space-y-2">
           {pairs.map((p, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-[10px] font-mono text-text-dim w-6 shrink-0">{i + 1}.</span>
+              <span className="text-xs font-mono text-text-dim w-6 shrink-0">{i + 1}.</span>
               <TextInput
                 value={p.left || ''}
                 onChange={(e) => setPair(i, { left: e.target.value })}
@@ -712,7 +712,7 @@ function MatchForm({ slide, onChange }) {
             </div>
           ))}
         </div>
-        <p className="mt-1.5 text-[11px] text-text-dim">The right column will be shuffled for students.</p>
+        <p className="mt-1.5 text-xs text-text-dim">The right column will be shuffled for students.</p>
       </div>
       <Field label="Explanation (shown after answering)">
         <TextArea
@@ -752,7 +752,7 @@ function OrderForm({ slide, onChange }) {
       </Field>
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim">
+          <span className="text-xs font-semibold text-text-dim">
             Items (in correct order)
           </span>
           <PillButton onClick={addItem} tone="primary">+ Add item</PillButton>
@@ -760,7 +760,7 @@ function OrderForm({ slide, onChange }) {
         <div className="space-y-2">
           {items.map((it, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-[10px] font-mono text-text-dim w-6 shrink-0">{i + 1}.</span>
+              <span className="text-xs font-mono text-text-dim w-6 shrink-0">{i + 1}.</span>
               <TextInput
                 value={it}
                 onChange={(e) => setItem(i, e.target.value)}
@@ -793,7 +793,7 @@ function OrderForm({ slide, onChange }) {
             </div>
           ))}
         </div>
-        <p className="mt-1.5 text-[11px] text-text-dim">
+        <p className="mt-1.5 text-xs text-text-dim">
           Students will see these shuffled and rearrange to match this order.
         </p>
       </div>
@@ -854,7 +854,7 @@ function TableForm({ slide, onChange }) {
                     type="button"
                     onClick={() => removeRow(r)}
                     disabled={rows.length <= 1}
-                    className="text-[11px] text-text-dim hover:text-rose-500 disabled:opacity-30"
+                    className="text-xs text-text-dim hover:text-rose-500 disabled:opacity-30"
                   >
                     Remove row
                   </button>
@@ -868,7 +868,7 @@ function TableForm({ slide, onChange }) {
                     type="button"
                     onClick={() => removeCol(c)}
                     disabled={cols <= 1}
-                    className="text-[11px] text-text-dim hover:text-rose-500 disabled:opacity-30"
+                    className="text-xs text-text-dim hover:text-rose-500 disabled:opacity-30"
                   >
                     Remove col
                   </button>
@@ -1006,7 +1006,7 @@ function DiagramForm({ slide, onChange }) {
           onChange={(e) => onChange({ code: e.target.value })}
         />
       </Field>
-      <p className="text-[11px] text-text-dim">
+      <p className="text-xs text-text-dim">
         Learn Mermaid syntax at{' '}
         <a href="https://mermaid.js.org/syntax/flowchart.html" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
           mermaid.js.org
@@ -1049,7 +1049,7 @@ function PhETPickerModal({ onSelect, onClose }) {
         {/* Header */}
         <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-line-soft">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-accent mb-0.5">PhET Interactive Simulations</p>
+            <p className="text-xs font-semibold text-accent mb-0.5">PhET Interactive Simulations</p>
             <p className="text-sm text-text-muted">{filtered.length} simulations</p>
           </div>
           <button type="button" onClick={onClose} className="w-8 h-8 rounded-full border border-line-soft text-text-muted hover:text-text-primary flex items-center justify-center">
@@ -1075,7 +1075,7 @@ function PhETPickerModal({ onSelect, onClose }) {
                 key={s}
                 type="button"
                 onClick={() => setActiveSubject(s)}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-[0.15em] transition-colors ${
+                className={`px-2.5 py-1 rounded-full text-sm font-medium transition-colors ${
                   activeSubject === s
                     ? 'bg-accent text-white'
                     : 'border border-line-soft text-text-muted hover:border-accent hover:text-accent'
@@ -1100,9 +1100,9 @@ function PhETPickerModal({ onSelect, onClose }) {
                   onClick={() => onSelect(sim)}
                   className="group text-left p-3 rounded-xl border border-line-soft bg-surface-soft hover:border-accent hover:bg-accent/[0.04] transition-all"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent/70 mb-1">{sim.subject}</p>
+                  <p className="text-xs font-semibold text-accent/70 mb-1">{sim.subject}</p>
                   <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors leading-snug">{sim.name}</p>
-                  <p className="text-[11px] text-text-dim mt-1 leading-snug">{sim.desc}</p>
+                  <p className="text-xs text-text-dim mt-1 leading-snug">{sim.desc}</p>
                 </button>
               ))}
             </div>
@@ -1146,7 +1146,7 @@ function MapsBuilder({ onApply, onClose }) {
       <div className="relative z-10 bg-surface-raised border border-line-soft rounded-2xl shadow-2xl w-full max-w-md p-5 space-y-4">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-accent mb-0.5">Google Maps</p>
+            <p className="text-xs font-semibold text-accent mb-0.5">Google Maps</p>
             <p className="text-sm text-text-muted">Search for a place or location</p>
           </div>
           <button type="button" onClick={onClose} className="w-8 h-8 rounded-full border border-line-soft text-text-muted hover:text-text-primary flex items-center justify-center">
@@ -1164,7 +1164,7 @@ function MapsBuilder({ onApply, onClose }) {
         )}
 
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">Place or address</label>
+          <label className="block text-xs font-semibold text-text-dim mb-1.5">Place or address</label>
           <input
             type="text"
             autoFocus
@@ -1177,14 +1177,14 @@ function MapsBuilder({ onApply, onClose }) {
         </div>
 
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">Map type</label>
+          <label className="block text-xs font-semibold text-text-dim mb-1.5">Map type</label>
           <div className="flex gap-2">
             {[['roadmap', 'Road'], ['satellite', 'Satellite'], ['terrain', 'Terrain']].map(([v, l]) => (
               <button
                 key={v}
                 type="button"
                 onClick={() => setMapType(v)}
-                className={`flex-1 py-2 rounded-lg border text-[11px] font-bold uppercase tracking-[0.15em] transition-colors ${
+                className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
                   mapType === v ? 'border-accent bg-accent/10 text-accent' : 'border-line-soft text-text-muted hover:border-accent/60'
                 }`}
               >
@@ -1195,9 +1195,9 @@ function MapsBuilder({ onApply, onClose }) {
         </div>
 
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-text-dim mb-1.5">Zoom level — {zoom}</label>
+          <label className="block text-xs font-semibold text-text-dim mb-1.5">Zoom level — {zoom}</label>
           <input type="range" min={1} max={20} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="w-full accent-accent" />
-          <div className="flex justify-between text-[10px] text-text-dim mt-0.5"><span>World</span><span>City</span><span>Street</span></div>
+          <div className="flex justify-between text-xs text-text-dim mt-0.5"><span>World</span><span>City</span><span>Street</span></div>
         </div>
 
         <button
@@ -1330,7 +1330,7 @@ function HotspotForm({ slide, onChange, lessonId }) {
 
       {slide.image && (
         <>
-          <p className="text-[11px] text-text-dim">Click on the image below to add a region. Then edit each region's label, size, and whether it's correct.</p>
+          <p className="text-xs text-text-dim">Click on the image below to add a region. Then edit each region's label, size, and whether it's correct.</p>
           <div className="relative rounded-xl overflow-hidden border border-line-soft cursor-crosshair">
             <img
               ref={imgRef}
@@ -1344,7 +1344,7 @@ function HotspotForm({ slide, onChange, lessonId }) {
               <div
                 key={r.id}
                 style={{ left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` }}
-                className={`absolute border-2 rounded-lg flex items-center justify-center text-[10px] font-bold text-white ${r.correct ? 'border-emerald-400 bg-emerald-400/30' : 'border-accent bg-accent/20'}`}
+                className={`absolute border-2 rounded-lg flex items-center justify-center text-xs font-bold text-white ${r.correct ? 'border-emerald-400 bg-emerald-400/30' : 'border-accent bg-accent/20'}`}
               >
                 {r.id + 1}
               </div>
@@ -1356,14 +1356,14 @@ function HotspotForm({ slide, onChange, lessonId }) {
               {regions.map((r) => (
                 <div key={r.id} className="p-3 rounded-xl border border-line-soft bg-surface-raised space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-text-dim w-6">{r.id + 1}.</span>
+                    <span className="text-xs font-mono text-text-dim w-6">{r.id + 1}.</span>
                     <TextInput
                       className="flex-1"
                       placeholder="Label"
                       value={r.label || ''}
                       onChange={(e) => updateRegion(r.id, { label: e.target.value })}
                     />
-                    <label className="flex items-center gap-1.5 text-[11px] text-text-muted shrink-0 cursor-pointer">
+                    <label className="flex items-center gap-1.5 text-xs text-text-muted shrink-0 cursor-pointer">
                       <input type="checkbox" checked={!!r.correct} onChange={(e) => updateRegion(r.id, { correct: e.target.checked })} className="accent-accent" />
                       Correct
                     </label>
@@ -1372,7 +1372,7 @@ function HotspotForm({ slide, onChange, lessonId }) {
                   <div className="grid grid-cols-4 gap-1.5">
                     {['x', 'y', 'w', 'h'].map((k) => (
                       <label key={k} className="block">
-                        <span className="text-[10px] text-text-dim uppercase">{k === 'w' ? 'Width %' : k === 'h' ? 'Height %' : k.toUpperCase() + ' %'}</span>
+                        <span className="text-xs text-text-dim">{k === 'w' ? 'Width %' : k === 'h' ? 'Height %' : k.toUpperCase() + ' %'}</span>
                         <input
                           type="number"
                           min={0}
@@ -1437,7 +1437,7 @@ function TimelineForm({ slide, onChange }) {
                 <button type="button" disabled={i === 0} onClick={() => move(i, -1)} className="text-text-dim hover:text-text-primary disabled:opacity-20 text-xs leading-none">↑</button>
                 <button type="button" disabled={i === events.length - 1} onClick={() => move(i, 1)} className="text-text-dim hover:text-text-primary disabled:opacity-20 text-xs leading-none">↓</button>
               </div>
-              <span className="text-[10px] font-mono text-text-dim w-5 shrink-0">{i + 1}.</span>
+              <span className="text-xs font-mono text-text-dim w-5 shrink-0">{i + 1}.</span>
               <TextInput
                 className="flex-1"
                 placeholder="Event label"
@@ -1542,7 +1542,7 @@ function DesmosForm({ slide, onChange }) {
         <div className="grid grid-cols-2 gap-2">
           {[['left', 'Left (x min)'], ['right', 'Right (x max)'], ['bottom', 'Bottom (y min)'], ['top', 'Top (y max)']].map(([k, label]) => (
             <label key={k} className="block">
-              <span className="block text-[10px] text-text-dim mb-1">{label}</span>
+              <span className="block text-xs text-text-dim mb-1">{label}</span>
               <TextInput
                 type="number"
                 value={bounds[k] ?? ''}

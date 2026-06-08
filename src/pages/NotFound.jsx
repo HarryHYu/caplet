@@ -16,13 +16,13 @@ const NotFound = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             to={isAuthenticated ? '/dashboard' : '/'}
-            className="btn-primary text-[10px] px-10 py-5"
+            className="btn-primary text-sm px-10 py-5"
           >
             {isAuthenticated ? 'Go to dashboard' : 'Go home'}
           </Link>
           <Link
             to="/courses"
-            className="btn-secondary text-[10px] px-10 py-5"
+            className="btn-secondary text-sm px-10 py-5"
           >
             Browse courses
           </Link>

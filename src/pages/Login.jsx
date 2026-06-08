@@ -23,16 +23,16 @@ const Login = () => {
                 </div>
 
                 {/* Vertically centered headline */}
-                <div className="relative z-10 flex-1 flex items-center px-12 xl:px-20 pb-12">
+                <div className="relative z-10 flex-1 flex items-center px-12 xl:px-20 pb-40">
                     <div className="max-w-lg">
-                        <span className="text-xs font-mono font-bold tracking-[0.3em] text-accent uppercase mb-8 block">
+                        <span className="text-sm font-mono font-bold text-accent mb-8 block">
                             Financial Education
                         </span>
-                        <h2 className="text-5xl xl:text-6xl font-display font-bold text-text-contrast leading-[0.95] tracking-tight mb-6">
+                        <h2 className="text-6xl xl:text-7xl font-display font-bold text-text-contrast leading-[0.95] tracking-tight mb-6">
                             Your money,<br />
                             <span className="font-serif italic font-medium text-accent">finally clear.</span>
                         </h2>
-                        <p className="text-text-dim text-lg leading-relaxed">
+                        <p className="text-text-dim text-xl leading-relaxed">
                             Structured financial education for Australians.<br />
                             No products. No catch. Just clarity.
                         </p>

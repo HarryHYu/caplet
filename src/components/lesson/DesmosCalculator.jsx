@@ -121,7 +121,7 @@ export default function DesmosCalculator({
       {loading && !error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface-raised z-10">
           <span className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-          <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-text-dim">
+          <span className="text-xs font-medium text-text-dim">
             Loading calculator…
           </span>
         </div>

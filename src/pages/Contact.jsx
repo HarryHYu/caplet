@@ -37,7 +37,7 @@ const Contact = () => {
 
             <div className="bg-surface-raised p-12 lg:p-20 space-y-12">
               <div>
-                <h3 className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-8">
+                <h3 className="text-sm font-semibold text-accent mb-8">
                   We can help with
                 </h3>
                 <ul className="space-y-4 text-sm text-text-muted">

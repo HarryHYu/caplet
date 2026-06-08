@@ -39,7 +39,7 @@ const Footer = () => {
           </div>
 
           <div className="md:col-span-3">
-            <h3 className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-8">Learn</h3>
+            <h3 className="text-sm font-semibold text-accent mb-8">Learn</h3>
             <ul className="space-y-4">
               {[
                 { label: 'Courses', path: '/courses' },
@@ -56,7 +56,7 @@ const Footer = () => {
           </div>
 
           <div className="md:col-span-3">
-            <h3 className="text-[10px] font-bold text-accent uppercase tracking-[0.3em] mb-8">Support</h3>
+            <h3 className="text-sm font-semibold text-accent mb-8">Support</h3>
             <ul className="space-y-4">
               {[
                 { label: 'Dashboard', path: '/dashboard' },

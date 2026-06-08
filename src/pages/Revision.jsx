@@ -24,7 +24,7 @@ function SummaryModal({ open, loading, error, category, slides, onClose }) {
                 <div className="flex items-center justify-between px-6 py-4 border-b border-line-soft">
                     <div className="flex items-center gap-2 min-w-0">
                         <SparklesIcon className="w-4 h-4 text-accent shrink-0" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim truncate">
+                        <span className="text-sm font-medium text-text-dim truncate">
                             Summary · {category}
                         </span>
                     </div>
@@ -37,7 +37,7 @@ function SummaryModal({ open, loading, error, category, slides, onClose }) {
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 min-h-[260px] flex flex-col justify-center">
                     {loading && <CapletLoader message="Summarizing with AI…" />}
                     {!loading && error && (
-                        <p className="text-center text-rose-400 text-sm font-bold uppercase tracking-wider">{error}</p>
+                        <p className="text-center text-rose-400 text-sm font-medium">{error}</p>
                     )}
                     {!loading && !error && current && <SlideRenderer slide={current} onSubmit={() => {}} />}
                 </div>
@@ -45,12 +45,12 @@ function SummaryModal({ open, loading, error, category, slides, onClose }) {
                 {!loading && !error && total > 1 && (
                     <div className="flex items-center justify-between px-6 py-4 border-t border-line-soft">
                         <button type="button" disabled={idx === 0} onClick={() => setIdx((i) => Math.max(0, i - 1))}
-                            className="text-[10px] font-bold uppercase tracking-widest text-text-dim hover:text-accent disabled:opacity-30">
+                            className="text-sm font-medium text-text-dim hover:text-accent disabled:opacity-30">
                             ← Prev
                         </button>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">{Math.min(idx + 1, total)} / {total}</span>
+                        <span className="text-sm font-medium text-text-dim">{Math.min(idx + 1, total)} / {total}</span>
                         <button type="button" disabled={idx >= total - 1} onClick={() => setIdx((i) => Math.min(total - 1, i + 1))}
-                            className="text-[10px] font-bold uppercase tracking-widest text-text-dim hover:text-accent disabled:opacity-30">
+                            className="text-sm font-medium text-text-dim hover:text-accent disabled:opacity-30">
                             Next →
                         </button>
                     </div>
@@ -171,7 +171,7 @@ export default function Revision() {
                             type="button"
                             onClick={handleOrganize}
                             disabled={organizing}
-                            className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-accent border border-accent px-5 py-3 hover:bg-accent hover:text-white transition-colors disabled:opacity-40"
+                            className="flex items-center gap-2 text-sm font-medium text-accent border border-accent px-5 py-3 hover:bg-accent hover:text-white transition-colors disabled:opacity-40"
                         >
                             <BookmarkIcon className="w-4 h-4" />
                             {organizing ? 'Organizing…' : 'Organize with AI'}
@@ -180,16 +180,16 @@ export default function Revision() {
                 </header>
 
                 {organizeError && (
-                    <p className="text-[11px] text-rose-400 mb-8 uppercase tracking-wider font-bold">{organizeError}</p>
+                    <p className="text-sm text-rose-400 mb-8 font-medium">{organizeError}</p>
                 )}
 
                 {savedSlides.length === 0 ? (
                     <div className="border border-line-soft bg-surface-body p-16 text-center">
                         <BookmarkIcon className="w-8 h-8 text-text-dim mx-auto mb-6" />
-                        <p className="text-text-dim uppercase tracking-widest text-[11px] font-bold italic mb-8">
+                        <p className="text-text-dim text-sm font-medium italic mb-8">
                             No flagged slides yet.
                         </p>
-                        <Link to="/courses" className="text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-1">
+                        <Link to="/courses" className="text-sm font-medium text-accent border-b border-accent pb-1">
                             Browse courses
                         </Link>
                     </div>
@@ -198,13 +198,13 @@ export default function Revision() {
                         {groups.map(([topic, slides]) => (
                             <div key={topic}>
                                 <div className="flex items-center justify-between mb-4">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
+                                    <p className="text-sm font-semibold text-text-dim">
                                         {CATEGORY_LABELS[topic] || topic}
                                     </p>
                                     <button
                                         type="button"
                                         onClick={() => handleSummarize(topic)}
-                                        className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-accent hover:opacity-70 transition-opacity"
+                                        className="flex items-center gap-1.5 text-xs font-medium text-accent hover:opacity-70 transition-opacity"
                                     >
                                         <SparklesIcon className="w-3.5 h-3.5" />
                                         Summarize
@@ -224,17 +224,17 @@ export default function Revision() {
                                                     className="flex-1 min-w-0"
                                                 >
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent">{label}</span>
-                                                        <span className="text-text-dim/40 text-[9px]">·</span>
-                                                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-dim">Slide {s.slideIndex + 1}</span>
+                                                        <span className="text-xs font-medium text-accent">{label}</span>
+                                                        <span className="text-text-dim/40 text-xs">·</span>
+                                                        <span className="text-xs font-medium text-text-dim">Slide {s.slideIndex + 1}</span>
                                                     </div>
-                                                    <p className="text-sm font-bold uppercase tracking-tight text-text-primary group-hover:text-accent transition-colors truncate">
+                                                    <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">
                                                         {s.lesson?.title || 'Lesson'}
                                                     </p>
                                                     {excerpt && (
-                                                        <p className="text-[11px] text-text-muted mt-1 line-clamp-1">{excerpt}</p>
+                                                        <p className="text-xs text-text-muted mt-1 line-clamp-1">{excerpt}</p>
                                                     )}
-                                                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-dim mt-1">{s.course?.title}</p>
+                                                    <p className="text-xs font-medium text-text-dim mt-1">{s.course?.title}</p>
                                                 </Link>
                                                 <button
                                                     type="button"

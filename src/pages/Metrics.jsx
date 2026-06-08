@@ -35,7 +35,7 @@ function timeAgo(iso) {
 function StatCell({ label, value, sub, accent }) {
   return (
     <div className={`bg-surface-body p-10 group hover:bg-surface-raised transition-colors ${accent ? 'border-t-2 border-accent' : ''}`}>
-      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-8 group-hover:text-accent transition-colors">
+      <p className="text-sm font-medium text-text-dim mb-8 group-hover:text-accent transition-colors">
         {label}
       </p>
       <p className={`text-5xl font-serif italic transition-transform duration-500 group-hover:translate-x-2 ${accent ? 'text-accent' : 'text-text-primary'}`}>
@@ -53,7 +53,7 @@ function InlineBar({ label, value, total, color }) {
   return (
     <div className="py-6 border-b border-line-soft last:border-0">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-xs font-bold uppercase tracking-widest text-text-muted">{label}</span>
+        <span className="text-sm font-medium text-text-muted">{label}</span>
         <span className="text-sm font-bold text-text-primary">{fmtNum(value)} <span className="text-text-dim font-normal">({pct}%)</span></span>
       </div>
       <div className="h-1 bg-surface-soft overflow-hidden rounded-full">
@@ -105,7 +105,7 @@ export default function Metrics() {
   if (!data) return null;
 
   const totalUsers = data.users?.total ?? 0;
-  const roleData = Object.entries(data.users?.byRole || {})
+  const roleData = Object.entries(data.users?.byRole || {}) // eslint-disable-line no-unused-vars
     .map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }));
 
   const topCourses = (data.topCourses || []).map((c, i) => ({ ...c, fill: i === 0 ? '#0050FF' : '#3B82F6' }));
@@ -128,16 +128,16 @@ export default function Metrics() {
             </h1>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">Auto-refreshes every 60s</p>
+            <p className="text-sm font-medium text-text-dim">Auto-refreshes every 60s</p>
             {lastRefresh && (
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mt-1">
+              <p className="text-sm font-medium text-text-dim mt-1">
                 Updated {timeAgo(lastRefresh)}
               </p>
             )}
             <button
               type="button"
               onClick={load}
-              className="mt-4 text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-0.5 hover:text-text-primary hover:border-text-primary transition-colors"
+              className="mt-4 text-sm font-medium text-accent border-b border-accent pb-0.5 hover:text-text-primary hover:border-text-primary transition-colors"
             >
               Refresh now
             </button>
@@ -173,7 +173,7 @@ export default function Metrics() {
               { label: 'Avg Confidence', value: data.survey?.averageConfidence > 0 ? `${data.survey.averageConfidence}/10` : '—' },
             ].map(({ label, value }) => (
               <div key={label} className="bg-surface-body p-6 hover:bg-surface-raised transition-colors group">
-                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-text-dim mb-4 group-hover:text-accent transition-colors">{label}</p>
+                <p className="text-xs font-medium text-text-dim mb-4 group-hover:text-accent transition-colors">{label}</p>
                 <p className="text-2xl font-serif italic text-text-primary">{value}</p>
               </div>
             ))}
@@ -256,7 +256,7 @@ export default function Metrics() {
         )}
 
         {/* ── footer stamp ── */}
-        <footer className="border-t border-line-soft pt-8 text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim flex justify-between">
+        <footer className="border-t border-line-soft pt-8 text-sm font-medium text-text-dim flex justify-between">
           <span>Caplet · Internal Analytics</span>
           <span>{data.generatedAt ? new Date(data.generatedAt).toLocaleString() : ''}</span>
         </footer>

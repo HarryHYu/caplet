@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../middleware/auth');
-const { generateLessonSlides } = require('../services/lessonAI');
+const { generateLessonSlides, getClient } = require('../services/lessonAI');
 
 const router = express.Router();
 
@@ -80,6 +80,63 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
       message: e.message || 'AI generation failed',
       details: e.details,
     });
+  }
+});
+
+// Conversational chat: interprets a natural-language message and either
+// generates slides (action="generate") or answers the question (action="message").
+router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
+  const ALLOWED_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
+  const message        = (req.body?.message ?? '').toString().trim().slice(0, 2000);
+  const lessonTitle    = (req.body?.lessonTitle ?? '').toString().slice(0, 200);
+  const existingCount  = parseInt(req.body?.existingSlideCount, 10) || 0;
+  const model          = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
+
+  if (!message) return res.status(400).json({ message: 'Message is required.' });
+
+  const client = getClient();
+  if (!client) return res.status(503).json({ message: 'AI not available — OPENAI_API_KEY not set.' });
+
+  try {
+    // Intent classification always uses mini — it's a simple routing task.
+    const intent = await client.chat.completions.create({
+      model: 'gpt-5.4-mini',
+      max_tokens: 400,
+      messages: [
+        {
+          role: 'system',
+          content: [
+            `You are a lesson-building assistant. The teacher is editing "${lessonTitle || 'a lesson'}" (${existingCount} slides).`,
+            'If the message asks to add, create, or generate educational content (slides, questions, exercises, etc.), respond with ONLY this JSON:',
+            '{"action":"generate","notes":"<detailed content description suitable for slide generation>","slideCount":<number 1-15>}',
+            'If the message is a question, request for advice, or anything else, respond with ONLY this JSON:',
+            '{"action":"message","text":"<your concise helpful response, max 3 sentences>"}',
+            'Respond with valid JSON only — no markdown, no backticks.',
+          ].join('\n'),
+        },
+        { role: 'user', content: message },
+      ],
+    });
+
+    let intent_parsed;
+    try {
+      intent_parsed = JSON.parse(intent.choices[0].message.content.trim());
+    } catch {
+      intent_parsed = { action: 'message', text: intent.choices[0].message.content.trim() };
+    }
+
+    if (intent_parsed.action === 'generate') {
+      const notes = intent_parsed.notes || message;
+      const slideCount = Math.min(Math.max(parseInt(intent_parsed.slideCount, 10) || 5, 1), 15);
+      const out = await generateLessonSlides(notes, { title: lessonTitle, slideCount, model });
+      return res.json({ action: 'generate', slides: out.slides, warnings: out.warnings || [] });
+    }
+
+    return res.json({ action: 'message', text: intent_parsed.text || '' });
+  } catch (e) {
+    const status = e.status || 502;
+    console.error('AI lesson-chat error:', e.message);
+    return res.status(status).json({ message: e.message || 'AI request failed' });
   }
 });
 

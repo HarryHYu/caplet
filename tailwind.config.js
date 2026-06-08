@@ -27,16 +27,19 @@ export default {
           soft: 'var(--surface-soft)',
           raised: 'var(--surface-raised)',
           inverse: 'var(--surface-inverse)',
+          error: 'var(--surface-error)',
         },
         text: {
           primary: 'var(--text-primary)',
           muted: 'var(--text-muted)',
           dim: 'var(--text-dim)',
           contrast: 'var(--text-contrast)',
+          error: 'var(--text-error)',
         },
         line: {
           soft: 'var(--line-soft)',
           strong: 'var(--line-strong)',
+          error: 'var(--border-error)',
         },
       },
       letterSpacing: {
@@ -45,7 +48,7 @@ export default {
       boxShadow: {
         minimal: '0 1px 3px rgba(0, 0, 0, 0.05)',
         'minimal-lg': '0 4px 12px rgba(0, 0, 0, 0.08)',
-        glow: '0 0 20px rgba(0, 102, 255, 0.15)',
+        glow: '0 0 20px var(--accent-soft)',
       },
       borderRadius: {
         none: '0',
@@ -59,6 +62,11 @@ export default {
         'progress-indefinite': 'progress-indefinite 2s linear infinite',
         'card-in': 'card-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'caplet-logo-twist': 'capletLogoTwist 2s ease-in-out infinite',
+        'msg-in': 'msg-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'dot-bounce': 'dot-bounce 1.1s ease-in-out infinite',
+        'dot-wave': 'dot-wave 1.3s ease-in-out infinite',
+        'status-pulse': 'status-pulse 2.4s ease-in-out infinite',
+        'slide-card-enter': 'slide-card-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both',
       },
       keyframes: {
         'progress-indefinite': {
@@ -75,6 +83,26 @@ export default {
           '25%': { transform: 'rotateY(90deg) rotateZ(-5deg)' },
           '50%': { transform: 'rotateY(180deg) rotateZ(0deg)' },
           '75%': { transform: 'rotateY(270deg) rotateZ(5deg)' },
+        },
+        'msg-in': {
+          '0%': { opacity: '0', transform: 'translateY(7px) scale(0.97)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'dot-bounce': {
+          '0%, 60%, 100%': { transform: 'translateY(0)' },
+          '30%': { transform: 'translateY(-5px)' },
+        },
+        'dot-wave': {
+          '0%, 80%, 100%': { transform: 'scaleY(0.45)', opacity: '0.3' },
+          '40%': { transform: 'scaleY(1)', opacity: '1' },
+        },
+        'status-pulse': {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.5', transform: 'scale(0.85)' },
+        },
+        'slide-card-enter': {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
     },

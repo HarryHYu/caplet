@@ -109,7 +109,7 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
     <div className="h-full overflow-y-auto">
       <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-4 border-b border-line-soft sticky top-0 bg-surface-raised z-10">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-2">Curriculum</p>
+          <p className="text-xs font-medium text-text-dim mb-2">Curriculum</p>
           <h3 className="text-base font-serif italic text-text-primary truncate">{course.title}</h3>
         </div>
         {onClose && (
@@ -133,10 +133,10 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
           .map((mod, mi) => (
             <section key={mod.id}>
               <div className="flex items-baseline gap-3 mb-3">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">
+                <span className="text-xs font-medium text-accent">
                   {String(mi + 1).padStart(2, '0')}
                 </span>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-text-dim">{mod.title}</p>
+                <p className="text-xs font-medium text-text-dim">{mod.title}</p>
               </div>
               <ul className="space-y-px border-l border-line-soft pl-4">
                 {(mod.lessons || [])
@@ -475,7 +475,7 @@ const LessonPlayer = () => {
               </Link>
 
               <div className="hidden md:block min-w-0">
-                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-text-dim mb-0.5">
+                <div className="flex items-center gap-2 text-xs font-medium text-text-dim mb-0.5">
                   <Link to={`/courses/${course.id}`} className="hover:text-accent transition-colors truncate">
                     {course.title}
                   </Link>
@@ -505,18 +505,18 @@ const LessonPlayer = () => {
 
             {/* Right — meta + outline trigger */}
             <div className="flex items-center gap-2 md:gap-3 shrink-0">
-              <div className="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-text-dim">
+              <div className="hidden md:flex items-center gap-2 text-xs font-medium text-text-dim">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
                 Lesson {idx + 1} <span className="opacity-50">/</span> {flatLessons.length}
               </div>
 
-              <div className="hidden lg:flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-text-dim">
+              <div className="hidden lg:flex items-center gap-2 text-xs font-medium text-text-dim">
                 <span className="opacity-50">·</span>
                 Course {coursePct}%
               </div>
 
               {completed && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
@@ -541,7 +541,7 @@ const LessonPlayer = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 7h6M9 11h2m4 0h-2m-2 4h2M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
                 </svg>
-                <span className="hidden md:inline text-[11px] font-bold uppercase tracking-[0.2em]">Calc</span>
+                <span className="hidden md:inline text-xs font-medium">Calc</span>
               </button>
 
               <button
@@ -553,7 +553,7 @@ const LessonPlayer = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h10" />
                 </svg>
-                <span className="hidden md:inline text-[11px] font-bold uppercase tracking-[0.2em]">Outline</span>
+                <span className="hidden md:inline text-xs font-medium">Outline</span>
               </button>
             </div>
           </div>
@@ -578,7 +578,7 @@ const LessonPlayer = () => {
         {hasSlides ? (
           <div className="flex-1 min-h-0 max-w-[1400px] w-full mx-auto px-4 md:px-8 lg:px-12 py-5 md:py-7 flex flex-col gap-4 md:gap-5">
             {/* Slide kicker */}
-            <div className="shrink-0 flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
+            <div className="shrink-0 flex items-center justify-between gap-3 text-xs font-medium text-text-dim">
               <div className="flex items-center gap-3">
                 <span className="font-mono text-accent">
                   {String(currentSlideIndex + 1).padStart(2, '0')}
@@ -598,7 +598,7 @@ const LessonPlayer = () => {
                   onClick={toggleSaveSlide}
                   disabled={savingSlide}
                   aria-label={savedSlides.has(currentSlideIndex) ? 'Remove saved slide' : 'Save slide'}
-                  className={`shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-full border transition-colors text-[10px] font-bold uppercase tracking-[0.2em] ${
+                  className={`shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-full border transition-colors text-xs font-medium ${
                     savedSlides.has(currentSlideIndex)
                       ? 'border-accent text-accent bg-accent/10 hover:bg-accent/20'
                       : 'border-line-soft text-text-muted hover:border-text-dim hover:text-text-primary'
@@ -673,10 +673,10 @@ const LessonPlayer = () => {
                 <svg className="w-4 h-4 transition-transform group-enabled:group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] hidden sm:inline">Previous</span>
+                <span className="text-xs font-medium hidden sm:inline">Previous</span>
               </button>
 
-              <div className="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-text-dim">
+              <div className="hidden md:flex items-center gap-2 text-xs font-medium text-text-dim">
                 <kbd className="px-2 py-1 rounded border border-line-soft text-text-dim/80 font-mono text-[10px]">←</kbd>
                 <kbd className="px-2 py-1 rounded border border-line-soft text-text-dim/80 font-mono text-[10px]">→</kbd>
                 <span className="ml-1">to navigate</span>
@@ -705,7 +705,7 @@ const LessonPlayer = () => {
                   onClick={() => goToSlide(currentSlideIndex + 1)}
                   className="group inline-flex items-center gap-3 h-11 md:h-12 px-5 md:px-6 rounded-full bg-text-primary text-surface-body hover:opacity-90 active:opacity-100 transition-opacity"
                 >
-                  <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Next</span>
+                  <span className="text-xs font-medium">Next</span>
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -718,7 +718,7 @@ const LessonPlayer = () => {
           <div className="flex-1 min-h-0 overflow-y-auto">
             <article className="max-w-3xl mx-auto px-6 md:px-12 py-12">
               <header className="mb-12">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent mb-4">Lesson</p>
+                <p className="text-xs font-medium text-accent mb-4">Lesson</p>
                 <h1 className="text-4xl md:text-5xl font-display font-bold leading-[1.05] mb-6">{lesson.title}</h1>
                 {lesson.description && (
                   <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-2xl">
@@ -829,7 +829,7 @@ const LessonPlayer = () => {
                   key={m}
                   type="button"
                   onClick={() => setCalcMode(m)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-[0.15em] transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                     calcMode === m
                       ? 'bg-surface-raised shadow-sm text-text-primary'
                       : 'text-text-dim hover:text-text-primary'

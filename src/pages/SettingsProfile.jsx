@@ -60,15 +60,15 @@ const SettingsProfile = () => {
   return (
     <div>
       <div className="pb-8 border-b border-line-soft mb-12">
-        <h2 className="text-xl font-bold uppercase tracking-tighter text-text-primary">Profile Details.</h2>
-        <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest mt-2">
+        <h2 className="text-xl font-bold text-text-primary">Profile Details.</h2>
+        <p className="text-sm font-medium text-text-dim mt-2">
           Update your personal information and account details.
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-10">
         {message.text && (
           <div
-            className={`px-6 py-4 border font-bold text-[10px] uppercase tracking-widest ${message.type === 'success'
+            className={`px-6 py-4 border font-medium text-sm ${message.type === 'success'
               ? 'border-accent text-accent'
               : 'border-red-500 text-red-500'
               }`}
@@ -78,7 +78,7 @@ const SettingsProfile = () => {
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
           <div className="space-y-3">
-            <label htmlFor="firstName" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+            <label htmlFor="firstName" className="block text-sm font-semibold text-text-dim">
               Given Name
             </label>
             <input
@@ -88,11 +88,11 @@ const SettingsProfile = () => {
               required
               value={form.firstName}
               onChange={handleChange}
-              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold text-xs uppercase tracking-widest"
+              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm"
             />
           </div>
           <div className="space-y-3">
-            <label htmlFor="lastName" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+            <label htmlFor="lastName" className="block text-sm font-semibold text-text-dim">
               Surname
             </label>
             <input
@@ -102,12 +102,12 @@ const SettingsProfile = () => {
               required
               value={form.lastName}
               onChange={handleChange}
-              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold text-xs uppercase tracking-widest"
+              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm"
             />
           </div>
         </div>
         <div className="space-y-3">
-          <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+          <label htmlFor="email" className="block text-sm font-semibold text-text-dim">
             Registry Email
           </label>
           <input
@@ -117,11 +117,11 @@ const SettingsProfile = () => {
             required
             value={form.email}
             onChange={handleChange}
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold text-xs uppercase tracking-widest"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm"
           />
         </div>
         <div className="space-y-3">
-          <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+          <label htmlFor="password" className="block text-sm font-semibold text-text-dim">
             New password
           </label>
           <input
@@ -132,14 +132,14 @@ const SettingsProfile = () => {
             onChange={handleChange}
             placeholder="Leave blank to keep current"
             autoComplete="new-password"
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs placeholder:text-text-muted/30"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-sm placeholder:text-text-muted/30"
           />
-          <p className="mt-2 text-[9px] font-bold text-text-dim uppercase tracking-widest">
+          <p className="mt-2 text-xs font-medium text-text-dim">
             At least 6 characters. Google-only accounts can set a password here to enable email login too.
           </p>
         </div>
         <div className="space-y-3">
-          <label htmlFor="dateOfBirth" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
+          <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-text-dim">
             Date of Birth
           </label>
           <input
@@ -148,12 +148,12 @@ const SettingsProfile = () => {
             type="date"
             value={form.dateOfBirth}
             onChange={handleChange}
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-bold text-xs uppercase tracking-widest appearance-none"
+            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm appearance-none"
           />
         </div>
         <div className="space-y-3">
-          <label htmlFor="bio" className="block text-[10px] font-black uppercase tracking-[0.4em] text-text-dim">
-            Professional Dossier
+          <label htmlFor="bio" className="block text-sm font-semibold text-text-dim">
+            Bio
           </label>
           <textarea
             id="bio"
@@ -163,11 +163,11 @@ const SettingsProfile = () => {
             value={form.bio}
             onChange={handleChange}
             placeholder="Tell us about yourself..."
-            className="w-full px-6 py-5 bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary text-xs tracking-wide placeholder:text-text-muted/30 resize-none"
+            className="w-full px-6 py-5 bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary text-sm placeholder:text-text-muted/30 resize-none"
           />
           <div className="flex justify-between items-center mt-2">
-            <p className="text-[9px] font-bold text-text-dim uppercase tracking-widest">
-              Characters: {form.bio.length}/1000
+            <p className="text-xs font-medium text-text-dim">
+              {form.bio.length}/1000 characters
             </p>
           </div>
         </div>
@@ -175,7 +175,7 @@ const SettingsProfile = () => {
           <button
             type="submit"
             disabled={saving}
-            className="btn-primary py-5 px-10 text-[10px] disabled:opacity-30"
+            className="btn-primary py-5 px-10 text-sm disabled:opacity-30"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

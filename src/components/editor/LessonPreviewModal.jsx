@@ -36,15 +36,18 @@ export default function LessonPreviewModal({ open, onClose, title, slides }) {
       <header className="shrink-0 border-b border-line-soft bg-surface-body/95 backdrop-blur-md">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 h-14 md:h-16 flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent mb-0.5">Preview</p>
+            <p className="text-xs font-semibold text-accent mb-0.5">Preview</p>
             <p className="text-sm font-serif italic text-text-primary truncate max-w-md">{title || 'Untitled lesson'}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center gap-2 h-9 px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim text-[11px] font-bold uppercase tracking-[0.2em]"
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim text-sm font-medium transition-colors duration-150"
           >
-            Close ✕
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M2 2L8 8M8 2L2 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            Close
           </button>
         </div>
         {list.length > 0 && (
@@ -77,7 +80,7 @@ export default function LessonPreviewModal({ open, onClose, title, slides }) {
           </div>
         ) : (
           <>
-            <div className="shrink-0 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim">
+            <div className="shrink-0 flex items-center gap-3 text-xs font-semibold text-text-dim">
               <span className="font-mono text-accent">
                 {String(index + 1).padStart(2, '0')}
                 <span className="opacity-50"> / </span>
@@ -107,20 +110,20 @@ export default function LessonPreviewModal({ open, onClose, title, slides }) {
                 type="button"
                 onClick={() => setIndex(Math.max(0, index - 1))}
                 disabled={index === 0}
-                className="px-4 py-2 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 text-[11px] font-bold uppercase tracking-[0.2em]"
+                className="px-4 py-2 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 text-sm font-medium transition-colors duration-150"
               >
                 ← Previous
               </button>
-              <div className="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-text-dim">
-                <kbd className="px-2 py-1 rounded border border-line-soft font-mono text-[10px]">←</kbd>
-                <kbd className="px-2 py-1 rounded border border-line-soft font-mono text-[10px]">→</kbd>
+              <div className="hidden md:flex items-center gap-2 text-xs text-text-dim">
+                <kbd className="px-2 py-1 rounded border border-line-soft font-mono text-xs">←</kbd>
+                <kbd className="px-2 py-1 rounded border border-line-soft font-mono text-xs">→</kbd>
                 <span className="ml-1">to navigate</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIndex(Math.min(list.length - 1, index + 1))}
                 disabled={index >= list.length - 1}
-                className="px-4 py-2 rounded-full bg-text-primary text-surface-body hover:opacity-90 disabled:opacity-30 text-[11px] font-bold uppercase tracking-[0.2em]"
+                className="px-4 py-2 rounded-full bg-text-primary text-surface-body hover:opacity-90 disabled:opacity-30 text-sm font-medium transition-opacity duration-150"
               >
                 Next →
               </button>

@@ -105,11 +105,11 @@ const Classes = () => {
               Collaborative learning environments structured for peer progression and academic leadership.
             </p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-3">
             {isTeacher && (
               <button
                 onClick={() => setShowCreate(true)}
-                className="btn-primary px-12 py-5 text-[10px]"
+                className="btn-secondary px-6 py-2.5 text-sm"
               >
                 Establish Class
               </button>
@@ -119,15 +119,18 @@ const Classes = () => {
                 if (!isAuthenticated) return navigate('/login');
                 setShowJoin(true);
               }}
-              className={`${isTeacher ? 'btn-secondary' : 'btn-primary'} px-12 py-5 text-[10px]`}
+              className="btn-primary px-6 py-2.5 text-sm gap-2"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
               Join Class
             </button>
           </div>
         </header>
 
         {error && (
-          <div className="mb-20 p-10 bg-red-50 text-red-800 text-[10px] font-bold uppercase tracking-widest border border-red-100 flex items-center gap-4 reveal-text">
+          <div className="mb-20 p-10 bg-red-50 text-red-800 text-sm font-medium border border-red-100 flex items-center gap-4 reveal-text">
             <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
             Signal Error: {error}
           </div>
@@ -135,12 +138,12 @@ const Classes = () => {
 
         {isTeacher && (
           <section className="mb-32 reveal-text stagger-1">
-            <h2 className="text-[11px] font-bold text-accent uppercase tracking-[0.5em] mb-12 border-b border-line-soft pb-6">
+            <h2 className="text-sm font-semibold text-accent mb-12 border-b border-line-soft pb-6">
               Leadership Portfolio
             </h2>
             {classes.teaching.length === 0 ? (
               <div className="p-24 border border-line-soft text-center bg-surface-soft">
-                <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest">
+                <p className="text-sm font-medium text-text-dim">
                   No managed entities detected.
                 </p>
               </div>
@@ -151,11 +154,11 @@ const Classes = () => {
                     <div>
                       <div className="flex justify-between items-start mb-12">
                         <h3 className="text-3xl font-serif italic group-hover:translate-x-2 transition-transform duration-700">{cls.name}</h3>
-                        <span className="text-[9px] font-bold px-3 py-1 bg-text-primary text-surface-body uppercase tracking-widest group-hover:bg-accent transition-colors">Owner</span>
+                        <span className="text-xs font-medium px-3 py-1 bg-text-primary text-surface-body group-hover:bg-accent transition-colors">Owner</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between pt-12 border-t border-line-soft">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Passkey Protocol:</span>
+                      <span className="text-sm font-medium text-text-dim">Passkey Protocol:</span>
                       <span className="text-xs font-bold font-mono tracking-widest text-text-primary group-hover:text-accent transition-colors">
                         {cls.code}
                       </span>
@@ -168,12 +171,12 @@ const Classes = () => {
         )}
 
         <section className="reveal-text stagger-2">
-          <h2 className="text-[11px] font-bold text-accent uppercase tracking-[0.5em] mb-12 border-b border-line-soft pb-6">
+          <h2 className="text-sm font-semibold text-accent mb-12 border-b border-line-soft pb-6">
             Enrollment Registry
           </h2>
           {classes.student.length === 0 ? (
             <div className="p-24 border border-line-soft text-center bg-surface-soft">
-              <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest italic">
+              <p className="text-sm font-medium text-text-dim italic">
                 Awaiting first academy registration.
               </p>
             </div>
@@ -184,11 +187,11 @@ const Classes = () => {
                   <div>
                     <div className="flex justify-between items-start mb-12">
                       <h3 className="text-3xl font-serif italic group-hover:translate-x-2 transition-transform duration-700">{cls.name}</h3>
-                      <span className="text-[9px] font-bold px-3 py-1 bg-surface-soft text-text-dim uppercase tracking-widest group-hover:text-accent group-hover:text-white transition-colors">Member</span>
+                      <span className="text-xs font-medium px-3 py-1 bg-surface-soft text-text-dim group-hover:text-accent transition-colors">Member</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-12 border-t border-line-soft">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Academy ID:</span>
+                    <span className="text-sm font-medium text-text-dim">Academy ID:</span>
                     <span className="text-xs font-bold font-mono tracking-widest text-text-primary group-hover:text-accent transition-colors">
                       {cls.code}
                     </span>
@@ -204,33 +207,33 @@ const Classes = () => {
           <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-2xl flex items-center justify-center z-50 p-6 reveal-text">
             <div className="bg-surface-raised border border-line-soft max-w-lg w-full p-16 shadow-2xl">
               <div className="flex items-center justify-between mb-16">
-                <h2 className="text-4xl font-serif italic uppercase tracking-tight">Create Entity.</h2>
+                <h2 className="text-4xl font-serif italic">Create Entity.</h2>
                 <button onClick={() => setShowCreate(false)} className="text-text-dim hover:text-accent transition-colors">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
               <form onSubmit={handleCreate} className="space-y-12">
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-[0.4em] text-text-dim mb-4 block">Entity Title</label>
+                  <label className="text-sm font-semibold text-text-dim mb-4 block">Entity Title</label>
                   <input
                     type="text"
                     value={createForm.name}
                     onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                    className="w-full bg-surface-soft border border-line-soft px-8 py-5 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-accent transition-colors"
+                    className="w-full bg-surface-soft border border-line-soft px-8 py-5 text-sm font-medium outline-none focus:border-accent transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-[0.4em] text-text-dim mb-4 block">Definition (Optional)</label>
+                  <label className="text-sm font-semibold text-text-dim mb-4 block">Definition (Optional)</label>
                   <textarea
                     rows={4}
                     value={createForm.description}
                     onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                    className="w-full bg-surface-soft border border-line-soft px-8 py-5 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-accent transition-colors resize-none"
+                    className="w-full bg-surface-soft border border-line-soft px-8 py-5 text-sm font-medium outline-none focus:border-accent transition-colors resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary py-5 text-[10px]">Abort</button>
-                  <button type="submit" className="btn-primary py-5 text-[10px]">{submitting ? 'Initializing...' : 'Establish Class'}</button>
+                  <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary py-3 text-sm">Cancel</button>
+                  <button type="submit" className="btn-primary py-3 text-sm">{submitting ? 'Creating...' : 'Establish Class'}</button>
                 </div>
               </form>
             </div>
@@ -241,23 +244,23 @@ const Classes = () => {
           <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-3xl flex items-center justify-center z-50 p-6 reveal-text">
             <div className="bg-surface-raised border border-line-soft max-w-sm w-full p-16 shadow-2xl">
               <div className="flex items-center justify-between mb-16">
-                <h2 className="text-4xl font-serif italic uppercase tracking-tight">Access.</h2>
+                <h2 className="text-4xl font-serif italic">Access.</h2>
                 <button onClick={() => setShowJoin(false)} className="text-text-dim hover:text-accent transition-colors">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
               <form onSubmit={handleJoin} className="space-y-20">
                 <div className="text-center">
-                  <label className="text-[10px] font-bold uppercase tracking-[0.5em] text-text-dim mb-8 block font-serif italic">Identity Protocol Required</label>
+                  <label className="text-sm font-semibold text-text-dim mb-8 block">Identity Protocol Required</label>
                   <input
                     type="text"
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    className="w-full bg-transparent text-center text-5xl font-extrabold tracking-[0.4em] outline-none border-b-2 border-line-soft focus:border-accent py-8 uppercase transition-all"
+                    className="w-full bg-transparent text-center text-5xl font-extrabold outline-none border-b-2 border-line-soft focus:border-accent py-8 transition-all"
                     placeholder="PROTOCOL"
                   />
                 </div>
-                <button type="submit" className="w-full btn-primary py-6 text-[10px]">{submitting ? 'Verifying...' : 'Authenticate Access'}</button>
+                <button type="submit" className="w-full btn-primary py-3 text-sm">{submitting ? 'Verifying...' : 'Join Class'}</button>
               </form>
             </div>
           </div>

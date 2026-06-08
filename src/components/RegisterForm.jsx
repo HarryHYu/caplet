@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
 
-const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
+const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -68,59 +68,63 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
   };
 
   return (
-    <div className={`w-full mx-auto reveal-text ${isPage ? 'max-w-xl' : 'max-w-md'}`}>
-      <div className="mb-10">
-        <span className="section-kicker">Sign up</span>
-        <h2 className="text-5xl font-serif italic mb-4">
-          Join Caplet.
+    <div className="w-full">
+
+      {/* Heading */}
+      <div className="mb-8">
+        <h2 className="text-4xl font-display font-bold text-text-primary tracking-tight mb-2">
+          Create account.
         </h2>
-        <p className="text-lg text-text-muted font-medium tracking-tight">
-          Google or email — same account if the email matches. Already registered?{' '}
+        <p className="text-sm text-text-muted">
+          Already registered?{' '}
           {onSwitchToLogin ? (
             <button
               type="button"
               onClick={onSwitchToLogin}
               className="text-accent font-semibold hover:underline"
             >
-              Log in
+              Sign in
             </button>
           ) : null}
         </p>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
-          <p className="text-sm font-medium text-red-700">{error}</p>
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 
-      <div className={googleLoading ? 'pointer-events-none opacity-60' : ''}>
-        <GoogleLogin
-          onSuccess={handleGoogleSuccess}
-          onError={() => setError('Google sign-up was cancelled or failed.')}
-          theme="outline"
-          size="large"
-          text="continue_with"
-          shape="rectangular"
-          width="320"
-        />
-      </div>
-      {googleLoading && (
-        <p className="mt-3 text-sm text-text-dim flex items-center gap-2">
-          <span className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin inline-block" />
-          Continuing with Google…
-        </p>
-      )}
-
-      <div className="my-10 flex items-center gap-4">
-        <div className="flex-1 h-px bg-line-soft" />
-        <span className="text-xs font-medium uppercase tracking-widest text-text-dim">or</span>
-        <div className="flex-1 h-px bg-line-soft" />
+      <div className={`w-full ${submitLoading || googleLoading ? 'opacity-80' : ''}`}>
+        <div className={`w-full [&>div]:w-full [&>div>div]:w-full ${googleLoading ? 'pointer-events-none opacity-60' : ''}`}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google sign-up was cancelled or failed.')}
+            theme="outline"
+            size="large"
+            text="continue_with"
+            shape="rectangular"
+            width="384"
+          />
+        </div>
+        {googleLoading && (
+          <p className="mt-3 text-sm text-text-dim flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin inline-block" />
+            Continuing with Google…
+          </p>
+        )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="space-y-2">
+      <div className="my-7 flex items-center gap-4">
+        <div className="flex-1 h-px bg-line-soft" />
+        <span className="text-xs font-medium text-text-dim">or</span>
+        <div className="flex-1 h-px bg-line-soft" />
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
             <label htmlFor="reg-firstName" className="block text-sm font-medium text-text-muted">First name</label>
             <input
               id="reg-firstName"
@@ -128,10 +132,10 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
               value={formData.firstName}
               onChange={handleChange}
               required
-              className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
+              className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm"
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label htmlFor="reg-lastName" className="block text-sm font-medium text-text-muted">Last name</label>
             <input
               id="reg-lastName"
@@ -139,11 +143,11 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
               value={formData.lastName}
               onChange={handleChange}
               required
-              className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
+              className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm"
             />
           </div>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <label htmlFor="reg-email" className="block text-sm font-medium text-text-muted">Email</label>
           <input
             type="email"
@@ -153,23 +157,24 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
             onChange={handleChange}
             required
             autoComplete="email"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
+            placeholder="you@example.com"
+            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <label htmlFor="reg-role" className="block text-sm font-medium text-text-muted">I am a</label>
           <select
             id="reg-role"
             name="role"
             value={formData.role}
             onChange={handleChange}
-            className="w-full py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
+            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm"
           >
             <option value="student">Student / learner</option>
             <option value="instructor">Instructor / teacher</option>
           </select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <label htmlFor="reg-password" className="block text-sm font-medium text-text-muted">Password (min 6 characters)</label>
           <input
             type="password"
@@ -180,10 +185,11 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
             required
             minLength={6}
             autoComplete="new-password"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
+            placeholder="••••••••"
+            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <label htmlFor="reg-confirm" className="block text-sm font-medium text-text-muted">Confirm password</label>
           <input
             type="password"
@@ -193,7 +199,8 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, isPage = false }) => {
             onChange={handleChange}
             required
             autoComplete="new-password"
-            className="w-full px-0 py-3 bg-transparent border-b border-line-soft focus:border-accent outline-none text-text-primary"
+            placeholder="••••••••"
+            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
           />
         </div>
         <button

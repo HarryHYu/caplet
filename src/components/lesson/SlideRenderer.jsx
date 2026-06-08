@@ -52,7 +52,7 @@ function FeedbackBanner({ correct, explanation }) {
       }`}
     >
       <p
-        className={`text-xs font-bold uppercase tracking-[0.2em] mb-1.5 ${
+        className={`text-xs font-bold mb-1.5 ${
           correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
         }`}
       >
@@ -67,7 +67,7 @@ function FeedbackBanner({ correct, explanation }) {
 
 function Kicker({ children }) {
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-[0.25em] mb-4">
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium mb-4">
       <span className="w-1.5 h-1.5 rounded-full bg-accent" />
       {children}
     </div>
@@ -400,7 +400,7 @@ function FillBlankSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
 
       {showFeedback && !allCorrect && (
         <div className="text-sm text-text-muted mb-4">
-          <p className="font-bold uppercase tracking-[0.2em] text-[10px] mb-1.5 text-rose-500">Answers</p>
+          <p className="font-medium text-xs mb-1.5 text-rose-500">Answers</p>
           <ul className="space-y-0.5">
             {slide.blanks.map((b, i) => (
               <li key={i}>
@@ -463,14 +463,14 @@ function CardsCarousel({ cards, caption }) {
           />
         )}
         <div className="relative max-w-lg">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-3">
+          <p className="text-xs font-medium text-text-dim mb-3">
             {flipped ? 'Back' : 'Front'}
           </p>
           <div className="text-xl md:text-2xl font-display leading-snug text-text-primary">
             <MathText>{flipped ? card.back : card.front}</MathText>
           </div>
           {flippable && (
-            <p className="mt-6 text-[10px] uppercase tracking-[0.25em] text-text-dim">
+            <p className="mt-6 text-xs text-text-dim">
               Click to flip
             </p>
           )}
@@ -483,7 +483,7 @@ function CardsCarousel({ cards, caption }) {
           type="button"
           onClick={() => { setI(Math.max(0, i - 1)); setFlipped(false); }}
           disabled={i === 0}
-          className="px-4 py-2 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 text-[11px] font-bold uppercase tracking-[0.2em]"
+          className="px-4 py-2 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 text-xs font-medium"
         >
           ← Prev
         </button>
@@ -502,7 +502,7 @@ function CardsCarousel({ cards, caption }) {
           type="button"
           onClick={() => { setI(Math.min(total - 1, i + 1)); setFlipped(false); }}
           disabled={i === total - 1}
-          className="px-4 py-2 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 text-[11px] font-bold uppercase tracking-[0.2em]"
+          className="px-4 py-2 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 text-xs font-medium"
         >
           Next →
         </button>
@@ -525,14 +525,14 @@ function FlipCard({ card }) {
         flippable ? 'cursor-pointer hover:border-accent/60 hover:-translate-y-0.5' : ''
       }`}
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text-dim mb-2">
+      <p className="text-xs font-medium text-text-dim mb-2">
         {flipped ? 'Back' : 'Front'}
       </p>
       <div className="flex-1 flex items-center text-base md:text-lg font-display text-text-primary">
         <MathText>{flipped ? card.back : card.front}</MathText>
       </div>
       {flippable && (
-        <p className="mt-3 text-[10px] uppercase tracking-[0.25em] text-text-dim">Tap to flip</p>
+        <p className="mt-3 text-xs text-text-dim">Tap to flip</p>
       )}
     </button>
   );
@@ -557,7 +557,7 @@ function CardsGrid({ cards, columns, caption, flip }) {
               key={i}
               className="rounded-2xl border border-line-soft bg-surface-raised p-5 flex flex-col gap-2"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">
+              <p className="text-xs font-medium text-accent">
                 {String(i + 1).padStart(2, '0')}
               </p>
               <p className="text-base md:text-lg font-display text-text-primary"><MathText>{c.front}</MathText></p>
@@ -646,7 +646,7 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
             <div key={rowIdx} className="flex items-stretch gap-2 md:gap-3">
               {/* Left — fixed */}
               <div className={`flex-1 flex items-center gap-2 px-4 py-3 border rounded-xl transition-all ${leftCls}`}>
-                <span className="text-[10px] font-mono text-text-dim shrink-0">{String.fromCharCode(65 + rowIdx)}.</span>
+                <span className="text-xs font-mono text-text-dim shrink-0">{String.fromCharCode(65 + rowIdx)}.</span>
                 <span className="text-sm md:text-base"><MathText>{p.left}</MathText></span>
               </div>
 
@@ -679,7 +679,7 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
       )}
       {showFeedback && !allCorrect && (
         <div className="mt-4 text-sm text-text-muted">
-          <p className="font-bold uppercase tracking-[0.2em] text-[10px] mb-2 text-rose-500">Correct matches</p>
+          <p className="font-medium text-xs mb-2 text-rose-500">Correct matches</p>
           <div className="space-y-1.5">
             {pairs.map((p, i) => (
               <div key={i} className="flex items-center gap-2 text-xs">
@@ -779,7 +779,7 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
               {!showFeedback && (
                 <span className="text-text-dim/50 shrink-0 text-base leading-none">⠿</span>
               )}
-              <span className="text-[10px] font-mono text-text-dim w-5 shrink-0">{pos + 1}.</span>
+              <span className="text-xs font-mono text-text-dim w-5 shrink-0">{pos + 1}.</span>
               <span className="flex-1 text-sm md:text-base"><MathText>{items[itemIdx]}</MathText></span>
               {showFeedback && (
                 inRightSpot ? <CheckIcon /> : <XIcon />
@@ -796,7 +796,7 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
       )}
       {showFeedback && !allCorrect && (
         <div className="mt-4 text-sm text-text-muted">
-          <p className="font-bold uppercase tracking-[0.2em] text-[10px] mb-1.5 text-rose-500">Correct order</p>
+          <p className="font-medium text-xs mb-1.5 text-rose-500">Correct order</p>
           <ol className="list-decimal list-inside space-y-0.5">
             {correctOrder.map((i) => <li key={i}><MathText>{items[i]}</MathText></li>)}
           </ol>
@@ -838,7 +838,7 @@ function TableSlide({ slide }) {
                       <Tag
                         key={ci}
                         className={`px-4 py-3 border-b border-line-soft last:border-b-0 align-top ${
-                          isHeader ? 'font-bold uppercase tracking-[0.15em] text-[11px] text-text-dim' : ''
+                          isHeader ? 'font-medium text-xs text-text-dim' : ''
                         } text-${a}`}
                       >
                         <div className="prose-lesson prose-lesson-compact">
@@ -1099,7 +1099,7 @@ function DiagramSlide({ slide }) {
             {status === 'loading' && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-text-dim">
                 <span className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                <span className="text-[11px] uppercase tracking-[0.2em] font-bold">Rendering diagram…</span>
+                <span className="text-xs font-medium">Rendering diagram…</span>
               </div>
             )}
             {/* Always in DOM so ref is valid when Mermaid resolves */}
@@ -1239,10 +1239,10 @@ function HotspotSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
               title={showFeedback ? region.label : undefined}
             >
               {showFeedback && isThisCorrect && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] flex items-center justify-center font-bold">✓</span>
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-bold">✓</span>
               )}
               {showFeedback && isSelected && !isThisCorrect && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-bold">✗</span>
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-rose-500 text-white text-xs flex items-center justify-center font-bold">✗</span>
               )}
             </button>
           );
@@ -1351,7 +1351,7 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
                   {!showFeedback && <span className="block text-text-dim/30 text-xs mb-1">⠿</span>}
                   <p className="text-sm font-medium text-text-primary leading-snug"><MathText>{event.label}</MathText></p>
                   {showFeedback && event.year && (
-                    <p className={`mt-1.5 text-[11px] font-mono font-bold ${inRightSpot ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
+                    <p className={`mt-1.5 text-xs font-mono font-bold ${inRightSpot ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
                       {String(event.year).replace(/^\$+|\$+$/g, '')}
                     </p>
                   )}
@@ -1360,7 +1360,7 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
                 {/* Connector line + position number */}
                 <div className="flex items-center w-full mt-2">
                   <div className="flex-1 h-px bg-line-soft" />
-                  <span className="w-6 h-6 rounded-full border border-line-soft bg-surface-raised text-[10px] font-mono text-text-dim flex items-center justify-center shrink-0">
+                  <span className="w-6 h-6 rounded-full border border-line-soft bg-surface-raised text-xs font-mono text-text-dim flex items-center justify-center shrink-0">
                     {pos + 1}
                   </span>
                   <div className="flex-1 h-px bg-line-soft" />
@@ -1378,7 +1378,7 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
       )}
       {showFeedback && !allCorrect && (
         <div className="mt-4 text-sm text-text-muted">
-          <p className="font-bold uppercase tracking-[0.2em] text-[10px] mb-2 text-rose-500">Correct order</p>
+          <p className="font-medium text-xs mb-2 text-rose-500">Correct order</p>
           <ol className="flex flex-wrap gap-2">
             {correctOrder.map((i) => (
               <li key={i} className="px-2 py-1 rounded-lg bg-surface-raised border border-line-soft text-xs">
@@ -1446,7 +1446,7 @@ function DesmosSlide({ slide }) {
 function UnsupportedSlide({ slide }) {
   return (
     <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col items-center justify-center text-center gap-6">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-[0.25em]">
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium">
         {slide.type || 'slide'}
       </div>
       {slide.content ? (

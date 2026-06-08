@@ -91,10 +91,10 @@ const Survey = () => {
               Your answers help us improve Caplet for students and teachers.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link to="/survey-results" className="btn-primary text-xs uppercase tracking-widest px-10 py-4">
+              <Link to="/survey-results" className="btn-primary text-sm px-10 py-4">
                 View results
               </Link>
-              <Link to={isAuthenticated ? '/courses' : '/'} className="btn-secondary text-xs uppercase tracking-widest px-10 py-4">
+              <Link to={isAuthenticated ? '/courses' : '/'} className="btn-secondary text-sm px-10 py-4">
                 {isAuthenticated ? 'Return to Academy' : 'Return Home'}
               </Link>
             </div>
@@ -121,7 +121,7 @@ const Survey = () => {
         <div className="max-w-2xl mx-auto reveal-text stagger-1">
           <div className="bg-surface-body border border-line-soft p-12 lg:p-16">
             {error && (
-              <div className="mb-12 p-6 bg-accent/5 border border-accent/20 text-accent text-[10px] font-bold uppercase tracking-widest">
+              <div className="mb-12 p-6 bg-accent/5 border border-accent/20 text-accent text-sm font-medium">
                 {error}
               </div>
             )}
@@ -129,7 +129,7 @@ const Survey = () => {
             <form onSubmit={handleSubmit} className="space-y-20">
               {/* Age */}
               <div className="space-y-6">
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim block italic">
+                <label className="text-sm font-semibold text-text-dim block">
                   Chronological Bracket <span className="text-accent">*</span>
                 </label>
                 <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
@@ -154,7 +154,7 @@ const Survey = () => {
 
               {/* Track Spending */}
               <div className="space-y-6">
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim block italic">
+                <label className="text-sm font-semibold text-text-dim block">
                   Capital Tracking Habits <span className="text-accent">*</span>
                 </label>
                 <div className="flex gap-12">
@@ -172,7 +172,7 @@ const Survey = () => {
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
                       </div>
-                      <span className="text-xs font-bold uppercase tracking-widest text-text-primary">{val}</span>
+                      <span className="text-sm font-medium text-text-primary">{val}</span>
                     </label>
                   ))}
                 </div>
@@ -180,7 +180,7 @@ const Survey = () => {
 
               {/* Taught at School */}
               <div className="space-y-6">
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim block italic">
+                <label className="text-sm font-semibold text-text-dim block">
                   Formal Institutional Introduction <span className="text-accent">*</span>
                 </label>
                 <div className="flex gap-12">
@@ -198,7 +198,7 @@ const Survey = () => {
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
                       </div>
-                      <span className="text-xs font-bold uppercase tracking-widest text-text-primary">{val}</span>
+                      <span className="text-sm font-medium text-text-primary">{val}</span>
                     </label>
                   ))}
                 </div>
@@ -207,7 +207,7 @@ const Survey = () => {
               {/* Confidence Level */}
               <div className="space-y-10">
                 <div className="flex justify-between items-end">
-                  <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim block italic">
+                  <label className="text-sm font-semibold text-text-dim block">
                     Perceived Competency Index <span className="text-accent">*</span>
                   </label>
                   <span className="text-4xl font-black text-accent">{formData.confidence || '00'}</span>
@@ -222,7 +222,7 @@ const Survey = () => {
                     required
                     className="w-full h-px bg-line-soft appearance-none cursor-pointer accent-accent"
                   />
-                  <div className="flex justify-between mt-4 text-[9px] font-bold text-text-muted uppercase tracking-widest">
+                  <div className="flex justify-between mt-4 text-xs font-medium text-text-muted">
                     <span>Baseline</span>
                     <span>Advanced</span>
                   </div>
@@ -231,7 +231,7 @@ const Survey = () => {
 
               {/* Terms Confusing */}
               <div className="space-y-6">
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim block italic">
+                <label className="text-sm font-semibold text-text-dim block">
                   Semantic Overload <span className="text-accent">*</span>
                 </label>
                 <div className="flex gap-12">
@@ -249,7 +249,7 @@ const Survey = () => {
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
                       </div>
-                      <span className="text-xs font-bold uppercase tracking-widest text-text-primary">{val}</span>
+                      <span className="text-sm font-medium text-text-primary">{val}</span>
                     </label>
                   ))}
                 </div>
@@ -257,13 +257,13 @@ const Survey = () => {
 
               {/* Helpful Explanations */}
               <div className="space-y-8">
-                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-text-dim block italic">
+                <label className="text-sm font-semibold text-text-dim block">
                   Preferred Pedagogical Mediums <span className="text-accent">*</span>
                 </label>
                 <div className="grid grid-cols-1 gap-4">
                   {explanationOptions.map(option => (
                     <label key={option} className="group flex items-center justify-between p-5 border border-line-soft hover:border-accent transition-colors cursor-pointer bg-surface-raised">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-text-primary">{option}</span>
+                      <span className="text-sm font-medium text-text-primary">{option}</span>
                       <div className="relative w-5 h-5 border border-line-soft group-hover:border-accent flex items-center justify-center transition-colors">
                         {formData.helpfulExplanations.includes(option) && <div className="w-2 h-2 bg-accent" />}
                         <input
@@ -283,11 +283,11 @@ const Survey = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-primary w-full py-6 text-xs uppercase tracking-[0.4em] disabled:opacity-30 disabled:grayscale"
+                  className="btn-primary w-full py-6 text-sm disabled:opacity-30 disabled:grayscale"
                 >
                   {loading ? 'Submitting…' : 'Submit survey'}
                 </button>
-                <p className="text-center mt-8 text-[9px] font-serif italic text-text-dim">
+                <p className="text-center mt-8 text-xs font-serif italic text-text-dim">
                   In submission, you agree to anonymous data contribution for pedagogical enhancement.
                 </p>
               </div>

@@ -135,7 +135,7 @@ const ClassDetail = () => {
       <div className="min-h-screen flex items-center justify-center bg-surface-body">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-6">Sign In Required</span>
-          <h2 className="text-3xl font-extrabold text-text-primary uppercase tracking-tighter mb-6">
+          <h2 className="text-3xl font-semibold text-text-primary mb-6">
             Please Sign In <br />to Continue.
           </h2>
           <button
@@ -162,10 +162,10 @@ const ClassDetail = () => {
       <div className="min-h-screen flex items-center justify-center bg-surface-body">
         <div className="text-center max-w-md mx-auto px-6">
           <span className="section-kicker mb-6 text-red-500">Error</span>
-          <h2 className="text-3xl font-extrabold text-text-primary uppercase tracking-tighter mb-6">
+          <h2 className="text-3xl font-semibold text-text-primary mb-6">
             Something Went <br />Wrong.
           </h2>
-          <p className="text-text-muted text-xs font-bold uppercase tracking-widest mb-10">{error}</p>
+          <p className="text-text-muted text-sm font-medium mb-10">{error}</p>
           <button
             onClick={() => navigate('/classes')}
             className="btn-secondary"
@@ -505,21 +505,21 @@ const ClassDetail = () => {
             <div className="flex-1">
               <button
                 onClick={() => navigate('/classes')}
-                className="mb-8 inline-flex items-center gap-2 text-[10px] font-bold text-text-dim uppercase tracking-widest hover:text-accent transition-colors"
+                className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent transition-colors"
               >
                 ← Back to Classes
               </button>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-text-primary uppercase tracking-tighter mb-4">
+              <h1 className="text-4xl md:text-5xl font-extrabold text-text-primary mb-4">
                 {classroom.name}
               </h1>
               {classroom.description ? (
-                <p className="text-xs font-bold text-text-muted uppercase tracking-widest leading-relaxed max-w-2xl">
+                <p className="text-sm font-medium text-text-muted leading-relaxed max-w-2xl">
                   {classroom.description}
                 </p>
               ) : null}
               <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft border border-line-soft">
-                <span className="text-[9px] font-extrabold text-text-dim uppercase tracking-widest">Class Code:</span>
-                <span className="font-mono font-bold text-text-primary text-xs">{classroom.code}</span>
+                <span className="text-xs font-semibold text-text-dim">Class Code:</span>
+                <span className="font-mono font-bold text-text-primary text-sm">{classroom.code}</span>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-6">
@@ -528,11 +528,11 @@ const ClassDetail = () => {
                   {getInitials(user)}
                 </div>
                 <div>
-                  <p className="text-[8px] font-bold text-text-dim uppercase tracking-widest mb-1">Signed in as</p>
-                  <p className="text-xs font-bold text-text-primary uppercase tracking-tight">
+                  <p className="text-xs font-medium text-text-dim mb-1">Signed in as</p>
+                  <p className="text-sm font-bold text-text-primary">
                     {user?.firstName} {user?.lastName}
                   </p>
-                  <span className="text-[9px] text-accent font-bold uppercase tracking-widest mt-1 block">
+                  <span className="text-xs text-accent font-medium mt-1 block">
                     {membership?.role === 'teacher' ? 'Teacher' : 'Student'}
                   </span>
                 </div>
@@ -542,7 +542,7 @@ const ClassDetail = () => {
                   <button
                     type="button"
                     onClick={handleLeaveClass}
-                    className="px-6 py-3 border border-line-soft text-[9px] font-bold uppercase tracking-widest hover:bg-surface-soft dark:hover:bg-surface-raised transition-all"
+                    className="px-6 py-3 border border-line-soft text-sm font-medium hover:bg-surface-soft dark:hover:bg-surface-raised transition-all"
                   >
                     Leave Class
                   </button>
@@ -551,7 +551,7 @@ const ClassDetail = () => {
                   <button
                     type="button"
                     onClick={handleDeleteClass}
-                    className="px-6 py-3 bg-red-500 text-white text-[9px] font-bold uppercase tracking-widest hover:bg-red-600 shadow-sm transition-all"
+                    className="px-6 py-3 bg-red-500 text-white text-sm font-medium hover:bg-red-600 shadow-sm transition-all"
                   >
                     Delete Class
                   </button>
@@ -562,7 +562,7 @@ const ClassDetail = () => {
         </div>
 
         {error && (
-          <div className="p-6 border border-red-500 text-red-500 text-[10px] font-bold uppercase tracking-widest bg-red-50/50 dark:bg-red-900/10 animate-fade-in">
+          <div className="p-6 border border-red-500 text-red-500 text-sm font-medium bg-red-50/50 dark:bg-red-900/10 animate-fade-in">
             Error: {error}
           </div>
         )}
@@ -572,7 +572,7 @@ const ClassDetail = () => {
           <button
             type="button"
             onClick={() => setActiveTab('stream')}
-            className={`px-8 py-3 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 ${activeTab === 'stream'
+            className={`px-8 py-3 text-sm font-medium transition-all duration-200 ${activeTab === 'stream'
               ? 'bg-text-primary dark:bg-surface-raised text-surface-body'
               : 'text-text-dim hover:text-text-primary hover:bg-surface-raised dark:hover:bg-surface-soft'
               }`}
@@ -582,7 +582,7 @@ const ClassDetail = () => {
           <button
             type="button"
             onClick={() => setActiveTab('classwork')}
-            className={`px-8 py-3 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 ${activeTab === 'classwork'
+            className={`px-8 py-3 text-sm font-medium transition-all duration-200 ${activeTab === 'classwork'
               ? 'bg-text-primary dark:bg-surface-raised text-surface-body'
               : 'text-text-dim hover:text-text-primary hover:bg-surface-raised dark:hover:bg-surface-soft'
               }`}
@@ -592,7 +592,7 @@ const ClassDetail = () => {
           <button
             type="button"
             onClick={() => setActiveTab('people')}
-            className={`px-8 py-3 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 ${activeTab === 'people'
+            className={`px-8 py-3 text-sm font-medium transition-all duration-200 ${activeTab === 'people'
               ? 'bg-text-primary dark:bg-surface-raised text-surface-body'
               : 'text-text-dim hover:text-text-primary hover:bg-surface-raised dark:hover:bg-surface-soft'
               }`}
@@ -623,7 +623,7 @@ const ClassDetail = () => {
                           }
                           placeholder="Post an announcement..."
                           rows={3}
-                          className="w-full px-5 py-4 bg-transparent border border-line-soft text-text-primary placeholder-text-dim text-sm font-bold uppercase tracking-widest leading-relaxed resize-none focus:border-accent outline-none transition-all"
+                          className="w-full px-5 py-4 bg-transparent border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium leading-relaxed resize-none focus:border-accent outline-none transition-all"
                         />
                         <input
                           type="url"
@@ -632,13 +632,13 @@ const ClassDetail = () => {
                             setAnnouncementForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))
                           }
                           placeholder="Attachment URL (optional)..."
-                          className="mt-4 w-full px-5 py-3 bg-transparent border border-line-soft text-text-primary placeholder-text-dim text-[10px] font-bold uppercase tracking-widest focus:border-accent outline-none transition-all"
+                          className="mt-4 w-full px-5 py-3 bg-transparent border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium focus:border-accent outline-none transition-all"
                         />
                         <div className="flex justify-end mt-6">
                           <button
                             type="submit"
                             disabled={postingAnnouncement || !announcementForm.content.trim()}
-                            className="px-10 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-[10px] font-bold uppercase tracking-widest hover:bg-accent dark:hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            className="px-10 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                           >
                             {postingAnnouncement ? 'Posting...' : 'Post Announcement'}
                           </button>
@@ -652,7 +652,7 @@ const ClassDetail = () => {
               {/* Announcement cards — visible to both teachers and students */}
               {!Array.isArray(announcements) || announcements.length === 0 ? (
                 <div className="p-20 border border-line-soft dark:border-line-soft text-center bg-surface-soft">
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.3em]">
+                  <p className="text-sm font-medium text-text-muted">
                     {isTeacher
                       ? 'No announcements yet. Post one to get started.'
                       : 'No announcements yet.'}
@@ -672,20 +672,20 @@ const ClassDetail = () => {
                       >
                         <div className="flex items-center justify-between gap-4 mb-4">
                           <div className="flex items-center gap-4 min-w-0">
-                            <div className={`w-10 h-10 rounded-sm bg-text-primary dark:bg-surface-raised flex items-center justify-center text-surface-body text-[10px] font-bold shadow-sm`}>
+                            <div className={`w-10 h-10 rounded-sm bg-text-primary dark:bg-surface-raised flex items-center justify-center text-surface-body text-xs font-bold shadow-sm`}>
                               {getInitials(a.author)}
                             </div>
                             <div className="flex flex-col">
                               {a.author?.id ? (
-                                <Link to={`/profile/${a.author.id}`} className="text-xs font-extrabold text-text-primary uppercase tracking-tighter hover:text-accent transition-colors">
+                                <Link to={`/profile/${a.author.id}`} className="text-sm font-bold text-text-primary hover:text-accent transition-colors">
                                   {authorName}
                                 </Link>
                               ) : (
-                                <span className="text-xs font-extrabold text-text-primary uppercase tracking-tighter">
+                                <span className="text-sm font-bold text-text-primary">
                                   {authorName}
                                 </span>
                               )}
-                              <span className="text-[8px] font-bold text-text-dim mt-1 uppercase tracking-widest">
+                              <span className="text-xs font-medium text-text-dim mt-1">
                                 Posted {formatRelativeTime(a.createdAt)}
                               </span>
                             </div>
@@ -856,14 +856,14 @@ const ClassDetail = () => {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-12">
               <div>
                 <span className="section-kicker mb-4">Assignments</span>
-                <h2 className="text-3xl font-extrabold text-text-primary uppercase tracking-tighter">
+                <h2 className="text-3xl font-semibold text-text-primary">
                   Class <br />Assignments.
                 </h2>
               </div>
               {isTeacher && (
                 <button
                   onClick={() => setShowNewAssignment(true)}
-                  className="px-8 py-4 bg-text-primary dark:bg-surface-raised text-surface-body text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-accent dark:hover:text-text-primary transition-all shadow-sm"
+                  className="px-8 py-4 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary transition-all shadow-sm"
                 >
                   Create Assignment
                 </button>
@@ -872,7 +872,7 @@ const ClassDetail = () => {
 
             {assignments.length === 0 ? (
               <div className="p-20 border border-line-soft dark:border-line-soft text-center bg-surface-soft">
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.3em]">
+                <p className="text-sm font-medium text-text-muted">
                   No assignments yet. Create one to get started.
                 </p>
               </div>
@@ -895,17 +895,17 @@ const ClassDetail = () => {
                     >
                       <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-extrabold text-text-primary uppercase tracking-tighter mb-4">
+                          <h3 className="text-xl font-semibold text-text-primary mb-4">
                             {a.title}
                           </h3>
                           {a.description && (
-                            <p className="text-xs font-bold text-text-muted uppercase tracking-widest leading-relaxed mb-6 max-w-2xl">
+                            <p className="text-sm font-medium text-text-muted leading-relaxed mb-6 max-w-2xl">
                               {a.description}
                             </p>
                           )}
                           <div className="flex flex-wrap gap-4 items-center">
                             {a.dueDate && (
-                              <span className="inline-flex items-center gap-2 px-3 py-1 bg-surface-soft border border-line-soft text-[9px] font-bold text-text-dim uppercase tracking-widest">
+                              <span className="inline-flex items-center gap-2 px-3 py-1 bg-surface-soft border border-line-soft text-xs font-medium text-text-dim">
                                 📅 DEADLINE: {new Date(a.dueDate).toLocaleDateString(undefined, {
                                   month: 'short',
                                   day: 'numeric',
@@ -915,7 +915,7 @@ const ClassDetail = () => {
                             {a.lesson && (
                               <Link
                                 to={`/courses/${a.course?.id || ''}/lessons/${a.lesson.id}`}
-                                className="inline-flex items-center gap-2 px-3 py-1 bg-accent text-white text-[9px] font-bold uppercase tracking-widest hover:bg-accent-strong transition-colors"
+                                className="inline-flex items-center gap-2 px-3 py-1 bg-accent text-white text-xs font-medium hover:bg-accent-strong transition-colors"
                               >
                                 📖 Linked Lesson: {a.lesson.title}
                               </Link>
@@ -927,7 +927,7 @@ const ClassDetail = () => {
                             <>
                               {typeof completedCount === 'number' && (
                                 <div className="px-4 py-2 bg-surface-soft border border-line-soft">
-                                  <span className="text-[9px] font-extrabold text-text-dim uppercase tracking-widest">
+                                  <span className="text-xs font-semibold text-text-dim">
                                     Completed: {completedCount}/{totalStudents}
                                   </span>
                                 </div>
@@ -935,14 +935,14 @@ const ClassDetail = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteAssignment(a.id)}
-                                className="w-full px-6 py-2 border border-line-soft text-[9px] font-bold uppercase tracking-widest hover:text-red-500 hover:border-red-500 transition-all"
+                                className="w-full px-6 py-2 border border-line-soft text-sm font-medium hover:text-red-500 hover:border-red-500 transition-all"
                               >
                                 Delete
                               </button>
                             </>
                           ) : (
                             <span
-                              className={`text-[9px] font-black uppercase tracking-[0.2em] px-4 py-2 border ${isCompleted
+                              className={`text-xs font-semibold px-4 py-2 border ${isCompleted
                                 ? 'border-accent text-accent'
                                 : 'border-line-soft text-text-dim'
                                 }`}
@@ -953,7 +953,7 @@ const ClassDetail = () => {
                           {!isTeacher && !isCompleted && (
                             <button
                               onClick={() => handleCompleteAssignment(a.id)}
-                              className="w-full px-6 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-[9px] font-bold uppercase tracking-widest hover:bg-accent dark:hover:text-text-primary transition-all shadow-sm"
+                              className="w-full px-6 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary transition-all shadow-sm"
                             >
                               Mark Complete
                             </button>
@@ -961,7 +961,7 @@ const ClassDetail = () => {
                           {!isTeacher && isCompleted && !a.lesson && (
                             <button
                               onClick={() => handleUncompleteAssignment(a.id)}
-                              className="w-full px-6 py-2 border border-line-soft text-[9px] font-bold uppercase tracking-widest hover:bg-surface-soft dark:hover:bg-surface-raised transition-all"
+                              className="w-full px-6 py-2 border border-line-soft text-sm font-medium hover:bg-surface-soft dark:hover:bg-surface-raised transition-all"
                             >
                               Mark Incomplete
                             </button>
@@ -974,7 +974,7 @@ const ClassDetail = () => {
                         <button
                           type="button"
                           onClick={() => toggleAssignmentComments(a.id)}
-                          className="text-[10px] font-extrabold text-text-dim uppercase tracking-widest hover:text-accent transition-colors"
+                          className="text-sm font-semibold text-text-dim hover:text-accent transition-colors"
                         >
                           {openCommentSections.assignment.has(a.id) ? 'Hide Comments' : 'Show Comments'}
                           {totalComments > 0 && ` [${totalComments}]`}
@@ -982,12 +982,12 @@ const ClassDetail = () => {
                         {openCommentSections.assignment.has(a.id) && (
                           <div className="mt-6 space-y-6 min-h-[2rem]">
                             {loadingComments.assignment === a.id || assignmentComments[a.id] === undefined ? (
-                              <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest py-1">Loading comments...</p>
+                              <p className="text-sm font-medium text-text-dim py-1">Loading comments...</p>
                             ) : (
                               <>
                                 {/* Class comments (public) */}
                                 <div>
-                                  <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-4">
+                                  <h4 className="text-sm font-semibold text-text-muted mb-4">
                                     Class Comments
                                   </h4>
                                   {classComments.map((c) => (
@@ -995,13 +995,13 @@ const ClassDetail = () => {
                                       <div className="flex flex-col flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-1">
                                           {c.author?.id ? (
-                                            <Link to={`/profile/${c.author.id}`} className="font-extrabold text-text-primary uppercase tracking-tighter hover:text-accent transition-colors">
+                                            <Link to={`/profile/${c.author.id}`} className="font-semibold text-text-primary hover:text-accent transition-colors">
                                               {c.author.firstName} {c.author.lastName}
                                             </Link>
                                           ) : (
-                                            <span className="font-extrabold text-text-primary uppercase tracking-tighter">Unknown</span>
+                                            <span className="font-semibold text-text-primary">Unknown</span>
                                           )}
-                                          <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">{formatRelativeTime(c.createdAt)}</span>
+                                          <span className="text-xs font-medium text-text-dim">{formatRelativeTime(c.createdAt)}</span>
                                         </div>
                                         <span className="text-text-muted font-medium leading-relaxed">{c.content}</span>
                                       </div>
@@ -1031,7 +1031,7 @@ const ClassDetail = () => {
                                         }))
                                       }
                                       placeholder="Add a class comment..."
-                                      className="flex-1 px-4 py-3 bg-surface-soft border border-line-soft text-xs font-bold uppercase tracking-widest placeholder-text-dim focus:border-accent outline-none transition-all"
+                                      className="flex-1 px-4 py-3 bg-surface-soft border border-line-soft text-sm font-medium placeholder-text-dim focus:border-accent outline-none transition-all"
                                       onKeyDown={(e) => {
                                         if (e.key === 'Enter' && !e.shiftKey) {
                                           e.preventDefault();
@@ -1043,7 +1043,7 @@ const ClassDetail = () => {
                                       type="button"
                                       disabled={postingComment || !(commentDrafts.assignmentClass[a.id] || '').trim()}
                                       onClick={() => handlePostAssignmentComment(a.id, { isPrivate: false })}
-                                      className="px-6 py-2 bg-text-primary dark:bg-surface-raised text-surface-body text-[10px] font-bold uppercase tracking-widest hover:bg-accent dark:hover:text-text-primary disabled:opacity-30 transition-all"
+                                      className="px-6 py-2 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary disabled:opacity-30 transition-all"
                                     >
                                       Post
                                     </button>
@@ -1052,7 +1052,7 @@ const ClassDetail = () => {
 
                                 {/* Private comments (student–teacher) */}
                                 <div>
-                                  <h4 className="text-[10px] font-black text-accent uppercase tracking-widest mb-4">
+                                  <h4 className="text-sm font-semibold text-accent mb-4">
                                     Private Messages
                                   </h4>
                                   {privateComments.map((c) => (
@@ -1060,23 +1060,23 @@ const ClassDetail = () => {
                                       <div className="flex flex-col flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-1">
                                           {c.author?.id ? (
-                                            <Link to={`/profile/${c.author.id}`} className="font-extrabold text-text-primary uppercase tracking-tighter hover:text-accent transition-colors">
+                                            <Link to={`/profile/${c.author.id}`} className="font-semibold text-text-primary hover:text-accent transition-colors">
                                               {c.author.firstName} {c.author.lastName}
                                             </Link>
                                           ) : (
-                                            <span className="font-extrabold text-text-primary uppercase tracking-tighter">Unknown</span>
+                                            <span className="font-semibold text-text-primary">Unknown</span>
                                           )}
                                           {c.targetUser ? (
                                             <>
-                                              <span className="text-[8px] text-text-muted">→</span>
-                                              <Link to={`/profile/${c.targetUser.id}`} className="font-extrabold text-text-primary uppercase tracking-tighter hover:text-accent transition-colors">
+                                              <span className="text-xs text-text-muted">→</span>
+                                              <Link to={`/profile/${c.targetUser.id}`} className="font-semibold text-text-primary hover:text-accent transition-colors">
                                                 {c.targetUser.firstName} {c.targetUser.lastName}
                                               </Link>
                                             </>
                                           ) : (
-                                            <span className="text-[8px] font-bold text-text-dim">(to instructor)</span>
+                                            <span className="text-xs font-medium text-text-dim">(to instructor)</span>
                                           )}
-                                          <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest ml-auto">{formatRelativeTime(c.createdAt)}</span>
+                                          <span className="text-xs font-medium text-text-dim ml-auto">{formatRelativeTime(c.createdAt)}</span>
                                         </div>
                                         <span className="text-text-muted font-medium leading-relaxed">{c.content}</span>
                                       </div>
@@ -1105,7 +1105,7 @@ const ClassDetail = () => {
                                             [a.id]: e.target.value || undefined,
                                           }))
                                         }
-                                        className="w-full px-4 py-2 bg-surface-raised dark:bg-text-primary border border-line-soft text-[10px] font-bold uppercase tracking-widest focus:border-accent outline-none transition-all"
+                                        className="w-full px-4 py-2 bg-surface-raised dark:bg-text-primary border border-line-soft text-sm font-medium focus:border-accent outline-none transition-all"
                                       >
                                         <option value="">Select student...</option>
                                         {students.map((s) => (
@@ -1125,7 +1125,7 @@ const ClassDetail = () => {
                                             }))
                                           }
                                           placeholder="Send private message..."
-                                          className="flex-1 px-4 py-3 bg-surface-raised dark:bg-text-primary border border-line-soft text-xs font-bold uppercase tracking-widest placeholder-text-dim focus:border-accent outline-none transition-all"
+                                          className="flex-1 px-4 py-3 bg-surface-raised dark:bg-text-primary border border-line-soft text-sm font-medium placeholder-text-dim focus:border-accent outline-none transition-all"
                                           onKeyDown={(e) => {
                                             if (e.key === 'Enter' && !e.shiftKey) {
                                               e.preventDefault();
@@ -1149,7 +1149,7 @@ const ClassDetail = () => {
                                               targetUserId: assignmentPrivateTarget[a.id] || undefined,
                                             })
                                           }
-                                          className="px-6 py-2 bg-accent text-white text-[10px] font-bold uppercase tracking-widest hover:bg-accent-strong disabled:opacity-30 transition-all"
+                                          className="px-6 py-2 bg-accent text-white text-sm font-medium hover:bg-accent-strong disabled:opacity-30 transition-all"
                                         >
                                           SEND
                                         </button>
@@ -1167,7 +1167,7 @@ const ClassDetail = () => {
                                           }))
                                         }
                                         placeholder="Send private message to teacher..."
-                                        className="flex-1 px-4 py-3 bg-surface-soft border border-line-soft text-xs font-bold uppercase tracking-widest placeholder-text-dim focus:border-accent outline-none transition-all"
+                                        className="flex-1 px-4 py-3 bg-surface-soft border border-line-soft text-sm font-medium placeholder-text-dim focus:border-accent outline-none transition-all"
                                         onKeyDown={(e) => {
                                           if (e.key === 'Enter' && !e.shiftKey) {
                                             e.preventDefault();
@@ -1179,7 +1179,7 @@ const ClassDetail = () => {
                                         type="button"
                                         disabled={postingComment || !(commentDrafts.assignmentPrivate[a.id] || '').trim()}
                                         onClick={() => handlePostAssignmentComment(a.id, { isPrivate: true })}
-                                        className="px-6 py-2 bg-accent text-white text-[10px] font-bold uppercase tracking-widest hover:bg-accent-strong disabled:opacity-30 transition-all"
+                                        className="px-6 py-2 bg-accent text-white text-sm font-medium hover:bg-accent-strong disabled:opacity-30 transition-all"
                                       >
                                         SEND
                                       </button>
@@ -1205,7 +1205,7 @@ const ClassDetail = () => {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-12">
               <div>
                 <span className="section-kicker mb-4">People</span>
-                <h2 className="text-3xl font-extrabold text-text-primary uppercase tracking-tighter">
+                <h2 className="text-3xl font-semibold text-text-primary">
                   Class <br />Members.
                 </h2>
               </div>
@@ -1213,7 +1213,7 @@ const ClassDetail = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddTeacher(true)}
-                  className="px-6 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-[9px] font-bold uppercase tracking-widest hover:bg-accent dark:hover:text-text-primary transition-all"
+                  className="px-6 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary transition-all"
                 >
                   Add teacher
                 </button>
@@ -1223,7 +1223,7 @@ const ClassDetail = () => {
             {/* Leaderboard: most assignments completed */}
             {Array.isArray(leaderboard) && leaderboard.length > 0 && (
               <div className="mb-12 p-8 bg-surface-soft border border-line-soft dark:border-line-soft">
-                <h3 className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                <h3 className="text-sm font-semibold text-accent mb-8 flex items-center gap-3">
                   <span className="w-8 h-[1px] bg-accent"></span>
                   Leaderboard — Most Assignments Completed
                 </h3>
@@ -1250,10 +1250,10 @@ const ClassDetail = () => {
                           {getInitials(entry)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className="text-[10px] font-black text-text-primary uppercase tracking-tight block group-hover:text-accent transition-colors truncate">
+                          <span className="text-sm font-semibold text-text-primary block group-hover:text-accent transition-colors truncate">
                             {entry.firstName} {entry.lastName}
                           </span>
-                          <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">
+                          <span className="text-xs font-medium text-text-dim">
                             {entry.completedCount} Completed
                           </span>
                         </div>
@@ -1267,12 +1267,12 @@ const ClassDetail = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Teachers */}
               <div>
-                <h3 className="text-[10px] font-black text-text-muted dark:text-text-muted uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                <h3 className="text-sm font-semibold text-text-muted dark:text-text-muted mb-6 flex items-center gap-3">
                   <span className="w-4 h-[1px] bg-surface-soft"></span>
                   Teachers
                 </h3>
                 {teachers.length === 0 ? (
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-7">
+                  <p className="text-sm font-medium text-text-muted pl-7">
                     No teachers in this class.
                   </p>
                 ) : (
@@ -1284,17 +1284,17 @@ const ClassDetail = () => {
                             {getInitials(t)}
                           </div>
                           <div className="min-w-0">
-                            <span className="text-xs font-black text-text-primary uppercase tracking-tighter block group-hover:text-accent transition-colors">
+                            <span className="text-sm font-semibold text-text-primary block group-hover:text-accent transition-colors">
                               {t.firstName} {t.lastName}
                             </span>
-                            <span className="text-[9px] font-bold text-text-dim uppercase tracking-widest">{t.email}</span>
+                            <span className="text-xs font-medium text-text-dim">{t.email}</span>
                           </div>
                         </Link>
                         {isOwner && t.id !== user?.id && (
                           <button
                             type="button"
                             onClick={() => handleRemoveMember(t.id, `${t.firstName} ${t.lastName}`)}
-                            className="text-[9px] font-bold text-red-500 hover:text-red-600 uppercase tracking-widest flex-shrink-0"
+                            className="text-xs font-medium text-red-500 hover:text-red-600 flex-shrink-0"
                           >
                             Remove
                           </button>
@@ -1307,12 +1307,12 @@ const ClassDetail = () => {
 
               {/* Students */}
               <div>
-                <h3 className="text-[10px] font-black text-text-muted dark:text-text-muted uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                <h3 className="text-sm font-semibold text-text-muted dark:text-text-muted mb-6 flex items-center gap-3">
                   <span className="w-4 h-[1px] bg-surface-soft"></span>
                   Students ({students.length})
                 </h3>
                 {students.length === 0 ? (
-                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest pl-7">
+                  <p className="text-sm font-medium text-text-muted pl-7">
                     No students in this class yet.
                   </p>
                 ) : (
@@ -1324,17 +1324,17 @@ const ClassDetail = () => {
                             {getInitials(s)}
                           </div>
                           <div className="min-w-0">
-                            <span className="text-[10px] font-black text-text-primary uppercase tracking-tight block group-hover:text-accent transition-colors">
+                            <span className="text-sm font-semibold text-text-primary block group-hover:text-accent transition-colors">
                               {s.firstName} {s.lastName}
                             </span>
-                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">{s.email}</span>
+                            <span className="text-xs font-medium text-text-dim">{s.email}</span>
                           </div>
                         </Link>
                         {isOwner && (
                           <button
                             type="button"
                             onClick={() => handleRemoveMember(s.id, `${s.firstName} ${s.lastName}`)}
-                            className="text-[9px] font-bold text-red-500 hover:text-red-600 uppercase tracking-widest flex-shrink-0"
+                            className="text-xs font-medium text-red-500 hover:text-red-600 flex-shrink-0"
                           >
                             Remove
                           </button>
@@ -1355,7 +1355,7 @@ const ClassDetail = () => {
               <div className="flex items-start justify-between mb-10">
                 <div>
                   <span className="section-kicker mb-2">Create Assignment</span>
-                  <h2 className="text-2xl font-black text-text-primary uppercase tracking-tighter">
+                  <h2 className="text-2xl font-black text-text-primary">
                     New Assignment
                   </h2>
                 </div>
@@ -1371,7 +1371,7 @@ const ClassDetail = () => {
 
               <form onSubmit={handleCreateAssignment} className="space-y-8">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-dim uppercase tracking-widest">
+                  <label className="text-sm font-semibold text-text-dim">
                     Title
                   </label>
                   <input
@@ -1387,7 +1387,7 @@ const ClassDetail = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-dim uppercase tracking-widest">
+                  <label className="text-sm font-semibold text-text-dim">
                     Description
                   </label>
                   <textarea
@@ -1403,7 +1403,7 @@ const ClassDetail = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-text-dim uppercase tracking-widest">
+                    <label className="text-sm font-semibold text-text-dim">
                       Deadline
                     </label>
                     <input
@@ -1412,12 +1412,12 @@ const ClassDetail = () => {
                       onChange={(e) =>
                         setAssignmentForm((prev) => ({ ...prev, dueDate: e.target.value }))
                       }
-                      className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-[10px] font-bold uppercase tracking-widest focus:border-accent outline-none transition-all"
+                      className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-sm font-medium focus:border-accent outline-none transition-all"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-text-dim uppercase tracking-widest">
+                    <label className="text-sm font-semibold text-text-dim">
                       Link to Lesson
                     </label>
                     <select
@@ -1431,7 +1431,7 @@ const ClassDetail = () => {
                           courseId: lesson ? lesson.courseId : '',
                         }));
                       }}
-                      className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-[10px] font-bold uppercase tracking-widest focus:border-accent outline-none transition-all"
+                      className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-sm font-medium focus:border-accent outline-none transition-all"
                     >
                       <option value="">NONE</option>
                       {availableLessons.map((l) => (
@@ -1447,7 +1447,7 @@ const ClassDetail = () => {
                   <button
                     type="button"
                     onClick={() => setShowNewAssignment(false)}
-                    className="px-8 py-4 text-[10px] font-bold text-text-dim uppercase tracking-widest hover:text-text-primary transition-all order-2 sm:order-1"
+                    className="px-8 py-4 text-sm font-medium text-text-dim hover:text-text-primary transition-all order-2 sm:order-1"
                     disabled={submitting}
                   >
                     Abort
@@ -1455,7 +1455,7 @@ const ClassDetail = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-10 py-4 bg-text-primary dark:bg-surface-raised text-surface-body text-[10px] font-black uppercase tracking-[0.2em] hover:bg-accent dark:hover:text-text-primary disabled:opacity-30 transition-all shadow-lg order-1 sm:order-2"
+                    className="px-10 py-4 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-semibold hover:bg-accent dark:hover:text-text-primary disabled:opacity-30 transition-all shadow-lg order-1 sm:order-2"
                   >
                     {submitting ? 'Creating...' : 'Create Assignment'}
                   </button>
@@ -1472,7 +1472,7 @@ const ClassDetail = () => {
               <div className="flex items-start justify-between mb-8">
                 <div>
                   <span className="section-kicker mb-2">Add Teacher</span>
-                  <h2 className="text-xl font-black text-text-primary uppercase tracking-tighter">
+                  <h2 className="text-xl font-black text-text-primary">
                     Add teacher
                   </h2>
                   <p className="text-[10px] text-text-muted mt-2">
@@ -1490,7 +1490,7 @@ const ClassDetail = () => {
               </div>
               <form onSubmit={handleAddTeacher} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-dim uppercase tracking-widest">Email</label>
+                  <label className="text-sm font-semibold text-text-dim">Email</label>
                   <input
                     type="email"
                     value={addTeacherEmail}
@@ -1504,14 +1504,14 @@ const ClassDetail = () => {
                   <button
                     type="button"
                     onClick={() => { setShowAddTeacher(false); setAddTeacherEmail(''); setError(''); }}
-                    className="px-6 py-3 text-[10px] font-bold text-text-dim uppercase tracking-widest hover:text-text-primary transition-all"
+                    className="px-6 py-3 text-sm font-medium text-text-dim hover:text-text-primary transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={addingTeacher}
-                    className="px-8 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-[10px] font-bold uppercase tracking-widest hover:bg-accent dark:hover:text-text-primary disabled:opacity-50 transition-all"
+                    className="px-8 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary disabled:opacity-50 transition-all"
                   >
                     {addingTeacher ? 'Adding...' : 'Add teacher'}
                   </button>

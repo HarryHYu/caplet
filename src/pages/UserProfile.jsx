@@ -71,7 +71,7 @@ const UserProfile = () => {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="group inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-text-dim hover:text-accent transition-colors mb-12"
+            className="group inline-flex items-center gap-2 text-sm font-semibold text-text-dim hover:text-accent transition-colors mb-12"
           >
             ← [ TERMINATE_VIEW ]
           </button>
@@ -90,10 +90,10 @@ const UserProfile = () => {
                     {profile.firstName} {profile.lastName}.
                   </h1>
                   <div className="flex items-center gap-4">
-                    <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.3em] px-3 py-1 border border-line-soft">
+                    <span className="text-xs font-semibold text-text-dim px-3 py-1 border border-line-soft">
                       {roleLabel}
                     </span>
-                    <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.4em]">UUID: {userId.substring(0, 8).toUpperCase()}</span>
+                    <span className="text-xs font-semibold text-text-dim">UUID: {userId.substring(0, 8).toUpperCase()}</span>
                   </div>
                 </div>
               </div>
@@ -101,7 +101,7 @@ const UserProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 {profile.bio && (
                   <div className="col-span-full mb-8">
-                    <span className="text-[10px] font-black uppercase tracking-[0.5em] text-text-dim block mb-6">Professional Dossier</span>
+                    <span className="text-sm font-semibold text-text-dim block mb-6">Professional Dossier</span>
                     <p className="text-base text-text-muted font-serif italic leading-relaxed">
                       {profile.bio}
                     </p>
@@ -109,27 +109,27 @@ const UserProfile = () => {
                 )}
 
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.5em] text-text-dim block mb-4">System Access</span>
+                  <span className="text-sm font-semibold text-text-dim block mb-4">System Access</span>
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                      <span className="text-xs font-bold text-text-primary uppercase tracking-widest">Active Status</span>
+                      <span className="text-sm font-medium text-text-primary">Active Status</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-line-soft" />
-                      <span className="text-xs font-bold text-text-dim uppercase tracking-widest">Two-Factor Enabled</span>
+                      <span className="text-sm font-medium text-text-dim">Two-Factor Enabled</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.5em] text-text-dim block mb-4">Verification Level</span>
+                  <span className="text-sm font-semibold text-text-dim block mb-4">Verification Level</span>
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-serif italic text-text-primary">Mastery Tier 01</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold text-accent uppercase tracking-widest underline decoration-accent/20 cursor-pointer">View Credentials →</span>
+                      <span className="text-sm font-medium text-accent underline decoration-accent/20 cursor-pointer">View Credentials →</span>
                     </div>
                   </div>
                 </div>
@@ -137,11 +137,11 @@ const UserProfile = () => {
 
               <div className="mt-20 pt-10 border-t border-line-soft flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.4em] text-text-dim mb-1">Last Synchronized</p>
-                  <span className="text-[10px] font-bold text-text-primary uppercase tracking-widest">FEB 18, 2026 - 06:42 GMT</span>
+                  <p className="text-xs font-semibold text-text-dim mb-1">Last Synchronized</p>
+                  <span className="text-sm font-medium text-text-primary">FEB 18, 2026 - 06:42 GMT</span>
                 </div>
                 <div className="text-right">
-                  <button className="text-[10px] font-black uppercase tracking-[0.3em] text-text-dim hover:text-accent transition-colors">
+                  <button className="text-sm font-semibold text-text-dim hover:text-accent transition-colors">
                     Request Data Export
                   </button>
                 </div>
