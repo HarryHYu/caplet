@@ -136,10 +136,12 @@ router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
     }
 
     if (intent_parsed.action === 'generate') {
-      // Combine attachment/notes with the AI-extracted description; prefer full notes if available.
-      const generationContent = [notes, intent_parsed.notes || message].filter(Boolean).join('\n\n') || message;
       // Use the user's explicit slide count from the slider; fall back to AI-extracted suggestion.
       const resolvedSlideCount = slideCount || Math.min(Math.max(parseInt(intent_parsed.slideCount, 10) || 5, 1), 40);
+      // Prepend a hard count override so the planner respects the slider, not any quantity
+      // words in the user's message (e.g. "give me a single slide" when slider is at 10).
+      const countLine = `Required slide count: ${resolvedSlideCount} (this overrides any quantity mentioned below).`;
+      const generationContent = [countLine, notes, intent_parsed.notes || message].filter(Boolean).join('\n\n');
       const out = await generateLessonSlides(generationContent, { title: lessonTitle, slideCount: resolvedSlideCount, model, formatterModel });
       return res.json({ action: 'generate', slides: out.slides, warnings: out.warnings || [] });
     }

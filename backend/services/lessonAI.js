@@ -301,7 +301,7 @@ async function runStage1(client, notes, opts, slideCount) {
 
   const userMsg = [
     contextLines.length ? `## Context\n${contextLines.join('\n')}` : null,
-    `## Target\nPlan approximately ${slideCount} slides total.`,
+    `## Target\nPlan EXACTLY ${slideCount} slides (±1 acceptable). This overrides any quantity mentioned in the source material.`,
     opts.outputDescription ? `## Output instructions\n${opts.outputDescription.trim()}` : null,
     `## Source material\n${notes}`,
     'Write the complete lesson plan now. Number slides SLIDE 1, SLIDE 2, … and separate each with ---',

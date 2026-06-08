@@ -98,19 +98,34 @@ export function Bubble({ msg }) {
 
 /* ── Loading bubble ──────────────────────────────────────────────────────────── */
 
+const LOADING_STAGES = [
+  'Understanding your request…',
+  'Planning lesson…',
+  'Building slides…',
+  'Finishing up…',
+];
+
 export function LoadingBubble() {
+  const [stage, setStage] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setStage((s) => Math.min(s + 1, LOADING_STAGES.length - 1)), 6000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div className="flex items-start gap-2.5 animate-msg-in">
       <AIAvatar className="mt-0.5 shrink-0" />
       <div
-        className="bg-surface-raised border border-line-soft/70 rounded-[18px] rounded-tl-[5px] px-4 py-[14px]"
+        className="bg-surface-raised border border-line-soft/70 rounded-[18px] rounded-tl-[5px] px-3.5 py-3"
         style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
       >
-        <div className="flex items-end gap-[4px] h-[14px]">
+        <p className="text-[13px] text-text-muted mb-2">{LOADING_STAGES[stage]}</p>
+        <div className="flex items-end gap-[4px] h-[12px]">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="w-[4px] h-[14px] rounded-full bg-accent/60 animate-dot-wave origin-bottom"
+              className="w-[4px] h-[12px] rounded-full bg-accent/60 animate-dot-wave origin-bottom"
               style={{ animationDelay: `${i * 160}ms` }}
             />
           ))}
@@ -220,7 +235,7 @@ function ModelPicker({ model, onChange, formatterModel, onFormatterChange }) {
             : 'border-transparent text-text-dim hover:text-accent hover:bg-accent/[0.06] hover:border-accent/20'
         }`}
       >
-        {current.short}
+        Model
         <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
           <path d="M1.5 3L4 5.5L6.5 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -304,7 +319,7 @@ function SlideCountPicker({ slideCount, onChange }) {
             : 'border-transparent text-text-dim hover:text-accent hover:bg-accent/[0.06] hover:border-accent/20'
         }`}
       >
-        ~{slideCount}
+        {slideCount} slides
         <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className={`transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
           <path d="M1.5 3L4 5.5L6.5 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -312,7 +327,7 @@ function SlideCountPicker({ slideCount, onChange }) {
 
       {open && (
         <div
-          className="absolute bottom-full left-0 mb-1.5 w-52 bg-surface-raised border border-line-soft rounded-xl z-30 p-3"
+          className="absolute bottom-full right-0 mb-1.5 w-44 bg-surface-raised border border-line-soft rounded-xl z-30 p-3"
           style={{ boxShadow: '0 -8px 32px rgba(0,0,0,0.12), 0 -1px 8px rgba(0,0,0,0.06)' }}
         >
           <div className="flex items-center justify-between mb-2">
@@ -329,7 +344,6 @@ function SlideCountPicker({ slideCount, onChange }) {
           />
           <div className="flex justify-between text-[9px] text-text-dim mt-1">
             <span>1</span>
-            <span className="text-text-dim/50">approx.</span>
             <span>40</span>
           </div>
         </div>
