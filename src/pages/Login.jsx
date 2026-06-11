@@ -1,10 +1,12 @@
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const redirectPath = location.state?.from || '/dashboard';
+    const sessionExpired = searchParams.get('reason') === 'session_expired';
 
     return (
         <div className="min-h-screen flex bg-surface-body">
@@ -56,6 +58,11 @@ const Login = () => {
                 {/* Form centered in remaining space */}
                 <div className="flex-1 flex items-center justify-center px-8 lg:px-16 xl:px-24 py-12">
                     <div className="w-full max-w-sm">
+                        {sessionExpired && (
+                            <div className="mb-6 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
+                                Your session expired. Please log in again to continue.
+                            </div>
+                        )}
                         <LoginForm
                             onSuccess={() => navigate(redirectPath, { replace: true })}
                             onSwitchToRegister={() => navigate('/register')}

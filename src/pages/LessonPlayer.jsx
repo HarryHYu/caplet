@@ -191,6 +191,7 @@ const LessonPlayer = () => {
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [saveError, setSaveError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -344,7 +345,14 @@ const LessonPlayer = () => {
         navigate(`/courses/${course.id}/lessons/${flat[idxNow + 1].id}`);
       }
     } catch (e) {
-      alert('Failed to save progress: ' + e.message);
+      if (e.status === 401) {
+        api.clearToken();
+        navigate('/login?reason=session_expired');
+        return;
+      }
+      const msg = 'Could not save progress: ' + (e.message || 'Unknown error');
+      setSaveError(msg);
+      setTimeout(() => setSaveError(null), 6000);
     } finally {
       setSaving(false);
     }
@@ -458,6 +466,13 @@ const LessonPlayer = () => {
     // The whole lesson view is locked to viewport height — no outer page scroll.
     // The global Navbar (h-14/h-16) sits above; we offset for it with pt-14/md:pt-16.
     <div className="h-[100dvh] pt-14 md:pt-16 bg-surface-body text-text-primary flex flex-col overflow-hidden">
+      {/* ─────── Save-error toast ─────── */}
+      {saveError && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] bg-red-600 text-white text-sm px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 max-w-sm">
+          <span>{saveError}</span>
+          <button onClick={() => setSaveError(null)} className="ml-1 opacity-70 hover:opacity-100 text-lg leading-none">&times;</button>
+        </div>
+      )}
       {/* ─────── Lesson sub-header (sits below the global navbar) ─────── */}
       <header className="shrink-0 bg-surface-body/95 backdrop-blur-md border-b border-line-soft">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
