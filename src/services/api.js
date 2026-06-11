@@ -241,23 +241,42 @@ class ApiService {
   }
 
   /**
+   * Shared wrapper for AI endpoints — adds a generous timeout and converts
+   * raw network errors into descriptive messages.
+   */
+  async _aiRequest(endpoint, payload) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 180000); // 3 min
+    try {
+      return await this.request(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        auth: 'editor',
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        throw new Error('The request timed out (3 min). Try reducing the slide count or using a shorter input.');
+      }
+      if (err instanceof TypeError || err.message === 'Failed to fetch') {
+        throw new Error('Could not reach the server. Check your connection, or the request may have timed out — try fewer slides or a shorter input.');
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
    * AI: paste notes → structured slides. Editor-gated.
    * Returns { slides: [...], warnings: string[] }.
    */
   async aiGenerateLesson(payload) {
-    return this.request('/ai/generate-lesson', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      auth: 'editor',
-    });
+    return this._aiRequest('/ai/generate-lesson', payload);
   }
 
   async aiLessonChat(payload) {
-    return this.request('/ai/lesson-chat', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      auth: 'editor',
-    });
+    return this._aiRequest('/ai/lesson-chat', payload);
   }
 
   /**

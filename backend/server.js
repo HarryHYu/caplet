@@ -175,11 +175,17 @@ const startServer = async () => {
     }
 
     // Start server
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`🚀 Caplet API Server running on port ${PORT}`);
       console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
     });
+
+    // Railway's reverse proxy idles connections after ~60 s.
+    // Setting keepAliveTimeout > 60 s keeps the socket alive through the proxy
+    // so long AI generation requests (which can take 60–90 s) don't get cut off.
+    server.keepAliveTimeout = 120000; // 2 min
+    server.headersTimeout   = 125000; // must be > keepAliveTimeout
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
