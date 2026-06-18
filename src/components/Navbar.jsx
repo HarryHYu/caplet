@@ -236,6 +236,7 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
+                  {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
                   className={`px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                     active
                       ? 'text-accent bg-accent-soft'
