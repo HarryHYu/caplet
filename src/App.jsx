@@ -4,6 +4,8 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { TourProvider } from './contexts/TourContext';
+import TourOverlay from './components/TourOverlay';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -103,6 +105,8 @@ function App() {
       <AuthProvider>
         <CoursesProvider>
           <Router>
+            <TourProvider>
+            <TourOverlay />
             <ScrollToTop />
             <div className="min-h-screen flex flex-col">
               <Navbar />
@@ -147,6 +151,7 @@ function App() {
               </main>
               <Footer />
             </div>
+            </TourProvider>
           </Router>
         </CoursesProvider>
       </AuthProvider>

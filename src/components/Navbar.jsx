@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTour } from '../contexts/TourContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +11,7 @@ const Navbar = () => {
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const { startTour } = useTour();
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -36,9 +38,9 @@ const Navbar = () => {
   const allNavItems = [
     { path: '/', label: 'Home', publicOnly: true },
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
-    { path: '/courses', label: 'Curriculum' },
+    { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
     { path: '/classes', label: 'Academy' },
-    { path: '/tools', label: 'Instruments' },
+    { path: '/tools', label: 'Instruments', tourId: 'nav-instruments' },
   ];
 
   const navItems = allNavItems.filter((item) => {
@@ -92,6 +94,7 @@ const Navbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
+                  {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
                   className={`relative px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                     active
                       ? 'text-text-primary'
@@ -172,6 +175,16 @@ const Navbar = () => {
                       </svg>
                       Settings
                     </Link>
+                    <button
+                      type="button"
+                      onClick={() => { setShowUserMenu(false); startTour(); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-text-primary hover:bg-surface-soft transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.869v6.262a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                      </svg>
+                      Take a tour
+                    </button>
                     <div className="my-1 border-t border-line-soft" />
                     <button
                       type="button"

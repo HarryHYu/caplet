@@ -202,7 +202,7 @@ const Tools = () => {
           )
         ) : (
           /* Grouped by category */
-          <div className="space-y-16 reveal-text stagger-2">
+          <div data-tour-id="tools-grid" className="space-y-16 reveal-text stagger-2">
             {categories.map(cat => {
               const group = tools.filter(t => t.category === cat);
               return (

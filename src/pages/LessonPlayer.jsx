@@ -474,7 +474,7 @@ const LessonPlayer = () => {
         </div>
       )}
       {/* ─────── Lesson sub-header (sits below the global navbar) ─────── */}
-      <header className="shrink-0 bg-surface-body/95 backdrop-blur-md border-b border-line-soft">
+      <header data-tour-id="lesson-header" className="shrink-0 bg-surface-body/95 backdrop-blur-md border-b border-line-soft">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
           <div className="h-14 md:h-16 flex items-center justify-between gap-4">
             {/* Left — exit + breadcrumbs */}
@@ -541,6 +541,7 @@ const LessonPlayer = () => {
 
               {/* Calculator toggle */}
               <button
+                data-tour-id="calc-btn"
                 type="button"
                 onClick={() => {
                   if (!calcOpen) setCalcEverOpened(true);
@@ -575,7 +576,7 @@ const LessonPlayer = () => {
 
           {/* Ticker — visited slides are solid blue */}
           {hasSlides && (
-            <div className="pb-2.5">
+            <div data-tour-id="lesson-ticker" className="pb-2.5">
               <SlideTicker
                 slides={slides}
                 currentIndex={currentSlideIndex}
@@ -631,7 +632,7 @@ const LessonPlayer = () => {
             {/* Slide canvas — pre-renders adjacent lightweight slides for smooth nav.
                 Heavy embeds (Desmos/PhET/iframes/diagram) only mount when active to
                 avoid browser/frame crashes from hidden pre-render instances. */}
-            <div className="flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden">
+            <div data-tour-id="slide-canvas" className="flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden">
               {/* Decorative top notch */}
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none z-10" />
               <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none z-10">
@@ -678,7 +679,7 @@ const LessonPlayer = () => {
             </div>
 
             {/* Footer controls */}
-            <div className="shrink-0 flex items-center justify-between gap-4">
+            <div data-tour-id="lesson-footer" className="shrink-0 flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={() => goToSlide(currentSlideIndex - 1)}

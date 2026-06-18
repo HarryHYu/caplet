@@ -74,7 +74,7 @@ function CodeEntry({ onEnter }) {
         <p className="text-[14px] text-text-dim leading-relaxed mb-10">
           Enter the code your admin shared with you.
         </p>
-        <form onSubmit={submit} className="space-y-5">
+        <form data-tour-id="editor-code-form" onSubmit={submit} className="space-y-5">
           <input
             type="password"
             autoComplete="off"
@@ -155,7 +155,7 @@ function WorkspaceOverview({
     <div className="flex-1 min-h-0 overflow-y-auto bg-surface-body">
 
       {/* Page header */}
-      <div className="relative border-b border-line-soft overflow-hidden">
+      <div data-tour-id="editor-workspace" className="relative border-b border-line-soft overflow-hidden">
         <div className="absolute inset-0 grid-technical opacity-[0.12] pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface-body to-transparent pointer-events-none" />
         <div className="relative max-w-3xl mx-auto px-6 md:px-10 pt-14 pb-12">

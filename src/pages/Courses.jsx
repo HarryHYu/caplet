@@ -149,7 +149,7 @@ const Courses = () => {
         </div>
 
         {/* Course grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-line-soft border border-line-soft reveal-text stagger-2">
+        <div data-tour-id="courses-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-line-soft border border-line-soft reveal-text stagger-2">
           {courses.map((course) => {
             const progress = courseProgress[course.id] || 0;
             const hasProgress = progress > 0;
