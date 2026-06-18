@@ -4,9 +4,8 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { TourProvider } from './contexts/TourContext';
-import TourOverlay from './components/TourOverlay';
 import Navbar from './components/Navbar';
+import Tour from './pages/Tour';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Contact from './pages/Contact';
@@ -105,8 +104,6 @@ function App() {
       <AuthProvider>
         <CoursesProvider>
           <Router>
-            <TourProvider>
-            <TourOverlay />
             <ScrollToTop />
             <div className="min-h-screen flex flex-col">
               <Navbar />
@@ -146,12 +143,12 @@ function App() {
                   <Route path="/survey" element={<Survey />} />
                   <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />
                   <Route path="/editor" element={<Editor />} />
+                  <Route path="/tour" element={<Tour />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
               <Footer />
             </div>
-            </TourProvider>
           </Router>
         </CoursesProvider>
       </AuthProvider>
