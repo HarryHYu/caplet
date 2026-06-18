@@ -1,7 +1,19 @@
+/**
+ * /tour  — standalone demo page
+ *
+ * Layout:
+ *   height:100vh + overflow:hidden container (no fixed positioning needed)
+ *   SimNavbar  →  position:fixed top-0 z-50  (exact copy of real Navbar HTML)
+ *   Page canvas  →  absolute { top:60, inset-x:0, bottom:0 }  for simulated views
+ *   Nav zones / cursor / caption  →  position:fixed, no z-index fight with real site
+ *   because App.jsx renders /tour in its own <Routes> without Navbar/Footer wrapper
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
 
-/* ─────────────────────────── Timing constants ───────────────────────────── */
+/* ─────────────────────────── Timing ────────────────────────────────────── */
 const CURSOR_MOVE  = 680;
 const HOVER_PAUSE  = 340;
 const CLICK_DOWN   = 110;
@@ -9,7 +21,7 @@ const POST_CLICK   = 260;
 const FADE_VIEW    = 200;
 const TIP_OX = 3, TIP_OY = 2;
 
-/* ─────────────────────────── Scene definitions ─────────────────────────── */
+/* ─────────────────────────── Scenes ────────────────────────────────────── */
 const SCENES = [
   {
     id: 'welcome', view: 'home', nav: null, cursor: null, clickAnim: false,
@@ -78,7 +90,7 @@ function VirtualCursor({ x, y, visible, clicking }) {
         opacity: visible ? 1 : 0,
         transition: [
           `left ${CURSOR_MOVE}ms cubic-bezier(0.42,0,0.18,1.0)`,
-          `top ${CURSOR_MOVE}ms cubic-bezier(0.42,0,0.18,1.0)`,
+          `top  ${CURSOR_MOVE}ms cubic-bezier(0.42,0,0.18,1.0)`,
           'opacity 0.3s ease',
         ].join(', '),
         filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.55)) drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
@@ -118,15 +130,15 @@ function ClickRipple({ x, y }) {
 function Caption({ title, body, visible }) {
   return (
     <div style={{
-      position: 'fixed', bottom: 36, left: '50%',
+      position: 'fixed', bottom: 32, left: '50%',
       transform: `translateX(-50%) translateY(${visible ? 0 : 14}px)`,
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.35s ease, transform 0.35s ease',
       zIndex: 400, pointerEvents: 'none',
-      maxWidth: 540, width: 'calc(100vw - 160px)',
+      maxWidth: 540, width: 'calc(100vw - 140px)',
     }}>
       <div style={{
-        background: 'rgba(6,6,10,0.82)',
+        background: 'rgba(6,6,10,0.84)',
         backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
         border: '1px solid rgba(255,255,255,0.09)',
         borderRadius: 18, padding: '14px 20px',
@@ -142,49 +154,98 @@ function Caption({ title, body, visible }) {
   );
 }
 
-/* ─────────────────────────── ProgressBar ───────────────────────────────── */
+/* ─────────────────────────── Progress bar ──────────────────────────────── */
 function ProgressBar({ current, total }) {
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 600, background: 'var(--line-soft)' }}>
-      <div style={{
-        height: '100%', background: 'var(--accent)',
-        width: `${((current + 1) / total) * 100}%`,
-        transition: 'width 0.55s cubic-bezier(0.4,0,0.2,1)',
-      }} />
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9980, background: 'var(--line-soft)' }}>
+      <div style={{ height: '100%', background: 'var(--accent)', width: `${((current + 1) / total) * 100}%`, transition: 'width 0.55s cubic-bezier(0.4,0,0.2,1)' }} />
     </div>
   );
 }
 
 /* ─────────────────────────── SimNavbar ─────────────────────────────────── */
+/* Pixel-matches the real Navbar — same Tailwind classes, same structure */
 function SimNavbar({ active }) {
+  const { isDark, toggleTheme } = useTheme();
+
+  const navItems = [
+    { label: 'Curriculum', id: 'curriculum' },
+    { label: 'Academy',    id: 'academy'    },
+    { label: 'Instruments', id: 'instruments' },
+  ];
+
   return (
-    <header className="absolute top-0 inset-x-0 z-10 h-[60px] bg-surface-body/95 backdrop-blur-xl border-b border-line-soft">
-      <div className="max-w-[1400px] mx-auto px-8 h-full flex items-center justify-between">
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-line-soft">
-            <img src="/logo.png" alt="" className="w-full h-full object-contain" />
-          </div>
-          <span className="text-xl font-serif italic font-bold text-text-primary">Caplet.</span>
-        </div>
-        <nav className="flex items-center gap-1">
-          {[['Curriculum','curriculum'],['Academy','academy'],['Instruments','instruments']].map(([label, id]) => (
-            <span
-              key={id}
-              data-sim-id={`nav-${id}`}
-              className={`relative px-3.5 py-2 text-sm font-medium rounded-lg select-none ${
-                active === id ? 'text-text-primary' : 'text-text-muted'
-              }`}
-            >
-              {label}
-              {active === id && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-accent rounded-full" />
-              )}
+    <header
+      className="fixed top-0 inset-x-0 z-50 bg-surface-body/95 backdrop-blur-2xl shadow-[0_1px_0_var(--line-soft),0_4px_24px_rgba(0,0,0,0.06)] text-text-primary"
+      style={{ zIndex: 50 }}
+    >
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
+        <div className="h-14 md:h-[60px] flex items-center justify-between gap-4">
+
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 group relative z-10 shrink-0 cursor-default">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden ring-1 ring-line-soft">
+              <img src="/logo.png" alt="Caplet" className="w-full h-full object-contain" />
+            </div>
+            <span className="text-lg md:text-xl font-serif italic font-bold tracking-tight text-text-primary">
+              Caplet.
             </span>
-          ))}
-        </nav>
-        <div className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-line-soft">
-          <div className="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold">HY</div>
-          <span className="text-sm font-medium text-text-primary">Harry</span>
+          </div>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map(({ label, id }) => {
+              const isActive = active === id;
+              return (
+                <span
+                  key={id}
+                  data-sim-id={`nav-${id}`}
+                  className={`relative px-3.5 py-2 text-sm font-medium rounded-lg select-none cursor-default ${
+                    isActive ? 'text-text-primary' : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
+                  }`}
+                >
+                  {label}
+                  {isActive && (
+                    <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-accent rounded-full" />
+                  )}
+                </span>
+              );
+            })}
+          </nav>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1.5 md:gap-2 relative z-10 shrink-0">
+            {/* Theme toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
+              aria-label="Toggle dark mode"
+            >
+              {isDark ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+
+            <div className="hidden md:block w-px h-4 bg-line-soft mx-0.5" />
+
+            {/* Demo user pill — always shows Harry */}
+            <div className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-line-soft cursor-default">
+              <div className="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold font-mono leading-none flex-shrink-0">
+                HY
+              </div>
+              <span className="text-sm font-medium text-text-primary leading-none">Harry</span>
+              <svg className="w-3 h-3 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -194,7 +255,7 @@ function SimNavbar({ active }) {
 /* ─────────────────────────── SimHome ───────────────────────────────────── */
 function SimHome() {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 gap-8" style={{ paddingTop: 60 }}>
+    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 gap-8">
       <div className="space-y-5 max-w-2xl">
         <p className="text-xs font-mono font-bold tracking-widest uppercase text-accent opacity-60">
           Financial literacy for Australian students
@@ -216,14 +277,14 @@ function SimHome() {
 
 /* ─────────────────────────── SimCourses ────────────────────────────────── */
 const SIM_COURSES = [
-  { id: 1, title: 'Money Basics', tag: 'Foundation', lessons: 16, color: '#0050ff' },
-  { id: 2, title: 'Tax & Super', tag: 'Essential', lessons: 12, color: '#7c3aed' },
-  { id: 3, title: 'Investing', tag: 'Advanced', lessons: 20, color: '#059669' },
+  { id: 1, title: 'Money Basics',   tag: 'Foundation', lessons: 16, color: '#0050ff' },
+  { id: 2, title: 'Tax & Super',    tag: 'Essential',  lessons: 12, color: '#7c3aed' },
+  { id: 3, title: 'Investing',      tag: 'Advanced',   lessons: 20, color: '#059669' },
 ];
 function SimCourses() {
   return (
-    <div className="absolute inset-0 overflow-hidden" style={{ paddingTop: 60 }}>
-      <div className="max-w-[1400px] mx-auto px-8 pt-20 pb-16">
+    <div className="absolute inset-0 overflow-hidden px-8 md:px-12 lg:px-16">
+      <div className="max-w-[1400px] mx-auto pt-20 pb-16">
         <h1 className="text-4xl font-serif font-bold text-text-primary mb-3">Curriculum</h1>
         <p className="text-text-muted text-sm mb-10">Financial education for every stage of your journey.</p>
         <div
@@ -244,18 +305,20 @@ function SimCourses() {
 }
 
 /* ─────────────────────────── SimLesson shell ───────────────────────────── */
-function SimLessonShell({ idx, total = 6, showCalc = false, children }) {
+function SimLessonShell({ idx = 0, total = 6, showCalc = false, children }) {
   return (
-    <div className="absolute inset-0 flex flex-col" style={{ paddingTop: 60 }}>
-      {/* Lesson sub-header */}
+    <div className="absolute inset-0 flex flex-col">
+      {/* Sub-header */}
       <div className="shrink-0 h-14 border-b border-line-soft flex items-center px-6 gap-3 bg-surface-body">
         <span className="text-xs text-text-dim">Money Basics</span>
-        <span className="text-text-dim">›</span>
+        <svg className="w-3 h-3 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
         <span className="text-sm font-medium text-text-primary">Understanding Income &amp; Tax</span>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           <button
             data-sim-id="calc-btn"
-            className="w-8 h-8 rounded-lg border border-line-soft flex items-center justify-center text-text-dim"
+            className="w-8 h-8 rounded-lg border border-line-soft flex items-center justify-center text-text-dim hover:bg-surface-soft transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <rect x="4" y="2" width="16" height="20" rx="2"/>
@@ -277,7 +340,7 @@ function SimLessonShell({ idx, total = 6, showCalc = false, children }) {
         ))}
       </div>
 
-      {/* Slide canvas */}
+      {/* Slide content */}
       <div className="flex-1 relative overflow-hidden">
         {children}
 
@@ -291,7 +354,7 @@ function SimLessonShell({ idx, total = 6, showCalc = false, children }) {
               <span className="text-xs text-text-dim ml-1">Scientific</span>
             </div>
             <div className="p-2.5 grid grid-cols-4 gap-1">
-              {['sin','cos','tan','(','7','8','9','÷','4','5','6','×','1','2','3','−','0','.','=','+'].map((k, i) => (
+              {['sin','cos','tan','(','7','8','9','÷','4','5','6','×','1','2','3','−','0','.','=','+'].map((k,i) => (
                 <div key={i} className="h-6 rounded bg-surface-soft flex items-center justify-center text-xs text-text-muted">{k}</div>
               ))}
             </div>
@@ -369,7 +432,7 @@ function SimLessonCalc() {
   return (
     <SimLessonShell idx={2} showCalc>
       <div className="absolute inset-0 flex items-center justify-center px-12">
-        <div className="w-full max-w-2xl opacity-40">
+        <div className="w-full max-w-2xl opacity-35">
           <h2 className="text-2xl font-serif font-bold text-text-primary leading-snug">
             Which of the following is NOT a feature of Australia's superannuation system?
           </h2>
@@ -382,18 +445,15 @@ function SimLessonCalc() {
 /* ─────────────────────────── SimClasses ────────────────────────────────── */
 function SimClasses() {
   return (
-    <div className="absolute inset-0 overflow-hidden" style={{ paddingTop: 60 }}>
-      <div className="max-w-[1400px] mx-auto px-8 pt-20">
+    <div className="absolute inset-0 overflow-hidden px-8 md:px-12 lg:px-16">
+      <div className="max-w-[1400px] mx-auto pt-20">
         <div className="flex justify-between items-end mb-10">
           <div>
             <h1 className="text-4xl font-serif font-bold text-text-primary mb-3">The Academy</h1>
             <p className="text-text-muted text-sm">Manage your classes and track student progress.</p>
           </div>
           <div className="flex gap-3">
-            <button
-              data-sim-id="academy-create-btn"
-              className="bg-accent text-white px-5 py-2.5 rounded-lg text-sm font-semibold"
-            >
+            <button data-sim-id="academy-create-btn" className="bg-accent text-white px-5 py-2.5 rounded-lg text-sm font-semibold">
               + Establish Class
             </button>
             <button className="border border-line-soft px-5 py-2.5 rounded-lg text-sm font-medium text-text-primary">
@@ -407,7 +467,7 @@ function SimClasses() {
           </div>
           {[
             { name: 'Year 11 Commerce A', students: 28, code: 'CAP-4821' },
-            { name: 'Year 12 Economics', students: 24, code: 'CAP-7193' },
+            { name: 'Year 12 Economics',  students: 24, code: 'CAP-7193' },
           ].map((c) => (
             <div key={c.name} className="px-6 py-4 flex items-center gap-4 border-b border-line-soft last:border-b-0 hover:bg-surface-soft transition-colors">
               <div className="w-10 h-10 rounded-xl bg-accent-soft flex items-center justify-center shrink-0">
@@ -429,7 +489,7 @@ function SimClasses() {
 /* ─────────────────────────── SimEditor ─────────────────────────────────── */
 function SimEditor() {
   return (
-    <div className="absolute inset-0 flex">
+    <div data-sim-id="editor-workspace" className="absolute inset-0 flex">
       {/* Sidebar */}
       <div className="w-72 border-r border-line-soft bg-surface-soft flex flex-col shrink-0">
         <div className="p-4 border-b border-line-soft">
@@ -449,17 +509,17 @@ function SimEditor() {
         </div>
       </div>
 
-      {/* Editor canvas */}
-      <div data-sim-id="editor-workspace" className="flex-1 flex flex-col">
+      {/* Canvas */}
+      <div className="flex-1 flex flex-col">
         <div className="h-12 border-b border-line-soft flex items-center px-6 gap-3 shrink-0 bg-surface-body">
           <span className="text-sm font-semibold text-text-primary">Tax Brackets</span>
           <span className="text-xs bg-surface-soft px-2 py-0.5 rounded text-text-dim">MCQ</span>
           <div className="ml-auto flex gap-2">
-            <button data-sim-id="editor-ai-btn" className="text-xs bg-accent-soft text-accent px-3 py-1.5 rounded-lg font-medium">✦ AI</button>
+            <button className="text-xs bg-accent-soft text-accent px-3 py-1.5 rounded-lg font-medium">✦ AI</button>
             <button className="text-xs border border-line-soft px-3 py-1.5 rounded-lg text-text-dim">Preview</button>
           </div>
         </div>
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 p-8 overflow-y-auto bg-surface-body">
           <div className="max-w-2xl mx-auto space-y-4">
             <div>
               <label className="text-xs text-text-dim uppercase tracking-wider">Question</label>
@@ -493,7 +553,7 @@ function SimEditor() {
 function SimEditorAI() {
   return (
     <div className="absolute inset-0 flex">
-      {/* Slim sidebar */}
+      {/* Slim slide list */}
       <div className="w-56 border-r border-line-soft bg-surface-soft flex flex-col shrink-0 p-4">
         <p className="text-xs font-mono uppercase tracking-wider text-text-dim mb-3">Slides</p>
         {['Intro: Income Types', 'Gross vs Net', 'Tax Brackets', 'PAYG System', 'Worked Example'].map((s, i) => (
@@ -510,16 +570,21 @@ function SimEditorAI() {
           <span className="text-xs text-text-dim">Lesson Generator</span>
         </div>
         <div className="flex-1 p-5 flex flex-col gap-4 overflow-hidden">
-          {/* Chat history */}
           <div className="flex-1 space-y-4 overflow-hidden">
+            {/* User message */}
             <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-surface-soft border border-line-soft flex items-center justify-center shrink-0 text-text-dim text-xs font-medium">H</div>
+              <div className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold shrink-0">HY</div>
               <div className="bg-surface-soft rounded-2xl rounded-tl-sm px-4 py-3 max-w-xs">
                 <p className="text-sm text-text-primary">10-slide lesson on Australian income tax for Year 11. Cover marginal rates, PAYG withholding, and a worked example.</p>
               </div>
             </div>
+            {/* AI response */}
             <div className="flex gap-3 flex-row-reverse">
-              <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center shrink-0 text-white text-[9px] font-bold">AI</div>
+              <div className="w-7 h-7 rounded-full bg-surface-soft border border-line-soft flex items-center justify-center shrink-0">
+                <svg className="w-3.5 h-3.5 text-accent" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
               <div className="bg-accent-soft border border-accent/20 rounded-2xl rounded-tr-sm px-4 py-3 max-w-xs">
                 <p className="text-[11px] text-accent font-mono mb-2 tracking-wide">Planning lesson structure…</p>
                 <p className="text-xs text-text-primary leading-relaxed">
@@ -535,7 +600,7 @@ function SimEditorAI() {
             </div>
           </div>
 
-          {/* Input area */}
+          {/* Input */}
           <div data-sim-id="ai-input" className="border border-line-soft rounded-2xl p-4 bg-surface-raised shrink-0">
             <p className="text-sm text-text-dim">Ask me to generate or refine slides…</p>
             <div className="mt-3 flex justify-between items-center gap-3">
@@ -556,10 +621,10 @@ function SimEditorAI() {
 
 /* ─────────────────────────── SimFuture ─────────────────────────────────── */
 const FUTURE_ITEMS = [
-  { label: 'Live Kahoot-style Mode', desc: 'Real-time quizzes, leaderboards, instant feedback — all built on actual course content.' },
-  { label: 'AI Essay Marking', desc: 'Students write long-form answers; a fine-tuned model grades and gives targeted, specific feedback.' },
-  { label: 'Adaptive Practice', desc: 'Difficulty adjusts per student based on quiz performance. Everyone works at exactly the right level.' },
-  { label: 'Gamification', desc: 'One shared currency across lessons, games and activities — points, streaks, leaderboards, all connected.' },
+  { label: 'Live Kahoot-style Mode',    desc: 'Real-time quizzes, leaderboards, instant feedback — all built on actual course content.' },
+  { label: 'AI Essay Marking',          desc: 'Students write long-form answers; a fine-tuned model grades and gives targeted, specific feedback.' },
+  { label: 'Adaptive Practice',         desc: 'Difficulty adjusts per student based on quiz performance. Everyone works at exactly the right level.' },
+  { label: 'Gamification',              desc: 'One shared currency across lessons, games and activities — points, streaks, leaderboards, all connected.' },
   { label: 'Assessment & Certification', desc: 'Formal assessments, marking rubrics, certificates, and school-level progress reporting.' },
 ];
 function SimFuture() {
@@ -592,35 +657,29 @@ export default function Tour() {
   const [sceneIndex, setSceneIndex] = useState(0);
   const [viewOpacity, setViewOpacity] = useState(1);
   const [cursorPos, setCursorPos] = useState({
-    x: typeof window !== 'undefined' ? window.innerWidth / 2 : 800,
-    y: typeof window !== 'undefined' ? window.innerHeight / 2 : 400,
+    x: typeof window !== 'undefined' ? window.innerWidth  * 0.88 : 800,
+    y: typeof window !== 'undefined' ? window.innerHeight * 0.06 : 30,
   });
   const [cursorVisible, setCursorVisible] = useState(false);
-  const [isClicking, setIsClicking] = useState(false);
-  const [rippleKey, setRippleKey] = useState(0);
-  const [showRipple, setShowRipple] = useState(false);
-  const [captionVis, setCaptionVis] = useState(false);
-  const [hoverSide, setHoverSide] = useState(null);
+  const [isClicking, setIsClicking]  = useState(false);
+  const [rippleKey, setRippleKey]    = useState(0);
+  const [showRipple, setShowRipple]  = useState(false);
+  const [captionVis, setCaptionVis]  = useState(false);
+  const [hoverSide, setHoverSide]    = useState(null);
 
-  const scene = SCENES[sceneIndex];
+  const scene       = SCENES[sceneIndex];
   const currentView = scene.view;
-  const hasSimNav = currentView !== 'editor' && currentView !== 'editor-ai';
+  const hasSimNav   = currentView !== 'editor' && currentView !== 'editor-ai';
 
-  /* ── Inject CSS keyframes ── */
+  /* ── CSS keyframes ── */
   useEffect(() => {
     const ID = 'tour-kf';
     if (document.getElementById(ID)) return;
     const s = document.createElement('style');
     s.id = ID;
     s.textContent = `
-      @keyframes simRipple {
-        from { transform: translate(-50%,-50%) scale(0.2); opacity: 1; }
-        to   { transform: translate(-50%,-50%) scale(3.2); opacity: 0; }
-      }
-      @keyframes simRippleBig {
-        from { transform: translate(-50%,-50%) scale(0.1); opacity: 0.6; }
-        to   { transform: translate(-50%,-50%) scale(3.8); opacity: 0; }
-      }
+      @keyframes simRipple    { from{transform:translate(-50%,-50%) scale(0.2);opacity:1} to{transform:translate(-50%,-50%) scale(3.2);opacity:0} }
+      @keyframes simRippleBig { from{transform:translate(-50%,-50%) scale(0.1);opacity:.6} to{transform:translate(-50%,-50%) scale(3.8);opacity:0} }
     `;
     document.head.appendChild(s);
     return () => document.getElementById(ID)?.remove();
@@ -650,10 +709,7 @@ export default function Tour() {
   useEffect(() => {
     let dead = false;
     const timers = [];
-    const delay = (fn, ms) => {
-      const id = setTimeout(() => { if (!dead) fn(); }, ms);
-      timers.push(id);
-    };
+    const delay = (fn, ms) => { const id = setTimeout(() => { if (!dead) fn(); }, ms); timers.push(id); };
     const cleanup = () => { dead = true; timers.forEach(clearTimeout); };
 
     setCaptionVis(false);
@@ -662,28 +718,23 @@ export default function Tour() {
 
     const sc = SCENES[sceneIndex];
 
-    // Fade view out → in
     setViewOpacity(0);
     delay(() => setViewOpacity(1), FADE_VIEW);
 
-    // No cursor target → float to center
     if (!sc.cursor) {
       setCursorPos({ x: window.innerWidth * 0.52, y: window.innerHeight * 0.44 });
       delay(() => setCaptionVis(true), FADE_VIEW + CURSOR_MOVE + 80);
       return cleanup;
     }
 
-    // Wait for view to settle, then find element
     delay(() => {
       if (dead) return;
       let attempts = 0;
-
       const findAndGo = () => {
         if (dead) return;
         const pos = getSimPoint(sc.cursor);
         if (pos) {
           setCursorPos(pos);
-
           if (sc.clickAnim) {
             delay(() => {
               setIsClicking(true);
@@ -701,11 +752,9 @@ export default function Tour() {
         } else if (attempts++ < 30) {
           setTimeout(findAndGo, 80);
         } else {
-          // Element never found, show caption anyway
           delay(() => setCaptionVis(true), 200);
         }
       };
-
       findAndGo();
     }, FADE_VIEW + 100);
 
@@ -713,26 +762,26 @@ export default function Tour() {
   }, [sceneIndex]);
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0,
-        background: 'var(--surface-base)',
-        overflow: 'hidden',
-        zIndex: 9000,
-      }}
-    >
-      {/* Progress bar */}
-      <ProgressBar current={sceneIndex} total={SCENES.length} />
+    /*
+     * Tour container: height:100vh + overflow:hidden.
+     * NOT position:fixed — App.jsx renders Tour without Navbar/Footer,
+     * so this div IS the entire page and fills the viewport naturally.
+     */
+    <div style={{ height: '100vh', overflow: 'hidden', position: 'relative', background: 'var(--surface-base)' }}>
 
-      {/* Simulated website */}
+      {/* SimNavbar — fixed to top, z-index 50 matches real Navbar */}
+      {hasSimNav && <SimNavbar active={scene.nav} />}
+
+      {/* Page canvas — area below navbar */}
       <div
         style={{
-          position: 'absolute', inset: 0,
+          position: 'absolute',
+          top: hasSimNav ? 60 : 0,
+          left: 0, right: 0, bottom: 0,
           opacity: viewOpacity,
           transition: `opacity ${FADE_VIEW}ms ease`,
         }}
       >
-        {hasSimNav && <SimNavbar active={scene.nav} />}
         {currentView === 'home'         && <SimHome />}
         {currentView === 'courses'      && <SimCourses />}
         {currentView === 'lesson-intro' && <SimLessonIntro />}
@@ -744,24 +793,20 @@ export default function Tour() {
         {currentView === 'future'       && <SimFuture />}
       </div>
 
+      {/* ── Overlays (all position:fixed so they sit above the simulated site) ── */}
+
+      {/* Progress bar */}
+      <ProgressBar current={sceneIndex} total={SCENES.length} />
+
       {/* Left half — go back */}
       <div
         onMouseEnter={() => setHoverSide('left')}
         onMouseLeave={() => setHoverSide(null)}
         onClick={prevScene}
-        style={{
-          position: 'fixed', left: 0, top: 0, bottom: 0, width: '50%',
-          zIndex: 200, cursor: sceneIndex > 0 ? 'pointer' : 'default',
-          display: 'flex', alignItems: 'center', paddingLeft: 22,
-        }}
+        style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '50%', zIndex: 200, cursor: sceneIndex > 0 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', paddingLeft: 22 }}
       >
-        <svg
-          width="28" height="28" viewBox="0 0 24 24" fill="none"
-          stroke="white" strokeWidth="1.5" strokeLinecap="round"
-          style={{
-            opacity: hoverSide === 'left' && sceneIndex > 0 ? 0.7 : sceneIndex > 0 ? 0.18 : 0,
-            transition: 'opacity 0.18s ease',
-          }}
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"
+          style={{ opacity: hoverSide === 'left' && sceneIndex > 0 ? 0.7 : sceneIndex > 0 ? 0.18 : 0, transition: 'opacity 0.18s ease' }}
         >
           <polyline points="15 18 9 12 15 6"/>
         </svg>
@@ -772,55 +817,27 @@ export default function Tour() {
         onMouseEnter={() => setHoverSide('right')}
         onMouseLeave={() => setHoverSide(null)}
         onClick={nextScene}
-        style={{
-          position: 'fixed', right: 0, top: 0, bottom: 0, width: '50%',
-          zIndex: 200, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 22,
-        }}
+        style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: '50%', zIndex: 200, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 22 }}
       >
-        <svg
-          width="28" height="28" viewBox="0 0 24 24" fill="none"
-          stroke="white" strokeWidth="1.5" strokeLinecap="round"
-          style={{
-            opacity: hoverSide === 'right' ? 0.7 : 0.18,
-            transition: 'opacity 0.18s ease',
-          }}
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"
+          style={{ opacity: hoverSide === 'right' ? 0.7 : 0.18, transition: 'opacity 0.18s ease' }}
         >
           <polyline points="9 18 15 12 9 6"/>
         </svg>
       </div>
 
-      {/* Scene counter — top centre */}
-      <div style={{
-        position: 'fixed', top: 12, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 9990,
-        background: 'rgba(0,0,0,0.48)', backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        color: 'rgba(255,255,255,0.65)',
-        borderRadius: 20, padding: '4px 14px',
-        fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.06em',
-        pointerEvents: 'none',
-      }}>
+      {/* Close button — top right, above nav zones */}
+      <button
+        onClick={() => navigate('/')}
+        style={{ position: 'fixed', top: 11, right: 16, zIndex: 9990, background: 'rgba(0,0,0,0.44)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.13)', color: 'white', borderRadius: '50%', width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}
+      >×</button>
+
+      {/* Scene counter — bottom right, above caption */}
+      <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 9990, background: 'rgba(0,0,0,0.44)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.13)', color: 'rgba(255,255,255,0.65)', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.06em', pointerEvents: 'none' }}>
         {sceneIndex + 1} / {SCENES.length}
       </div>
 
-      {/* Close button */}
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          position: 'fixed', top: 10, right: 16, zIndex: 9990,
-          background: 'rgba(0,0,0,0.48)', backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          color: 'white', borderRadius: '50%',
-          width: 34, height: 34,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', fontSize: 20, lineHeight: 1,
-        }}
-      >
-        ×
-      </button>
-
-      {/* Caption card */}
+      {/* Caption */}
       <Caption title={scene.caption.title} body={scene.caption.body} visible={captionVis} />
 
       {/* Virtual cursor */}

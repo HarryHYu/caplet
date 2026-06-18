@@ -97,6 +97,66 @@ function RequireAdmin({ children }) {
   return children;
 }
 
+/* Separate component so useLocation is inside Router */
+function AppShell() {
+  const { pathname } = useLocation();
+
+  // Tour gets a completely standalone layout — no Navbar/Footer/flex wrapper
+  if (pathname === '/tour') {
+    return (
+      <Routes>
+        <Route path="/tour" element={<Tour />} />
+      </Routes>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<HomeOrRedirect />} />
+          <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/tools" element={<Tools />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
+          <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
+          <Route path="/tools/savings-goal" element={<SavingsGoal />} />
+          <Route path="/tools/loan-repayment" element={<LoanRepayment />} />
+          <Route path="/tools/compound-interest" element={<CompoundInterest />} />
+          <Route path="/tools/mortgage" element={<MortgageCalculator />} />
+          <Route path="/tools/super-contribution" element={<SuperContribution />} />
+          <Route path="/tools/gst" element={<GSTCalculator />} />
+          <Route path="/tools/salary" element={<SalaryCalculator />} />
+          <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/courses/:courseId" element={<CourseDetail />} />
+          <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
+          <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
+          <Route path="/classes" element={<Classes />} />
+          <Route path="/classes/:classId" element={<RequireAuth><ClassDetail /></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>}>
+            <Route index element={<Navigate to="/settings/profile" replace />} />
+            <Route path="profile" element={<SettingsProfile />} />
+            <Route path="account" element={<SettingsAccount />} />
+          </Route>
+          <Route path="/profile/:userId" element={<UserProfile />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/metrics" element={<Metrics />} />
+          <Route path="/survey" element={<Survey />} />
+          <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />
+          <Route path="/editor" element={<Editor />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -105,50 +165,7 @@ function App() {
         <CoursesProvider>
           <Router>
             <ScrollToTop />
-            <div className="min-h-screen flex flex-col">
-              <Navbar />
-              <main className="flex-grow">
-                <Routes>
-                  <Route path="/" element={<HomeOrRedirect />} />
-                  <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                  <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/tools" element={<Tools />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
-                  <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
-                  <Route path="/tools/savings-goal" element={<SavingsGoal />} />
-                  <Route path="/tools/loan-repayment" element={<LoanRepayment />} />
-                  <Route path="/tools/compound-interest" element={<CompoundInterest />} />
-                  <Route path="/tools/mortgage" element={<MortgageCalculator />} />
-                  <Route path="/tools/super-contribution" element={<SuperContribution />} />
-                  <Route path="/tools/gst" element={<GSTCalculator />} />
-                  <Route path="/tools/salary" element={<SalaryCalculator />} />
-                  <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
-                  <Route path="/courses" element={<Courses />} />
-                  <Route path="/courses/:courseId" element={<CourseDetail />} />
-                  <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
-                  <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
-                  <Route path="/classes" element={<Classes />} />
-                  <Route path="/classes/:classId" element={<RequireAuth><ClassDetail /></RequireAuth>} />
-                  <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>}>
-                    <Route index element={<Navigate to="/settings/profile" replace />} />
-                    <Route path="profile" element={<SettingsProfile />} />
-                    <Route path="account" element={<SettingsAccount />} />
-                  </Route>
-                  <Route path="/profile/:userId" element={<UserProfile />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/metrics" element={<Metrics />} />
-                  <Route path="/survey" element={<Survey />} />
-                  <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />
-                  <Route path="/editor" element={<Editor />} />
-                  <Route path="/tour" element={<Tour />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
+            <AppShell />
           </Router>
         </CoursesProvider>
       </AuthProvider>
