@@ -39,7 +39,7 @@ const Navbar = () => {
     { path: '/', label: 'Home', publicOnly: true },
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
     { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
-    { path: '/classes', label: 'Academy' },
+    { path: '/classes', label: 'Academy', tourId: 'nav-academy' },
     { path: '/tools', label: 'Instruments', tourId: 'nav-instruments' },
   ];
 

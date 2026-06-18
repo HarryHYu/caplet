@@ -95,7 +95,7 @@ const Classes = () => {
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         {/* Header Section */}
-        <header className="mb-32 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text">
+        <header data-tour-id="academy-header" className="mb-32 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text">
           <div>
             <span className="section-kicker">Faculty Admissions</span>
             <h1 className="text-6xl md:text-8xl mb-12">
@@ -105,7 +105,7 @@ const Classes = () => {
               Collaborative learning environments structured for peer progression and academic leadership.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div data-tour-id="academy-actions" className="flex items-center gap-3">
             {isTeacher && (
               <button
                 onClick={() => setShowCreate(true)}
