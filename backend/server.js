@@ -116,6 +116,7 @@ app.use('/api/editor', require('./routes/editor'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/saved-slides', require('./routes/savedSlides'));
+app.use('/api/avatar', require('./routes/avatar'));
 app.use('/api', require('./routes/proxy'));
 
 // Error handling middleware

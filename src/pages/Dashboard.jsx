@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../contexts/CoursesContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import Avatar from '../components/Avatar';
 import {
     BookOpenIcon,
     AcademicCapIcon,
@@ -20,6 +21,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
     const [savedSlides, setSavedSlides] = useState([]);
+    const [avatar, setAvatar] = useState(null);
 
     useEffect(() => {
         if (!hasFetched && !coursesLoading) {
@@ -32,10 +34,11 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [progressData, classesData, savedSlidesData] = await Promise.all([
+                const [progressData, classesData, savedSlidesData, avatarData] = await Promise.all([
                     api.getUserProgress(),
                     api.getClasses(),
                     api.getSavedSlides().catch(() => null),
+                    api.getAvatar().catch(() => null),
                 ]);
                 setUserProgress(progressData?.progress || []);
                 const allClasses = [
@@ -44,6 +47,7 @@ export default function Dashboard() {
                 ];
                 setClasses(allClasses);
                 setSavedSlides(savedSlidesData?.savedSlides || []);
+                setAvatar(avatarData || null);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             } finally {
@@ -99,6 +103,13 @@ export default function Dashboard() {
                         </p>
                     </div>
 
+                    {/* Avatar + level */}
+                    <Link to="/avatar" className="group flex flex-col items-center gap-3 shrink-0" title="Customize your avatar">
+                        <Avatar config={avatar?.avatarConfig} size={96} level={avatar?.level} showLevel={avatar?.level != null} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim group-hover:text-accent transition-colors">
+                            Customize →
+                        </span>
+                    </Link>
                 </header>
 
                 {/* Stats Matrix */}
