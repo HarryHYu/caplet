@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { useLocation } from 'react-router-dom';
 import { useTour } from '../contexts/TourContext';
 import api from '../services/api';
 
@@ -270,10 +269,9 @@ function VirtualCursor({ x, y, visible, clicking }) {
    Click ripple — expands and fades on each click
    key prop forces re-mount to restart the CSS animation
 ───────────────────────────────────────────────────────────────────────────── */
-function ClickRipple({ x, y, id }) {
+function ClickRipple({ x, y }) {
   return (
     <div
-      key={id}
       aria-hidden="true"
       style={{
         position: 'fixed',
@@ -312,8 +310,7 @@ function ClickRipple({ x, y, id }) {
 ───────────────────────────────────────────────────────────────────────────── */
 export default function TourOverlay() {
   const { active, stepIndex, steps, next, prev, end } = useTour();
-  const location = useLocation();
-  const dims     = useDims();
+  const dims = useDims();
 
   // Spotlight
   const [rect,    setRect]    = useState(null);
@@ -435,20 +432,25 @@ export default function TourOverlay() {
     }
 
     // ── Normal hover step ─────────────────────────────────────────────────
-    // If element is already in DOM, move cursor to it immediately.
+    // Capture whether element was already present so timers below are correct.
+    const hadPos = !!pos0;
     if (pos0) setCursorPos(pos0);
 
-    // findEl handles cross-page polling; when element is found, cursor
-    // finishes its travel and spotlight+tooltip appear.
+    // findEl polls until element is in DOM (handles cross-page loads).
+    // Spotlight appears ~100 ms before cursor lands (acts as a landing pad).
+    // Tooltip appears 180 ms after cursor arrives.
     findEl(targetId, (r) => {
       if (deadRef.current) return;
       if (r) {
-        setRect(r);
-        setSpotVis(true);
         const p = { x: r.left + r.width * 0.42, y: r.top + r.height * 0.48 };
         setCursorPos(p);
-        // Give cursor time to complete its travel before showing tooltip
-        t(() => setTipVis(true), pos0 ? CURSOR_MOVE + 120 : CURSOR_MOVE + 80);
+        setRect(r);
+        // hadPos → element was already there → cursor is already traveling
+        // !hadPos → cross-page load → cursor starts moving NOW
+        const spotDelay = hadPos ? CURSOR_MOVE - 100 : 80;
+        const tipDelay  = hadPos ? CURSOR_MOVE + 200 : CURSOR_MOVE + 160;
+        t(() => { if (!deadRef.current) setSpotVis(true); }, spotDelay);
+        t(() => setTipVis(true), tipDelay);
       } else {
         t(() => setTipVis(true), 80);
       }
@@ -456,7 +458,7 @@ export default function TourOverlay() {
 
     return cancel;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, stepIndex, location.pathname]);
+  }, [active, stepIndex]);
 
   /* ── Keep spotlight rect fresh on scroll / resize ───────────────────────── */
   useEffect(() => {
@@ -501,9 +503,9 @@ export default function TourOverlay() {
         clicking={isClicking}
       />
 
-      {/* Click ripple */}
+      {/* Click ripple — key forces remount to restart CSS animation */}
       {showRipple && (
-        <ClickRipple x={cursorPos.x} y={cursorPos.y} id={rippleKey} />
+        <ClickRipple key={rippleKey} x={cursorPos.x} y={cursorPos.y} />
       )}
 
       {/* Backdrop + spotlight */}
@@ -638,43 +640,62 @@ export default function TourOverlay() {
               )}
             </div>
 
-            {/* Footer nav */}
+            {/* Footer nav — left/right click zones */}
             <div style={{
-              padding: '14px 20px 18px',
-              display: 'flex', alignItems: 'center',
-              justifyContent: 'space-between', gap: 8,
+              display: 'flex', alignItems: 'stretch',
+              borderTop: '1px solid var(--line-soft)',
+              height: 52,
             }}>
+              {/* ← Back zone */}
               <button
-                onClick={prev}
+                onClick={isFirst ? undefined : prev}
                 disabled={isFirst}
+                aria-label="Previous step"
                 style={{
-                  background: 'none', border: 'none',
+                  flex: 1, background: 'none', border: 'none',
                   cursor: isFirst ? 'default' : 'pointer',
-                  fontSize: 13, color: 'var(--text-dim)', padding: 0,
-                  fontFamily: 'var(--font-body)',
-                  opacity: isFirst ? 0 : 1,
-                  transition: 'color .15s, opacity .15s',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--text-dim)',
+                  opacity: isFirst ? 0.15 : 0.4,
+                  borderRadius: '0 0 0 17px',
+                  transition: 'opacity .15s, background .15s',
                 }}
-                onMouseEnter={(e) => !isFirst && (e.currentTarget.style.color = 'var(--text-primary)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-dim)')}
-              >← Back</button>
+                onMouseEnter={(e) => { if (!isFirst) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'var(--surface-soft)'; } }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = isFirst ? '0.15' : '0.4'; e.currentTarget.style.background = 'transparent'; }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
 
-              <Dots total={steps.length} current={stepIndex} />
+              {/* Dots */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '0 10px', flexShrink: 0 }}>
+                <Dots total={steps.length} current={stepIndex} />
+              </div>
 
+              {/* → Next / Finish zone */}
               {step.codeEntry ? (
-                <div style={{ width: 72 }} />
+                <div style={{ flex: 1 }} />
               ) : (
                 <button
                   onClick={isLast ? end : next}
+                  aria-label={isLast ? 'Finish tour' : 'Next step'}
                   style={{
-                    background: 'var(--accent)', color: '#fff', border: 'none',
-                    borderRadius: 999, padding: '8px 20px', cursor: 'pointer',
-                    fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)',
-                    transition: 'opacity .15s',
+                    flex: 1, background: 'none', border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'var(--accent)',
+                    opacity: 0.55,
+                    borderRadius: '0 0 17px 0',
+                    transition: 'opacity .15s, background .15s',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '.82')}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-                >{isLast ? 'Finish' : 'Next →'}</button>
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'var(--surface-soft)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.55'; e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
               )}
             </div>
           </div>
