@@ -7,11 +7,22 @@ import api from '../services/api';
 /* ─────────────────────────────────────────────────────────────────────────────
    Constants
 ───────────────────────────────────────────────────────────────────────────── */
-const PAD     = 10;
-const TIP_W   = 430;
-const TIP_GAP = 22;
-const FADE    = 200;   // ms for opacity transitions
-const TIP_MIN_H = 240; // minimum height needed to show a tooltip without clipping
+const PAD           = 10;
+const TIP_W         = 430;
+const TIP_GAP       = 22;
+const FADE          = 180;
+const TIP_MIN_H     = 220;
+
+// Cursor animation timing (ms)
+const CURSOR_MOVE   = 650;   // CSS transition for cursor travel
+const HOVER_PAUSE   = 380;   // cursor sits still before clicking
+const CLICK_DOWN    = 120;   // scale-down on click
+const CLICK_UP      = 140;   // scale-up after click
+const POST_CLICK    = 300;   // settle time after click before showing spotlight
+
+// Cursor SVG hotspot offset within the container div
+const TIP_OX = 3;
+const TIP_OY = 2;
 
 const FUTURE_PLANS = [
   { label: 'Live Kahoot-style Mode',     desc: 'Real-time classroom quizzes — leaderboards, instant feedback, very low latency. Everything Kahoot does, but with the actual course content built in.' },
@@ -22,7 +33,7 @@ const FUTURE_PLANS = [
 ];
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Hooks
+   Viewport dimensions hook
 ───────────────────────────────────────────────────────────────────────────── */
 function useDims() {
   const [d, setD] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -35,7 +46,7 @@ function useDims() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Element finder — cancellable
+   Element finder — polls until found or gives up
 ───────────────────────────────────────────────────────────────────────────── */
 function findEl(targetId, onFound, isDead) {
   let attempts = 0;
@@ -45,7 +56,7 @@ function findEl(targetId, onFound, isDead) {
     if (el) {
       const r = el.getBoundingClientRect();
       if (r.width > 0 && r.height > 0) {
-        const isFixed  = window.getComputedStyle(el).position === 'fixed';
+        const isFixed   = window.getComputedStyle(el).position === 'fixed';
         const offScreen = !isFixed && (r.bottom < 0 || r.top > window.innerHeight);
         if (offScreen) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -60,14 +71,30 @@ function findEl(targetId, onFound, isDead) {
         return;
       }
     }
-    if (++attempts < 30) setTimeout(poll, 140);
-    else onFound(null);  // give up → show floating
+    if (++attempts < 30) setTimeout(poll, 150);
+    else onFound(null);
   };
   poll();
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Tooltip position calculator  (viewport-safe)
+   Get center-ish point of a DOM element for cursor targeting
+   Returns null if element not yet in DOM
+───────────────────────────────────────────────────────────────────────────── */
+function getElPoint(targetId) {
+  if (!targetId) return null;
+  const el = document.querySelector(`[data-tour-id="${targetId}"]`);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  if (r.width === 0 || r.height === 0) return null;
+  return {
+    x: r.left + r.width  * 0.42,
+    y: r.top  + r.height * 0.48,
+  };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Tooltip position calculator — viewport-safe
 ───────────────────────────────────────────────────────────────────────────── */
 function calcPos(sr, placement, winW, winH, wide) {
   const tw = Math.min(wide ? 500 : TIP_W, winW - 32);
@@ -97,13 +124,11 @@ function calcPos(sr, placement, winW, winH, wide) {
       return { position: 'fixed', width: tw, top: clT(sr.top + sr.height + TIP_GAP), left: clL(cx - tw / 2) };
     }
     case 'right': {
-      const spaceRight = winW - (sr.left + sr.width);
-      if (spaceRight < tw + TIP_GAP + 16) return centered;
+      if (winW - (sr.left + sr.width) < tw + TIP_GAP + 16) return centered;
       return { position: 'fixed', width: tw, left: sr.left + sr.width + TIP_GAP, top: clT(sr.top) };
     }
     case 'left': {
-      const spaceLeft = sr.left;
-      if (spaceLeft < tw + TIP_GAP + 16) return centered;
+      if (sr.left < tw + TIP_GAP + 16) return centered;
       return { position: 'fixed', width: tw, right: winW - sr.left + TIP_GAP, top: clT(sr.top) };
     }
     default: return centered;
@@ -111,12 +136,15 @@ function calcPos(sr, placement, winW, winH, wide) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Caret arrow (rotated square, uses CSS vars)
+   Caret arrow (rotated square, theme-compatible)
 ───────────────────────────────────────────────────────────────────────────── */
 function Caret({ placement }) {
   if (!placement || placement === 'center') return null;
   const S = 9;
-  const base = { position: 'absolute', width: S, height: S, background: 'var(--surface-raised)', transform: 'rotate(45deg)' };
+  const base = {
+    position: 'absolute', width: S, height: S,
+    background: 'var(--surface-raised)', transform: 'rotate(45deg)',
+  };
   switch (placement) {
     case 'bottom': return <div style={{ ...base, top: -S / 2 - 1, left: '50%', marginLeft: -S / 2, borderTop: '1px solid var(--line-soft)', borderLeft: '1px solid var(--line-soft)' }} />;
     case 'top':    return <div style={{ ...base, bottom: -S / 2 - 1, left: '50%', marginLeft: -S / 2, borderBottom: '1px solid var(--line-soft)', borderRight: '1px solid var(--line-soft)' }} />;
@@ -127,7 +155,7 @@ function Caret({ placement }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Step dot progress bar
+   Step dots progress bar
 ───────────────────────────────────────────────────────────────────────────── */
 function Dots({ total, current }) {
   return (
@@ -144,12 +172,12 @@ function Dots({ total, current }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Access-code form (inline inside tooltip)
+   Access-code form (inline inside tooltip for editor step)
 ───────────────────────────────────────────────────────────────────────────── */
 function CodeForm({ onSuccess }) {
-  const [code, setCode]       = useState('');
+  const [code,    setCode]    = useState('');
   const [loading, setLoading] = useState(false);
-  const [err, setErr]         = useState('');
+  const [err,     setErr]     = useState('');
 
   const submit = async (e) => {
     e.preventDefault();
@@ -160,27 +188,25 @@ function CodeForm({ onSuccess }) {
     finally    { setLoading(false); }
   };
 
-  const borderColor = (focused) => err ? '#ef4444' : focused ? 'var(--accent)' : 'var(--line-soft)';
   return (
     <form onSubmit={submit} style={{ marginTop: 12 }}>
       <input
         type="password" autoComplete="off" placeholder="Enter access code"
         value={code} onChange={(e) => setCode(e.target.value)}
-        onFocus={(e) => (e.target.style.borderColor = borderColor(true))}
-        onBlur={(e)  => (e.target.style.borderColor = borderColor(false))}
         style={{
           display: 'block', width: '100%', boxSizing: 'border-box',
           padding: '10px 14px', borderRadius: 10, marginBottom: 8,
-          border: `1.5px solid ${borderColor(false)}`,
+          border: `1.5px solid ${err ? '#ef4444' : 'var(--line-soft)'}`,
           background: 'var(--surface-soft)', color: 'var(--text-primary)',
           fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none',
+          cursor: 'text',
         }}
       />
       {err && <p style={{ fontSize: 12, color: '#ef4444', margin: '0 0 8px', fontFamily: 'var(--font-body)' }}>{err}</p>}
       <button type="submit" disabled={loading || !code.trim()} style={{
         display: 'block', width: '100%', padding: '10px', border: 'none', borderRadius: 10,
         background: (!loading && code.trim()) ? 'var(--accent)' : 'var(--line-soft)',
-        color:      (!loading && code.trim()) ? '#fff' : 'var(--text-dim)',
+        color:      (!loading && code.trim()) ? '#fff'          : 'var(--text-dim)',
         cursor: loading ? 'wait' : 'pointer',
         fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-body)',
         transition: 'background .15s, color .15s',
@@ -192,23 +218,144 @@ function CodeForm({ onSuccess }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Main overlay
+   Virtual cursor — OS-style arrow that glides between targets
+───────────────────────────────────────────────────────────────────────────── */
+function VirtualCursor({ x, y, visible, clicking }) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        left: x - TIP_OX,
+        top:  y - TIP_OY,
+        width: 24,
+        height: 28,
+        pointerEvents: 'none',
+        zIndex: 9960,
+        opacity: visible ? 1 : 0,
+        transition: [
+          `left    ${CURSOR_MOVE}ms cubic-bezier(0.42,0,0.18,1.0)`,
+          `top     ${CURSOR_MOVE}ms cubic-bezier(0.42,0,0.18,1.0)`,
+          'opacity 0.28s ease',
+        ].join(', '),
+        filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.50)) drop-shadow(0 1px 2px rgba(0,0,0,0.35))',
+        willChange: 'left, top',
+      }}
+    >
+      <svg
+        width="24" height="28" viewBox="0 0 24 28" fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{
+          transform: clicking ? 'scale(0.78)' : 'scale(1)',
+          transition: `transform ${clicking ? CLICK_DOWN : CLICK_UP}ms ease`,
+          transformOrigin: `${TIP_OX}px ${TIP_OY}px`,
+          display: 'block',
+        }}
+      >
+        {/* Standard OS arrow cursor — tip at (3.5, 2.5) */}
+        <path
+          d="M3.5 2.5 L3.5 21.5 L7.5 17.5 L11.5 25.5 L14 24.5 L10 16.5 L16.5 16.5 Z"
+          fill="white"
+          stroke="#0f0f0f"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Click ripple — expands and fades on each click
+   key prop forces re-mount to restart the CSS animation
+───────────────────────────────────────────────────────────────────────────── */
+function ClickRipple({ x, y, id }) {
+  return (
+    <div
+      key={id}
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        left: x, top: y,
+        width: 0, height: 0,
+        pointerEvents: 'none',
+        zIndex: 9959,
+      }}
+    >
+      {/* Inner ring */}
+      <div style={{
+        position: 'absolute',
+        transform: 'translate(-50%,-50%)',
+        width: 32, height: 32,
+        borderRadius: '50%',
+        border: '2px solid rgba(40,100,255,0.6)',
+        background: 'rgba(40,100,255,0.10)',
+        animation: 'tourRipple 0.55s cubic-bezier(0.35,0,0.25,1) forwards',
+      }} />
+      {/* Outer ring (delayed, bigger) */}
+      <div style={{
+        position: 'absolute',
+        transform: 'translate(-50%,-50%)',
+        width: 48, height: 48,
+        borderRadius: '50%',
+        border: '1.5px solid rgba(40,100,255,0.30)',
+        background: 'transparent',
+        animation: 'tourRippleBig 0.7s 0.05s cubic-bezier(0.35,0,0.25,1) forwards',
+      }} />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Main overlay component
 ───────────────────────────────────────────────────────────────────────────── */
 export default function TourOverlay() {
   const { active, stepIndex, steps, next, prev, end } = useTour();
   const location = useLocation();
   const dims     = useDims();
 
-  const [rect,    setRect]    = useState(null);   // spotlight rect
-  const [spotVis, setSpotVis] = useState(false);  // spotlight opacity
-  const [tipVis,  setTipVis]  = useState(false);  // tooltip opacity
-  const prevRef  = useRef({ stepIndex: -1, route: undefined });
-  const deadRef  = useRef(false);
+  // Spotlight
+  const [rect,    setRect]    = useState(null);
+  const [spotVis, setSpotVis] = useState(false);
+  const [tipVis,  setTipVis]  = useState(false);
+
+  // Virtual cursor
+  const [cursorPos,     setCursorPos]     = useState({
+    x: typeof window !== 'undefined' ? window.innerWidth - 72 : 900,
+    y: 52,
+  });
+  const [cursorVisible, setCursorVisible] = useState(false);
+  const [isClicking,    setIsClicking]    = useState(false);
+  const [rippleKey,     setRippleKey]     = useState(0);
+  const [showRipple,    setShowRipple]    = useState(false);
+
+  const deadRef   = useRef(false);
   const timersRef = useRef([]);
 
   const step = steps[stepIndex];
 
-  /* ── Helpers ─────────────────────────────────────────────────────────────── */
+  /* ── Inject keyframe animations once ────────────────────────────────────── */
+  useEffect(() => {
+    const ID = 'tour-cursor-keyframes';
+    if (document.getElementById(ID)) return;
+    const style = document.createElement('style');
+    style.id = ID;
+    style.textContent = `
+      @keyframes tourRipple {
+        from { transform: translate(-50%,-50%) scale(0.2); opacity: 1; }
+        to   { transform: translate(-50%,-50%) scale(3.2); opacity: 0; }
+      }
+      @keyframes tourRippleBig {
+        from { transform: translate(-50%,-50%) scale(0.1); opacity: 0.6; }
+        to   { transform: translate(-50%,-50%) scale(3.8); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => { document.getElementById(ID)?.remove(); };
+  }, []);
+
+  /* ── Timer helpers ───────────────────────────────────────────────────────── */
   const cancel = () => {
     deadRef.current = true;
     timersRef.current.forEach(clearTimeout);
@@ -220,67 +367,98 @@ export default function TourOverlay() {
     return id;
   };
 
-  /* ── Main transition effect ──────────────────────────────────────────────── */
+  /* ── Main step transition effect ─────────────────────────────────────────── */
   useEffect(() => {
     cancel();
     deadRef.current = false;
 
-    if (!active || !step) { setSpotVis(false); setTipVis(false); return; }
-
-    const prev_ = prevRef.current;
-    const isSamePage = (
-      prev_.stepIndex >= 0 &&
-      step.route !== undefined &&
-      prev_.route === step.route
-    );
-    prevRef.current = { stepIndex, route: step.route };
-
-    // ── Floating step (no target) ────────────────────────────────────────────
-    if (!step.target) {
+    if (!active || !step) {
       setSpotVis(false);
-      setRect(null);
       setTipVis(false);
-      t(() => { setTipVis(true); }, isSamePage ? FADE : FADE + 60);
+      setCursorVisible(false);
       return;
     }
 
-    // ── Non-floating: has a target element ──────────────────────────────────
-    if (isSamePage) {
-      // Spotlight stays visible; only tooltip fades out → glide → fade in
-      setTipVis(false);
-      t(() => {
-        findEl(step.target, (r) => {
-          if (deadRef.current) return;
-          if (r) { setRect(r); setSpotVis(true); }
-          else   { setSpotVis(false); setRect(null); }
-          t(() => setTipVis(true), r ? 360 : 0); // wait for spotlight glide
-        }, () => deadRef.current);
-      }, FADE);
-    } else {
-      // Cross-page: fade everything out, find on new page, fade back in
-      setSpotVis(false);
-      setTipVis(false);
-      t(() => {
-        setRect(null);
-        findEl(step.target, (r) => {
-          if (deadRef.current) return;
-          if (r) {
-            setRect(r);         // mount spotlight at correct position (no transition on mount)
-            t(() => { setSpotVis(true); t(() => setTipVis(true), 80); }, 30);
-          } else {
-            // Element not found — show floating
-            setSpotVis(false); setRect(null);
-            t(() => setTipVis(true), 60);
-          }
-        }, () => deadRef.current);
-      }, FADE + 80);
+    setCursorVisible(true);
+    setTipVis(false);
+    setSpotVis(false);
+    setIsClicking(false);
+
+    const targetId = step.target;
+
+    // ── Floating step (no target) ──────────────────────────────────────────
+    if (!targetId) {
+      // Park cursor near center, just off to give depth
+      setCursorPos({ x: dims.w * 0.54, y: dims.h * 0.44 });
+      setRect(null);
+      t(() => setTipVis(true), CURSOR_MOVE + 220);
+      return cancel;
     }
+
+    // Find cursor destination (may be null if element not yet mounted)
+    const pos0 = getElPoint(targetId);
+
+    // ── Click step (nav links, calc button) ───────────────────────────────
+    if (step.clickAnim) {
+      // Click-target elements live in the Navbar (always mounted)
+      const clickPos = pos0 ?? { x: dims.w / 2, y: 52 };
+      setCursorPos(clickPos);
+
+      t(() => {
+        // Arrived — hover pause then click
+        t(() => {
+          setIsClicking(true);
+          t(() => {
+            setIsClicking(false);
+            setRippleKey((k) => k + 1);
+            setShowRipple(true);
+            t(() => setShowRipple(false), 700);
+
+            // After click: page may navigate → poll for element → show spotlight
+            t(() => {
+              findEl(targetId, (r) => {
+                if (deadRef.current) return;
+                if (r) {
+                  setRect(r);
+                  // Cursor glides to the freshly-spotlit element
+                  setCursorPos({ x: r.left + r.width * 0.42, y: r.top + r.height * 0.48 });
+                  setSpotVis(true);
+                }
+                t(() => setTipVis(true), r ? 240 : 80);
+              }, () => deadRef.current);
+            }, POST_CLICK);
+          }, CLICK_DOWN);
+        }, HOVER_PAUSE);
+      }, CURSOR_MOVE);
+
+      return cancel;
+    }
+
+    // ── Normal hover step ─────────────────────────────────────────────────
+    // If element is already in DOM, move cursor to it immediately.
+    if (pos0) setCursorPos(pos0);
+
+    // findEl handles cross-page polling; when element is found, cursor
+    // finishes its travel and spotlight+tooltip appear.
+    findEl(targetId, (r) => {
+      if (deadRef.current) return;
+      if (r) {
+        setRect(r);
+        setSpotVis(true);
+        const p = { x: r.left + r.width * 0.42, y: r.top + r.height * 0.48 };
+        setCursorPos(p);
+        // Give cursor time to complete its travel before showing tooltip
+        t(() => setTipVis(true), pos0 ? CURSOR_MOVE + 120 : CURSOR_MOVE + 80);
+      } else {
+        t(() => setTipVis(true), 80);
+      }
+    }, () => deadRef.current);
 
     return cancel;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, stepIndex, location.pathname]);
 
-  // Keep rect fresh on scroll/resize while visible
+  /* ── Keep spotlight rect fresh on scroll / resize ───────────────────────── */
   useEffect(() => {
     if (!active || !step?.target || !spotVis) return;
     const refresh = () => {
@@ -299,7 +477,7 @@ export default function TourOverlay() {
   if (!active || !step) return null;
 
   const isFloating = !step.target || !rect;
-  const DARK = 'rgba(0,0,0,0.70)';
+  const DARK = 'rgba(0,0,0,0.68)';
 
   const sr = rect ? {
     top:    rect.top    - PAD,
@@ -308,144 +486,201 @@ export default function TourOverlay() {
     height: rect.height + PAD * 2,
   } : null;
 
-  const isFirst = stepIndex === 0;
-  const isLast  = stepIndex === steps.length - 1;
-  const pos     = calcPos(sr, step.placement, dims.w, dims.h, step.wide);
-
-  // For floating steps that ended up floating due to element not found,
-  // use the step's actual placement for tooltip position
+  const isFirst            = stepIndex === 0;
+  const isLast             = stepIndex === steps.length - 1;
+  const pos                = calcPos(sr, step.placement, dims.w, dims.h, step.wide);
   const effectivePlacement = isFloating ? 'center' : step.placement;
 
   const node = (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9900, pointerEvents: 'none' }}>
+    <>
+      {/* Virtual cursor — always on top */}
+      <VirtualCursor
+        x={cursorPos.x}
+        y={cursorPos.y}
+        visible={cursorVisible}
+        clicking={isClicking}
+      />
 
-      {/* ── Spotlight / Backdrop ─────────────────────────────────── */}
-      {isFloating ? (
-        /* Full-screen dim for floating steps */
-        <div style={{
-          position: 'absolute', inset: 0, background: DARK, pointerEvents: 'auto',
-          opacity: tipVis ? 1 : 0, transition: `opacity ${FADE}ms ease`,
-        }} onClick={(e) => { if (e.target === e.currentTarget) end(); }} />
-      ) : (
-        <>
-          {/* Box-shadow spotlight — glides smoothly on same-page moves */}
-          {sr && (
-            <div style={{
-              position: 'fixed',
-              top: sr.top, left: sr.left, width: sr.width, height: sr.height,
-              borderRadius: 14, background: 'transparent',
-              boxShadow: `0 0 0 9999px ${DARK}, 0 0 0 2.5px var(--accent), 0 0 0 6px rgba(0,80,255,0.15)`,
-              pointerEvents: 'none',
-              opacity: spotVis ? 1 : 0,
-              transition: [
-                `opacity ${FADE}ms ease`,
-                'top 0.38s cubic-bezier(0.4,0,0.2,1)',
-                'left 0.38s cubic-bezier(0.4,0,0.2,1)',
-                'width 0.38s cubic-bezier(0.4,0,0.2,1)',
-                'height 0.38s cubic-bezier(0.4,0,0.2,1)',
-              ].join(', '),
-            }} />
-          )}
-          {/* Intercept off-spotlight clicks */}
-          <div style={{ position: 'fixed', inset: 0, zIndex: -1, pointerEvents: spotVis ? 'auto' : 'none' }}
-            onClick={(e) => {
-              if (!sr) return;
-              const { clientX: x, clientY: y } = e;
-              if (x >= sr.left && x <= sr.left + sr.width && y >= sr.top && y <= sr.top + sr.height) return;
-              e.stopPropagation();
-            }}
-          />
-        </>
+      {/* Click ripple */}
+      {showRipple && (
+        <ClickRipple x={cursorPos.x} y={cursorPos.y} id={rippleKey} />
       )}
 
-      {/* ── Tooltip card ─────────────────────────────────────────── */}
-      <div style={{
-        ...pos,
-        zIndex: 9902,
-        pointerEvents: 'auto',
-        opacity: tipVis ? 1 : 0,
-        transform: `${pos.transform ?? ''} translateY(${tipVis ? 0 : 8}px)`.trim(),
-        transition: `opacity ${FADE}ms ease, transform ${FADE}ms ease`,
-      }}>
-        {!isFloating && <Caret placement={effectivePlacement} />}
+      {/* Backdrop + spotlight */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9900, pointerEvents: 'none' }}>
 
+        {isFloating ? (
+          /* Full-screen dim for floating / no-target steps */
+          <div style={{
+            position: 'absolute', inset: 0, background: DARK,
+            pointerEvents: 'auto',
+            opacity: tipVis ? 1 : 0,
+            transition: `opacity ${FADE}ms ease`,
+          }} onClick={(e) => { if (e.target === e.currentTarget) end(); }} />
+        ) : (
+          <>
+            {/* Box-shadow spotlight — glides on same-page transitions */}
+            {sr && (
+              <div style={{
+                position: 'fixed',
+                top: sr.top, left: sr.left, width: sr.width, height: sr.height,
+                borderRadius: 14,
+                background: 'transparent',
+                boxShadow: `0 0 0 9999px ${DARK}, 0 0 0 2.5px var(--accent), 0 0 0 7px rgba(0,80,255,0.14)`,
+                pointerEvents: 'none',
+                opacity: spotVis ? 1 : 0,
+                transition: [
+                  `opacity ${FADE}ms ease`,
+                  'top    0.42s cubic-bezier(0.4,0,0.2,1)',
+                  'left   0.42s cubic-bezier(0.4,0,0.2,1)',
+                  'width  0.42s cubic-bezier(0.4,0,0.2,1)',
+                  'height 0.42s cubic-bezier(0.4,0,0.2,1)',
+                ].join(', '),
+              }} />
+            )}
+            {/* Intercept off-spotlight clicks to prevent accidental interaction */}
+            <div
+              style={{ position: 'fixed', inset: 0, zIndex: -1, pointerEvents: spotVis ? 'auto' : 'none' }}
+              onClick={(e) => {
+                if (!sr) return;
+                const { clientX: x, clientY: y } = e;
+                if (x >= sr.left && x <= sr.left + sr.width && y >= sr.top && y <= sr.top + sr.height) return;
+                e.stopPropagation();
+              }}
+            />
+          </>
+        )}
+
+        {/* ── Tooltip card ─────────────────────────────────────────────────── */}
         <div style={{
-          background: 'var(--surface-raised)',
-          border: '1px solid var(--line-soft)',
-          borderRadius: 18,
-          boxShadow: '0 24px 60px rgba(0,0,0,0.20), 0 4px 16px rgba(0,0,0,0.08)',
-          overflow: 'hidden',
+          ...pos,
+          zIndex: 9910,
+          pointerEvents: 'auto',
+          cursor: 'default',
+          opacity: tipVis ? 1 : 0,
+          transform: `${pos.transform ?? ''} translateY(${tipVis ? 0 : 9}px)`.trim(),
+          transition: `opacity ${FADE}ms ease, transform ${FADE}ms ease`,
         }}>
-          {/* Accent bar */}
-          <div style={{ height: 4, background: 'var(--accent)', borderRadius: '18px 18px 0 0' }} />
+          {!isFloating && <Caret placement={effectivePlacement} />}
 
-          {/* Header */}
-          <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--line-soft)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <p style={{ margin: '0 0 3px', fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--accent)', opacity: 0.72 }}>
-                  {stepIndex + 1} / {steps.length}
-                </p>
-                <h3 style={{ margin: 0, fontSize: 15, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
-                  {step.title}
-                </h3>
+          <div style={{
+            background: 'var(--surface-raised)',
+            border: '1px solid var(--line-soft)',
+            borderRadius: 18,
+            boxShadow: '0 28px 64px rgba(0,0,0,0.22), 0 4px 18px rgba(0,0,0,0.08)',
+            overflow: 'hidden',
+          }}>
+            {/* Accent top bar */}
+            <div style={{ height: 4, background: 'var(--accent)', borderRadius: '18px 18px 0 0' }} />
+
+            {/* Header */}
+            <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--line-soft)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <p style={{
+                    margin: '0 0 3px', fontSize: 10,
+                    fontFamily: 'var(--font-mono)', fontWeight: 700,
+                    letterSpacing: '0.14em', textTransform: 'uppercase',
+                    color: 'var(--accent)', opacity: 0.72,
+                  }}>
+                    {stepIndex + 1} / {steps.length}
+                  </p>
+                  <h3 style={{
+                    margin: 0, fontSize: 15,
+                    fontFamily: 'var(--font-display)', fontWeight: 700,
+                    color: 'var(--text-primary)', lineHeight: 1.3,
+                  }}>
+                    {step.title}
+                  </h3>
+                </div>
+                <button
+                  onClick={end}
+                  aria-label="Close tour"
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: 20, lineHeight: 1, color: 'var(--text-dim)',
+                    padding: '0 0 0 14px', flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-dim)')}
+                >×</button>
               </div>
-              <button onClick={end} aria-label="Close tour"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, lineHeight: 1, color: 'var(--text-dim)', padding: '0 0 0 14px', flexShrink: 0 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-dim)')}
-              >×</button>
             </div>
-          </div>
 
-          {/* Body */}
-          <div style={{ padding: '14px 20px 4px' }}>
-            {step.futurePlans ? (
-              <div>
-                <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                  That's what's live today. Here's what's coming next:
-                </p>
-                {FUTURE_PLANS.map((p) => (
-                  <div key={p.label} style={{ display: 'flex', gap: 10, marginBottom: 13 }}>
-                    <div style={{ marginTop: 5, width: 5, height: 5, borderRadius: 99, background: 'var(--accent)', flexShrink: 0 }} />
-                    <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{p.label}</p>
-                      <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.55 }}>{p.desc}</p>
+            {/* Body */}
+            <div style={{ padding: '14px 20px 4px' }}>
+              {step.futurePlans ? (
+                <div>
+                  <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                    That's what's live today. Here's what's coming next:
+                  </p>
+                  {FUTURE_PLANS.map((p) => (
+                    <div key={p.label} style={{ display: 'flex', gap: 10, marginBottom: 13 }}>
+                      <div style={{ marginTop: 5, width: 5, height: 5, borderRadius: 99, background: 'var(--accent)', flexShrink: 0 }} />
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+                          {p.label}
+                        </p>
+                        <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.55 }}>
+                          {p.desc}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : step.codeEntry ? (
-              <div>
-                <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{step.body}</p>
-                <CodeForm onSuccess={next} />
-              </div>
-            ) : (
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.65 }}>{step.body}</p>
-            )}
-          </div>
+                  ))}
+                </div>
+              ) : step.codeEntry ? (
+                <div>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{step.body}</p>
+                  <CodeForm onSuccess={next} />
+                </div>
+              ) : (
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.65 }}>{step.body}</p>
+              )}
+            </div>
 
-          {/* Footer */}
-          <div style={{ padding: '14px 20px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <button onClick={prev} disabled={isFirst}
-              style={{ background: 'none', border: 'none', cursor: isFirst ? 'default' : 'pointer', fontSize: 13, color: 'var(--text-dim)', padding: 0, fontFamily: 'var(--font-body)', opacity: isFirst ? 0 : 1, transition: 'color .15s, opacity .15s' }}
-              onMouseEnter={(e) => !isFirst && (e.currentTarget.style.color = 'var(--text-primary)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-dim)')}
-            >← Back</button>
+            {/* Footer nav */}
+            <div style={{
+              padding: '14px 20px 18px',
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', gap: 8,
+            }}>
+              <button
+                onClick={prev}
+                disabled={isFirst}
+                style={{
+                  background: 'none', border: 'none',
+                  cursor: isFirst ? 'default' : 'pointer',
+                  fontSize: 13, color: 'var(--text-dim)', padding: 0,
+                  fontFamily: 'var(--font-body)',
+                  opacity: isFirst ? 0 : 1,
+                  transition: 'color .15s, opacity .15s',
+                }}
+                onMouseEnter={(e) => !isFirst && (e.currentTarget.style.color = 'var(--text-primary)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-dim)')}
+              >← Back</button>
 
-            <Dots total={steps.length} current={stepIndex} />
+              <Dots total={steps.length} current={stepIndex} />
 
-            {step.codeEntry ? <div style={{ width: 72 }} /> : (
-              <button onClick={isLast ? end : next}
-                style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 999, padding: '8px 20px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)', transition: 'opacity .15s' }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '.82')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-              >{isLast ? 'Finish' : 'Next →'}</button>
-            )}
+              {step.codeEntry ? (
+                <div style={{ width: 72 }} />
+              ) : (
+                <button
+                  onClick={isLast ? end : next}
+                  style={{
+                    background: 'var(--accent)', color: '#fff', border: 'none',
+                    borderRadius: 999, padding: '8px 20px', cursor: 'pointer',
+                    fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-body)',
+                    transition: 'opacity .15s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '.82')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                >{isLast ? 'Finish' : 'Next →'}</button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 
   return ReactDOM.createPortal(node, document.body);
