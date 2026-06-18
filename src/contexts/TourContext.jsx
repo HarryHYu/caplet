@@ -38,11 +38,12 @@ function buildSteps(lessonUrl) {
         },
         {
           id: 'slide-canvas',
-          target: 'slide-canvas',
+          target: null,
           route: lessonUrl,
-          placement: 'top',
+          placement: 'center',
+          wide: false,
           title: '15 Slide Types',
-          body: 'Lessons are built from 15 types — text, multiple choice, flashcards, matching, fill-in-the-blank, Desmos graphs, diagrams, PhET simulations, timelines, hotspot annotations, charts, embeds, and more. Each one purpose-built for actual learning, not just reading.',
+          body: 'Each slide is one of 15 types — text, multiple choice, flashcards, matching, fill-in-the-blank, Desmos graphs, diagrams, PhET simulations, timelines, hotspot annotations, charts, and embedded tools. Every type is purpose-built for learning, not just for displaying text.',
         },
         {
           id: 'lesson-footer',
