@@ -27,8 +27,8 @@ const SCENES = [
     caption: { title: 'The Curriculum', body: 'Structured courses covering the financial skills that matter most to Australian students — tax, budgeting, super, investing, and more.' },
   },
   {
-    id: 'courses-grid', view: 'courses', nav: 'curriculum', cursor: 'courses-grid', clickAnim: false,
-    caption: { title: 'Course Library', body: 'Courses break into modules and short focused lessons. Progress is tracked automatically — students always pick up right where they left off.' },
+    id: 'enter-course', view: 'courses', nav: 'curriculum', cursor: 'course-card-1', clickAnim: true,
+    caption: { title: 'Course Library', body: 'Courses break into focused modules and short lessons. Click any course to jump straight in — progress is saved automatically.' },
   },
   {
     id: 'lesson-intro', view: 'lesson-intro', nav: 'curriculum', cursor: 'lesson-next-btn', clickAnim: true,
@@ -51,7 +51,7 @@ const SCENES = [
     caption: { title: 'Class Management', body: "One click to establish a class, share the passkey. Track every student's progress privately, post announcements, assign specific lessons." },
   },
   {
-    id: 'editor', view: 'editor', nav: null, cursor: 'editor-workspace', clickAnim: false,
+    id: 'editor', view: 'editor', nav: null, cursor: 'editor-lesson-row', clickAnim: true,
     caption: { title: 'Lesson Creator', body: "The editor is gated by access code. Full course hierarchy: courses → modules → lessons. Drag, reorder, edit any slide type." },
   },
   {
@@ -245,7 +245,7 @@ function SimCourses() {
         </header>
         <div data-sim-id="courses-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-line-soft border border-line-soft">
           {SIM_COURSES.map((course) => (
-            <div key={course.id} className="bg-surface-body p-10 group cursor-default transition-all duration-700 hover:bg-surface-raised flex flex-col">
+            <div key={course.id} data-sim-id={course.id === 1 ? 'course-card-1' : undefined} className="bg-surface-body p-10 group cursor-default transition-all duration-700 hover:bg-surface-raised flex flex-col">
               <div className="flex justify-between items-start mb-8">
                 <span className="text-sm font-medium text-accent border-b border-accent pb-1">{course.level}</span>
               </div>
@@ -472,87 +472,104 @@ function SimClasses() {
 }
 
 /* ─────────────────────────── SimEditor ─────────────────────────────────── */
-/* Matches real Editor layout */
+/* Matches real Editor workspace overview — centered max-w-3xl, grid-technical header */
 function SimEditor() {
+  const simCourses = [
+    { name: 'Money Basics',  modules: 3, lessons: 16, published: true,
+      mods: [
+        { name: 'Budgeting',    lessons: ['Introduction', 'Core concepts'] },
+        { name: 'Saving',       lessons: ['Introduction', 'Core concepts'] },
+        { name: 'Income & Tax', lessons: ['What is income?', 'Tax brackets', 'PAYG System'] },
+      ],
+    },
+    { name: 'Tax & Super', modules: 2, lessons: 12, published: false, mods: [] },
+  ];
   return (
-    <div className="absolute inset-0 flex overflow-hidden bg-surface-body">
-      {/* Left sidebar */}
-      <aside className="w-80 border-r border-line-soft flex flex-col overflow-hidden bg-surface-body shrink-0">
-        {/* Sidebar header */}
-        <div className="shrink-0 h-14 border-b border-line-soft flex items-center px-5 gap-3">
-          <span className="text-xs font-mono font-medium text-text-dim/50 uppercase tracking-[0.22em]">Workspace</span>
+    <div className="absolute inset-0 flex flex-col overflow-hidden bg-surface-body">
+      {/* Top bar — matches real editor header in workspace mode */}
+      <header className="shrink-0 border-b border-line-soft bg-surface-body/95 backdrop-blur-md">
+        <div className="px-4 md:px-6 h-12 flex items-center gap-2 min-w-0">
+          <p className="font-mono text-[10px] font-medium text-accent/60 uppercase tracking-[0.18em]">Workspace</p>
+          <div className="ml-auto flex items-center gap-2">
+            <button className="h-7 px-3 rounded-md border border-line-soft text-[12px] font-medium text-text-dim hover:text-text-primary transition-colors">Refresh</button>
+            <button className="h-7 px-3 rounded-md border border-line-soft text-[12px] font-medium text-text-dim hover:text-text-primary transition-colors">Leave</button>
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {/* Course card */}
-          {['Money Basics', 'Tax & Super'].map((courseName, ci) => (
-            <div key={courseName} className={`rounded-xl border ${ci === 0 ? 'border-accent/40 bg-surface-raised' : 'border-line-soft bg-surface-raised'} overflow-hidden`}>
-              <div className="flex items-start gap-3 px-5 py-3.5 border-b border-line-soft">
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-display font-bold text-text-primary leading-tight">{courseName}</p>
-                  <p className="font-mono text-[11px] text-text-dim mt-1">{ci === 0 ? '3 modules · 16 lessons' : '2 modules · 12 lessons'}</p>
-                </div>
-                <span className={`text-[10px] font-semibold px-2 py-1 rounded-full border shrink-0 ${ci === 0 ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600' : 'border-line-soft text-text-dim'}`}>
-                  {ci === 0 ? 'Live' : 'Draft'}
-                </span>
+      </header>
+
+      {/* WorkspaceOverview — matches real WorkspaceOverview component */}
+      <div className="flex-1 min-h-0 overflow-y-auto bg-surface-body">
+        {/* Page header with grid-technical background */}
+        <div className="relative border-b border-line-soft overflow-hidden">
+          <div className="absolute inset-0 grid-technical opacity-[0.12] pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface-body to-transparent pointer-events-none" />
+          <div className="relative max-w-3xl mx-auto px-6 md:px-10 pt-14 pb-12">
+            <p className="font-mono text-[10px] font-medium text-accent/60 uppercase tracking-[0.22em] mb-5">Lesson workspace</p>
+            <div className="flex items-end justify-between gap-8">
+              <div className="min-w-0">
+                <h1 className="text-[2.75rem] font-display font-bold text-text-primary tracking-tight leading-none mb-3">Your courses</h1>
+                <p className="text-[14px] font-serif italic text-text-dim leading-relaxed">Build, organise, and publish lessons for your students.</p>
               </div>
-              {ci === 0 && (
-                <div>
-                  {['Budgeting', 'Saving', 'Income & Tax'].map((mod, mi) => (
-                    <div key={mod} className={`px-5 py-2 ${mi > 0 ? 'border-t border-line-soft/50' : ''}`}>
-                      <p className="text-xs font-semibold text-text-muted mb-1.5">{mod}</p>
-                      <div className="space-y-1">
-                        {(mod === 'Income & Tax' ? ['What is income?', 'Tax brackets', 'PAYG System'] : ['Introduction', 'Core concepts']).map((lesson, li) => (
-                          <div key={lesson} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-default text-xs ${mi === 2 && li === 1 ? 'bg-accent/10 text-accent font-medium' : 'text-text-muted hover:bg-surface-soft hover:text-text-primary transition-colors'}`}>
-                            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            {lesson}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <button className="btn-primary shrink-0 px-4 py-2 text-sm font-medium">+ Course</button>
+            </div>
+            <div className="flex items-center gap-8 mt-8 pt-6 border-t border-line-soft/50">
+              {[{ label: 'courses', value: 2 }, { label: 'modules', value: 5 }, { label: 'lessons', value: 28 }].map((s) => (
+                <div key={s.label} className="flex items-baseline gap-1.5">
+                  <span className="text-xl font-display font-bold text-text-primary tabular-nums">{s.value}</span>
+                  <span className="text-[11px] text-text-dim tracking-wide">{s.label}</span>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Course cards — matching real WorkspaceOverview card structure */}
+        <div className="max-w-3xl mx-auto px-6 md:px-10 py-10 space-y-5">
+          {simCourses.map((c, ci) => (
+            <div key={c.name} className="rounded-xl border border-line-soft bg-surface-raised overflow-hidden hover:border-text-dim/30 transition-colors duration-200">
+              <div className="flex items-start gap-3 px-6 py-4 border-b border-line-soft">
+                <div className="flex-1 min-w-0">
+                  <p className="text-2xl font-display font-bold text-text-primary leading-tight">{c.name}</p>
+                  <p className="font-mono text-xs text-text-dim mt-1.5">{c.modules} modules · {c.lessons} lessons</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 mt-0.5">
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${c.published ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600' : 'border-line-soft text-text-dim'}`}>
+                    {c.published ? 'Live' : 'Draft'}
+                  </span>
+                  <span className="text-sm font-medium text-accent cursor-default">+ Module</span>
+                </div>
+              </div>
+
+              {c.mods.length > 0 && c.mods.map((m, mi) => (
+                <div key={m.name} className={mi > 0 ? 'border-t border-line-soft/50' : ''}>
+                  <div className="flex items-center gap-3 px-6 py-2.5">
+                    <span className="flex-1 text-sm font-semibold text-text-muted">{m.name}</span>
+                    <span className="text-xs font-medium text-accent cursor-default">+ Lesson</span>
+                  </div>
+                  <ul>
+                    {m.lessons.map((l, li) => {
+                      const isActive = mi === 2 && li === 1;
+                      return (
+                        <li key={l} className="border-t border-line-soft/30">
+                          <div
+                            data-sim-id={isActive ? 'editor-lesson-row' : undefined}
+                            className={`flex items-center gap-4 px-6 py-4 hover:bg-surface-soft/60 transition-colors text-left ${isActive ? 'bg-accent/[0.04]' : ''}`}
+                          >
+                            <span className="font-mono text-xs text-text-dim w-5 shrink-0 select-none">{String(li + 1).padStart(2, '0')}</span>
+                            <span className={`flex-1 text-sm font-medium truncate ${isActive ? 'text-accent' : 'text-text-primary'}`}>{l}</span>
+                            <svg className="shrink-0 text-text-dim" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+              {c.mods.length === 0 && (
+                <p className="px-6 py-5 font-serif italic text-sm text-text-dim">No modules yet.</p>
               )}
             </div>
           ))}
-        </div>
-      </aside>
-
-      {/* Main editor area */}
-      <div data-sim-id="editor-workspace" className="flex-1 flex flex-col overflow-hidden">
-        {/* Editor top bar */}
-        <div className="shrink-0 h-14 border-b border-line-soft flex items-center px-5 gap-3 bg-surface-body">
-          <span className="text-xs font-mono font-medium text-text-dim/50 uppercase tracking-[0.22em]">Tax brackets</span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">MCQ</span>
-          <div className="ml-auto flex items-center gap-2">
-            <button className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-accent/10 text-accent border border-accent/20">✦ AI Generate</button>
-            <button className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-line-soft text-text-dim hover:text-text-primary transition-colors">Preview</button>
-          </div>
-        </div>
-
-        {/* Slide form area */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-2xl mx-auto space-y-6">
-            <div>
-              <label className="text-xs font-mono uppercase tracking-[0.14em] text-text-dim block mb-2">Question</label>
-              <div className="p-4 border border-line-soft rounded-xl bg-surface-soft text-sm text-text-primary font-medium leading-relaxed">
-                At what annual income threshold does the 32.5% marginal tax rate begin in Australia?
-              </div>
-            </div>
-            <div>
-              <label className="text-xs font-mono uppercase tracking-[0.14em] text-text-dim block mb-2">Options</label>
-              <div className="space-y-2">
-                {[['$18,201', false],['$45,001', true],['$120,001', false],['$180,001', false]].map(([opt, correct], i) => (
-                  <div key={i} className={`flex gap-3 items-center p-3 border rounded-xl ${correct ? 'border-accent bg-accent/5' : 'border-line-soft bg-surface-body'}`}>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${correct ? 'border-accent bg-accent' : 'border-line-soft'}`}>
-                      {correct && <svg width="8" height="8" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth={3}><polyline points="20 6 9 17 4 12"/></svg>}
-                    </div>
-                    <span className="text-sm text-text-primary">{opt}</span>
-                    {correct && <span className="ml-auto text-xs text-accent font-semibold">Correct</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -560,63 +577,99 @@ function SimEditor() {
 }
 
 /* ─────────────────────────── SimEditorAI ───────────────────────────────── */
+/* Matches real Editor in lesson mode with AI panel open */
 function SimEditorAI() {
+  const slides = [
+    { label: 'Text',  title: 'What is income?' },
+    { label: 'Flash', title: 'Gross vs Net' },
+    { label: 'MCQ',   title: 'Tax Brackets' },
+    { label: 'Text',  title: 'PAYG System' },
+    { label: 'Table', title: 'Worked Example' },
+  ];
   return (
-    <div className="absolute inset-0 flex overflow-hidden bg-surface-body">
-      {/* Slim slide list */}
-      <aside className="w-60 border-r border-line-soft flex flex-col shrink-0">
-        <div className="shrink-0 h-14 border-b border-line-soft flex items-center px-5">
-          <span className="text-xs font-mono font-medium text-text-dim/50 uppercase tracking-[0.22em]">Slides</span>
+    <div className="absolute inset-0 flex flex-col overflow-hidden bg-surface-body">
+      {/* Lesson mode header — matches real editor header when inLessonMode */}
+      <header className="shrink-0 border-b border-line-soft bg-surface-body/95 backdrop-blur-md">
+        <div className="px-4 md:px-6 h-12 flex items-center gap-2 md:gap-3 min-w-0">
+          <button className="shrink-0 text-[13px] font-medium text-text-dim hover:text-text-primary transition-colors">← Workspace</button>
+          <span className="shrink-0 w-px h-3.5 bg-line-soft" />
+          <span className="text-[13px] font-serif italic text-text-dim truncate max-w-[120px]">Money Basics</span>
+          <span className="text-text-dim/40 shrink-0 text-[11px]">/</span>
+          <span className="text-[13px] font-serif italic text-text-dim truncate max-w-[120px]">Income &amp; Tax</span>
+          <div className="ml-auto flex items-center gap-1.5 shrink-0">
+            {/* AI button — active state */}
+            <button className="h-8 px-3 rounded-full border border-accent/60 bg-accent/[0.08] text-accent text-sm font-medium flex items-center gap-1.5">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 0.75 L6.4 3.6 L9.25 5.5 L6.4 7.4 L5.5 10.25 L4.6 7.4 L1.75 5.5 L4.6 3.6 Z" fill="currentColor" /></svg>
+              AI
+            </button>
+            <button className="h-8 px-3 rounded-full border border-line-soft text-text-muted text-sm font-medium hover:text-text-primary transition-colors">Preview</button>
+            <button className="h-8 px-4 btn-primary text-sm font-medium opacity-40">Saved</button>
+            <button className="h-8 w-8 rounded-full border border-line-soft text-text-dim flex items-center justify-center text-base">×</button>
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-1">
-          {['What is income?','Gross vs Net','Tax Brackets','PAYG System','Worked Example'].map((s,i) => (
-            <div key={s} className={`px-3 py-2 rounded-lg text-xs cursor-default ${i===2?'bg-accent/10 text-accent font-semibold border border-accent/20':'text-text-muted hover:bg-surface-soft hover:text-text-primary transition-colors'}`}>
-              {i+1}. {s}
-            </div>
-          ))}
-        </div>
-      </aside>
+      </header>
 
-      {/* AI panel */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="shrink-0 h-14 border-b border-line-soft flex items-center px-5 gap-3">
-          <span className="text-sm font-semibold text-accent">✦ AI Assistant</span>
-          <span className="text-xs text-text-dim">Lesson Generator</span>
+      {/* Lesson builder + AI panel */}
+      <div className="flex-1 min-h-0 flex overflow-hidden">
+        {/* Slide list — matches real LessonBuilder left panel */}
+        <div className="w-64 border-r border-line-soft flex flex-col overflow-hidden shrink-0 bg-surface-body">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {slides.map((s, i) => (
+              <div key={s.title} className={`group rounded-xl border px-5 py-4 flex items-center gap-3 ${i === 2 ? 'border-accent/40 bg-surface-raised' : 'border-line-soft bg-surface-raised hover:border-text-dim/25 transition-colors'}`}>
+                <span className="font-mono text-[11px] text-text-dim/60 w-6 shrink-0 tabular-nums select-none">{String(i + 1).padStart(2, '0')}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="inline-flex items-center px-2 py-[3px] mb-1 rounded-md bg-accent/[0.08] text-accent text-[10px] font-bold tracking-wide uppercase">{s.label}</span>
+                  <p className="text-[13px] text-text-primary truncate leading-snug">{s.title}</p>
+                </div>
+              </div>
+            ))}
+            <button className="w-full mt-1 py-3 rounded-xl border border-dashed border-line-soft text-sm text-text-dim hover:border-accent/40 hover:text-accent transition-colors">
+              + Add slide
+            </button>
+          </div>
         </div>
-        <div className="flex-1 flex flex-col p-5 gap-4 overflow-hidden">
-          <div className="flex-1 space-y-4 overflow-hidden">
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold shrink-0">HY</div>
-              <div className="bg-surface-soft rounded-2xl rounded-tl-sm px-4 py-3 max-w-sm">
-                <p className="text-sm text-text-primary">Generate a 10-slide lesson on Australian income tax for Year 11 students. Include the marginal rate system, PAYG withholding, and a worked example.</p>
+
+        {/* AI chat panel — right side */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            {/* User message */}
+            <div className="flex gap-3 items-start">
+              <div className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">HY</div>
+              <div className="bg-surface-soft border border-line-soft/60 rounded-2xl rounded-tl-sm px-4 py-3 max-w-sm">
+                <p className="text-sm text-text-primary leading-relaxed">Generate a 10-slide lesson on Australian income tax for Year 11. Include marginal rates, PAYG withholding, and a worked example.</p>
               </div>
             </div>
-            <div className="flex gap-3 flex-row-reverse">
-              <div className="w-7 h-7 rounded-full bg-surface-soft border border-line-soft flex items-center justify-center shrink-0">
+            {/* AI response */}
+            <div className="flex gap-3 items-start flex-row-reverse">
+              <div className="w-7 h-7 rounded-full bg-surface-soft border border-line-soft flex items-center justify-center shrink-0 mt-0.5">
                 <svg className="w-3.5 h-3.5 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
               </div>
-              <div className="bg-accent-soft border border-accent/20 rounded-2xl rounded-tr-sm px-4 py-3 max-w-sm">
-                <p className="text-[11px] text-accent font-mono mb-2 tracking-wide">Planning lesson structure…</p>
+              <div className="bg-accent/[0.05] border border-accent/20 rounded-2xl rounded-tr-sm px-4 py-3 max-w-sm">
+                <p className="text-[10px] text-accent font-mono mb-2 tracking-[0.1em] uppercase">Planning lesson…</p>
                 <p className="text-xs text-text-primary leading-relaxed">
-                  1. What is income? (Text)<br/>
-                  2. Gross vs net income (Flashcard)<br/>
-                  3. Tax bracket table (Chart)<br/>
-                  4. Marginal vs effective rate (MCQ)<br/>
-                  5. PAYG withholding system (Text)<br/>
-                  6. Worked payslip example (Table)<br/>
-                  7. Practice question (MCQ)…
+                  1. What is income? (Text)<br />
+                  2. Gross vs net income (Flashcard)<br />
+                  3. Tax bracket table (Chart)<br />
+                  4. Marginal vs effective rate (MCQ)<br />
+                  5. PAYG withholding system (Text)<br />
+                  6. Worked payslip example (Table)
                 </p>
               </div>
             </div>
+            <p className="text-[11px] text-text-dim text-center font-mono py-1">Added 5 slides to your lesson.</p>
           </div>
-          <div data-sim-id="ai-input" className="border border-line-soft rounded-2xl p-4 bg-surface-raised shrink-0">
-            <p className="text-sm text-text-dim">Ask me to generate or refine slides…</p>
-            <div className="mt-3 flex justify-between items-center gap-3">
-              <div className="flex gap-2">
-                <button className="text-xs border border-line-soft px-2.5 py-1.5 rounded-lg text-text-dim">📎 PDF</button>
-                <button className="text-xs border border-line-soft px-2.5 py-1.5 rounded-lg text-text-dim">10 slides ↕</button>
+
+          {/* Chat input */}
+          <div className="shrink-0 p-4 border-t border-line-soft">
+            <div className="border border-line-soft rounded-2xl p-4 bg-surface-raised">
+              <p className="text-sm text-text-dim">Ask me to generate or refine slides…</p>
+              <div className="mt-3 flex justify-between items-center gap-3">
+                <div className="flex gap-2">
+                  <button className="text-xs border border-line-soft px-2.5 py-1.5 rounded-lg text-text-dim">📎 PDF</button>
+                  <button className="text-xs border border-line-soft px-2.5 py-1.5 rounded-lg text-text-dim">10 slides ↕</button>
+                </div>
+                <button data-sim-id="ai-send-btn" className="btn-primary px-4 py-2 text-sm rounded-xl">Generate →</button>
               </div>
-              <button data-sim-id="ai-send-btn" className="btn-primary px-4 py-2 text-sm rounded-xl">Generate →</button>
             </div>
           </div>
         </div>
@@ -789,22 +842,40 @@ export default function Tour() {
       {/* ── Fixed overlays ── */}
       <ProgressBar current={sceneIndex} total={SCENES.length} />
 
-      {/* Left half — back */}
+      {/* Left edge — back */}
       <div onMouseEnter={() => setHoverSide('left')} onMouseLeave={() => setHoverSide(null)} onClick={prevScene}
-        style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '50%', zIndex: 200, cursor: sceneIndex > 0 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', paddingLeft: 22 }}
+        style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '50%', zIndex: 200, cursor: sceneIndex > 0 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', paddingLeft: 14 }}
       >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"
-          style={{ opacity: hoverSide === 'left' && sceneIndex > 0 ? 0.7 : sceneIndex > 0 ? 0.15 : 0, transition: 'opacity 0.18s ease' }}
-        ><polyline points="15 18 9 12 15 6"/></svg>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 38, height: 38, borderRadius: '50%',
+          background: hoverSide === 'left' && sceneIndex > 0 ? 'rgba(128,128,128,0.14)' : 'transparent',
+          border: hoverSide === 'left' && sceneIndex > 0 ? '1px solid rgba(128,128,128,0.22)' : '1px solid transparent',
+          opacity: sceneIndex > 0 ? (hoverSide === 'left' ? 0.78 : 0.32) : 0,
+          transition: 'opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease',
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ color: 'var(--text-primary)', stroke: 'currentColor' }}
+          ><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
       </div>
 
-      {/* Right half — forward */}
+      {/* Right edge — forward */}
       <div onMouseEnter={() => setHoverSide('right')} onMouseLeave={() => setHoverSide(null)} onClick={nextScene}
-        style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: '50%', zIndex: 200, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 22 }}
+        style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: '50%', zIndex: 200, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 14 }}
       >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round"
-          style={{ opacity: hoverSide === 'right' ? 0.7 : 0.15, transition: 'opacity 0.18s ease' }}
-        ><polyline points="9 18 15 12 9 6"/></svg>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 38, height: 38, borderRadius: '50%',
+          background: hoverSide === 'right' ? 'rgba(128,128,128,0.14)' : 'transparent',
+          border: hoverSide === 'right' ? '1px solid rgba(128,128,128,0.22)' : '1px solid transparent',
+          opacity: hoverSide === 'right' ? 0.78 : 0.32,
+          transition: 'opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease',
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ color: 'var(--text-primary)', stroke: 'currentColor' }}
+          ><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
       </div>
 
       {/* Close button */}
