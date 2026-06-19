@@ -28,7 +28,11 @@ const SCENES = [
   },
   {
     id: 'enter-course', view: 'courses', nav: 'curriculum', cursor: 'course-card-1', clickAnim: true,
-    caption: { title: 'Course Library', body: 'Courses break into focused modules and short lessons. Click any course to jump straight in — progress is saved automatically.' },
+    caption: { title: 'Course Library', body: 'Courses are split into focused modules. Click a course to see its full lesson outline.' },
+  },
+  {
+    id: 'course-detail', view: 'course-detail', nav: 'curriculum', cursor: 'lesson-link', clickAnim: true,
+    caption: { title: 'Modules & Lessons', body: 'Each course is broken into modules. Progress is tracked per lesson — students always pick up exactly where they left off.' },
   },
   {
     id: 'lesson-intro', view: 'lesson-intro', nav: 'curriculum', cursor: 'lesson-next-btn', clickAnim: true,
@@ -264,6 +268,93 @@ function SimCourses() {
                   <span className="text-sm font-medium group-hover:text-accent transition-colors duration-500">Enter Lesson →</span>
                   <svg className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-2 transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── SimCourseDetail ───────────────────────────── */
+/* Matches real course detail / ClassDetail page layout */
+function SimCourseDetail() {
+  const simModules = [
+    {
+      name: 'Budgeting Fundamentals',
+      lessons: [
+        { title: 'Introduction to Budgeting', duration: '4m', done: true },
+        { title: 'The 50/30/20 Rule', duration: '5m', done: true },
+        { title: 'Tracking Your Spending', duration: '6m', done: false, active: true },
+      ],
+    },
+    {
+      name: 'Income & Tax',
+      lessons: [
+        { title: 'Understanding Income', duration: '5m', done: false },
+        { title: 'How Tax Brackets Work', duration: '7m', done: false },
+        { title: 'PAYG Withholding', duration: '6m', done: false },
+      ],
+    },
+    {
+      name: 'Saving Strategies',
+      lessons: [
+        { title: 'Emergency Funds', duration: '4m', done: false },
+        { title: 'Compound Interest', duration: '5m', done: false },
+      ],
+    },
+  ];
+
+  return (
+    <div className="absolute inset-0 bg-surface-body overflow-hidden selection:bg-accent selection:text-white">
+      <div className="container-custom py-12">
+        {/* Course header */}
+        <header className="mb-10">
+          <span className="section-kicker">Money Basics</span>
+          <h1 className="text-5xl md:text-6xl font-serif font-bold text-text-primary mb-4 leading-tight">
+            Course overview
+          </h1>
+          <p className="text-lg text-text-muted font-serif italic max-w-xl leading-relaxed">
+            Understand how money works — income, spending, saving, and the basics every Australian student needs.
+          </p>
+          <div className="mt-6 flex items-center gap-4">
+            <div className="flex-1 max-w-xs h-1.5 bg-line-soft rounded-full overflow-hidden">
+              <div className="h-full bg-accent rounded-full" style={{ width: '25%' }} />
+            </div>
+            <span className="text-sm font-medium text-text-dim">2 / 8 lessons complete</span>
+          </div>
+        </header>
+
+        {/* Module accordion */}
+        <div className="space-y-4">
+          {simModules.map((mod) => (
+            <div key={mod.name} className="rounded-2xl border border-line-soft overflow-hidden bg-surface-raised">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-line-soft bg-surface-soft/40">
+                <h2 className="text-sm font-semibold text-text-muted tracking-wide">{mod.name}</h2>
+                <span className="text-xs text-text-dim font-mono">{mod.lessons.length} lessons</span>
+              </div>
+              <div>
+                {mod.lessons.map((lesson, li) => (
+                  <div
+                    key={lesson.title}
+                    data-sim-id={lesson.active ? 'lesson-link' : undefined}
+                    className={`flex items-center gap-4 px-6 py-4 border-t border-line-soft/40 first:border-t-0 hover:bg-surface-soft/60 transition-colors cursor-default ${lesson.active ? 'bg-accent/[0.03]' : ''}`}
+                  >
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${lesson.done ? 'border-accent bg-accent' : lesson.active ? 'border-accent' : 'border-line-soft'}`}>
+                      {lesson.done && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><polyline points="20 6 9 17 4 12" /></svg>
+                      )}
+                    </div>
+                    <span className={`flex-1 text-sm font-medium ${lesson.done ? 'text-text-dim line-through' : lesson.active ? 'text-accent' : 'text-text-primary'}`}>
+                      {lesson.title}
+                    </span>
+                    <span className="text-xs text-text-dim font-medium shrink-0">{lesson.duration}</span>
+                    <svg className={`w-4 h-4 shrink-0 ${lesson.active ? 'text-accent' : 'text-text-dim'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
@@ -828,9 +919,10 @@ export default function Tour() {
         position: 'absolute', top: hasSimNav ? 60 : 0, left: 0, right: 0, bottom: 0,
         opacity: viewOpacity, transition: `opacity ${FADE_VIEW}ms ease`,
       }}>
-        {currentView === 'home'         && <SimHome />}
-        {currentView === 'courses'      && <SimCourses />}
-        {currentView === 'lesson-intro' && <SimLessonIntro />}
+        {currentView === 'home'          && <SimHome />}
+        {currentView === 'courses'       && <SimCourses />}
+        {currentView === 'course-detail' && <SimCourseDetail />}
+        {currentView === 'lesson-intro'  && <SimLessonIntro />}
         {currentView === 'lesson-mcq'   && <SimLessonMCQ />}
         {currentView === 'lesson-calc'  && <SimLessonCalc />}
         {currentView === 'classes'      && <SimClasses />}
@@ -842,40 +934,65 @@ export default function Tour() {
       {/* ── Fixed overlays ── */}
       <ProgressBar current={sceneIndex} total={SCENES.length} />
 
-      {/* Left edge — back */}
-      <div onMouseEnter={() => setHoverSide('left')} onMouseLeave={() => setHoverSide(null)} onClick={prevScene}
-        style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '50%', zIndex: 200, cursor: sceneIndex > 0 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', paddingLeft: 14 }}
+      {/* Left gradient strip — back */}
+      <div
+        onMouseEnter={() => setHoverSide('left')}
+        onMouseLeave={() => setHoverSide(null)}
+        onClick={prevScene}
+        style={{
+          position: 'fixed', left: 0, top: 0, bottom: 0, width: 220,
+          zIndex: 200,
+          cursor: sceneIndex > 0 ? 'pointer' : 'default',
+          display: 'flex', alignItems: 'center', paddingLeft: 22,
+          background: sceneIndex > 0
+            ? hoverSide === 'left'
+              ? 'linear-gradient(to right, rgba(0,0,0,0.36) 0%, rgba(0,0,0,0.10) 55%, transparent 100%)'
+              : 'linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.04) 55%, transparent 100%)'
+            : 'transparent',
+          transition: 'background 0.28s ease',
+          pointerEvents: sceneIndex > 0 ? 'auto' : 'none',
+        }}
       >
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 38, height: 38, borderRadius: '50%',
-          background: hoverSide === 'left' && sceneIndex > 0 ? 'rgba(128,128,128,0.14)' : 'transparent',
-          border: hoverSide === 'left' && sceneIndex > 0 ? '1px solid rgba(128,128,128,0.22)' : '1px solid transparent',
-          opacity: sceneIndex > 0 ? (hoverSide === 'left' ? 0.78 : 0.32) : 0,
-          transition: 'opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease',
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-            style={{ color: 'var(--text-primary)', stroke: 'currentColor' }}
-          ><polyline points="15 18 9 12 15 6"/></svg>
-        </div>
+        <svg
+          width="26" height="26" viewBox="0 0 24 24" fill="none"
+          strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+          style={{
+            stroke: 'white',
+            filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.55))',
+            opacity: sceneIndex > 0 ? (hoverSide === 'left' ? 1 : 0.55) : 0,
+            transition: 'opacity 0.22s ease',
+            flexShrink: 0,
+          }}
+        ><polyline points="15 18 9 12 15 6" /></svg>
       </div>
 
-      {/* Right edge — forward */}
-      <div onMouseEnter={() => setHoverSide('right')} onMouseLeave={() => setHoverSide(null)} onClick={nextScene}
-        style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: '50%', zIndex: 200, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 14 }}
+      {/* Right gradient strip — forward */}
+      <div
+        onMouseEnter={() => setHoverSide('right')}
+        onMouseLeave={() => setHoverSide(null)}
+        onClick={nextScene}
+        style={{
+          position: 'fixed', right: 0, top: 0, bottom: 0, width: 220,
+          zIndex: 200,
+          cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 22,
+          background: hoverSide === 'right'
+            ? 'linear-gradient(to left, rgba(0,0,0,0.36) 0%, rgba(0,0,0,0.10) 55%, transparent 100%)'
+            : 'linear-gradient(to left, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.04) 55%, transparent 100%)',
+          transition: 'background 0.28s ease',
+        }}
       >
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 38, height: 38, borderRadius: '50%',
-          background: hoverSide === 'right' ? 'rgba(128,128,128,0.14)' : 'transparent',
-          border: hoverSide === 'right' ? '1px solid rgba(128,128,128,0.22)' : '1px solid transparent',
-          opacity: hoverSide === 'right' ? 0.78 : 0.32,
-          transition: 'opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease',
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-            style={{ color: 'var(--text-primary)', stroke: 'currentColor' }}
-          ><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
+        <svg
+          width="26" height="26" viewBox="0 0 24 24" fill="none"
+          strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+          style={{
+            stroke: 'white',
+            filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.55))',
+            opacity: hoverSide === 'right' ? 1 : 0.55,
+            transition: 'opacity 0.22s ease',
+            flexShrink: 0,
+          }}
+        ><polyline points="9 18 15 12 9 6" /></svg>
       </div>
 
       {/* Close button */}
