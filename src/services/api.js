@@ -567,6 +567,46 @@ class ApiService {
     }
     return imageUrl;
   }
+
+  // ── Hidden games (clicker) ────────────────────────────────────────────────
+  async getGame(key) {
+    return this.request(`/games/${key}`);
+  }
+
+  async saveGame(key, state) {
+    return this.request(`/games/${key}`, {
+      method: 'PUT',
+      body: JSON.stringify({ state }),
+    });
+  }
+
+  // ── Academy Estates (hidden; per-classroom property market) ───────────────
+  // Plots are addressed by grid coordinates: at world scale (~50k plots) unowned
+  // plots never travel over the API, so they have no server ids to reference.
+  async getAcademyEstate(classId) {
+    return this.request(`/academies/${classId}/estate`);
+  }
+
+  async buyAcademyPlot(classId, gridX, gridY) {
+    return this.request(`/academies/${classId}/estate/buy`, {
+      method: 'POST',
+      body: JSON.stringify({ gridX, gridY }),
+    });
+  }
+
+  async sellAcademyPlot(classId, gridX, gridY) {
+    return this.request(`/academies/${classId}/estate/sell`, {
+      method: 'POST',
+      body: JSON.stringify({ gridX, gridY }),
+    });
+  }
+
+  async customizeAcademyPlot(classId, gridX, gridY, { houseStyle, houseColor }) {
+    return this.request(`/academies/${classId}/estate/customize`, {
+      method: 'PUT',
+      body: JSON.stringify({ gridX, gridY, houseStyle, houseColor }),
+    });
+  }
 }
 
 export default new ApiService();

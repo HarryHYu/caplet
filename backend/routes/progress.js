@@ -4,9 +4,14 @@ const UserProgress = require('../models/UserProgress');
 const Course = require('../models/Course');
 const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
+const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Caplet Coins granted the first time a lesson is completed (spendable in the
+// hidden Academy Estates game). Flat award — balance/tuning can come later.
+const COINS_PER_LESSON = 20;
 
 // Helper: lesson has actual content (slides, text, or video)
 function lessonHasContent(lesson) {
@@ -81,13 +86,24 @@ router.put('/lesson/:lessonId', requireAuth, [
       updateData.quizScores = merged;
     }
 
+    const firstCompletion = status === 'completed' && progress.status !== 'completed';
     if (status === 'completed') {
       updateData.completedAt = new Date();
     }
-    
+
     updateData.lastAccessedAt = new Date();
 
     await progress.update(updateData);
+
+    // Award Caplet Coins once per lesson, the first time it's completed.
+    // Never let a coin-grant failure break progress saving.
+    if (firstCompletion) {
+      try {
+        await User.increment('capletCoins', { by: COINS_PER_LESSON, where: { id: req.user.id } });
+      } catch (coinErr) {
+        console.error('Coin award failed (non-fatal):', coinErr.message || coinErr);
+      }
+    }
 
     res.json({
       message: 'Progress updated successfully',

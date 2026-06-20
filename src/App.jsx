@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
@@ -43,6 +43,17 @@ import Editor from './pages/Editor';
 import NotFound from './pages/NotFound';
 import CapletLoader from './components/CapletLoader';
 import { GOOGLE_OAUTH_CLIENT_ID } from './config/googleClient';
+// Hidden features — reachable only by typing their URL (no nav/menu entry):
+//   /games/clicker            → the idle clicker game
+//   /academy/:classId/estate  → the 3D Academy Estates property game
+import ClickerGame from './pages/games/ClickerGame';
+import AcademyEstate from './pages/academy/AcademyEstate';
+
+// Wrapper so the standalone Estates route can pass the class id from the URL.
+function AcademyEstateRoute() {
+  const { classId } = useParams();
+  return <AcademyEstate classroomId={classId} />;
+}
 
 function FullPageSpinner() {
   return (
@@ -146,6 +157,9 @@ function App() {
                   <Route path="/survey" element={<Survey />} />
                   <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />
                   <Route path="/editor" element={<Editor />} />
+                  {/* Hidden — no nav links point here; type the URL to reach them. */}
+                  <Route path="/games/clicker" element={<RequireAuth><ClickerGame /></RequireAuth>} />
+                  <Route path="/academy/:classId/estate" element={<RequireAuth><AcademyEstateRoute /></RequireAuth>} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

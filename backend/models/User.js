@@ -86,6 +86,13 @@ const User = sequelize.define('User', {
     set(value) {
       this.setDataValue('onboardingData', value ? JSON.stringify(value) : null);
     }
+  },
+  // Caplet Coins — soft currency earned by completing lessons, spent in the
+  // (hidden) Academy Estates property game.
+  capletCoins: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
   }
 }, {
   tableName: 'users',

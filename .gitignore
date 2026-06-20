@@ -42,3 +42,8 @@ backend/.env
 !.env.example
 .vercel
 # Force redeploy
+
+# Estates dev scratch (Claude tooling — not part of the app)
+.dev-snaps/
+.backups/
+cookie-clicker/

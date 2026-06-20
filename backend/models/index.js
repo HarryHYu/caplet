@@ -14,6 +14,9 @@ const Comment = require('./Comment');
 const ChatMessage = require('./ChatMessage');
 const EditorWorkspace = require('./EditorWorkspace');
 const SavedSlide = require('./SavedSlide');
+const Property = require('./Property');
+const PropertyTransaction = require('./PropertyTransaction');
+const GameState = require('./GameState');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -200,6 +203,25 @@ ChatMessage.belongsTo(User, {
   as: 'user'
 });
 
+// Academy Estates: per-classroom property worlds. Owner FK is SET NULL so a
+// user deletion frees their plots rather than destroying the shared map.
+User.hasMany(Property, { foreignKey: 'ownerId', as: 'properties', onDelete: 'SET NULL' });
+Property.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
+Classroom.hasMany(Property, { foreignKey: 'classroomId', as: 'plots', onDelete: 'CASCADE' });
+Property.belongsTo(Classroom, { foreignKey: 'classroomId', as: 'classroom' });
+
+// Estate activity ledger.
+Classroom.hasMany(PropertyTransaction, { foreignKey: 'classroomId', as: 'estateTransactions', onDelete: 'CASCADE' });
+PropertyTransaction.belongsTo(Classroom, { foreignKey: 'classroomId', as: 'classroom' });
+Property.hasMany(PropertyTransaction, { foreignKey: 'propertyId', as: 'transactions', onDelete: 'CASCADE' });
+PropertyTransaction.belongsTo(Property, { foreignKey: 'propertyId', as: 'property' });
+User.hasMany(PropertyTransaction, { foreignKey: 'actorId', as: 'estateActions', onDelete: 'SET NULL' });
+PropertyTransaction.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
+
+// Saved game state (the hidden clicker game).
+User.hasMany(GameState, { foreignKey: 'userId', as: 'gameStates', onDelete: 'CASCADE' });
+GameState.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // Sync database
 // NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
 // This sync() call is a no-op fallback (force: false prevents any schema changes).
@@ -232,5 +254,8 @@ module.exports = {
   ChatMessage,
   EditorWorkspace,
   SavedSlide,
+  Property,
+  PropertyTransaction,
+  GameState,
   syncDatabase
 };

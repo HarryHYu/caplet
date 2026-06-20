@@ -10,8 +10,10 @@ const {
   Lesson,
   ClassAnnouncement,
   Comment,
+  Property,
 } = require('../models');
 const { sequelize } = require('../config/database');
+const { buildDeedRows } = require('../services/estateSeed');
 
 const router = express.Router();
 
@@ -109,17 +111,25 @@ router.post(
       const { name, description } = req.body;
       const code = await generateClassCode();
 
-      const classroom = await Classroom.create({
-        name,
-        description: description || '',
-        code,
-        createdBy: req.user.id,
-      });
+      // Create the class, enrol the creator as teacher, and seed this academy's
+      // landmark-deed parcels — all atomically. Ordinary Estates plots are
+      // created on demand when bought, so this stays cheap (~12 rows).
+      const classroom = await sequelize.transaction(async (t) => {
+        const created = await Classroom.create({
+          name,
+          description: description || '',
+          code,
+          createdBy: req.user.id,
+        }, { transaction: t });
 
-      await ClassMembership.create({
-        classroomId: classroom.id,
-        userId: req.user.id,
-        role: 'teacher',
+        await ClassMembership.create({
+          classroomId: created.id,
+          userId: req.user.id,
+          role: 'teacher',
+        }, { transaction: t });
+
+        await Property.bulkCreate(buildDeedRows(created.id), { transaction: t });
+        return created;
       });
 
       res.status(201).json({ classroom });

@@ -116,6 +116,10 @@ app.use('/api/editor', require('./routes/editor'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/saved-slides', require('./routes/savedSlides'));
+// Hidden games + Academy Estates (URL-only; no nav entry points). Mounted
+// before the proxy catch-all so they take precedence.
+app.use('/api/games', require('./routes/games'));
+app.use('/api/academies/:classroomId/estate', require('./routes/academyEstate'));
 app.use('/api', require('./routes/proxy'));
 
 // Error handling middleware
