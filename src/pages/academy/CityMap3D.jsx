@@ -1,15 +1,24 @@
 import { useMemo, useRef, useState, useEffect, useCallback, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { MapControls, Html, useGLTF, useTexture, useProgress } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import {
+  MapControls, OrthographicCamera, PerspectiveCamera,
+  Html, useGLTF, useTexture, useProgress,
+} from '@react-three/drei';
 import * as THREE from 'three';
 import {
   TILE, ALL_MODEL_URLS, CUSTOM_IMAGES, CUSTOM_IMAGE_URLS, modelUrl, GROUND_FILE, ROAD_FILE,
   ROAD_JUNCTION_FILE, ROAD_CROSSING_FILE, ROAD_CORNER_FILE, ROAD_TSPLIT_FILE, WATERTOWER_FILE,
   CIVIC_POOL, TREES, BUSHES, PALMS, PINES, SMALL_DECOR, ROCKS, STREETLIGHT_FILE,
   TRAFFICLIGHT_FILES, STREET_PROPS, CHIMNEYS, IND_TANK, CONTAINERS, OLD_TOWN_ART, FARM_ART,
-  CLIFFS, buildingForTier, hashCell, normFor, isBillboard, BILLBOARD_SCALE,
+  CLIFFS, PEOPLE, buildingForTier, hashCell, normFor, isBillboard, BILLBOARD_SCALE,
   OLD_TOWN_SCALE, FARM_SCALE,
 } from './cityModels.js';
+
+// The player avatar is one of the Kenney mini-characters — same model + scale as
+// the NPCs walking the streets, so "you" are the same little size as everyone.
+const PLAYER_MODEL = 'people/character-male-e.glb';
+const PLAYER_HEIGHT = 0.42;   // matches NPC normalisation (normFor people)
+const POV_MAX = 10;           // furthest 3rd-person pull-back (kept modest)
 import { applyMatrices, extractGeoMat, Y_AXIS } from './cityRender.js';
 import CityLife from './CityLife.jsx';
 
@@ -40,6 +49,11 @@ export default function CityMap3D({ plots, ownedRows, layout, selectedKey, onSel
   const stateRef = useRef(null);
   const [isFull, setIsFull] = useState(false);
   const [ready, setReady] = useState(false);
+  // 'play' = spawn into the city as a tiny player (perspective + pointer lock +
+  // WASD, scroll to change POV); 'overview' = the isometric map (orthographic,
+  // drag/zoom). You spawn straight into the city.
+  const [mode, setMode] = useState('play');
+  const [locked, setLocked] = useState(false);
 
   // DEV ONLY — with #devsnap[=name] in the URL, capture the canvas shortly
   // after the city renders and POST it to the Vite dev-snap endpoint, so local
@@ -94,6 +108,20 @@ export default function CityMap3D({ plots, ownedRows, layout, selectedKey, onSel
     return () => document.removeEventListener('fullscreenchange', onFs);
   }, []);
 
+  // In play mode: track pointer-lock (to show/hide the "click to look" hint)
+  // and let Esc drop straight back to the overview.
+  useEffect(() => {
+    if (mode !== 'play') return undefined;
+    const onLock = () => setLocked(!!document.pointerLockElement);
+    const onKey = (e) => { if (e.key === 'Escape') setMode('overview'); };
+    document.addEventListener('pointerlockchange', onLock);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerlockchange', onLock);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [mode]);
+
   // The renderer needs the v2 cell-map layout; a stale backend (old infra
   // shape) just keeps the loader up rather than crashing mid-scene.
   if (!layout?.cells) return null;
@@ -110,9 +138,7 @@ export default function CityMap3D({ plots, ownedRows, layout, selectedKey, onSel
       style={{ height: isFull ? '100vh' : 'max(440px, calc(100vh - 252px))' }}
     >
       <Canvas
-        orthographic
         shadows="percentage"
-        camera={{ zoom: 12, position: [ccx + 200, 180, ccz + 200], near: 0.1, far: 4000 }}
         dpr={[1, 1.75]}
         gl={{
           antialias: true,
@@ -123,6 +149,26 @@ export default function CityMap3D({ plots, ownedRows, layout, selectedKey, onSel
         onCreated={(state) => { glRef.current = state.gl; camRef.current = state.camera; stateRef.current = state; }}
       >
         <color attach="background" args={['#bcd6f2']} />
+        {/* At street level, haze hides the far edge of the huge map and grounds
+            the view. No fog in the iso overview. */}
+        {mode === 'play' && <fog attach="fog" args={['#bcd6f2', 50, 340]} />}
+
+        {/* Two cameras, swapped by makeDefault: the iso overview camera and the
+            first-person player camera (positioned by the Player controller). */}
+        <OrthographicCamera
+          makeDefault={mode === 'overview'}
+          position={[ccx + 200, 180, ccz + 200]}
+          zoom={12}
+          near={0.1}
+          far={4000}
+        />
+        <PerspectiveCamera
+          makeDefault={mode === 'play'}
+          fov={72}
+          near={0.1}
+          far={2000}
+          position={[ccx, 1.7, ccz]}
+        />
         {/* Flat fill kept low so the sun's shadows give the city depth. */}
         <ambientLight intensity={0.55} />
         <hemisphereLight args={[0xffffff, 0x6b7a55, 0.5]} />
@@ -143,14 +189,33 @@ export default function CityMap3D({ plots, ownedRows, layout, selectedKey, onSel
         />
 
         <Suspense fallback={null}>
-          <City plots={plots} ownedRows={ownedRows} layout={layout} selectedKey={selectedKey} onSelectPlot={onSelectPlot} downPos={downPos} onReady={() => setReady(true)} />
+          <City plots={plots} ownedRows={ownedRows} layout={layout} selectedKey={selectedKey} onSelectPlot={onSelectPlot} interactive={mode === 'overview'} downPos={downPos} onReady={() => setReady(true)} />
         </Suspense>
 
-        <MapControls makeDefault enableRotate={false} enableDamping dampingFactor={0.12} minZoom={6} maxZoom={170} target={[ccx, 0, ccz]} />
-        <CameraLimits gridW={layout.gridW} />
+        {mode === 'overview' && (
+          <>
+            <MapControls makeDefault enableRotate={false} enableDamping dampingFactor={0.12} minZoom={6} maxZoom={170} target={[ccx, 0, ccz]} />
+            <CameraLimits gridW={layout.gridW} />
+          </>
+        )}
+        {mode === 'play' && (
+          <Suspense fallback={null}>
+            <Player spawn={[ccx, ccz]} bound={(layout.gridW * TILE) / 2 - 6} />
+          </Suspense>
+        )}
       </Canvas>
 
       <LoadingOverlay ready={ready} />
+
+      {/* Mode toggle — spawn into the city, or return to the map overview. */}
+      <button
+        type="button"
+        onClick={() => setMode((m) => (m === 'overview' ? 'play' : 'overview'))}
+        className="absolute top-3 left-3 z-10 text-[10px] font-bold uppercase tracking-widest text-white bg-accent/80 hover:bg-accent px-3 py-1.5 rounded transition-colors"
+      >
+        {mode === 'overview' ? '🚶 Walk the city' : '🗺 Overview'}
+      </button>
+
       <button
         type="button"
         onClick={toggleFull}
@@ -158,14 +223,134 @@ export default function CityMap3D({ plots, ownedRows, layout, selectedKey, onSel
       >
         {isFull ? '⤢ Exit' : '⤢ Fullscreen'}
       </button>
+
+      {/* Centre crosshair while walking + locked. */}
+      {mode === 'play' && locked && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+          <div className="w-1.5 h-1.5 rounded-full bg-white/80 ring-1 ring-black/40" />
+        </div>
+      )}
+
+      {/* "Click to look" prompt while walking but not yet locked. */}
+      {mode === 'play' && !locked && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+          <div className="bg-black/55 text-white text-center px-5 py-4 rounded-xl">
+            <p className="text-sm font-bold">Click to look around</p>
+            <p className="text-[11px] text-white/75 mt-1">WASD move · mouse look · scroll for 1st/3rd person · Shift sprint · Esc or “Overview” to exit</p>
+          </div>
+        </div>
+      )}
+
       <div className="absolute bottom-3 left-3 text-[10px] font-bold uppercase tracking-widest text-white/80 bg-black/40 px-3 py-1.5 rounded pointer-events-none">
-        Drag to pan · scroll to zoom out to see the whole city · click a lot
+        {mode === 'overview'
+          ? 'Drag to pan · scroll to zoom · click a lot · 🚶 walk the city'
+          : 'WASD move · mouse look · scroll 1st/3rd person · Shift sprint · Esc overview'}
       </div>
     </div>
   );
 }
 
-function City({ plots, ownedRows, layout, selectedKey, onSelectPlot, downPos, onReady }) {
+// First-person player: positions the (default) perspective camera and walks it
+// with WASD on the ground plane; the mouse looks via PointerLockControls. No
+// building collision yet — you can pass through structures. The player is the
+// same little Kenney character as the NPCs (height 0.42). Mouse looks (custom
+// pointer-lock), WASD walks, and the scroll wheel dollies the camera from first
+// person (dist 0) out to a modest third-person/wider view (dist POV_MAX).
+function Player({ spawn, bound }) {
+  const { camera, gl } = useThree();
+  const keys = useRef({});
+  const yaw = useRef(Math.PI);     // face into the city on spawn
+  const pitch = useRef(-0.05);
+  const dist = useRef(0);          // POV: 0 = first person
+  const groundPos = useRef(new THREE.Vector3(spawn[0], 0, spawn[1] + 4));
+  const avatarRef = useRef();
+  const EYE = PLAYER_HEIGHT * 0.92;
+
+  // Player avatar — same model + scale as the street NPCs.
+  const { scene } = useGLTF(modelUrl(PLAYER_MODEL));
+  const avatar = useMemo(() => extractGeoMat(scene, 'height', PLAYER_HEIGHT), [scene]);
+
+  const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
+  const look = useRef(new THREE.Vector3());
+  const fwd = useRef(new THREE.Vector3());
+  const right = useRef(new THREE.Vector3());
+
+  useEffect(() => {
+    const dom = gl.domElement;
+    const onDown = (e) => { if (e.button === 0 && document.pointerLockElement !== dom) dom.requestPointerLock?.(); };
+    const onMove = (e) => {
+      if (document.pointerLockElement !== dom) return;
+      yaw.current -= e.movementX * 0.0022;
+      pitch.current = Math.max(-1.35, Math.min(1.35, pitch.current - e.movementY * 0.0022));
+    };
+    const onWheel = (e) => {
+      e.preventDefault();
+      dist.current = Math.max(0, Math.min(POV_MAX, dist.current + e.deltaY * 0.01));
+    };
+    const onKeyDown = (e) => { keys.current[e.code] = true; };
+    const onKeyUp = (e) => { keys.current[e.code] = false; };
+    dom.addEventListener('pointerdown', onDown);
+    window.addEventListener('mousemove', onMove);
+    dom.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      dom.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('mousemove', onMove);
+      dom.removeEventListener('wheel', onWheel);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, [gl]);
+
+  useFrame((_, dtRaw) => {
+    const dt = Math.min(dtRaw, 0.05);
+    const k = keys.current;
+    // Tiny avatar → modest speeds (world units are ~human-scaled to 0.42 tall).
+    const speed = (k.ShiftLeft || k.ShiftRight ? 11 : 4.5) * dt;
+
+    euler.current.set(pitch.current, yaw.current, 0);
+    look.current.set(0, 0, -1).applyEuler(euler.current);
+    fwd.current.set(look.current.x, 0, look.current.z);
+    if (fwd.current.lengthSq() > 1e-5) fwd.current.normalize();
+    right.current.crossVectors(fwd.current, Y_AXIS).normalize();
+
+    let mf = 0; let ms = 0;
+    if (k.KeyW || k.ArrowUp) mf += 1;
+    if (k.KeyS || k.ArrowDown) mf -= 1;
+    if (k.KeyD || k.ArrowRight) ms += 1;
+    if (k.KeyA || k.ArrowLeft) ms -= 1;
+    if (mf || ms) {
+      const dx = fwd.current.x * mf + right.current.x * ms;
+      const dz = fwd.current.z * mf + right.current.z * ms;
+      const len = Math.hypot(dx, dz) || 1;
+      groundPos.current.x = Math.max(-bound, Math.min(bound, groundPos.current.x + (dx / len) * speed));
+      groundPos.current.z = Math.max(-bound, Math.min(bound, groundPos.current.z + (dz / len) * speed));
+    }
+
+    // Camera sits at the eye and pulls straight back along the look ray as the
+    // POV dollies out; kept above ground so it never dips under the street.
+    const ex = groundPos.current.x;
+    const ez = groundPos.current.z;
+    camera.position.set(
+      ex - look.current.x * dist.current,
+      Math.max(0.25, EYE - look.current.y * dist.current),
+      ez - look.current.z * dist.current,
+    );
+    camera.quaternion.setFromEuler(euler.current);
+
+    if (avatarRef.current) {
+      avatarRef.current.position.set(ex, 0, ez);
+      avatarRef.current.rotation.y = yaw.current; // face the walk/look direction
+      avatarRef.current.visible = dist.current > 0.6; // hidden in first person
+    }
+  });
+
+  if (!avatar) return null;
+  return <mesh ref={avatarRef} geometry={avatar.geometry} material={avatar.material} castShadow visible={false} />;
+}
+
+function City({ plots, ownedRows, layout, selectedKey, onSelectPlot, interactive = true, downPos, onReady }) {
   const deeds = useMemo(() => ownedRows.filter((p) => p.tier === 'Landmark'), [ownedRows]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- positions are stable; rebuild on map/count only
   const plan = useMemo(() => computeScene(plots, deeds, layout), [layout, plots.length, deeds.length]);
@@ -175,7 +360,10 @@ function City({ plots, ownedRows, layout, selectedKey, onSelectPlot, downPos, on
     const [sx, sy] = selectedKey.split(',').map(Number);
     return Number.isFinite(sx) && Number.isFinite(sy) ? [sx, sy] : null;
   }, [selectedKey]);
-  const pick = useCallback((key) => onSelectPlot?.(key), [onSelectPlot]);
+  const pickCb = useCallback((key) => onSelectPlot?.(key), [onSelectPlot]);
+  // In walk mode (interactive=false) plots aren't clickable — a click locks the
+  // pointer for mouse-look instead. Buying happens from the overview.
+  const pick = interactive ? pickCb : undefined;
 
   // Models have resolved (we're past Suspense) and instances are committed —
   // signal ready so the loading overlay can hide (don't rely on the loader's
