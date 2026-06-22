@@ -1,7 +1,7 @@
 /**
- * /tour — standalone demo page. Simulated pages copy exact HTML/CSS from
- * the real Caplet pages (section-kicker, huge serif headings, p-12 cards, etc.)
- * App.jsx renders /tour in its own <Routes> without Navbar/Footer.
+ * /tour — standalone demo page. Sim components copy the exact HTML/CSS from
+ * real Caplet pages. Data is fake / hardcoded for demo purposes.
+ * App.jsx renders /tour without the global Navbar / Footer.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -9,18 +9,18 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 
 /* ─────────────────────────── Timing ────────────────────────────────────── */
-const CURSOR_MOVE  = 680;
-const HOVER_PAUSE  = 360;
-const CLICK_DOWN   = 110;
-const POST_CLICK   = 280;
-const FADE_VIEW    = 200;
+const CURSOR_MOVE = 680;
+const HOVER_PAUSE = 360;
+const CLICK_DOWN  = 110;
+const POST_CLICK  = 280;
+const FADE_VIEW   = 200;
 const TIP_OX = 3, TIP_OY = 2;
 
 /* ─────────────────────────── Scenes ────────────────────────────────────── */
 const SCENES = [
   {
     id: 'welcome', view: 'home', nav: null, cursor: null, clickAnim: false,
-    caption: { title: 'Welcome to Caplet', body: "Hey — I'm Harry. I built Caplet to make financial literacy actually stick for students. Let me walk you through what's here." },
+    caption: { title: 'Welcome to Caplet', body: "Hey — I'm Harry. I built Caplet to make financial literacy actually stick for students. Let me show you what's here." },
   },
   {
     id: 'curriculum', view: 'courses', nav: 'curriculum', cursor: 'nav-curriculum', clickAnim: true,
@@ -28,11 +28,11 @@ const SCENES = [
   },
   {
     id: 'enter-course', view: 'courses', nav: 'curriculum', cursor: 'course-card-1', clickAnim: true,
-    caption: { title: 'Course Library', body: 'Courses are split into focused modules. Click a course to see its full lesson outline.' },
+    caption: { title: 'Course Library', body: 'Courses split into focused modules. Click any course to see its full outline and start where you left off.' },
   },
   {
     id: 'course-detail', view: 'course-detail', nav: 'curriculum', cursor: 'lesson-link', clickAnim: true,
-    caption: { title: 'Modules & Lessons', body: 'Each course is broken into modules. Progress is tracked per lesson — students always pick up exactly where they left off.' },
+    caption: { title: 'Modules & Lessons', body: 'Each course breaks into modules. Progress is tracked per lesson — students always pick up exactly where they left off.' },
   },
   {
     id: 'lesson-intro', view: 'lesson-intro', nav: 'curriculum', cursor: 'lesson-next-btn', clickAnim: true,
@@ -51,8 +51,12 @@ const SCENES = [
     caption: { title: 'The Academy', body: 'The classroom management layer. Teachers create a class, students join with a code, progress is tracked privately.' },
   },
   {
-    id: 'classes-create', view: 'classes', nav: 'academy', cursor: 'academy-create-btn', clickAnim: true,
-    caption: { title: 'Class Management', body: "One click to establish a class, share the passkey. Track every student's progress privately, post announcements, assign specific lessons." },
+    id: 'enter-class', view: 'classes', nav: 'academy', cursor: 'class-link', clickAnim: true,
+    caption: { title: 'Your Classes', body: "Each class has a private stream — teachers post announcements and assignments, students respond. Like Google Classroom but designed for Caplet." },
+  },
+  {
+    id: 'class-stream', view: 'class-detail', nav: 'academy', cursor: null, clickAnim: false,
+    caption: { title: 'Class Stream', body: 'Announcements, assignments with due dates, student comments — all private to that class. Teachers can also assign specific lessons.' },
   },
   {
     id: 'editor', view: 'editor', nav: null, cursor: 'editor-lesson-row', clickAnim: true,
@@ -60,11 +64,11 @@ const SCENES = [
   },
   {
     id: 'editor-ai', view: 'editor-ai', nav: null, cursor: 'ai-send-btn', clickAnim: true,
-    caption: { title: 'AI Generation', body: 'Paste curriculum notes or upload a PDF. AI plans the lesson in natural text first, then converts it to structured slides — coherent output, every time.' },
+    caption: { title: 'AI Generation', body: 'Paste curriculum notes or upload a PDF. AI plans the lesson in natural text first, then converts to structured slides — coherent output, every time.' },
   },
   {
     id: 'future', view: 'future', nav: null, cursor: null, clickAnim: false,
-    caption: { title: "That's Caplet", body: "Live today for students and teachers. Here's where we're heading." },
+    caption: { title: "That's Caplet", body: "Live today for students and teachers. Here's where we're heading next." },
   },
 ];
 
@@ -85,7 +89,7 @@ function VirtualCursor({ x, y, visible, clicking }) {
       position: 'fixed', left: x - TIP_OX, top: y - TIP_OY,
       width: 24, height: 28, pointerEvents: 'none', zIndex: 9960,
       opacity: visible ? 1 : 0,
-      transition: [`left ${CURSOR_MOVE}ms cubic-bezier(0.42,0,0.18,1.0)`,`top ${CURSOR_MOVE}ms cubic-bezier(0.42,0,0.18,1.0)`,'opacity 0.3s ease'].join(', '),
+      transition: [`left ${CURSOR_MOVE}ms cubic-bezier(0.42,0,0.18,1.0)`, `top ${CURSOR_MOVE}ms cubic-bezier(0.42,0,0.18,1.0)`, 'opacity 0.3s ease'].join(', '),
       filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.55)) drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
       willChange: 'left, top',
     }}>
@@ -118,7 +122,7 @@ function Caption({ title, body, visible }) {
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.35s ease, transform 0.35s ease',
       zIndex: 400, pointerEvents: 'none',
-      maxWidth: 540, width: 'calc(100vw - 140px)',
+      maxWidth: 540, width: 'calc(100vw - 180px)',
     }}>
       <div style={{ background: 'rgba(6,6,10,0.85)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 18, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
         <p style={{ margin: '0 0 4px', fontSize: 10, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)' }}>Caplet Demo</p>
@@ -139,7 +143,6 @@ function ProgressBar({ current, total }) {
 }
 
 /* ─────────────────────────── SimNavbar ─────────────────────────────────── */
-/* Exact copy of real Navbar HTML structure */
 function SimNavbar({ active }) {
   const { isDark, toggleTheme } = useTheme();
   const navItems = [
@@ -195,78 +198,113 @@ function CourseCover({ title }) {
   const hue2 = (hue1 + 40) % 360;
   const hue3 = (hue1 + 180) % 360;
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden group-hover:scale-105 transition-transform duration-700">
       <div className="absolute inset-0 opacity-80" style={{ background: `linear-gradient(${hue1}deg, hsl(${hue1},70%,85%) 0%, hsl(${hue2},70%,90%) 50%, hsl(${hue3},70%,95%) 100%)` }} />
       <div className="absolute top-[-20%] left-[-20%] w-[100%] h-[100%] rounded-full blur-[80px] mix-blend-multiply opacity-60" style={{ background: `hsl(${hue2},80%,75%)` }} />
       <div className="absolute bottom-[-30%] right-[-10%] w-[120%] h-[120%] rounded-full blur-[100px] mix-blend-screen opacity-40" style={{ background: `hsl(${hue3},60%,85%)` }} />
       <div className="absolute inset-0 flex items-center justify-center opacity-10">
-        <span className="text-[8rem] font-serif italic select-none">{title.charAt(0)}</span>
+        <span className="text-[12rem] font-serif italic select-none">{title.charAt(0)}</span>
       </div>
     </div>
   );
 }
 
 /* ─────────────────────────── SimHome ───────────────────────────────────── */
+/* Exact copy of real Home.jsx hero section */
 function SimHome() {
   return (
-    <div className="absolute inset-0 bg-surface-body flex flex-col items-center justify-center text-center px-6 md:px-12 lg:px-20 gap-8">
-      <div className="max-w-3xl w-full">
-        <span className="section-kicker">Financial literacy for Australian students</span>
-        <h1 className="text-6xl md:text-8xl font-serif font-bold text-text-primary leading-tight mb-8">
-          Learning that<br />actually sticks.
-        </h1>
-        <p className="text-2xl text-text-muted font-serif italic max-w-xl mx-auto leading-relaxed mb-12">
-          Structured courses, interactive lessons, and a built-in classroom system.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <button className="btn-primary">Get started free</button>
-          <button className="btn-secondary">Explore curriculum →</button>
+    <div className="absolute inset-0 bg-surface-body text-text-primary relative selection:bg-accent selection:text-text-contrast overflow-hidden">
+      <section className="relative h-full flex items-center overflow-hidden">
+        <div className="absolute inset-0 grid-technical opacity-40 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-surface-body pointer-events-none" />
+        <div className="container-custom relative z-10 w-full text-center py-32">
+          <div className="max-w-4xl mx-auto text-text-primary">
+            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter mb-8">
+              Money,<br />
+              <span className="font-serif italic font-medium text-accent-strong">Simplified.</span>
+            </h1>
+            <p className="text-xl sm:text-2xl font-display font-medium max-w-2xl mx-auto text-text-muted leading-relaxed mb-12">
+              Structured financial education for Australians.<br />
+              No products. No catch. Just clarity.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <button className="bg-accent hover:bg-accent-strong text-white font-display font-semibold px-10 py-5 rounded-full transition-all duration-300 shadow-xl">
+                Get Started Free
+              </button>
+              <button className="text-text-muted hover:text-text-primary font-display font-bold text-sm transition-all duration-300 py-4 px-6">
+                Browse Registry <span>&rarr;</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
 
 /* ─────────────────────────── SimCourses ────────────────────────────────── */
+/* Exact copy of real Courses.jsx */
 const SIM_COURSES = [
-  { id: 1, title: 'Money Basics',       level: 'Beginner',     duration: 45, lessons: 16, desc: 'Understand how money actually works — income, spending, saving, and the basics every Australian student needs.' },
-  { id: 2, title: 'Tax & Super',        level: 'Intermediate',  duration: 38, lessons: 12, desc: 'Break down the Australian tax system, PAYG withholding, and why superannuation matters more than most people think.' },
-  { id: 3, title: 'Investing Basics',   level: 'Advanced',     duration: 52, lessons: 20, desc: 'From compound interest to ETFs and property — building real wealth over time using evidence-based strategies.' },
+  { id: 1, title: 'Money Basics', level: 'Beginner', duration: 45, lessons: 16,
+    desc: 'Understand how money actually works — income, spending, saving, and the basics every Australian student needs before they enter the workforce.' },
+  { id: 2, title: 'Tax & Super', level: 'Intermediate', duration: 38, lessons: 12,
+    desc: 'Break down the Australian tax system, PAYG withholding, and why superannuation matters more than most 17-year-olds realise.' },
+  { id: 3, title: 'Investing Basics', level: 'Advanced', duration: 52, lessons: 20,
+    desc: 'From compound interest to ETFs and property — how to build real wealth over time using evidence-based, long-term strategies.' },
 ];
 
 function SimCourses() {
   return (
     <div className="absolute inset-0 bg-surface-body overflow-hidden selection:bg-accent selection:text-white">
-      <div className="container-custom py-12">
-        <header className="mb-10">
+      <div className="container-custom" style={{ paddingTop: '5rem' }}>
+        {/* Header — exact copy from Courses.jsx */}
+        <header className="mb-16">
           <span className="section-kicker">Library</span>
-          <h1 className="text-6xl md:text-7xl font-serif font-bold text-text-primary mb-5">
-            Curriculum.
-          </h1>
-          <p className="text-xl text-text-muted font-serif italic max-w-xl leading-relaxed">
+          <h1 className="text-6xl md:text-8xl mb-12">Curriculum.</h1>
+          <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
             Browse our course library designed for Australian learners.
           </p>
         </header>
-        <div data-sim-id="courses-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-line-soft border border-line-soft">
+
+        {/* Filters — exact copy */}
+        <div className="mb-10 flex flex-col sm:flex-row gap-8">
+          <div className="sm:w-48">
+            <label className="text-sm font-semibold text-text-dim mb-4 block">Level</label>
+            <div className="w-full bg-surface-raised border border-line-soft px-6 py-4 rounded-xl text-sm font-medium text-text-dim">All Levels ▾</div>
+          </div>
+          <div className="flex-1">
+            <label className="text-sm font-semibold text-text-dim mb-4 block">Search</label>
+            <div className="w-full bg-surface-raised border border-line-soft px-6 py-4 rounded-xl text-sm font-medium text-text-dim/30">Search by title...</div>
+          </div>
+        </div>
+
+        {/* Course grid — exact copy */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-line-soft border border-line-soft">
           {SIM_COURSES.map((course) => (
-            <div key={course.id} data-sim-id={course.id === 1 ? 'course-card-1' : undefined} className="bg-surface-body p-10 group cursor-default transition-all duration-700 hover:bg-surface-raised flex flex-col">
-              <div className="flex justify-between items-start mb-8">
+            <div
+              key={course.id}
+              data-sim-id={course.id === 1 ? 'course-card-1' : undefined}
+              className="bg-surface-body p-12 group cursor-pointer transition-all duration-700 hover:bg-surface-raised flex flex-col"
+            >
+              <div className="flex justify-between items-start mb-12">
                 <span className="text-sm font-medium text-accent border-b border-accent pb-1">{course.level}</span>
               </div>
-              <div className="aspect-[16/9] w-full mb-8 overflow-hidden bg-surface-soft border border-line-soft rounded-[1.5rem]">
+              <div className="aspect-[16/9] w-full mb-12 overflow-hidden bg-surface-soft border border-line-soft rounded-[2rem]">
                 <CourseCover title={course.title} />
               </div>
-              <h3 className="text-xl font-bold mb-5 group-hover:text-accent transition-colors duration-500">{course.title}</h3>
-              <p className="text-sm font-medium text-text-muted leading-relaxed mb-8 line-clamp-2">{course.desc}</p>
+              <h3 className="text-2xl font-bold mb-8 group-hover:text-accent transition-colors duration-500">{course.title}</h3>
+              <p className="text-sm font-medium text-text-muted leading-relaxed mb-12 line-clamp-3">{course.desc}</p>
               <div className="mt-auto">
-                <div className="flex items-center gap-3 text-sm font-medium text-text-dim mb-6">
+                <div className="flex items-center gap-4 text-sm font-medium text-text-dim mb-8">
                   <span>{course.duration}m</span>
-                  <span className="w-1 h-1 bg-text-dim rounded-full" />
+                  <span className="w-1 h-1 bg-text-dim" />
                   <span>{course.lessons} lessons</span>
                 </div>
-                <div className="flex items-center justify-between pt-6 border-t border-line-soft">
-                  <span className="text-sm font-medium group-hover:text-accent transition-colors duration-500">Enter Lesson →</span>
-                  <svg className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-2 transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                <div className="flex items-center justify-between pt-8 border-t border-line-soft">
+                  <span className="text-sm font-medium group-hover:text-accent transition-colors duration-500">Enter Lesson &rarr;</span>
+                  <svg className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-2 transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -278,7 +316,6 @@ function SimCourses() {
 }
 
 /* ─────────────────────────── SimCourseDetail ───────────────────────────── */
-/* Matches real course detail / ClassDetail page layout */
 function SimCourseDetail() {
   const simModules = [
     {
@@ -305,16 +342,12 @@ function SimCourseDetail() {
       ],
     },
   ];
-
   return (
     <div className="absolute inset-0 bg-surface-body overflow-hidden selection:bg-accent selection:text-white">
-      <div className="container-custom py-12">
-        {/* Course header */}
+      <div className="container-custom" style={{ paddingTop: '4rem' }}>
         <header className="mb-10">
           <span className="section-kicker">Money Basics</span>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-text-primary mb-4 leading-tight">
-            Course overview
-          </h1>
+          <h1 className="text-5xl md:text-6xl mb-4 leading-tight">Course overview</h1>
           <p className="text-lg text-text-muted font-serif italic max-w-xl leading-relaxed">
             Understand how money works — income, spending, saving, and the basics every Australian student needs.
           </p>
@@ -325,8 +358,6 @@ function SimCourseDetail() {
             <span className="text-sm font-medium text-text-dim">2 / 8 lessons complete</span>
           </div>
         </header>
-
-        {/* Module accordion */}
         <div className="space-y-4">
           {simModules.map((mod) => (
             <div key={mod.name} className="rounded-2xl border border-line-soft overflow-hidden bg-surface-raised">
@@ -335,20 +366,16 @@ function SimCourseDetail() {
                 <span className="text-xs text-text-dim font-mono">{mod.lessons.length} lessons</span>
               </div>
               <div>
-                {mod.lessons.map((lesson, li) => (
+                {mod.lessons.map((lesson) => (
                   <div
                     key={lesson.title}
                     data-sim-id={lesson.active ? 'lesson-link' : undefined}
                     className={`flex items-center gap-4 px-6 py-4 border-t border-line-soft/40 first:border-t-0 hover:bg-surface-soft/60 transition-colors cursor-default ${lesson.active ? 'bg-accent/[0.03]' : ''}`}
                   >
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${lesson.done ? 'border-accent bg-accent' : lesson.active ? 'border-accent' : 'border-line-soft'}`}>
-                      {lesson.done && (
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><polyline points="20 6 9 17 4 12" /></svg>
-                      )}
+                      {lesson.done && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><polyline points="20 6 9 17 4 12" /></svg>}
                     </div>
-                    <span className={`flex-1 text-sm font-medium ${lesson.done ? 'text-text-dim line-through' : lesson.active ? 'text-accent' : 'text-text-primary'}`}>
-                      {lesson.title}
-                    </span>
+                    <span className={`flex-1 text-sm font-medium ${lesson.done ? 'text-text-dim line-through' : lesson.active ? 'text-accent' : 'text-text-primary'}`}>{lesson.title}</span>
                     <span className="text-xs text-text-dim font-medium shrink-0">{lesson.duration}</span>
                     <svg className={`w-4 h-4 shrink-0 ${lesson.active ? 'text-accent' : 'text-text-dim'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -365,98 +392,164 @@ function SimCourseDetail() {
 }
 
 /* ─────────────────────────── SimLesson (shell) ─────────────────────────── */
-/* Matches real LessonPlayer layout exactly */
-function SimLessonShell({ slideIdx = 0, totalSlides = 6, showCalc = false, children }) {
+/* Exact copy of real LessonPlayer layout */
+function SimLessonShell({ slideIdx = 0, totalSlides = 6, showCalc = false, slideLabel = 'Text', children }) {
   const BARS = Array.from({ length: totalSlides });
   return (
     <div className="absolute inset-0 flex flex-col bg-surface-body text-text-primary overflow-hidden">
-      {/* Sub-header — matches real LessonPlayer header */}
+      {/* Header — exact copy of real LessonPlayer header */}
       <header className="shrink-0 bg-surface-body/95 backdrop-blur-md border-b border-line-soft">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
           <div className="h-14 md:h-16 flex items-center justify-between gap-4">
+            {/* Left: back + breadcrumb */}
             <div className="flex items-center gap-3 md:gap-5 min-w-0">
               <div className="shrink-0 w-9 h-9 rounded-full border border-line-soft text-text-muted flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
               </div>
               <div className="hidden md:block min-w-0">
                 <div className="flex items-center gap-2 text-xs font-medium text-text-dim mb-0.5">
-                  <span>Money Basics</span>
+                  <span className="truncate">Money Basics</span>
                   <span className="text-text-dim/50">/</span>
-                  <span>Budgeting</span>
+                  <span className="truncate">Budgeting</span>
                 </div>
-                <p className="text-sm font-serif italic text-text-primary truncate max-w-md">Understanding Income &amp; Tax</p>
+                <p className="text-sm font-serif italic text-text-primary truncate max-w-md">Tracking Your Spending</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button data-sim-id="calc-btn" className="shrink-0 w-9 h-9 rounded-full border border-line-soft flex items-center justify-center text-text-dim hover:text-text-primary hover:border-text-dim transition-all">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2" strokeWidth={1.8}/><path d="M8 6h8M8 10h8M8 14h4" strokeWidth={1.8}/></svg>
+            {/* Right: progress indicators + buttons */}
+            <div className="flex items-center gap-2 md:gap-3 shrink-0">
+              <div className="hidden md:flex items-center gap-2 text-xs font-medium text-text-dim">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                Lesson {slideIdx + 1} <span className="opacity-50">/</span> 16
+              </div>
+              <div className="hidden lg:flex items-center gap-2 text-xs font-medium text-text-dim">
+                <span className="opacity-50">·</span>
+                Course 47%
+              </div>
+              {/* Calculator button */}
+              <button
+                data-sim-id="calc-btn"
+                className={`inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border transition-colors ${showCalc ? 'border-accent bg-accent/10 text-accent' : 'border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim'}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 7h6M9 11h2m4 0h-2m-2 4h2M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+                </svg>
+                <span className="hidden md:inline text-xs font-medium">Calc</span>
               </button>
-              <span className="text-xs font-medium text-text-dim tabular-nums">{slideIdx + 1} / {totalSlides}</span>
+              {/* Outline button */}
+              <button className="inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h10" />
+                </svg>
+                <span className="hidden md:inline text-xs font-medium">Outline</span>
+              </button>
             </div>
+          </div>
+        </div>
+        {/* Slide ticker — thin bars, exact real structure */}
+        <div className="pb-2.5 max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
+          <div className="flex items-center gap-1.5 w-full">
+            {BARS.map((_, i) => (
+              <button key={i} type="button" className="group relative flex-1 py-2.5">
+                <span className={`block rounded-full transition-all duration-300 ${
+                  i < slideIdx ? 'bg-accent h-[3px]' : i === slideIdx ? 'bg-accent h-[5px]' : 'bg-line-soft h-[3px]'
+                } group-hover:h-[4px]`} />
+              </button>
+            ))}
           </div>
         </div>
       </header>
 
-      {/* Slide ticker — thin bars, exactly like the real one */}
-      <div className="shrink-0 flex items-center gap-1 w-full px-4 md:px-8 lg:px-12 py-0">
-        {BARS.map((_, i) => (
-          <button key={i} type="button" className="group relative flex-1 py-2.5">
-            <span className={`block rounded-full transition-all duration-300 ${
-              i <= slideIdx ? 'bg-accent' : 'bg-line-soft'
-            } ${i === slideIdx ? 'h-[5px]' : 'h-[3px] group-hover:h-[4px]'}`} />
-          </button>
-        ))}
-      </div>
-
-      {/* Slide canvas */}
-      <div className="flex-1 relative overflow-hidden">
-        {children}
-        {/* Floating calculator */}
-        {showCalc && (
-          <div className="absolute top-6 right-6 w-60 h-52 bg-surface-raised border border-line-soft rounded-2xl shadow-2xl overflow-hidden" style={{ zIndex: 20 }}>
-            <div className="h-8 bg-surface-soft border-b border-line-soft flex items-center px-3 gap-2">
-              <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-400"/><div className="w-2.5 h-2.5 rounded-full bg-yellow-400"/><div className="w-2.5 h-2.5 rounded-full bg-green-400"/></div>
-              <span className="text-xs text-text-dim ml-1">Scientific</span>
+      {/* Main canvas */}
+      <main className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 max-w-[1400px] w-full mx-auto px-4 md:px-8 lg:px-12 py-5 md:py-7 flex flex-col gap-4 md:gap-5">
+          {/* Slide kicker — exact copy */}
+          <div className="shrink-0 flex items-center justify-between gap-3 text-xs font-medium text-text-dim">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-accent">
+                {String(slideIdx + 1).padStart(2, '0')}
+                <span className="opacity-50"> / </span>
+                {String(totalSlides).padStart(2, '0')}
+              </span>
+              <span className="w-6 h-px bg-line-soft" />
+              <span>{slideLabel}</span>
+              <span className="w-6 h-px bg-line-soft hidden sm:block" />
+              <span className="text-text-dim/60 hidden sm:inline">
+                {Math.round(((slideIdx + 1) / totalSlides) * 100)}% through
+              </span>
             </div>
-            <div className="p-2.5 grid grid-cols-4 gap-1">
-              {['sin','cos','tan','(','7','8','9','÷','4','5','6','×','1','2','3','−','0','.','=','+'].map((k,i) => (
-                <div key={i} className="h-6 rounded-md bg-surface-soft flex items-center justify-center text-xs text-text-muted">{k}</div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Footer nav */}
-      <div className="shrink-0 border-t border-line-soft">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
-          <div className="h-16 flex items-center justify-between">
-            <button className="flex items-center gap-2 text-sm font-medium text-text-dim hover:text-text-primary transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-              Previous
+            <button className="shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-full border border-line-soft text-text-muted hover:border-text-dim hover:text-text-primary transition-colors text-xs font-medium">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              <span className="hidden sm:inline">Save</span>
             </button>
-            <button data-sim-id="lesson-next-btn" className="flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-strong transition-colors">
-              Next
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          </div>
+
+          {/* Slide canvas — exact copy including decorative notch */}
+          <div className="flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none z-10" />
+            <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none z-10">
+              <div className="w-32 h-px bg-accent" />
+            </div>
+            {children}
+            {/* Floating calculator */}
+            {showCalc && (
+              <div className="absolute top-6 right-6 w-64 h-56 bg-surface-raised border border-line-soft rounded-2xl shadow-2xl overflow-hidden" style={{ zIndex: 20 }}>
+                <div className="h-8 bg-surface-soft border-b border-line-soft flex items-center px-3 gap-2">
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                  </div>
+                  <span className="text-xs text-text-dim ml-1">Scientific</span>
+                </div>
+                <div className="p-2.5 grid grid-cols-4 gap-1">
+                  {['sin','cos','tan','(','7','8','9','÷','4','5','6','×','1','2','3','−','0','.','=','+'].map((k, i) => (
+                    <div key={i} className="h-7 rounded-md bg-surface-soft flex items-center justify-center text-xs text-text-muted">{k}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer controls — exact copy */}
+          <div className="shrink-0 flex items-center justify-between gap-4">
+            <button className="group inline-flex items-center gap-3 h-11 md:h-12 px-4 md:px-5 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 transition-all">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-xs font-medium hidden sm:inline">Previous</span>
+            </button>
+            <div className="hidden md:flex items-center gap-2 text-xs font-medium text-text-dim">
+              <kbd className="px-2 py-1 rounded border border-line-soft text-text-dim/80 font-mono text-[10px]">←</kbd>
+              <kbd className="px-2 py-1 rounded border border-line-soft text-text-dim/80 font-mono text-[10px]">→</kbd>
+              <span className="ml-1">to navigate</span>
+            </div>
+            <button data-sim-id="lesson-next-btn" className="group inline-flex items-center gap-3 h-11 md:h-12 px-4 md:px-5 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-all">
+              <span className="text-xs font-medium hidden sm:inline">Next</span>
+              <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
 
 function SimLessonIntro() {
   return (
-    <SimLessonShell slideIdx={0}>
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center gap-5 max-w-3xl mx-auto">
-        <p className="text-xs font-semibold uppercase tracking-wide text-accent">Text</p>
-        <h2 className="text-3xl md:text-4xl font-serif italic font-bold text-text-primary">Understanding Income &amp; Tax</h2>
+    <SimLessonShell slideIdx={0} slideLabel="Text">
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-10 text-center gap-6 max-w-3xl mx-auto">
+        <h2 className="text-3xl md:text-4xl font-serif italic font-bold text-text-primary leading-snug">Tracking Your Spending</h2>
         <p className="text-lg text-text-muted leading-relaxed max-w-xl">
-          Before you manage money well, you need to understand where it comes from — and where it goes. In Australia, every dollar you earn is subject to the income tax system.
+          Before you manage money well, you need to know where it goes. In Australia, most households underestimate their discretionary spending by 30–40%.
         </p>
         <p className="text-base text-text-muted leading-relaxed max-w-xl">
-          This lesson covers gross vs net income, the marginal tax rate system, and how PAYG withholding works in practice.
+          This lesson covers expense categories, tracking methods, and how to identify patterns in your spending over time.
         </p>
       </div>
     </SimLessonShell>
@@ -471,7 +564,7 @@ function SimLessonMCQ() {
     { id: 'd', text: 'Long-term retirement savings' },
   ];
   return (
-    <SimLessonShell slideIdx={2}>
+    <SimLessonShell slideIdx={2} slideLabel="Multiple Choice">
       <div className="absolute inset-0 flex items-center justify-center px-8">
         <div className="w-full max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-wide text-accent mb-3">Multiple Choice</p>
@@ -499,9 +592,9 @@ function SimLessonMCQ() {
 
 function SimLessonCalc() {
   return (
-    <SimLessonShell slideIdx={2} showCalc>
+    <SimLessonShell slideIdx={2} showCalc slideLabel="Multiple Choice">
       <div className="absolute inset-0 flex items-center justify-center px-8">
-        <div className="w-full max-w-2xl opacity-30">
+        <div className="w-full max-w-2xl opacity-25">
           <h2 className="text-2xl font-serif italic font-bold text-text-primary leading-snug">
             Which of the following is NOT a feature of Australia's superannuation system?
           </h2>
@@ -512,47 +605,191 @@ function SimLessonCalc() {
 }
 
 /* ─────────────────────────── SimClasses ────────────────────────────────── */
-/* Matches real Classes page exactly */
+/* Exact copy of real Classes.jsx */
 function SimClasses() {
-  const simClasses = [
+  const simTeachingClasses = [
     { name: 'Year 11 Commerce A', code: 'CAP-4821' },
     { name: 'Year 12 Economics',  code: 'CAP-7193' },
   ];
   return (
     <div className="absolute inset-0 bg-surface-body overflow-hidden selection:bg-accent selection:text-white">
-      <div className="container-custom py-12">
-        <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-8">
+      <div className="container-custom" style={{ paddingTop: '3rem' }}>
+        {/* Header — exact copy from Classes.jsx */}
+        <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-12">
           <div>
             <span className="section-kicker">Faculty Admissions</span>
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-text-primary mb-5">
-              The Academy.
-            </h1>
-            <p className="text-xl text-text-muted font-serif italic max-w-xl leading-relaxed">
+            <h1 className="text-6xl md:text-8xl mb-12">The Academy.</h1>
+            <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
               Collaborative learning environments structured for peer progression and academic leadership.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <button data-sim-id="academy-create-btn" className="btn-secondary px-6 py-2.5 text-sm">Establish Class</button>
-            <button className="btn-primary px-6 py-2.5 text-sm gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+            <button className="btn-secondary px-6 py-2.5 text-sm">Establish Class</button>
+            <button className="btn-primary px-6 py-2.5 text-sm gap-2 flex items-center">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
               Join Class
             </button>
           </div>
         </header>
 
-        <h2 className="text-sm font-semibold text-accent mb-8 border-b border-line-soft pb-4">Leadership Portfolio</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft">
-          {simClasses.map((cls) => (
-            <div key={cls.name} className="bg-surface-body p-10 group transition-all duration-700 hover:bg-surface-raised flex flex-col justify-between cursor-default">
-              <div>
-                <div className="flex justify-between items-start mb-8">
-                  <h3 className="text-2xl md:text-3xl font-serif italic group-hover:translate-x-2 transition-transform duration-700">{cls.name}</h3>
-                  <span className="text-xs font-medium px-3 py-1 bg-text-primary text-surface-body group-hover:bg-accent transition-colors shrink-0 ml-4">Owner</span>
+        {/* Leadership Portfolio */}
+        <section className="mb-16">
+          <h2 className="text-sm font-semibold text-accent mb-12 border-b border-line-soft pb-6">Leadership Portfolio</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft">
+            {simTeachingClasses.map((cls) => (
+              <div
+                key={cls.name}
+                data-sim-id={cls.code === 'CAP-4821' ? 'class-link' : undefined}
+                className="bg-surface-body p-12 group transition-all duration-700 hover:bg-surface-raised flex flex-col justify-between cursor-default"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-12">
+                    <h3 className="text-3xl font-serif italic group-hover:translate-x-2 transition-transform duration-700">{cls.name}</h3>
+                    <span className="text-xs font-medium px-3 py-1 bg-text-primary text-surface-body group-hover:bg-accent transition-colors">Owner</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-12 border-t border-line-soft">
+                  <span className="text-sm font-medium text-text-dim">Passkey Protocol:</span>
+                  <span className="text-xs font-bold font-mono tracking-widest text-text-primary group-hover:text-accent transition-colors">{cls.code}</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between pt-8 border-t border-line-soft">
-                <span className="text-sm font-medium text-text-dim">Passkey Protocol:</span>
-                <span className="text-xs font-bold font-mono tracking-widest text-text-primary group-hover:text-accent transition-colors">{cls.code}</span>
+            ))}
+          </div>
+        </section>
+
+        {/* Enrollment Registry */}
+        <section>
+          <h2 className="text-sm font-semibold text-accent mb-12 border-b border-line-soft pb-6">Enrollment Registry</h2>
+          <div className="p-24 border border-line-soft text-center bg-surface-soft">
+            <p className="text-sm font-medium text-text-dim italic">Awaiting first academy registration.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── SimClassDetail ────────────────────────────── */
+/* Exact copy of real ClassDetail.jsx layout with fake stream data */
+function SimClassDetail() {
+  const fakeAnnouncements = [
+    {
+      id: 1,
+      author: 'Harry Y',
+      initials: 'HY',
+      time: '2 hours ago',
+      content: "Hey everyone — don't forget that this week's lesson on tax brackets is now live. Work through the MCQ slides and use the built-in calculator for the PAYG practice section. Any questions, drop them here 👇",
+      comments: [
+        { id: 1, author: 'Emily T', initials: 'ET', time: '1h ago', text: "Got to slide 4, the Desmos graph is really helpful for visualising the brackets!" },
+        { id: 2, author: 'James K', initials: 'JK', time: '45m ago', text: "Does the calculator save between sessions? I had some working on it last week." },
+      ],
+    },
+    {
+      id: 2,
+      author: 'Harry Y',
+      initials: 'HY',
+      time: 'Yesterday',
+      content: "Assignment due Friday: complete the Budgeting Fundamentals module and submit your 50/30/20 budget for your own hypothetical income. Template is in Classwork.",
+      comments: [
+        { id: 3, author: 'Priya M', initials: 'PM', time: '20h ago', text: "Can we use a different income figure than the example in the lesson?" },
+      ],
+    },
+  ];
+
+  return (
+    <div className="absolute inset-0 bg-surface-body overflow-hidden selection:bg-accent selection:text-white">
+      <div className="container-custom space-y-8" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        {/* Class header — exact copy from ClassDetail.jsx */}
+        <div className="bg-surface-body border border-line-soft p-10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+            <div className="flex-1">
+              <button className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent transition-colors">
+                ← Back to Classes
+              </button>
+              <h1 className="text-4xl md:text-5xl font-extrabold text-text-primary mb-4">Year 11 Commerce A</h1>
+              <p className="text-sm font-medium text-text-muted leading-relaxed max-w-2xl">
+                Financial literacy and economic principles for Year 11 Commerce students.
+              </p>
+              <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft border border-line-soft">
+                <span className="text-xs font-semibold text-text-dim">Class Code:</span>
+                <span className="font-mono font-bold text-text-primary text-sm">CAP-4821</span>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-6">
+              <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft border border-line-soft min-w-[240px]">
+                <div className="w-10 h-10 rounded-sm bg-text-primary flex items-center justify-center text-surface-body text-xs font-bold">HY</div>
+                <div>
+                  <p className="text-xs font-medium text-text-dim mb-1">Signed in as</p>
+                  <p className="text-sm font-bold text-text-primary">Harry Y</p>
+                  <span className="text-xs text-accent font-medium mt-1 block">Teacher</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab bar — exact copy */}
+        <nav className="flex gap-1 bg-surface-soft border border-line-soft p-1">
+          {['Stream', 'Classwork', 'People'].map((tab, i) => (
+            <button key={tab} type="button"
+              className={`px-8 py-3 text-sm font-medium transition-all duration-200 ${i === 0
+                ? 'bg-text-primary text-surface-body'
+                : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
+
+        {/* Stream — exact copy structure with fake announcements */}
+        <div className="space-y-5">
+          {/* Teacher composer */}
+          <div className="bg-surface-body border border-line-soft p-8 hover:border-accent transition-colors mb-4">
+            <div className="flex gap-6">
+              <div className="flex-shrink-0 w-12 h-12 rounded-sm bg-text-primary flex items-center justify-center text-surface-body text-xs font-bold ring-4 ring-line-soft">HY</div>
+              <div className="flex-1">
+                <div className="w-full px-5 py-4 border border-line-soft text-text-dim text-sm font-medium">
+                  Post an announcement...
+                </div>
+                <div className="flex justify-end mt-6">
+                  <button className="px-10 py-3 bg-text-primary text-surface-body text-sm font-medium opacity-40">Post Announcement</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fake announcements */}
+          {fakeAnnouncements.map((a) => (
+            <div key={a.id} className="bg-surface-body border border-line-soft p-8 hover:border-accent transition-all group">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-10 h-10 rounded-sm bg-text-primary flex items-center justify-center text-surface-body text-xs font-bold shadow-sm">{a.initials}</div>
+                  <div>
+                    <p className="text-sm font-bold text-text-primary">{a.author}</p>
+                    <span className="text-xs font-medium text-text-dim mt-1 block">Posted {a.time}</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-text-primary font-medium whitespace-pre-wrap leading-relaxed mb-6">{a.content}</p>
+
+              {/* Comments */}
+              <div className="border-t border-line-soft pt-4 space-y-3">
+                {a.comments.map((c) => (
+                  <div key={c.id} className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-sm bg-surface-raised border border-line-soft flex items-center justify-center text-[9px] font-bold text-text-dim shrink-0">{c.initials}</div>
+                    <div className="flex-1 min-w-0 bg-surface-soft px-4 py-3 border border-line-soft">
+                      <p className="text-xs font-bold text-text-primary mb-1">{c.author} <span className="font-normal text-text-dim">{c.time}</span></p>
+                      <p className="text-sm text-text-primary">{c.text}</p>
+                    </div>
+                  </div>
+                ))}
+                {/* Comment input */}
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="w-7 h-7 rounded-sm bg-text-primary flex items-center justify-center text-[9px] font-bold text-surface-body shrink-0">HY</div>
+                  <div className="flex-1 px-4 py-2 border border-line-soft text-xs text-text-dim/40">Add a comment...</div>
+                </div>
               </div>
             </div>
           ))}
@@ -563,10 +800,10 @@ function SimClasses() {
 }
 
 /* ─────────────────────────── SimEditor ─────────────────────────────────── */
-/* Matches real Editor workspace overview — centered max-w-3xl, grid-technical header */
+/* Exact copy of real Editor workspace overview */
 function SimEditor() {
   const simCourses = [
-    { name: 'Money Basics',  modules: 3, lessons: 16, published: true,
+    { name: 'Money Basics', modules: 3, lessons: 16, published: true,
       mods: [
         { name: 'Budgeting',    lessons: ['Introduction', 'Core concepts'] },
         { name: 'Saving',       lessons: ['Introduction', 'Core concepts'] },
@@ -577,7 +814,7 @@ function SimEditor() {
   ];
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden bg-surface-body">
-      {/* Top bar — matches real editor header in workspace mode */}
+      {/* Top bar — exact copy from Editor.jsx workspace mode */}
       <header className="shrink-0 border-b border-line-soft bg-surface-body/95 backdrop-blur-md">
         <div className="px-4 md:px-6 h-12 flex items-center gap-2 min-w-0">
           <p className="font-mono text-[10px] font-medium text-accent/60 uppercase tracking-[0.18em]">Workspace</p>
@@ -588,9 +825,8 @@ function SimEditor() {
         </div>
       </header>
 
-      {/* WorkspaceOverview — matches real WorkspaceOverview component */}
+      {/* WorkspaceOverview — exact copy from Editor.jsx */}
       <div className="flex-1 min-h-0 overflow-y-auto bg-surface-body">
-        {/* Page header with grid-technical background */}
         <div className="relative border-b border-line-soft overflow-hidden">
           <div className="absolute inset-0 grid-technical opacity-[0.12] pointer-events-none" />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface-body to-transparent pointer-events-none" />
@@ -614,9 +850,9 @@ function SimEditor() {
           </div>
         </div>
 
-        {/* Course cards — matching real WorkspaceOverview card structure */}
+        {/* Course cards — exact copy from WorkspaceOverview */}
         <div className="max-w-3xl mx-auto px-6 md:px-10 py-10 space-y-5">
-          {simCourses.map((c, ci) => (
+          {simCourses.map((c) => (
             <div key={c.name} className="rounded-xl border border-line-soft bg-surface-raised overflow-hidden hover:border-text-dim/30 transition-colors duration-200">
               <div className="flex items-start gap-3 px-6 py-4 border-b border-line-soft">
                 <div className="flex-1 min-w-0">
@@ -630,7 +866,6 @@ function SimEditor() {
                   <span className="text-sm font-medium text-accent cursor-default">+ Module</span>
                 </div>
               </div>
-
               {c.mods.length > 0 && c.mods.map((m, mi) => (
                 <div key={m.name} className={mi > 0 ? 'border-t border-line-soft/50' : ''}>
                   <div className="flex items-center gap-3 px-6 py-2.5">
@@ -644,11 +879,13 @@ function SimEditor() {
                         <li key={l} className="border-t border-line-soft/30">
                           <div
                             data-sim-id={isActive ? 'editor-lesson-row' : undefined}
-                            className={`flex items-center gap-4 px-6 py-4 hover:bg-surface-soft/60 transition-colors text-left ${isActive ? 'bg-accent/[0.04]' : ''}`}
+                            className={`flex items-center gap-4 px-6 py-4 hover:bg-surface-soft/60 transition-colors ${isActive ? 'bg-accent/[0.04]' : ''}`}
                           >
                             <span className="font-mono text-xs text-text-dim w-5 shrink-0 select-none">{String(li + 1).padStart(2, '0')}</span>
                             <span className={`flex-1 text-sm font-medium truncate ${isActive ? 'text-accent' : 'text-text-primary'}`}>{l}</span>
-                            <svg className="shrink-0 text-text-dim" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <svg className="shrink-0 text-text-dim" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                              <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                           </div>
                         </li>
                       );
@@ -668,7 +905,7 @@ function SimEditor() {
 }
 
 /* ─────────────────────────── SimEditorAI ───────────────────────────────── */
-/* Matches real Editor in lesson mode with AI panel open */
+/* Exact copy of real lesson-mode editor with AI panel open */
 function SimEditorAI() {
   const slides = [
     { label: 'Text',  title: 'What is income?' },
@@ -679,7 +916,7 @@ function SimEditorAI() {
   ];
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden bg-surface-body">
-      {/* Lesson mode header — matches real editor header when inLessonMode */}
+      {/* Lesson mode header — exact copy from Editor.jsx inLessonMode */}
       <header className="shrink-0 border-b border-line-soft bg-surface-body/95 backdrop-blur-md">
         <div className="px-4 md:px-6 h-12 flex items-center gap-2 md:gap-3 min-w-0">
           <button className="shrink-0 text-[13px] font-medium text-text-dim hover:text-text-primary transition-colors">← Workspace</button>
@@ -688,21 +925,20 @@ function SimEditorAI() {
           <span className="text-text-dim/40 shrink-0 text-[11px]">/</span>
           <span className="text-[13px] font-serif italic text-text-dim truncate max-w-[120px]">Income &amp; Tax</span>
           <div className="ml-auto flex items-center gap-1.5 shrink-0">
-            {/* AI button — active state */}
             <button className="h-8 px-3 rounded-full border border-accent/60 bg-accent/[0.08] text-accent text-sm font-medium flex items-center gap-1.5">
               <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 0.75 L6.4 3.6 L9.25 5.5 L6.4 7.4 L5.5 10.25 L4.6 7.4 L1.75 5.5 L4.6 3.6 Z" fill="currentColor" /></svg>
               AI
             </button>
-            <button className="h-8 px-3 rounded-full border border-line-soft text-text-muted text-sm font-medium hover:text-text-primary transition-colors">Preview</button>
+            <button className="h-8 px-3 rounded-full border border-line-soft text-text-muted text-sm font-medium">Preview</button>
             <button className="h-8 px-4 btn-primary text-sm font-medium opacity-40">Saved</button>
             <button className="h-8 w-8 rounded-full border border-line-soft text-text-dim flex items-center justify-center text-base">×</button>
           </div>
         </div>
       </header>
 
-      {/* Lesson builder + AI panel */}
+      {/* Split: slide list + AI panel */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
-        {/* Slide list — matches real LessonBuilder left panel */}
+        {/* Slide list — matches real LessonBuilder */}
         <div className="w-64 border-r border-line-soft flex flex-col overflow-hidden shrink-0 bg-surface-body">
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {slides.map((s, i) => (
@@ -720,20 +956,18 @@ function SimEditorAI() {
           </div>
         </div>
 
-        {/* AI chat panel — right side */}
+        {/* AI chat panel */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
-            {/* User message */}
             <div className="flex gap-3 items-start">
               <div className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">HY</div>
               <div className="bg-surface-soft border border-line-soft/60 rounded-2xl rounded-tl-sm px-4 py-3 max-w-sm">
-                <p className="text-sm text-text-primary leading-relaxed">Generate a 10-slide lesson on Australian income tax for Year 11. Include marginal rates, PAYG withholding, and a worked example.</p>
+                <p className="text-sm text-text-primary leading-relaxed">Generate a 10-slide lesson on Australian income tax for Year 11. Include marginal rates, PAYG withholding, and a worked payslip example.</p>
               </div>
             </div>
-            {/* AI response */}
             <div className="flex gap-3 items-start flex-row-reverse">
               <div className="w-7 h-7 rounded-full bg-surface-soft border border-line-soft flex items-center justify-center shrink-0 mt-0.5">
-                <svg className="w-3.5 h-3.5 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <svg className="w-3.5 h-3.5 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
               </div>
               <div className="bg-accent/[0.05] border border-accent/20 rounded-2xl rounded-tr-sm px-4 py-3 max-w-sm">
                 <p className="text-[10px] text-accent font-mono mb-2 tracking-[0.1em] uppercase">Planning lesson…</p>
@@ -749,8 +983,6 @@ function SimEditorAI() {
             </div>
             <p className="text-[11px] text-text-dim text-center font-mono py-1">Added 5 slides to your lesson.</p>
           </div>
-
-          {/* Chat input */}
           <div className="shrink-0 p-4 border-t border-line-soft">
             <div className="border border-line-soft rounded-2xl p-4 bg-surface-raised">
               <p className="text-sm text-text-dim">Ask me to generate or refine slides…</p>
@@ -813,7 +1045,35 @@ export default function Tour() {
   const [rippleKey, setRippleKey]    = useState(0);
   const [showRipple, setShowRipple]  = useState(false);
   const [captionVis, setCaptionVis]  = useState(false);
-  const [hoverSide, setHoverSide]    = useState(null);
+
+  /* Mouse X tracking for gradient opacity — updated continuously, no state updates on move
+     to avoid re-renders. We use a ref + requestAnimationFrame. */
+  const mouseXRef = useState(() => ({ norm: 0.5 }))[0];
+  const [leftIntensity,  setLeftIntensity]  = useState(0.18);
+  const [rightIntensity, setRightIntensity] = useState(0.18);
+
+  useEffect(() => {
+    let rafId;
+    const onMove = (e) => {
+      mouseXRef.norm = e.clientX / window.innerWidth;
+    };
+    const tick = () => {
+      const n = mouseXRef.norm;
+      // leftRatio: 1 at x=0, 0 at x=1 — rightRatio: 0 at x=0, 1 at x=1
+      const lRaw = 1 - n;
+      const rRaw = n;
+      const MIN = 0.12, RANGE = 0.30;
+      setLeftIntensity(MIN + RANGE * lRaw);
+      setRightIntensity(MIN + RANGE * rRaw);
+      rafId = requestAnimationFrame(tick);
+    };
+    window.addEventListener('mousemove', onMove);
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      cancelAnimationFrame(rafId);
+    };
+  }, [mouseXRef]);
 
   const scene       = SCENES[sceneIndex];
   const currentView = scene.view;
@@ -911,7 +1171,7 @@ export default function Tour() {
   return (
     <div style={{ height: '100vh', overflow: 'hidden', position: 'relative', background: 'var(--surface-base)' }}>
 
-      {/* SimNavbar — fixed, z-50, matches real Navbar */}
+      {/* SimNavbar */}
       {hasSimNav && <SimNavbar active={scene.nav} />}
 
       {/* Page canvas */}
@@ -923,21 +1183,20 @@ export default function Tour() {
         {currentView === 'courses'       && <SimCourses />}
         {currentView === 'course-detail' && <SimCourseDetail />}
         {currentView === 'lesson-intro'  && <SimLessonIntro />}
-        {currentView === 'lesson-mcq'   && <SimLessonMCQ />}
-        {currentView === 'lesson-calc'  && <SimLessonCalc />}
-        {currentView === 'classes'      && <SimClasses />}
-        {currentView === 'editor'       && <SimEditor />}
-        {currentView === 'editor-ai'    && <SimEditorAI />}
-        {currentView === 'future'       && <SimFuture />}
+        {currentView === 'lesson-mcq'    && <SimLessonMCQ />}
+        {currentView === 'lesson-calc'   && <SimLessonCalc />}
+        {currentView === 'classes'       && <SimClasses />}
+        {currentView === 'class-detail'  && <SimClassDetail />}
+        {currentView === 'editor'        && <SimEditor />}
+        {currentView === 'editor-ai'     && <SimEditorAI />}
+        {currentView === 'future'        && <SimFuture />}
       </div>
 
       {/* ── Fixed overlays ── */}
       <ProgressBar current={sceneIndex} total={SCENES.length} />
 
-      {/* Left gradient strip — back */}
+      {/* Left gradient strip — intensity driven by mouse X position */}
       <div
-        onMouseEnter={() => setHoverSide('left')}
-        onMouseLeave={() => setHoverSide(null)}
         onClick={prevScene}
         style={{
           position: 'fixed', left: 0, top: 0, bottom: 0, width: 220,
@@ -945,51 +1204,41 @@ export default function Tour() {
           cursor: sceneIndex > 0 ? 'pointer' : 'default',
           display: 'flex', alignItems: 'center', paddingLeft: 22,
           background: sceneIndex > 0
-            ? hoverSide === 'left'
-              ? 'linear-gradient(to right, rgba(0,0,0,0.36) 0%, rgba(0,0,0,0.10) 55%, transparent 100%)'
-              : 'linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.04) 55%, transparent 100%)'
+            ? `linear-gradient(to right, rgba(0,0,0,${(leftIntensity * 2).toFixed(2)}) 0%, rgba(0,0,0,${(leftIntensity * 0.5).toFixed(2)}) 55%, transparent 100%)`
             : 'transparent',
-          transition: 'background 0.28s ease',
           pointerEvents: sceneIndex > 0 ? 'auto' : 'none',
         }}
       >
         <svg
-          width="26" height="26" viewBox="0 0 24 24" fill="none"
-          strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+          width="24" height="24" viewBox="0 0 24 24" fill="none"
+          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           style={{
             stroke: 'white',
-            filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.55))',
-            opacity: sceneIndex > 0 ? (hoverSide === 'left' ? 1 : 0.55) : 0,
-            transition: 'opacity 0.22s ease',
+            filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.6))',
+            opacity: sceneIndex > 0 ? Math.max(0.45, leftIntensity / 0.42) : 0,
             flexShrink: 0,
           }}
         ><polyline points="15 18 9 12 15 6" /></svg>
       </div>
 
-      {/* Right gradient strip — forward */}
+      {/* Right gradient strip */}
       <div
-        onMouseEnter={() => setHoverSide('right')}
-        onMouseLeave={() => setHoverSide(null)}
         onClick={nextScene}
         style={{
           position: 'fixed', right: 0, top: 0, bottom: 0, width: 220,
           zIndex: 200,
           cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 22,
-          background: hoverSide === 'right'
-            ? 'linear-gradient(to left, rgba(0,0,0,0.36) 0%, rgba(0,0,0,0.10) 55%, transparent 100%)'
-            : 'linear-gradient(to left, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.04) 55%, transparent 100%)',
-          transition: 'background 0.28s ease',
+          background: `linear-gradient(to left, rgba(0,0,0,${(rightIntensity * 2).toFixed(2)}) 0%, rgba(0,0,0,${(rightIntensity * 0.5).toFixed(2)}) 55%, transparent 100%)`,
         }}
       >
         <svg
-          width="26" height="26" viewBox="0 0 24 24" fill="none"
-          strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+          width="24" height="24" viewBox="0 0 24 24" fill="none"
+          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           style={{
             stroke: 'white',
-            filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.55))',
-            opacity: hoverSide === 'right' ? 1 : 0.55,
-            transition: 'opacity 0.22s ease',
+            filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.6))',
+            opacity: Math.max(0.45, rightIntensity / 0.42),
             flexShrink: 0,
           }}
         ><polyline points="9 18 15 12 9 6" /></svg>
@@ -1000,7 +1249,7 @@ export default function Tour() {
         style={{ position: 'fixed', top: 11, right: 16, zIndex: 9990, background: 'rgba(0,0,0,0.44)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.13)', color: 'white', borderRadius: '50%', width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}
       >×</button>
 
-      {/* Scene counter — bottom right */}
+      {/* Scene counter */}
       <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 9990, background: 'rgba(0,0,0,0.44)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.13)', color: 'rgba(255,255,255,0.65)', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.06em', pointerEvents: 'none' }}>
         {sceneIndex + 1} / {SCENES.length}
       </div>
