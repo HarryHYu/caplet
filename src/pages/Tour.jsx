@@ -31,8 +31,12 @@ const SCENES = [
     caption: { title: 'Course Library', body: 'Courses split into focused modules. Click any course to see its full outline and start where you left off.' },
   },
   {
-    id: 'course-detail', view: 'course-detail', nav: 'curriculum', cursor: 'lesson-link', clickAnim: true,
-    caption: { title: 'Modules & Lessons', body: 'Each course breaks into modules. Progress is tracked per lesson — students always pick up exactly where they left off.' },
+    id: 'course-detail', view: 'course-detail', nav: 'curriculum', cursor: 'module-card-1', clickAnim: true,
+    caption: { title: 'Course Overview', body: 'Each course breaks into focused modules. Click a module to see its lessons and track your progress per lesson.' },
+  },
+  {
+    id: 'module-detail', view: 'module-detail', nav: 'curriculum', cursor: 'lesson-link', clickAnim: true,
+    caption: { title: 'Modules & Lessons', body: 'Each module lists its lessons with completion status. Students always pick up exactly where they left off.' },
   },
   {
     id: 'lesson-intro', view: 'lesson-intro', nav: 'curriculum', cursor: 'lesson-next-btn', clickAnim: true,
@@ -316,75 +320,187 @@ function SimCourses() {
 }
 
 /* ─────────────────────────── SimCourseDetail ───────────────────────────── */
+/* Exact copy of real CourseDetail.jsx — shows modules list with "View Module →" */
 function SimCourseDetail() {
   const simModules = [
-    {
-      name: 'Budgeting Fundamentals',
-      lessons: [
-        { title: 'Introduction to Budgeting', duration: '4m', done: true },
-        { title: 'The 50/30/20 Rule', duration: '5m', done: true },
-        { title: 'Tracking Your Spending', duration: '6m', done: false, active: true },
-      ],
-    },
-    {
-      name: 'Income & Tax',
-      lessons: [
-        { title: 'Understanding Income', duration: '5m', done: false },
-        { title: 'How Tax Brackets Work', duration: '7m', done: false },
-        { title: 'PAYG Withholding', duration: '6m', done: false },
-      ],
-    },
-    {
-      name: 'Saving Strategies',
-      lessons: [
-        { title: 'Emergency Funds', duration: '4m', done: false },
-        { title: 'Compound Interest', duration: '5m', done: false },
-      ],
-    },
+    { id: 1, title: 'Budgeting Fundamentals', lessonCount: 3 },
+    { id: 2, title: 'Income & Tax',           lessonCount: 3 },
+    { id: 3, title: 'Saving Strategies',      lessonCount: 2 },
+  ];
+  const outcomes = [
+    'How income and tax work in Australia',
+    'Building a realistic personal budget',
+    'Superannuation basics and why it matters now',
+    'Strategies for emergency funds and saving',
   ];
   return (
-    <div className="absolute inset-0 bg-surface-body overflow-hidden selection:bg-accent selection:text-white">
-      <div className="container-custom" style={{ paddingTop: '4rem' }}>
-        <header className="mb-10">
-          <span className="section-kicker">Money Basics</span>
-          <h1 className="text-5xl md:text-6xl mb-4 leading-tight">Course overview</h1>
-          <p className="text-lg text-text-muted font-serif italic max-w-xl leading-relaxed">
-            Understand how money works — income, spending, saving, and the basics every Australian student needs.
-          </p>
-          <div className="mt-6 flex items-center gap-4">
-            <div className="flex-1 max-w-xs h-1.5 bg-line-soft rounded-full overflow-hidden">
-              <div className="h-full bg-accent rounded-full" style={{ width: '25%' }} />
+    <div className="absolute inset-0 bg-surface-body overflow-y-auto selection:bg-accent selection:text-white">
+      <div className="container-custom" style={{ paddingTop: '3.5rem', paddingBottom: '3rem' }}>
+        {/* Back link */}
+        <button className="mb-8 inline-flex items-center gap-2 text-sm text-text-muted hover:text-accent transition-colors">
+          ← All Courses
+        </button>
+
+        {/* Course header */}
+        <div className="mb-10">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">Money Basics</h1>
+              <p className="text-lg text-text-muted leading-relaxed max-w-2xl">
+                Understand how money actually works — income, spending, saving, and the basics every Australian student needs before they enter the workforce.
+              </p>
             </div>
-            <span className="text-sm font-medium text-text-dim">2 / 8 lessons complete</span>
           </div>
-        </header>
-        <div className="space-y-4">
-          {simModules.map((mod) => (
-            <div key={mod.name} className="rounded-2xl border border-line-soft overflow-hidden bg-surface-raised">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-line-soft bg-surface-soft/40">
-                <h2 className="text-sm font-semibold text-text-muted tracking-wide">{mod.name}</h2>
-                <span className="text-xs text-text-dim font-mono">{mod.lessons.length} lessons</span>
+        </div>
+
+        {/* Info card + outcomes */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
+          <div className="lg:col-span-8">
+            <div className="bg-surface-raised border border-line-soft rounded-xl p-8">
+              <div className="grid grid-cols-3 gap-6 mb-8">
+                <div>
+                  <p className="text-xs font-medium text-text-muted mb-1">Duration</p>
+                  <p className="text-lg font-semibold">45 minutes</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-text-muted mb-1">Lessons</p>
+                  <p className="text-lg font-semibold">8 lessons</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-text-muted mb-1">Level</p>
+                  <p className="text-lg font-semibold">Beginner</p>
+                </div>
               </div>
-              <div>
-                {mod.lessons.map((lesson) => (
-                  <div
-                    key={lesson.title}
-                    data-sim-id={lesson.active ? 'lesson-link' : undefined}
-                    className={`flex items-center gap-4 px-6 py-4 border-t border-line-soft/40 first:border-t-0 hover:bg-surface-soft/60 transition-colors cursor-default ${lesson.active ? 'bg-accent/[0.03]' : ''}`}
-                  >
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${lesson.done ? 'border-accent bg-accent' : lesson.active ? 'border-accent' : 'border-line-soft'}`}>
-                      {lesson.done && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3}><polyline points="20 6 9 17 4 12" /></svg>}
-                    </div>
-                    <span className={`flex-1 text-sm font-medium ${lesson.done ? 'text-text-dim line-through' : lesson.active ? 'text-accent' : 'text-text-primary'}`}>{lesson.title}</span>
-                    <span className="text-xs text-text-dim font-medium shrink-0">{lesson.duration}</span>
-                    <svg className={`w-4 h-4 shrink-0 ${lesson.active ? 'text-accent' : 'text-text-dim'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                ))}
+              {/* Progress bar */}
+              <div className="mb-8">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-text-muted">Your Progress</span>
+                  <span className="font-medium text-accent">25%</span>
+                </div>
+                <div className="h-2 w-full bg-surface-soft rounded-full overflow-hidden">
+                  <div className="h-full bg-accent rounded-full transition-all duration-500 ease-out" style={{ width: '25%' }} />
+                </div>
               </div>
+              <button className="btn-primary py-3 px-10">Continue Learning</button>
             </div>
-          ))}
+          </div>
+          <aside className="lg:col-span-4 bg-accent/5 border border-accent/20 rounded-xl p-8">
+            <h3 className="text-sm font-semibold mb-4">What you&apos;ll learn</h3>
+            <ul className="space-y-3">
+              {outcomes.map((o) => (
+                <li key={o} className="flex items-start gap-2 text-sm text-text-muted">
+                  <span className="text-accent mt-0.5">&#10003;</span>
+                  <span>{o}</span>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        </div>
+
+        {/* Modules list — exact copy from CourseDetail.jsx */}
+        <div>
+          <div className="flex items-end justify-between mb-6">
+            <h2 className="text-2xl font-bold">Modules</h2>
+            <p className="text-sm text-text-muted">{simModules.length} modules</p>
+          </div>
+          <div className="space-y-2">
+            {simModules.map((mod, index) => (
+              <div
+                key={mod.id}
+                data-sim-id={index === 0 ? 'module-card-1' : undefined}
+                className="group bg-surface-raised border border-line-soft rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between transition-colors duration-200 hover:border-accent/50 cursor-default"
+              >
+                <div className="flex items-center gap-5 min-w-0 mb-4 md:mb-0">
+                  <span className="text-2xl font-bold text-text-dim w-8 text-right shrink-0">{index + 1}</span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold text-text-primary mb-1 truncate group-hover:text-accent transition-colors">{mod.title}</h3>
+                    <div className="flex items-center gap-3 text-sm text-text-muted">
+                      <span>{mod.lessonCount} lessons</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-text-muted group-hover:text-accent transition-colors">View Module &rarr;</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── SimModuleDetail ───────────────────────────── */
+/* Exact copy of real ModuleDetail.jsx — shows lessons list */
+function SimModuleDetail() {
+  const simLessons = [
+    { id: 1, title: 'Introduction to Budgeting',  completed: true },
+    { id: 2, title: 'The 50/30/20 Rule',          completed: true },
+    { id: 3, title: 'Tracking Your Spending',      completed: false, active: true },
+  ];
+  const completedCount = simLessons.filter((l) => l.completed).length;
+  const progressWidth  = (completedCount / simLessons.length) * 100;
+  return (
+    <div className="absolute inset-0 bg-surface-body overflow-y-auto selection:bg-accent selection:text-white">
+      <div className="container-custom" style={{ paddingTop: '3.5rem', paddingBottom: '3rem' }}>
+        {/* Back link */}
+        <button className="mb-8 inline-flex items-center gap-2 text-sm text-text-muted hover:text-accent transition-colors">
+          ← Course Overview
+        </button>
+
+        {/* Module header */}
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12">
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">Budgeting Fundamentals</h1>
+            <p className="text-lg text-text-muted leading-relaxed max-w-2xl">
+              A practical guide to building and sticking to a budget that actually works for Australian students.
+            </p>
+          </div>
+          {/* Progress summary */}
+          <div className="flex flex-col gap-3 min-w-[260px] p-6 bg-surface-raised border border-line-soft rounded-xl">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-muted">Progress</span>
+              <span className="font-medium text-accent">{completedCount} of {simLessons.length} completed</span>
+            </div>
+            <div className="h-2 w-full bg-surface-soft rounded-full overflow-hidden">
+              <div className="h-full bg-accent rounded-full transition-all duration-500 ease-out" style={{ width: `${progressWidth}%` }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Lessons list — exact copy from ModuleDetail.jsx */}
+        <div>
+          <div className="flex items-end justify-between mb-6">
+            <h2 className="text-2xl font-bold">Lessons</h2>
+            <p className="text-sm text-text-muted">{simLessons.length} lessons</p>
+          </div>
+          <div className="space-y-2">
+            {simLessons.map((lesson, idx) => (
+              <div
+                key={lesson.id}
+                data-sim-id={lesson.active ? 'lesson-link' : undefined}
+                className="group bg-surface-raised border border-line-soft rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between transition-colors duration-200 hover:border-accent/50 cursor-default"
+              >
+                <div className="flex items-center gap-5 min-w-0 mb-4 md:mb-0">
+                  <span className="text-2xl font-bold text-text-dim w-8 text-right shrink-0">{idx + 1}</span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold text-text-primary mb-1 truncate group-hover:text-accent transition-colors">{lesson.title}</h3>
+                    <div className="flex items-center gap-3 text-sm text-text-muted">
+                      {lesson.completed && (
+                        <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2.5 py-0.5 rounded-full">Completed</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-text-muted group-hover:text-accent transition-colors">
+                    {lesson.completed ? 'Review' : 'Start Lesson'} &rarr;
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -1046,34 +1162,6 @@ export default function Tour() {
   const [showRipple, setShowRipple]  = useState(false);
   const [captionVis, setCaptionVis]  = useState(false);
 
-  /* Mouse X tracking for gradient opacity — updated continuously, no state updates on move
-     to avoid re-renders. We use a ref + requestAnimationFrame. */
-  const mouseXRef = useState(() => ({ norm: 0.5 }))[0];
-  const [leftIntensity,  setLeftIntensity]  = useState(0.18);
-  const [rightIntensity, setRightIntensity] = useState(0.18);
-
-  useEffect(() => {
-    let rafId;
-    const onMove = (e) => {
-      mouseXRef.norm = e.clientX / window.innerWidth;
-    };
-    const tick = () => {
-      const n = mouseXRef.norm;
-      // leftRatio: 1 at x=0, 0 at x=1 — rightRatio: 0 at x=0, 1 at x=1
-      const lRaw = 1 - n;
-      const rRaw = n;
-      const MIN = 0.12, RANGE = 0.30;
-      setLeftIntensity(MIN + RANGE * lRaw);
-      setRightIntensity(MIN + RANGE * rRaw);
-      rafId = requestAnimationFrame(tick);
-    };
-    window.addEventListener('mousemove', onMove);
-    rafId = requestAnimationFrame(tick);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      cancelAnimationFrame(rafId);
-    };
-  }, [mouseXRef]);
 
   const scene       = SCENES[sceneIndex];
   const currentView = scene.view;
@@ -1182,6 +1270,7 @@ export default function Tour() {
         {currentView === 'home'          && <SimHome />}
         {currentView === 'courses'       && <SimCourses />}
         {currentView === 'course-detail' && <SimCourseDetail />}
+        {currentView === 'module-detail' && <SimModuleDetail />}
         {currentView === 'lesson-intro'  && <SimLessonIntro />}
         {currentView === 'lesson-mcq'    && <SimLessonMCQ />}
         {currentView === 'lesson-calc'   && <SimLessonCalc />}
@@ -1195,50 +1284,52 @@ export default function Tour() {
       {/* ── Fixed overlays ── */}
       <ProgressBar current={sceneIndex} total={SCENES.length} />
 
-      {/* Left gradient strip — intensity driven by mouse X position */}
+      {/* Left gradient strip — permanent grey */}
       <div
         onClick={prevScene}
         style={{
-          position: 'fixed', left: 0, top: 0, bottom: 0, width: 220,
+          position: 'fixed', left: 0, top: 0, bottom: 0, width: 200,
           zIndex: 200,
           cursor: sceneIndex > 0 ? 'pointer' : 'default',
-          display: 'flex', alignItems: 'center', paddingLeft: 22,
+          display: 'flex', alignItems: 'center', paddingLeft: 20,
           background: sceneIndex > 0
-            ? `linear-gradient(to right, rgba(0,0,0,${(leftIntensity * 2).toFixed(2)}) 0%, rgba(0,0,0,${(leftIntensity * 0.5).toFixed(2)}) 55%, transparent 100%)`
+            ? 'linear-gradient(to right, rgba(100,100,100,0.26) 0%, rgba(100,100,100,0.08) 58%, transparent 100%)'
             : 'transparent',
           pointerEvents: sceneIndex > 0 ? 'auto' : 'none',
+          transition: 'background 0.3s ease',
         }}
       >
         <svg
-          width="24" height="24" viewBox="0 0 24 24" fill="none"
+          width="22" height="22" viewBox="0 0 24 24" fill="none"
           strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           style={{
-            stroke: 'white',
-            filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.6))',
-            opacity: sceneIndex > 0 ? Math.max(0.45, leftIntensity / 0.42) : 0,
+            stroke: 'var(--text-muted)',
+            filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))',
+            opacity: sceneIndex > 0 ? 0.7 : 0,
             flexShrink: 0,
+            transition: 'opacity 0.3s ease',
           }}
         ><polyline points="15 18 9 12 15 6" /></svg>
       </div>
 
-      {/* Right gradient strip */}
+      {/* Right gradient strip — permanent grey */}
       <div
         onClick={nextScene}
         style={{
-          position: 'fixed', right: 0, top: 0, bottom: 0, width: 220,
+          position: 'fixed', right: 0, top: 0, bottom: 0, width: 200,
           zIndex: 200,
           cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 22,
-          background: `linear-gradient(to left, rgba(0,0,0,${(rightIntensity * 2).toFixed(2)}) 0%, rgba(0,0,0,${(rightIntensity * 0.5).toFixed(2)}) 55%, transparent 100%)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 20,
+          background: 'linear-gradient(to left, rgba(100,100,100,0.26) 0%, rgba(100,100,100,0.08) 58%, transparent 100%)',
         }}
       >
         <svg
-          width="24" height="24" viewBox="0 0 24 24" fill="none"
+          width="22" height="22" viewBox="0 0 24 24" fill="none"
           strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           style={{
-            stroke: 'white',
-            filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.6))',
-            opacity: Math.max(0.45, rightIntensity / 0.42),
+            stroke: 'var(--text-muted)',
+            filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))',
+            opacity: 0.7,
             flexShrink: 0,
           }}
         ><polyline points="9 18 15 12 9 6" /></svg>
