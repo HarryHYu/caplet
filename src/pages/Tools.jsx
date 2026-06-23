@@ -112,9 +112,120 @@ const tools = [
       </svg>
     ),
   },
+  {
+    title: 'Credit Card Payoff',
+    description: 'See exactly how long it takes to clear your balance and how much interest you can save by paying more.',
+    path: '/tools/credit-card-payoff',
+    category: 'Debt & Loans',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Debt-to-Income Ratio',
+    description: 'Calculate your DTI ratio — the first thing lenders check before approving any loan.',
+    path: '/tools/debt-to-income',
+    category: 'Debt & Loans',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Capital Gains Estimator',
+    description: 'Estimate CGT on shares, property, or other assets under Australian tax rules including the 50% discount.',
+    path: '/tools/capital-gains',
+    category: 'Tax & Income',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Inflation Calculator',
+    description: 'See how inflation erodes purchasing power over time, or how much something will cost in the future.',
+    path: '/tools/inflation',
+    category: 'Savings & Growth',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Rule of 72',
+    description: 'Find out how long it takes to double your money at a given rate — or what rate you need to hit a target.',
+    path: '/tools/rule-of-72',
+    category: 'Savings & Growth',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Net Worth Calculator',
+    description: 'Add up all your assets and liabilities to find your true net worth — and your debt-to-asset ratio.',
+    path: '/tools/net-worth',
+    category: 'Wealth & Investing',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+      </svg>
+    ),
+  },
+  {
+    title: 'ROI Calculator',
+    description: 'Calculate total return on investment and annualised CAGR for any asset — shares, property, business, or otherwise.',
+    path: '/tools/roi',
+    category: 'Wealth & Investing',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'FIRE Number Calculator',
+    description: 'Calculate how much you need to retire early and how long it will take you to get there.',
+    path: '/tools/fire-number',
+    category: 'Wealth & Investing',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Rent vs Buy Calculator',
+    description: 'Compare the true total cost of renting versus buying a home over any time horizon.',
+    path: '/tools/rent-vs-buy',
+    category: 'Property',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Break-Even Calculator',
+    description: 'Find how many units you need to sell to cover costs — and what it takes to hit a profit target.',
+    path: '/tools/break-even',
+    category: 'Business',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+  },
 ];
 
-const categories = ['Tax & Income', 'Budgeting', 'Savings & Growth', 'Debt & Loans'];
+const categories = ['Tax & Income', 'Budgeting', 'Savings & Growth', 'Debt & Loans', 'Wealth & Investing', 'Property', 'Business'];
 
 const Tools = () => {
   const [searchQuery, setSearchQuery] = useState('');

@@ -20,6 +20,16 @@ import SuperContribution from './pages/tools/SuperContribution';
 import GSTCalculator from './pages/tools/GSTCalculator';
 import SalaryCalculator from './pages/tools/SalaryCalculator';
 import EmergencyFund from './pages/tools/EmergencyFund';
+import NetWorth from './pages/tools/NetWorth';
+import InflationCalculator from './pages/tools/InflationCalculator';
+import CreditCardPayoff from './pages/tools/CreditCardPayoff';
+import ROICalculator from './pages/tools/ROICalculator';
+import RentVsBuy from './pages/tools/RentVsBuy';
+import DebtToIncome from './pages/tools/DebtToIncome';
+import BreakEven from './pages/tools/BreakEven';
+import FIRENumber from './pages/tools/FIRENumber';
+import RuleOf72 from './pages/tools/RuleOf72';
+import CapitalGains from './pages/tools/CapitalGains';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModuleDetail from './pages/ModuleDetail';
@@ -132,6 +142,16 @@ function AppShell() {
           <Route path="/tools/gst" element={<GSTCalculator />} />
           <Route path="/tools/salary" element={<SalaryCalculator />} />
           <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
+          <Route path="/tools/net-worth" element={<NetWorth />} />
+          <Route path="/tools/inflation" element={<InflationCalculator />} />
+          <Route path="/tools/credit-card-payoff" element={<CreditCardPayoff />} />
+          <Route path="/tools/roi" element={<ROICalculator />} />
+          <Route path="/tools/rent-vs-buy" element={<RentVsBuy />} />
+          <Route path="/tools/debt-to-income" element={<DebtToIncome />} />
+          <Route path="/tools/break-even" element={<BreakEven />} />
+          <Route path="/tools/fire-number" element={<FIRENumber />} />
+          <Route path="/tools/rule-of-72" element={<RuleOf72 />} />
+          <Route path="/tools/capital-gains" element={<CapitalGains />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
