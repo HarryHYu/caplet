@@ -117,7 +117,7 @@ const Courses = () => {
             Curriculum.
           </h1>
           <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
-            Browse our course library designed for Australian learners.
+            Browse the course library.
           </p>
         </header>
 

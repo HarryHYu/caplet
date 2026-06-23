@@ -34,7 +34,7 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-xl font-serif italic text-text-muted mb-12 max-w-sm leading-relaxed">
-              Free financial education for Australians — courses, tools, and classroom-ready content.
+              A free platform for structured courses, tools, and collaborative workspaces.
             </p>
           </div>
 
@@ -75,7 +75,7 @@ const Footer = () => {
 
         <div className="mt-24 pt-8 border-t border-line-soft flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-text-dim">
-            © {new Date().getFullYear()} Caplet Education
+            © {new Date().getFullYear()} Caplet
           </p>
         </div>
       </div>

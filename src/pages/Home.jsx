@@ -55,9 +55,9 @@ const Home = () => {
 
   // Card 1 Logic: Courses Shuffler
   const [courses, setCourses] = useState([
-    "Retirement Savings (Super) 101",
     "Budgeting Fundamentals",
-    "Understanding Tax"
+    "Introduction to Data Science",
+    "Digital Marketing 101",
   ]);
 
   useEffect(() => {
@@ -75,11 +75,11 @@ const Home = () => {
   // Card 2 Logic: Telemetry Typewriter
   const [typewriterText, setTypewriterText] = useState("");
   const messages = [
-    "Breaking down your tax bracket...",
-    "Explaining compound interest...",
-    "What is a franking credit?",
-    "Calculating your savings rate...",
-    "Understanding HECS repayments..."
+    "Generate slides from these notes...",
+    "Build an interactive quiz...",
+    "Summarise the key concepts here...",
+    "Turn this PDF into a lesson...",
+    "Create a structured lesson plan...",
   ];
 
   useEffect(() => {
@@ -255,12 +255,12 @@ const Home = () => {
         <div className="container-custom relative z-10 w-full text-center py-32" ref={heroTextRef}>
           <div className="max-w-4xl mx-auto text-text-primary">
             <h1 className="hero-text-elem text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter mb-8">
-              Money,<br />
+              Anything,<br />
               <span className="font-serif italic font-medium text-accent-strong">Simplified.</span>
             </h1>
             <p className="hero-text-elem text-xl sm:text-2xl font-display font-medium max-w-2xl mx-auto text-text-muted leading-relaxed mb-12">
-              Structured financial education for Australians.<br />
-              No products. No catch. Just clarity.
+              An open platform for courses, tools, and anything you want to build and share.<br />
+              No catch. No lock-in. Just powerful software.
             </p>
             <div className="hero-text-elem flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link to="/register" className="bg-accent hover:bg-accent-strong text-white font-display font-semibold px-10 py-5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl w-full sm:w-auto text-center">
@@ -311,7 +311,7 @@ const Home = () => {
               <div className="flex justify-between items-center">
                 <span className="text-xs font-mono text-accent flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  AI Assistant — Educational Only
+                  AI Content Assistant
                 </span>
               </div>
               <div className="flex-1 flex items-end pb-8">
@@ -374,14 +374,14 @@ const Home = () => {
           <div className="flex flex-col lg:flex-row items-center gap-16 md:gap-24">
             
             <div className="w-full lg:w-1/2">
-              <span className="text-xs font-mono font-bold text-accent mb-8 block">The Language Gap</span>
+              <span className="text-xs font-mono font-bold text-accent mb-8 block">The Knowledge Gap</span>
               <h2 className="text-4xl md:text-6xl font-display font-bold mb-8 leading-tight text-text-primary">
                 We translate <br />
-                <span className="font-serif italic text-accent-strong">Industry Jargon</span> <br />
-                into Plain English.
+                <span className="font-serif italic text-accent-strong">any jargon</span> <br />
+                into plain language.
               </h2>
               <p className="text-xl font-display font-medium text-text-muted leading-relaxed mb-12">
-                Finance is intentionally complex. We strip away the smoke and mirrors to give you the definitions that actually matter for your future.
+                Every field has language designed to confuse. Caplet makes the complex clear — whatever domain you're working in.
               </p>
             </div>
 
@@ -432,7 +432,7 @@ const Home = () => {
             </h2>
             
             <p className="phil-text text-lg sm:text-2xl font-display font-medium text-text-primary/80 max-w-3xl leading-relaxed">
-              Caplet is free. Always. No products. No upsells. No affiliate links buried in our content. Just structured financial education, built for Australians who deserve better.
+              Caplet is free. Always. Build courses, tools, and workspaces for any subject, any audience, any purpose. No hidden costs, no upsells, no lock-in.
             </p>
           </div>
         </div>
@@ -451,22 +451,22 @@ const Home = () => {
         <div className="w-full relative px-4 md:px-0">
           {[
             {
-              title: "Understanding Your Money",
-              kicker: "01. Foundations",
+              title: "Build your workspace",
+              kicker: "01. Structure",
               anim: "pie",
-              desc: "Build a rock-solid mental model of your cash flow. We demystify budgeting by focusing on systems, not restrictive rules."
+              desc: "Create courses, modules, and lessons from scratch. 15+ interactive slide types — text, quizzes, diagrams, embeds, timelines, Desmos graphs, and more."
             },
             {
-              title: "Tax, Super & Beyond",
-              kicker: "02. Building Knowledge",
+              title: "Add intelligence",
+              kicker: "02. Automate",
               anim: "timeline",
-              desc: "Navigate the Australian system. Finally understand what your payslip means, where your tax goes, and why your super balance matters today."
+              desc: "Paste in notes, upload a PDF, or describe what you need. AI plans the structure in plain text first, then converts it to polished interactive slides — ready to publish."
             },
             {
-              title: "Put It Into Practice",
-              kicker: "03. Taking Action",
+              title: "Reach your audience",
+              kicker: "03. Deliver",
               anim: "curve",
-              desc: "From theory to reality. Learn how compound interest, risk profiles, and long-term planning translate into actual wealth creation."
+              desc: "Publish to the world or gate it behind a private classroom. Track progress, manage assignments, and iterate based on real usage."
             }
           ].map((item) => (
             <div key={item.kicker} className="learning-card sticky top-24 md:top-32 w-full max-w-6xl mx-auto h-[65vh] min-h-[500px] mb-24 rounded-[3rem] bg-surface-raised border border-line-soft shadow-2xl p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center overflow-hidden transform-gpu">
@@ -520,33 +520,33 @@ const Home = () => {
 
             <div className="bg-surface-raised rounded-[3rem] px-8 md:px-12 py-4 shadow-sm border border-line-soft">
               {[
-                { 
-                  q: "Is Caplet really free?", 
-                  a: "Yes, 100%. We believe financial literacy is a fundamental right. Caplet is funded independently, and we never sell your data or push affiliate financial products." 
-                },
-                { 
-                  q: "Is this financial advice?", 
-                  a: "Absolutely not. Caplet provide strictly educational material. We help you understand how the system works so you can make your own informed decisions or ask the right questions when talking to a professional." 
-                },
-                { 
-                  q: "Do I need to live in Australia?", 
-                  a: "Our content is deeply optimized for the Australian system (retirement savings, tax brackets, HELP/HECS, etc.), but the core principles of cash flow and compound interest apply to everyone." 
-                },
-                { 
-                  q: "How often courses updated?", 
-                  a: "Whenever policy changes (like new tax thresholds or super guarantee changes), we update the curriculum within 48 hours to ensure you're learning from the latest data." 
+                {
+                  q: "Is Caplet free?",
+                  a: "Yes, completely free. Build and publish content, use the tools, and join classrooms — no credit card, no hidden costs, no upsells. Ever."
                 },
                 {
-                  q: "Where are the sources gathered from?",
-                  a: "Our courses and information are all verified and tightly linked to the NESA syllabus for schools, including Year 9 to 10 Commerce with its corresponding legal, economics and business topics."
+                  q: "What can I build on Caplet?",
+                  a: "Structured courses with 15+ interactive slide types, calculator and tool suites, private classroom workspaces, and AI-generated content from notes or PDFs. Right now we focus on financial education, but the platform supports any subject or domain."
                 },
                 {
-                  q: "Can I suggest courses and give feedback to Caplet?",
-                  a: "Yes, absolutely! We love hearing from our users. You can suggest new course topics or provide feedback on existing ones through our contact form."
+                  q: "Who is Caplet for?",
+                  a: "Anyone who wants to create or consume structured interactive content — teachers, trainers, developers, creators, or learners. If you want to build something to share or learn from something well-made, Caplet is for you."
+                },
+                {
+                  q: "How does the AI work?",
+                  a: "Paste in notes, describe a topic, or upload a PDF. The AI first plans the lesson in plain natural text, then a second pass converts that plan into fully formatted interactive slides. You control the slide count, focus, and model."
+                },
+                {
+                  q: "How do I get access to the lesson creator?",
+                  a: "The lesson editor is gated by a workspace access code. Contact us through the contact form to request access and we'll get you set up."
+                },
+                {
+                  q: "Can I suggest features or give feedback?",
+                  a: "Absolutely. Use the contact form — we read everything and actively build based on what users actually need."
                 },
                 {
                   q: "How do I get started?",
-                  a: "Just click on any course that interests you, sign up for a free account, and you'll be able to start learning immediately."
+                  a: "Create a free account and explore the existing curriculum, or head straight to the tools. If you want to build your own content, reach out for editor access."
                 }
               ].map((faq, i) => (
                 <FAQItem key={i} question={faq.q} answer={faq.a} />
@@ -560,13 +560,13 @@ const Home = () => {
       <section className="bg-accent text-white py-32 rounded-t-[3rem] -mt-10 relative z-30">
         <div className="container-custom text-center max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-serif italic mb-8">
-            Ready to actually understand your money?
+            Ready to build something?
           </h2>
           <p className="text-xl md:text-2xl font-display font-medium text-white/80 mb-12">
-            Start with any course! it's free.
+            It&apos;s free. No catch.
           </p>
           <Link to="/courses" className="inline-block bg-surface-raised text-accent font-display font-bold px-10 py-5 rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl">
-            View Curriculum
+            Explore the platform
           </Link>
         </div>
       </section>
