@@ -104,7 +104,7 @@ function TextSlide({ slide }) {
       </div>
       {slide.caption && (
         <p className="mt-10 pt-6 border-t border-line-soft text-sm text-text-muted italic font-serif">
-          {slide.caption}
+          <MathText>{slide.caption}</MathText>
         </p>
       )}
     </div>
@@ -120,7 +120,7 @@ function MediaSlide({ slide }) {
 
   const caption = slide.caption ? (
     <figcaption className="text-center text-sm font-serif italic text-text-muted">
-      {slide.caption}
+      <MathText>{slide.caption}</MathText>
     </figcaption>
   ) : null;
 
@@ -508,7 +508,7 @@ function CardsCarousel({ cards, caption }) {
         </button>
       </div>
       {caption && (
-        <p className="shrink-0 text-center text-sm font-serif italic text-text-muted">{caption}</p>
+        <p className="shrink-0 text-center text-sm font-serif italic text-text-muted"><MathText>{caption}</MathText></p>
       )}
     </div>
   );
@@ -567,7 +567,7 @@ function CardsGrid({ cards, columns, caption, flip }) {
         )}
       </div>
       {caption && (
-        <p className="text-center text-sm font-serif italic text-text-muted">{caption}</p>
+        <p className="text-center text-sm font-serif italic text-text-muted"><MathText>{caption}</MathText></p>
       )}
     </div>
   );
@@ -696,7 +696,7 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
         </div>
       )}
       {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}
-      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted"><MathText>{slide.caption}</MathText></p>}
     </div>
   );
 }
@@ -803,7 +803,7 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
         </div>
       )}
       {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}
-      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted"><MathText>{slide.caption}</MathText></p>}
     </div>
   );
 }
@@ -854,7 +854,7 @@ function TableSlide({ slide }) {
         </table>
       </div>
       {slide.caption && (
-        <p className="text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>
+        <p className="text-center text-sm font-serif italic text-text-muted"><MathText>{slide.caption}</MathText></p>
       )}
     </div>
   );
@@ -1121,7 +1121,7 @@ function DiagramSlide({ slide }) {
           </>
         )}
       </div>
-      {slide.caption && <p className="shrink-0 mt-2 text-center text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+      {slide.caption && <p className="shrink-0 mt-2 text-center text-sm font-serif italic text-text-muted"><MathText>{slide.caption}</MathText></p>}
     </div>
   );
 }
@@ -1184,7 +1184,7 @@ function EmbedSlide({ slide }) {
       </div>
       {slide.caption && (
         <p className="shrink-0 px-5 py-2 md:px-8 text-center text-sm font-serif italic text-text-muted">
-          {slide.caption}
+          <MathText>{slide.caption}</MathText>
         </p>
       )}
     </div>
@@ -1271,7 +1271,7 @@ function HotspotSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
         </button>
       )}
       {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}
-      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted"><MathText>{slide.caption}</MathText></p>}
     </div>
   );
 }
@@ -1401,7 +1401,7 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
         </div>
       )}
       {showFeedback && <FeedbackBanner correct={isCorrect} explanation={slide.explanation} />}
-      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted">{slide.caption}</p>}
+      {slide.caption && <p className="mt-4 text-sm font-serif italic text-text-muted"><MathText>{slide.caption}</MathText></p>}
     </div>
   );
 }
