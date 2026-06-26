@@ -13,10 +13,22 @@ export function derivePlots(layout) {
   const grid = cells.split('\n');
   const at = (x, y) => (x >= 0 && x < gridW && y >= 0 && y < gridH ? grid[y][x] : null);
 
+  // Themed outer ring (angular sectors) — mirrors backend cityPlan.themedAt.
+  const themedAt = (x, y) => {
+    const t = geo.themed;
+    if (!t || Math.max(Math.abs(x - geo.cc), Math.abs(y - geo.cc)) <= t.r0) return null;
+    const ang = Math.atan2(y - geo.cc, x - geo.cc);
+    return t.sectors[Math.floor(((ang + Math.PI) / (2 * Math.PI)) * t.sectors.length) % t.sectors.length];
+  };
+
   const districtFor = (x, y) => {
     if (inRect(x, y, geo.industrial)) return 'Industrial';
     if (inRect(x, y, geo.oldTown)) return 'Old Town';
-    const r = Math.max(Math.abs(x - geo.cc), Math.abs(y - geo.cc));
+    const themed = themedAt(x, y);
+    if (themed) return themed;
+    // Nearest of the two downtown centres (west + east bank) drives the district.
+    let r = Math.max(Math.abs(x - geo.cc), Math.abs(y - geo.cc));
+    if (geo.cc2) r = Math.min(r, Math.max(Math.abs(x - geo.cc2.x), Math.abs(y - geo.cc2.y)));
     for (const [rad, name] of geo.radii) if (r <= rad) return name;
     return geo.outer;
   };

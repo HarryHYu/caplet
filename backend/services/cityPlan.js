@@ -31,12 +31,38 @@ const CIVIC_R = 15;
 const RING_MIN = 45;             // city-local ring road
 const RING_MAX = 224;
 const RAMBLA_OFF = 6;
-const riverXLocal = (ly) => 150 + Math.round(5 * Math.sin(ly / 12));
-const RIVER_AVOID = [143, 160];  // no street columns inside the river corridor
+
+// The grand river: a clean, gently meandering vertical channel of FIXED width
+// running lake → city → sea. RIVER_HALF is its half-width (the channel is
+// 2·HALF+1 cells across); RIVER_CXL is its city-local centre column. Unlike the
+// old generator, every chosen crossing row carries a CONTINUOUS road deck, so
+// the bridges are real — you can walk the whole span instead of dead-ending in
+// the water halfway across.
+const RIVER_HALF = 10;
+const RIVER_CXL = 150;
+const RIVER_AVOID = [RIVER_CXL - RIVER_HALF - 7, RIVER_CXL + RIVER_HALF + 7]; // keep grid streets out of the channel
 
 const BEACH_W = 14;
 const LAKE = { x: 172, y: 13, rx: 16, ry: 8 };
 const BOARDWALK_Y = GRID - 9;
+const lakeExitY = LAKE.y + LAKE.ry;
+// World centre column of the channel at world row y — ramps out of the lake,
+// then meanders gently down through the city to the sea.
+const riverCxAt = (y) => {
+  const c = CX0 + RIVER_CXL + Math.round(5 * Math.sin((y - CY0) / 28));
+  if (y < CY0) {
+    const t = (y - lakeExitY) / Math.max(1, CY0 - lakeExitY);
+    return Math.round((LAKE.x - 4) * (1 - t) + c * t);
+  }
+  return c;
+};
+
+// Twin downtowns: the original civic core sits on the WEST bank; a second core
+// (EAST_CC) rises just across the water, so a skyline stands on BOTH banks.
+// Districts price off whichever centre is nearer (see districtFor).
+const EAST_CC = { x: CX0 + RIVER_CXL + RIVER_HALF + 24, y: CC }; // world
+const EAST_PLAZA_R = 5;
+const EAST_CIVIC_R = 13;
 
 // In-city quarters (city-local rects).
 const OLD_TOWN_L = { x0: 14, x1: 58, y0: 170, y1: 225 };
@@ -49,7 +75,27 @@ const DISTRICTS = {
   'Outer Suburb': { tier: 'Starter', color: '#9aa861', base: 130, step: 26 },
   Industrial: { tier: 'Industrial', color: '#8a8578', base: 1600, step: 320 },
   'Old Town': { tier: 'Heritage', color: '#c08a4e', base: 900, step: 160 },
+  // Six themed districts carved from the outer ring (angular sectors). `tier`
+  // selects the procedural building pool in cityModels.DISTRICT_BUILDINGS.
+  Oriental: { tier: 'Oriental', color: '#c0463b', base: 540, step: 108 },
+  Cyberpunk: { tier: 'Cyberpunk', color: '#2b3a6a', base: 760, step: 150 },
+  'Wild West': { tier: 'WildWest', color: '#b0824a', base: 300, step: 62 },
+  Alpine: { tier: 'Alpine', color: '#cfe0ec', base: 600, step: 120 },
+  'Spooky Hollow': { tier: 'Spooky', color: '#4a3a55', base: 360, step: 74 },
+  'Desert Bazaar': { tier: 'Desert', color: '#d8b070', base: 380, step: 78 },
 };
+
+// The themed outer ring: everything beyond the Inner Suburb radius (and outside
+// the Industrial / Old Town rects) is split into six angular sectors, one per
+// theme. Mirrored verbatim on the client (cityPlots.js + cityWorld.js).
+const THEMED_R0 = 95; // outer ~30% of the city radius becomes the themed ring
+const THEMED_SECTORS = ['Oriental', 'Cyberpunk', 'Wild West', 'Alpine', 'Spooky Hollow', 'Desert Bazaar'];
+function themedAt(x, y) {
+  if (ringFrom(x, y, CC) <= THEMED_R0) return null;
+  const ang = Math.atan2(y - CC, x - CC); // -PI..PI
+  const s = Math.floor(((ang + Math.PI) / (2 * Math.PI)) * THEMED_SECTORS.length) % THEMED_SECTORS.length;
+  return THEMED_SECTORS[s];
+}
 
 // District radii (Chebyshev from the city centre) — also shipped to the client
 // so it can derive plot pricing without the server sending 50k rows.
@@ -62,13 +108,19 @@ function hash(x, y) {
 }
 
 const ringFrom = (x, y, c) => Math.max(Math.abs(x - c), Math.abs(y - c));
+const cheb = (x, y, cx, cy) => Math.max(Math.abs(x - cx), Math.abs(y - cy));
 const inRectL = (lx, ly, r) => lx >= r.x0 && lx <= r.x1 && ly >= r.y0 && ly <= r.y1;
 
 function districtFor(x, y) {
   const lx = x - CX0; const ly = y - CY0;
   if (inRectL(lx, ly, IND_L)) return 'Industrial';
   if (inRectL(lx, ly, OLD_TOWN_L)) return 'Old Town';
-  const r = ringFrom(x, y, CC);
+  // Themed outer ring wins before the (two-centre) inner rings, so the east
+  // downtown's reach can't swallow the eastern themed sector.
+  const themed = themedAt(x, y);
+  if (themed) return themed;
+  // Nearest of the two downtown centres drives the ring district + pricing.
+  const r = Math.min(ringFrom(x, y, CC), cheb(x, y, EAST_CC.x, EAST_CC.y));
   for (const [rad, name] of RADII) if (r <= rad) return name;
   return 'Outer Suburb';
 }
@@ -141,50 +193,34 @@ function build() {
     put(CX0 + RING_MIN, CY0 + i, 'R'); put(CX0 + RING_MAX, CY0 + i, 'R');
   }
 
-  // ==== 5. river: lake → city → sea ==========================================
-  const cityRiverTopX = CX0 + riverXLocal(0);
-  const lakeExit = { x: LAKE.x - 4, y: LAKE.y + LAKE.ry };
-  for (let y = lakeExit.y; y < CY0; y += 1) {
-    const t = (y - lakeExit.y) / Math.max(1, CY0 - lakeExit.y);
-    const x = Math.round(lakeExit.x + (cityRiverTopX - lakeExit.x) * t + 2 * Math.sin(y / 5));
-    for (const xx of [x, x + 1]) {
-      if (at(xx, y) === 'R') continue;
-      put(xx, y, 'W');
-    }
-  }
-  const bridgeRowsL = new Set(rowsL.filter((_, i) => i % 2 === 0));
-  for (let ly = 0; ly < CITY; ly += 1) {
-    const xr = CX0 + riverXLocal(ly);
-    for (const x of [xr, xr + 1]) {
-      const cur = at(x, CY0 + ly);
-      if (cur === 'R') {
-        const isBridge = rowsL.includes(ly) ? bridgeRowsL.has(ly) : true;
-        if (!isBridge) put(x, CY0 + ly, 'W');
-      } else {
-        put(x, CY0 + ly, 'W');
+  // ==== 5. river: one clean meandering channel with REAL bridge decks ========
+  // Every 3rd city road row (plus the ring road, and the highways laid later)
+  // keeps an UNBROKEN road deck across the channel; everywhere else the channel
+  // is open water you must cross by a bridge. Because each deck is laid as
+  // continuous road, walk-mode collision lets you cross the whole span — the old
+  // generator left water gaps mid-river, so "bridges" dead-ended in the water.
+  const deckRows = new Set();
+  rowsL.forEach((r, i) => { if (i % 3 === 0) deckRows.add(CY0 + r); });
+  deckRows.add(CY0 + RING_MIN); deckRows.add(CY0 + RING_MAX);
+  for (let y = lakeExitY; y < GRID; y += 1) {
+    const cx = riverCxAt(y);
+    const deck = deckRows.has(y);
+    for (let dx = -RIVER_HALF; dx <= RIVER_HALF; dx += 1) put(cx + dx, y, deck ? 'R' : 'W');
+    if (deck) { put(cx - RIVER_HALF - 1, y, 'R'); put(cx + RIVER_HALF + 1, y, 'R'); }
+    // grassy levee banks lining the channel inside the city (not on deck rows)
+    if (!deck && y >= CY0 && y < CY0 + CITY) {
+      for (const bx of [cx - RIVER_HALF - 1, cx + RIVER_HALF + 1]) {
+        if (at(bx, y) === '.' && hash(bx, y) % 3 !== 0) put(bx, y, 'K');
       }
     }
-    for (const x of [xr - 1, xr + 2]) {
-      if (at(x, CY0 + ly) === '.' && hash(x, ly) % 3 !== 0) put(x, CY0 + ly, 'K');
-    }
-  }
-  const cityRiverBotX = CX0 + riverXLocal(CITY - 1);
-  for (let y = CY0 + CITY; y < GRID; y += 1) {
-    const x = Math.round(cityRiverBotX + 4 * Math.sin((y - CY0 - CITY) / 9));
-    const width = at(x, y) === 'S' || at(x + 1, y) === 'S' ? 4 : 2;
-    for (let k = 0; k < width; k += 1) {
-      if (at(x + k, y) === 'R') continue;
-      put(x + k, y, 'W');
-    }
-    if (at(x, y + 1) === null) break;
   }
 
   // ==== 6. rambla, plaza, civic ==============================================
   for (let ly = 2; ly < CITY - 2; ly += 1) {
     const lx = ly + RAMBLA_OFF;
     if (lx >= CITY - 1) break;
-    const xr = riverXLocal(ly);
-    if (lx >= xr - 2 && lx <= xr + 3) continue;
+    const cxl = riverCxAt(CY0 + ly) - CX0;
+    if (lx >= cxl - RIVER_HALF - 2 && lx <= cxl + RIVER_HALF + 2) continue;
     for (const xx of [lx, lx + 1]) {
       const cur = at(CX0 + xx, CY0 + ly);
       if (cur === '.' || cur === 'K') put(CX0 + xx, CY0 + ly, 'P');
@@ -196,6 +232,38 @@ function build() {
       const r = ringFrom(x, y, CC);
       if (r <= PLAZA_R) put(x, y, 'P');
       else if (r <= CIVIC_R && at(x, y) === '.') put(x, y, 'C');
+    }
+  }
+  // East downtown: a second civic core + plaza just across the river, so a
+  // tower skyline rises on the far bank too (twin riverfront CBDs).
+  for (let y = 0; y < GRID; y += 1) {
+    for (let x = 0; x < GRID; x += 1) {
+      if (!inCity(x, y)) continue;
+      const r = cheb(x, y, EAST_CC.x, EAST_CC.y);
+      if (r <= EAST_PLAZA_R) { if (at(x, y) === '.' || at(x, y) === 'C') put(x, y, 'P'); }
+      else if (r <= EAST_CIVIC_R && at(x, y) === '.') put(x, y, 'C');
+    }
+  }
+
+  // ==== 6b. diagonal boulevards — break the rigid grid =======================
+  // A handful of long avenues at irregular angles fired from a few "star" nodes,
+  // cutting diagonally across the waffle grid so the city reads as organic, not
+  // structured. 2 cells wide (auto-tiles as real road); only paves plots/parks,
+  // so it never braids the water — it simply stops at the river bank.
+  const DIAG_STARS = [[CL, CL], [55, 60], [205, 70], [70, 205], [205, 205], [EAST_CC.x - CX0, EAST_CC.y - CY0], [135, 40]];
+  for (let d = 0; d < DIAG_STARS.length; d += 1) {
+    const [sx, sy] = DIAG_STARS[d];
+    const ang = Math.PI / 6 + ((hash(d * 13 + 1, 7) % 1000) / 1000) * (Math.PI * 2 / 3); // 30°..150°
+    const ux = Math.cos(ang); const uy = Math.sin(ang);
+    const vert = Math.abs(uy) >= Math.abs(ux);
+    for (let t = -CITY; t < CITY; t += 1) {
+      const lx = Math.round(sx + ux * t); const ly = Math.round(sy + uy * t);
+      for (const [ox, oy] of [[0, 0], vert ? [1, 0] : [0, 1]]) {
+        const gx = CX0 + lx + ox; const gy = CY0 + ly + oy;
+        if (!inCity(gx, gy)) continue;
+        const c = at(gx, gy);
+        if (c === '.' || c === 'K') put(gx, gy, 'R');
+      }
     }
   }
 
@@ -243,6 +311,26 @@ function build() {
       put(gx, y, 'R');
     }
     hwySpan.cols.set(gx, [a, b]);
+  }
+
+  // ==== 8b. organic city outline — carve the square into an irregular blob ====
+  // Real cities aren't perfect rectangles. Convert built cells (plots/roads/
+  // paving/parks) that fall OUTSIDE a wobbly organic boundary back into nature
+  // (grass + a little forest), but KEEP the river corridor (so bridges/decks
+  // survive) and never touch sea/beach/forest/farm or the civic core (r < ~95).
+  // Done before landmarks + plots so they only ever land inside the real city.
+  const blobR = (a) => 138 + 18 * Math.sin(a * 2 + 0.6) + 12 * Math.sin(a * 3 - 1.3)
+    + 8 * Math.sin(a * 5 + 2.2) + 5 * Math.sin(a * 7 - 0.4); // ranges ~95..181 cells
+  for (let y = CY0; y < CY0 + CITY; y += 1) {
+    const rcx = riverCxAt(y);
+    for (let x = CX0; x < CX0 + CITY; x += 1) {
+      const c = at(x, y);
+      if (c !== '.' && c !== 'R' && c !== 'P' && c !== 'K') continue;       // keep W/S/C/F/T/G
+      if (x >= rcx - RIVER_HALF - 2 && x <= rcx + RIVER_HALF + 2) continue; // keep the river corridor
+      const dx = x - CC; const dy = y - CC;
+      if (Math.hypot(dx, dy) <= blobR(Math.atan2(dy, dx))) continue;        // inside the blob → keep
+      put(x, y, hash(x, y) % 4 === 0 ? 'T' : 'G');                          // outside → nature
+    }
   }
 
   // ==== 9. landmark stages (programmatic, well-spaced) =======================
@@ -315,6 +403,19 @@ function build() {
     });
   });
 
+  // Continuous bridge decks across the channel — one entry per crossing, used by
+  // the 3D renderer to stand a real bridge over each. A deck cell is road with
+  // open water immediately up/down-river.
+  const bridges = [];
+  for (let ly = 0; ly < CITY; ly += 1) {
+    const y = CY0 + ly;
+    const cx = riverCxAt(y);
+    if (at(cx, y) === 'R' && at(cx - RIVER_HALF, y) === 'R' && at(cx + RIVER_HALF, y) === 'R'
+      && (at(cx, y - 1) === 'W' || at(cx, y + 1) === 'W')) {
+      bridges.push({ y, cx, half: RIVER_HALF });
+    }
+  }
+
   // ==== 11. movement networks =================================================
   const carRoads = [];
   for (const c of colsL) {
@@ -325,17 +426,25 @@ function build() {
   }
   for (const r of rowsL) {
     if (Math.abs(r - CL) <= PLAZA_R + 1) continue;
-    if (!bridgeRowsL.has(r)) continue;
     const gy = CY0 + r;
     if (hwySpan.rows.has(gy)) continue;
-    carRoads.push({ axis: 'x', cell: gy, a: CX0, b: CX0 + CITY - 1, walk: true });
+    const cx = riverCxAt(gy);
+    if (deckRows.has(gy)) {
+      // a bridge row — cars drive the full width, across the deck
+      carRoads.push({ axis: 'x', cell: gy, a: CX0, b: CX0 + CITY - 1, walk: true });
+    } else {
+      // no crossing here — traffic runs each bank up to the water's edge
+      carRoads.push({ axis: 'x', cell: gy, a: CX0, b: cx - RIVER_HALF - 1, walk: true });
+      carRoads.push({ axis: 'x', cell: gy, a: cx + RIVER_HALF + 1, b: CX0 + CITY - 1, walk: true });
+    }
   }
   for (const [gx, [a, b]] of hwySpan.cols) carRoads.push({ axis: 'z', cell: gx, a, b, walk: false });
   for (const [gy, [a, b]] of hwySpan.rows) carRoads.push({ axis: 'x', cell: gy, a, b, walk: false });
 
   const walkPaths = [
     [[CX0 + RAMBLA_OFF + 2.5, CY0 + 2], [CC - PLAZA_R + 1, CC - PLAZA_R - 5.5]],
-    [[CX0 + 163.5, CY0 + 157], [CX0 + CITY - 2.5, CY0 + CITY - 8.5]],
+    // riverfront promenade along the east bank, between the two downtowns
+    [[EAST_CC.x - EAST_CIVIC_R, CY0 + 12], [EAST_CC.x - EAST_CIVIC_R, CY0 + CITY - 12]],
     [
       [CC - PLAZA_R + 1.5, CC - PLAZA_R + 1.5], [CC + PLAZA_R - 1.5, CC - PLAZA_R + 1.5],
       [CC + PLAZA_R - 1.5, CC + PLAZA_R - 1.5], [CC - PLAZA_R + 1.5, CC + PLAZA_R - 1.5],
@@ -358,6 +467,8 @@ function build() {
     plazaC: CC,
     plazaR: PLAZA_R,
     cityCenter: { x: CC, y: CC },
+    eastCenter: { x: EAST_CC.x, y: EAST_CC.y },
+    bridges,
     carRoads,
     walkPaths,
     artLandmarks,
@@ -365,10 +476,12 @@ function build() {
     // Everything the client needs to derive unowned plots locally.
     districtGeo: {
       cc: CC,
+      cc2: { x: EAST_CC.x, y: EAST_CC.y },
       radii: RADII,
       outer: 'Outer Suburb',
       industrial: { x0: CX0 + IND_L.x0, x1: CX0 + IND_L.x1, y0: CY0 + IND_L.y0, y1: CY0 + IND_L.y1 },
       oldTown: { x0: CX0 + OLD_TOWN_L.x0, x1: CX0 + OLD_TOWN_L.x1, y0: CY0 + OLD_TOWN_L.y0, y1: CY0 + OLD_TOWN_L.y1 },
+      themed: { r0: THEMED_R0, sectors: THEMED_SECTORS },
       pricing: DISTRICTS,
       waterfrontMult: 1.3,
     },

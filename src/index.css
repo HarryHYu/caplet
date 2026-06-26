@@ -394,3 +394,14 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent);
 }
+
+/* Academy Estate — district heading flash (fade up, hold, fade out). */
+@keyframes estate-banner-in {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(0.96); }
+  12% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  82% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -6px) scale(1); }
+}
+.estate-banner {
+  animation: estate-banner-in 2.6s ease-in-out forwards;
+}

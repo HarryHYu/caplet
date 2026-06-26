@@ -23,7 +23,7 @@ export default function CityLife({ layout, originX, originZ, islandW, islandD })
           key={file}
           url={modelUrl(file)}
           norm={normFor(file)}
-          count={20}
+          count={34}
           kind="drive"
           seed={101 + i * 17}
           layout={layout}
@@ -36,7 +36,7 @@ export default function CityLife({ layout, originX, originZ, islandW, islandD })
           key={file}
           url={modelUrl(file)}
           norm={normFor(file)}
-          count={12}
+          count={20}
           kind="walk"
           seed={501 + i * 13}
           layout={layout}
@@ -49,7 +49,7 @@ export default function CityLife({ layout, originX, originZ, islandW, islandD })
           key={`path-${file}`}
           url={modelUrl(file)}
           norm={normFor(file)}
-          count={9}
+          count={16}
           seed={901 + i * 11}
           layout={layout}
           originX={originX}
