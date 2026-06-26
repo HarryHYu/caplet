@@ -979,8 +979,19 @@ export default function SlideRenderer({ slide, variant = '', alreadyAnswered = f
 
 const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
+// Strip $...$ and $$...$$ LaTeX delimiters from a string.
+// Used for chart axis labels which are rendered as SVG text nodes (no KaTeX support).
+function stripLatexDelimiters(str) {
+  if (!str) return str;
+  return str
+    .replace(/\$\$([^$]+)\$\$/g, '$1')
+    .replace(/\$([^$\n]+)\$/g, '$1');
+}
+
 function ChartSlide({ slide }) {
-  const { chartType, title, data, xLabel, yLabel, caption } = slide;
+  const { chartType, title, data, caption } = slide;
+  const xLabel = stripLatexDelimiters(slide.xLabel);
+  const yLabel = stripLatexDelimiters(slide.yLabel);
 
   const chartContent = () => {
     if (chartType === 'pie') {
@@ -1030,7 +1041,7 @@ function ChartSlide({ slide }) {
           {chartContent()}
         </ResponsiveContainer>
       </div>
-      {caption && <p className="shrink-0 text-center text-sm font-serif italic text-text-muted">{caption}</p>}
+      {caption && <p className="shrink-0 text-center text-sm font-serif italic text-text-muted"><MathText>{caption}</MathText></p>}
     </div>
   );
 }

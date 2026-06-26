@@ -111,8 +111,8 @@ caption: Optional.
 SLIDE N [chart | chartType: bar]
   chartType options: bar · line · area · pie · scatter
 title: Chart Title
-xLabel: X-axis label  (not used for pie)
-yLabel: Y-axis label  (not used for pie)
+xLabel: X-axis label  (not used for pie)  — plain text only, no LaTeX $ delimiters
+yLabel: Y-axis label  (not used for pie)  — plain text only, no LaTeX $ delimiters
   bar/line/area/scatter data — write as x→y pairs:
 data: 2020→2.1, 2021→5.8, 2022→3.2
   pie data — write as name→value pairs:
@@ -283,6 +283,7 @@ app: graphing | geometry | 3d | scientific | classic
 - Do NOT generate "media" or "hotspot" slides — these require real uploaded image URLs.
 - correctIndices must be a 0-based integer array.
 - Pie chart data uses "name"/"value"; all others use "x"/"y".
+- chart xLabel and yLabel must be plain text — NEVER wrap in $ signs (axis labels are SVG text, not HTML).
 - Desmos expression ids must be unique strings within each slide.
 - timeline year must be a plain string, never wrapped in $ signs.
 - match needs ≥2 pairs; order needs ≥2 items; timeline needs ≥2 events.
