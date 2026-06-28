@@ -14,6 +14,7 @@ const Comment = require('./Comment');
 const ChatMessage = require('./ChatMessage');
 const EditorWorkspace = require('./EditorWorkspace');
 const SavedSlide = require('./SavedSlide');
+const UserFinancialProfile = require('./UserFinancialProfile');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -200,6 +201,10 @@ ChatMessage.belongsTo(User, {
   as: 'user'
 });
 
+// Financial profile (1:1)
+User.hasOne(UserFinancialProfile, { foreignKey: 'userId', as: 'financialProfile', onDelete: 'CASCADE' });
+UserFinancialProfile.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // Sync database
 // NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
 // This sync() call is a no-op fallback (force: false prevents any schema changes).
@@ -232,5 +237,6 @@ module.exports = {
   ChatMessage,
   EditorWorkspace,
   SavedSlide,
+  UserFinancialProfile,
   syncDatabase
 };

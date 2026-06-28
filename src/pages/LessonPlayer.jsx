@@ -58,6 +58,18 @@ function parseSlides(raw) {
   return [];
 }
 
+// Mirrors the backend's content check (backend/routes/progress.js): a lesson
+// "counts" only if it has slides, body text, or a video. Course completion is
+// measured over content-bearing lessons, so the transition screen must key off
+// the same definition rather than raw lesson position.
+function hasLessonContent(l) {
+  if (!l) return false;
+  if (parseSlides(l.slides).length > 0) return true;
+  if (l.content && String(l.content).trim()) return true;
+  if (l.videoUrl && String(l.videoUrl).trim()) return true;
+  return false;
+}
+
 function isSafeToPrerender(slide) {
   const n = normalizeSlide(slide);
   if (!n) return true;
@@ -341,8 +353,14 @@ const LessonPlayer = () => {
       setCompleted(true);
       const flat = getFlatLessons(course);
       const idxNow = flat.findIndex((l) => l.id === lesson.id);
-      if (idxNow < flat.length - 1) {
+      // Go to the transition screen once no content-bearing lesson remains —
+      // this matches how course completion is measured, so a trailing
+      // content-less lesson can't strand the user short of /complete.
+      const hasLaterContent = flat.slice(idxNow + 1).some(hasLessonContent);
+      if (hasLaterContent) {
         navigate(`/courses/${course.id}/lessons/${flat[idxNow + 1].id}`);
+      } else {
+        navigate(`/courses/${course.id}/complete`);
       }
     } catch (e) {
       if (e.status === 401) {

@@ -349,6 +349,18 @@ class ApiService {
     return this.request(`/users/${userId}`);
   }
 
+  // Financial profile (personal financial snapshot)
+  async getFinancialProfile() {
+    return this.request('/financial-profile');
+  }
+
+  async updateFinancialProfile(data) {
+    return this.request('/financial-profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Progress
   async updateLessonProgress(lessonId, progressData) {
     return this.request(`/progress/lesson/${lessonId}`, {
