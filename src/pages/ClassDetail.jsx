@@ -745,10 +745,12 @@ const ClassDetail = () => {
                                   );
                                 }
                               }
+                              const safeLinkUrl = /^https?:\/\//i.test(att.url) ? att.url : null;
+                              if (!safeLinkUrl) return null;
                               return (
                                 <a
                                   key={idx}
-                                  href={att.url}
+                                  href={safeLinkUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"

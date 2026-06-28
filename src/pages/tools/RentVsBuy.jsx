@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const formatCurrency = (value) =>
-  new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+  '$' + new Intl.NumberFormat(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(value));
 
 const RentVsBuy = () => {
   const [homePrice, setHomePrice] = useState('');
@@ -12,6 +12,7 @@ const RentVsBuy = () => {
   const [monthlyRent, setMonthlyRent] = useState('');
   const [compareYears, setCompareYears] = useState('10');
   const [homeAppreciation, setHomeAppreciation] = useState('4');
+  const [transferTaxPct, setTransferTaxPct] = useState('4');
   const [result, setResult] = useState(null);
 
   const handleSubmit = (e) => {
@@ -23,6 +24,7 @@ const RentVsBuy = () => {
     const rent = parseFloat(monthlyRent) || 0;
     const n = parseFloat(compareYears) || 0;
     const appRate = parseFloat(homeAppreciation) / 100;
+    const transferTaxRate = parseFloat(transferTaxPct) / 100;
 
     if (price <= 0 || parseFloat(mortgageRate) <= 0 || rent <= 0 || n <= 0) {
       setResult({ error: 'Please fill in all required fields.' });
@@ -39,8 +41,8 @@ const RentVsBuy = () => {
     const compareMonths = n * 12;
 
     // Buying costs
-    const stampDuty = price * 0.04; // simplified estimate
-    const upfrontCosts = downPayment + stampDuty + price * 0.01; // + ~1% fees
+    const transferTax = price * transferTaxRate;
+    const upfrontCosts = downPayment + transferTax + price * 0.01; // + ~1% closing fees
     const totalMortgagePayments = monthlyMortgage * compareMonths;
     const ongoingCosts = price * 0.01 * n; // ~1% p.a. maintenance/insurance
     const totalBuyingCashOut = upfrontCosts + totalMortgagePayments + ongoingCosts;
@@ -138,6 +140,14 @@ const RentVsBuy = () => {
                       <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
                     </div>
                   </div>
+                  <div>
+                    <label className="text-sm font-semibold text-text-dim mb-4 block italic">Transfer / Stamp Duty (%)</label>
+                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                      <input type="number" min="0" max="20" step="0.1" value={transferTaxPct} onChange={(e) => setTransferTaxPct(e.target.value)} placeholder="4"
+                        className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div>
@@ -206,7 +216,7 @@ const RentVsBuy = () => {
                     </div>
                   </div>
                   <p className="text-xs font-serif italic text-text-dim leading-relaxed pt-4 border-t border-line-soft">
-                    Includes stamp duty estimate (~4%) and maintenance (~1% p.a.). Results are indicative only.
+                    Includes your transfer/stamp duty rate and ~1% p.a. maintenance estimate. Results are indicative only.
                   </p>
                 </div>
               )

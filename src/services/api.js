@@ -81,6 +81,9 @@ class ApiService {
         const errorMsg = data.message || data.errors?.[0]?.msg || data.errors?.[0]?.message || `Error ${response.status}: ${response.statusText}`;
         const error = new Error(errorMsg);
         error.status = response.status;
+        if (response.status === 401) {
+          this.clearToken();
+        }
         throw error;
       }
 

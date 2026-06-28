@@ -377,8 +377,9 @@ const LessonPlayer = () => {
           }, 2000);
         }
       }
-    } catch (e) {
-      console.warn('Toggle save slide failed:', e?.message || e);
+    } catch {
+      setSaveError('Could not save slide. Please try again.');
+      setTimeout(() => setSaveError(null), 6000);
     } finally {
       setSavingSlide(false);
     }

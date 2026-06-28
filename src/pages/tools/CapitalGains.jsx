@@ -2,21 +2,27 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const formatCurrency = (value) =>
-  new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+  '$' + new Intl.NumberFormat(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(value));
 
-const TAX_BRACKETS = [
-  { min: 0, max: 18200, rate: 0, label: 'Tax-free threshold' },
-  { min: 18201, max: 45000, rate: 0.19, label: '19%' },
-  { min: 45001, max: 120000, rate: 0.325, label: '32.5%' },
-  { min: 120001, max: 180000, rate: 0.37, label: '37%' },
-  { min: 180001, max: Infinity, rate: 0.45, label: '45%' },
+// Returns the total Australian income tax on `income` using bracket-stacking.
+// The thresholds use continuous ranges (0→18200, 18200→45000…) so there are
+// no gaps between brackets.
+const TAX_THRESHOLDS = [
+  { from: 0,      to: 18200,    rate: 0 },
+  { from: 18200,  to: 45000,    rate: 0.19 },
+  { from: 45000,  to: 120000,   rate: 0.325 },
+  { from: 120000, to: 180000,   rate: 0.37 },
+  { from: 180000, to: Infinity, rate: 0.45 },
 ];
 
-const getMarginalRate = (income) => {
-  for (const b of TAX_BRACKETS) {
-    if (income <= b.max) return b.rate;
+const calculateTax = (income) => {
+  if (income <= 0) return 0;
+  let tax = 0;
+  for (const { from, to, rate } of TAX_THRESHOLDS) {
+    if (income <= from) break;
+    tax += (Math.min(income, to) - from) * rate;
   }
-  return 0.45;
+  return tax;
 };
 
 const CapitalGains = () => {
@@ -53,8 +59,9 @@ const CapitalGains = () => {
 
     const discountedGain = heldOver12m ? grossGain * 0.5 : grossGain;
     const taxableIncome = OI + discountedGain;
-    const marginalRate = getMarginalRate(taxableIncome);
-    const taxOnGain = discountedGain * marginalRate;
+    const marginalRate = TAX_THRESHOLDS.find((b) => taxableIncome <= b.to)?.rate ?? 0.45;
+    // Bracket-differential: tax attributable to the gain only
+    const taxOnGain = calculateTax(OI + discountedGain) - calculateTax(OI);
     const effectiveRate = (taxOnGain / grossGain) * 100;
 
     setResult({

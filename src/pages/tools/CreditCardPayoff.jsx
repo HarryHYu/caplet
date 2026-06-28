@@ -34,14 +34,16 @@ const CreditCardPayoff = () => {
     // Minimum payment comparison (typically 2% of balance or $25, whichever is greater)
     const minPayment = Math.max(25, B * 0.02);
     let minMonths = 0;
+    let minTotalPaid = 0;
     let runningBalance = B;
     while (runningBalance > 0 && minMonths < 1200) {
-      const mp = Math.max(25, runningBalance * 0.02);
+      const mp = Math.min(Math.max(25, runningBalance * 0.02), runningBalance * (1 + r));
       const interest = runningBalance * r;
       runningBalance = runningBalance + interest - mp;
+      minTotalPaid += mp;
       minMonths++;
     }
-    const minTotalInterest = (Math.max(25, B * 0.02) * minMonths) - B;
+    const minTotalInterest = minTotalPaid - B;
     const interestSaved = Math.max(0, minTotalInterest - totalInterest);
     const monthsSaved = Math.max(0, minMonths - months);
 
