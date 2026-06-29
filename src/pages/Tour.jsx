@@ -117,21 +117,97 @@ function ClickRipple({ x, y }) {
   );
 }
 
-/* ─────────────────────────── Caption ───────────────────────────────────── */
-function Caption({ title, body, visible }) {
+/* ─────────────────────────── AvatarGuide ───────────────────────────────── */
+function AvatarGuide({ title, body, visible, talking }) {
   return (
     <div style={{
-      position: 'fixed', bottom: 32, left: '50%',
-      transform: `translateX(-50%) translateY(${visible ? 0 : 14}px)`,
+      position: 'fixed', bottom: 20, left: 20,
+      display: 'flex', alignItems: 'flex-end', gap: 10,
+      zIndex: 9900, pointerEvents: 'none',
       opacity: visible ? 1 : 0,
-      transition: 'opacity 0.35s ease, transform 0.35s ease',
-      zIndex: 400, pointerEvents: 'none',
-      maxWidth: 540, width: 'calc(100vw - 180px)',
+      transform: `translateY(${visible ? 0 : 16}px)`,
+      transition: 'opacity 0.38s ease, transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
     }}>
-      <div style={{ background: 'rgba(6,6,10,0.85)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 18, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
-        <p style={{ margin: '0 0 4px', fontSize: 10, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.38)' }}>Caplet Demo</p>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'white', lineHeight: 1.2 }}>{title}</h3>
-        {body && <p style={{ margin: '5px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.63)', lineHeight: 1.56 }}>{body}</p>}
+      {/* ── Avatar ── */}
+      <div style={{
+        width: 68, height: 68, flexShrink: 0,
+        animation: 'avBob 2.6s ease-in-out infinite',
+        filter: 'drop-shadow(0 6px 18px rgba(99,102,241,0.55))',
+      }}>
+        <svg viewBox="0 0 68 68" width="68" height="68" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="avGrad" cx="38%" cy="30%" r="64%">
+              <stop offset="0%" stopColor="#818cf8"/>
+              <stop offset="100%" stopColor="#4338ca"/>
+            </radialGradient>
+          </defs>
+          {/* Head */}
+          <circle cx="34" cy="37" r="29" fill="url(#avGrad)"/>
+          {/* Shine */}
+          <ellipse cx="23" cy="24" rx="7" ry="4.5" fill="white" opacity="0.18" transform="rotate(-15 23 24)"/>
+          {/* Hair */}
+          <ellipse cx="34" cy="10" rx="14" ry="8" fill="#3730a3"/>
+          <ellipse cx="20" cy="14" rx="5.5" ry="6" fill="#3730a3"/>
+          <ellipse cx="48" cy="14" rx="5.5" ry="6" fill="#3730a3"/>
+          <ellipse cx="34" cy="7" rx="6" ry="4" fill="#6366f1"/>
+          {/* Left eye */}
+          <ellipse cx="24" cy="33" rx="4.5" ry="5" fill="white"
+            style={{ transformOrigin:'24px 33px', animation:'avBlink 4.3s 0.2s ease-in-out infinite' }}/>
+          <circle cx="25.2" cy="33" r="2.3" fill="#1e1b4b"/>
+          <circle cx="26.2" cy="31.8" r="0.9" fill="white"/>
+          {/* Right eye */}
+          <ellipse cx="44" cy="33" rx="4.5" ry="5" fill="white"
+            style={{ transformOrigin:'44px 33px', animation:'avBlink 4.3s 2.1s ease-in-out infinite' }}/>
+          <circle cx="45.2" cy="33" r="2.3" fill="#1e1b4b"/>
+          <circle cx="46.2" cy="31.8" r="0.9" fill="white"/>
+          {/* Cheeks */}
+          <ellipse cx="13" cy="41" rx="5.5" ry="3" fill="#c7d2fe" opacity="0.45"/>
+          <ellipse cx="55" cy="41" rx="5.5" ry="3" fill="#c7d2fe" opacity="0.45"/>
+          {/* Smile (idle) */}
+          <path d="M24 45 Q34 53 44 45" stroke="white" strokeWidth="2.4" fill="none" strokeLinecap="round"
+            style={{ opacity: talking ? 0 : 1, transition:'opacity 0.08s' }}/>
+          {/* Talking mouth */}
+          <ellipse cx="34" cy="46" rx="7" ry="3.5" fill="#312e81"
+            style={{
+              opacity: talking ? 1 : 0, transition:'opacity 0.08s',
+              transformOrigin:'34px 46px',
+              animation: talking ? 'avTalk 0.2s ease-in-out infinite alternate' : 'none',
+            }}/>
+          {/* Teeth */}
+          <rect x="29.5" y="44" width="9" height="2.2" rx="1" fill="white"
+            style={{ opacity: talking ? 0.75 : 0, transition:'opacity 0.08s' }}/>
+        </svg>
+      </div>
+
+      {/* ── Speech bubble ── */}
+      <div style={{
+        position: 'relative',
+        background: 'rgba(6,6,14,0.93)',
+        backdropFilter: 'blur(22px)', WebkitBackdropFilter:'blur(22px)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        borderRadius: 20, padding: '12px 18px 14px',
+        maxWidth: 460, width:'calc(100vw - 196px)',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(99,102,241,0.12)',
+      }}>
+        {/* Tail */}
+        <div style={{
+          position:'absolute', left:-7, bottom:24,
+          width:0, height:0,
+          borderTop:'7px solid transparent',
+          borderBottom:'7px solid transparent',
+          borderRight:'7px solid rgba(6,6,14,0.93)',
+        }}/>
+        {/* Label */}
+        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:5 }}>
+          <span style={{ width:5, height:5, borderRadius:'50%', background:'#6366f1', display:'inline-block', flexShrink:0, boxShadow:'0 0 6px rgba(99,102,241,0.8)' }}/>
+          <span style={{ fontSize:10, fontFamily:'monospace', fontWeight:700, letterSpacing:'0.13em', textTransform:'uppercase', color:'rgba(165,180,252,0.75)' }}>
+            {title}
+          </span>
+        </div>
+        {/* Body text */}
+        <p style={{ margin:0, fontSize:13.5, color:'rgba(255,255,255,0.88)', lineHeight:1.6 }}>
+          {body}
+        </p>
       </div>
     </div>
   );
@@ -1161,6 +1237,7 @@ export default function Tour() {
   const [rippleKey, setRippleKey]    = useState(0);
   const [showRipple, setShowRipple]  = useState(false);
   const [captionVis, setCaptionVis]  = useState(false);
+  const [avatarTalking, setAvatarTalking] = useState(false);
 
 
   const scene       = SCENES[sceneIndex];
@@ -1176,6 +1253,9 @@ export default function Tour() {
     s.textContent = `
       @keyframes simRipple    { from{transform:translate(-50%,-50%) scale(0.2);opacity:1} to{transform:translate(-50%,-50%) scale(3.2);opacity:0} }
       @keyframes simRippleBig { from{transform:translate(-50%,-50%) scale(0.1);opacity:.6} to{transform:translate(-50%,-50%) scale(3.8);opacity:0} }
+      @keyframes avBob  { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-7px)} }
+      @keyframes avBlink{ 0%,85%,100%{transform:scaleY(1)} 92%{transform:scaleY(0.06)} }
+      @keyframes avTalk { 0%{transform:scaleY(0.22)} 100%{transform:scaleY(1)} }
     `;
     document.head.appendChild(s);
     return () => document.getElementById(ID)?.remove();
@@ -1209,6 +1289,7 @@ export default function Tour() {
     const cleanup = () => { dead = true; timers.forEach(clearTimeout); };
 
     setCaptionVis(false);
+    setAvatarTalking(false);
     setIsClicking(false);
     setCursorVisible(true);
 
@@ -1216,9 +1297,18 @@ export default function Tour() {
     setViewOpacity(0);
     delay(() => setViewOpacity(1), FADE_VIEW);
 
+    // Show caption AND start talking animation, then stop talking after 2.8s
+    const showCaption = (afterMs) => {
+      delay(() => {
+        setCaptionVis(true);
+        setAvatarTalking(true);
+        delay(() => setAvatarTalking(false), 2800);
+      }, afterMs);
+    };
+
     if (!sc.cursor) {
       setCursorPos({ x: window.innerWidth * 0.52, y: window.innerHeight * 0.44 });
-      delay(() => setCaptionVis(true), FADE_VIEW + CURSOR_MOVE + 80);
+      showCaption(FADE_VIEW + CURSOR_MOVE + 80);
       return cleanup;
     }
 
@@ -1238,16 +1328,16 @@ export default function Tour() {
                 setRippleKey(k => k + 1);
                 setShowRipple(true);
                 delay(() => setShowRipple(false), 700);
-                delay(() => setCaptionVis(true), POST_CLICK + 60);
+                showCaption(POST_CLICK + 60);
               }, CLICK_DOWN);
             }, CURSOR_MOVE + HOVER_PAUSE);
           } else {
-            delay(() => setCaptionVis(true), CURSOR_MOVE + 240);
+            showCaption(CURSOR_MOVE + 240);
           }
         } else if (attempts++ < 30) {
           setTimeout(findAndGo, 80);
         } else {
-          delay(() => setCaptionVis(true), 200);
+          showCaption(200);
         }
       };
       findAndGo();
@@ -1345,8 +1435,8 @@ export default function Tour() {
         {sceneIndex + 1} / {SCENES.length}
       </div>
 
-      {/* Caption */}
-      <Caption title={scene.caption.title} body={scene.caption.body} visible={captionVis} />
+      {/* Avatar guide */}
+      <AvatarGuide title={scene.caption.title} body={scene.caption.body} visible={captionVis} talking={avatarTalking} />
 
       {/* Virtual cursor */}
       <VirtualCursor x={cursorPos.x} y={cursorPos.y} visible={cursorVisible} clicking={isClicking} />
