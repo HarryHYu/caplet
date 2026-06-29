@@ -4,16 +4,16 @@
  * App.jsx renders /demo without the global Navbar / Footer.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 
 /* ─────────────────────────── Timing ────────────────────────────────────── */
-const CURSOR_MOVE = 680;
-const HOVER_PAUSE = 360;
-const CLICK_DOWN  = 110;
-const POST_CLICK  = 280;
-const FADE_VIEW   = 200;
+const CURSOR_MOVE   = 600;  // ms virtual cursor travel time
+const HOVER_PAUSE   = 260;  // ms pause before click
+const CLICK_DOWN    = 110;  // ms press-down duration
+const POST_CLICK    = 220;  // ms after click before caption shows
+const COVER_DELAY   = 460;  // ms: fade-in cover → swap content → fade-out cover
 const TIP_OX = 3, TIP_OY = 2;
 
 /* ─────────────────────────── Scenes ────────────────────────────────────── */
@@ -135,11 +135,12 @@ function ClickRipple({ x, y }) {
 }
 
 /* ─────────────────────────── AvatarGuide ───────────────────────────────── */
-// avatarLeft: CSS left value string, e.g. '50%', '13%', '84%'
-// ≤32% → pill on left edge, bubble extends RIGHT with left-pointing tail
-// ≥68% → pill on right edge, bubble extends LEFT with right-pointing tail
-// otherwise → bubble floats ABOVE pill with downward tail
-function AvatarGuide({ title, body, visible, talking, avatarLeft = '50%' }) {
+// avatarLeft: CSS left value — drives both pill anchor and bubble direction
+// ≤32%  → pill on left,  bubble extends RIGHT  (left-pointing tail)
+// ≥68%  → pill on right, bubble extends LEFT   (right-pointing tail)
+// 33-67% → bubble floats ABOVE pill            (downward tail)
+// avatarScale: drives the outer scale transform (1.0 normal, >1 during transition)
+function AvatarGuide({ title, body, visible, talking, avatarLeft = '50%', avatarScale = 1.0 }) {
   const leftNum = parseFloat(avatarLeft) || 50;
   const onLeft  = leftNum <= 32;
   const onRight = leftNum >= 68;
@@ -148,62 +149,56 @@ function AvatarGuide({ title, body, visible, talking, avatarLeft = '50%' }) {
   /* ── bubble geometry ── */
   let bubblePos, bubbleTail;
   if (onLeft) {
-    // Bubble to the right of the pill, tail points left
     bubblePos = {
-      position: 'fixed',
-      bottom: 28,
-      left: `calc(${avatarLeft} + 58px)`,
-      transform: `translateY(${visible ? 0 : 10}px)`,
+      position: 'fixed', bottom: 34,
+      left: `calc(${avatarLeft} + 62px)`,
+      transform: `translateY(${visible ? 0 : 12}px)`,
       opacity: visible ? 1 : 0,
-      maxWidth: 460, width: 'calc(100vw - 230px)',
-      transition: 'opacity 0.35s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+      maxWidth: 480, width: 'calc(100vw - 210px)',
+      transition: 'opacity 0.35s ease, transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
       zIndex: 9900, pointerEvents: 'none',
     };
     bubbleTail = {
-      position: 'absolute', left: -12, bottom: 28,
+      position: 'absolute', left: -13, bottom: 32,
       width: 0, height: 0,
-      borderTop: '10px solid transparent',
-      borderBottom: '10px solid transparent',
-      borderRight: `12px solid ${BG}`,
+      borderTop: '11px solid transparent',
+      borderBottom: '11px solid transparent',
+      borderRight: `13px solid ${BG}`,
     };
   } else if (onRight) {
-    // Bubble to the left of the pill, tail points right
     bubblePos = {
-      position: 'fixed',
-      bottom: 28,
-      right: `calc(${100 - leftNum}% + 58px)`,
-      transform: `translateY(${visible ? 0 : 10}px)`,
+      position: 'fixed', bottom: 34,
+      right: `calc(${100 - leftNum}% + 62px)`,
+      transform: `translateY(${visible ? 0 : 12}px)`,
       opacity: visible ? 1 : 0,
-      maxWidth: 460, width: 'calc(100vw - 230px)',
-      transition: 'opacity 0.35s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+      maxWidth: 480, width: 'calc(100vw - 210px)',
+      transition: 'opacity 0.35s ease, transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
       zIndex: 9900, pointerEvents: 'none',
     };
     bubbleTail = {
-      position: 'absolute', right: -12, bottom: 28,
+      position: 'absolute', right: -13, bottom: 32,
       width: 0, height: 0,
-      borderTop: '10px solid transparent',
-      borderBottom: '10px solid transparent',
-      borderLeft: `12px solid ${BG}`,
+      borderTop: '11px solid transparent',
+      borderBottom: '11px solid transparent',
+      borderLeft: `13px solid ${BG}`,
     };
   } else {
-    // Bubble above the pill, tail points down
     bubblePos = {
-      position: 'fixed',
-      bottom: 174,
+      position: 'fixed', bottom: 178,
       left: '50%',
-      transform: `translateX(-50%) translateY(${visible ? 0 : 18}px)`,
+      transform: `translateX(-50%) translateY(${visible ? 0 : 20}px)`,
       opacity: visible ? 1 : 0,
-      maxWidth: 520, width: 'calc(100vw - 180px)',
-      transition: 'opacity 0.38s ease, transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
+      maxWidth: 540, width: 'calc(100vw - 160px)',
+      transition: 'opacity 0.38s ease, transform 0.44s cubic-bezier(0.34,1.56,0.64,1)',
       zIndex: 9900, pointerEvents: 'none',
     };
     bubbleTail = {
-      position: 'absolute', bottom: -13, left: '50%',
+      position: 'absolute', bottom: -14, left: '50%',
       transform: 'translateX(-50%)',
       width: 0, height: 0,
-      borderLeft: '11px solid transparent',
-      borderRight: '11px solid transparent',
-      borderTop: `13px solid ${BG}`,
+      borderLeft: '12px solid transparent',
+      borderRight: '12px solid transparent',
+      borderTop: `14px solid ${BG}`,
     };
   }
 
@@ -213,34 +208,39 @@ function AvatarGuide({ title, body, visible, talking, avatarLeft = '50%' }) {
       <div style={bubblePos}>
         <div style={{
           background: BG,
-          backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-          border: '1px solid rgba(255,255,255,0.10)',
-          borderRadius: 20, padding: '14px 22px 16px',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255,255,255,0.11)',
+          borderRadius: 22, padding: '16px 24px 18px',
+          boxShadow: '0 10px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07)',
           position: 'relative',
         }}>
           <div style={bubbleTail}/>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#6366f1', display: 'inline-block', flexShrink: 0, boxShadow: '0 0 6px rgba(99,102,241,0.9)' }}/>
-            <span style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: 'rgba(165,180,252,0.78)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', display: 'inline-block', flexShrink: 0, boxShadow: '0 0 8px rgba(99,102,241,1)' }}/>
+            <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: 'rgba(165,180,252,0.82)' }}>
               {title}
             </span>
           </div>
-          <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.90)', lineHeight: 1.65 }}>
+          <p style={{ margin: 0, fontSize: 16, color: 'rgba(255,255,255,0.93)', lineHeight: 1.68, fontWeight: 400 }}>
             {body}
           </p>
         </div>
       </div>
 
-      {/* ── Pill avatar — always visible, slides horizontally per scene ── */}
+      {/* ── Pill avatar ─────────────────────────────────────────────────────
+          Outer div: position anchor + scale (CSS transition on both)
+          Inner div: avBob animation (translateY only — no translateX here)
+      ──────────────────────────────────────────────────────────────────── */}
       <div style={{
         position: 'fixed',
         bottom: 14, left: avatarLeft,
-        transition: 'left 1.0s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        transform: `translateX(-50%) scale(${avatarScale})`,
+        transformOrigin: 'bottom center',
+        transition: 'left 0.82s cubic-bezier(0.34,1.56,0.64,1), transform 0.52s cubic-bezier(0.34,1.56,0.64,1)',
         zIndex: 9901, pointerEvents: 'none',
-        animation: 'avBob 2.8s ease-in-out infinite',
-        filter: 'drop-shadow(0 10px 32px rgba(99,102,241,0.7)) drop-shadow(0 2px 8px rgba(0,0,0,0.4))',
+        filter: 'drop-shadow(0 12px 36px rgba(99,102,241,0.72)) drop-shadow(0 2px 10px rgba(0,0,0,0.45))',
       }}>
+        <div style={{ animation: 'avBob 2.8s ease-in-out infinite' }}>
         {/*
           viewBox "-18 -4 116 158":
             x: -18 → 98  (room for arms sticking out 18px each side of 80px body)
@@ -309,7 +309,8 @@ function AvatarGuide({ title, body, visible, talking, avatarLeft = '50%' }) {
           <rect x="32" y="83.5" width="16" height="3.5" rx="1.8" fill="white"
             style={{ opacity: talking ? 0.72 : 0, transition: 'opacity 0.1s' }}/>
         </svg>
-      </div>
+        </div>{/* /avBob inner */}
+      </div>{/* /outer scale+position */}
     </>
   );
 }
@@ -1334,7 +1335,9 @@ function SimFuture() {
 export default function Tour() {
   const navigate = useNavigate();
   const [sceneIndex, setSceneIndex] = useState(0);
-  const [viewOpacity, setViewOpacity] = useState(1);
+  const [coverOpacity, setCoverOpacity] = useState(0);   // dark cover for scene transitions
+  const [displayedLeft, setDisplayedLeft] = useState(SCENES[0].avatarLeft); // avatar horizontal anchor
+  const [avatarScale, setAvatarScale]     = useState(1.0);                  // avatar zoom during transition
   const [cursorPos, setCursorPos] = useState({
     x: typeof window !== 'undefined' ? window.innerWidth  * 0.88 : 800,
     y: typeof window !== 'undefined' ? window.innerHeight * 0.04 : 30,
@@ -1345,7 +1348,7 @@ export default function Tour() {
   const [showRipple, setShowRipple]  = useState(false);
   const [captionVis, setCaptionVis]  = useState(false);
   const [avatarTalking, setAvatarTalking] = useState(false);
-
+  const isFirstMount = useRef(true);
 
   const scene       = SCENES[sceneIndex];
   const currentView = scene.view;
@@ -1360,7 +1363,7 @@ export default function Tour() {
     s.textContent = `
       @keyframes simRipple    { from{transform:translate(-50%,-50%) scale(0.2);opacity:1} to{transform:translate(-50%,-50%) scale(3.2);opacity:0} }
       @keyframes simRippleBig { from{transform:translate(-50%,-50%) scale(0.1);opacity:.6} to{transform:translate(-50%,-50%) scale(3.8);opacity:0} }
-      @keyframes avBob  { 0%,100%{transform:translateX(-50%) translateY(0px)} 50%{transform:translateX(-50%) translateY(-10px)} }
+      @keyframes avBob  { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-11px)} }
       @keyframes avBlink{ 0%,85%,100%{transform:scaleY(1)} 92%{transform:scaleY(0.06)} }
       @keyframes avTalk { 0%{transform:scaleY(0.18)} 100%{transform:scaleY(1)} }
     `;
@@ -1395,16 +1398,11 @@ export default function Tour() {
     const delay = (fn, ms) => { const id = setTimeout(() => { if (!dead) fn(); }, ms); timers.push(id); };
     const cleanup = () => { dead = true; timers.forEach(clearTimeout); };
 
+    const sc = SCENES[sceneIndex];
     setCaptionVis(false);
     setAvatarTalking(false);
     setIsClicking(false);
-    setCursorVisible(true);
 
-    const sc = SCENES[sceneIndex];
-    setViewOpacity(0);
-    delay(() => setViewOpacity(1), FADE_VIEW);
-
-    // Show caption AND start talking animation, then stop talking after 2.8s
     const showCaption = (afterMs) => {
       delay(() => {
         setCaptionVis(true);
@@ -1413,14 +1411,13 @@ export default function Tour() {
       }, afterMs);
     };
 
-    if (!sc.cursor) {
-      setCursorPos({ x: window.innerWidth * 0.52, y: window.innerHeight * 0.44 });
-      showCaption(FADE_VIEW + CURSOR_MOVE + 80);
-      return cleanup;
-    }
-
-    delay(() => {
-      if (dead) return;
+    const launchCursor = () => {
+      setCursorVisible(true);
+      if (!sc.cursor) {
+        setCursorPos({ x: window.innerWidth * 0.52, y: window.innerHeight * 0.44 });
+        showCaption(660);
+        return;
+      }
       let attempts = 0;
       const findAndGo = () => {
         if (dead) return;
@@ -1448,7 +1445,35 @@ export default function Tour() {
         }
       };
       findAndGo();
-    }, FADE_VIEW + 100);
+    };
+
+    if (isFirstMount.current) {
+      // First scene: no cover transition, just fade in and start
+      isFirstMount.current = false;
+      setDisplayedLeft(sc.avatarLeft);
+      setAvatarScale(1.0);
+      setCoverOpacity(0);
+      delay(launchCursor, 300);
+      return cleanup;
+    }
+
+    // ── Transition sequence ──────────────────────────────────────────────
+    // Phase 1 (t=0): hide caption, cover fades IN, avatar glides to centre
+    //                and grows — avatar is always visible above the cover
+    setCursorVisible(false);
+    setCoverOpacity(1);
+    setDisplayedLeft('50%');
+    setAvatarScale(1.36);
+
+    // Phase 2 (t=COVER_DELAY): content has changed (sceneIndex already updated),
+    //   cover fades OUT, avatar glides to new position and shrinks back
+    delay(() => {
+      setCoverOpacity(0);
+      setDisplayedLeft(sc.avatarLeft);
+      setAvatarScale(1.0);
+      // Cursor / caption start after avatar arrives (left transition is 0.8s)
+      delay(launchCursor, 820);
+    }, COVER_DELAY);
 
     return cleanup;
   }, [sceneIndex]);
@@ -1459,10 +1484,9 @@ export default function Tour() {
       {/* SimNavbar */}
       {hasSimNav && <SimNavbar active={scene.nav} />}
 
-      {/* Page canvas */}
+      {/* Page canvas — no opacity here; cover overlay handles transitions */}
       <div style={{
         position: 'absolute', top: hasSimNav ? 60 : 0, left: 0, right: 0, bottom: 0,
-        opacity: viewOpacity, transition: `opacity ${FADE_VIEW}ms ease`,
       }}>
         {currentView === 'home'          && <SimHome />}
         {currentView === 'courses'       && <SimCourses />}
@@ -1477,6 +1501,15 @@ export default function Tour() {
         {currentView === 'editor-ai'     && <SimEditorAI />}
         {currentView === 'future'        && <SimFuture />}
       </div>
+
+      {/* ── Scene-transition cover — fades in over old content, out over new ── */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 9800,
+        background: 'var(--surface-base)',
+        opacity: coverOpacity,
+        transition: 'opacity 420ms cubic-bezier(0.4,0,0.2,1)',
+        pointerEvents: coverOpacity > 0.05 ? 'auto' : 'none',
+      }}/>
 
       {/* ── Fixed overlays ── */}
       <ProgressBar current={sceneIndex} total={SCENES.length} />
@@ -1543,7 +1576,11 @@ export default function Tour() {
       </div>
 
       {/* Avatar guide */}
-      <AvatarGuide title={scene.caption.title} body={scene.caption.body} visible={captionVis} talking={avatarTalking} avatarLeft={scene.avatarLeft} />
+      <AvatarGuide
+        title={scene.caption.title} body={scene.caption.body}
+        visible={captionVis} talking={avatarTalking}
+        avatarLeft={displayedLeft} avatarScale={avatarScale}
+      />
 
       {/* Virtual cursor */}
       <VirtualCursor x={cursorPos.x} y={cursorPos.y} visible={cursorVisible} clicking={isClicking} />
