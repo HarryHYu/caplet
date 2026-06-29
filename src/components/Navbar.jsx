@@ -174,7 +174,7 @@ const Navbar = () => {
                       Settings
                     </Link>
                     <Link
-                      to="/tour"
+                      to="/demo"
                       onClick={() => setShowUserMenu(false)}
                       className="flex items-center gap-2.5 px-3 py-2 text-sm text-text-primary hover:bg-surface-soft transition-colors"
                     >

@@ -1,7 +1,7 @@
 /**
- * /tour — standalone demo page. Sim components copy the exact HTML/CSS from
+ * /demo — standalone demo page. Sim components copy the exact HTML/CSS from
  * real Caplet pages. Data is fake / hardcoded for demo purposes.
- * App.jsx renders /tour without the global Navbar / Footer.
+ * App.jsx renders /demo without the global Navbar / Footer.
  */
 
 import { useState, useEffect, useCallback } from 'react';

@@ -112,10 +112,10 @@ function AppShell() {
   const { pathname } = useLocation();
 
   // Tour gets a completely standalone layout — no Navbar/Footer/flex wrapper
-  if (pathname === '/tour') {
+  if (pathname === '/demo') {
     return (
       <Routes>
-        <Route path="/tour" element={<Tour />} />
+        <Route path="/demo" element={<Tour />} />
       </Routes>
     );
   }
