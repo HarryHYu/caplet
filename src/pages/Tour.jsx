@@ -1349,6 +1349,13 @@ export default function Tour() {
   const [captionVis, setCaptionVis]  = useState(false);
   const [avatarTalking, setAvatarTalking] = useState(false);
   const isFirstMount = useRef(true);
+  const [navHintVisible, setNavHintVisible] = useState(true);
+
+  // Dismiss nav hint after 3.2 s
+  useEffect(() => {
+    const t = setTimeout(() => setNavHintVisible(false), 3200);
+    return () => clearTimeout(t);
+  }, []);
 
   const scene       = SCENES[sceneIndex];
   const currentView = scene.view;
@@ -1363,17 +1370,23 @@ export default function Tour() {
     s.textContent = `
       @keyframes simRipple    { from{transform:translate(-50%,-50%) scale(0.2);opacity:1} to{transform:translate(-50%,-50%) scale(3.2);opacity:0} }
       @keyframes simRippleBig { from{transform:translate(-50%,-50%) scale(0.1);opacity:.6} to{transform:translate(-50%,-50%) scale(3.8);opacity:0} }
-      @keyframes avBob  { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-11px)} }
-      @keyframes avBlink{ 0%,85%,100%{transform:scaleY(1)} 92%{transform:scaleY(0.06)} }
-      @keyframes avTalk { 0%{transform:scaleY(0.18)} 100%{transform:scaleY(1)} }
+      @keyframes avBob      { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-11px)} }
+      @keyframes avBlink    { 0%,85%,100%{transform:scaleY(1)} 92%{transform:scaleY(0.06)} }
+      @keyframes avTalk     { 0%{transform:scaleY(0.18)} 100%{transform:scaleY(1)} }
+      @keyframes hintBounceL{ 0%,100%{transform:translateX(0)}  50%{transform:translateX(-7px)} }
+      @keyframes hintBounceR{ 0%,100%{transform:translateX(0)}  50%{transform:translateX(7px)} }
     `;
     document.head.appendChild(s);
     return () => document.getElementById(ID)?.remove();
   }, []);
 
   /* ── Navigation ── */
-  const prevScene = useCallback(() => setSceneIndex(i => Math.max(0, i - 1)), []);
+  const prevScene = useCallback(() => {
+    setNavHintVisible(false);
+    setSceneIndex(i => Math.max(0, i - 1));
+  }, []);
   const nextScene = useCallback(() => {
+    setNavHintVisible(false);
     setSceneIndex(i => {
       if (i < SCENES.length - 1) return i + 1;
       navigate('/');
@@ -1514,35 +1527,54 @@ export default function Tour() {
       {/* ── Fixed overlays ── */}
       <ProgressBar current={sceneIndex} total={SCENES.length} />
 
-      {/* Left gradient strip — permanent grey */}
+      {/* Left gradient strip */}
       <div
         onClick={prevScene}
         style={{
           position: 'fixed', left: 0, top: 0, bottom: 0, width: 200,
           zIndex: 200,
-          cursor: sceneIndex > 0 ? 'pointer' : 'default',
+          cursor: sceneIndex > 0 ? 'pointer' : navHintVisible ? 'default' : 'default',
           display: 'flex', alignItems: 'center', paddingLeft: 20,
-          background: sceneIndex > 0
+          background: (sceneIndex > 0 || navHintVisible)
             ? 'linear-gradient(to right, rgba(100,100,100,0.26) 0%, rgba(100,100,100,0.08) 58%, transparent 100%)'
             : 'transparent',
           pointerEvents: sceneIndex > 0 ? 'auto' : 'none',
           transition: 'background 0.3s ease',
         }}
       >
+        {/* Persistent small chevron (shown once hint fades) */}
         <svg
           width="22" height="22" viewBox="0 0 24 24" fill="none"
           strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           style={{
             stroke: 'var(--text-muted)',
             filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))',
-            opacity: sceneIndex > 0 ? 0.7 : 0,
+            opacity: sceneIndex > 0 && !navHintVisible ? 0.7 : 0,
             flexShrink: 0,
-            transition: 'opacity 0.3s ease',
+            transition: 'opacity 0.4s ease',
           }}
         ><polyline points="15 18 9 12 15 6" /></svg>
+
+        {/* Nav hint — bouncing arrow + label, fades after 3 s */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
+          opacity: navHintVisible ? 1 : 0,
+          transition: 'opacity 0.9s ease',
+          pointerEvents: 'none',
+        }}>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
+            strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"
+            style={{ stroke: 'rgba(180,180,200,0.9)', animation: 'hintBounceL 1.0s ease-in-out infinite' }}
+          ><polyline points="15 18 9 12 15 6" /></svg>
+          <span style={{
+            fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.12em',
+            textTransform: 'uppercase', color: 'rgba(180,180,200,0.7)',
+          }}>Back</span>
+        </div>
       </div>
 
-      {/* Right gradient strip — permanent grey */}
+      {/* Right gradient strip */}
       <div
         onClick={nextScene}
         style={{
@@ -1553,16 +1585,36 @@ export default function Tour() {
           background: 'linear-gradient(to left, rgba(100,100,100,0.26) 0%, rgba(100,100,100,0.08) 58%, transparent 100%)',
         }}
       >
+        {/* Persistent small chevron */}
         <svg
           width="22" height="22" viewBox="0 0 24 24" fill="none"
           strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           style={{
             stroke: 'var(--text-muted)',
             filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.2))',
-            opacity: 0.7,
+            opacity: navHintVisible ? 0 : 0.7,
             flexShrink: 0,
+            transition: 'opacity 0.4s ease',
           }}
         ><polyline points="9 18 15 12 9 6" /></svg>
+
+        {/* Nav hint */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
+          opacity: navHintVisible ? 1 : 0,
+          transition: 'opacity 0.9s ease',
+          pointerEvents: 'none',
+        }}>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
+            strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"
+            style={{ stroke: 'rgba(180,180,200,0.9)', animation: 'hintBounceR 1.0s ease-in-out infinite' }}
+          ><polyline points="9 18 15 12 9 6" /></svg>
+          <span style={{
+            fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.12em',
+            textTransform: 'uppercase', color: 'rgba(180,180,200,0.7)',
+          }}>Next</span>
+        </div>
       </div>
 
       {/* Close button */}
