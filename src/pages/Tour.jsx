@@ -20,59 +20,59 @@ const TIP_OX = 3, TIP_OY = 2;
 const SCENES = [
   {
     id: 'welcome', view: 'home', nav: null, cursor: null, clickAnim: false,
-    caption: { title: 'Welcome to Caplet', body: "Hey — I'm Harry. I built Caplet to make financial literacy actually stick for students. Let me show you what's here." },
+    caption: { title: 'Meet Caplet', body: "Caplet is being built to be the everything platform for structured learning — interactive courses, AI tools, live classrooms, and calculators — open for anyone to build on. Let me show you what's live today." },
   },
   {
     id: 'curriculum', view: 'courses', nav: 'curriculum', cursor: 'nav-curriculum', clickAnim: true,
-    caption: { title: 'The Curriculum', body: 'Structured courses covering the financial skills that matter most to Australian students — tax, budgeting, super, investing, and more.' },
+    caption: { title: 'The Curriculum', body: "Structured, interactive courses — currently focused on financial literacy for Australian students. The same infrastructure works for any subject, any curriculum, anywhere." },
   },
   {
     id: 'enter-course', view: 'courses', nav: 'curriculum', cursor: 'course-card-1', clickAnim: true,
-    caption: { title: 'Course Library', body: 'Courses split into focused modules. Click any course to see its full outline and start where you left off.' },
+    caption: { title: 'Course Library', body: 'Courses split into focused modules. Progress is tracked per lesson — click any course to see its full outline and pick up right where you left off.' },
   },
   {
     id: 'course-detail', view: 'course-detail', nav: 'curriculum', cursor: 'module-card-1', clickAnim: true,
-    caption: { title: 'Course Overview', body: 'Each course breaks into focused modules. Click a module to see its lessons and track your progress per lesson.' },
+    caption: { title: 'Course Overview', body: 'Each course breaks into focused modules with a clean overview — outcomes, structure, time estimates. Click a module to drill into its lessons.' },
   },
   {
     id: 'module-detail', view: 'module-detail', nav: 'curriculum', cursor: 'lesson-link', clickAnim: true,
-    caption: { title: 'Modules & Lessons', body: 'Each module lists its lessons with completion status. Students always pick up exactly where they left off.' },
+    caption: { title: 'Modules & Lessons', body: 'Module-level progress, lesson completion status at a glance. Students always know exactly where they are and what comes next.' },
   },
   {
     id: 'lesson-intro', view: 'lesson-intro', nav: 'curriculum', cursor: 'lesson-next-btn', clickAnim: true,
-    caption: { title: 'Inside a Lesson', body: 'Each lesson loads fully upfront — no waiting. Arrow keys or the footer buttons move between slides.' },
+    caption: { title: 'Inside a Lesson', body: 'Each lesson preloads entirely — zero waiting mid-slide. Arrow keys or the footer buttons navigate. No scrolling, no page reloads, no friction.' },
   },
   {
     id: 'lesson-mcq', view: 'lesson-mcq', nav: 'curriculum', cursor: 'lesson-option-c', clickAnim: true,
-    caption: { title: '15 Slide Types', body: 'Multiple choice, flashcards, drag-to-match, fill-in-the-blank, Desmos graphs, diagrams, PhET simulations, hotspot annotations, and more.' },
+    caption: { title: '15 Slide Types', body: 'Multiple choice, flashcards, drag-to-match, fill-in-the-blank, Desmos graphs, PhET simulations, annotated hotspots, timelines, charts, and more. No other LMS ships this out of the box.' },
   },
   {
     id: 'lesson-calc', view: 'lesson-calc', nav: 'curriculum', cursor: 'calc-btn', clickAnim: true,
-    caption: { title: 'Built-in Calculator', body: "A floating Desmos graphing and scientific calculator on every lesson. Pop it up, close it — it remembers everything." },
+    caption: { title: 'Built-in Calculator', body: "A floating Desmos graphing and scientific calculator on every lesson, anywhere in the platform. Drag it, close it, reopen it — it remembers everything you typed." },
   },
   {
     id: 'academy', view: 'classes', nav: 'academy', cursor: 'nav-academy', clickAnim: true,
-    caption: { title: 'The Academy', body: 'The classroom management layer. Teachers create a class, students join with a code, progress is tracked privately.' },
+    caption: { title: 'The Academy', body: 'Classroom management built in. Teachers create a class, students join with a code, progress is tracked privately — no third-party tools needed.' },
   },
   {
     id: 'enter-class', view: 'classes', nav: 'academy', cursor: 'class-link', clickAnim: true,
-    caption: { title: 'Your Classes', body: "Each class has a private stream — teachers post announcements and assignments, students respond. Like Google Classroom but designed for Caplet." },
+    caption: { title: 'Your Classes', body: "Each class has a private stream for announcements, assignments and student responses. Everything is connected — assign a specific lesson with one click." },
   },
   {
     id: 'class-stream', view: 'class-detail', nav: 'academy', cursor: null, clickAnim: false,
-    caption: { title: 'Class Stream', body: 'Announcements, assignments with due dates, student comments — all private to that class. Teachers can also assign specific lessons.' },
+    caption: { title: 'Class Stream', body: 'Announcements, assignments with due dates, student comments — all private to the class. Progress across every student is visible in one place.' },
   },
   {
     id: 'editor', view: 'editor', nav: null, cursor: 'editor-lesson-row', clickAnim: true,
-    caption: { title: 'Lesson Creator', body: "The editor is gated by access code. Full course hierarchy: courses → modules → lessons. Drag, reorder, edit any slide type." },
+    caption: { title: 'Lesson Creator', body: "The editor is access-code gated. Build the full hierarchy — courses, modules, lessons — then drag and reorder any slide type with a clean visual editor." },
   },
   {
     id: 'editor-ai', view: 'editor-ai', nav: null, cursor: 'ai-send-btn', clickAnim: true,
-    caption: { title: 'AI Generation', body: 'Paste curriculum notes or upload a PDF. AI plans the lesson in natural text first, then converts to structured slides — coherent output, every time.' },
+    caption: { title: 'AI Generation', body: 'Paste notes, upload a PDF, pick a model. The AI plans the lesson in plain text first, then structures it into slides — two-stage pipeline, up to 40 slides, 30,000 character input.' },
   },
   {
     id: 'future', view: 'future', nav: null, cursor: null, clickAnim: false,
-    caption: { title: "That's Caplet", body: "Live today for students and teachers. Here's where we're heading next." },
+    caption: { title: "This Is Just v1", body: "Live AI marking, real-time quiz sessions, adaptive practice, certifications, gamification — and an open API so anyone can build on Caplet. We're building the infrastructure for the future of structured learning." },
   },
 ];
 
@@ -120,96 +120,126 @@ function ClickRipple({ x, y }) {
 /* ─────────────────────────── AvatarGuide ───────────────────────────────── */
 function AvatarGuide({ title, body, visible, talking }) {
   return (
-    <div style={{
-      position: 'fixed', bottom: 20, left: 20,
-      display: 'flex', alignItems: 'flex-end', gap: 10,
-      zIndex: 9900, pointerEvents: 'none',
-      opacity: visible ? 1 : 0,
-      transform: `translateY(${visible ? 0 : 16}px)`,
-      transition: 'opacity 0.38s ease, transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
-    }}>
-      {/* ── Avatar ── */}
+    <>
+      {/* ── Speech bubble — floats above the pill, always centered ── */}
       <div style={{
-        width: 68, height: 68, flexShrink: 0,
-        animation: 'avBob 2.6s ease-in-out infinite',
-        filter: 'drop-shadow(0 6px 18px rgba(99,102,241,0.55))',
+        position: 'fixed',
+        bottom: 174,
+        left: '50%',
+        transform: `translateX(-50%) translateY(${visible ? 0 : 20}px)`,
+        opacity: visible ? 1 : 0,
+        transition: 'opacity 0.38s ease, transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
+        zIndex: 9900, pointerEvents: 'none',
+        maxWidth: 520, width: 'calc(100vw - 180px)',
       }}>
-        <svg viewBox="0 0 68 68" width="68" height="68" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="avGrad" cx="38%" cy="30%" r="64%">
-              <stop offset="0%" stopColor="#818cf8"/>
-              <stop offset="100%" stopColor="#4338ca"/>
-            </radialGradient>
-          </defs>
-          {/* Head */}
-          <circle cx="34" cy="37" r="29" fill="url(#avGrad)"/>
-          {/* Shine */}
-          <ellipse cx="23" cy="24" rx="7" ry="4.5" fill="white" opacity="0.18" transform="rotate(-15 23 24)"/>
-          {/* Hair */}
-          <ellipse cx="34" cy="10" rx="14" ry="8" fill="#3730a3"/>
-          <ellipse cx="20" cy="14" rx="5.5" ry="6" fill="#3730a3"/>
-          <ellipse cx="48" cy="14" rx="5.5" ry="6" fill="#3730a3"/>
-          <ellipse cx="34" cy="7" rx="6" ry="4" fill="#6366f1"/>
-          {/* Left eye */}
-          <ellipse cx="24" cy="33" rx="4.5" ry="5" fill="white"
-            style={{ transformOrigin:'24px 33px', animation:'avBlink 4.3s 0.2s ease-in-out infinite' }}/>
-          <circle cx="25.2" cy="33" r="2.3" fill="#1e1b4b"/>
-          <circle cx="26.2" cy="31.8" r="0.9" fill="white"/>
-          {/* Right eye */}
-          <ellipse cx="44" cy="33" rx="4.5" ry="5" fill="white"
-            style={{ transformOrigin:'44px 33px', animation:'avBlink 4.3s 2.1s ease-in-out infinite' }}/>
-          <circle cx="45.2" cy="33" r="2.3" fill="#1e1b4b"/>
-          <circle cx="46.2" cy="31.8" r="0.9" fill="white"/>
-          {/* Cheeks */}
-          <ellipse cx="13" cy="41" rx="5.5" ry="3" fill="#c7d2fe" opacity="0.45"/>
-          <ellipse cx="55" cy="41" rx="5.5" ry="3" fill="#c7d2fe" opacity="0.45"/>
-          {/* Smile (idle) */}
-          <path d="M24 45 Q34 53 44 45" stroke="white" strokeWidth="2.4" fill="none" strokeLinecap="round"
-            style={{ opacity: talking ? 0 : 1, transition:'opacity 0.08s' }}/>
-          {/* Talking mouth */}
-          <ellipse cx="34" cy="46" rx="7" ry="3.5" fill="#312e81"
-            style={{
-              opacity: talking ? 1 : 0, transition:'opacity 0.08s',
-              transformOrigin:'34px 46px',
-              animation: talking ? 'avTalk 0.2s ease-in-out infinite alternate' : 'none',
-            }}/>
-          {/* Teeth */}
-          <rect x="29.5" y="44" width="9" height="2.2" rx="1" fill="white"
-            style={{ opacity: talking ? 0.75 : 0, transition:'opacity 0.08s' }}/>
-        </svg>
+        <div style={{
+          background: 'rgba(6,6,14,0.93)',
+          backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: 20, padding: '14px 22px 16px',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(99,102,241,0.12)',
+          position: 'relative',
+        }}>
+          {/* Downward tail toward the pill */}
+          <div style={{
+            position: 'absolute', bottom: -13, left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0, height: 0,
+            borderLeft: '11px solid transparent',
+            borderRight: '11px solid transparent',
+            borderTop: '13px solid rgba(6,6,14,0.93)',
+          }}/>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#6366f1', display: 'inline-block', flexShrink: 0, boxShadow: '0 0 6px rgba(99,102,241,0.9)' }}/>
+            <span style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: 'rgba(165,180,252,0.78)' }}>
+              {title}
+            </span>
+          </div>
+          <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.90)', lineHeight: 1.65 }}>
+            {body}
+          </p>
+        </div>
       </div>
 
-      {/* ── Speech bubble ── */}
+      {/* ── Pill avatar — always visible, always bobbing, centered bottom ── */}
       <div style={{
-        position: 'relative',
-        background: 'rgba(6,6,14,0.93)',
-        backdropFilter: 'blur(22px)', WebkitBackdropFilter:'blur(22px)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        borderRadius: 20, padding: '12px 18px 14px',
-        maxWidth: 460, width:'calc(100vw - 196px)',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(99,102,241,0.12)',
+        position: 'fixed',
+        bottom: 14, left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 9901, pointerEvents: 'none',
+        animation: 'avBob 2.8s ease-in-out infinite',
+        filter: 'drop-shadow(0 10px 32px rgba(99,102,241,0.7)) drop-shadow(0 2px 8px rgba(0,0,0,0.4))',
       }}>
-        {/* Tail */}
-        <div style={{
-          position:'absolute', left:-7, bottom:24,
-          width:0, height:0,
-          borderTop:'7px solid transparent',
-          borderBottom:'7px solid transparent',
-          borderRight:'7px solid rgba(6,6,14,0.93)',
-        }}/>
-        {/* Label */}
-        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:5 }}>
-          <span style={{ width:5, height:5, borderRadius:'50%', background:'#6366f1', display:'inline-block', flexShrink:0, boxShadow:'0 0 6px rgba(99,102,241,0.8)' }}/>
-          <span style={{ fontSize:10, fontFamily:'monospace', fontWeight:700, letterSpacing:'0.13em', textTransform:'uppercase', color:'rgba(165,180,252,0.75)' }}>
-            {title}
-          </span>
-        </div>
-        {/* Body text */}
-        <p style={{ margin:0, fontSize:13.5, color:'rgba(255,255,255,0.88)', lineHeight:1.6 }}>
-          {body}
-        </p>
+        {/*
+          viewBox "-18 -4 116 158":
+            x: -18 → 98  (room for arms sticking out 18px each side of 80px body)
+            y:  -4 → 154  (body is 0→150, slight padding)
+          Arms sit at x=-18..4 (left) and x=76..98 (right)
+        */}
+        <svg viewBox="-18 -4 116 158" width="97" height="132" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="pgTop" cx="32%" cy="28%" r="68%">
+              <stop offset="0%" stopColor="#a5b4fc"/>
+              <stop offset="100%" stopColor="#6366f1"/>
+            </radialGradient>
+            <radialGradient id="pgBot" cx="32%" cy="20%" r="70%">
+              <stop offset="0%" stopColor="#5b5cf9"/>
+              <stop offset="100%" stopColor="#3730a3"/>
+            </radialGradient>
+            <clipPath id="pillClip">
+              <rect x="0" y="0" width="80" height="150" rx="40"/>
+            </clipPath>
+          </defs>
+
+          {/* Left arm */}
+          <rect x="-18" y="60" width="24" height="14" rx="7" fill="#5b5ce8"/>
+          {/* Right arm */}
+          <rect x="74" y="60" width="24" height="14" rx="7" fill="#4f46e5"/>
+
+          {/* Pill body — top half (lighter) */}
+          <rect x="0" y="0" width="80" height="150" rx="40" fill="url(#pgTop)"/>
+          {/* Pill body — bottom half overlay (darker), clipped to pill */}
+          <rect x="0" y="75" width="80" height="75" fill="url(#pgBot)" clipPath="url(#pillClip)"/>
+
+          {/* Score / groove line */}
+          <rect x="0" y="73" width="80" height="4" fill="white" opacity="0.18" clipPath="url(#pillClip)"/>
+
+          {/* Shine */}
+          <ellipse cx="26" cy="28" rx="11" ry="21" fill="white" opacity="0.20" transform="rotate(-10 26 28)" clipPath="url(#pillClip)"/>
+
+          {/* Left eye */}
+          <ellipse cx="26" cy="53" rx="7.5" ry="8" fill="white"
+            style={{ transformOrigin: '26px 53px', animation: 'avBlink 4.3s 0.2s ease-in-out infinite' }}/>
+          <circle cx="27.8" cy="53" r="3.8" fill="#1e1b4b"/>
+          <circle cx="29.5" cy="51.2" r="1.4" fill="white"/>
+
+          {/* Right eye */}
+          <ellipse cx="54" cy="53" rx="7.5" ry="8" fill="white"
+            style={{ transformOrigin: '54px 53px', animation: 'avBlink 4.3s 2.1s ease-in-out infinite' }}/>
+          <circle cx="55.8" cy="53" r="3.8" fill="#1e1b4b"/>
+          <circle cx="57.5" cy="51.2" r="1.4" fill="white"/>
+
+          {/* Cheeks */}
+          <ellipse cx="10" cy="65" rx="8.5" ry="5" fill="#c7d2fe" opacity="0.55" clipPath="url(#pillClip)"/>
+          <ellipse cx="70" cy="65" rx="8.5" ry="5" fill="#c7d2fe" opacity="0.55" clipPath="url(#pillClip)"/>
+
+          {/* Smile (idle) */}
+          <path d="M22 82 Q40 96 58 82" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"
+            style={{ opacity: talking ? 0 : 1, transition: 'opacity 0.1s' }}/>
+
+          {/* Talking mouth */}
+          <ellipse cx="40" cy="86" rx="12" ry="6.5" fill="#312e81"
+            style={{
+              opacity: talking ? 1 : 0, transition: 'opacity 0.1s',
+              transformOrigin: '40px 86px',
+              animation: talking ? 'avTalk 0.2s ease-in-out infinite alternate' : 'none',
+            }}/>
+          {/* Teeth strip */}
+          <rect x="32" y="83.5" width="16" height="3.5" rx="1.8" fill="white"
+            style={{ opacity: talking ? 0.72 : 0, transition: 'opacity 0.1s' }}/>
+        </svg>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -1195,25 +1225,31 @@ function SimEditorAI() {
 
 /* ─────────────────────────── SimFuture ─────────────────────────────────── */
 const FUTURE_ITEMS = [
-  { label: 'Live Kahoot-style Mode',     desc: 'Real-time quizzes, leaderboards, instant feedback — all built on actual course content.' },
-  { label: 'AI Essay Marking',           desc: 'Students write long-form answers; a fine-tuned model grades and gives targeted, specific feedback.' },
-  { label: 'Adaptive Practice',          desc: 'Difficulty adjusts per student based on quiz performance. Everyone works at exactly the right level.' },
-  { label: 'Gamification',               desc: 'One shared currency across lessons, games and activities — points, streaks, leaderboards, all connected.' },
-  { label: 'Assessment & Certification', desc: 'Formal assessments, marking rubrics, certificates, and school-level progress reporting.' },
+  { label: 'Live Kahoot-style Mode',          desc: 'Real-time quizzes, leaderboards, instant feedback — all running on actual course content, not separate decks.' },
+  { label: 'AI Essay Marking',                desc: 'Students write long-form answers; a model trained against real marking rubrics grades and returns targeted, specific feedback.' },
+  { label: 'Adaptive Practice Paths',         desc: 'Difficulty adjusts per student based on their quiz history. Everyone works at the level that pushes them exactly enough.' },
+  { label: 'Gamification Layer',              desc: 'One shared currency across lessons, games and activities — points, streaks, leaderboards, cross-platform rewards.' },
+  { label: 'Assessment & Certification',      desc: 'Formal assessments with custom rubrics, auto-generated certificates, and per-school progress reporting dashboards.' },
+  { label: 'Open Platform & API',             desc: 'Caplet becomes infrastructure — publishers, developers, and institutions build on top of it for any subject, any audience, anywhere.' },
 ];
 function SimFuture() {
   return (
-    <div className="absolute inset-0 bg-surface-body flex items-center justify-center px-6 md:px-12 lg:px-20">
+    <div className="absolute inset-0 bg-surface-body flex items-center justify-center px-6 md:px-12 lg:px-20 overflow-hidden">
       <div className="max-w-2xl w-full">
-        <span className="section-kicker">Coming next</span>
-        <h2 className="text-5xl md:text-6xl font-serif font-bold text-text-primary mb-10">What's next<br />for Caplet</h2>
-        <div className="space-y-6">
+        <span className="section-kicker">Roadmap</span>
+        <h2 className="text-5xl md:text-6xl font-serif font-bold text-text-primary mb-3">
+          The infrastructure<br />for how people learn
+        </h2>
+        <p className="text-text-muted mb-8 leading-relaxed max-w-lg">
+          Caplet v1 is live. Here's what's being built next — a platform open enough for anyone to build on, powerful enough to replace every tool a school currently uses.
+        </p>
+        <div className="space-y-5">
           {FUTURE_ITEMS.map((p) => (
-            <div key={p.label} className="flex gap-5 items-start border-b border-line-soft pb-6 last:border-b-0 last:pb-0">
-              <div className="w-2 h-2 rounded-full bg-accent shrink-0 mt-2.5" />
+            <div key={p.label} className="flex gap-5 items-start border-b border-line-soft pb-5 last:border-b-0 last:pb-0">
+              <div className="w-2 h-2 rounded-full bg-accent shrink-0 mt-2" />
               <div>
-                <p className="font-semibold text-text-primary">{p.label}</p>
-                <p className="text-sm text-text-muted mt-1 leading-relaxed">{p.desc}</p>
+                <p className="font-semibold text-text-primary text-sm">{p.label}</p>
+                <p className="text-sm text-text-muted mt-0.5 leading-relaxed">{p.desc}</p>
               </div>
             </div>
           ))}
@@ -1253,9 +1289,9 @@ export default function Tour() {
     s.textContent = `
       @keyframes simRipple    { from{transform:translate(-50%,-50%) scale(0.2);opacity:1} to{transform:translate(-50%,-50%) scale(3.2);opacity:0} }
       @keyframes simRippleBig { from{transform:translate(-50%,-50%) scale(0.1);opacity:.6} to{transform:translate(-50%,-50%) scale(3.8);opacity:0} }
-      @keyframes avBob  { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-7px)} }
+      @keyframes avBob  { 0%,100%{transform:translateX(-50%) translateY(0px)} 50%{transform:translateX(-50%) translateY(-10px)} }
       @keyframes avBlink{ 0%,85%,100%{transform:scaleY(1)} 92%{transform:scaleY(0.06)} }
-      @keyframes avTalk { 0%{transform:scaleY(0.22)} 100%{transform:scaleY(1)} }
+      @keyframes avTalk { 0%{transform:scaleY(0.18)} 100%{transform:scaleY(1)} }
     `;
     document.head.appendChild(s);
     return () => document.getElementById(ID)?.remove();
