@@ -17,62 +17,79 @@ const FADE_VIEW   = 200;
 const TIP_OX = 3, TIP_OY = 2;
 
 /* ─────────────────────────── Scenes ────────────────────────────────────── */
+// avatarLeft: horizontal anchor for the pill (50% = centred, <30% = left side, >70% = right side)
 const SCENES = [
   {
-    id: 'welcome', view: 'home', nav: null, cursor: null, clickAnim: false,
-    caption: { title: 'Meet Caplet', body: "Caplet is being built to be the everything platform for structured learning — interactive courses, AI tools, live classrooms, and calculators — open for anyone to build on. Let me show you what's live today." },
+    id: 'welcome',
+    view: 'home', nav: null, cursor: null, clickAnim: false,
+    avatarLeft: '50%',
+    caption: {
+      title: 'Meet Caplet',
+      body: "The average student uses five different apps just to study. Teachers spend weekends on admin. We built one platform to replace all of it — lessons, classrooms, AI tools, and calculators, all connected from day one.",
+    },
   },
   {
-    id: 'curriculum', view: 'courses', nav: 'curriculum', cursor: 'nav-curriculum', clickAnim: true,
-    caption: { title: 'The Curriculum', body: "Structured, interactive courses — currently focused on financial literacy for Australian students. The same infrastructure works for any subject, any curriculum, anywhere." },
+    id: 'the-content',
+    view: 'courses', nav: 'curriculum', cursor: 'course-card-1', clickAnim: true,
+    avatarLeft: '13%',
+    caption: {
+      title: 'Real curriculum, not links',
+      body: "Structured courses split into modules and lessons — currently built around Australian financial literacy, but the same platform works for any subject, any curriculum, anywhere. Teachers can use ours or build their own.",
+    },
   },
   {
-    id: 'enter-course', view: 'courses', nav: 'curriculum', cursor: 'course-card-1', clickAnim: true,
-    caption: { title: 'Course Library', body: 'Courses split into focused modules. Progress is tracked per lesson — click any course to see its full outline and pick up right where you left off.' },
+    id: 'inside-lessons',
+    view: 'lesson-mcq', nav: 'curriculum', cursor: 'lesson-option-c', clickAnim: true,
+    avatarLeft: '11%',
+    caption: {
+      title: '15 interactive slide types',
+      body: "Multiple choice, drag-to-match, flashcards, Desmos graphs, PhET simulations, annotated hotspots, timelines, charts — not a PDF with a quiz at the end. A real learning environment that loads instantly, no scrolling anywhere.",
+    },
   },
   {
-    id: 'course-detail', view: 'course-detail', nav: 'curriculum', cursor: 'module-card-1', clickAnim: true,
-    caption: { title: 'Course Overview', body: 'Each course breaks into focused modules with a clean overview — outcomes, structure, time estimates. Click a module to drill into its lessons.' },
+    id: 'classrooms',
+    view: 'class-detail', nav: 'academy', cursor: null, clickAnim: false,
+    avatarLeft: '84%',
+    caption: {
+      title: 'Classrooms, built in',
+      body: "Teachers create a class, students join with a code. Progress, assignments, and announcements all in one stream — no Google Classroom, no Edmodo. Every lesson is assignable in one click. Everything is native.",
+    },
   },
   {
-    id: 'module-detail', view: 'module-detail', nav: 'curriculum', cursor: 'lesson-link', clickAnim: true,
-    caption: { title: 'Modules & Lessons', body: 'Module-level progress, lesson completion status at a glance. Students always know exactly where they are and what comes next.' },
+    id: 'build-it',
+    view: 'editor', nav: null, cursor: 'editor-lesson-row', clickAnim: true,
+    avatarLeft: '11%',
+    caption: {
+      title: 'Build any lesson yourself',
+      body: "The editor lets any teacher build the full hierarchy — courses, modules, lessons — and assemble slides in any order. Drag, reorder, choose from all 15 slide types. No coding, no exports, no format conversions.",
+    },
   },
   {
-    id: 'lesson-intro', view: 'lesson-intro', nav: 'curriculum', cursor: 'lesson-next-btn', clickAnim: true,
-    caption: { title: 'Inside a Lesson', body: 'Each lesson preloads entirely — zero waiting mid-slide. Arrow keys or the footer buttons navigate. No scrolling, no page reloads, no friction.' },
+    id: 'ai-generate',
+    view: 'editor-ai', nav: null, cursor: 'ai-send-btn', clickAnim: true,
+    avatarLeft: '85%',
+    caption: {
+      title: 'Or just describe what you want',
+      body: "Paste your notes, upload a PDF, pick a model, hit send. The AI plans the lesson in plain text first — then structures it. Up to 40 slides, 30,000 characters of input. A full unit of work in under a minute.",
+    },
   },
   {
-    id: 'lesson-mcq', view: 'lesson-mcq', nav: 'curriculum', cursor: 'lesson-option-c', clickAnim: true,
-    caption: { title: '15 Slide Types', body: 'Multiple choice, flashcards, drag-to-match, fill-in-the-blank, Desmos graphs, PhET simulations, annotated hotspots, timelines, charts, and more. No other LMS ships this out of the box.' },
+    id: 'marking-vision',
+    view: 'future', nav: null, cursor: null, clickAnim: false,
+    avatarLeft: '42%',
+    caption: {
+      title: "The website is just the start",
+      body: "We're building CapletMark — a library of real marking rubrics, exemplars, and syllabus dot points. In NSW alone, $500M is spent on marking every year. AI can grade student work accurately when you give it the right data. That's the market we're going after.",
+    },
   },
   {
-    id: 'lesson-calc', view: 'lesson-calc', nav: 'curriculum', cursor: 'calc-btn', clickAnim: true,
-    caption: { title: 'Built-in Calculator', body: "A floating Desmos graphing and scientific calculator on every lesson, anywhere in the platform. Drag it, close it, reopen it — it remembers everything you typed." },
-  },
-  {
-    id: 'academy', view: 'classes', nav: 'academy', cursor: 'nav-academy', clickAnim: true,
-    caption: { title: 'The Academy', body: 'Classroom management built in. Teachers create a class, students join with a code, progress is tracked privately — no third-party tools needed.' },
-  },
-  {
-    id: 'enter-class', view: 'classes', nav: 'academy', cursor: 'class-link', clickAnim: true,
-    caption: { title: 'Your Classes', body: "Each class has a private stream for announcements, assignments and student responses. Everything is connected — assign a specific lesson with one click." },
-  },
-  {
-    id: 'class-stream', view: 'class-detail', nav: 'academy', cursor: null, clickAnim: false,
-    caption: { title: 'Class Stream', body: 'Announcements, assignments with due dates, student comments — all private to the class. Progress across every student is visible in one place.' },
-  },
-  {
-    id: 'editor', view: 'editor', nav: null, cursor: 'editor-lesson-row', clickAnim: true,
-    caption: { title: 'Lesson Creator', body: "The editor is access-code gated. Build the full hierarchy — courses, modules, lessons — then drag and reorder any slide type with a clean visual editor." },
-  },
-  {
-    id: 'editor-ai', view: 'editor-ai', nav: null, cursor: 'ai-send-btn', clickAnim: true,
-    caption: { title: 'AI Generation', body: 'Paste notes, upload a PDF, pick a model. The AI plans the lesson in plain text first, then structures it into slides — two-stage pipeline, up to 40 slides, 30,000 character input.' },
-  },
-  {
-    id: 'future', view: 'future', nav: null, cursor: null, clickAnim: false,
-    caption: { title: "This Is Just v1", body: "Live AI marking, real-time quiz sessions, adaptive practice, certifications, gamification — and an open API so anyone can build on Caplet. We're building the infrastructure for the future of structured learning." },
+    id: 'open-platform',
+    view: 'future', nav: null, cursor: null, clickAnim: false,
+    avatarLeft: '58%',
+    caption: {
+      title: "Infrastructure for learning",
+      body: "Live quiz sessions, adaptive practice, certifications, gamification, an open API — Caplet becomes the layer every school, publisher, and tutoring platform builds on. Not just a product. Infrastructure.",
+    },
   },
 ];
 
@@ -118,37 +135,91 @@ function ClickRipple({ x, y }) {
 }
 
 /* ─────────────────────────── AvatarGuide ───────────────────────────────── */
-function AvatarGuide({ title, body, visible, talking }) {
+// avatarLeft: CSS left value string, e.g. '50%', '13%', '84%'
+// ≤32% → pill on left edge, bubble extends RIGHT with left-pointing tail
+// ≥68% → pill on right edge, bubble extends LEFT with right-pointing tail
+// otherwise → bubble floats ABOVE pill with downward tail
+function AvatarGuide({ title, body, visible, talking, avatarLeft = '50%' }) {
+  const leftNum = parseFloat(avatarLeft) || 50;
+  const onLeft  = leftNum <= 32;
+  const onRight = leftNum >= 68;
+  const BG = 'rgba(6,6,14,0.93)';
+
+  /* ── bubble geometry ── */
+  let bubblePos, bubbleTail;
+  if (onLeft) {
+    // Bubble to the right of the pill, tail points left
+    bubblePos = {
+      position: 'fixed',
+      bottom: 28,
+      left: `calc(${avatarLeft} + 58px)`,
+      transform: `translateY(${visible ? 0 : 10}px)`,
+      opacity: visible ? 1 : 0,
+      maxWidth: 460, width: 'calc(100vw - 230px)',
+      transition: 'opacity 0.35s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+      zIndex: 9900, pointerEvents: 'none',
+    };
+    bubbleTail = {
+      position: 'absolute', left: -12, bottom: 28,
+      width: 0, height: 0,
+      borderTop: '10px solid transparent',
+      borderBottom: '10px solid transparent',
+      borderRight: `12px solid ${BG}`,
+    };
+  } else if (onRight) {
+    // Bubble to the left of the pill, tail points right
+    bubblePos = {
+      position: 'fixed',
+      bottom: 28,
+      right: `calc(${100 - leftNum}% + 58px)`,
+      transform: `translateY(${visible ? 0 : 10}px)`,
+      opacity: visible ? 1 : 0,
+      maxWidth: 460, width: 'calc(100vw - 230px)',
+      transition: 'opacity 0.35s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+      zIndex: 9900, pointerEvents: 'none',
+    };
+    bubbleTail = {
+      position: 'absolute', right: -12, bottom: 28,
+      width: 0, height: 0,
+      borderTop: '10px solid transparent',
+      borderBottom: '10px solid transparent',
+      borderLeft: `12px solid ${BG}`,
+    };
+  } else {
+    // Bubble above the pill, tail points down
+    bubblePos = {
+      position: 'fixed',
+      bottom: 174,
+      left: '50%',
+      transform: `translateX(-50%) translateY(${visible ? 0 : 18}px)`,
+      opacity: visible ? 1 : 0,
+      maxWidth: 520, width: 'calc(100vw - 180px)',
+      transition: 'opacity 0.38s ease, transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
+      zIndex: 9900, pointerEvents: 'none',
+    };
+    bubbleTail = {
+      position: 'absolute', bottom: -13, left: '50%',
+      transform: 'translateX(-50%)',
+      width: 0, height: 0,
+      borderLeft: '11px solid transparent',
+      borderRight: '11px solid transparent',
+      borderTop: `13px solid ${BG}`,
+    };
+  }
+
   return (
     <>
-      {/* ── Speech bubble — floats above the pill, always centered ── */}
-      <div style={{
-        position: 'fixed',
-        bottom: 174,
-        left: '50%',
-        transform: `translateX(-50%) translateY(${visible ? 0 : 20}px)`,
-        opacity: visible ? 1 : 0,
-        transition: 'opacity 0.38s ease, transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
-        zIndex: 9900, pointerEvents: 'none',
-        maxWidth: 520, width: 'calc(100vw - 180px)',
-      }}>
+      {/* ── Speech bubble ── */}
+      <div style={bubblePos}>
         <div style={{
-          background: 'rgba(6,6,14,0.93)',
+          background: BG,
           backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
           border: '1px solid rgba(255,255,255,0.10)',
           borderRadius: 20, padding: '14px 22px 16px',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(99,102,241,0.12)',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
           position: 'relative',
         }}>
-          {/* Downward tail toward the pill */}
-          <div style={{
-            position: 'absolute', bottom: -13, left: '50%',
-            transform: 'translateX(-50%)',
-            width: 0, height: 0,
-            borderLeft: '11px solid transparent',
-            borderRight: '11px solid transparent',
-            borderTop: '13px solid rgba(6,6,14,0.93)',
-          }}/>
+          <div style={bubbleTail}/>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#6366f1', display: 'inline-block', flexShrink: 0, boxShadow: '0 0 6px rgba(99,102,241,0.9)' }}/>
             <span style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: 'rgba(165,180,252,0.78)' }}>
@@ -161,11 +232,11 @@ function AvatarGuide({ title, body, visible, talking }) {
         </div>
       </div>
 
-      {/* ── Pill avatar — always visible, always bobbing, centered bottom ── */}
+      {/* ── Pill avatar — always visible, slides horizontally per scene ── */}
       <div style={{
         position: 'fixed',
-        bottom: 14, left: '50%',
-        transform: 'translateX(-50%)',
+        bottom: 14, left: avatarLeft,
+        transition: 'left 1.0s cubic-bezier(0.34, 1.56, 0.64, 1)',
         zIndex: 9901, pointerEvents: 'none',
         animation: 'avBob 2.8s ease-in-out infinite',
         filter: 'drop-shadow(0 10px 32px rgba(99,102,241,0.7)) drop-shadow(0 2px 8px rgba(0,0,0,0.4))',
@@ -1278,7 +1349,7 @@ export default function Tour() {
 
   const scene       = SCENES[sceneIndex];
   const currentView = scene.view;
-  const hasSimNav   = currentView !== 'editor' && currentView !== 'editor-ai';
+  const hasSimNav   = currentView !== 'editor' && currentView !== 'editor-ai' && currentView !== 'future';
 
   /* ── CSS keyframes ── */
   useEffect(() => {
@@ -1472,7 +1543,7 @@ export default function Tour() {
       </div>
 
       {/* Avatar guide */}
-      <AvatarGuide title={scene.caption.title} body={scene.caption.body} visible={captionVis} talking={avatarTalking} />
+      <AvatarGuide title={scene.caption.title} body={scene.caption.body} visible={captionVis} talking={avatarTalking} avatarLeft={scene.avatarLeft} />
 
       {/* Virtual cursor */}
       <VirtualCursor x={cursorPos.x} y={cursorPos.y} visible={cursorVisible} clicking={isClicking} />
