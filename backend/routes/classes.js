@@ -854,9 +854,18 @@ router.post(
       const { content, attachmentUrl } = req.body;
       const attachments = [];
       if (attachmentUrl && typeof attachmentUrl === 'string' && attachmentUrl.trim()) {
-        const type = classifyAttachment(attachmentUrl.trim());
-        if (type) {
-          attachments.push({ url: attachmentUrl.trim(), type });
+        const trimmed = attachmentUrl.trim();
+        let parsedUrl;
+        try {
+          parsedUrl = new URL(trimmed);
+        } catch {
+          parsedUrl = null;
+        }
+        if (parsedUrl && (parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:')) {
+          const type = classifyAttachment(trimmed);
+          if (type) {
+            attachments.push({ url: trimmed, type });
+          }
         }
       }
 

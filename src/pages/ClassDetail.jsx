@@ -500,16 +500,17 @@ const ClassDetail = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 px-6 selection:bg-accent selection:text-white">
       <div className="container-custom space-y-12">
-        <div className="bg-surface-body border border-line-soft dark:border-line-soft p-10 animate-slide-up">
+        <div className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-10 animate-slide-up">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
             <div className="flex-1">
               <button
                 onClick={() => navigate('/classes')}
                 className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent transition-colors"
               >
-                ← Back to Classes
+                Back to Classes
               </button>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-text-primary mb-4">
+              <p className="font-hand text-accent text-lg mb-2">Your classroom</p>
+              <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-text-primary mb-4">
                 {classroom.name}
               </h1>
               {classroom.description ? (
@@ -517,13 +518,13 @@ const ClassDetail = () => {
                   {classroom.description}
                 </p>
               ) : null}
-              <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft border border-line-soft">
+              <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft rounded-xl">
                 <span className="text-xs font-semibold text-text-dim">Class Code:</span>
                 <span className="font-mono font-bold text-text-primary text-sm">{classroom.code}</span>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-6">
-              <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft border border-line-soft min-w-[240px]">
+              <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft rounded-2xl min-w-[240px]">
                 <div className={`w-10 h-10 rounded-sm bg-text-primary dark:bg-surface-raised flex items-center justify-center text-surface-body text-xs font-bold`}>
                   {getInitials(user)}
                 </div>
@@ -542,7 +543,7 @@ const ClassDetail = () => {
                   <button
                     type="button"
                     onClick={handleLeaveClass}
-                    className="px-6 py-3 border border-line-soft text-sm font-medium hover:bg-surface-soft dark:hover:bg-surface-raised transition-all"
+                    className="btn-secondary"
                   >
                     Leave Class
                   </button>
@@ -551,7 +552,7 @@ const ClassDetail = () => {
                   <button
                     type="button"
                     onClick={handleDeleteClass}
-                    className="px-6 py-3 bg-red-500 text-white text-sm font-medium hover:bg-red-600 shadow-sm transition-all"
+                    className="px-6 py-3 bg-red-500 text-white text-sm font-bold rounded-2xl hover:bg-red-600 hover:-translate-y-0.5 shadow-sm transition-transform"
                   >
                     Delete Class
                   </button>
@@ -562,19 +563,19 @@ const ClassDetail = () => {
         </div>
 
         {error && (
-          <div className="p-6 border border-red-500 text-red-500 text-sm font-medium bg-red-50/50 dark:bg-red-900/10 animate-fade-in">
+          <div className="p-6 rounded-2xl text-red-600 text-sm font-medium bg-red-50 dark:bg-red-900/20 animate-fade-in">
             Error: {error}
           </div>
         )}
 
         {/* Tab bar — only one "page" (Stream / Classwork / People) is shown below */}
-        <nav className="flex gap-1 bg-surface-soft border border-line-soft p-1" aria-label="Class tabs">
+        <nav className="inline-flex gap-1 bg-surface-soft rounded-2xl p-1.5" aria-label="Class tabs">
           <button
             type="button"
             onClick={() => setActiveTab('stream')}
-            className={`px-8 py-3 text-sm font-medium transition-all duration-200 ${activeTab === 'stream'
-              ? 'bg-text-primary dark:bg-surface-raised text-surface-body'
-              : 'text-text-dim hover:text-text-primary hover:bg-surface-raised dark:hover:bg-surface-soft'
+            className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${activeTab === 'stream'
+              ? 'bg-accent text-white shadow-sm'
+              : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'
               }`}
           >
             Stream
@@ -582,9 +583,9 @@ const ClassDetail = () => {
           <button
             type="button"
             onClick={() => setActiveTab('classwork')}
-            className={`px-8 py-3 text-sm font-medium transition-all duration-200 ${activeTab === 'classwork'
-              ? 'bg-text-primary dark:bg-surface-raised text-surface-body'
-              : 'text-text-dim hover:text-text-primary hover:bg-surface-raised dark:hover:bg-surface-soft'
+            className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${activeTab === 'classwork'
+              ? 'bg-accent text-white shadow-sm'
+              : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'
               }`}
           >
             Classwork
@@ -592,9 +593,9 @@ const ClassDetail = () => {
           <button
             type="button"
             onClick={() => setActiveTab('people')}
-            className={`px-8 py-3 text-sm font-medium transition-all duration-200 ${activeTab === 'people'
-              ? 'bg-text-primary dark:bg-surface-raised text-surface-body'
-              : 'text-text-dim hover:text-text-primary hover:bg-surface-raised dark:hover:bg-surface-soft'
+            className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${activeTab === 'people'
+              ? 'bg-accent text-white shadow-sm'
+              : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'
               }`}
           >
             People
@@ -606,7 +607,7 @@ const ClassDetail = () => {
             <div className="space-y-5">
               {/* Composer: teachers only (like Google Classroom) */}
               {isTeacher && (
-                <div className="bg-surface-body border border-line-soft dark:border-line-soft p-8 hover:border-accent transition-colors mb-12">
+                <div className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-8 hover:-translate-y-0.5 transition-transform mb-12">
                   <form onSubmit={handlePostAnnouncement}>
                     <div className="flex gap-6">
                       <div
@@ -623,7 +624,7 @@ const ClassDetail = () => {
                           }
                           placeholder="Post an announcement..."
                           rows={3}
-                          className="w-full px-5 py-4 bg-transparent border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium leading-relaxed resize-none focus:border-accent outline-none transition-all"
+                          className="w-full px-5 py-4 bg-surface-soft rounded-xl border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium leading-relaxed resize-none focus:border-accent outline-none transition-all"
                         />
                         <input
                           type="url"
@@ -632,13 +633,13 @@ const ClassDetail = () => {
                             setAnnouncementForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))
                           }
                           placeholder="Attachment URL (optional)..."
-                          className="mt-4 w-full px-5 py-3 bg-transparent border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium focus:border-accent outline-none transition-all"
+                          className="mt-4 w-full px-5 py-3 bg-surface-soft rounded-xl border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium focus:border-accent outline-none transition-all"
                         />
                         <div className="flex justify-end mt-6">
                           <button
                             type="submit"
                             disabled={postingAnnouncement || !announcementForm.content.trim()}
-                            className="px-10 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            className="btn-primary disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             {postingAnnouncement ? 'Posting...' : 'Post Announcement'}
                           </button>
@@ -651,7 +652,7 @@ const ClassDetail = () => {
 
               {/* Announcement cards — visible to both teachers and students */}
               {!Array.isArray(announcements) || announcements.length === 0 ? (
-                <div className="p-20 border border-line-soft dark:border-line-soft text-center bg-surface-soft">
+                <div className="p-20 rounded-3xl text-center bg-surface-soft">
                   <p className="text-sm font-medium text-text-muted">
                     {isTeacher
                       ? 'No announcements yet. Post one to get started.'
@@ -668,7 +669,7 @@ const ClassDetail = () => {
                     return (
                       <div
                         key={a.id}
-                        className="bg-surface-body border border-line-soft dark:border-line-soft p-8 hover:border-accent transition-all animate-slide-up group"
+                        className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-8 hover:-translate-y-0.5 transition-transform animate-slide-up group"
                       >
                         <div className="flex items-center justify-between gap-4 mb-4">
                           <div className="flex items-center gap-4 min-w-0">
@@ -745,10 +746,12 @@ const ClassDetail = () => {
                                   );
                                 }
                               }
+                              const safeLinkUrl = /^https?:\/\//i.test(att.url) ? att.url : null;
+                              if (!safeLinkUrl) return null;
                               return (
                                 <a
                                   key={idx}
-                                  href={att.url}
+                                  href={safeLinkUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
@@ -856,14 +859,14 @@ const ClassDetail = () => {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-12">
               <div>
                 <span className="section-kicker mb-4">Assignments</span>
-                <h2 className="text-3xl font-semibold text-text-primary">
+                <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">
                   Class <br />Assignments.
                 </h2>
               </div>
               {isTeacher && (
                 <button
                   onClick={() => setShowNewAssignment(true)}
-                  className="px-8 py-4 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary transition-all shadow-sm"
+                  className="btn-primary"
                 >
                   Create Assignment
                 </button>
@@ -871,7 +874,7 @@ const ClassDetail = () => {
             </div>
 
             {assignments.length === 0 ? (
-              <div className="p-20 border border-line-soft dark:border-line-soft text-center bg-surface-soft">
+              <div className="p-20 rounded-3xl text-center bg-surface-soft">
                 <p className="text-sm font-medium text-text-muted">
                   No assignments yet. Create one to get started.
                 </p>
@@ -891,11 +894,11 @@ const ClassDetail = () => {
                   return (
                     <div
                       key={a.id}
-                      className="bg-surface-body border border-line-soft dark:border-line-soft p-8 hover:border-accent transition-all animate-slide-up group"
+                      className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-8 hover:-translate-y-0.5 transition-transform animate-slide-up group"
                     >
                       <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-semibold text-text-primary mb-4">
+                          <h3 className="font-display text-xl font-extrabold tracking-tight text-text-primary mb-4">
                             {a.title}
                           </h3>
                           {a.description && (
@@ -905,8 +908,8 @@ const ClassDetail = () => {
                           )}
                           <div className="flex flex-wrap gap-4 items-center">
                             {a.dueDate && (
-                              <span className="inline-flex items-center gap-2 px-3 py-1 bg-surface-soft border border-line-soft text-xs font-medium text-text-dim">
-                                📅 DEADLINE: {new Date(a.dueDate).toLocaleDateString(undefined, {
+                              <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-surface-soft rounded-xl text-xs font-medium text-text-dim">
+                                📅 Due: {new Date(a.dueDate).toLocaleDateString(undefined, {
                                   month: 'short',
                                   day: 'numeric',
                                 })}
@@ -915,7 +918,7 @@ const ClassDetail = () => {
                             {a.lesson && (
                               <Link
                                 to={`/courses/${a.course?.id || ''}/lessons/${a.lesson.id}`}
-                                className="inline-flex items-center gap-2 px-3 py-1 bg-accent text-white text-xs font-medium hover:bg-accent-strong transition-colors"
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-white rounded-xl text-xs font-semibold hover:bg-accent-strong transition-colors"
                               >
                                 📖 Linked Lesson: {a.lesson.title}
                               </Link>
@@ -926,7 +929,7 @@ const ClassDetail = () => {
                           {isTeacher ? (
                             <>
                               {typeof completedCount === 'number' && (
-                                <div className="px-4 py-2 bg-surface-soft border border-line-soft">
+                                <div className="px-4 py-2 bg-surface-soft rounded-xl">
                                   <span className="text-xs font-semibold text-text-dim">
                                     Completed: {completedCount}/{totalStudents}
                                   </span>
@@ -935,16 +938,16 @@ const ClassDetail = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteAssignment(a.id)}
-                                className="w-full px-6 py-2 border border-line-soft text-sm font-medium hover:text-red-500 hover:border-red-500 transition-all"
+                                className="w-full px-6 py-2 rounded-xl text-sm font-medium text-text-dim hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
                               >
                                 Delete
                               </button>
                             </>
                           ) : (
                             <span
-                              className={`text-xs font-semibold px-4 py-2 border ${isCompleted
-                                ? 'border-accent text-accent'
-                                : 'border-line-soft text-text-dim'
+                              className={`text-xs font-bold px-4 py-2 rounded-xl ${isCompleted
+                                ? 'bg-accent/15 text-accent'
+                                : 'bg-surface-soft text-text-dim'
                                 }`}
                             >
                               {isCompleted ? 'Completed' : 'Not Started'}
@@ -953,7 +956,7 @@ const ClassDetail = () => {
                           {!isTeacher && !isCompleted && (
                             <button
                               onClick={() => handleCompleteAssignment(a.id)}
-                              className="w-full px-6 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary transition-all shadow-sm"
+                              className="btn-primary w-full"
                             >
                               Mark Complete
                             </button>
@@ -961,7 +964,7 @@ const ClassDetail = () => {
                           {!isTeacher && isCompleted && !a.lesson && (
                             <button
                               onClick={() => handleUncompleteAssignment(a.id)}
-                              className="w-full px-6 py-2 border border-line-soft text-sm font-medium hover:bg-surface-soft dark:hover:bg-surface-raised transition-all"
+                              className="w-full px-6 py-2 rounded-xl text-sm font-medium text-text-dim hover:bg-surface-soft transition-all"
                             >
                               Mark Incomplete
                             </button>
@@ -1043,7 +1046,7 @@ const ClassDetail = () => {
                                       type="button"
                                       disabled={postingComment || !(commentDrafts.assignmentClass[a.id] || '').trim()}
                                       onClick={() => handlePostAssignmentComment(a.id, { isPrivate: false })}
-                                      className="px-6 py-2 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary disabled:opacity-30 transition-all"
+                                      className="px-6 py-2 bg-accent text-white rounded-xl text-sm font-bold hover:bg-accent-strong disabled:opacity-30 transition-all"
                                     >
                                       Post
                                     </button>
@@ -1149,9 +1152,9 @@ const ClassDetail = () => {
                                               targetUserId: assignmentPrivateTarget[a.id] || undefined,
                                             })
                                           }
-                                          className="px-6 py-2 bg-accent text-white text-sm font-medium hover:bg-accent-strong disabled:opacity-30 transition-all"
+                                          className="px-6 py-2 bg-accent text-white rounded-xl text-sm font-bold hover:bg-accent-strong disabled:opacity-30 transition-all"
                                         >
-                                          SEND
+                                          Send
                                         </button>
                                       </div>
                                     </div>
@@ -1179,9 +1182,9 @@ const ClassDetail = () => {
                                         type="button"
                                         disabled={postingComment || !(commentDrafts.assignmentPrivate[a.id] || '').trim()}
                                         onClick={() => handlePostAssignmentComment(a.id, { isPrivate: true })}
-                                        className="px-6 py-2 bg-accent text-white text-sm font-medium hover:bg-accent-strong disabled:opacity-30 transition-all"
+                                        className="px-6 py-2 bg-accent text-white rounded-xl text-sm font-bold hover:bg-accent-strong disabled:opacity-30 transition-all"
                                       >
-                                        SEND
+                                        Send
                                       </button>
                                     </div>
                                   )}
@@ -1205,7 +1208,7 @@ const ClassDetail = () => {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-12">
               <div>
                 <span className="section-kicker mb-4">People</span>
-                <h2 className="text-3xl font-semibold text-text-primary">
+                <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">
                   Class <br />Members.
                 </h2>
               </div>
@@ -1213,34 +1216,33 @@ const ClassDetail = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddTeacher(true)}
-                  className="px-6 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary transition-all"
+                  className="btn-primary"
                 >
-                  Add teacher
+                  Add Teacher
                 </button>
               )}
             </div>
 
             {/* Leaderboard: most assignments completed */}
             {Array.isArray(leaderboard) && leaderboard.length > 0 && (
-              <div className="mb-12 p-8 bg-surface-soft border border-line-soft dark:border-line-soft">
-                <h3 className="text-sm font-semibold text-accent mb-8 flex items-center gap-3">
-                  <span className="w-8 h-[1px] bg-accent"></span>
-                  Leaderboard — Most Assignments Completed
+              <div className="mb-12 p-8 bg-block-blue rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                <h3 className="font-display text-base font-extrabold tracking-tight text-blue mb-8">
+                  Leaderboard, Most Assignments Completed
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {leaderboard.map((entry, index) => (
                     <div
                       key={entry.userId}
-                      className="flex items-center gap-4 p-4 bg-surface-raised border border-line-soft hover:border-accent transition-all group"
+                      className="flex items-center gap-4 p-4 bg-surface-raised rounded-2xl shadow-[0_16px_36px_-30px_rgba(20,20,18,0.4)] hover:-translate-y-0.5 transition-transform group"
                     >
                       <span
-                        className={`flex-shrink-0 w-10 h-10 flex items-center justify-center text-[10px] font-black border ${index === 0
-                          ? 'bg-accent text-white border-accent'
+                        className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-black ${index === 0
+                          ? 'bg-accent text-white'
                           : index === 1
-                            ? 'bg-text-primary text-white border-line-soft dark:bg-surface-raised dark:text-surface-body dark:border-line-soft'
+                            ? 'bg-text-primary text-white dark:bg-surface-soft dark:text-text-primary'
                             : index === 2
-                              ? 'bg-surface-soft text-text-primary border-line-soft dark:bg-surface-soft dark:text-text-primary dark:border-line-soft'
-                              : 'bg-transparent text-text-dim border-line-soft'
+                              ? 'bg-surface-soft text-text-primary'
+                              : 'bg-surface-soft/60 text-text-dim'
                           }`}
                       >
                         {String(index + 1).padStart(2, '0')}
@@ -1267,8 +1269,7 @@ const ClassDetail = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Teachers */}
               <div>
-                <h3 className="text-sm font-semibold text-text-muted dark:text-text-muted mb-6 flex items-center gap-3">
-                  <span className="w-4 h-[1px] bg-surface-soft"></span>
+                <h3 className="font-display text-base font-extrabold tracking-tight text-text-primary mb-6">
                   Teachers
                 </h3>
                 {teachers.length === 0 ? (
@@ -1278,7 +1279,7 @@ const ClassDetail = () => {
                 ) : (
                   <div className="space-y-3">
                     {teachers.map((t) => (
-                      <div key={t.id} className="flex items-center gap-4 p-4 bg-surface-soft border border-line-soft dark:border-line-soft hover:border-text-dim transition-all group">
+                      <div key={t.id} className="flex items-center gap-4 p-4 bg-surface-raised rounded-2xl shadow-[0_16px_36px_-30px_rgba(20,20,18,0.4)] hover:-translate-y-0.5 transition-transform group">
                         <Link to={`/profile/${t.id}`} className="flex items-center gap-4 flex-1 min-w-0">
                           <div className={`w-10 h-10 rounded-full ${getAvatarColor(t.firstName + t.lastName)} flex items-center justify-center text-[10px] font-bold text-white shadow-sm flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity`}>
                             {getInitials(t)}
@@ -1307,8 +1308,7 @@ const ClassDetail = () => {
 
               {/* Students */}
               <div>
-                <h3 className="text-sm font-semibold text-text-muted dark:text-text-muted mb-6 flex items-center gap-3">
-                  <span className="w-4 h-[1px] bg-surface-soft"></span>
+                <h3 className="font-display text-base font-extrabold tracking-tight text-text-primary mb-6">
                   Students ({students.length})
                 </h3>
                 {students.length === 0 ? (
@@ -1318,7 +1318,7 @@ const ClassDetail = () => {
                 ) : (
                   <div className="grid grid-cols-1 gap-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                     {students.map((s) => (
-                      <div key={s.id} className="flex items-center gap-4 p-3 bg-surface-raised border border-line-soft hover:border-text-dim transition-all group">
+                      <div key={s.id} className="flex items-center gap-4 p-3 bg-surface-soft rounded-2xl hover:bg-surface-raised transition-colors group">
                         <Link to={`/profile/${s.id}`} className="flex items-center gap-4 flex-1 min-w-0">
                           <div className={`w-8 h-8 rounded-full ${getAvatarColor(s.firstName + s.lastName)} flex items-center justify-center text-[10px] font-bold text-white shadow-sm flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity`}>
                             {getInitials(s)}
@@ -1351,11 +1351,11 @@ const ClassDetail = () => {
         {/* New assignment modal — overlay, not a tab */}
         {isTeacher && showNewAssignment && (
           <div className="fixed inset-0 bg-surface-raised/80 dark:bg-text-primary/80 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
-            <div className="bg-surface-body border border-line-soft shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-lg w-full max-h-[90vh] overflow-y-auto p-10 animate-in zoom-in-95 duration-300">
+            <div className="bg-surface-raised rounded-3xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-lg w-full max-h-[90vh] overflow-y-auto p-10 animate-in zoom-in-95 duration-300">
               <div className="flex items-start justify-between mb-10">
                 <div>
                   <span className="section-kicker mb-2">Create Assignment</span>
-                  <h2 className="text-2xl font-black text-text-primary">
+                  <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">
                     New Assignment
                   </h2>
                 </div>
@@ -1433,29 +1433,29 @@ const ClassDetail = () => {
                       }}
                       className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-sm font-medium focus:border-accent outline-none transition-all"
                     >
-                      <option value="">NONE</option>
+                      <option value="">None</option>
                       {availableLessons.map((l) => (
                         <option key={l.id} value={l.id}>
-                          {l.courseTitle.toUpperCase()} – {l.title.toUpperCase()}
+                          {l.courseTitle}, {l.title}
                         </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4 border-t border-line-soft">
+                <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4">
                   <button
                     type="button"
                     onClick={() => setShowNewAssignment(false)}
                     className="px-8 py-4 text-sm font-medium text-text-dim hover:text-text-primary transition-all order-2 sm:order-1"
                     disabled={submitting}
                   >
-                    Abort
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-10 py-4 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-semibold hover:bg-accent dark:hover:text-text-primary disabled:opacity-30 transition-all shadow-lg order-1 sm:order-2"
+                    className="btn-primary disabled:opacity-30 order-1 sm:order-2"
                   >
                     {submitting ? 'Creating...' : 'Create Assignment'}
                   </button>
@@ -1468,12 +1468,12 @@ const ClassDetail = () => {
         {/* Add teacher modal — owner only */}
         {isOwner && showAddTeacher && (
           <div className="fixed inset-0 bg-surface-raised/80 dark:bg-text-primary/80 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
-            <div className="bg-surface-body border border-line-soft shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-md w-full p-10 animate-in zoom-in-95 duration-300">
+            <div className="bg-surface-raised rounded-3xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-md w-full p-10 animate-in zoom-in-95 duration-300">
               <div className="flex items-start justify-between mb-8">
                 <div>
                   <span className="section-kicker mb-2">Add Teacher</span>
-                  <h2 className="text-xl font-black text-text-primary">
-                    Add teacher
+                  <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">
+                    Add Teacher
                   </h2>
                   <p className="text-[10px] text-text-muted mt-2">
                     Enter the teacher&apos;s account email. They must have an instructor account.
@@ -1511,9 +1511,9 @@ const ClassDetail = () => {
                   <button
                     type="submit"
                     disabled={addingTeacher}
-                    className="px-8 py-3 bg-text-primary dark:bg-surface-raised text-surface-body text-sm font-medium hover:bg-accent dark:hover:text-text-primary disabled:opacity-50 transition-all"
+                    className="btn-primary disabled:opacity-50"
                   >
-                    {addingTeacher ? 'Adding...' : 'Add teacher'}
+                    {addingTeacher ? 'Adding...' : 'Add Teacher'}
                   </button>
                 </div>
               </form>

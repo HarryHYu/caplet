@@ -53,25 +53,24 @@ const FIRENumber = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+        <header className="mb-20">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools &rarr; Wealth & Investing</span>
-              <h1 className="text-6xl md:text-8xl mb-8">FIRE<br />Number.</h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Calculate how much you need to retire — and how long until you get there.
+              <span className="font-hand text-accent text-lg block mb-3">Wealth and investing</span>
+              <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mb-8">FIRE<br />Number.</h1>
+              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+                Calculate how much you need to retire, and how long until you get there.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
+            <Link to="/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">&larr; Back to tools</Link>
           </div>
-          <div className="h-px w-full bg-line-soft" />
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
             <form onSubmit={handleSubmit} className="space-y-16">
               <div>
-                <h2 className="text-sm font-semibold text-text-muted mb-10">Retirement Target</h2>
+                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-10">Retirement Target</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div>
                     <label className="text-sm font-semibold text-text-dim mb-4 block italic">Monthly Expenses in Retirement</label>
@@ -93,7 +92,7 @@ const FIRENumber = () => {
                 </div>
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-text-muted mb-10">Your Current Situation (optional)</h2>
+                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-10">Your Current Situation (optional)</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                   <div>
                     <label className="text-sm font-semibold text-text-dim mb-4 block italic">Current Savings / Investments</label>
@@ -118,28 +117,27 @@ const FIRENumber = () => {
                         className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                       <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
                     </div>
-                    <p className="text-xs text-text-dim mt-2 italic">ASX 200 long-run avg ≈ 7–8%</p>
+                    <p className="text-xs text-text-dim mt-2 italic">ASX 200 long-run average is about 7 to 8%</p>
                   </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary w-full py-6 text-sm">Calculate FIRE Number</button>
+              <button type="submit" className="btn-primary w-full py-6 text-sm hover:-translate-y-0.5 transition-transform">Calculate FIRE Number</button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03] grid-technical pointer-events-none" />
-            <h2 className="text-sm font-semibold text-text-muted mb-16 relative z-10">FIRE Projection</h2>
+          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-16 relative z-10">FIRE Projection</h2>
             {result ? (
               result.error ? (
                 <p className="text-sm font-medium text-accent relative z-10">{result.error}</p>
               ) : (
                 <div className="space-y-12 relative z-10">
-                  <div>
-                    <p className="text-xs font-medium text-text-dim mb-4 italic">Your FIRE Number</p>
-                    <p className="text-5xl font-black tracking-tighter text-text-primary">{formatCurrency(result.fireNumber)}</p>
-                    <p className="text-xs text-text-dim mt-2 italic">At {(result.WR * 100).toFixed(1)}% withdrawal rate</p>
+                  <div className="bg-surface-raised rounded-2xl p-8 shadow-[0_18px_40px_-30px_rgba(20,20,18,0.3)]">
+                    <p className="text-xs font-semibold text-text-muted mb-4">Your FIRE Number</p>
+                    <p className="text-5xl font-display font-extrabold tracking-tight text-text-primary">{formatCurrency(result.fireNumber)}</p>
+                    <p className="text-xs text-text-dim mt-2">At {(result.WR * 100).toFixed(1)}% withdrawal rate</p>
                   </div>
-                  <div className="pt-10 border-t border-line-soft space-y-8">
+                  <div className="space-y-8">
                     <div className="flex justify-between items-end">
                       <div>
                         <p className="text-xs font-medium text-text-dim mb-1">Annual Expenses</p>
@@ -153,9 +151,9 @@ const FIRENumber = () => {
                       )}
                     </div>
                     {result.yearsToFIRE !== null && (
-                      <div className="pt-8 border-t border-line-soft">
-                        <p className="text-xs font-medium text-text-dim mb-2">Years to FIRE</p>
-                        <p className="text-3xl font-black">
+                      <div className="bg-surface-raised rounded-2xl p-8 shadow-[0_18px_40px_-30px_rgba(20,20,18,0.3)]">
+                        <p className="text-xs font-semibold text-text-muted mb-2">Years to FIRE</p>
+                        <p className="text-3xl font-display font-extrabold tracking-tight">
                           {result.yearsToFIRE === 0 ? "You're there!" : `${result.yearsToFIRE.toFixed(1)} years`}
                         </p>
                         {result.savingsRate !== null && (
@@ -164,15 +162,15 @@ const FIRENumber = () => {
                       </div>
                     )}
                   </div>
-                  <p className="text-xs font-serif italic text-text-dim leading-relaxed pt-4 border-t border-line-soft">
+                  <p className="text-xs text-text-dim leading-relaxed">
                     FIRE = Financial Independence, Retire Early. Returns are not guaranteed; this is a projection only.
                   </p>
                 </div>
               )
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
-                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">FI</div>
-                <p className="text-sm font-medium">Enter your expenses to calculate your number</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10">
+                <div className="w-14 h-14 rounded-2xl bg-accent text-white flex items-center justify-center text-sm font-display font-extrabold mb-8 shadow-[0_18px_40px_-26px_rgba(20,20,18,0.5)]">FI</div>
+                <p className="text-sm font-medium text-text-muted">Enter your expenses to calculate your number</p>
               </div>
             )}
           </div>

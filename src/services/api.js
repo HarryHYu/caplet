@@ -81,6 +81,9 @@ class ApiService {
         const errorMsg = data.message || data.errors?.[0]?.msg || data.errors?.[0]?.message || `Error ${response.status}: ${response.statusText}`;
         const error = new Error(errorMsg);
         error.status = response.status;
+        if (response.status === 401) {
+          this.clearToken();
+        }
         throw error;
       }
 
@@ -346,6 +349,18 @@ class ApiService {
     return this.request(`/users/${userId}`);
   }
 
+  // Financial profile (personal financial snapshot)
+  async getFinancialProfile() {
+    return this.request('/financial-profile');
+  }
+
+  async updateFinancialProfile(data) {
+    return this.request('/financial-profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Progress
   async updateLessonProgress(lessonId, progressData) {
     return this.request(`/progress/lesson/${lessonId}`, {
@@ -531,6 +546,104 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify({ category }),
     });
+  }
+
+  // Saved slides that are due for spaced-repetition review (new or past-due).
+  async getDueSavedSlides() {
+    return this.request('/saved-slides/due');
+  }
+
+  // Generate one active-recall question (+ model answer) from a saved slide.
+  async getSlideRecallQuestion(savedSlideId) {
+    return this.request(`/saved-slides/${savedSlideId}/recall-question`, {
+      method: 'POST',
+    });
+  }
+
+  // Spaced repetition (shared scheduler across saved slides, essays, quotes)
+  async getDueReviewItems(itemType) {
+    const qs = itemType ? `?itemType=${encodeURIComponent(itemType)}` : '';
+    return this.request(`/review/due${qs}`);
+  }
+
+  // Record a recall result for an item; advances/resets its review schedule.
+  async submitReview(itemType, itemId, recall) {
+    return this.request('/review/submit', {
+      method: 'POST',
+      body: JSON.stringify({ itemType, itemId, recall }),
+    });
+  }
+
+  // AI tutor (in-slide assistance). Degrades gracefully: never throws, so the
+  // tutor UI keeps working whether or not the backend has shipped /ai/tutor.
+  async askTutor({ lessonId, slide, question } = {}) {
+    try {
+      const data = await this.request('/ai/tutor', {
+        method: 'POST',
+        body: JSON.stringify({ lessonId, slide, question }),
+      });
+      return { unavailable: false, answer: data?.answer || '' };
+    } catch (error) {
+      console.warn('askTutor failed; returning fallback', error);
+      return {
+        unavailable: true,
+        answer: '',
+        message: 'The tutor is currently unavailable. Please try again later.',
+      };
+    }
+  }
+
+  // Lesson scoring + analytics events. Both degrade gracefully (resolve to null
+  // instead of throwing) so the lesson player behaves identically before the
+  // backend ships POST /progress/:lessonId/score and POST /events.
+  async submitLessonScore(lessonId, payload) {
+    if (!lessonId) return null;
+    try {
+      return await this.request(`/progress/${lessonId}/score`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      console.warn('submitLessonScore failed; ignoring', error);
+      return null;
+    }
+  }
+
+  async logEvent(event) {
+    try {
+      return await this.request('/events', {
+        method: 'POST',
+        body: JSON.stringify(event),
+      });
+    } catch (error) {
+      console.warn('logEvent failed; ignoring', error);
+      return null;
+    }
+  }
+
+  // Essays (private essay memoriser)
+  async getEssays() {
+    return this.request('/essays');
+  }
+
+  async getEssay(id) {
+    return this.request(`/essays/${id}`);
+  }
+
+  async createEssay(title, text) {
+    return this.request('/essays', {
+      method: 'POST',
+      body: JSON.stringify({ title, text }),
+    });
+  }
+
+  // AI: segment + annotate a stored essay (thesis / paragraphs / quotes).
+  async parseEssay(id) {
+    return this.request(`/essays/${id}/parse`, { method: 'POST' });
+  }
+
+  async deleteEssay(id) {
+    return this.request(`/essays/${id}`, { method: 'DELETE' });
   }
 
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)

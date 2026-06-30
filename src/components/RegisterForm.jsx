@@ -72,8 +72,9 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
 
       {/* Heading */}
       <div className="mb-8">
-        <h2 className="text-4xl font-display font-bold text-text-primary tracking-tight mb-2">
-          Create account.
+        <p className="font-hand text-accent text-lg mb-1">Welcome aboard</p>
+        <h2 className="text-4xl font-display font-extrabold text-text-primary tracking-tight mb-2">
+          Create Your Account
         </h2>
         <p className="text-sm text-text-muted">
           Already registered?{' '}
@@ -91,7 +92,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+        <div className="mb-6 p-4 bg-red-500/10 rounded-2xl">
           <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
@@ -117,9 +118,9 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
       </div>
 
       <div className="my-7 flex items-center gap-4">
-        <div className="flex-1 h-px bg-line-soft" />
-        <span className="text-xs font-medium text-text-dim">or</span>
-        <div className="flex-1 h-px bg-line-soft" />
+        <div className="flex-1 h-px bg-line-soft/60" />
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-dim">Or</span>
+        <div className="flex-1 h-px bg-line-soft/60" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -206,7 +207,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
         <button
           type="submit"
           disabled={submitLoading || googleLoading}
-          className="w-full btn-primary py-4 flex items-center justify-center gap-2 rounded-xl disabled:opacity-50"
+          className="w-full btn-primary py-4 flex items-center justify-center gap-2 rounded-2xl hover:-translate-y-0.5 transition-transform disabled:opacity-50"
         >
           {submitLoading ? (
             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

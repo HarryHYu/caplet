@@ -2,9 +2,11 @@ const express = require('express');
 const SavedSlide = require('../models/SavedSlide');
 const Lesson = require('../models/Lesson');
 const Course = require('../models/Course');
+const ReviewItem = require('../models/ReviewItem');
 const { requireAuth } = require('../middleware/auth');
 const { categorizeSlides, slideToText } = require('../services/slideCategorizer');
 const { summarizeSlides } = require('../services/slideSummarizer');
+const { generateRecallQuestion } = require('../services/recallQuestion');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -31,6 +33,70 @@ router.get('/', async (req, res) => {
   } catch (e) {
     console.error('Get saved slides error:', e);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Saved slides that are due for spaced-repetition review. A slide is "due" if
+// it has never been reviewed (no ReviewItem yet) or its scheduled nextDueAt has
+// passed. Each returned slide carries its `review` state (stage/nextDueAt) when
+// one exists. Due-ness is computed against the shared ReviewItem schedule.
+router.get('/due', async (req, res) => {
+  try {
+    const slides = await SavedSlide.findAll({
+      where: { userId: req.user.id },
+      include: [
+        { model: Lesson, as: 'lesson', attributes: ['id', 'title', 'slides'] },
+        { model: Course, as: 'course', attributes: ['id', 'title', 'category', 'thumbnail'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    const reviews = await ReviewItem.findAll({
+      where: { userId: req.user.id, itemType: 'savedSlide' },
+    });
+    const reviewByItemId = new Map(reviews.map((r) => [r.itemId, r]));
+
+    const now = Date.now();
+    const due = [];
+    for (const s of slides) {
+      const review = reviewByItemId.get(String(s.id));
+      const isDue = !review || new Date(review.nextDueAt).getTime() <= now;
+      if (!isDue) continue;
+      const plain = s.toJSON();
+      plain.review = review
+        ? { stage: review.stage, nextDueAt: review.nextDueAt, lastRecall: review.lastRecall }
+        : null;
+      due.push(plain);
+    }
+
+    res.json({ savedSlides: due });
+  } catch (e) {
+    console.error('Get due saved slides error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Generate one active-recall question for a saved slide (AI). The actual recall
+// grade is submitted through the shared scheduler (POST /api/review/submit with
+// itemType 'savedSlide'), so this endpoint only produces the prompt + answer.
+router.post('/:id/recall-question', async (req, res) => {
+  try {
+    const saved = await SavedSlide.findOne({
+      where: { id: req.params.id, userId: req.user.id },
+      include: [{ model: Lesson, as: 'lesson', attributes: ['id', 'title', 'slides'] }],
+    });
+    if (!saved) return res.status(404).json({ message: 'Saved slide not found' });
+
+    const parsed = parseSlides(saved.lesson?.slides);
+    const slide = parsed[saved.slideIndex];
+    const text = slideToText(slide) || saved.lesson?.title || '';
+
+    const recall = await generateRecallQuestion(text);
+    res.json({ ...recall, savedSlideId: saved.id });
+  } catch (e) {
+    const status = e.status || 500;
+    console.error('Recall question error:', e.message || e);
+    res.status(status).json({ message: e.message || 'Failed to generate a question' });
   }
 });
 
@@ -147,6 +213,11 @@ router.delete('/:id', async (req, res) => {
       where: { id: req.params.id, userId: req.user.id },
     });
     if (!deleted) return res.status(404).json({ message: 'Saved slide not found' });
+    // Tidy up the slide's review schedule (itemId is a string ref, not an FK,
+    // so it does not cascade automatically).
+    await ReviewItem.destroy({
+      where: { userId: req.user.id, itemType: 'savedSlide', itemId: String(req.params.id) },
+    }).catch(() => {});
     res.status(204).end();
   } catch (e) {
     console.error('Delete saved slide error:', e);

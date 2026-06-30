@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Survey = require('../models/Survey');
+const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.post('/', [
 });
 
 // Get aggregated survey statistics
-router.get('/stats', async (req, res) => {
+router.get('/stats', requireAdmin, async (req, res) => {
   try {
     const surveys = await Survey.findAll();
 

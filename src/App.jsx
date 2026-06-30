@@ -34,14 +34,17 @@ import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModuleDetail from './pages/ModuleDetail';
 import LessonPlayer from './pages/LessonPlayer';
+import CourseComplete from './pages/CourseComplete';
 import Dashboard from './pages/Dashboard';
 import Revision from './pages/Revision';
+import EssayMemoriser from './pages/EssayMemoriser';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Classes from './pages/Classes';
 import ClassDetail from './pages/ClassDetail';
 import Settings from './pages/Settings';
 import SettingsProfile from './pages/SettingsProfile';
+import SettingsFinancial from './pages/SettingsFinancial';
 import SettingsAccount from './pages/SettingsAccount';
 import UserProfile from './pages/UserProfile';
 import Terms from './pages/Terms';
@@ -128,6 +131,7 @@ function AppShell() {
           <Route path="/" element={<HomeOrRedirect />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
+          <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/tools" element={<Tools />} />
@@ -156,11 +160,13 @@ function AppShell() {
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
           <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
+          <Route path="/courses/:courseId/complete" element={<RequireAuth><CourseComplete /></RequireAuth>} />
           <Route path="/classes" element={<Classes />} />
           <Route path="/classes/:classId" element={<RequireAuth><ClassDetail /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>}>
             <Route index element={<Navigate to="/settings/profile" replace />} />
             <Route path="profile" element={<SettingsProfile />} />
+            <Route path="financial" element={<SettingsFinancial />} />
             <Route path="account" element={<SettingsAccount />} />
           </Route>
           <Route path="/profile/:userId" element={<UserProfile />} />

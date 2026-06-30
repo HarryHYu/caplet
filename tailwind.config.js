@@ -8,10 +8,15 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        body: ['"Outfit"', 'system-ui', 'sans-serif'],
+        // Global type system: Bricolage display + Hanken body, with Lora as a
+        // serif-italic accent and JetBrains Mono for code/data.
+        display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+        body: ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],
         serif: ['"Lora"', 'Georgia', 'serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
+        bricolage: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+        hanken: ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],
+        hand: ['"Shantell Sans"', 'ui-rounded', 'cursive'],
       },
       colors: {
         // Design system tokens — CSS variable backed (see src/index.css).

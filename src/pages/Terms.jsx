@@ -1,15 +1,19 @@
+import { useReveal } from '../lib/useReveal';
+
 const Terms = () => {
+  useReveal();
+
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <div className="max-w-3xl mx-auto reveal-text">
-          <span className="section-kicker mb-8">Legal Interface</span>
-          <h1 className="text-6xl md:text-8xl mb-12">
+        <div className="max-w-3xl mx-auto reveal">
+          <span className="font-hand text-accent text-xl mb-4 block">The fine print</span>
+          <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mb-12">
             Terms and<br />Services.
           </h1>
 
-          <div className="border border-line-soft bg-surface-raised p-12 lg:p-16 space-y-10">
-            <div className="space-y-8 text-sm font-medium text-text-muted leading-relaxed">
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 space-y-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="space-y-8 text-base font-medium text-text-muted leading-relaxed">
               <p>
                 Caplet is not liable for any financial damages.
               </p>
@@ -23,7 +27,7 @@ const Terms = () => {
               </p>
             </div>
 
-            <div className="pt-10 border-t border-line-soft">
+            <div className="pt-10">
               <p className="text-xs font-medium text-text-dim">
                 Last updated: February 2026
               </p>
