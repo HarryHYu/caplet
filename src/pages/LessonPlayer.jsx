@@ -23,13 +23,13 @@ class SlideErrorBoundary extends Component {
     if (this.state.error) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-          <p className="text-text-muted text-sm">This slide encountered an error.</p>
+          <p className="text-text-muted text-sm">This slide ran into an error.</p>
           <button
             type="button"
-            className="px-4 py-2 rounded-full border border-line-soft text-sm text-text-muted hover:text-text-primary transition-colors"
+            className="btn-secondary px-5 py-2.5 rounded-xl text-sm hover:-translate-y-0.5 transition-transform"
             onClick={() => this.setState({ error: null })}
           >
-            Retry
+            Try Again
           </button>
         </div>
       );
@@ -465,13 +465,15 @@ const LessonPlayer = () => {
     return (
       <div className="min-h-[100dvh] pt-14 md:pt-16 bg-surface-body flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <p className="text-2xl font-bold mb-4">{error || 'Lesson not found'}</p>
-          <p className="text-text-muted mb-8">
-            The lesson you're looking for doesn't exist or may have been moved.
-          </p>
-          <Link to={`/courses/${courseId}`} className="btn-primary py-3 px-8">
-            Back to Course
-          </Link>
+          <div className="block-cream rounded-3xl px-8 py-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <p className="text-2xl font-display font-extrabold tracking-tight mb-4">{error || 'Lesson not found'}</p>
+            <p className="text-text-muted mb-8">
+              The lesson you're looking for doesn't exist or may have been moved.
+            </p>
+            <Link to={`/courses/${courseId}`} className="btn-primary py-3 px-8 hover:-translate-y-0.5 transition-transform">
+              Back to Course
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -722,7 +724,7 @@ const LessonPlayer = () => {
                   type="button"
                   onClick={markComplete}
                   disabled={saving || completed}
-                  className="btn-primary h-11 md:h-12 px-6 md:px-8 rounded-full"
+                  className="btn-primary h-11 md:h-12 px-6 md:px-8 rounded-2xl hover:-translate-y-0.5 transition-transform"
                 >
                   {completed
                     ? nextLesson
@@ -753,8 +755,8 @@ const LessonPlayer = () => {
           <div className="flex-1 min-h-0 overflow-y-auto">
             <article className="max-w-3xl mx-auto px-6 md:px-12 py-12">
               <header className="mb-12">
-                <p className="text-xs font-medium text-accent mb-4">Lesson</p>
-                <h1 className="text-4xl md:text-5xl font-display font-bold leading-[1.05] mb-6">{lesson.title}</h1>
+                <p className="font-hand text-lg text-accent mb-3">Lesson</p>
+                <h1 className="text-4xl md:text-5xl font-display font-extrabold tracking-tight leading-[1.05] mb-6">{lesson.title}</h1>
                 {lesson.description && (
                   <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-2xl">
                     {lesson.description}
@@ -766,12 +768,12 @@ const LessonPlayer = () => {
                 <ReactMarkdown>{lesson.content || 'No content available yet.'}</ReactMarkdown>
               </div>
 
-              <div className="mt-16 pt-8 border-t border-line-soft flex justify-end">
+              <div className="mt-16 pt-8 flex justify-end">
                 <button
                   type="button"
                   onClick={markComplete}
                   disabled={saving || completed}
-                  className="btn-primary h-12 px-8 rounded-full"
+                  className="btn-primary h-12 px-8 rounded-2xl hover:-translate-y-0.5 transition-transform"
                 >
                   {completed ? 'Lesson Completed' : saving ? 'Saving…' : 'Mark as Complete'}
                 </button>

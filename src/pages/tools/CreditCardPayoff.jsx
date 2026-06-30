@@ -53,102 +53,100 @@ const CreditCardPayoff = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+        <header className="mb-16">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools &rarr; Debt & Loans</span>
-              <h1 className="text-6xl md:text-8xl mb-8">Credit Card<br />Payoff.</h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Calculate exactly how long it takes to clear your balance — and how much interest you can save by paying more.
+              <span className="font-hand text-accent text-lg">Tools &rarr; Debt & Loans</span>
+              <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mt-4 mb-8">Credit Card<br />Payoff.</h1>
+              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+                See exactly how long it takes to clear your balance, and how much interest you save by paying more.
               </p>
             </div>
             <Link to="/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
           </div>
-          <div className="h-px w-full bg-line-soft" />
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-sm font-semibold text-text-muted mb-16">Debt Parameters</h2>
-            <form onSubmit={handleSubmit} className="space-y-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Debt Parameters</h2>
+            <form onSubmit={handleSubmit} className="space-y-10">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-4 block italic">Current Balance (AUD)</label>
-                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                <label className="text-sm font-semibold text-text-dim mb-3 block">Current Balance (AUD)</label>
+                <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input
                     type="number" min="0" step="100" value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="0.00"
-                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                    className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block italic">Annual Interest Rate (APR %)</label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                  <label className="text-sm font-semibold text-text-dim mb-3 block">Annual Interest Rate (APR %)</label>
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
                       type="number" min="0" max="100" step="0.1" value={apr} onChange={(e) => setApr(e.target.value)} placeholder="19.9"
-                      className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      className="w-full bg-transparent pl-4 pr-9 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
-                    <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                   </div>
-                  <p className="text-xs text-text-dim mt-2 italic">AU avg ≈ 19–20%</p>
+                  <p className="text-xs text-text-dim mt-2">AU avg is roughly 19 to 20%.</p>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block italic">Monthly Payment (AUD)</label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                    <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                  <label className="text-sm font-semibold text-text-dim mb-3 block">Monthly Payment (AUD)</label>
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input
                       type="number" min="0" step="10" value={monthlyPayment} onChange={(e) => setMonthlyPayment(e.target.value)} placeholder="0"
-                      className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      className="w-full bg-transparent pl-8 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                   </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary w-full py-6 text-sm">Calculate Payoff</button>
+              <button type="submit" className="btn-primary w-full py-5 text-sm hover:-translate-y-0.5 transition-transform">Calculate Payoff</button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03] grid-technical pointer-events-none" />
-            <h2 className="text-sm font-semibold text-text-muted mb-16 relative z-10">Payoff Projection</h2>
+          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Payoff Projection</h2>
             {result ? (
               result.error ? (
-                <p className="text-sm font-medium text-accent relative z-10">{result.error}</p>
+                <p className="text-sm font-semibold text-accent">{result.error}</p>
               ) : (
-                <div className="space-y-12 relative z-10">
+                <div className="space-y-10">
                   <div>
-                    <p className="text-xs font-medium text-text-dim mb-4 italic">Time to Pay Off</p>
-                    <p className="text-5xl font-black tracking-tighter text-text-primary">
+                    <p className="text-xs font-semibold text-text-dim mb-3">Time to Pay Off</p>
+                    <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
                       {result.years > 0 ? `${result.years}y ` : ''}{result.remMonths > 0 ? `${result.remMonths}m` : result.years === 0 ? `${result.months}m` : ''}
                     </p>
                   </div>
-                  <div className="pt-10 border-t border-line-soft space-y-8">
+                  <div className="rounded-2xl bg-surface-raised p-6 space-y-6">
                     <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-xs font-medium text-text-dim mb-1">Total Paid</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Total Paid</p>
                         <p className="text-xl font-bold">{formatCurrency(result.totalPaid)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-medium text-text-dim mb-1">Interest Cost</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Interest Cost</p>
                         <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
                       </div>
                     </div>
                     {result.interestSaved > 0 && (
-                      <div className="pt-8 border-t border-line-soft">
-                        <p className="text-xs font-medium text-text-dim mb-2 italic">vs. minimum payments</p>
+                      <div className="pt-6 border-t border-line-soft">
+                        <p className="text-xs font-semibold text-text-dim mb-2">Versus minimum payments</p>
                         <p className="text-sm font-semibold text-accent">
                           Save {formatCurrency(result.interestSaved)} and {result.monthsSaved} months
                         </p>
-                        <p className="text-xs text-text-dim mt-1">by paying {formatCurrency(parseFloat(monthlyPayment))} instead of ~{formatCurrency(result.minPayment)}/mo minimum</p>
+                        <p className="text-xs text-text-dim mt-1">By paying {formatCurrency(parseFloat(monthlyPayment))} instead of about {formatCurrency(result.minPayment)}/mo minimum.</p>
                       </div>
                     )}
                   </div>
                 </div>
               )
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
-                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">CC</div>
-                <p className="text-sm font-medium">Enter your balance and payment details</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <div className="w-14 h-14 rounded-2xl bg-accent text-white flex items-center justify-center text-sm font-display font-extrabold mb-6">CC</div>
+                <p className="text-sm font-medium text-text-muted">Enter your balance and payment details.</p>
               </div>
             )}
           </div>

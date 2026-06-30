@@ -138,8 +138,8 @@ const SavingsGoal = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block italic">
-                    Expected Yield (%)
+                  <label className="text-sm font-semibold text-text-dim mb-4 block">
+                    Interest Rate (%)
                   </label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                     <input
@@ -157,61 +157,56 @@ const SavingsGoal = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full py-6 text-sm mt-8">
-                Calculate
+              <button type="submit" className="btn-primary w-full py-5 text-base mt-4 hover:-translate-y-0.5 transition-transform">
+                Calculate Timeline
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
-            <h2 className="text-sm font-semibold text-text-muted mb-16 relative z-10">Temporal Projection</h2>
+          <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-lg mb-10">Your projection</h2>
 
             {result ? (
               result.error ? (
-                <p className="text-sm font-medium text-accent relative z-10">{result.error}</p>
+                <p className="text-sm font-semibold text-accent">{result.error}</p>
               ) : (
-                <div className="space-y-12 relative z-10">
+                <div className="space-y-10">
                   <div>
-                    <p className="text-xs font-medium text-text-dim mb-4 italic">Time to Maturity</p>
-                    <p className="text-5xl font-black tracking-tighter text-text-primary">
-                      {result.months} <span className="text-xl text-text-dim font-bold">Months</span>
+                    <p className="text-xs font-semibold text-text-dim mb-3">Time to reach your goal</p>
+                    <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
+                      {result.months} <span className="text-xl text-text-dim font-bold">months</span>
                     </p>
-                    <p className="text-xs font-bold text-text-muted mt-4">Equivalent to {result.years.toFixed(1)} annual cycles</p>
+                    <p className="text-xs font-bold text-text-muted mt-3">About {result.years.toFixed(1)} years</p>
                   </div>
 
-                  <div className="pt-10 border-t border-line-soft space-y-8">
+                  <div className="space-y-8">
                     <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-xs font-medium text-text-dim mb-1">Total Injected</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">You contribute</p>
                         <p className="text-xl font-bold">{formatCurrency(result.totalContributed)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-medium text-text-dim mb-1">Accrued Yield</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Interest earned</p>
                         <p className="text-xl font-bold text-accent">{formatCurrency(result.interestEarned)}</p>
                       </div>
                     </div>
 
-                    <div className="bg-surface-body p-8 border border-line-soft relative">
-                      <p className="text-xs font-medium text-text-dim mb-4">Maturity Balance</p>
-                      <p className="text-3xl font-black">{formatCurrency(result.finalBalance)}</p>
-                      <div className="absolute bottom-4 right-4 text-xs font-serif italic text-accent opacity-50">
-                        Objective Reached
-                      </div>
+                    <div className="bg-surface-raised rounded-2xl p-7 shadow-[0_16px_36px_-28px_rgba(20,20,18,0.3)]">
+                      <p className="text-xs font-semibold text-text-dim mb-3">Final balance</p>
+                      <p className="font-display text-3xl font-extrabold tracking-tight">{formatCurrency(result.finalBalance)}</p>
+                      <p className="font-hand text-lg text-accent mt-2">Goal reached.</p>
                     </div>
 
-                    <div className="pt-8 border-t border-line-soft">
-                      <p className="text-xs font-serif italic text-text-dim leading-relaxed">
-                        Definiton of a goal is the primary catalyst for economic discipline. Visualization is the first step toward acquisition.
-                      </p>
-                    </div>
+                    <p className="text-sm text-text-muted leading-relaxed">
+                      Naming a goal is the first step toward reaching it. Seeing the timeline makes it real.
+                    </p>
                   </div>
                 </div>
               )
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
-                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">GOAL</div>
-                <p className="text-sm font-medium">Enter your goal to see results</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-2xl bg-surface-raised flex items-center justify-center text-sm font-display font-bold text-accent mb-6 shadow-[0_16px_36px_-28px_rgba(20,20,18,0.3)]">Goal</div>
+                <p className="text-sm font-semibold text-text-muted">Enter your goal to see results.</p>
               </div>
             )}
           </div>

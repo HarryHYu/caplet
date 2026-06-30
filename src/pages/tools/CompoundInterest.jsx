@@ -105,12 +105,12 @@ const CompoundInterest = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block italic">
-                    Annual Yield (%)
+                  <label className="text-sm font-semibold text-text-dim mb-3 block">
+                    Annual Interest Rate (%)
                   </label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
                       type="number"
                       min="0"
@@ -119,17 +119,17 @@ const CompoundInterest = () => {
                       value={interestRate}
                       onChange={(e) => setInterestRate(e.target.value)}
                       placeholder="0.0"
-                      className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      className="w-full bg-transparent pl-4 pr-9 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
-                    <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block italic">
+                  <label className="text-sm font-semibold text-text-dim mb-3 block">
                     Time Horizon
                   </label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
                       type="number"
                       min="0.5"
@@ -138,67 +138,66 @@ const CompoundInterest = () => {
                       value={years}
                       onChange={(e) => setYears(e.target.value)}
                       placeholder="Years"
-                      className="w-full bg-transparent pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full py-6 text-sm mt-8">
-                Confirm Growth Logic
+              <button type="submit" className="btn-primary w-full py-4 mt-2 hover:-translate-y-0.5 transition-transform">
+                Calculate Growth
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
-            <h2 className="text-sm font-semibold text-text-muted mb-16 relative z-10">Economic Projection</h2>
+          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Your Projection</h2>
 
             {result ? (
               result.error ? (
-                <p className="text-sm font-medium text-accent relative z-10">{result.error}</p>
+                <p className="text-sm font-semibold text-accent">{result.error}</p>
               ) : (
-                <div className="space-y-12 relative z-10">
+                <div className="space-y-10">
                   <div>
-                    <p className="text-xs font-medium text-text-dim mb-4 italic">Maturity Balance</p>
-                    <p className="text-5xl font-black tracking-tighter text-text-primary">
+                    <p className="text-xs font-semibold text-text-dim mb-3">Final Balance</p>
+                    <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
                       {formatCurrency(result.finalBalance)}
                     </p>
                   </div>
 
-                  <div className="pt-10 border-t border-line-soft space-y-8">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-xs font-medium text-text-dim mb-1">Total Injected</p>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-end gap-4">
+                      <div className="bg-surface-raised rounded-2xl px-5 py-4 flex-1">
+                        <p className="text-xs font-semibold text-text-dim mb-1">Total Contributed</p>
                         <p className="text-xl font-bold">{formatCurrency(result.totalContributions)}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs font-medium text-text-dim mb-1">Accrued Interest</p>
+                      <div className="bg-surface-raised rounded-2xl px-5 py-4 flex-1 text-right">
+                        <p className="text-xs font-semibold text-text-dim mb-1">Interest Earned</p>
                         <p className="text-xl font-bold text-accent">{formatCurrency(result.interestEarned)}</p>
                       </div>
                     </div>
 
-                    <div className="pt-8 border-t border-line-soft">
-                      <p className="text-xs font-medium text-text-dim mb-4 font-serif italic">Compounded Statistics</p>
+                    <div className="bg-surface-raised rounded-2xl px-5 py-4">
+                      <p className="text-xs font-semibold text-text-dim mb-3">The Breakdown</p>
                       <div className="flex items-center gap-4 text-sm font-semibold">
-                        <span className="text-text-primary">{result.years} Year Horizon</span>
+                        <span className="text-text-primary">{result.years} year horizon</span>
                         <div className="w-px h-3 bg-line-soft" />
-                        <span className="text-text-muted">{((result.interestEarned / result.finalBalance) * 100 || 0).toFixed(1)}% Interest</span>
+                        <span className="text-text-muted">{((result.interestEarned / result.finalBalance) * 100 || 0).toFixed(1)}% interest</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-8 border-t border-line-soft">
-                    <p className="text-xs font-serif italic text-text-dim leading-relaxed">
-                      "Compound interest is the eighth wonder of the world. He who understands it, earns it... he who doesn't... pays it."
-                    </p>
-                  </div>
+                  <p className="text-sm font-serif italic text-text-muted leading-relaxed">
+                    "Compound interest is the eighth wonder of the world. Those who understand it, earn it. Those who don't, pay it."
+                  </p>
                 </div>
               )
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
-                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">EXP</div>
-                <p className="text-sm font-medium">Enter your details to see results</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-2xl bg-surface-raised flex items-center justify-center text-2xl mb-6 shadow-[0_16px_30px_-22px_rgba(20,20,18,0.4)]">
+                  &#128200;
+                </div>
+                <p className="text-sm font-medium text-text-muted">Enter your details to see your results.</p>
               </div>
             )}
           </div>

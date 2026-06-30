@@ -106,56 +106,54 @@ const BudgetPlanner = () => {
                 ))}
               </div>
 
-              <button type="submit" className="btn-primary w-full py-6 text-xs mt-12">
-                Execute Calculation
+              <button type="submit" className="btn-primary w-full py-5 mt-12 hover:-translate-y-0.5 transition-transform">
+                Calculate Budget
               </button>
             </form>
           </div>
 
           {/* Results Panel */}
-          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
-
-            <h2 className="text-sm font-semibold text-text-muted mb-16 relative z-10">Economic Summary</h2>
+          <div className="lg:col-span-5 block-blue rounded-3xl p-12 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-12 relative z-10">Summary</h2>
 
             {result ? (
               <div className="space-y-12 relative z-10">
                 <div className="grid grid-cols-2 gap-8">
                   <div>
                     <p className="text-xs font-medium text-text-dim mb-2">Total Income</p>
-                    <p className="text-3xl font-bold tracking-tight">{formatCurrency(result.income)}</p>
+                    <p className="font-display text-3xl font-bold tracking-tight">{formatCurrency(result.income)}</p>
                   </div>
                   <div>
                     <p className="text-xs font-medium text-text-dim mb-2">Total Outflow</p>
-                    <p className="text-3xl font-bold tracking-tight">{formatCurrency(result.totalExpenses)}</p>
+                    <p className="font-display text-3xl font-bold tracking-tight">{formatCurrency(result.totalExpenses)}</p>
                   </div>
                 </div>
 
-                <div className="bg-surface-body p-10 border border-line-soft">
+                <div className="bg-surface-raised rounded-2xl p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                   <p className="text-xs font-bold text-accent mb-4">
-                    {result.remaining >= 0 ? 'Surplus Logic' : 'Deficit Warning'}
+                    {result.remaining >= 0 ? 'Surplus' : 'Deficit'}
                   </p>
-                  <p className={`text-5xl font-black tracking-tighter ${result.remaining >= 0 ? 'text-text-primary' : 'text-accent'}`}>
+                  <p className={`font-display text-5xl font-extrabold tracking-tight ${result.remaining >= 0 ? 'text-text-primary' : 'text-accent'}`}>
                     {formatCurrency(Math.abs(result.remaining))}
                   </p>
                   <div className="mt-8 flex justify-between items-center text-xs font-bold">
-                    <span className="text-text-muted">Economic Retention</span>
+                    <span className="text-text-muted">Money retained</span>
                     <span className="text-accent">{((result.remaining / result.income) * 100 || 0).toFixed(1)}%</span>
                   </div>
                 </div>
 
-                <div className="space-y-6 pt-12 border-t border-line-soft">
+                <div className="space-y-6 pt-8">
                   <p className="text-xs font-black text-text-dim mb-8">Allocation Breakdown</p>
                   {result.breakdown.map((item) => (
                     item.amount > 0 && (
                       <div key={item.category}>
                         <div className="flex justify-between items-end mb-3">
                           <span className="text-xs font-bold tracking-wider text-text-primary">{item.category}</span>
-                          <span className="text-xs font-bold font-serif italic">{formatCurrency(item.amount)}</span>
+                          <span className="text-xs font-bold">{formatCurrency(item.amount)}</span>
                         </div>
-                        <div className="w-full bg-surface-soft h-1 overflow-hidden">
+                        <div className="w-full bg-surface-soft h-2 rounded-full overflow-hidden">
                           <div
-                            className="bg-text-dim h-full transition-all duration-1000 ease-out"
+                            className="bg-accent h-full rounded-full transition-all duration-1000 ease-out"
                             style={{ width: `${item.percentage}%` }}
                           />
                         </div>
@@ -165,9 +163,9 @@ const BudgetPlanner = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
-                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-4xl font-serif italic mb-8">?</div>
-                <p className="text-sm font-medium">Add your income and expenses</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 relative z-10">
+                <div className="w-14 h-14 rounded-2xl bg-surface-raised flex items-center justify-center text-3xl font-display font-bold mb-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">?</div>
+                <p className="text-sm font-medium">Add your income and expenses to see results.</p>
               </div>
             )}
           </div>

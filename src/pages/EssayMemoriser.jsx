@@ -357,6 +357,8 @@ export default function EssayMemoriser() {
     const [essay, setEssay] = useState(null); // full selected essay
     const [opening, setOpening] = useState(false);
 
+    useReveal();
+
     const loadEssays = async () => {
         const data = await api.getEssays().catch(() => null);
         setEssays(data?.essays || []);
@@ -438,25 +440,25 @@ export default function EssayMemoriser() {
                             </p>
                         </header>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 reveal-stagger">
                             <NewEssayForm onCreated={handleCreate} />
 
                             <div>
-                                <h2 className="text-sm font-semibold text-text-primary mb-4">Your essays</h2>
-                                {opening && <p className="text-sm text-text-dim mb-3">Opening…</p>}
+                                <h2 className="font-display text-lg font-extrabold tracking-tight text-text-primary mb-4">Your essays</h2>
+                                {opening && <p className="text-sm text-text-dim mb-3">Opening</p>}
                                 {essays.length === 0 ? (
-                                    <div className="border border-line-soft bg-surface-body p-10 text-center">
+                                    <div className="bg-block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                                         <DocumentTextIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
-                                        <p className="text-text-dim text-sm font-medium italic">No essays yet.</p>
+                                        <p className="text-text-dim text-sm font-medium">No essays yet.</p>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 gap-px bg-line-soft border border-line-soft">
+                                    <div className="grid grid-cols-1 gap-3">
                                         {essays.map((e) => (
                                             <button
                                                 key={e.id}
                                                 type="button"
                                                 onClick={() => openEssay(e.id)}
-                                                className="bg-surface-body p-5 text-left flex items-center justify-between gap-4 group hover:bg-surface-raised transition-colors"
+                                                className="bg-surface-raised rounded-2xl p-5 text-left flex items-center justify-between gap-4 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform"
                                             >
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">

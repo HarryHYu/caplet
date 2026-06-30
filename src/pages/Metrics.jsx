@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import { useReveal } from '../lib/useReveal';
 
 /* ── tiny helpers ─────────────────────────────────────────────────────────── */
 
@@ -17,7 +18,7 @@ function fmtMinutes(mins) {
 }
 
 function fmtNum(n) {
-  if (n === null || n === undefined) return '—';
+  if (n === null || n === undefined) return '-';
   return Number(n).toLocaleString();
 }
 
@@ -34,14 +35,14 @@ function timeAgo(iso) {
 
 function StatCell({ label, value, sub, accent }) {
   return (
-    <div className={`bg-surface-body p-10 group hover:bg-surface-raised transition-colors ${accent ? 'border-t-2 border-accent' : ''}`}>
-      <p className="text-sm font-medium text-text-dim mb-8 group-hover:text-accent transition-colors">
+    <div className={`p-10 group rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform ${accent ? 'bg-accent text-white' : 'bg-surface-raised'}`}>
+      <p className={`text-sm font-medium mb-8 ${accent ? 'text-white/80' : 'text-text-dim group-hover:text-accent transition-colors'}`}>
         {label}
       </p>
-      <p className={`text-5xl font-serif italic transition-transform duration-500 group-hover:translate-x-2 ${accent ? 'text-accent' : 'text-text-primary'}`}>
+      <p className={`text-5xl font-display font-extrabold tracking-tight ${accent ? 'text-white' : 'text-text-primary'}`}>
         {value}
       </p>
-      {sub && <p className="mt-4 text-xs font-medium text-text-dim">{sub}</p>}
+      {sub && <p className={`mt-4 text-xs font-medium ${accent ? 'text-white/70' : 'text-text-dim'}`}>{sub}</p>}
     </div>
   );
 }
@@ -51,7 +52,7 @@ function StatCell({ label, value, sub, accent }) {
 function InlineBar({ label, value, total, color }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div className="py-6 border-b border-line-soft last:border-0">
+    <div className="py-6">
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-text-muted">{label}</span>
         <span className="text-sm font-bold text-text-primary">{fmtNum(value)} <span className="text-text-dim font-normal">({pct}%)</span></span>
@@ -66,6 +67,7 @@ function InlineBar({ label, value, total, color }) {
 /* ── main component ───────────────────────────────────────────────────────── */
 
 export default function Metrics() {
+  useReveal();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -92,7 +94,7 @@ export default function Metrics() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-surface-body">
-      <CapletLoader message="Loading metrics…" />
+      <CapletLoader message="Loading metrics..." />
     </div>
   );
 
@@ -119,12 +121,12 @@ export default function Metrics() {
       <div className="container-custom">
 
         {/* ── header ── */}
-        <header className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <header className="reveal mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div>
-            <span className="section-kicker">Platform Analytics</span>
-            <h1 className="text-5xl md:text-7xl">
+            <span className="font-hand text-accent text-lg">Platform analytics</span>
+            <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight">
               Caplet<br />
-              <span className="font-serif italic">Metrics.</span>
+              <span className="text-accent">Metrics.</span>
             </h1>
           </div>
           <div className="text-right">
@@ -137,7 +139,7 @@ export default function Metrics() {
             <button
               type="button"
               onClick={load}
-              className="mt-4 text-sm font-medium text-accent border-b border-accent pb-0.5 hover:text-text-primary hover:border-text-primary transition-colors"
+              className="btn-secondary mt-4 hover:-translate-y-0.5 transition-transform"
             >
               Refresh now
             </button>
@@ -145,8 +147,8 @@ export default function Metrics() {
         </header>
 
         {/* ── tier 1: hero numbers ── */}
-        <section className="mb-24">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-line-soft border border-line-soft">
+        <section className="reveal mb-24">
+          <div className="reveal-stagger grid grid-cols-1 md:grid-cols-4 gap-6">
             <StatCell label="Total Users" value={fmtNum(totalUsers)} sub={`+${data.users?.newThisWeek ?? 0} this week`} accent />
             <StatCell label="Lessons Completed" value={fmtNum(data.progress?.lessonsCompleted)} sub={`${data.progress?.lessonsCompletedThisWeek ?? 0} in the last 7 days`} />
             <StatCell label="Published Courses" value={fmtNum(data.content?.courses?.published)} sub={`${data.content?.courses?.total ?? 0} total incl. drafts`} />
@@ -155,9 +157,9 @@ export default function Metrics() {
         </section>
 
         {/* ── tier 2: secondary numbers ── */}
-        <section className="mb-24">
-          <span className="section-kicker">Breakdown</span>
-          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-line-soft border border-line-soft">
+        <section className="reveal mb-24">
+          <h2 className="text-2xl font-display font-bold tracking-tight text-text-primary">Breakdown</h2>
+          <div className="reveal-stagger mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
               { label: 'New this month', value: fmtNum(data.users?.newThisMonth) },
               { label: 'Modules', value: fmtNum(data.content?.modules) },
@@ -172,20 +174,20 @@ export default function Metrics() {
               { label: 'Survey Responses', value: fmtNum(data.survey?.totalResponses) },
               { label: 'Avg Confidence', value: data.survey?.averageConfidence > 0 ? `${data.survey.averageConfidence}/10` : '—' },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-surface-body p-6 hover:bg-surface-raised transition-colors group">
+              <div key={label} className="bg-surface-raised p-6 rounded-2xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform group">
                 <p className="text-xs font-medium text-text-dim mb-4 group-hover:text-accent transition-colors">{label}</p>
-                <p className="text-2xl font-serif italic text-text-primary">{value}</p>
+                <p className="text-2xl font-display font-extrabold tracking-tight text-text-primary">{value}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* ── tier 3: users × engagement ── */}
-        <section className="mb-24 grid grid-cols-1 lg:grid-cols-2 gap-px bg-line-soft border border-line-soft">
+        <section className="reveal mb-24 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* users by role */}
-          <div className="bg-surface-body p-10">
-            <span className="section-kicker">Users by Role</span>
+          <div className="bg-surface-raised p-10 rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="text-xl font-display font-bold tracking-tight text-text-primary">Users by Role</h2>
             <div className="mt-6">
               <InlineBar label="Students" value={data.users?.byRole?.student ?? 0} total={totalUsers} color="#0050FF" />
               <InlineBar label="Instructors" value={data.users?.byRole?.instructor ?? 0} total={totalUsers} color="#10B981" />
@@ -194,8 +196,8 @@ export default function Metrics() {
           </div>
 
           {/* engagement reach */}
-          <div className="bg-surface-body p-10">
-            <span className="section-kicker">Engagement Reach</span>
+          <div className="bg-surface-raised p-10 rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="text-xl font-display font-bold tracking-tight text-text-primary">Engagement Reach</h2>
             <div className="mt-6 space-y-0">
               {[
                 { label: 'Users with any progress', value: data.progress?.uniqueUsersWithProgress ?? 0 },
@@ -205,7 +207,7 @@ export default function Metrics() {
               ].map(({ label, value }) => (
                 <div key={label} className="py-5 border-b border-line-soft last:border-0 flex justify-between items-center">
                   <span className="text-xs font-medium text-text-muted">{label}</span>
-                  <span className="text-lg font-serif italic text-text-primary">{fmtNum(value)}</span>
+                  <span className="text-lg font-display font-bold tracking-tight text-text-primary">{fmtNum(value)}</span>
                 </div>
               ))}
             </div>
@@ -214,10 +216,10 @@ export default function Metrics() {
 
         {/* ── tier 4: top courses bar chart ── */}
         {topCourses.length > 0 && (
-          <section className="mb-24">
-            <span className="section-kicker">Top Courses</span>
+          <section className="reveal mb-24">
+            <h2 className="text-2xl font-display font-bold tracking-tight text-text-primary">Top Courses</h2>
             <p className="text-sm text-text-dim mb-8 mt-2">Ranked by total lesson completions.</p>
-            <div className="border border-line-soft bg-surface-body p-10">
+            <div className="bg-surface-raised p-10 rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
               <ResponsiveContainer width="100%" height={Math.max(180, topCourses.length * 44)}>
                 <BarChart
                   data={topCourses}
@@ -256,7 +258,7 @@ export default function Metrics() {
         )}
 
         {/* ── footer stamp ── */}
-        <footer className="border-t border-line-soft pt-8 text-sm font-medium text-text-dim flex justify-between">
+        <footer className="pt-8 text-sm font-medium text-text-dim flex justify-between">
           <span>Caplet · Internal Analytics</span>
           <span>{data.generatedAt ? new Date(data.generatedAt).toLocaleString() : ''}</span>
         </footer>
