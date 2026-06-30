@@ -574,6 +574,53 @@ class ApiService {
     });
   }
 
+  // AI tutor (in-slide assistance). Degrades gracefully: never throws, so the
+  // tutor UI keeps working whether or not the backend has shipped /ai/tutor.
+  async askTutor({ lessonId, slide, question } = {}) {
+    try {
+      const data = await this.request('/ai/tutor', {
+        method: 'POST',
+        body: JSON.stringify({ lessonId, slide, question }),
+      });
+      return { unavailable: false, answer: data?.answer || '' };
+    } catch (error) {
+      console.warn('askTutor failed; returning fallback', error);
+      return {
+        unavailable: true,
+        answer: '',
+        message: 'The tutor is currently unavailable. Please try again later.',
+      };
+    }
+  }
+
+  // Lesson scoring + analytics events. Both degrade gracefully (resolve to null
+  // instead of throwing) so the lesson player behaves identically before the
+  // backend ships POST /progress/:lessonId/score and POST /events.
+  async submitLessonScore(lessonId, payload) {
+    if (!lessonId) return null;
+    try {
+      return await this.request(`/progress/${lessonId}/score`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      console.warn('submitLessonScore failed; ignoring', error);
+      return null;
+    }
+  }
+
+  async logEvent(event) {
+    try {
+      return await this.request('/events', {
+        method: 'POST',
+        body: JSON.stringify(event),
+      });
+    } catch (error) {
+      console.warn('logEvent failed; ignoring', error);
+      return null;
+    }
+  }
+
   // Essays (private essay memoriser)
   async getEssays() {
     return this.request('/essays');

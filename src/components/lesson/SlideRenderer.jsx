@@ -16,6 +16,36 @@ import DesmosCalculator from './DesmosCalculator';
    Shared helpers
    ────────────────────────────────────────────────────────────────────────── */
 
+// Slide types that the learner can answer (and that therefore count toward the
+// lesson score). Keep in sync with the interactive cases in renderSlide.
+const INTERACTIVE_SLIDE_TYPES = new Set(['choice', 'fillblank', 'match', 'order']);
+
+/**
+ * Turn the player's slides + recorded quiz results into the payload the backend
+ * expects: { score: 0-100, answers: [{ slideIndex, type, correct }] }.
+ *
+ * Only interactive slides the learner actually answered (i.e. present in the
+ * quizScores map) are counted. Any recorded value other than strict `true` is
+ * treated as incorrect. Defensive against malformed input — never throws.
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildLessonScorePayload(slides, quizScores = {}) {
+  if (!Array.isArray(slides)) return { score: 0, answers: [] };
+  const scores = quizScores && typeof quizScores === 'object' ? quizScores : {};
+
+  const answers = [];
+  slides.forEach((slide, slideIndex) => {
+    if (!slide || typeof slide !== 'object') return;
+    if (!INTERACTIVE_SLIDE_TYPES.has(slide.type)) return;
+    if (!Object.prototype.hasOwnProperty.call(scores, slideIndex)) return;
+    answers.push({ slideIndex, type: slide.type, correct: scores[slideIndex] === true });
+  });
+
+  if (answers.length === 0) return { score: 0, answers: [] };
+  const correct = answers.filter((a) => a.correct).length;
+  return { score: Math.round((correct / answers.length) * 100), answers };
+}
+
 function getYouTubeId(url) {
   if (!url) return '';
   const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/);
