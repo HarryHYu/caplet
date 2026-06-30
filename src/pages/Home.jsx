@@ -1,576 +1,646 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import MarkerCursor from '../components/home/MarkerCursor';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const FAQItem = ({ question, answer }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <div className="border-b border-line-soft last:border-0">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
-        className="w-full py-8 flex justify-between items-center text-left group transition-all"
-      >
-        <span className="text-xl md:text-2xl font-serif italic text-text-primary group-hover:text-accent transition-colors">{question}</span>
-        <span className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isOpen ? 'rotate-180 bg-accent text-white border-transparent' : 'border-line-soft text-text-muted'}`}>
-          <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
-        </span>
-      </button>
-      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 pb-8' : 'max-h-0'}`}>
-        <p className="text-lg text-text-muted font-display font-medium leading-relaxed max-w-3xl">
-          {answer}
-        </p>
-      </div>
+/* ── Hand-drawn ink marks (drawn on scroll via the .ink-draw class) ───────── */
+
+const Scribble = ({ className = '', pathClass = '', stroke = 'stroke-blue', width = 3 }) => (
+  <svg className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[118%] h-[150%] overflow-visible pointer-events-none ${className}`} viewBox="0 0 200 90" preserveAspectRatio="none" aria-hidden="true">
+    <path className={`ink-draw ${stroke} ${pathClass}`} pathLength="1" strokeWidth={width} vectorEffect="non-scaling-stroke"
+      d="M48 14 C 96 3 168 6 186 30 C 198 50 150 78 96 80 C 38 82 8 66 8 42 C 8 21 28 13 58 11" />
+  </svg>
+);
+
+const Arrow = ({ className = '', pathClass = '', stroke = 'stroke-mark', width = 3 }) => (
+  <svg className={`pointer-events-none overflow-visible ${className}`} viewBox="0 0 120 90" fill="none" aria-hidden="true">
+    <path className={`ink-draw ${stroke} ${pathClass}`} pathLength="1" strokeWidth={width} vectorEffect="non-scaling-stroke"
+      d="M14 10 C 36 32 44 58 78 70" />
+    <path className={`ink-draw ${stroke} ${pathClass}`} pathLength="1" strokeWidth={width} vectorEffect="non-scaling-stroke"
+      d="M78 70 L 58 66 M78 70 L 70 50" />
+  </svg>
+);
+
+const Check = ({ className = '', pathClass = '', stroke = 'stroke-green', width = 3.2 }) => (
+  <svg className={`pointer-events-none overflow-visible ${className}`} viewBox="0 0 28 24" fill="none" aria-hidden="true">
+    <path className={`ink-draw ${stroke} ${pathClass}`} pathLength="1" strokeWidth={width} vectorEffect="non-scaling-stroke"
+      d="M4 13 L 11 21 L 25 3" />
+  </svg>
+);
+
+/* A floating hero widget: outer = load-reveal target, inner = ambient CSS float. */
+const Widget = ({ className = '', tilt = '0deg', delay = '0s', block = 'block-cream', children }) => (
+  <div className={`widget absolute ${className}`}>
+    <div className={`animate-soft-float rounded-2xl ${block} shadow-[0_26px_50px_-30px_rgba(20,20,18,0.4)] p-4`} style={{ '--tilt': tilt, animationDelay: delay }}>
+      {children}
     </div>
-  );
-};
+  </div>
+);
+
+/* ── Content ──────────────────────────────────────────────────────────────── */
+
+const features = [
+  { tag: 'build', title: 'Lesson builder', body: 'Drag blocks onto the page: text, images, video, code, quizzes. Arrange a whole lesson in minutes.', to: '/courses', block: 'block-blue' },
+  { tag: 'code', title: 'Live code IDE', body: 'Python, JavaScript, and HTML run right in the browser, with test runners and an AI debugger.', to: '/tools', block: 'block-blue' },
+  { tag: 'graph', title: 'Desmos and plotting', body: 'Drop in graphing panels and geometry widgets. A student drags a slider and the curve responds.', to: '/tools', block: 'block-green' },
+  { tag: 'check', title: 'Quizzes and grading', body: 'Mix in quiz blocks and grading workflows that track every student’s progress automatically.', to: '/courses', block: 'block-amber' },
+  { tag: 'ai', title: 'AI lesson generation', body: 'Describe a topic and Caplet drafts structured slides, quizzes, and a lesson plan for you to edit.', to: '/courses', block: 'block-blue' },
+  { tag: 'class', title: 'Classrooms', body: 'Group students into classes, set assignments, and watch submissions arrive in real time.', to: '/classes', block: 'block-blue' },
+];
+
+const calculators = [
+  'Income tax', 'Superannuation', 'Mortgage', 'GST', 'Compound interest',
+  'Budget planner', 'Savings goal', 'Net worth', 'FIRE number', 'Salary',
+  'Capital gains', 'Rule of 72', 'Emergency fund', 'Loan repayment',
+  'Inflation', 'Rent vs buy', 'Credit-card payoff', 'Debt-to-income',
+];
+
+const newFeatures = [
+  { tag: 'recall', title: 'Spaced-repetition review', body: 'Saved slides, quotes, and essay paragraphs resurface right before you would forget them.', to: '/revision', block: 'block-blue' },
+  { tag: 'tutor', title: 'In-slide AI tutor', body: 'Stuck on a slide? Ask for a hint or a worked example without ever leaving the lesson.', to: '/courses', block: 'block-amber' },
+  { tag: 'profile', title: 'Financial profile', body: 'Add your income, goals, and accounts once, and examples across Caplet use your real numbers.', to: '/settings/financial', block: 'block-green' },
+];
+
+const principles = [
+  { k: 'free', title: 'Free, always', body: 'Build courses, tools, and workspaces for any subject. No tiers, no paywalls, no per-seat pricing.', note: 'yes, actually free' },
+  { k: 'open', title: 'Open source', body: 'The whole codebase is yours to read, fork, and self-host. Own your classroom and its data.' },
+  { k: 'hands', title: 'Hands-on', body: 'Fifteen and more block types, from rich text and quizzes to live IDEs and graphing calculators.' },
+];
+
+const faqItems = [
+  { question: 'Is Caplet really free?', answer: 'Yes. Caplet is an open learning playground. Teachers and students can build and complete whole courses with no subscription tiers and no user limits.' },
+  { question: 'How do I publish my own curriculum?', answer: 'Sign up, open your dashboard, and create a course. Compile lessons, drag in blocks, and share the link the moment it is ready.' },
+  { question: 'Can I host Caplet on my own servers?', answer: 'Yes. Caplet is fully open-source. Pull the code from the repository and deploy it on your own servers or a private cloud.' },
+  { question: 'Does it support grading and tests?', answer: 'It does. Embed live coding playgrounds, quiz blocks, and grading workflows that track student progress automatically.' },
+];
+
+const showcaseTabs = [
+  { id: 'workspace', label: 'Lesson builder' },
+  { id: 'ide', label: 'Live code' },
+  { id: 'geometry', label: 'Graphing' },
+];
 
 const Home = () => {
+  const rootRef = useRef(null);
   const heroRef = useRef(null);
-  const heroTextRef = useRef(null);
-  const philosophyRef = useRef(null);
-  const learningPathRef = useRef(null);
-  const jargonRef = useRef(null);
-
-  // Jargon Transformation Logic
-  const [jargonIndex, setJargonIndex] = useState(0);
-  const jargons = [
-    { complex: "Amortization", plain: "Paying off a loan in regular chunks until it’s gone." },
-    { complex: "Capital Gains", plain: "The profit you make when you sell something for more than you bought it." },
-    { complex: "Compound Interest", plain: "Interest you earn on your original money, plus interest on the interest you've already earned." },
-    { complex: "Franking Credits", plain: "A tax discount for shareholders to prevent the same money being taxed twice." },
-    { complex: "Asset Allocation", plain: "Spreading your money across different things (like savings, property, or shares) to stay safe." },
-    { complex: "Securities", plain: "A fancy word for tradable financial assets like stocks, bonds, or shares." }
-  ];
+  const lenisRef = useRef(null);
+  const [activeShowcaseTab, setActiveShowcaseTab] = useState('workspace');
+  const [activeFaq, setActiveFaq] = useState(0);
 
   useEffect(() => {
-    const jargonInterval = setInterval(() => {
-      setJargonIndex(prev => (prev + 1) % jargons.length);
-    }, 4000);
-    return () => clearInterval(jargonInterval);
-  }, []);
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-  // Card 1 Logic: Courses Shuffler
-  const [courses, setCourses] = useState([
-    "Budgeting Fundamentals",
-    "Introduction to Data Science",
-    "Digital Marketing 101",
-  ]);
+    // Reduced motion: reveal every mark and highlight statically, do nothing else.
+    if (reduce) {
+      const root = rootRef.current;
+      root?.querySelectorAll('.ink-draw').forEach((p) => { p.style.strokeDashoffset = '0'; });
+      root?.querySelectorAll('.hl-swipe').forEach((el) => { el.style.setProperty('--hl-w', '100%'); });
+      return;
+    }
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCourses(prev => {
-        const newArr = [...prev];
-        const last = newArr.pop();
-        newArr.unshift(last);
-        return newArr;
+    let removeTicker;
+    const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+    lenisRef.current = lenis;
+    lenis.on('scroll', ScrollTrigger.update);
+    const raf = (time) => lenis.raf(time * 1000);
+    gsap.ticker.add(raf);
+    gsap.ticker.lagSmoothing(0);
+    removeTicker = () => gsap.ticker.remove(raf);
+
+    const ctx = gsap.context(() => {
+      // Hero opens, then writes its own annotations on top.
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      tl.from('.hero-kicker', { y: 12, opacity: 0, duration: 0.5 })
+        .from('.hero-line', { y: 26, opacity: 0, duration: 0.8, stagger: 0.1 }, '-=0.2')
+        .to('.hero-hl', { '--hl-w': '100%', duration: 0.5, ease: 'power2.out' }, '-=0.15')
+        .to('.hero-circle', { strokeDashoffset: 0, duration: 0.7, ease: 'power2.inOut' }, '-=0.1')
+        .from('.hero-sub', { y: 14, opacity: 0, duration: 0.5 }, '-=0.5')
+        .from('.hero-cta', { y: 14, opacity: 0, duration: 0.5, stagger: 0.1 }, '-=0.3')
+        .to('.hero-arrow', { strokeDashoffset: 0, duration: 0.55, ease: 'power2.inOut' }, '-=0.2')
+        .from('.hero-note', { opacity: 0, scale: 0.85, rotate: -8, duration: 0.4 }, '-=0.2')
+        .from('.widget', { y: 18, opacity: 0, scale: 0.92, duration: 0.6, stagger: 0.08 }, '-=1.1');
+
+      // Section reveals.
+      gsap.utils.toArray('.reveal').forEach((el) => {
+        gsap.from(el, { y: 40, opacity: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 86%' } });
       });
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+      gsap.utils.toArray('.reveal-stagger').forEach((group) => {
+        gsap.from(group.children, { y: 34, opacity: 0, duration: 0.65, ease: 'power3.out', stagger: 0.1, scrollTrigger: { trigger: group, start: 'top 84%' } });
+      });
 
-  // Card 2 Logic: Telemetry Typewriter
-  const [typewriterText, setTypewriterText] = useState("");
-  const messages = [
-    "Generate slides from these notes...",
-    "Build an interactive quiz...",
-    "Summarise the key concepts here...",
-    "Turn this PDF into a lesson...",
-    "Create a structured lesson plan...",
-  ];
+      // Living annotations: ink marks draw + highlights swipe as they enter view.
+      gsap.utils.toArray('.ink-draw:not(.hero-mark)').forEach((p) => {
+        gsap.to(p, { strokeDashoffset: 0, duration: 0.7, ease: 'power2.inOut', scrollTrigger: { trigger: p.closest('[data-mark]') || p, start: 'top 82%' } });
+      });
+      gsap.utils.toArray('.hl-swipe:not(.hero-mark)').forEach((el) => {
+        gsap.to(el, { '--hl-w': '100%', duration: 0.55, ease: 'power2.out', scrollTrigger: { trigger: el, start: 'top 86%' } });
+      });
 
-  useEffect(() => {
-    let msgIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-    let timeout;
-
-    const type = () => {
-      const currentMsg = messages[msgIndex];
-      
-      if (isDeleting) {
-        setTypewriterText(currentMsg.substring(0, charIndex - 1));
-        charIndex--;
-      } else {
-        setTypewriterText(currentMsg.substring(0, charIndex + 1));
-        charIndex++;
-      }
-
-      if (!isDeleting && charIndex === currentMsg.length) {
-        timeout = setTimeout(() => { isDeleting = true; type(); }, 2000);
-      } else if (isDeleting && charIndex === 0) {
-        isDeleting = false;
-        msgIndex = (msgIndex + 1) % messages.length;
-        timeout = setTimeout(type, 500);
-      } else {
-        timeout = setTimeout(type, isDeleting ? 30 : 70);
-      }
-    };
-
-    timeout = setTimeout(type, 1000);
-    return () => clearTimeout(timeout);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Card 3 Logic: Calculator Automation
-  const [calcInput, setCalcInput] = useState("");
-  const [calcOutput, setCalcOutput] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    let activeInterval = null;
-
-    const runAnimation = async () => {
-      if (cancelled) return;
-      setCalcInput("");
-      setCalcOutput(0);
-
-      const delay = (ms) => new Promise(r => setTimeout(r, ms));
-
-      await delay(1000); if (cancelled) return;
-      setCalcInput("$8");
-      await delay(100); if (cancelled) return;
-      setCalcInput("$85");
-      await delay(100); if (cancelled) return;
-      setCalcInput("$85,");
-      await delay(100); if (cancelled) return;
-      setCalcInput("$85,0");
-      await delay(100); if (cancelled) return;
-      setCalcInput("$85,000");
-
-      await delay(500); if (cancelled) return;
-
-      let value = 0;
-      const target = 19667;
-      activeInterval = setInterval(() => {
-        if (cancelled) { clearInterval(activeInterval); return; }
-        value += Math.floor(target / 20);
-        if (value >= target) {
-          setCalcOutput(target);
-          clearInterval(activeInterval);
-        } else {
-          setCalcOutput(value);
-        }
-      }, 50);
-
-      await delay(3000); if (cancelled) return;
-      runAnimation();
-    };
-
-    runAnimation();
+      // Lenis-woven parallax: the whole widget constellation drifts with scroll.
+      gsap.to('.hero-widgets', { yPercent: -8, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: 0.6 } });
+    }, rootRef);
 
     return () => {
-      cancelled = true;
-      if (activeInterval) clearInterval(activeInterval);
+      ctx.revert();
+      lenisRef.current?.destroy();
+      lenisRef.current = null;
+      removeTicker?.();
     };
   }, []);
 
-  // GSAP Animations
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Hero Animations
-      gsap.fromTo('.hero-text-elem', 
-        { y: 50, opacity: 0 }, 
-        { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: 'power3.out', delay: 0.2 }
-      );
-
-      // Features Cards Reveal
-      gsap.fromTo('.feature-card',
-        { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          stagger: 0.2,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: '.feature-card',
-            start: 'top 80%',
-          }
-        }
-      );
-
-      // Philosophy Scroll Trigger
-      gsap.fromTo('.phil-text',
-        { y: 100, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1.2,
-          stagger: 0.2,
-          ease: 'power4.out',
-          scrollTrigger: {
-            trigger: philosophyRef.current,
-            start: 'top 70%',
-          }
-        }
-      );
-
-      // Learning Path Sticky Stacking
-      const cards = gsap.utils.toArray('.learning-card');
-      cards.forEach((card, i) => {
-        if (i < cards.length - 1) {
-          gsap.to(card, {
-            scale: 0.9,
-            opacity: 0.5,
-            filter: 'blur(20px)',
-            scrollTrigger: {
-              trigger: cards[i + 1],
-              start: 'top 70%',
-              end: 'top top',
-              scrub: true,
-            }
-          });
-        }
-      });
-
-      // Jargon Reveal
-      gsap.fromTo('.jargon-box',
-        { scale: 0.8, opacity: 0 },
-        {
-          scale: 1,
-          opacity: 1,
-          duration: 1,
-          ease: 'back.out(1.7)',
-          scrollTrigger: {
-            trigger: jargonRef.current,
-            start: 'top 60%',
-          }
-        }
-      );
-    });
-
-    return () => ctx.revert();
-  }, []);
+  const goTo = (selector) => {
+    const lenis = lenisRef.current;
+    if (lenis) lenis.scrollTo(selector, { offset: -32 });
+    else document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
-    <div className="bg-surface-body text-text-primary relative selection:bg-accent selection:text-text-contrast">
-      {/* ================= SIMPLIFIED HERO ================= */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center overflow-hidden">
-        <div className="absolute inset-0 grid-technical opacity-40 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-surface-body pointer-events-none" />
-        <div className="container-custom relative z-10 w-full text-center py-32" ref={heroTextRef}>
-          <div className="max-w-4xl mx-auto text-text-primary">
-            <h1 className="hero-text-elem text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter mb-8">
-              Anything,<br />
-              <span className="font-serif italic font-medium text-accent-strong">Simplified.</span>
-            </h1>
-            <p className="hero-text-elem text-xl sm:text-2xl font-display font-medium max-w-2xl mx-auto text-text-muted leading-relaxed mb-12">
-              An open platform for courses, tools, and anything you want to build and share.<br />
-              No catch. No lock-in. Just powerful software.
-            </p>
-            <div className="hero-text-elem flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Link to="/register" className="bg-accent hover:bg-accent-strong text-white font-display font-semibold px-10 py-5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl w-full sm:w-auto text-center">
-                Get Started Free
-              </Link>
-              <Link to="/courses" className="text-text-muted hover:text-text-primary font-display font-bold text-sm transition-all duration-300 group py-4 px-6 md:px-0">
-                Browse Registry <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span>
-              </Link>
+    <div ref={rootRef} className="home-root text-text-primary relative selection:bg-[color:var(--mark-blue)] selection:text-white overflow-x-clip">
+      <MarkerCursor />
+
+      {/* ───────── HERO ───────── */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-16">
+        {/* soft ambient washes for depth */}
+        <div className="absolute top-[22%] left-1/2 -translate-x-1/2 w-[58vw] h-[58vw] max-w-[720px] max-h-[720px] rounded-full bg-[color:var(--block-blue)] blur-[130px] opacity-80 pointer-events-none" />
+        <div className="absolute bottom-[8%] right-[12%] w-[28vw] h-[28vw] max-w-[360px] max-h-[360px] rounded-full bg-[color:var(--block-amber)] blur-[120px] opacity-70 pointer-events-none" />
+
+        {/* widget constellation (xl+ only, so it never crowds the headline) */}
+        <div className="hero-widgets absolute inset-0 pointer-events-none hidden xl:block">
+          {/* live learners chip */}
+          <Widget className="top-[15vh] left-[12vw] w-auto" tilt="-4deg" block="block-blue">
+            <div className="flex items-center gap-2 px-1">
+              <span className="w-2 h-2 rounded-full bg-[color:var(--mark-green)] animate-pulse" />
+              <span className="text-sm font-bold text-text-primary">1,240 learning now</span>
+            </div>
+          </Widget>
+
+          {/* AI tutor */}
+          <Widget className="top-[24vh] left-[4vw] w-56" tilt="3deg" delay="0.5s">
+            <p className="font-hand text-base text-blue mb-2">ask anything</p>
+            <p className="text-[11px] text-text-primary bg-[color:var(--block-blue)] rounded-lg rounded-tl-sm p-2 mb-1.5">How does compound interest work?</p>
+            <p className="text-[11px] text-text-primary bg-[color:var(--block-green)] rounded-lg rounded-tr-sm p-2">It is interest earned on interest. Let us plot it.</p>
+          </Widget>
+
+          {/* lesson builder */}
+          <Widget className="top-[13vh] right-[5vw] w-60" tilt="-2deg" delay="0.3s">
+            <p className="font-hand text-base text-blue mb-2">drag &amp; drop</p>
+            <div className="flex gap-1.5 mb-2.5">
+              {['Text', 'Code', 'Quiz'].map((t) => (
+                <span key={t} className="text-[11px] font-bold px-2 py-1 rounded-md bg-[color:var(--block-blue)] text-text-primary">{t}</span>
+              ))}
+            </div>
+            <div className="space-y-1.5">
+              <div className="h-2.5 w-3/4 rounded bg-line-soft" />
+              <div className="h-2 w-full rounded bg-surface-soft" />
+              <div className="h-10 rounded-lg bg-[color:var(--block-amber)] flex items-center justify-center text-[11px] font-bold text-text-primary">Live preview</div>
+            </div>
+          </Widget>
+
+          {/* code snippet */}
+          <Widget className="top-[50vh] left-[5vw] w-56" tilt="-3deg" delay="0.9s" block="block-cream">
+            <div className="rounded-lg bg-[#1b1b1b] text-[#d4d4d4] overflow-hidden font-mono text-[10px]">
+              <div className="bg-[#262626] px-2.5 py-1.5 flex gap-1">
+                <span className="w-2 h-2 rounded-full bg-[#ff5f56]" />
+                <span className="w-2 h-2 rounded-full bg-[#ffbd2e]" />
+                <span className="w-2 h-2 rounded-full bg-[#27c93f]" />
+              </div>
+              <div className="p-2.5 leading-relaxed">
+                <div><span className="text-[#569cd6]">def</span> <span className="text-[#dcdcaa]">value</span>(x):</div>
+                <div className="pl-3"><span className="text-[#c586c0]">return</span> x ** <span className="text-[#b5cea8]">2</span></div>
+                <div className="text-white mt-1">&gt; 2.56</div>
+              </div>
+            </div>
+          </Widget>
+
+          {/* desmos / graphing */}
+          <Widget className="top-[46vh] right-[4vw] w-56" tilt="3deg" delay="1.1s" block="block-cream">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-mono text-[11px] text-text-primary">f(x) = sin x</span>
+              <span className="font-hand text-base text-blue">drag me</span>
+            </div>
+            <div className="h-16 relative">
+              <div className="absolute inset-x-0 top-1/2 h-px bg-line-soft" />
+              <svg viewBox="0 0 200 70" className="w-full h-full text-[color:var(--mark-blue)]" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0 35 Q 25 4 50 35 T 100 35 T 150 35 T 200 35" fill="none" stroke="currentColor" strokeWidth="2.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+              </svg>
+            </div>
+          </Widget>
+
+          {/* growth graph */}
+          <Widget className="bottom-[13vh] right-[8vw] w-60" tilt="-2deg" delay="0.2s" block="block-green">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-hand text-base text-green">compounding</span>
+              <span className="text-[11px] font-bold text-green">+8.5%</span>
+            </div>
+            <div className="h-16 flex items-end">
+              <svg viewBox="0 0 120 60" className="w-full h-full text-[color:var(--mark-green)]" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M2 56 Q 40 50 64 32 T 118 6" fill="none" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+                <circle cx="118" cy="6" r="3.2" className="fill-[color:var(--mark-green)]" />
+              </svg>
+            </div>
+          </Widget>
+
+          {/* quiz */}
+          <Widget className="bottom-[12vh] left-[9vw] w-52" tilt="3deg" delay="0.7s" block="block-amber">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-hand text-base text-blue">quick check</span>
+              <Check className="w-5 h-4" />
+            </div>
+            <div className="space-y-1.5">
+              {['A whole number', 'A fraction', 'An integer'].map((o, i) => (
+                <div key={o} className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-lg ${i === 2 ? 'bg-[color:var(--block-green)] text-text-primary' : 'bg-surface-raised text-text-muted'}`}>{o}</div>
+              ))}
+            </div>
+          </Widget>
+        </div>
+
+        {/* centered content */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-3xl px-5">
+          <p className="hero-kicker font-hand text-2xl md:text-[1.65rem] text-blue mb-5 -rotate-2">free, open, and a little playful</p>
+
+          <h1 className="font-bricolage font-extrabold text-text-primary leading-[0.96] tracking-[-0.03em] text-[clamp(3rem,8.5vw,6.25rem)]">
+            <span className="hero-line block">Build,{' '}
+              <span className="hero-hl hero-mark hl-swipe">learn</span>,
+            </span>
+            <span className="hero-line block">and ship{' '}
+              <span className="relative inline-block">
+                anything
+                <Scribble pathClass="hero-circle hero-mark" />
+              </span>
+              .
+            </span>
+          </h1>
+
+          <p className="hero-sub body-text mt-8 max-w-xl mx-auto">
+            Caplet is a free, open platform for building interactive courses and learning from them.
+            Lessons, live code, graphing, quizzes. No subscriptions. No lock-in.
+          </p>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3 relative">
+            <Link to="/register" className="hero-cta inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-[color:var(--mark-blue)] text-white text-base font-bold shadow-[0_12px_30px_-10px_rgba(19,81,170,0.5)] hover:-translate-y-0.5 transition-transform duration-200">
+              Start building
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+            </Link>
+            <button onClick={() => goTo('#features')} className="hero-cta inline-flex items-center gap-2 px-6 py-4 rounded-2xl block-blue text-text-primary text-base font-bold hover:-translate-y-0.5 transition-transform duration-200">
+              See how it works
+            </button>
+
+            {/* hand-drawn note pointing at the primary action */}
+            <div className="hero-note hidden sm:block absolute -bottom-14 left-1/2 -translate-x-[7.5rem] -rotate-6 pointer-events-none">
+              <span className="font-hand text-xl text-mark">it’s genuinely free</span>
+              <Arrow className="absolute -top-9 -right-10 w-14 h-10" pathClass="hero-arrow hero-mark" stroke="stroke-mark" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================= FEATURES (Card Dashboard) ================= */}
-      <section className="py-24 md:py-40 bg-surface-soft relative z-20 overflow-hidden">
-        <div className="container-custom">
-          <div className="mb-16">
-            <span className="text-xs font-mono font-bold text-accent mb-4 block">The Platform</span>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary">Everything you need to learn.</h2>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Card 1: Knowledge Shuffler */}
-            <div className="feature-card h-80 md:h-96 bg-surface-raised rounded-[2rem] p-8 shadow-sm border border-line-soft flex flex-col items-center justify-center relative overflow-hidden group">
-              <div className="w-full flex justify-between absolute top-8 px-8">
-                <span className="text-xs font-mono text-accent-strong/50">Knowledge Base</span>
-                <span className="w-2 h-2 rounded-full bg-accent-strong/20" />
-              </div>
-              <div className="relative w-full h-32 mt-8 flex justify-center items-center">
-                {courses.map((course, i) => (
-                  <div 
-                    key={course}
-                    className="absolute w-full max-w-[280px] bg-surface-soft border border-line-soft rounded-2xl p-6 shadow-sm flex items-center justify-center text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
-                    style={{
-                      transform: `translateY(${i === 0 ? '0' : i === 1 ? '-16px' : '-32px'}) scale(${i === 0 ? 1 : i === 1 ? 0.95 : 0.9})`,
-                      zIndex: courses.length - i,
-                      opacity: i === 0 ? 1 : i === 1 ? 0.6 : 0.3
-                    }}
-                  >
-                    <span className="font-serif italic text-xl text-text-primary">{course}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Card 2: AI Literarcy Assistant */}
-            <div className="h-80 md:h-96 bg-surface-inverse text-text-contrast rounded-[2rem] p-8 shadow-sm border border-transparent dark:border-line-soft flex flex-col justify-between relative overflow-hidden group">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-mono text-accent flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  AI Content Assistant
-                </span>
-              </div>
-              <div className="flex-1 flex items-end pb-8">
-                <p className="font-mono text-lg text-text-contrast/90 leading-tight">
-                  <span className="text-accent mr-2">&gt;</span>
-                  {typewriterText}
-                  <span className="inline-block w-2 bg-accent h-5 animate-pulse ml-1 align-middle" />
-                </p>
-              </div>
-              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-surface-inverse via-transparent to-transparent opacity-50" />
-            </div>
-
-            {/* Card 3: Live Calculator Preview */}
-            <div className="h-80 md:h-96 bg-surface-raised rounded-[2rem] p-8 shadow-sm border border-line-soft flex flex-col relative group">
-              <div className="flex justify-between items-center mb-8">
-                <span className="text-xs font-mono text-accent-strong/50">Live Telemetry</span>
-              </div>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="text-xs font-display font-medium text-text-dim mb-2 block">Income Input</label>
-                  <div className="w-full bg-surface-soft rounded-xl px-4 py-3 font-mono text-text-primary border border-line-soft">
-                    {calcInput || " "}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-xs font-display font-medium text-text-dim mb-2 block">Est. Tax Outcome</label>
-                  <div className="w-full bg-accent/10 rounded-xl px-4 py-3 font-mono text-accent border border-accent/20">
-                    ${calcOutput.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-display font-bold text-accent-strong cursor-pointer hover:text-accent transition-colors">
-                Try the full calculator &rarr;
-              </div>
-
-              {/* Fake SVG Cursor */}
-              <div className="absolute w-8 h-8 pointer-events-none transition-all duration-1000 ease-in-out z-10" 
-                   style={{ 
-                     top: calcInput ? '30%' : '75%', 
-                     left: calcInput ? '60%' : '20%',
-                     opacity: 0.8 
-                   }}>
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 4L11.9616 22.396A1 1 0 0013.793 22.4542L16.2753 15.6558C16.3986 15.3178 16.6661 15.0503 17.0041 14.927L23.8024 12.4447A1 1 0 0023.7443 10.613L5.34825 2.65158" fill="var(--accent-strong)" />
-                  <path d="M4 4L11.9616 22.396A1 1 0 0013.793 22.4542L16.2753 15.6558C16.3986 15.3178 16.6661 15.0503 17.0041 14.927L23.8024 12.4447A1 1 0 0023.7443 10.613L5.34825 2.65158L4 4Z" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </div>
-
-          </div>
+      {/* ───────── THESIS ───────── */}
+      <section className="py-24 md:py-32 px-6 md:px-10" data-mark>
+        <div className="max-w-[1100px] mx-auto">
+          <h2 className="reveal font-bricolage font-extrabold text-text-primary leading-[1.02] tracking-[-0.03em] text-[clamp(2.25rem,5.5vw,4.25rem)] max-w-4xl">
+            Most platforms profit from{' '}
+            <span className="hl-swipe hl-blue">confusion</span>. We exist to{' '}
+            <span className="relative inline-block">
+              end it
+              <Scribble stroke="stroke-blue" />
+            </span>
+            .
+          </h2>
+          <p className="reveal body-text mt-8 max-w-2xl">
+            Learning tools love a locked door: a paywall here, an export you cannot take with you there.
+            Caplet goes the other way. Everything is free, the code is open, and the lessons are built to be
+            played with, not just read.
+          </p>
         </div>
       </section>
 
-      {/* ================= JARGON TRANSFORMATION ================= */}
-      <section ref={jargonRef} className="py-24 md:py-40 bg-surface-body relative overflow-hidden">
-        <div className="container-custom">
-          <div className="flex flex-col lg:flex-row items-center gap-16 md:gap-24">
-            
-            <div className="w-full lg:w-1/2">
-              <span className="text-xs font-mono font-bold text-accent mb-8 block">The Knowledge Gap</span>
-              <h2 className="text-4xl md:text-6xl font-display font-bold mb-8 leading-tight text-text-primary">
-                We translate <br />
-                <span className="font-serif italic text-accent-strong">any jargon</span> <br />
-                into plain language.
-              </h2>
-              <p className="text-xl font-display font-medium text-text-muted leading-relaxed mb-12">
-                Every field has language designed to confuse. Caplet makes the complex clear — whatever domain you're working in.
-              </p>
-            </div>
-
-            <div className="w-full lg:w-1/2 relative bg-surface-raised rounded-[3rem] p-8 md:p-16 jargon-box shadow-2xl border border-line-soft min-h-[400px] flex flex-col justify-center transition-all duration-500 overflow-hidden">
-              <div className="absolute top-0 right-0 p-8">
-                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                  <span className="text-accent font-mono font-bold">{jargonIndex + 1}/{jargons.length}</span>
-                </div>
-              </div>
-
-              <div className="relative h-full">
-                {/* Complex side */}
-                <div key={`complex-${jargons[jargonIndex].complex}`} className="animate-fade-slide-up">
-                  <span className="text-xs font-mono text-text-dim/40 mb-2 block">Complex Terminology</span>
-                  <h3 className="text-3xl md:text-5xl font-display font-bold text-text-primary mb-12">
-                    {jargons[jargonIndex].complex}
-                  </h3>
-                </div>
-
-                {/* Arrow animation divider */}
-                <div className="w-full h-px bg-accent/20 mb-12 relative">
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-accent rounded-full animate-ping" />
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white shadow-lg">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                </div>
-
-                {/* Plain side */}
-                <div key={`plain-${jargons[jargonIndex].complex}`} className="animate-fade-slide-up" style={{ animationDelay: '150ms' }}>
-                  <span className="text-xs font-mono text-accent mb-2 block font-bold">In Plain English</span>
-                  <p className="text-xl md:text-2xl font-serif italic text-accent-strong leading-relaxed">
-                    "{jargons[jargonIndex].plain}"
-                  </p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-      <section ref={philosophyRef} className="py-32 md:py-48 bg-surface-soft text-text-primary relative overflow-hidden">
-        <div className="container-custom relative z-10">
-          <div className="max-w-5xl">
-            <h2 className="text-4xl sm:text-6xl md:text-7xl font-display font-bold tracking-tight mb-12 leading-[1.2]">
-              <span className="block overflow-hidden"><span className="phil-text block py-3">Most platforms profit from</span></span>
-              <span className="block overflow-hidden"><span className="phil-text block py-3 font-serif italic text-accent-strong">your confusion.</span></span>
-              <span className="block overflow-hidden mt-2"><span className="phil-text block py-3">We exist to end it.</span></span>
-            </h2>
-            
-            <p className="phil-text text-lg sm:text-2xl font-display font-medium text-text-primary/80 max-w-3xl leading-relaxed">
-              Caplet is free. Always. Build courses, tools, and workspaces for any subject, any audience, any purpose. No hidden costs, no upsells, no lock-in.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= LEARNING PATH ================= */}
-      <section ref={learningPathRef} className="relative bg-surface-body pb-32">
-        <div className="container-custom py-24">
-          <div className="text-center mb-16">
-            <span className="text-xs font-mono text-accent-strong/60 font-bold">The Syllabus</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold mt-4">A structured path forward.</h2>
-          </div>
-        </div>
-
-        {/* Path Cards */}
-        <div className="w-full relative px-4 md:px-0">
-          {[
-            {
-              title: "Build your workspace",
-              kicker: "01. Structure",
-              anim: "pie",
-              desc: "Create courses, modules, and lessons from scratch. 15+ interactive slide types — text, quizzes, diagrams, embeds, timelines, Desmos graphs, and more."
-            },
-            {
-              title: "Add intelligence",
-              kicker: "02. Automate",
-              anim: "timeline",
-              desc: "Paste in notes, upload a PDF, or describe what you need. AI plans the structure in plain text first, then converts it to polished interactive slides — ready to publish."
-            },
-            {
-              title: "Reach your audience",
-              kicker: "03. Deliver",
-              anim: "curve",
-              desc: "Publish to the world or gate it behind a private classroom. Track progress, manage assignments, and iterate based on real usage."
-            }
-          ].map((item) => (
-            <div key={item.kicker} className="learning-card sticky top-24 md:top-32 w-full max-w-6xl mx-auto h-[65vh] min-h-[500px] mb-24 rounded-[3rem] bg-surface-raised border border-line-soft shadow-2xl p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center overflow-hidden transform-gpu">
-              
-              <div className="w-full md:w-1/2 relative z-10">
-                <span className="text-xs font-mono font-bold text-accent-strong/60 block mb-4">
-                  {item.kicker}
-                </span>
-                <h3 className="text-4xl md:text-5xl font-serif italic mb-6 text-text-primary">
-                  {item.title}
-                </h3>
-                <p className="text-lg text-text-muted leading-relaxed font-display font-medium">
-                  {item.desc}
-                </p>
-              </div>
-              
-              <div className="w-full md:w-1/2 h-full flex items-center justify-center bg-surface-soft rounded-[2rem] border border-line-soft relative overflow-hidden group">
-                {/* Abstract Visuals depending on anim type */}
-                {item.anim === 'pie' && (
-                  <div className="relative w-64 h-64 rounded-full border-[16px] border-accent/20 border-t-accent border-r-accent-strong animate-spin transition-all duration-[10s]" />
-                )}
-                {item.anim === 'timeline' && (
-                  <div className="w-3/4 h-2 bg-accent/20 rounded-full relative">
-                    <div className="absolute top-1/2 -translate-y-1/2 left-0 w-4 h-4 rounded-full bg-accent shadow-[0_0_15px_rgba(0,80,255,0.5)]" />
-                    <div className="absolute top-1/2 -translate-y-1/2 left-1/2 w-4 h-4 rounded-full bg-accent shadow-[0_0_15px_rgba(0,80,255,0.5)]" />
-                    <div className="absolute top-1/2 -translate-y-1/2 right-0 w-4 h-4 rounded-full bg-accent-strong shadow-[0_0_15px_rgba(0,54,204,0.5)]" />
-                  </div>
-                )}
-                {item.anim === 'curve' && (
-                  <div className="relative w-full h-full p-8 flex items-end">
-                    <svg viewBox="0 0 100 100" className="w-full h-full stroke-accent fill-none" preserveAspectRatio="none">
-                      <path d="M0,100 C40,90 60,60 100,0" strokeWidth="4" strokeLinecap="round" />
-                    </svg>
-                    <span className="absolute top-12 right-12 font-mono text-2xl font-bold text-accent-strong">$124,500</span>
-                  </div>
-                )}
-              </div>
+      {/* ───────── WHY CAPLET ───────── */}
+      <section className="pb-8 px-6 md:px-10">
+        <div className="max-w-[1100px] mx-auto reveal-stagger grid md:grid-cols-3 gap-5">
+          {principles.map((p) => (
+            <div key={p.k} className="relative rounded-3xl block-cream p-7 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <span className="font-hand text-xl text-blue">{p.k}</span>
+              <h3 className="font-bricolage font-bold text-2xl text-text-primary mt-1 mb-2.5">{p.title}</h3>
+              <p className="body-text !text-[1rem] !leading-[1.65]">{p.body}</p>
+              {p.note && (
+                <span className="absolute -top-4 right-4 font-hand text-lg text-green -rotate-6 select-none">{p.note} ✓</span>
+              )}
             </div>
           ))}
         </div>
       </section>
 
-      {/* ================= FAQ ================= */}
-      <section className="py-24 md:py-40 bg-surface-body border-t border-line-soft relative z-20">
-        <div className="container-custom">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-16">
-              <span className="text-xs font-mono text-accent font-bold mb-4 block">Common Questions</span>
-              <h2 className="text-4xl md:text-5xl font-display font-bold text-text-primary">Still curious?</h2>
-            </div>
+      {/* ───────── FEATURES (extensible) ───────── */}
+      <section id="features" className="py-24 md:py-32 px-6 md:px-10" data-mark>
+        <div className="max-w-[1200px] mx-auto">
+          <div className="reveal flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+            <h2 className="font-bricolage font-extrabold text-text-primary leading-[1.02] tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">
+              <span className="hl-swipe">Everything</span> is in the box
+            </h2>
+            <p className="font-hand text-xl text-blue md:mb-2 md:-rotate-2">no add-ons. no upsells.</p>
+          </div>
 
-            <div className="bg-surface-raised rounded-[3rem] px-8 md:px-12 py-4 shadow-sm border border-line-soft">
-              {[
-                {
-                  q: "Is Caplet free?",
-                  a: "Yes, completely free. Build and publish content, use the tools, and join classrooms — no credit card, no hidden costs, no upsells. Ever."
-                },
-                {
-                  q: "What can I build on Caplet?",
-                  a: "Structured courses with 15+ interactive slide types, calculator and tool suites, private classroom workspaces, and AI-generated content from notes or PDFs. Right now we focus on financial education, but the platform supports any subject or domain."
-                },
-                {
-                  q: "Who is Caplet for?",
-                  a: "Anyone who wants to create or consume structured interactive content — teachers, trainers, developers, creators, or learners. If you want to build something to share or learn from something well-made, Caplet is for you."
-                },
-                {
-                  q: "How does the AI work?",
-                  a: "Paste in notes, describe a topic, or upload a PDF. The AI first plans the lesson in plain natural text, then a second pass converts that plan into fully formatted interactive slides. You control the slide count, focus, and model."
-                },
-                {
-                  q: "How do I get access to the lesson creator?",
-                  a: "The lesson editor is gated by a workspace access code. Contact us through the contact form to request access and we'll get you set up."
-                },
-                {
-                  q: "Can I suggest features or give feedback?",
-                  a: "Absolutely. Use the contact form — we read everything and actively build based on what users actually need."
-                },
-                {
-                  q: "How do I get started?",
-                  a: "Create a free account and explore the existing curriculum, or head straight to the tools. If you want to build your own content, reach out for editor access."
-                }
-              ].map((faq, i) => (
-                <FAQItem key={i} question={faq.q} answer={faq.a} />
+          <div className="reveal-stagger grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map((f) => (
+              <Link key={f.title} to={f.to} data-cursor className={`group rounded-3xl ${f.block} p-7 transition-transform duration-200 hover:-translate-y-1`}>
+                <span className="font-hand text-xl text-mark opacity-70">{f.tag}</span>
+                <h3 className="font-bricolage font-bold text-2xl text-text-primary mt-1 mb-2.5 flex items-center gap-2">
+                  {f.title}
+                  <svg className="w-5 h-5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </h3>
+                <p className="body-text !text-[1rem] !leading-[1.6]">{f.body}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── FINTECH / FINANCIAL LITERACY ───────── */}
+      <section className="py-24 md:py-32 px-6 md:px-10" data-mark>
+        <div className="max-w-[1200px] mx-auto">
+          <div className="reveal max-w-3xl">
+            <p className="font-hand text-xl text-blue mb-3 -rotate-2">built for Australia 🇦🇺</p>
+            <h2 className="font-bricolage font-extrabold text-text-primary leading-[1.02] tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">
+              Money, <span className="hl-swipe">made to make sense</span>
+            </h2>
+            <p className="body-text mt-6 max-w-2xl">
+              Caplet began as a free financial-literacy platform for Australians, and that is still its
+              backbone. Learn tax, super, mortgages, and investing by running the numbers yourself, not
+              by reading another explainer. Every calculator is built around Australian rules, and your
+              figures never leave your account.
+            </p>
+          </div>
+
+          <div className="reveal-stagger grid sm:grid-cols-3 gap-5 mt-12">
+            <div className="rounded-3xl block-blue p-7">
+              <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-text-primary">20+</div>
+              <p className="body-text !text-[1rem] !leading-[1.55] mt-2">interactive financial calculators, from income tax to your FIRE number</p>
+            </div>
+            <div className="rounded-3xl block-green p-7">
+              <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-text-primary">AU-ready</div>
+              <p className="body-text !text-[1rem] !leading-[1.55] mt-2">tuned to Australian tax brackets, superannuation, and GST</p>
+            </div>
+            <div className="rounded-3xl block-amber p-7">
+              <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-text-primary">$0</div>
+              <p className="body-text !text-[1rem] !leading-[1.55] mt-2">free forever, with no ads and no selling your data</p>
+            </div>
+          </div>
+
+          <div className="reveal mt-10">
+            <p className="font-hand text-lg text-blue mb-3">run the numbers on</p>
+            <div className="flex flex-wrap gap-2.5">
+              {calculators.map((c) => (
+                <span key={c} className="px-3.5 py-2 rounded-full bg-surface-raised text-sm font-semibold text-text-primary">{c}</span>
               ))}
+              <Link to="/tools" data-cursor className="px-4 py-2 rounded-full bg-[color:var(--mark-blue)] text-white text-sm font-bold hover:-translate-y-0.5 transition-transform inline-flex items-center gap-1.5">
+                See every tool
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================= FOOTER CTA ================= */}
-      <section className="bg-accent text-white py-32 rounded-t-[3rem] -mt-10 relative z-30">
-        <div className="container-custom text-center max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-serif italic mb-8">
-            Ready to build something?
-          </h2>
-          <p className="text-xl md:text-2xl font-display font-medium text-white/80 mb-12">
-            It&apos;s free. No catch.
-          </p>
-          <Link to="/courses" className="inline-block bg-surface-raised text-accent font-display font-bold px-10 py-5 rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl">
-            Explore the platform
-          </Link>
+      {/* ───────── JUST SHIPPED (Essay Memoriser + new features) ───────── */}
+      <section className="py-24 md:py-32 px-6 md:px-10" data-mark>
+        <div className="max-w-[1200px] mx-auto">
+          <div className="reveal flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+            <h2 className="font-bricolage font-extrabold text-text-primary leading-[1.02] tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">
+              Just <span className="hl-swipe">shipped</span>
+            </h2>
+            <p className="font-hand text-xl text-blue md:mb-2 md:-rotate-2">fresh out of the workshop</p>
+          </div>
+
+          {/* Essay Memoriser — feature spotlight */}
+          <div className="reveal rounded-[2rem] block-blue p-8 md:p-10 grid md:grid-cols-2 gap-10 items-center">
+            <div>
+              <span className="font-hand text-xl text-blue">brand new</span>
+              <h3 className="font-bricolage font-extrabold text-3xl md:text-4xl text-text-primary mt-1 mb-4">Essay Memoriser</h3>
+              <p className="body-text mb-7 max-w-md">
+                Paste an essay or drop in a PDF. Caplet turns it into cloze gaps, quote cards, and
+                paragraph-order drills, then schedules them with spaced repetition so the whole thing
+                actually sticks before exam day.
+              </p>
+              <Link to="/essays" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
+                Try the memoriser
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+              </Link>
+            </div>
+
+            {/* mock preview */}
+            <div className="rounded-2xl bg-surface-raised p-6 shadow-[0_24px_50px_-30px_rgba(20,20,18,0.4)] space-y-4">
+              <div>
+                <span className="font-hand text-base text-blue">cloze gap</span>
+                <p className="body-text !text-[1rem] !leading-[1.8] mt-1">
+                  In <span className="px-2 py-0.5 rounded bg-[color:var(--block-blue)] font-bold">1788</span> the First Fleet
+                  arrived, marking the start of <span className="inline-block w-20 align-middle rounded bg-[color:var(--block-amber)]">&nbsp;</span> settlement.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-hand text-base text-blue mr-1">paragraph order</span>
+                {['1', '2', '3', '4'].map((n) => (
+                  <span key={n} className="w-7 h-7 rounded-lg bg-[color:var(--block-blue)] flex items-center justify-center text-sm font-bold text-text-primary">{n}</span>
+                ))}
+                <Check className="w-5 h-4 ml-1" />
+              </div>
+              <div className="rounded-xl bg-[color:var(--block-green)] p-3.5 text-sm font-semibold text-text-primary flex items-center justify-between">
+                Quote card
+                <span className="font-hand text-base text-green">tap to flip</span>
+              </div>
+            </div>
+          </div>
+
+          {/* other recent additions */}
+          <div className="reveal-stagger grid sm:grid-cols-3 gap-5 mt-5">
+            {newFeatures.map((f) => (
+              <Link key={f.title} to={f.to} data-cursor className={`group rounded-3xl ${f.block} p-7 transition-transform duration-200 hover:-translate-y-1`}>
+                <span className="font-hand text-xl text-mark opacity-70">{f.tag}</span>
+                <h3 className="font-bricolage font-bold text-2xl text-text-primary mt-1 mb-2.5 flex items-center gap-2">
+                  {f.title}
+                  <svg className="w-5 h-5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </h3>
+                <p className="body-text !text-[1rem] !leading-[1.6]">{f.body}</p>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
+      {/* ───────── SEE IT IN ACTION ───────── */}
+      <section className="py-20 md:py-28 px-6 md:px-10">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="reveal flex items-center gap-4 mb-10">
+            <h2 className="font-bricolage font-extrabold text-text-primary tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">See it in action</h2>
+            <span className="font-hand text-xl text-blue mt-3 hidden sm:block -rotate-3">try the tabs</span>
+          </div>
+
+          <div className="reveal">
+            <div className="inline-flex flex-wrap gap-2 mb-7">
+              {showcaseTabs.map((tab) => {
+                const isActive = activeShowcaseTab === tab.id;
+                return (
+                  <button key={tab.id} onClick={() => setActiveShowcaseTab(tab.id)}
+                    className={`px-5 py-2.5 rounded-full text-sm font-bold transition-colors duration-200 ${isActive ? 'bg-[color:var(--mark-blue)] text-white' : 'block-cream text-text-primary hover:text-[color:var(--mark-blue)]'}`}>
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="rounded-[2rem] block-cream p-6 md:p-9 shadow-[0_40px_80px_-50px_rgba(20,20,18,0.4)] min-h-[440px] flex items-center">
+              {activeShowcaseTab === 'workspace' && (
+                <div className="w-full animate-fade-slide-up flex flex-col xl:flex-row gap-10 items-center">
+                  <div className="flex-1">
+                    <h3 className="font-bricolage font-bold text-3xl text-text-primary mb-4">A canvas you can drag, drop, and play with</h3>
+                    <p className="body-text mb-7 max-w-md">Draft slides, drop in coding challenges, embed videos, and run a live classroom. The builder stays out of your way and keeps every block editable.</p>
+                    <Link to="/courses" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
+                      Open the builder
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </Link>
+                  </div>
+                  <div className="w-full xl:w-[460px] rounded-2xl bg-surface-body p-4 shadow-[0_20px_40px_-28px_rgba(20,20,18,0.45)]">
+                    <div className="flex gap-3 h-[260px]">
+                      <div className="w-24 flex flex-col gap-2">
+                        {['Text', 'Code', 'Chart', 'Quiz'].map((tool) => (
+                          <div key={tool} className="p-2.5 rounded-xl block-blue text-sm font-bold text-text-primary cursor-grab">{tool}</div>
+                        ))}
+                      </div>
+                      <div className="flex-1 flex flex-col gap-3">
+                        <div className="h-12 rounded-xl block-blue flex items-center justify-center text-sm font-bold text-[color:var(--mark-blue)]">Drop a block here</div>
+                        <div className="flex-1 rounded-xl bg-surface-raised p-4 flex flex-col gap-2">
+                          <div className="w-3/4 h-4 rounded bg-line-soft" />
+                          <div className="w-full h-2.5 rounded bg-surface-soft" />
+                          <div className="w-5/6 h-2.5 rounded bg-surface-soft" />
+                          <div className="mt-auto h-14 rounded-lg block-amber flex items-center justify-center text-sm font-bold text-text-primary">Live preview</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeShowcaseTab === 'ide' && (
+                <div className="w-full animate-fade-slide-up flex flex-col xl:flex-row gap-10 items-center">
+                  <div className="flex-1">
+                    <h3 className="font-bricolage font-bold text-3xl text-text-primary mb-4">Run real code, right in the browser</h3>
+                    <p className="body-text mb-7 max-w-md">Python, JavaScript, and HTML with instant visual feedback, test runners, and an AI debugger on hand. Nothing to install.</p>
+                    <Link to="/tools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
+                      Open the playground
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </Link>
+                  </div>
+                  <div className="w-full xl:w-[460px] rounded-2xl bg-[#1b1b1b] text-[#d4d4d4] overflow-hidden shadow-[0_24px_50px_-26px_rgba(0,0,0,0.6)]">
+                    <div className="bg-[#262626] flex items-center px-4 py-2.5">
+                      <div className="flex gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+                        <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                        <span className="w-3 h-3 rounded-full bg-[#27c93f]" />
+                      </div>
+                      <div className="mx-auto text-[11px] font-mono text-[#8a8a8a]">main.py</div>
+                    </div>
+                    <div className="flex font-mono text-[12px] h-[200px]">
+                      <div className="w-9 bg-[#1b1b1b] text-[#6a6a6a] text-right pr-3 pt-2 select-none flex flex-col gap-1">
+                        {[1, 2, 3, 4, 5].map((n) => <span key={n}>{n}</span>)}
+                      </div>
+                      <div className="flex-1 p-3 pt-2 flex flex-col gap-1">
+                        <div><span className="text-[#569cd6]">import</span> math</div>
+                        <div><span className="text-[#569cd6]">def</span> <span className="text-[#dcdcaa]">value</span>(x):</div>
+                        <div className="pl-6">y = math.<span className="text-[#dcdcaa]">sin</span>(x) * math.<span className="text-[#dcdcaa]">exp</span>(-<span className="text-[#b5cea8]">0.1</span> * x)</div>
+                        <div className="pl-6"><span className="text-[#c586c0]">return</span> <span className="text-[#4ec9b0]">round</span>(y, <span className="text-[#b5cea8]">4</span>)</div>
+                        <div className="mt-2"><span className="text-[#dcdcaa]">print</span>(<span className="text-[#dcdcaa]">value</span>(<span className="text-[#b5cea8]">1.57</span>))</div>
+                      </div>
+                    </div>
+                    <div className="bg-[#1b1b1b] px-3 py-2.5 font-mono text-[11px] text-white border-t border-white/5">&gt; 0.8547</div>
+                  </div>
+                </div>
+              )}
+
+              {activeShowcaseTab === 'geometry' && (
+                <div className="w-full animate-fade-slide-up flex flex-col xl:flex-row gap-10 items-center">
+                  <div className="flex-1">
+                    <h3 className="font-bricolage font-bold text-3xl text-text-primary mb-4">Graphing that students can touch</h3>
+                    <p className="body-text mb-7 max-w-md">Drop interactive geometry and graphing panels into a lesson. Drag a parameter and watch the curve move, live.</p>
+                    <Link to="/tools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
+                      Plot a graph
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </Link>
+                  </div>
+                  <div className="w-full xl:w-[460px] rounded-2xl bg-surface-body overflow-hidden shadow-[0_20px_40px_-28px_rgba(20,20,18,0.45)]">
+                    <div className="px-4 py-3 flex justify-between items-center">
+                      <span className="font-mono text-xs text-text-primary">f(x) = sin(x) · e^(0.1x)</span>
+                      <span className="font-hand text-base text-blue">drag me</span>
+                    </div>
+                    <div className="h-[240px] relative text-green">
+                      <div className="absolute inset-x-0 top-1/2 h-px bg-line-soft" />
+                      <div className="absolute inset-y-0 left-1/4 w-px bg-line-soft" />
+                      <svg viewBox="0 0 500 240" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                        <path d="M 0 120 Q 60 18 125 120 T 250 120 T 375 120 T 500 120" fill="none" stroke="currentColor" strokeWidth="3.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+                        <circle cx="95" cy="52" r="5" className="fill-[color:var(--mark-green)] animate-pulse" />
+                      </svg>
+                      <div className="absolute bottom-4 right-4 rounded-xl bg-surface-raised p-3 font-mono text-[11px] flex flex-col gap-2 w-32 shadow-sm">
+                        <label className="flex justify-between items-center gap-2"><span>a</span><input type="range" defaultValue="50" className="w-16 accent-[color:var(--mark-green)]" /></label>
+                        <label className="flex justify-between items-center gap-2"><span>b</span><input type="range" defaultValue="30" className="w-16 accent-[color:var(--mark-green)]" /></label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── FAQ ───────── */}
+      <section className="py-20 md:py-28 px-6 md:px-10">
+        <div className="max-w-[1000px] mx-auto">
+          <h2 className="reveal font-bricolage font-extrabold text-text-primary tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)] mb-10">
+            Common <span className="hl-swipe hl-blue">questions</span>
+          </h2>
+          <div className="reveal-stagger space-y-3">
+            {faqItems.map((item, index) => {
+              const isOpen = activeFaq === index;
+              return (
+                <div key={item.question} className={`rounded-3xl overflow-hidden block-cream transition-shadow duration-300 ${isOpen ? 'shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]' : ''}`}>
+                  <button onClick={() => setActiveFaq(isOpen ? null : index)} className="w-full p-6 flex justify-between items-center text-left gap-4" aria-expanded={isOpen}>
+                    <span className="font-bricolage font-bold text-lg md:text-xl text-text-primary">{item.question}</span>
+                    <svg className={`w-6 h-6 flex-shrink-0 text-[color:var(--mark-blue)] transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M12 5v14M5 12h14" /></svg>
+                  </button>
+                  <div className={`grid transition-all duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                    <div className="overflow-hidden">
+                      <p className="px-6 pb-6 body-text !text-[1rem] !leading-[1.65] max-w-2xl">{item.answer}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── SIGN-OFF ───────── */}
+      <section className="px-6 md:px-10 pb-28" data-mark>
+        <div className="reveal max-w-[1200px] mx-auto rounded-[2.5rem] bg-[color:var(--mark-blue)] text-white px-8 py-16 md:px-16 md:py-24 text-center relative overflow-hidden">
+          <p className="font-hand text-2xl text-white/85 mb-3 -rotate-2">ready when you are</p>
+          <h2 className="font-bricolage font-extrabold leading-[1.02] tracking-[-0.03em] text-[clamp(2.25rem,5vw,4rem)] max-w-3xl mx-auto">
+            Build your first course in an afternoon.
+          </h2>
+          <div className="mt-9 flex flex-wrap gap-3 justify-center">
+            <Link to="/register" className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-[color:var(--mark-blue)] text-base font-bold hover:-translate-y-0.5 transition-transform">
+              Create a course
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+            </Link>
+            <Link to="/courses" className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white/15 text-white text-base font-bold hover:bg-white/25 transition-colors">
+              Browse the curriculum
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

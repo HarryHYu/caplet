@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import CapletLoader from '../components/CapletLoader';
+import { useReveal } from '../lib/useReveal';
 
 const CourseCover = ({ title }) => {
   // Generate a semi-stable pseudo-random gradient based on title
@@ -51,6 +52,8 @@ const Courses = () => {
   });
   const [courseProgress, setCourseProgress] = useState({});
 
+  useReveal(undefined, [courses, loading]);
+
   useEffect(() => {
     fetchCourses(filters);
   }, [fetchCourses, filters]);
@@ -96,7 +99,7 @@ const Courses = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-body flex items-center justify-center">
-        <CapletLoader message="Loading curriculum…" />
+        <CapletLoader message="Loading the curriculum" />
       </div>
     );
   }
@@ -105,51 +108,51 @@ const Courses = () => {
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         {error && (
-          <div className="mb-20 p-6 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-red-800 text-sm font-medium flex items-center gap-4 reveal-text">
+          <div className="reveal mb-16 p-6 rounded-2xl bg-red-50 text-red-800 text-sm font-semibold flex items-center gap-4 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
             {error}
           </div>
         )}
 
         {/* Header */}
-        <header className="mb-32 reveal-text">
-          <span className="section-kicker">Library</span>
-          <h1 className="text-6xl md:text-8xl mb-12">
-            Curriculum.
+        <header className="reveal mb-20">
+          <p className="font-hand text-2xl text-accent mb-3 -rotate-2">Pick something to learn</p>
+          <h1 className="font-display font-extrabold tracking-tight text-text-primary text-6xl md:text-8xl mb-8">
+            Curriculum
           </h1>
-          <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
-            Browse the course library.
+          <p className="text-xl md:text-2xl text-text-muted max-w-xl leading-relaxed">
+            Browse the full course library and start wherever you like.
           </p>
         </header>
 
         {/* Filters */}
-        <div className="mb-24 flex flex-col sm:flex-row gap-8 reveal-text stagger-1">
+        <div className="reveal mb-16 flex flex-col sm:flex-row gap-6">
           <div className="sm:w-48">
-            <label className="text-sm font-semibold text-text-dim mb-4 block">Level</label>
+            <label className="text-sm font-semibold text-text-dim mb-3 block">Level</label>
             <select
               value={filters.level}
               onChange={(e) => handleFilterChange('level', e.target.value)}
-              className="w-full bg-surface-raised border border-line-soft px-6 py-4 rounded-xl text-sm font-medium outline-none focus:border-accent transition-colors"
+              className="w-full bg-surface-raised border border-line-soft px-5 py-4 rounded-xl text-sm font-semibold outline-none focus:border-accent transition-colors"
             >
-              <option value="">All Levels</option>
+              <option value="">All levels</option>
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
               <option value="advanced">Advanced</option>
             </select>
           </div>
           <div className="flex-1">
-            <label className="text-sm font-semibold text-text-dim mb-4 block">Search</label>
+            <label className="text-sm font-semibold text-text-dim mb-3 block">Search</label>
             <input
               type="text"
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              placeholder="Search by title..."
-              className="w-full bg-surface-raised border border-line-soft px-6 py-4 rounded-xl text-sm font-medium outline-none focus:border-accent transition-colors placeholder:text-text-dim/30"
+              placeholder="Search courses by title"
+              className="w-full bg-surface-raised border border-line-soft px-5 py-4 rounded-xl text-sm font-semibold outline-none focus:border-accent transition-colors placeholder:text-text-dim/40"
             />
           </div>
         </div>
 
         {/* Course grid */}
-        <div data-tour-id="courses-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-line-soft border border-line-soft reveal-text stagger-2">
+        <div data-tour-id="courses-grid" className="reveal-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => {
             const progress = courseProgress[course.id] || 0;
             const hasProgress = progress > 0;
@@ -158,55 +161,55 @@ const Courses = () => {
               <div
                 key={course.id}
                 onClick={() => handleCourseClick(course.id)}
-                className="bg-surface-body p-12 group cursor-pointer transition-all duration-700 hover:bg-surface-raised flex flex-col"
+                className="group cursor-pointer flex flex-col bg-surface-raised rounded-3xl p-7 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200"
               >
-                <div className="flex justify-between items-start mb-12">
-                  <span className="text-sm font-medium text-accent border-b border-accent pb-1">
+                <div className="flex justify-between items-start mb-6">
+                  <span className="text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full bg-accent text-white">
                     {course.level || 'Beginner'}
                   </span>
                   {hasProgress && (
-                    <span className="text-sm font-medium text-accent">
-                      In Progress
+                    <span className="text-xs font-bold px-3 py-1.5 rounded-full block-green text-green">
+                      In progress
                     </span>
                   )}
                 </div>
 
-                <div className="aspect-[16/9] w-full mb-12 overflow-hidden bg-surface-soft border border-line-soft rounded-[2rem]">
+                <div className="aspect-[16/9] w-full mb-7 overflow-hidden bg-surface-soft rounded-2xl">
                   <CourseCover title={course.title} id={course.id} />
                 </div>
 
-                <h3 className="text-2xl font-bold mb-8 group-hover:text-accent transition-colors duration-500">
+                <h3 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-3 group-hover:text-accent transition-colors duration-300">
                   {course.title}
                 </h3>
 
-                <p className="text-sm font-medium text-text-muted leading-relaxed mb-12 line-clamp-3">
+                <p className="text-sm font-medium text-text-muted leading-relaxed mb-7 line-clamp-3">
                   {course.shortDescription}
                 </p>
 
                 <div className="mt-auto">
-                  <div className="flex items-center gap-4 text-sm font-medium text-text-dim mb-8">
+                  <div className="flex items-center gap-3 text-sm font-semibold text-text-dim mb-6">
                     <span>{course.duration}m</span>
-                    <span className="w-1 h-1 bg-text-dim" />
+                    <span className="w-1 h-1 rounded-full bg-text-dim" />
                     <span>{(course.modules || []).reduce((sum, m) => sum + (m.lessons || []).length, 0)} lessons</span>
                   </div>
 
                   {isAuthenticated && hasProgress && (
-                    <div className="mb-8">
-                      <div className="flex justify-between text-sm font-medium text-text-dim mb-3">
+                    <div className="mb-6">
+                      <div className="flex justify-between text-sm font-semibold text-text-dim mb-2">
                         <span>Progress</span>
                         <span className="text-accent">{Math.round(progress)}%</span>
                       </div>
-                      <div className="w-full bg-surface-soft h-1 overflow-hidden">
-                        <div className="bg-accent h-full transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
+                      <div className="w-full bg-surface-soft h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-accent h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
                       </div>
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-8 border-t border-line-soft">
-                    <span className="text-sm font-medium group-hover:text-accent transition-colors duration-500">
-                      {hasProgress ? 'Continue Module' : 'Enter Lesson'} &rarr;
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-accent">
+                      {hasProgress ? 'Continue module' : 'Open lesson'}
                     </span>
-                    <ArrowRightIcon className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-2 transition-all duration-500" />
+                    <ArrowRightIcon className="w-4 h-4 text-accent group-hover:translate-x-1.5 transition-transform duration-300" />
                   </div>
                 </div>
               </div>
@@ -215,15 +218,18 @@ const Courses = () => {
         </div>
 
         {courses.length === 0 && !loading && (
-          <div className="py-40 text-center border border-line-soft bg-surface-soft reveal-text">
-            <p className="text-text-dim font-medium text-sm animate-pulse mb-8">
-              Registry Query Null
+          <div className="reveal py-24 px-8 text-center block-cream rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h3 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-3">
+              No courses match those filters
+            </h3>
+            <p className="text-text-muted font-medium text-sm mb-8 max-w-md mx-auto">
+              Try a different level or search term, or clear everything to see the full library.
             </p>
             <button
               onClick={() => setFilters({ level: '', search: '' })}
-              className="text-sm font-medium text-accent hover:text-accent-strong transition-colors"
+              className="btn-primary"
             >
-              Clear Filters
+              Clear filters
             </button>
           </div>
         )}

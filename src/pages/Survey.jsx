@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 
 const Survey = () => {
+  useReveal();
   const { isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     age: '',
@@ -79,15 +81,15 @@ const Survey = () => {
     return (
       <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
         <div className="container-custom">
-          <div className="max-w-2xl mx-auto bg-surface-raised border border-line-soft p-12 lg:p-20 text-center reveal-text">
-            <div className="w-20 h-20 border border-line-soft flex items-center justify-center mx-auto mb-12">
-              <svg className="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 13l4 4L19 7" />
+          <div className="max-w-2xl mx-auto bg-surface-raised rounded-3xl p-12 lg:p-20 text-center reveal shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="w-20 h-20 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-12">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <span className="section-kicker mb-4">Thank you</span>
-            <h2 className="text-4xl font-black mb-8 italic">Response submitted.</h2>
-            <p className="text-text-muted mb-12 font-serif italic leading-relaxed">
+            <span className="font-hand text-accent text-lg block mb-3">Thank you</span>
+            <h2 className="font-display text-4xl font-extrabold tracking-tight mb-8">Response submitted.</h2>
+            <p className="text-text-muted mb-12 leading-relaxed">
               Your answers help us improve Caplet for students and teachers.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
@@ -107,21 +109,20 @@ const Survey = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-24 reveal-text max-w-4xl mx-auto">
-          <span className="section-kicker">Research survey</span>
-          <h1 className="text-6xl md:text-8xl mb-8">
+        <header className="mb-24 reveal max-w-4xl mx-auto">
+          <span className="font-hand text-accent text-lg block mb-3">Research survey</span>
+          <h1 className="font-display text-6xl md:text-8xl font-extrabold tracking-tight mb-8">
             Financial literacy<br />survey.
           </h1>
-          <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
+          <p className="text-xl text-text-muted leading-relaxed max-w-xl">
             Help us understand how people learn about money. Your responses are anonymous.
           </p>
-          <div className="h-px w-full bg-line-soft mt-12" />
         </header>
 
-        <div className="max-w-2xl mx-auto reveal-text stagger-1">
-          <div className="bg-surface-body border border-line-soft p-12 lg:p-16">
+        <div className="max-w-2xl mx-auto reveal">
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
             {error && (
-              <div className="mb-12 p-6 bg-accent/5 border border-accent/20 text-accent text-sm font-medium">
+              <div className="mb-12 p-6 rounded-2xl bg-accent/10 text-accent text-sm font-medium">
                 {error}
               </div>
             )}
@@ -130,7 +131,7 @@ const Survey = () => {
               {/* Age */}
               <div className="space-y-6">
                 <label className="text-sm font-semibold text-text-dim block">
-                  Chronological Bracket <span className="text-accent">*</span>
+                  Age Range <span className="text-accent">*</span>
                 </label>
                 <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                   <select
@@ -155,7 +156,7 @@ const Survey = () => {
               {/* Track Spending */}
               <div className="space-y-6">
                 <label className="text-sm font-semibold text-text-dim block">
-                  Capital Tracking Habits <span className="text-accent">*</span>
+                  Do You Track Your Spending? <span className="text-accent">*</span>
                 </label>
                 <div className="flex gap-12">
                   {['yes', 'no'].map((val) => (
@@ -172,7 +173,7 @@ const Survey = () => {
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
                       </div>
-                      <span className="text-sm font-medium text-text-primary">{val}</span>
+                      <span className="text-sm font-medium text-text-primary capitalize">{val}</span>
                     </label>
                   ))}
                 </div>
@@ -181,7 +182,7 @@ const Survey = () => {
               {/* Taught at School */}
               <div className="space-y-6">
                 <label className="text-sm font-semibold text-text-dim block">
-                  Formal Institutional Introduction <span className="text-accent">*</span>
+                  Were You Taught This at School? <span className="text-accent">*</span>
                 </label>
                 <div className="flex gap-12">
                   {['yes', 'no'].map((val) => (
@@ -198,7 +199,7 @@ const Survey = () => {
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
                       </div>
-                      <span className="text-sm font-medium text-text-primary">{val}</span>
+                      <span className="text-sm font-medium text-text-primary capitalize">{val}</span>
                     </label>
                   ))}
                 </div>
@@ -208,9 +209,9 @@ const Survey = () => {
               <div className="space-y-10">
                 <div className="flex justify-between items-end">
                   <label className="text-sm font-semibold text-text-dim block">
-                    Perceived Competency Index <span className="text-accent">*</span>
+                    Your Confidence Level <span className="text-accent">*</span>
                   </label>
-                  <span className="text-4xl font-black text-accent">{formData.confidence || '00'}</span>
+                  <span className="font-display text-4xl font-extrabold tracking-tight text-accent">{formData.confidence || '00'}</span>
                 </div>
                 <div className="relative pt-4">
                   <input
@@ -232,7 +233,7 @@ const Survey = () => {
               {/* Terms Confusing */}
               <div className="space-y-6">
                 <label className="text-sm font-semibold text-text-dim block">
-                  Semantic Overload <span className="text-accent">*</span>
+                  Do Financial Terms Confuse You? <span className="text-accent">*</span>
                 </label>
                 <div className="flex gap-12">
                   {['yes', 'no'].map((val) => (
@@ -249,7 +250,7 @@ const Survey = () => {
                           className="absolute inset-0 opacity-0 cursor-pointer"
                         />
                       </div>
-                      <span className="text-sm font-medium text-text-primary">{val}</span>
+                      <span className="text-sm font-medium text-text-primary capitalize">{val}</span>
                     </label>
                   ))}
                 </div>
@@ -258,11 +259,11 @@ const Survey = () => {
               {/* Helpful Explanations */}
               <div className="space-y-8">
                 <label className="text-sm font-semibold text-text-dim block">
-                  Preferred Pedagogical Mediums <span className="text-accent">*</span>
+                  What Explanations Help You Most? <span className="text-accent">*</span>
                 </label>
                 <div className="grid grid-cols-1 gap-4">
                   {explanationOptions.map(option => (
-                    <label key={option} className="group flex items-center justify-between p-5 border border-line-soft hover:border-accent transition-colors cursor-pointer bg-surface-raised">
+                    <label key={option} className="group flex items-center justify-between p-5 rounded-2xl bg-block-cream hover:-translate-y-0.5 transition-transform cursor-pointer">
                       <span className="text-sm font-medium text-text-primary">{option}</span>
                       <div className="relative w-5 h-5 border border-line-soft group-hover:border-accent flex items-center justify-center transition-colors">
                         {formData.helpfulExplanations.includes(option) && <div className="w-2 h-2 bg-accent" />}
@@ -283,12 +284,12 @@ const Survey = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-primary w-full py-6 text-sm disabled:opacity-30 disabled:grayscale"
+                  className="btn-primary w-full py-6 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-30 disabled:grayscale"
                 >
-                  {loading ? 'Submitting…' : 'Submit survey'}
+                  {loading ? 'Submitting...' : 'Submit Survey'}
                 </button>
-                <p className="text-center mt-8 text-xs font-serif italic text-text-dim">
-                  In submission, you agree to anonymous data contribution for pedagogical enhancement.
+                <p className="text-center mt-8 text-xs text-text-dim">
+                  By submitting, you agree to contribute anonymous data to help us improve our lessons.
                 </p>
               </div>
             </form>

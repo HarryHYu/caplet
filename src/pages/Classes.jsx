@@ -3,8 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import { useReveal } from '../lib/useReveal';
 
 const Classes = () => {
+  useReveal();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -95,14 +97,14 @@ const Classes = () => {
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
         {/* Header Section */}
-        <header data-tour-id="academy-header" className="mb-32 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text">
+        <header data-tour-id="academy-header" className="mb-32 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal">
           <div>
-            <span className="section-kicker">Faculty Admissions</span>
-            <h1 className="text-6xl md:text-8xl mb-12">
+            <span className="font-hand text-accent text-2xl">Learn together</span>
+            <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mb-12 mt-2">
               The Academy.
             </h1>
-            <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
-              Collaborative learning environments structured for peer progression and academic leadership.
+            <p className="text-2xl text-text-muted max-w-xl leading-relaxed">
+              Collaborative learning environments built for peer progression and academic leadership.
             </p>
           </div>
           <div data-tour-id="academy-actions" className="flex items-center gap-3">
@@ -130,36 +132,36 @@ const Classes = () => {
         </header>
 
         {error && (
-          <div className="mb-20 p-10 bg-red-50 text-red-800 text-sm font-medium border border-red-100 flex items-center gap-4 reveal-text">
+          <div className="mb-20 p-6 rounded-2xl bg-red-50 text-red-800 text-sm font-medium flex items-center gap-4 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-            Signal Error: {error}
+            Something went wrong: {error}
           </div>
         )}
 
         {isTeacher && (
-          <section className="mb-32 reveal-text stagger-1">
-            <h2 className="text-sm font-semibold text-accent mb-12 border-b border-line-soft pb-6">
-              Leadership Portfolio
+          <section className="mb-32 reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-12">
+              Classes You Teach
             </h2>
             {classes.teaching.length === 0 ? (
-              <div className="p-24 border border-line-soft text-center bg-surface-soft">
+              <div className="p-16 rounded-3xl text-center block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                 <p className="text-sm font-medium text-text-dim">
-                  No managed entities detected.
+                  You don't manage any classes yet.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal-stagger">
                 {classes.teaching.map((cls) => (
-                  <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-body p-12 group transition-all duration-700 hover:bg-surface-raised flex flex-col justify-between">
+                  <Link key={cls.id} to={`/classes/${cls.id}`} className="block-blue rounded-3xl p-10 group flex flex-col justify-between shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
                     <div>
-                      <div className="flex justify-between items-start mb-12">
-                        <h3 className="text-3xl font-serif italic group-hover:translate-x-2 transition-transform duration-700">{cls.name}</h3>
-                        <span className="text-xs font-medium px-3 py-1 bg-text-primary text-surface-body group-hover:bg-accent transition-colors">Owner</span>
+                      <div className="flex justify-between items-start mb-12 gap-4">
+                        <h3 className="font-display font-bold tracking-tight text-3xl">{cls.name}</h3>
+                        <span className="text-xs font-bold px-3 py-1 rounded-xl bg-accent text-white shrink-0">Owner</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between pt-12 border-t border-line-soft">
-                      <span className="text-sm font-medium text-text-dim">Passkey Protocol:</span>
-                      <span className="text-xs font-bold font-mono tracking-widest text-text-primary group-hover:text-accent transition-colors">
+                    <div className="flex items-center justify-between pt-8">
+                      <span className="text-sm font-medium text-text-dim">Class code</span>
+                      <span className="text-xs font-bold font-mono tracking-widest text-accent">
                         {cls.code}
                       </span>
                     </div>
@@ -170,29 +172,29 @@ const Classes = () => {
           </section>
         )}
 
-        <section className="reveal-text stagger-2">
-          <h2 className="text-sm font-semibold text-accent mb-12 border-b border-line-soft pb-6">
-            Enrollment Registry
+        <section className="reveal">
+          <h2 className="font-display font-bold tracking-tight text-2xl mb-12">
+            Classes You're In
           </h2>
           {classes.student.length === 0 ? (
-            <div className="p-24 border border-line-soft text-center bg-surface-soft">
-              <p className="text-sm font-medium text-text-dim italic">
-                Awaiting first academy registration.
+            <div className="p-16 rounded-3xl text-center block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <p className="text-sm font-medium text-text-dim">
+                Join your first class to get started.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal-stagger">
               {classes.student.map((cls) => (
-                <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-body p-12 group transition-all duration-700 hover:bg-surface-raised flex flex-col justify-between">
+                <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-raised rounded-3xl p-10 group flex flex-col justify-between shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
                   <div>
-                    <div className="flex justify-between items-start mb-12">
-                      <h3 className="text-3xl font-serif italic group-hover:translate-x-2 transition-transform duration-700">{cls.name}</h3>
-                      <span className="text-xs font-medium px-3 py-1 bg-surface-soft text-text-dim group-hover:text-accent transition-colors">Member</span>
+                    <div className="flex justify-between items-start mb-12 gap-4">
+                      <h3 className="font-display font-bold tracking-tight text-3xl">{cls.name}</h3>
+                      <span className="text-xs font-bold px-3 py-1 rounded-xl bg-surface-soft text-text-dim shrink-0">Member</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-12 border-t border-line-soft">
-                    <span className="text-sm font-medium text-text-dim">Academy ID:</span>
-                    <span className="text-xs font-bold font-mono tracking-widest text-text-primary group-hover:text-accent transition-colors">
+                  <div className="flex items-center justify-between pt-8">
+                    <span className="text-sm font-medium text-text-dim">Class code</span>
+                    <span className="text-xs font-bold font-mono tracking-widest text-accent">
                       {cls.code}
                     </span>
                   </div>
@@ -204,36 +206,36 @@ const Classes = () => {
 
         {/* Modals */}
         {showCreate && (
-          <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-2xl flex items-center justify-center z-50 p-6 reveal-text">
-            <div className="bg-surface-raised border border-line-soft max-w-lg w-full p-16 shadow-2xl">
+          <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-2xl flex items-center justify-center z-50 p-6">
+            <div className="bg-surface-raised rounded-3xl max-w-lg w-full p-12 shadow-[0_30px_60px_-30px_rgba(20,20,18,0.45)]">
               <div className="flex items-center justify-between mb-16">
-                <h2 className="text-4xl font-serif italic">Create Entity.</h2>
+                <h2 className="font-display font-bold tracking-tight text-4xl">Create a Class</h2>
                 <button onClick={() => setShowCreate(false)} className="text-text-dim hover:text-accent transition-colors">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
               <form onSubmit={handleCreate} className="space-y-12">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">Entity Title</label>
+                  <label className="text-sm font-semibold text-text-dim mb-4 block">Class Name</label>
                   <input
                     type="text"
                     value={createForm.name}
                     onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                    className="w-full bg-surface-soft border border-line-soft px-8 py-5 text-sm font-medium outline-none focus:border-accent transition-colors"
+                    className="w-full bg-surface-soft border border-line-soft rounded-xl px-6 py-4 text-sm font-medium outline-none focus:border-accent transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">Definition (Optional)</label>
+                  <label className="text-sm font-semibold text-text-dim mb-4 block">Description (Optional)</label>
                   <textarea
                     rows={4}
                     value={createForm.description}
                     onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                    className="w-full bg-surface-soft border border-line-soft px-8 py-5 text-sm font-medium outline-none focus:border-accent transition-colors resize-none"
+                    className="w-full bg-surface-soft border border-line-soft rounded-xl px-6 py-4 text-sm font-medium outline-none focus:border-accent transition-colors resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary py-3 text-sm">Cancel</button>
-                  <button type="submit" className="btn-primary py-3 text-sm">{submitting ? 'Creating...' : 'Establish Class'}</button>
+                  <button type="submit" className="btn-primary py-3 text-sm">{submitting ? 'Creating...' : 'Create Class'}</button>
                 </div>
               </form>
             </div>
@@ -241,23 +243,23 @@ const Classes = () => {
         )}
 
         {showJoin && (
-          <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-3xl flex items-center justify-center z-50 p-6 reveal-text">
-            <div className="bg-surface-raised border border-line-soft max-w-sm w-full p-16 shadow-2xl">
+          <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-3xl flex items-center justify-center z-50 p-6">
+            <div className="bg-surface-raised rounded-3xl max-w-sm w-full p-12 shadow-[0_30px_60px_-30px_rgba(20,20,18,0.45)]">
               <div className="flex items-center justify-between mb-16">
-                <h2 className="text-4xl font-serif italic">Access.</h2>
+                <h2 className="font-display font-bold tracking-tight text-4xl">Join a Class</h2>
                 <button onClick={() => setShowJoin(false)} className="text-text-dim hover:text-accent transition-colors">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
               <form onSubmit={handleJoin} className="space-y-20">
                 <div className="text-center">
-                  <label className="text-sm font-semibold text-text-dim mb-8 block">Identity Protocol Required</label>
+                  <label className="text-sm font-semibold text-text-dim mb-8 block">Enter Your Class Code</label>
                   <input
                     type="text"
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    className="w-full bg-transparent text-center text-5xl font-extrabold outline-none border-b-2 border-line-soft focus:border-accent py-8 transition-all"
-                    placeholder="PROTOCOL"
+                    className="w-full bg-surface-soft rounded-xl text-center text-5xl font-display font-extrabold tracking-tight outline-none border border-line-soft focus:border-accent py-6 transition-all"
+                    placeholder="CODE"
                   />
                 </div>
                 <button type="submit" className="w-full btn-primary py-3 text-sm">{submitting ? 'Verifying...' : 'Join Class'}</button>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../contexts/CoursesContext';
+import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import {
@@ -20,6 +21,8 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
     const [savedSlides, setSavedSlides] = useState([]);
+
+    useReveal(undefined, [loading, coursesLoading]);
 
     useEffect(() => {
         if (!hasFetched && !coursesLoading) {
@@ -88,33 +91,33 @@ export default function Dashboard() {
         <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
             <div className="container-custom">
                 {/* Header Section */}
-                <header className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal-text">
+                <header className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal">
                     <div>
-                        <span className="section-kicker">Welcome back</span>
-                        <h1 className="text-5xl md:text-7xl">
+                        <span className="font-hand text-2xl text-blue -rotate-2 inline-block mb-2">welcome back</span>
+                        <h1 className="font-bricolage font-extrabold tracking-tight text-text-primary text-5xl md:text-7xl leading-[0.96]">
                             {getGreeting()}, {user?.firstName || 'Student'}.
                         </h1>
-                        <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
-                            Great to see you again. You have {inProgressCourses.length} active courses in progress.
+                        <p className="mt-7 text-xl text-text-muted font-medium max-w-xl">
+                            Great to see you again. You have {inProgressCourses.length} active {inProgressCourses.length === 1 ? 'course' : 'courses'} in progress.
                         </p>
                     </div>
 
                 </header>
 
                 {/* Stats Matrix */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-line-soft border border-line-soft mb-24 reveal-text stagger-1">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-20 reveal-stagger">
                     {[
-                        { label: 'Modules Active', value: inProgressCourses.length, icon: BookOpenIcon },
-                        { label: 'Completed', value: completedCourses.length, icon: CheckCircleIcon },
-                        { label: 'Academy Classes', value: classes.length, icon: AcademicCapIcon },
-                        { label: 'Saved Slides', value: savedSlides.length, icon: BookmarkIcon }
+                        { label: 'Modules Active', value: inProgressCourses.length, icon: BookOpenIcon, block: 'block-blue' },
+                        { label: 'Completed', value: completedCourses.length, icon: CheckCircleIcon, block: 'block-green' },
+                        { label: 'Academy Classes', value: classes.length, icon: AcademicCapIcon, block: 'block-amber' },
+                        { label: 'Saved Slides', value: savedSlides.length, icon: BookmarkIcon, block: 'block-cream' }
                     ].map((stat) => (
-                        <div key={stat.label} className="bg-surface-body p-10 group hover:bg-surface-raised transition-colors">
-                            <p className="text-sm font-medium text-text-dim mb-8 flex justify-between items-center group-hover:text-accent transition-colors">
+                        <div key={stat.label} className={`${stat.block} rounded-3xl p-8 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200`}>
+                            <p className="text-sm font-bold text-text-muted mb-6 flex justify-between items-center">
                                 {stat.label}
-                                <stat.icon className="w-4 h-4 opacity-20" />
+                                <stat.icon className="w-5 h-5 text-accent opacity-70" />
                             </p>
-                            <p className="text-5xl font-serif italic text-text-primary group-hover:translate-x-2 transition-transform duration-500">
+                            <p className="font-bricolage font-extrabold tracking-tight text-5xl text-text-primary">
                                 {stat.value}
                             </p>
                         </div>
@@ -126,29 +129,29 @@ export default function Dashboard() {
                     <div className="lg:col-span-8 space-y-20">
                         {/* Resume Session */}
                         {lastAccessed && lastAccessedCourse && (
-                            <div className="reveal-text stagger-2">
+                            <div className="reveal">
                                 <span className="section-kicker">Continue Learning</span>
-                                <div className="mt-8 group relative overflow-hidden bg-surface-raised border border-line-soft p-12 transition-all hover:shadow-2xl">
-                                    <div className="flex flex-col md:flex-row gap-12 items-center">
-                                        <div className="w-40 h-40 shrink-0 bg-surface-soft p-1 border border-line-soft">
+                                <div className="mt-6 group relative overflow-hidden block-blue rounded-3xl p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200">
+                                    <div className="flex flex-col md:flex-row gap-10 items-center">
+                                        <div className="w-40 h-40 shrink-0 rounded-2xl overflow-hidden bg-surface-raised shadow-[0_16px_36px_-24px_rgba(20,20,18,0.4)]">
                                             <img
                                                 src={lastAccessedCourse.thumbnail || 'https://placehold.co/400x400'}
                                                 alt=""
-                                                className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
+                                                className="w-full h-full object-cover"
                                             />
                                         </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-4xl font-serif italic mb-6">{lastAccessedCourse.title}</h3>
-                                            <div className="w-full bg-surface-soft h-1 mb-8 overflow-hidden">
+                                        <div className="flex-1 w-full">
+                                            <h3 className="font-bricolage font-bold tracking-tight text-3xl md:text-4xl text-text-primary mb-6">{lastAccessedCourse.title}</h3>
+                                            <div className="w-full bg-surface-raised h-2 rounded-full mb-7 overflow-hidden">
                                                 <div
-                                                    className="bg-accent h-full transition-all duration-1000 ease-out"
+                                                    className="bg-accent h-full rounded-full transition-all duration-1000 ease-out"
                                                     style={{ width: `${lastCoursePct}%` }}
                                                 />
                                             </div>
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-sm font-medium text-text-dim">Progress: {lastCoursePct}%</span>
+                                            <div className="flex flex-wrap gap-4 justify-between items-center">
+                                                <span className="text-sm font-bold text-text-muted">Progress: {lastCoursePct}%</span>
                                                 <Link to={`/courses/${lastAccessedCourse.id}`} className="btn-primary py-3 px-8 text-[15px]">
-                                                    Continue Module
+                                                    Continue Course
                                                 </Link>
                                             </div>
                                         </div>
@@ -158,28 +161,29 @@ export default function Dashboard() {
                         )}
 
                         {/* Recent Academy Enrollments */}
-                        <div className="reveal-text stagger-3">
-                            <div className="flex items-end justify-between mb-8">
+                        <div className="reveal">
+                            <div className="flex items-end justify-between mb-6">
                                 <div>
                                     <span className="section-kicker">Academy</span>
-                                    <h2 className="text-4xl font-serif italic">My Classes.</h2>
+                                    <h2 className="font-bricolage font-bold tracking-tight text-3xl md:text-4xl text-text-primary">My Classes</h2>
                                 </div>
-                                <Link to="/classes" className="text-sm font-medium text-accent border-b border-accent pb-1">All Classes</Link>
+                                <Link to="/classes" className="text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">View All Classes</Link>
                             </div>
-                            <div className="grid grid-cols-1 gap-px bg-line-soft border border-line-soft">
+                            <div className="reveal-stagger grid grid-cols-1 gap-4">
                                 {classes.length > 0 ? (
                                     classes.slice(0, 3).map(cls => (
-                                        <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-body p-8 flex justify-between items-center group hover:bg-surface-raised transition-colors">
+                                        <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-raised rounded-2xl p-7 flex justify-between items-center group shadow-[0_18px_40px_-32px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200">
                                             <div>
-                                                <p className="text-lg font-bold group-hover:text-accent transition-colors">{cls.name}</p>
-                                                <p className="text-xs font-medium text-text-dim mt-1">{cls.code}</p>
+                                                <p className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors">{cls.name}</p>
+                                                <p className="text-xs font-bold text-text-muted mt-1">{cls.code}</p>
                                             </div>
-                                            <ArrowRightIcon className="w-5 h-5 text-text-dim group-hover:translate-x-2 transition-transform" />
+                                            <ArrowRightIcon className="w-5 h-5 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-all" />
                                         </Link>
                                     ))
                                 ) : (
-                                    <div className="bg-surface-body p-12 text-center text-text-dim text-sm font-medium italic">
-                                        No active enrollments detected.
+                                    <div className="block-cream rounded-2xl p-12 text-center shadow-[0_18px_40px_-32px_rgba(20,20,18,0.3)]">
+                                        <p className="text-base font-bold text-text-primary mb-2">No classes yet</p>
+                                        <p className="text-sm font-medium text-text-muted">Join or create a class to see it here.</p>
                                     </div>
                                 )}
                             </div>
@@ -188,56 +192,55 @@ export default function Dashboard() {
 
                     {/* Sidebar */}
                     <div className="lg:col-span-4 space-y-20">
-                        <div className="reveal-text stagger-3">
+                        <div className="reveal">
                             <span className="section-kicker">My Courses</span>
-                            <div className="mt-8 space-y-6">
+                            <div className="mt-6 reveal-stagger space-y-4">
                                 {courses.slice(0, 4).map(course => (
                                     <Link
                                         key={course.id}
                                         to={`/courses/${course.id}`}
-                                        className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
+                                        className="group flex w-full items-center justify-between gap-4 rounded-2xl bg-surface-raised px-5 py-4 shadow-[0_16px_36px_-30px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform duration-200"
                                     >
                                         <div className="min-w-0">
-                                            <p className="text-sm font-medium truncate group-hover:text-accent transition-colors">{course.title}</p>
-                                            <p className="text-xs font-medium text-text-dim mt-1">{course.duration}m</p>
+                                            <p className="text-sm font-bold text-text-primary truncate group-hover:text-accent transition-colors">{course.title}</p>
+                                            <p className="text-xs font-bold text-text-muted mt-1">{course.duration}m</p>
                                         </div>
-                                        <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                                        <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-all" />
                                     </Link>
                                 ))}
                             </div>
                         </div>
 
                         {/* Revision — its own section, mirrors "My Courses" */}
-                        <div className="reveal-text stagger-3">
+                        <div className="reveal">
                             <span className="section-kicker">Revision</span>
-                            <div className="mt-8 space-y-6">
+                            <div className="mt-6 space-y-4">
                                 <Link
                                     to="/revision"
-                                    className="group flex w-full items-center justify-between gap-4 border border-line-soft bg-surface-body px-5 py-4 hover:bg-surface-raised transition-colors"
+                                    className="group flex w-full items-center justify-between gap-4 rounded-2xl block-amber px-5 py-4 shadow-[0_16px_36px_-30px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform duration-200"
                                 >
                                     <div className="min-w-0 flex items-center gap-3">
-                                        <BookmarkIcon className="w-4 h-4 shrink-0 text-accent" />
+                                        <BookmarkIcon className="w-5 h-5 shrink-0 text-accent" />
                                         <div className="min-w-0">
-                                            <p className="text-sm font-medium truncate group-hover:text-accent transition-colors">Archived slides</p>
-                                            <p className="text-xs font-medium text-text-dim mt-1">
-                                                {savedSlides.length} {savedSlides.length === 1 ? 'Slide' : 'Slides'} Flagged
+                                            <p className="text-sm font-bold text-text-primary truncate group-hover:text-accent transition-colors">Archived slides</p>
+                                            <p className="text-xs font-bold text-text-muted mt-1">
+                                                {savedSlides.length} {savedSlides.length === 1 ? 'slide' : 'slides'} flagged
                                             </p>
                                         </div>
                                     </div>
-                                    <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-dim group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                                    <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-all" />
                                 </Link>
                             </div>
                         </div>
 
-                        <div className="bg-surface-inverse p-12 text-surface-body relative overflow-hidden group">
-                            <div className="absolute inset-0 opacity-10 grid-technical !bg-[size:40px_40px]" />
+                        <div className="reveal rounded-3xl bg-[color:var(--mark-blue)] text-white p-10 relative overflow-hidden shadow-[0_30px_60px_-38px_rgba(19,81,170,0.7)]">
                             <div className="relative z-10">
-                                <FireIcon className="w-10 h-10 text-accent mb-8" />
-                                <h4 className="text-xl font-serif italic mb-6">Daily Insight</h4>
-                                <blockquote className="text-sm font-medium leading-relaxed text-text-dim mb-8 italic">
-                                    "Compound interest is the eighth wonder of the world. He who understands it, earns it... he who doesn't... pays it."
+                                <FireIcon className="w-10 h-10 text-white mb-7" />
+                                <h4 className="font-bricolage font-bold tracking-tight text-2xl mb-5">Daily Insight</h4>
+                                <blockquote className="text-base font-medium leading-relaxed text-white/85 mb-7">
+                                    "Compound interest is the eighth wonder of the world. He who understands it, earns it. He who does not, pays it."
                                 </blockquote>
-                                <p className="text-xs font-medium text-accent">Source: Albert Einstein</p>
+                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/70">Albert Einstein</p>
                             </div>
                         </div>
                     </div>

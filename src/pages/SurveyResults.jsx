@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import { useReveal } from '../lib/useReveal';
 
 const COLORS = ['var(--text-primary)', 'var(--text-dim)', 'var(--line-soft)', 'var(--accent)', '#888', '#aaa', '#ccc'];
 
@@ -9,6 +10,8 @@ const SurveyResults = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useReveal();
 
   useEffect(() => {
     const loadStats = async () => {
@@ -35,9 +38,10 @@ const SurveyResults = () => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-body">
-        <div className="text-center max-w-md mx-auto px-6 reveal-text">
-          <span className="section-kicker mb-4 text-accent italic">Unable to load results</span>
-          <p className="text-sm font-medium text-text-muted">
+        <div className="text-center max-w-md mx-auto px-6 reveal">
+          <span className="font-hand text-accent text-lg block mb-3">Hmm, something went sideways</span>
+          <h2 className="font-display text-2xl font-extrabold tracking-tight mb-3">Unable to Load Results</h2>
+          <p className="text-base font-medium text-text-muted">
             {error}
           </p>
         </div>
@@ -49,11 +53,11 @@ const SurveyResults = () => {
     return (
       <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto bg-surface-raised border border-line-soft p-20 text-center reveal-text">
-            <span className="section-kicker mb-4">Observation Post</span>
-            <h1 className="text-4xl font-black mb-8 italic">Null Result.</h1>
-            <p className="text-sm font-medium text-text-muted">
-              No empirical responses have been logged in the current cycle.
+          <div className="max-w-4xl mx-auto bg-surface-raised rounded-3xl p-20 text-center reveal shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <span className="font-hand text-accent text-lg block mb-3">Nothing here yet</span>
+            <h1 className="font-display text-4xl font-extrabold tracking-tight mb-6">No Responses Yet</h1>
+            <p className="text-base font-medium text-text-muted">
+              No survey responses have been logged in the current cycle.
             </p>
           </div>
         </div>
@@ -91,28 +95,27 @@ const SurveyResults = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+        <header className="mb-20 reveal">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Survey results</span>
-              <h1 className="text-6xl md:text-8xl mb-8 font-black">
-                Literacy <br />Spectrum.
+              <span className="font-hand text-accent text-xl block mb-3">Survey results</span>
+              <h1 className="font-display text-6xl md:text-8xl mb-8 font-extrabold tracking-tight">
+                Literacy <br />Spectrum
               </h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Synthesis of crowd-sourced financial intelligence and perceived competency across global demographics.
+              <p className="text-xl text-text-muted leading-relaxed font-serif max-w-xl">
+                A synthesis of crowd-sourced financial knowledge and perceived competency across our community.
               </p>
             </div>
-            <div className="text-right">
+            <div className="block-blue rounded-3xl px-8 py-7 text-center shrink-0 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
               <span className="text-sm font-semibold text-text-dim block mb-2">Total responses</span>
-              <span className="text-6xl font-black text-accent leading-none">{stats.total}</span>
+              <span className="font-display text-6xl font-extrabold text-accent leading-none tracking-tight">{stats.total}</span>
             </div>
           </div>
-          <div className="h-px w-full bg-line-soft" />
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-line-soft border border-line-soft reveal-text stagger-1 mb-px">
-          <div className="bg-surface-body p-12 lg:p-16 border-b lg:border-b-0 lg:border-r border-line-soft">
-            <h2 className="text-sm font-semibold text-text-muted mb-12">Demographic Architecture</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 reveal mb-6">
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display text-lg font-extrabold tracking-tight mb-10">Demographic Breakdown</h2>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -136,8 +139,8 @@ const SurveyResults = () => {
             </div>
           </div>
 
-          <div className="bg-surface-body p-12 lg:p-16">
-            <h2 className="text-sm font-semibold text-text-muted mb-12">Economic Discipline</h2>
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display text-lg font-extrabold tracking-tight mb-10">Tracks Their Spending</h2>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -162,9 +165,9 @@ const SurveyResults = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-line-soft border-x border-b border-line-soft reveal-text stagger-2 mb-px">
-          <div className="bg-surface-body p-12 lg:p-16 border-b lg:border-b-0 lg:border-r border-line-soft">
-            <h2 className="text-sm font-semibold text-text-muted mb-12">Educational Heritage</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 reveal mb-6">
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display text-lg font-extrabold tracking-tight mb-10">Learned It at School</h2>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -188,8 +191,8 @@ const SurveyResults = () => {
             </div>
           </div>
 
-          <div className="bg-surface-body p-12 lg:p-16">
-            <h2 className="text-sm font-semibold text-text-muted mb-12">Semantic Barrier Analysis</h2>
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display text-lg font-extrabold tracking-tight mb-10">Finds the Terms Confusing</h2>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -215,16 +218,15 @@ const SurveyResults = () => {
         </div>
 
         {/* Confidence Level */}
-        <div className="bg-surface-raised border-x border-b border-line-soft p-12 lg:p-20 reveal-text stagger-3 mb-px relative overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.02] grid-technical !bg-[size:40px_40px] pointer-events-none" />
+        <div className="bg-surface-raised rounded-3xl p-12 lg:p-20 reveal mb-6 relative overflow-hidden shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 relative z-10">
             <div>
-              <h2 className="text-sm font-semibold text-text-muted mb-2">Competency Self-Assessment</h2>
-              <p className="text-sm font-serif italic text-text-dim">Distribution of perceived knowledge levels (1-10 Scale).</p>
+              <h2 className="font-display text-lg font-extrabold tracking-tight mb-2">Confidence Self-Assessment</h2>
+              <p className="text-base font-serif text-text-dim">Distribution of perceived knowledge levels (1 to 10 scale).</p>
             </div>
-            <div className="text-right">
+            <div className="block-cream rounded-2xl px-6 py-4 text-center shrink-0">
               <span className="text-sm font-semibold text-text-muted block mb-1">Average confidence</span>
-              <span className="text-4xl font-black text-accent">{stats.confidence.average}</span>
+              <span className="font-display text-4xl font-extrabold text-accent tracking-tight">{stats.confidence.average}</span>
             </div>
           </div>
           <div className="h-[300px] relative z-10">
@@ -250,8 +252,8 @@ const SurveyResults = () => {
         </div>
 
         {/* Helpful Explanations */}
-        <div className="bg-surface-body border-x border-b border-line-soft p-12 lg:p-20 reveal-text stagger-4">
-          <h2 className="text-sm font-semibold text-text-muted mb-16">What helps people learn</h2>
+        <div className="bg-surface-raised rounded-3xl p-12 lg:p-20 reveal shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <h2 className="font-display text-lg font-extrabold tracking-tight mb-14">What Helps People Learn</h2>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={helpfulExplanationsData} layout="vertical">
@@ -272,8 +274,8 @@ const SurveyResults = () => {
           </div>
         </div>
 
-        <footer className="mt-20 flex justify-between items-center text-xs font-medium text-text-dim opacity-40">
-          <span>Observation Cycle: 2024.A</span>
+        <footer className="mt-12 flex justify-between items-center text-xs font-medium text-text-dim opacity-60">
+          <span>Survey cycle: 2024.A</span>
           <span>All responses anonymous</span>
         </footer>
       </div>

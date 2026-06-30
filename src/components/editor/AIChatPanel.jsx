@@ -209,7 +209,6 @@ function SlashMenu({ filter, onSelect, activeIndex }) {
 function ModelPicker({ model, onChange, formatterModel, onFormatterChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const current = MODEL_OPTIONS.find((m) => m.id === model) || MODEL_OPTIONS[1];
 
   useEffect(() => {
     if (!open) return;

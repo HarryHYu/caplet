@@ -99,7 +99,7 @@ router.post('/enter', async (req, res) => {
     const token = jwt.sign(
       { typ: 'editor', wid: ws.id },
       JWT_SECRET,
-      { expiresIn: '60d' }
+      { expiresIn: '24h' }
     );
     res.json({
       token,

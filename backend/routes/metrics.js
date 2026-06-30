@@ -1,9 +1,6 @@
-/**
- * Public metrics endpoint — aggregated platform statistics.
- * Not linked in the UI; accessible by direct URL only.
- */
 const express = require('express');
 const { Op } = require('sequelize');
+const { requireAdmin } = require('../middleware/auth');
 const {
   sequelize,
   User,
@@ -22,7 +19,7 @@ const {
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/', requireAdmin, async (req, res) => {
   try {
     const now = new Date();
     const oneWeekAgo  = new Date(now.getTime() - 7  * 24 * 60 * 60 * 1000);

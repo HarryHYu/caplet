@@ -34,7 +34,6 @@ const Navbar = () => {
   }, []);
 
   const allNavItems = [
-    { path: '/', label: 'Home', publicOnly: true },
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
     { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
     { path: '/classes', label: 'Academy', tourId: 'nav-academy' },
@@ -61,25 +60,23 @@ const Navbar = () => {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-surface-body/95 backdrop-blur-2xl shadow-[0_1px_0_var(--line-soft),0_4px_24px_rgba(0,0,0,0.06)]'
-          : 'bg-surface-body/80 backdrop-blur-xl border-b border-line-soft'
-      } text-text-primary`}
+      className={`fixed top-0 inset-x-0 z-50 transition-shadow duration-300 bg-surface-body/80 backdrop-blur-md text-text-primary ${
+        scrolled ? 'shadow-[0_6px_24px_-16px_rgba(0,0,0,0.4)]' : ''
+      }`}
     >
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
-        <div className="h-14 md:h-[60px] flex items-center justify-between gap-4">
+        <div className="h-11 md:h-12 flex items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link to={homePath} className="flex items-center gap-2.5 group relative z-10 shrink-0">
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden ring-1 ring-line-soft group-hover:ring-accent transition-all duration-300">
+          <Link to={homePath} className="flex items-center gap-2 group relative z-10 shrink-0">
+            <div className="w-6 h-6 md:w-7 md:h-7 rounded-full overflow-hidden ring-1 ring-line-soft group-hover:ring-accent transition-all duration-300">
               <img
                 src="/logo.png"
-                alt="Caplet Logo"
+                alt="Caplet logo"
                 className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
               />
             </div>
-            <span className="text-lg md:text-xl font-serif italic font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors duration-300">
+            <span className="text-sm md:text-base font-serif italic font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors duration-300">
               Caplet.
             </span>
           </Link>
@@ -93,29 +90,26 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                  className={`relative px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  className={`relative px-2.5 py-1.5 text-[11px] font-bold tracking-[0.08em] transition-all duration-200 ${
                     active
-                      ? 'text-text-primary'
-                      : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
+                      ? 'text-text-primary font-black border-b-2 border-accent'
+                      : 'text-text-muted hover:text-text-primary hover:bg-surface-soft rounded-none'
                   }`}
                 >
                   {item.label}
-                  {active && (
-                    <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-accent rounded-full" />
-                  )}
                 </Link>
               );
             })}
           </nav>
-
+ 
           {/* Actions */}
           <div className="flex items-center gap-1.5 md:gap-2 relative z-10 shrink-0">
             {/* Theme toggle */}
             <button
               type="button"
               onClick={toggleTheme}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
-              aria-label="Toggle dark mode"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
+              aria-label="toggle dark mode"
             >
               {isDark ? (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,10 +121,8 @@ const Navbar = () => {
                 </svg>
               )}
             </button>
-
-            {/* Divider */}
-            <div className="hidden md:block w-px h-4 bg-line-soft mx-0.5" />
-
+ 
+ 
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
                 <button
@@ -147,7 +139,7 @@ const Navbar = () => {
                     {initials}
                   </div>
                   <span className="text-sm font-medium text-text-primary leading-none">
-                    {user?.firstName || 'User'}
+                    {user?.firstName || 'Account'}
                   </span>
                   <svg
                     className={`w-3 h-3 text-text-dim transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`}
@@ -156,7 +148,7 @@ const Navbar = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-
+ 
                 {showUserMenu && (
                   <div className="absolute top-full right-0 mt-2 w-48 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
                     <div className="px-3 py-2 mb-1 border-b border-line-soft">
@@ -200,18 +192,18 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/register"
-                className="hidden md:inline-flex items-center justify-center bg-accent hover:bg-accent-strong text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all duration-200 hover:-translate-y-px hover:shadow-md"
+                className="hidden md:inline-flex items-center justify-center bg-accent hover:bg-accent-strong text-white font-bold text-[11px] tracking-[0.12em] px-4 py-1.5 rounded-lg transition-all duration-300"
               >
                 Get started
               </Link>
             )}
-
+ 
             {/* Mobile hamburger */}
             <button
               type="button"
               className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all"
               onClick={() => setIsOpen(!isOpen)}
-              aria-label={isOpen ? 'Close menu' : 'Open menu'}
+              aria-label={isOpen ? 'close menu' : 'open menu'}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isOpen ? (
@@ -223,7 +215,7 @@ const Navbar = () => {
             </button>
           </div>
         </div>
-
+ 
         {/* Mobile menu */}
         {isOpen && (
           <div className="md:hidden border-t border-line-soft py-3 flex flex-col gap-0.5">
@@ -235,10 +227,10 @@ const Navbar = () => {
                   to={item.path}
                   onClick={() => setIsOpen(false)}
                   {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                  className={`px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  className={`px-3 py-2.5 text-xs font-bold tracking-[0.1em] transition-colors ${
                     active
-                      ? 'text-accent bg-accent-soft'
-                      : 'text-text-primary hover:bg-surface-soft'
+                      ? 'text-accent bg-accent-soft rounded-none'
+                      : 'text-text-primary hover:bg-surface-soft rounded-none'
                   }`}
                 >
                   {item.label}
@@ -249,7 +241,7 @@ const Navbar = () => {
               <Link
                 to="/register"
                 onClick={() => setIsOpen(false)}
-                className="mt-2 btn-primary text-sm"
+                className="mt-2 btn-primary text-sm rounded-none"
               >
                 Get started
               </Link>
