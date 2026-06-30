@@ -1,6 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../middleware/auth');
+const { JWT_SECRET, requireAuth } = require('../middleware/auth');
 const { generateLessonSlides, getClient } = require('../services/lessonAI');
 
 const router = express.Router();
@@ -151,6 +151,74 @@ router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
     const status = e.status || 502;
     console.error('AI lesson-chat error:', e.message);
     return res.status(status).json({ message: e.message || 'AI request failed' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Tutor endpoint — per-user rate limit (not per-workspace like the editor).
+// Auth: regular user JWT so lesson players can call it without editor access.
+// ---------------------------------------------------------------------------
+const tutorRecent = new Map();
+const TUTOR_WINDOW_MS = 60 * 1000; // 1-minute window
+const TUTOR_LIMIT = 10;             // 10 questions per user per minute
+
+function throttleTutor(req, res, next) {
+  const uid = req.user?.id;
+  if (!uid) return next(); // edge: unauthenticated request already rejected by requireAuth
+  const now = Date.now();
+  const hits = (tutorRecent.get(uid) || []).filter((t) => now - t < TUTOR_WINDOW_MS);
+  if (hits.length >= TUTOR_LIMIT) {
+    return res.status(429).json({ message: 'Too many tutor questions — wait a moment and try again.' });
+  }
+  hits.push(now);
+  tutorRecent.set(uid, hits);
+  next();
+}
+
+// POST /api/ai/tutor  { lessonId, slide, question }
+// Returns { answer } — a concise, educational AI explanation scoped to the slide.
+router.post('/tutor', requireAuth, throttleTutor, async (req, res) => {
+  const question = (req.body?.question ?? '').toString().trim().slice(0, 600);
+  const slide = req.body?.slide; // slide object for context
+
+  if (!question) return res.status(400).json({ message: 'question is required' });
+
+  const client = getClient();
+  if (!client) return res.status(503).json({ message: 'Tutor unavailable — AI not configured.' });
+
+  // Build a compact slide summary so the AI can answer in context.
+  let slideContext = '';
+  if (slide && typeof slide === 'object') {
+    const type = slide.type || 'unknown';
+    const title = slide.title || slide.question || slide.heading || '';
+    const body = slide.content || slide.explanation || '';
+    slideContext = `Slide type: ${type}${title ? `. Title: ${title}` : ''}${body ? `. Content: ${String(body).slice(0, 600)}` : ''}`;
+  }
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: 'gpt-5.4-mini',
+      max_completion_tokens: 400,
+      messages: [
+        {
+          role: 'system',
+          content: [
+            'You are a friendly, concise educational tutor helping a student understand lesson content.',
+            'Answer the student\'s question clearly and simply in 2-4 sentences. Use plain English.',
+            'If the question is unrelated to learning, politely redirect back to the lesson material.',
+            slideContext ? `Context — ${slideContext}` : '',
+          ].filter(Boolean).join('\n'),
+        },
+        { role: 'user', content: question },
+      ],
+    });
+
+    const answer = completion.choices[0]?.message?.content?.trim() || '';
+    res.json({ answer });
+  } catch (e) {
+    const status = e.status || 502;
+    console.error('AI tutor error:', e.message);
+    res.status(status).json({ message: e.message || 'Tutor request failed' });
   }
 });
 

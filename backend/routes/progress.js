@@ -314,4 +314,44 @@ router.delete('/bookmark/:lessonId', requireAuth, async (req, res) => {
   }
 });
 
+// POST /progress/:lessonId/score  { score, answers }
+// Persists a completed-lesson score (0-100) and the per-slide answer detail.
+// Stored inside quizScores under the key '_score' so it coexists with any
+// per-slide score entries written by PUT /lesson/:lessonId.
+router.post('/:lessonId/score', requireAuth, async (req, res) => {
+  try {
+    const { lessonId } = req.params;
+    const score = Math.min(100, Math.max(0, Number(req.body?.score) || 0));
+    const answers = Array.isArray(req.body?.answers) ? req.body.answers : [];
+
+    const lesson = await Lesson.findByPk(lessonId, {
+      include: [{ model: Module, as: 'module', attributes: ['courseId'] }],
+    });
+    if (!lesson || !lesson.module) {
+      return res.status(404).json({ message: 'Lesson not found' });
+    }
+    const courseId = lesson.module.courseId;
+
+    let progress = await UserProgress.findOne({
+      where: { userId: req.user.id, courseId, lessonId },
+    });
+    if (!progress) {
+      progress = await UserProgress.create({
+        userId: req.user.id,
+        courseId,
+        lessonId,
+        status: 'in_progress',
+      });
+    }
+
+    const merged = { ...(progress.quizScores || {}), _score: { score, answers, scoredAt: new Date().toISOString() } };
+    await progress.update({ quizScores: merged, lastAccessedAt: new Date() });
+
+    res.json({ saved: true, score });
+  } catch (error) {
+    console.error('Submit lesson score error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 module.exports = router;

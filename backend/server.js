@@ -119,6 +119,7 @@ app.use('/api/saved-slides', require('./routes/savedSlides'));
 app.use('/api/financial-profile', require('./routes/financialProfile'));
 app.use('/api/review', require('./routes/review'));
 app.use('/api/essays', require('./routes/essays'));
+app.use('/api/events', require('./routes/events'));
 app.use('/api', require('./routes/proxy'));
 
 // Error handling middleware
