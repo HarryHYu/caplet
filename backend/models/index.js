@@ -15,6 +15,8 @@ const ChatMessage = require('./ChatMessage');
 const EditorWorkspace = require('./EditorWorkspace');
 const SavedSlide = require('./SavedSlide');
 const UserFinancialProfile = require('./UserFinancialProfile');
+const ReviewItem = require('./ReviewItem');
+const Essay = require('./Essay');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -205,6 +207,14 @@ ChatMessage.belongsTo(User, {
 User.hasOne(UserFinancialProfile, { foreignKey: 'userId', as: 'financialProfile', onDelete: 'CASCADE' });
 UserFinancialProfile.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Spaced-repetition review items (generic; one row per user+itemType+itemId)
+User.hasMany(ReviewItem, { foreignKey: 'userId', as: 'reviewItems', onDelete: 'CASCADE' });
+ReviewItem.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// Essays (private essay memoriser)
+User.hasMany(Essay, { foreignKey: 'userId', as: 'essays', onDelete: 'CASCADE' });
+Essay.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // Sync database
 // NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
 // This sync() call is a no-op fallback (force: false prevents any schema changes).
@@ -238,5 +248,7 @@ module.exports = {
   EditorWorkspace,
   SavedSlide,
   UserFinancialProfile,
+  ReviewItem,
+  Essay,
   syncDatabase
 };

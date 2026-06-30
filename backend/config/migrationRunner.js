@@ -14,7 +14,6 @@ const umzug = new Umzug({
     // is a no-op (path.sep is already '/'), so production behavior is unchanged.
     glob: path.join(__dirname, '../migrations/*.js').split(path.sep).join('/'),
     resolve: ({ name, path: migrationPath, context }) => {
-      // eslint-disable-next-line global-require
       const migration = require(migrationPath);
       const Sequelize = require('sequelize');
       return {

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useReveal } from '../lib/useReveal';
 
 const SettingsProfile = () => {
+  useReveal();
   const { user, updateProfile } = useAuth();
   const [form, setForm] = useState({
     firstName: '',
@@ -58,25 +60,28 @@ const SettingsProfile = () => {
   };
 
   return (
-    <div>
-      <div className="pb-8 border-b border-line-soft mb-12">
-        <h2 className="text-xl font-bold text-text-primary">Profile Details.</h2>
+    <div className="reveal">
+      <div className="mb-10">
+        <p className="font-hand text-lg text-accent mb-1">Your details</p>
+        <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-text-primary">
+          Profile Details
+        </h2>
         <p className="text-sm font-medium text-text-dim mt-2">
           Update your personal information and account details.
         </p>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-10">
+      <form onSubmit={handleSubmit} className="space-y-8 bg-surface-raised rounded-3xl p-8 sm:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
         {message.text && (
           <div
-            className={`px-6 py-4 border font-medium text-sm ${message.type === 'success'
-              ? 'border-accent text-accent'
-              : 'border-red-500 text-red-500'
+            className={`px-6 py-4 rounded-2xl font-semibold text-sm ${message.type === 'success'
+              ? 'block-blue text-blue'
+              : 'bg-red-50 text-red-600'
               }`}
           >
             {message.type === 'success' ? 'Success:' : 'Error:'} {message.text}
           </div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-3">
             <label htmlFor="firstName" className="block text-sm font-semibold text-text-dim">
               Given Name
@@ -88,7 +93,7 @@ const SettingsProfile = () => {
               required
               value={form.firstName}
               onChange={handleChange}
-              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm"
             />
           </div>
           <div className="space-y-3">
@@ -102,7 +107,7 @@ const SettingsProfile = () => {
               required
               value={form.lastName}
               onChange={handleChange}
-              className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm"
             />
           </div>
         </div>
@@ -117,12 +122,12 @@ const SettingsProfile = () => {
             required
             value={form.email}
             onChange={handleChange}
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm"
+            className="w-full px-4 py-3 rounded-xl bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm"
           />
         </div>
         <div className="space-y-3">
           <label htmlFor="password" className="block text-sm font-semibold text-text-dim">
-            New password
+            New Password
           </label>
           <input
             id="password"
@@ -132,7 +137,7 @@ const SettingsProfile = () => {
             onChange={handleChange}
             placeholder="Leave blank to keep current"
             autoComplete="new-password"
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary text-sm placeholder:text-text-muted/30"
+            className="w-full px-4 py-3 rounded-xl bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary text-sm placeholder:text-text-muted/40"
           />
           <p className="mt-2 text-xs font-medium text-text-dim">
             At least 6 characters. Google-only accounts can set a password here to enable email login too.
@@ -148,7 +153,7 @@ const SettingsProfile = () => {
             type="date"
             value={form.dateOfBirth}
             onChange={handleChange}
-            className="w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm appearance-none"
+            className="w-full px-4 py-3 rounded-xl bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm appearance-none"
           />
         </div>
         <div className="space-y-3">
@@ -163,7 +168,7 @@ const SettingsProfile = () => {
             value={form.bio}
             onChange={handleChange}
             placeholder="Tell us about yourself..."
-            className="w-full px-6 py-5 bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary text-sm placeholder:text-text-muted/30 resize-none"
+            className="w-full px-4 py-3 rounded-xl bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary text-sm placeholder:text-text-muted/40 resize-none"
           />
           <div className="flex justify-between items-center mt-2">
             <p className="text-xs font-medium text-text-dim">
@@ -171,11 +176,11 @@ const SettingsProfile = () => {
             </p>
           </div>
         </div>
-        <div className="pt-8">
+        <div className="pt-4">
           <button
             type="submit"
             disabled={saving}
-            className="btn-primary py-5 px-10 text-sm disabled:opacity-30"
+            className="btn-primary py-4 px-10 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-40"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

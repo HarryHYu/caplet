@@ -46,35 +46,34 @@ const CompoundInterest = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+        <header className="mb-16">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools &rarr; Growth</span>
-              <h1 className="text-6xl md:text-8xl mb-8">
-                Compound <br />Architecture.
+              <span className="font-hand text-accent text-lg block mb-3">Watch your money grow</span>
+              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-6">
+                Compound <br />Interest.
               </h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Visualize the exponential mechanics of your capital over defined temporal windows.
+              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+                See how your savings grow with <span className="hl-swipe hl-blue">compounding</span> over time.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">
+            <Link to="/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
               &larr; Back to tools
             </Link>
           </div>
-          <div className="h-px w-full bg-line-soft" />
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-sm font-semibold text-text-muted mb-16">Growth Parameters</h2>
-            <form onSubmit={handleSubmit} className="space-y-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Growth Parameters</h2>
+            <form onSubmit={handleSubmit} className="space-y-12">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block italic">
-                    Opening Principal (AUD)
+                  <label className="text-sm font-semibold text-text-dim mb-3 block">
+                    Starting Amount (AUD)
                   </label>
-                  <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                    <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                     <input
                       type="number"
                       min="0"
@@ -82,17 +81,17 @@ const CompoundInterest = () => {
                       value={principal}
                       onChange={(e) => setPrincipal(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      className="w-full bg-transparent pl-9 pr-4 py-3 text-xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block italic">
-                    Monthly Injection
+                  <label className="text-sm font-semibold text-text-dim mb-3 block">
+                    Monthly Contribution
                   </label>
-                  <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                    <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                     <input
                       type="number"
                       min="0"
@@ -100,7 +99,7 @@ const CompoundInterest = () => {
                       value={monthlyContribution}
                       onChange={(e) => setMonthlyContribution(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      className="w-full bg-transparent pl-9 pr-4 py-3 text-xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>
                 </div>

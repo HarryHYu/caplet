@@ -93,10 +93,11 @@ export default function DesmosCalculator({
         if (!cancelled) { setError(err.message); setLoading(false); }
       });
 
+    const currentSavedStates = savedStates.current;
     return () => {
       cancelled = true;
       if (calcRef.current) {
-        try { savedStates.current[mode] = calcRef.current.getState(); } catch { /* ignore */ }
+        try { currentSavedStates[mode] = calcRef.current.getState(); } catch { /* ignore */ }
         try { calcRef.current.destroy(); } catch { /* ignore */ }
         calcRef.current = null;
       }

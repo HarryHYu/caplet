@@ -288,7 +288,7 @@ const LessonPlayer = () => {
       }
     };
     load();
-  }, [courseId, lessonId, isAuthenticated]);
+  }, [courseId, lessonId, isAuthenticated, searchParams]);
 
   /* ---------- Derived ---------- */
   const slides = useMemo(() => parseSlides(lesson?.slides), [lesson]);

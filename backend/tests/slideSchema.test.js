@@ -106,7 +106,10 @@ describe('validateSlides', () => {
 });
 
 describe('CANONICAL_TYPES', () => {
-  test('lists the nine canonical types', () => {
-    expect(CANONICAL_TYPES).toEqual(['text', 'media', 'choice', 'fillblank', 'cards', 'match', 'order', 'table', 'divider']);
+  test('lists the canonical slide types', () => {
+    expect(CANONICAL_TYPES).toEqual([
+      'text', 'media', 'choice', 'fillblank', 'cards', 'match', 'order', 'table', 'divider',
+      'chart', 'diagram', 'embed', 'hotspot', 'timeline', 'desmos',
+    ]);
   });
 });

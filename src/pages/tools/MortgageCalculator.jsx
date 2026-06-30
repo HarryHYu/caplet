@@ -45,28 +45,27 @@ const MortgageCalculator = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+        <header className="mb-20">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools &rarr; Mortgage</span>
-              <h1 className="text-6xl md:text-8xl mb-8">
-                Equity <br />Strategist.
+              <span className="font-hand text-accent text-xl mb-3 block">Tools / Mortgage</span>
+              <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mb-6">
+                Mortgage <br />Calculator.
               </h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Simulate property acquisition debt and optimize your long-term capital allocation strategies.
+              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+                Work out your repayments, total interest, and the real cost of a property loan over its full term.
               </p>
             </div>
             <Link to="/tools" className="btn-secondary text-sm px-8">
-              &larr; Back to tools
+              &larr; Back to Tools
             </Link>
           </div>
-          <div className="h-px w-full bg-line-soft" />
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-sm font-semibold text-text-muted mb-16">Acquisition Parameters</h2>
-            <form onSubmit={handleSubmit} className="space-y-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-12">Loan Details</h2>
+            <form onSubmit={handleSubmit} className="space-y-12">
               <div>
                 <label className="text-sm font-semibold text-text-dim mb-4 block italic">
                   Property Loan Amount (AUD)

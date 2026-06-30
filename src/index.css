@@ -1,6 +1,9 @@
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@700,600,500,400,900,300&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CAPLET DESIGN SYSTEM
@@ -13,37 +16,36 @@
                                           structural UI labels.
    --font-serif    Lora                — editorial italic accents, the
                                           wordmark, italic course / lesson
-                                          titles, blockquotes, kicker quotes.
    --font-mono     JetBrains Mono      — code, kbd, numeric badges, slide
                                           counters.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Surfaces */
-  --surface-body: #FAF8F5; /* Warmer off-white */
-  --surface-soft: #F2EFEA;
-  --surface-raised: #FFFFFF;
-  --surface-inverse: #2C2825;
+  /* Surfaces — warm cream paper, site-wide */
+  --surface-body: #F6F1E6;
+  --surface-soft: #ECE5D6;
+  --surface-raised: #FCFAF4;
+  --surface-inverse: #141413;
 
-  /* Typography */
-  --font-body: 'Outfit', system-ui, sans-serif;
-  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  /* Typography — Bricolage display + Hanken body */
+  --font-body: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-serif: 'Lora', Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --text-primary: #2C2825; /* Warmer dark ink */
-  --text-muted: #5E5854;
-  --text-dim: #8A837E;
-  --text-contrast: #FFFFFF;
+  --text-primary: #1C1A16;
+  --text-muted: #756F63;
+  --text-dim: #ABA391;
+  --text-contrast: #F6F1E6;
 
-  /* Lines */
-  --line-soft: #E2E2E5;
-  --line-strong: #171717;
+  /* Lines — warm and soft, so outlines recede */
+  --line-soft: #DCD4C2;
+  --line-strong: #1C1A16;
 
   /* Accent */
-  --accent: #0050FF;
-  --accent-strong: #0036CC;
-  --accent-soft: rgba(0, 80, 255, 0.05);
+  --accent: #1351AA;
+  --accent-strong: #0E3D82;
+  --accent-soft: rgba(19, 81, 170, 0.1);
 
   /* Error */
   --text-error: #B91C1C;
@@ -51,41 +53,78 @@
   --border-error: rgba(220, 38, 38, 0.15);
 
   /* Shadows */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
-  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.06);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
 
   /* Radii */
   --radius-none: 0px;
-  --radius-sm: 4px;
-  --radius-md: 12px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+
+  /* Homepage — handmade-modern "living annotations" (homepage-scoped, see src/pages/Home.jsx) */
+  --ink-body: #2B2A26;        /* readable body ink, darker than text-muted */
+  --paper-grain: 0.04;
+  --mark-ink: #24252b;        /* hand-drawn pencil/ink marks */
+  --mark-blue: #1351AA;
+  --mark-coral: #E8633F;
+  --mark-amber: #E59E2E;
+  --mark-green: #3F9D6B;
+  --hl-amber: rgba(235, 166, 60, 0.45);
+  --hl-blue: rgba(19, 81, 170, 0.20);
+  --hl-green: rgba(63, 157, 107, 0.28);
+  --hl-coral: rgba(232, 99, 63, 0.26);
+  /* warm color blocks — fills instead of outlines */
+  --block-cream: #FBF7EF;
+  --block-blue: rgba(19, 81, 170, 0.07);
+  --block-coral: rgba(232, 99, 63, 0.09);
+  --block-amber: rgba(235, 166, 60, 0.15);
+  --block-green: rgba(63, 157, 107, 0.09);
 }
 
 .dark {
-  --surface-body: #111215; /* Clean dark gray */
-  --surface-soft: #181a1f;
-  --surface-raised: #20232a;
-  --surface-inverse: #FAF8F5;
+  --surface-body: #141413;
+  --surface-soft: #232220;
+  --surface-raised: #1c1b19;
+  --surface-inverse: #F6F1E6;
 
-  --text-primary: #FAF8F5;
-  --text-muted: #D1CBC5;
-  --text-dim: #A69E98;
-  --text-contrast: #24201E;
+  --text-primary: #F2EEE4;
+  --text-muted: #B4AD9E;
+  --text-dim: #7C766A;
+  --text-contrast: #141413;
 
-  --line-soft: #3D3834;
-  --line-strong: #FAF8F5;
+  --line-soft: #322F2A;
+  --line-strong: #F2EEE4;
 
-  --accent: #3385FF;
-  --accent-strong: #85B8FF;
-  --accent-soft: rgba(51, 133, 255, 0.15);
+  --accent: #2b76e2;
+  --accent-strong: #498ff5;
+  --accent-soft: rgba(43, 118, 226, 0.15);
 
   /* Error */
   --text-error: #FCA5A5;
   --surface-error: rgba(239, 68, 68, 0.1);
   --border-error: rgba(239, 68, 68, 0.2);
 
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-sm: none;
+  --shadow-md: none;
+
+  /* Homepage — handmade-modern, dark theme */
+  --ink-body: #E9E5DC;
+  --paper-grain: 0.06;
+  --mark-ink: #E9E5DC;
+  --mark-blue: #5B9BF0;
+  --mark-coral: #F2845F;
+  --mark-amber: #F0BB5C;
+  --mark-green: #5FC08C;
+  --hl-amber: rgba(240, 187, 92, 0.30);
+  --hl-blue: rgba(91, 155, 240, 0.28);
+  --hl-green: rgba(95, 192, 140, 0.28);
+  --hl-coral: rgba(242, 132, 95, 0.28);
+  --block-cream: #1d1d1b;
+  --block-blue: rgba(91, 155, 240, 0.12);
+  --block-coral: rgba(242, 132, 95, 0.12);
+  --block-amber: rgba(240, 187, 92, 0.12);
+  --block-green: rgba(95, 192, 140, 0.11);
 }
 
 @layer base {
@@ -140,32 +179,35 @@
 
   /* Section kicker — the small uppercase accent label above a heading. */
   .section-kicker {
-    @apply text-xs font-semibold uppercase tracking-wide text-accent mb-2 block;
+    @apply text-xs font-bold uppercase tracking-[0.14em] text-accent mb-2 block;
   }
 
-  /* Interactive Elements */
+  /* Interactive Elements — rounded, bold, soft blue lift (no thin outlines). */
   .btn-primary {
-    @apply px-8 py-3 bg-accent text-white font-semibold text-sm tracking-wide rounded-lg transition-all duration-200 flex items-center justify-center border border-transparent shadow-md;
+    @apply px-6 py-3 bg-accent text-white font-bold text-sm tracking-wide rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 border border-transparent;
+    box-shadow: 0 12px 28px -14px rgba(19, 81, 170, 0.6);
   }
 
   .btn-primary:hover {
-    @apply bg-accent-strong -translate-y-0.5 shadow-lg;
+    @apply bg-accent-strong -translate-y-0.5;
   }
 
   .btn-primary:active {
-    @apply translate-y-0 shadow-md;
+    @apply translate-y-0;
   }
 
   .btn-primary:disabled {
-    @apply opacity-50 cursor-not-allowed transform-none shadow-none;
+    @apply opacity-50 cursor-not-allowed transform-none;
+    box-shadow: none;
   }
 
   .btn-secondary {
-    @apply px-8 py-3 bg-transparent text-text-primary border border-line-soft font-semibold text-sm tracking-wide rounded-lg transition-all duration-200 flex items-center justify-center;
+    @apply px-6 py-3 bg-accent-soft text-accent font-bold text-sm tracking-wide rounded-2xl transition-all duration-200 flex items-center justify-center gap-2;
   }
 
   .btn-secondary:hover {
-    @apply bg-surface-soft border-text-dim -translate-y-0.5;
+    @apply -translate-y-0.5;
+    background-color: color-mix(in srgb, var(--accent) 18%, transparent);
   }
 
   .btn-secondary:active {
@@ -394,3 +436,121 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOMEPAGE — handmade-modern "living annotations"  (homepage-scoped)
+   Bold sans, warm color blocks instead of outlines, hand-drawn marks &
+   highlighter swipes that animate on scroll, a marker cursor, readable body.
+   See src/pages/Home.jsx.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Readable body text + comfortable rhythm for everything inside the homepage. */
+.home-root {
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  background-color: #F6F1E6; /* warm cream paper */
+}
+.dark .home-root { background-color: #141413; }
+.home-root .body-text {
+  color: var(--ink-body);
+  font-size: 1.0625rem;
+  line-height: 1.72;
+  letter-spacing: 0.003em;
+}
+@media (min-width: 768px) {
+  .home-root .body-text { font-size: 1.1875rem; }
+}
+
+/* Very soft warm grain — natural, not technical. */
+.paper-texture { position: relative; }
+.paper-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--paper-grain);
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Warm color blocks — fills replace outlines. */
+.block-cream { background-color: var(--block-cream); }
+.block-blue  { background-color: var(--block-blue); }
+.block-coral { background-color: var(--block-coral); }
+.block-amber { background-color: var(--block-amber); }
+.block-green { background-color: var(--block-green); }
+
+/* Marker ink colors (text + svg stroke). */
+.text-coral { color: var(--mark-coral); }
+.text-blue { color: var(--mark-blue); }
+.text-amber { color: var(--mark-amber); }
+.text-green { color: var(--mark-green); }
+.text-mark  { color: var(--mark-ink); }
+.stroke-coral { stroke: var(--mark-coral); }
+.stroke-blue  { stroke: var(--mark-blue); }
+.stroke-amber { stroke: var(--mark-amber); }
+.stroke-green { stroke: var(--mark-green); }
+.stroke-mark  { stroke: var(--mark-ink); }
+
+/* Highlighter swipe — width animates left→right via the --hl-w custom prop
+   (driven by GSAP on scroll, or set to 100% under reduced motion). */
+.hl-swipe {
+  --hl-w: 0%;
+  background-image: linear-gradient(var(--hl-color, var(--hl-amber)), var(--hl-color, var(--hl-amber)));
+  background-repeat: no-repeat;
+  background-position: 0 86%;
+  background-size: var(--hl-w) 0.52em;
+  padding: 0 0.04em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.hl-blue  { --hl-color: var(--hl-blue); }
+.hl-green { --hl-color: var(--hl-green); }
+.hl-coral { --hl-color: var(--hl-coral); }
+
+/* Hand-drawn ink marks: hidden until drawn (GSAP animates strokeDashoffset). */
+.ink-draw {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+/* Marker cursor — an ink-blue nib with a soft trailing ring. */
+html.cursor-on,
+html.cursor-on * { cursor: none !important; }
+
+.marker-cursor { position: fixed; top: 0; left: 0; z-index: 90; pointer-events: none; }
+.marker-cursor .mc-ring,
+.marker-cursor .mc-dot { position: absolute; border-radius: 9999px; will-change: transform; }
+.marker-cursor .mc-dot {
+  left: -4px; top: -4px; width: 8px; height: 8px;
+  background: var(--mark-blue);
+  transition: width 0.2s ease, height 0.2s ease, left 0.2s ease, top 0.2s ease, opacity 0.2s ease;
+}
+.marker-cursor .mc-ring {
+  left: -17px; top: -17px; width: 34px; height: 34px;
+  border: 1.5px solid var(--mark-blue);
+  opacity: 0.4;
+  transition: opacity 0.25s ease, border-width 0.25s ease;
+}
+.marker-cursor.is-active .mc-dot { width: 5px; height: 5px; left: -2.5px; top: -2.5px; }
+.marker-cursor.is-active .mc-ring { opacity: 0.9; border-width: 2px; }
+.marker-cursor.is-press .mc-dot { width: 14px; height: 14px; left: -7px; top: -7px; opacity: 0.85; }
+
+/* Ambient drift for pinned bits. */
+@keyframes soft-float {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(-9px) rotate(var(--tilt, 0deg)); }
+}
+.animate-soft-float { animation: soft-float 7s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-soft-float,
+  .animate-float,
+  .animate-pulse,
+  .animate-ping,
+  .animate-bounce { animation: none !important; }
+  html { scroll-behavior: auto !important; }
+}
+

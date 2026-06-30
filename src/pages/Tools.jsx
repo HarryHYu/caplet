@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useReveal } from '../lib/useReveal';
 
 const tools = [
   {
@@ -125,7 +126,7 @@ const tools = [
   },
   {
     title: 'Debt-to-Income Ratio',
-    description: 'Calculate your DTI ratio — the first thing lenders check before approving any loan.',
+    description: 'Calculate your DTI ratio, the first thing lenders check before approving any loan.',
     path: '/tools/debt-to-income',
     category: 'Debt & Loans',
     icon: (
@@ -158,7 +159,7 @@ const tools = [
   },
   {
     title: 'Rule of 72',
-    description: 'Find out how long it takes to double your money at a given rate — or what rate you need to hit a target.',
+    description: 'Find out how long it takes to double your money at a given rate, or what rate you need to hit a target.',
     path: '/tools/rule-of-72',
     category: 'Savings & Growth',
     icon: (
@@ -169,7 +170,7 @@ const tools = [
   },
   {
     title: 'Net Worth Calculator',
-    description: 'Add up all your assets and liabilities to find your true net worth — and your debt-to-asset ratio.',
+    description: 'Add up all your assets and liabilities to find your true net worth and your debt-to-asset ratio.',
     path: '/tools/net-worth',
     category: 'Wealth & Investing',
     icon: (
@@ -180,7 +181,7 @@ const tools = [
   },
   {
     title: 'ROI Calculator',
-    description: 'Calculate total return on investment and annualised CAGR for any asset — shares, property, business, or otherwise.',
+    description: 'Calculate total return on investment and annualised CAGR for any asset (shares, property, business, or otherwise).',
     path: '/tools/roi',
     category: 'Wealth & Investing',
     icon: (
@@ -214,7 +215,7 @@ const tools = [
   },
   {
     title: 'Break-Even Calculator',
-    description: 'Find how many units you need to sell to cover costs — and what it takes to hit a profit target.',
+    description: 'Find how many units you need to sell to cover costs and what it takes to hit a profit target.',
     path: '/tools/break-even',
     category: 'Business',
     icon: (
@@ -228,6 +229,7 @@ const tools = [
 const categories = ['Tax & Income', 'Budgeting', 'Savings & Growth', 'Debt & Loans', 'Wealth & Investing', 'Property', 'Business'];
 
 const Tools = () => {
+  useReveal();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredTools = tools.filter(tool => {
@@ -244,26 +246,28 @@ const Tools = () => {
       <div className="container-custom">
 
         {/* Header */}
-        <header className="mb-16 reveal-text">
-          <span className="section-kicker mb-8">Instruments</span>
+        <header className="mb-16 reveal">
+          <span className="font-hand text-accent text-xl mb-6 block">Your money toolkit</span>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <h1 className="text-6xl lg:text-8xl mb-10">
+              <h1 className="font-display font-extrabold tracking-tight text-6xl lg:text-8xl mb-8">
                 Financial <br />calculators.
               </h1>
-              <p className="text-xl text-text-muted max-w-xl font-serif italic leading-relaxed">
-                Free calculators for tax, budgeting, loans, super, and more — built for Australian rules and rates.
+              <p className="text-xl text-text-muted max-w-xl leading-relaxed">
+                Free calculators for tax, budgeting, loans, super, and more, built for Australian rules and rates.
               </p>
             </div>
-            <div className="shrink-0 text-right hidden md:block">
-              <span className="text-5xl font-black text-text-primary/10 font-mono">{tools.length}</span>
-              <p className="text-xs font-medium text-text-dim mt-1">calculators</p>
+            <div className="shrink-0 hidden md:block">
+              <div className="block-blue rounded-3xl px-8 py-6 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                <span className="text-5xl font-display font-extrabold tracking-tight text-blue">{tools.length}</span>
+                <p className="text-xs font-bold text-text-muted mt-1 uppercase tracking-wide">Calculators</p>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Search */}
-        <div className="mb-16 reveal-text stagger-1">
+        <div className="mb-16 reveal">
           <div className="relative max-w-lg">
             <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -273,7 +277,7 @@ const Tools = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search calculators…"
-              className="w-full pl-11 pr-10 py-3 bg-surface-raised border border-line-soft text-text-primary text-sm focus:border-accent outline-none transition-all rounded-xl placeholder:text-text-dim"
+              className="w-full pl-11 pr-10 py-3.5 bg-surface-raised border border-line-soft text-text-primary text-sm focus:border-accent outline-none transition-all rounded-xl placeholder:text-text-dim shadow-[0_12px_30px_-26px_rgba(20,20,18,0.4)]"
             />
             {searchQuery && (
               <button
@@ -292,20 +296,20 @@ const Tools = () => {
         {/* Tool grid — searched */}
         {isSearching ? (
           filteredTools.length > 0 ? (
-            <div className="reveal-text stagger-2">
-              <p className="text-xs font-medium text-text-dim mb-8">{filteredTools.length} result{filteredTools.length !== 1 ? 's' : ''}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div>
+              <p className="text-sm font-bold text-text-muted mb-8">{filteredTools.length} result{filteredTools.length !== 1 ? 's' : ''}</p>
+              <div className="reveal-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredTools.map(tool => (
                   <ToolCard key={tool.path} tool={tool} />
                 ))}
               </div>
             </div>
           ) : (
-            <div className="py-24 text-center border border-line-soft bg-surface-soft reveal-text">
-              <p className="text-text-muted font-serif italic text-lg mb-2">No match found.</p>
+            <div className="py-24 text-center block-cream rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <p className="text-text-primary font-display font-bold text-xl mb-3">No match found.</p>
               <button
                 onClick={() => setSearchQuery('')}
-                className="text-sm font-medium text-accent hover:text-accent-strong transition-colors"
+                className="text-sm font-bold text-accent hover:text-accent-strong transition-colors"
               >
                 Clear search
               </button>
@@ -313,21 +317,20 @@ const Tools = () => {
           )
         ) : (
           /* Grouped by category */
-          <div data-tour-id="tools-grid" className="space-y-16 reveal-text stagger-2">
+          <div data-tour-id="tools-grid" className="space-y-16">
             {categories.map(cat => {
               const group = tools.filter(t => t.category === cat);
               return (
                 <div key={cat}>
                   <div className="flex items-center gap-4 mb-6">
-                    <h2 className="text-sm font-semibold text-text-primary">{cat}</h2>
-                    <div className="flex-1 h-px bg-line-soft" />
-                    <span className="text-xs font-medium text-text-dim">{group.length}</span>
+                    <h2 className="font-display font-bold tracking-tight text-lg text-text-primary">{cat}</h2>
+                    <span className="block-blue text-xs font-bold text-blue rounded-full px-3 py-1">{group.length}</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="reveal-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {group.map(tool => (
                       <ToolCard key={tool.path} tool={tool} />
                     ))}
-                </div>
+                  </div>
                 </div>
               );
             })}
@@ -342,10 +345,10 @@ const Tools = () => {
 const ToolCard = ({ tool }) => (
   <Link
     to={tool.path}
-    className="group flex flex-col gap-4 p-6 bg-surface-body border border-line-soft rounded-xl hover:border-text-dim hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-all duration-200"
+    className="group flex flex-col gap-4 p-6 bg-surface-raised rounded-2xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform duration-200"
   >
     <div className="flex items-start justify-between">
-      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-soft text-text-dim group-hover:bg-accent-soft group-hover:text-accent transition-all duration-200">
+      <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-accent text-white shadow-[0_12px_24px_-16px_rgba(20,20,18,0.5)]">
         {tool.icon}
       </div>
       <svg
@@ -357,7 +360,7 @@ const ToolCard = ({ tool }) => (
     </div>
 
     <div className="flex-1">
-      <h3 className="text-base font-semibold text-text-primary mb-1.5 group-hover:text-accent transition-colors duration-200">
+      <h3 className="font-display font-bold tracking-tight text-base text-text-primary mb-1.5 group-hover:text-accent transition-colors duration-200">
         {tool.title}
       </h3>
       <p className="text-sm text-text-muted leading-relaxed line-clamp-2">

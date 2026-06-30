@@ -5,25 +5,19 @@ const NotFound = () => {
   const { isAuthenticated } = useAuth();
   return (
     <div className="min-h-screen flex items-center justify-center px-4 pt-24 pb-16 bg-surface-body selection:bg-accent selection:text-white">
-      <div className="text-center max-w-md mx-auto reveal-text">
-        <span className="section-kicker mb-6">Page not found</span>
-        <h1 className="text-[80px] md:text-[120px] font-serif italic text-text-primary leading-none mb-4">
+      <div className="text-center max-w-md mx-auto">
+        <p className="font-hand text-2xl text-accent mb-1 -rotate-2">well, this is awkward</p>
+        <h1 className="font-display font-extrabold text-text-primary text-[clamp(5rem,18vw,10rem)] leading-none tracking-[-0.04em]">
           404
         </h1>
-        <p className="text-sm text-text-muted leading-relaxed mb-12">
-          This page doesn&apos;t exist or may have moved. Head back home or browse our courses.
+        <p className="text-base text-text-muted leading-relaxed mt-4 mb-10">
+          This page does not exist, or it may have moved. Head back home, or browse the courses.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to={isAuthenticated ? '/dashboard' : '/'}
-            className="btn-primary text-sm px-10 py-5"
-          >
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link to={isAuthenticated ? '/dashboard' : '/'} className="btn-primary">
             {isAuthenticated ? 'Go to dashboard' : 'Go home'}
           </Link>
-          <Link
-            to="/courses"
-            className="btn-secondary text-sm px-10 py-5"
-          >
+          <Link to="/courses" className="btn-secondary">
             Browse courses
           </Link>
         </div>

@@ -63,34 +63,33 @@ const TaxCalculator = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+        <header className="mb-16">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools &rarr; Compliance</span>
-              <h1 className="text-6xl md:text-8xl mb-8">
-                Tax <br />Architecture.
+              <span className="font-hand text-2xl text-accent">Tools, compliance</span>
+              <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mt-3 mb-6">
+                Tax <br />Architecture
               </h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Synthesize your fiscal obligation and optimize net outcome based on residency brackets.
+              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+                Work out your fiscal obligation and net outcome based on residency brackets.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">
-              &larr; Back to tools
+            <Link to="/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
+              &larr; Back to Tools
             </Link>
           </div>
-          <div className="h-px w-full bg-line-soft" />
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-sm font-semibold text-text-muted mb-16">Assessment Parameters</h2>
-            <form onSubmit={handleSubmit} className="space-y-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Assessment Parameters</h2>
+            <form onSubmit={handleSubmit} className="space-y-10">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-4 block italic">
-                  Annual Taxable Income (AUD)
+                <label className="text-sm font-semibold text-text-dim mb-3 block">
+                  Annual taxable income (AUD)
                 </label>
-                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition-shadow">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input
                     type="number"
                     min="0"
@@ -98,21 +97,21 @@ const TaxCalculator = () => {
                     value={income}
                     onChange={(e) => setIncome(e.target.value)}
                     placeholder="0.00"
-                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                    className="w-full bg-transparent pl-6 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 p-6 bg-surface-raised border border-line-soft">
+              <div className="flex items-center gap-4 p-6 rounded-2xl bg-surface-body">
                 <input
                   id="medicare"
                   type="checkbox"
                   checked={includeMedicare}
                   onChange={(e) => setIncludeMedicare(e.target.checked)}
-                  className="w-5 h-5 accent-accent bg-transparent border-line-soft"
+                  className="w-5 h-5 accent-accent bg-transparent"
                 />
                 <label htmlFor="medicare" className="text-sm font-semibold text-text-primary">
-                  Integrate Medicare Levy (2.0%)
+                  Include Medicare levy (2.0%)
                 </label>
               </div>
 
@@ -122,54 +121,53 @@ const TaxCalculator = () => {
                 </div>
               )}
 
-              <button type="submit" className="btn-primary w-full py-6 text-sm mt-8">
-                Execute Assessment
+              <button type="submit" className="btn-primary w-full py-5 hover:-translate-y-0.5 transition-transform">
+                Calculate Tax
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 bg-surface-raised p-12 lg:p-20 flex flex-col min-h-full relative overflow-hidden">
-            <div className="absolute inset-0 opacity-[0.03] grid-technical !bg-[size:30px_30px] pointer-events-none" />
-            <h2 className="text-sm font-semibold text-text-muted mb-16 relative z-10">Fiscal Summary</h2>
+          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Fiscal Summary</h2>
 
             {result ? (
-              <div className="space-y-12 relative z-10">
+              <div className="space-y-10">
                 <div>
-                  <p className="text-xs font-medium text-text-dim mb-4 italic">Estimated Liability</p>
-                  <p className="text-5xl font-black tracking-tighter text-text-primary">
+                  <p className="text-xs font-semibold text-text-dim mb-3">Estimated liability</p>
+                  <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
                     {formatCurrency(result.totalTax)}
                   </p>
-                  <p className="text-xs font-bold text-text-muted mt-4">Effective Rate: {result.effectiveRate.toFixed(2)}%</p>
+                  <p className="text-xs font-bold text-text-muted mt-4">Effective rate: {result.effectiveRate.toFixed(2)}%</p>
                 </div>
 
-                <div className="pt-10 border-t border-line-soft space-y-8">
-                  <div className="grid grid-cols-2 gap-px bg-line-soft border border-line-soft">
-                    <div className="bg-surface-body p-6">
-                      <p className="text-xs font-medium text-text-dim mb-1">Income Tax</p>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-surface-raised rounded-2xl p-6">
+                      <p className="text-xs font-medium text-text-dim mb-1">Income tax</p>
                       <p className="text-lg font-bold">{formatCurrency(result.incomeTax)}</p>
                     </div>
-                    <div className="bg-surface-body p-6">
+                    <div className="bg-surface-raised rounded-2xl p-6">
                       <p className="text-xs font-medium text-text-dim mb-1">Medicare</p>
                       <p className="text-lg font-bold">{formatCurrency(result.medicare)}</p>
                     </div>
                   </div>
 
-                  <div className="bg-surface-body p-8 border border-line-soft">
-                    <p className="text-xs font-medium text-text-dim mb-4">Net Liquidity (Annual)</p>
-                    <p className="text-3xl font-black text-accent">{formatCurrency(result.netIncome)}</p>
+                  <div className="bg-accent text-white rounded-2xl p-8">
+                    <p className="text-xs font-medium text-white/70 mb-4">Net liquidity (annual)</p>
+                    <p className="font-display text-3xl font-extrabold tracking-tight">{formatCurrency(result.netIncome)}</p>
                   </div>
 
-                  <div className="pt-8 border-t border-line-soft text-xs text-text-dim space-y-2 opacity-60 font-bold">
-                    <p>• AU Resident Rates (2023-24)</p>
-                    <p>• Excludes HECS/HELP Adjustments</p>
-                    <p>• Schematic Educational Purpose Only</p>
+                  <div className="text-xs text-text-dim space-y-2 font-semibold">
+                    <p>• AU resident rates (2023-24)</p>
+                    <p>• Excludes HECS/HELP adjustments</p>
+                    <p>• For educational purposes only</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
-                <div className="w-12 h-12 border border-line-soft flex items-center justify-center text-xs font-bold font-serif italic mb-8">FISCAL</div>
-                <p className="text-sm font-medium">Enter your income to see results</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50">
+                <div className="w-14 h-14 rounded-2xl bg-surface-raised flex items-center justify-center text-xs font-bold mb-8">$</div>
+                <p className="text-sm font-medium">Enter your income to see results.</p>
               </div>
             )}
           </div>

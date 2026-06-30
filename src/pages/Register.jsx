@@ -23,12 +23,12 @@ const Register = () => {
         {/* Vertically centered headline */}
         <div className="relative z-10 flex-1 flex items-center px-12 xl:px-20 pb-40">
           <div className="max-w-lg">
-            <span className="text-sm font-mono font-bold text-accent mb-8 block">
-              Financial Education
+            <span className="font-hand text-2xl text-accent mb-6 block -rotate-2">
+              free, open, and a little playful
             </span>
-            <h2 className="text-6xl xl:text-7xl font-display font-bold text-text-contrast leading-[0.95] tracking-tight mb-6">
+            <h2 className="text-6xl xl:text-7xl font-display font-extrabold text-text-contrast leading-[0.95] tracking-tight mb-6">
               Start for free,<br />
-              <span className="font-serif italic font-medium text-accent">learn for life.</span>
+              <span className="text-accent">learn for life.</span>
             </h2>
             <p className="text-text-dim text-xl leading-relaxed">
               Structured financial education for Australians.<br />

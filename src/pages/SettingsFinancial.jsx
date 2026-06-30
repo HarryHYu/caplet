@@ -19,7 +19,7 @@ const emptyForm = {
 };
 
 const inputClass =
-  'w-full px-0 py-4 bg-transparent border-b border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm';
+  'w-full px-4 py-3 bg-surface-body rounded-xl border border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm';
 
 const SettingsFinancial = () => {
   const [form, setForm] = useState(emptyForm);
@@ -123,18 +123,19 @@ const SettingsFinancial = () => {
 
   return (
     <div>
-      <div className="pb-8 border-b border-line-soft mb-12">
-        <h2 className="text-xl font-bold text-text-primary">Financial Profile.</h2>
+      <div className="mb-12">
+        <p className="font-hand text-lg text-accent mb-1">Your money, at a glance</p>
+        <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Financial Profile</h2>
         <p className="text-sm font-medium text-text-dim mt-2">
-          Your current snapshot. We use it to tailor the tools and your next steps — it&apos;s private to you.
+          Your current snapshot. We use it to tailor the tools and your next steps. It&apos;s private to you.
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-10">
         {message.text && (
           <div
-            className={`px-6 py-4 border font-medium text-sm ${message.type === 'success'
-              ? 'border-accent text-accent'
-              : 'border-red-500 text-red-500'
+            className={`px-6 py-4 rounded-2xl font-semibold text-sm ${message.type === 'success'
+              ? 'block-blue text-blue'
+              : 'bg-red-50 text-red-600'
               }`}
           >
             {message.type === 'success' ? 'Success:' : 'Error:'} {message.text}
@@ -175,7 +176,7 @@ const SettingsFinancial = () => {
         {/* Debts */}
         <div className="space-y-4 pt-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-text-dim">Debts</h3>
+            <h3 className="font-display text-lg font-bold tracking-tight text-text-primary">Debts</h3>
             <button type="button" onClick={addDebt} className="text-xs font-semibold text-accent hover:underline">
               + Add debt
             </button>
@@ -205,7 +206,7 @@ const SettingsFinancial = () => {
         {/* Goals */}
         <div className="space-y-4 pt-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-text-dim">Goals</h3>
+            <h3 className="font-display text-lg font-bold tracking-tight text-text-primary">Goals</h3>
             <button type="button" onClick={addGoal} className="text-xs font-semibold text-accent hover:underline">
               + Add goal
             </button>
@@ -231,14 +232,14 @@ const SettingsFinancial = () => {
         </div>
 
         {/* Net worth snapshot */}
-        <div className="px-6 py-5 bg-surface-soft border border-line-soft">
-          <p className="text-xs font-semibold text-text-dim mb-1">Estimated net worth</p>
-          <p className="text-2xl font-bold text-text-primary">{fmtMoney(netWorth)}</p>
-          <p className="text-xs font-medium text-text-dim mt-1">Savings + super − total debt. A snapshot, not advice.</p>
+        <div className="block-blue rounded-3xl px-7 py-6 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <p className="text-xs font-semibold text-blue mb-1">Estimated net worth</p>
+          <p className="font-display text-3xl font-extrabold tracking-tight text-text-primary">{fmtMoney(netWorth)}</p>
+          <p className="text-xs font-medium text-text-dim mt-1">Savings plus super, minus total debt. A snapshot, not advice.</p>
         </div>
 
         <div className="pt-2">
-          <button type="submit" disabled={saving} className="btn-primary py-5 px-10 text-sm disabled:opacity-30">
+          <button type="submit" disabled={saving} className="btn-primary py-4 px-10 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-40 disabled:hover:translate-y-0">
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>

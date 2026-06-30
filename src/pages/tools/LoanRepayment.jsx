@@ -41,31 +41,30 @@ const LoanRepayment = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-24 reveal-text">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+        <header className="mb-16">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools &rarr; Liability</span>
-              <h1 className="text-6xl md:text-8xl mb-8">
-                Loan <br />repayments.
+              <span className="font-hand text-accent text-lg mb-3 block">Loan repayments</span>
+              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-6">
+                Loan repayments.
               </h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-xl">
-                Analyze interest obligation and visualize the amortization of your debt-layer architecture.
+              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+                See your monthly payment, total interest, and how long it takes to clear the loan.
               </p>
             </div>
             <Link to="/tools" className="btn-secondary text-sm px-8">
               &larr; Back to tools
             </Link>
           </div>
-          <div className="h-px w-full bg-line-soft" />
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-line-soft border border-line-soft reveal-text stagger-1">
-          <div className="lg:col-span-7 bg-surface-body p-12 lg:p-20">
-            <h2 className="text-sm font-semibold text-text-muted mb-16">Liability Parameters</h2>
-            <form onSubmit={handleSubmit} className="space-y-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Loan Details</h2>
+            <form onSubmit={handleSubmit} className="space-y-12">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-4 block italic">
-                  Principal Amount (AUD)
+                <label className="text-sm font-semibold text-text-dim mb-4 block">
+                  Loan Amount (AUD)
                 </label>
                 <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>

@@ -56,7 +56,8 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
 
       {/* Heading */}
       <div className="mb-8">
-        <h2 className="text-4xl font-display font-bold text-text-primary tracking-tight mb-2">
+        <p className="font-hand text-accent text-lg mb-1">Good to see you</p>
+        <h2 className="text-4xl font-display font-extrabold text-text-primary tracking-tight mb-2">
           Welcome back.
         </h2>
         <p className="text-sm text-text-muted">
@@ -77,7 +78,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 p-4 bg-surface-error border border-line-error rounded-xl">
+        <div className="mb-6 p-4 bg-surface-error rounded-2xl shadow-[0_16px_36px_-28px_rgba(20,20,18,0.3)]">
           <p className="text-sm font-medium text-text-error">{error}</p>
         </div>
       )}
@@ -98,7 +99,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
         {googleLoading && (
           <p className="text-sm text-text-dim flex items-center gap-2 mt-3">
             <span className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin inline-block" />
-            Signing you in with Google…
+            Signing you in with Google.
           </p>
         )}
       </div>
@@ -125,7 +126,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
             required
             autoComplete="username"
             placeholder="you@example.com"
-            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
+            className="w-full px-4 py-3 bg-surface-raised border border-line-soft focus:border-accent outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
           />
         </div>
         <div className="space-y-1.5">
@@ -141,13 +142,13 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
             required
             autoComplete="current-password"
             placeholder="••••••••"
-            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
+            className="w-full px-4 py-3 bg-surface-raised border border-line-soft focus:border-accent outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
           />
         </div>
         <button
           type="submit"
           disabled={busy}
-          className="w-full btn-primary py-4 text-base rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full btn-primary py-4 text-base rounded-2xl hover:-translate-y-0.5 transition-transform disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
         >
           {passwordLoading ? (
             <span className="w-5 h-5 border-2 border-text-contrast/30 border-t-text-contrast rounded-full animate-spin" />

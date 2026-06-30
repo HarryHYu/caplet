@@ -548,6 +548,57 @@ class ApiService {
     });
   }
 
+  // Saved slides that are due for spaced-repetition review (new or past-due).
+  async getDueSavedSlides() {
+    return this.request('/saved-slides/due');
+  }
+
+  // Generate one active-recall question (+ model answer) from a saved slide.
+  async getSlideRecallQuestion(savedSlideId) {
+    return this.request(`/saved-slides/${savedSlideId}/recall-question`, {
+      method: 'POST',
+    });
+  }
+
+  // Spaced repetition (shared scheduler across saved slides, essays, quotes)
+  async getDueReviewItems(itemType) {
+    const qs = itemType ? `?itemType=${encodeURIComponent(itemType)}` : '';
+    return this.request(`/review/due${qs}`);
+  }
+
+  // Record a recall result for an item; advances/resets its review schedule.
+  async submitReview(itemType, itemId, recall) {
+    return this.request('/review/submit', {
+      method: 'POST',
+      body: JSON.stringify({ itemType, itemId, recall }),
+    });
+  }
+
+  // Essays (private essay memoriser)
+  async getEssays() {
+    return this.request('/essays');
+  }
+
+  async getEssay(id) {
+    return this.request(`/essays/${id}`);
+  }
+
+  async createEssay(title, text) {
+    return this.request('/essays', {
+      method: 'POST',
+      body: JSON.stringify({ title, text }),
+    });
+  }
+
+  // AI: segment + annotate a stored essay (thesis / paragraphs / quotes).
+  async parseEssay(id) {
+    return this.request(`/essays/${id}/parse`, { method: 'POST' });
+  }
+
+  async deleteEssay(id) {
+    return this.request(`/essays/${id}`, { method: 'DELETE' });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');

@@ -23,8 +23,9 @@ const SettingsAccount = () => {
 
   return (
     <div>
-      <div className="pb-8 border-b border-line-soft mb-12">
-        <h2 className="text-xl font-bold text-text-primary">Account Settings.</h2>
+      <div className="mb-12">
+        <p className="font-hand text-accent text-lg mb-1">Your account</p>
+        <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Account Settings</h2>
         <p className="text-sm font-medium text-text-dim mt-2">
           Manage your account role and preferences.
         </p>
@@ -32,21 +33,21 @@ const SettingsAccount = () => {
       <div className="space-y-12">
         {message.text && (
           <div
-            className={`px-6 py-4 border font-medium text-sm ${message.type === 'success'
-              ? 'border-accent text-accent'
-              : 'border-red-500 text-red-500'
+            className={`px-6 py-4 rounded-2xl font-medium text-sm ${message.type === 'success'
+              ? 'block-blue text-blue'
+              : 'bg-red-50 text-error'
               }`}
           >
-            {message.type === 'success' ? 'Success:' : 'Error:'} {message.text}
+            {message.type === 'success' ? 'Success: ' : 'Error: '}{message.text}
           </div>
         )}
         <div>
-          <h3 className="text-sm font-semibold text-text-dim mb-6">Access Level</h3>
-          <div className="p-10 bg-surface-soft border border-line-soft">
+          <h3 className="text-sm font-display font-bold tracking-tight text-text-primary mb-6">Access Level</h3>
+          <div className="p-10 bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
             <p className="text-sm font-medium text-text-dim mb-4">
-              Current role:
+              Current role
             </p>
-            <p className="text-3xl font-serif italic text-accent mb-8">
+            <p className="text-3xl font-display font-extrabold tracking-tight text-accent mb-8">
               {user?.role === 'admin' ? 'Strategic Admin' : user?.role === 'instructor' ? 'Lead Architect' : 'Scholar'}
             </p>
             {user?.role !== 'admin' && (
@@ -59,7 +60,7 @@ const SettingsAccount = () => {
                 type="button"
                 onClick={handleSwitchRole}
                 disabled={updating}
-                className="btn-primary py-5 px-10 text-sm disabled:opacity-30"
+                className="btn-primary py-3 px-8 hover:-translate-y-0.5 transition-transform disabled:opacity-30"
               >
                 {updating ? 'Updating...' : user?.role === 'instructor' ? 'Switch to Student' : 'Switch to Teacher'}
               </button>
