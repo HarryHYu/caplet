@@ -8,6 +8,7 @@ import {
     buildTopicSentenceCloze,
     buildQuoteCards,
     buildParagraphOrder,
+    buildAnnotatedParagraph,
     lastSentence,
     paragraphItemId,
     quoteItemId,
@@ -21,6 +22,7 @@ import {
     AcademicCapIcon,
     ArrowUpTrayIcon,
     ArrowRightIcon,
+    EyeIcon,
 } from '@heroicons/react/24/outline';
 
 // ── Cycling messages during AI parsing ─────────────────────────────────────
@@ -126,6 +128,51 @@ function GradeButtons({ busy, onPass, onFail, passLabel = 'Got it' }) {
                 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/60 rounded-xl px-5 py-2.5 hover:bg-emerald-500 hover:text-white transition-colors disabled:opacity-40">
                 {passLabel}
             </button>
+        </div>
+    );
+}
+
+/**
+ * A "sneak peek" button — tap to reveal `text` in a floating card for a few
+ * seconds (or tap again to dismiss early). Costs nothing, isn't scored; it's
+ * just a safety net so a stuck student can check without failing the card.
+ */
+function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500 }) {
+    const [peeking, setPeeking] = useState(false);
+    const timerRef = useRef(null);
+
+    useEffect(() => () => clearTimeout(timerRef.current), []);
+
+    const toggle = () => {
+        clearTimeout(timerRef.current);
+        if (peeking) { setPeeking(false); return; }
+        setPeeking(true);
+        timerRef.current = setTimeout(() => setPeeking(false), autoHideMs);
+    };
+
+    if (!text) return null;
+
+    return (
+        <div className="relative inline-block">
+            <button
+                type="button"
+                onClick={toggle}
+                className={`text-xs font-semibold rounded-full px-3 py-1.5 inline-flex items-center gap-1.5 border transition-colors ${
+                    peeking
+                        ? 'border-accent text-accent bg-accent/10'
+                        : 'border-line-soft text-text-dim hover:border-accent hover:text-accent'
+                }`}
+            >
+                <EyeIcon className="w-3.5 h-3.5" />
+                {label}
+            </button>
+            {peeking && (
+                <div className="absolute z-20 left-0 top-full mt-2 w-72 sm:w-96 p-4 rounded-2xl bg-text-primary text-surface-body shadow-2xl font-serif text-sm leading-relaxed animate-[peekIn_0.15s_ease-out]">
+                    {text}
+                    <div className="absolute -top-1.5 left-5 w-3 h-3 bg-text-primary rotate-45" />
+                </div>
+            )}
+            <style>{`@keyframes peekIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
         </div>
     );
 }
@@ -400,7 +447,10 @@ function GuidedTypeMode({ essay, onScheduled }) {
                             <ArrowRightIcon className="w-4 h-4" />
                         </button>
                     </div>
-                    <p className="text-[10px] text-text-dim/50 mt-2">Space or Enter to confirm each word</p>
+                    <div className="flex items-center justify-between mt-3">
+                        <p className="text-[10px] text-text-dim/50">Space or Enter to confirm each word</p>
+                        <SneakPeek text={targetWord} label="Peek this word" autoHideMs={2000} />
+                    </div>
                 </div>
             ) : (
                 <div>
@@ -463,10 +513,13 @@ function TypeMode({ essay, onScheduled }) {
                         rows={7}
                         className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
                     />
-                    <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
-                        className="btn-primary mt-3 inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                        Check →
-                    </button>
+                    <div className="flex items-center justify-between mt-3">
+                        <SneakPeek text={current.text} label="Sneak peek" />
+                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
+                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            Check →
+                        </button>
+                    </div>
                 </>
             ) : (
                 <>
@@ -542,10 +595,13 @@ function SentenceStartsMode({ essay, onScheduled }) {
                         rows={3}
                         className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
                     />
-                    <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
-                        className="btn-primary mt-3 inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                        Check →
-                    </button>
+                    <div className="flex items-center justify-between mt-3">
+                        <SneakPeek text={rest} label="Sneak peek" />
+                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
+                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            Check →
+                        </button>
+                    </div>
                 </>
             ) : (
                 <>
@@ -623,10 +679,13 @@ function LettersMode({ essay, onScheduled }) {
                         rows={6}
                         className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-sm resize-none"
                     />
-                    <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
-                        className="btn-primary mt-3 inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                        Check →
-                    </button>
+                    <div className="flex items-center justify-between mt-3">
+                        <SneakPeek text={current.text} label="Sneak peek" />
+                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
+                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            Check →
+                        </button>
+                    </div>
                 </>
             ) : (
                 <>
@@ -825,10 +884,13 @@ function AcronymMode({ essay, onScheduled }) {
                         rows={7}
                         className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-sm resize-none"
                     />
-                    <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
-                        className="btn-primary mt-3 inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                        Check →
-                    </button>
+                    <div className="flex items-center justify-between mt-3">
+                        <SneakPeek text={current.text} label="Sneak peek" />
+                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
+                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            Check →
+                        </button>
+                    </div>
                 </>
             ) : (
                 <>
@@ -837,6 +899,133 @@ function AcronymMode({ essay, onScheduled }) {
                     <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')} />
                 </>
             )}
+        </div>
+    );
+}
+
+// ── MODE — ORIGINAL (raw, unannotated, exactly as saved) ────────────────────
+
+function OriginalEssayMode({ essay }) {
+    const text = essay.originalText || '';
+    if (!text.trim()) return <p className="text-sm text-text-muted italic">No essay text saved.</p>;
+    const paragraphs = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+
+    return (
+        <div>
+            <p className="text-xs font-medium text-text-dim/70 mb-6">
+                Exactly what you saved — no segmentation, no highlighting.
+            </p>
+            <div className="max-w-2xl mx-auto space-y-6">
+                {paragraphs.map((p, i) => (
+                    <p key={i} className="font-serif text-base md:text-lg leading-relaxed text-text-primary whitespace-pre-wrap">
+                        {p}
+                    </p>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ── MODE — ANNOTATED (colour-coded thesis / topic sentences / quotes) ───────
+
+function AnnotatedLegend() {
+    const items = [
+        { swatch: 'bg-blue-200 dark:bg-blue-500/30', label: 'Thesis' },
+        { swatch: 'bg-amber-200 dark:bg-amber-500/30', label: 'Topic sentence' },
+        { swatch: 'bg-emerald-200 dark:bg-emerald-500/30', label: 'Quote' },
+        { swatch: 'bg-emerald-300 dark:bg-emerald-500/50', label: 'High-leverage quote ⭐' },
+        { swatch: 'bg-violet-200 dark:bg-violet-500/30', label: 'Conclusion' },
+    ];
+    return (
+        <div className="flex flex-wrap gap-x-5 gap-y-2 mb-8 p-4 rounded-2xl bg-surface-body border border-line-soft">
+            {items.map((it, i) => (
+                <div key={i} className="flex items-center gap-2">
+                    <span className={`w-3 h-3 rounded-sm ${it.swatch}`} />
+                    <span className="text-xs font-medium text-text-dim">{it.label}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function AnnotatedParagraphBlock({ paragraph, index }) {
+    const segments = buildAnnotatedParagraph(paragraph);
+    return (
+        <div className="relative pl-5 border-l-2 border-line-soft">
+            <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-surface-raised border-2 border-accent flex items-center justify-center">
+                <span className="text-[8px] font-bold text-accent">{index + 1}</span>
+            </span>
+            <p className="font-serif text-base leading-relaxed text-text-primary">
+                {segments.map((seg, i) => {
+                    if (seg.type === 'topic') {
+                        return (
+                            <span key={i} className="bg-amber-200 dark:bg-amber-500/30 rounded px-0.5">
+                                {seg.text}
+                            </span>
+                        );
+                    }
+                    if (seg.type === 'quote') {
+                        return (
+                            <span key={i}
+                                className={`rounded px-0.5 ${
+                                    seg.meta?.highLeverage
+                                        ? 'bg-emerald-300 dark:bg-emerald-500/50 font-medium'
+                                        : 'bg-emerald-200 dark:bg-emerald-500/30'
+                                }`}>
+                                {seg.text}{seg.meta?.highLeverage ? ' ⭐' : ''}
+                            </span>
+                        );
+                    }
+                    return <span key={i}>{seg.text}</span>;
+                })}
+            </p>
+            {(paragraph.techniques || []).length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                    {paragraph.techniques.map((t, i) => (
+                        <span key={i} className="text-[11px] font-semibold px-2.5 py-1 bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 rounded-full">
+                            {t}
+                        </span>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function AnnotatedEssayMode({ essay }) {
+    const structure = essay.parsedStructure || {};
+    const paras = structure.bodyParagraphs || [];
+
+    return (
+        <div>
+            <AnnotatedLegend />
+            <div className="max-w-2xl mx-auto space-y-8">
+                {structure.thesis && (
+                    <div className="p-5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200/60 dark:border-blue-500/20">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-2 block">Thesis</span>
+                        <p className="font-serif text-base leading-relaxed text-text-primary bg-blue-200 dark:bg-blue-500/30 rounded px-0.5 inline">
+                            {structure.thesis}
+                        </p>
+                    </div>
+                )}
+
+                {paras.length === 0 ? (
+                    <p className="text-sm text-text-muted italic text-center py-8">No body paragraphs to annotate.</p>
+                ) : (
+                    <div className="space-y-8">
+                        {paras.map((p, i) => <AnnotatedParagraphBlock key={i} paragraph={p} index={i} />)}
+                    </div>
+                )}
+
+                {structure.conclusion && (
+                    <div className="p-5 rounded-2xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200/60 dark:border-violet-500/20">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-violet-500 mb-2 block">Conclusion</span>
+                        <p className="font-serif text-base leading-relaxed text-text-primary bg-violet-200 dark:bg-violet-500/30 rounded px-0.5 inline">
+                            {structure.conclusion}
+                        </p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -919,6 +1108,8 @@ function NewEssayForm({ onCreated }) {
 
 const MODES = [
     { key: 'spotlight',  label: 'Spotlight',  desc: 'Read through' },
+    { key: 'annotated',  label: 'Annotated',  desc: 'Thesis, topic sentences & quotes highlighted' },
+    { key: 'original',   label: 'Original',   desc: 'Exactly what you saved — no highlighting' },
     { key: 'recall',     label: 'Recall',     desc: 'SRS cloze' },
     { key: 'guided',     label: 'Guided',     desc: 'Word-by-word' },
     { key: 'type',       label: 'Type',       desc: 'Free type' },
@@ -1035,6 +1226,8 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
 
                     <div className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                         {mode === 'spotlight' && <SpotlightMode essay={essay} />}
+                        {mode === 'annotated' && <AnnotatedEssayMode essay={essay} />}
+                        {mode === 'original' && <OriginalEssayMode essay={essay} />}
                         {mode === 'recall' && <RecallChunks essay={essay} onScheduled={loadDue} />}
                         {mode === 'guided' && <GuidedTypeMode essay={essay} onScheduled={loadDue} />}
                         {mode === 'type' && <TypeMode essay={essay} onScheduled={loadDue} />}

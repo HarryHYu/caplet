@@ -7,6 +7,8 @@ import {
   lastSentence,
   paragraphItemId,
   quoteItemId,
+  highlightSpansInText,
+  buildAnnotatedParagraph,
 } from '../lib/essaySlides';
 
 const structure = {
@@ -102,6 +104,63 @@ describe('lastSentence', () => {
     expect(lastSentence('First. Second. Third.')).toBe('Third.');
     expect(lastSentence('Only one sentence here')).toBe('Only one sentence here');
     expect(lastSentence('')).toBe('');
+  });
+});
+
+describe('highlightSpansInText', () => {
+  it('splits text into plain and highlighted segments, preserving all content', () => {
+    const text = 'Shakespeare presents ambition as a corrosive force. "Vaulting ambition" drives Macbeth.';
+    const segments = highlightSpansInText(text, [
+      { needle: 'Shakespeare presents ambition as a corrosive force.', type: 'topic' },
+      { needle: 'Vaulting ambition', type: 'quote', meta: { highLeverage: true } },
+    ]);
+    expect(segments.map((s) => s.text).join('')).toBe(text);
+    expect(segments[0].type).toBe('topic');
+    expect(segments.some((s) => s.type === 'quote' && s.meta.highLeverage)).toBe(true);
+  });
+
+  it('drops overlapping markers, keeping the earliest', () => {
+    const segments = highlightSpansInText('hello world', [
+      { needle: 'hello world', type: 'topic' },
+      { needle: 'world', type: 'quote' },
+    ]);
+    expect(segments).toHaveLength(1);
+    expect(segments[0].type).toBe('topic');
+  });
+
+  it('skips markers not found verbatim in the text', () => {
+    const segments = highlightSpansInText('hello world', [{ needle: 'nowhere', type: 'quote' }]);
+    expect(segments).toEqual([{ text: 'hello world', type: 'plain' }]);
+  });
+
+  it('returns an empty array for empty text', () => {
+    expect(highlightSpansInText('', [{ needle: 'x', type: 'topic' }])).toEqual([]);
+  });
+});
+
+describe('buildAnnotatedParagraph', () => {
+  it('highlights the topic sentence and every quote actually present in the text', () => {
+    const segments = buildAnnotatedParagraph(structure.bodyParagraphs[1]);
+    const joined = segments.map((s) => s.text).join('');
+    expect(joined).toBe(structure.bodyParagraphs[1].text);
+    // "blood will have blood" is a quote on the paragraph object but doesn't
+    // occur verbatim in this paragraph's text — it must be silently skipped.
+    expect(segments.filter((s) => s.type === 'quote')).toHaveLength(1);
+    expect(segments.find((s) => s.type === 'topic')).toBeTruthy();
+  });
+
+  it('highlights every quote when all are verbatim substrings of the text', () => {
+    const paragraph = {
+      topicSentence: 'Shakespeare presents ambition as a corrosive force.',
+      text: 'Shakespeare presents ambition as a corrosive force. "Vaulting ambition" drives him, yet "blood will have blood" seals his fate.',
+      quotes: [
+        { text: 'Vaulting ambition', highLeverage: true },
+        { text: 'blood will have blood', highLeverage: true },
+      ],
+    };
+    const segments = buildAnnotatedParagraph(paragraph);
+    expect(segments.map((s) => s.text).join('')).toBe(paragraph.text);
+    expect(segments.filter((s) => s.type === 'quote')).toHaveLength(2);
   });
 });
 

@@ -141,3 +141,67 @@ export function buildPracticeSlides(structure) {
     paragraphOrder: buildParagraphOrder(structure),
   };
 }
+
+/**
+ * Splits `text` into an ordered list of segments, highlighting each verbatim
+ * `needle` supplied in `markers`. Pure and deterministic — used to render the
+ * "Annotated" essay view (thesis / topic sentences / quotes highlighted in
+ * different colours) without ever touching the student's actual words.
+ *
+ * Overlapping markers are resolved by first-match-wins (earlier start keeps
+ * priority — in practice a paragraph's topicSentence sits at the very start
+ * and never overlaps with quotes drawn from later in the paragraph).
+ *
+ * @param {string} text
+ * @param {Array<{needle:string, type:string, meta?:object}>} markers
+ * @returns {Array<{text:string, type:'plain'|string, meta?:object}>}
+ */
+export function highlightSpansInText(text, markers = []) {
+  const t = String(text || '');
+  if (!t) return [];
+
+  const spans = [];
+  markers.forEach((m) => {
+    const needle = String(m?.needle || '').trim();
+    if (!needle) return;
+    const start = t.indexOf(needle);
+    if (start === -1) return;
+    spans.push({ start, end: start + needle.length, type: m.type, meta: m.meta });
+  });
+  spans.sort((a, b) => a.start - b.start);
+
+  const clean = [];
+  let lastEnd = -1;
+  spans.forEach((s) => {
+    if (s.start >= lastEnd) {
+      clean.push(s);
+      lastEnd = s.end;
+    }
+  });
+
+  const segments = [];
+  let cursor = 0;
+  clean.forEach((s) => {
+    if (s.start > cursor) segments.push({ text: t.slice(cursor, s.start), type: 'plain' });
+    segments.push({ text: t.slice(s.start, s.end), type: s.type, meta: s.meta });
+    cursor = s.end;
+  });
+  if (cursor < t.length) segments.push({ text: t.slice(cursor), type: 'plain' });
+  return segments;
+}
+
+/**
+ * Annotates one body paragraph: its topic sentence and every quote it cites
+ * become highlighted segments (see highlightSpansInText). Used by the
+ * "Annotated" essay view.
+ * @returns {Array<{text:string, type:'plain'|'topic'|'quote', meta?:object}>}
+ */
+export function buildAnnotatedParagraph(paragraph) {
+  const p = paragraph || {};
+  const markers = [];
+  if (p.topicSentence) markers.push({ needle: p.topicSentence, type: 'topic' });
+  (p.quotes || []).forEach((q) => {
+    if (q?.text) markers.push({ needle: q.text, type: 'quote', meta: { highLeverage: !!q.highLeverage } });
+  });
+  return highlightSpansInText(p.text, markers);
+}
