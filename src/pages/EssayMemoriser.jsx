@@ -23,6 +23,12 @@ import {
     ArrowUpTrayIcon,
     ArrowRightIcon,
     EyeIcon,
+    BookOpenIcon,
+    PencilIcon,
+    ChatBubbleBottomCenterTextIcon,
+    ClockIcon,
+    RectangleStackIcon,
+    ArrowsUpDownIcon,
 } from '@heroicons/react/24/outline';
 
 // ── Cycling messages during AI parsing ─────────────────────────────────────
@@ -202,18 +208,42 @@ function HintToggle({ options, value, onChange }) {
     );
 }
 
-function SessionDone({ onRestart }) {
+/** Thin progress bar tracking paragraph/step position within the current mode. */
+function ProgressBar({ value, total }) {
+    const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
+    return (
+        <div className="h-1.5 w-full bg-line-soft rounded-full overflow-hidden mb-5">
+            <div className="h-full bg-accent rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
+        </div>
+    );
+}
+
+/**
+ * End-of-session screen. Optionally offers a "Continue to X" button so
+ * finishing one practice mode naturally hands you off to the next stage of
+ * the Read → Practice → Recall progression, instead of leaving you to hunt
+ * for the next tab yourself.
+ */
+function SessionDone({ onRestart, nextLabel, onNext }) {
     return (
         <div className="text-center py-14">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-5">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-5 animate-pop-in">
                 <AcademicCapIcon className="w-7 h-7 text-emerald-500" />
             </div>
             <p className="font-display text-xl font-extrabold tracking-tight text-text-primary">Session complete</p>
             <p className="text-sm text-text-muted mt-2">Items rescheduled on the 1, 3, 7, 14 day ladder.</p>
-            <button type="button" onClick={onRestart}
-                className="btn-secondary mt-6 inline-flex hover:-translate-y-0.5 transition-transform">
-                Restart
-            </button>
+            <div className="flex items-center justify-center gap-3 mt-6">
+                <button type="button" onClick={onRestart}
+                    className="btn-secondary inline-flex hover:-translate-y-0.5 transition-transform">
+                    Restart
+                </button>
+                {onNext && (
+                    <button type="button" onClick={onNext}
+                        className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+                        Continue to {nextLabel} <ArrowRightIcon className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
         </div>
     );
 }
@@ -417,7 +447,7 @@ const READ_VIEWS = [
  * was saved with zero AI touch (Original). One tab, three lenses, so this
  * doesn't eat three separate slots in the practice nav.
  */
-function ReadMode({ essay }) {
+function ReadMode({ essay, onStartPractice }) {
     const [view, setView] = useState('story');
     return (
         <div>
@@ -427,13 +457,23 @@ function ReadMode({ essay }) {
             {view === 'story' && <SpotlightMode essay={essay} />}
             {view === 'annotated' && <AnnotatedEssayMode essay={essay} />}
             {view === 'original' && <OriginalEssayMode essay={essay} />}
+
+            {onStartPractice && (
+                <div className="flex justify-center mt-10 pt-8 border-t border-line-soft/60">
+                    <button type="button" onClick={onStartPractice}
+                        className="text-sm font-semibold text-accent hover:opacity-70 transition-opacity inline-flex items-center gap-2">
+                        Know it well enough to try recalling it? <span className="underline">Start practising</span>
+                        <ArrowRightIcon className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
 
 // ── RECALL — spaced-repetition cloze on topic sentences ─────────────────────
 
-function RecallChunks({ essay, onScheduled }) {
+function RecallChunks({ essay, onScheduled, onNext, nextLabel }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
     const [pIndex, setPIndex] = useState(0);
@@ -445,7 +485,7 @@ function RecallChunks({ essay, onScheduled }) {
     const reset = () => { setPIndex(0); setGraded(false); setRevealed(false); setDone(false); };
 
     if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs were found in this essay.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
 
     const current = paras[pIndex];
     const cloze = buildTopicSentenceCloze(current, pIndex);
@@ -475,9 +515,10 @@ function RecallChunks({ essay, onScheduled }) {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
             </div>
+            <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-sm text-text-muted italic mb-6 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
 
             {cloze ? (
@@ -517,7 +558,7 @@ function RecallChunks({ essay, onScheduled }) {
 
 // ── WORD BY WORD — type one word at a time; next letter revealed as you go ──
 
-function GuidedTypeMode({ essay, onScheduled }) {
+function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
     const [pIndex, setPIndex] = useState(0);
@@ -534,7 +575,7 @@ function GuidedTypeMode({ essay, onScheduled }) {
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
 
     if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
 
     const para = paras[pIndex];
     const words = para.text.trim().split(/\s+/).filter(Boolean);
@@ -565,9 +606,10 @@ function GuidedTypeMode({ essay, onScheduled }) {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
             </div>
+            <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-xs font-medium text-text-dim mb-4">Type each word. The first letter of the next word appears after you type.</p>
 
             {/* Word stream display */}
@@ -648,7 +690,7 @@ const startingPhase = (hintStyle) => (hintStyle === 'firstWord' ? 'type' : 'read
  * first word is cued) flows into one tab with a hint-style toggle, since
  * they're the same underlying drill — just how much of a head start you get.
  */
-function SentenceMode({ essay, onScheduled }) {
+function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
     const [hintStyle, setHintStyle] = useState('readFirst');
@@ -666,7 +708,7 @@ function SentenceMode({ essay, onScheduled }) {
     useEffect(() => { setPhase(startingPhase(hintStyle)); setTyped(''); }, [hintStyle]);
 
     if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
 
     const para = paras[pIndex];
     const sentences = splitSentences(para.text);
@@ -693,10 +735,11 @@ function SentenceMode({ essay, onScheduled }) {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">Para {pIndex + 1}/{paras.length} · Sentence {sIndex + 1}/{total}</span>
                 <HintToggle options={SENTENCE_HINTS} value={hintStyle} onChange={setHintStyle} />
             </div>
+            <ProgressBar value={pIndex} total={paras.length} />
 
             {phase === 'read' && (
                 <div>
@@ -791,7 +834,7 @@ const TYPE_HINTS = [
  * exact same check-a-whole-paragraph mechanic, just a different hint above
  * the textarea. A toggle keeps that variety without three near-identical tabs.
  */
-function TypeItMode({ essay, onScheduled }) {
+function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
     const [hint, setHint] = useState('letters');
@@ -805,7 +848,7 @@ function TypeItMode({ essay, onScheduled }) {
     const reset = () => { setPIndex(0); setTyped(''); setSubmitted(false); setRevealed(false); setDone(false); };
 
     if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
 
     const current = paras[pIndex];
     const cue = pIndex === 0
@@ -826,10 +869,11 @@ function TypeItMode({ essay, onScheduled }) {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
                 <HintToggle options={TYPE_HINTS} value={hint} onChange={setHint} />
             </div>
+            <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-sm text-text-muted italic mb-5 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
 
             {hintBlock && (
@@ -961,28 +1005,28 @@ const MODE_GROUPS = [
     {
         group: 'Understand',
         modes: [
-            { key: 'read', label: 'Read', desc: 'Skim it block-by-block, see its structure colour-coded, or read exactly what you saved.' },
+            { key: 'read', label: 'Read', icon: BookOpenIcon, desc: 'Skim it block-by-block, see its structure colour-coded, or read exactly what you saved.' },
         ],
     },
     {
         group: 'Practice',
         modes: [
-            { key: 'wordbyword', label: 'Word by word', desc: 'Type one word at a time — a hint for the next word appears once you confirm.' },
-            { key: 'sentence', label: 'Sentence by sentence', desc: 'Rebuild the essay one sentence at a time, from a full read or just the first word.' },
-            { key: 'typeit', label: 'Type it', desc: 'Type a whole paragraph from memory. Choose no hint, first letters, or just an acronym.' },
+            { key: 'wordbyword', label: 'Word by word', icon: PencilIcon, next: 'sentence', desc: 'Type one word at a time — a hint for the next word appears once you confirm.' },
+            { key: 'sentence', label: 'Sentence by sentence', icon: ChatBubbleBottomCenterTextIcon, next: 'typeit', desc: 'Rebuild the essay one sentence at a time, from a full read or just the first word.' },
+            { key: 'typeit', label: 'Type it', icon: DocumentTextIcon, next: 'recall', desc: 'Type a whole paragraph from memory. Choose no hint, first letters, or just an acronym.' },
         ],
     },
     {
         group: 'Long-term',
         modes: [
-            { key: 'recall', label: 'Recall', desc: 'Spaced-repetition cloze — the same 1/3/7/14-day ladder that keeps this essay in memory for exam day.' },
+            { key: 'recall', label: 'Recall', icon: ClockIcon, next: 'quotes', desc: 'Spaced-repetition cloze — the same 1/3/7/14-day ladder that keeps this essay in memory for exam day.' },
         ],
     },
     {
         group: 'Drills',
         modes: [
-            { key: 'quotes', label: 'Quotes', desc: 'Flashcards on every quote in the essay and the technique it demonstrates.' },
-            { key: 'order', label: 'Order', desc: 'Drag your body paragraphs back into their original order.' },
+            { key: 'quotes', label: 'Quotes', icon: RectangleStackIcon, desc: 'Flashcards on every quote in the essay and the technique it demonstrates.' },
+            { key: 'order', label: 'Order', icon: ArrowsUpDownIcon, desc: 'Drag your body paragraphs back into their original order.' },
         ],
     },
 ];
@@ -1084,11 +1128,12 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
                                 </span>
                                 {g.modes.map((t) => (
                                     <button key={t.key} type="button" onClick={() => setMode(t.key)}
-                                        className={`shrink-0 px-4 py-3 text-sm font-medium -mb-px border-b-2 transition-colors whitespace-nowrap ${
+                                        className={`shrink-0 flex items-center gap-1.5 px-4 py-3 text-sm font-medium -mb-px border-b-2 transition-colors whitespace-nowrap ${
                                             mode === t.key
                                                 ? 'border-accent text-accent'
                                                 : 'border-transparent text-text-dim hover:text-text-primary'
                                         }`}>
+                                        {t.icon && <t.icon className="w-4 h-4" />}
                                         {t.label}
                                     </button>
                                 ))}
@@ -1103,11 +1148,23 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
                     </p>
 
                     <div className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                        {mode === 'read' && <ReadMode essay={essay} />}
-                        {mode === 'recall' && <RecallChunks essay={essay} onScheduled={loadDue} />}
-                        {mode === 'wordbyword' && <GuidedTypeMode essay={essay} onScheduled={loadDue} />}
-                        {mode === 'sentence' && <SentenceMode essay={essay} onScheduled={loadDue} />}
-                        {mode === 'typeit' && <TypeItMode essay={essay} onScheduled={loadDue} />}
+                        {mode === 'read' && <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />}
+                        {mode === 'recall' && (
+                            <RecallChunks essay={essay} onScheduled={loadDue}
+                                onNext={() => setMode('quotes')} nextLabel="Quotes" />
+                        )}
+                        {mode === 'wordbyword' && (
+                            <GuidedTypeMode essay={essay} onScheduled={loadDue}
+                                onNext={() => setMode('sentence')} nextLabel="Sentence by sentence" />
+                        )}
+                        {mode === 'sentence' && (
+                            <SentenceMode essay={essay} onScheduled={loadDue}
+                                onNext={() => setMode('typeit')} nextLabel="Type it" />
+                        )}
+                        {mode === 'typeit' && (
+                            <TypeItMode essay={essay} onScheduled={loadDue}
+                                onNext={() => setMode('recall')} nextLabel="Recall" />
+                        )}
                         {mode === 'quotes' && (
                             quoteCards
                                 ? <SlideRenderer slide={quoteCards} onSubmit={() => {}} />
@@ -1250,11 +1307,20 @@ export default function EssayMemoriser() {
                                             return (
                                                 <button key={e.id} type="button" onClick={() => openEssay(e.id)}
                                                     className="bg-surface-raised rounded-2xl p-5 text-left flex items-center justify-between gap-4 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
-                                                    <div className="min-w-0">
-                                                        <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">{e.title}</p>
-                                                        <p className="text-xs font-medium text-text-dim mt-1">
-                                                            {e.parsed ? `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}` : 'Not parsed yet'}
-                                                        </p>
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                                            e.parsed ? 'bg-emerald-500/10' : 'bg-accent/10'
+                                                        }`}>
+                                                            {e.parsed
+                                                                ? <BookOpenIcon className="w-4 h-4 text-emerald-500" />
+                                                                : <SparklesIcon className="w-4 h-4 text-accent" />}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">{e.title}</p>
+                                                            <p className="text-xs font-medium text-text-dim mt-1">
+                                                                {e.parsed ? `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}` : 'Needs parsing — click to finish setting it up'}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                     <div className="flex items-center gap-3 shrink-0">
                                                         {due > 0 && (
