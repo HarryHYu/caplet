@@ -1037,7 +1037,7 @@ function ChartSlide({ slide }) {
     if (chartType === 'scatter') {
       return (
         <ScatterChart>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line-soft)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--line-soft)" />
           <XAxis dataKey="x" name={xLabel || 'X'} tick={{ fontSize: 12 }} label={xLabel ? { value: xLabel, position: 'insideBottom', offset: -5, fontSize: 12 } : undefined} />
           <YAxis dataKey="y" name={yLabel || 'Y'} tick={{ fontSize: 12 }} label={yLabel ? { value: yLabel, angle: -90, position: 'insideLeft', fontSize: 12 } : undefined} />
           <Tooltip cursor={{ strokeDasharray: '3 3' }} />
@@ -1054,7 +1054,7 @@ function ChartSlide({ slide }) {
         : { fill: CHART_COLORS[0], radius: [4, 4, 0, 0] };
     return (
       <ChartComp data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line-soft)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--line-soft)" />
         <XAxis dataKey="x" tick={{ fontSize: 12 }} label={xLabel ? { value: xLabel, position: 'insideBottom', offset: -5, fontSize: 12 } : undefined} />
         <YAxis tick={{ fontSize: 12 }} label={yLabel ? { value: yLabel, angle: -90, position: 'insideLeft', fontSize: 12 } : undefined} />
         <Tooltip />

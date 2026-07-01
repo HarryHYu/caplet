@@ -23,6 +23,7 @@
 :root {
   /* Surfaces — warm cream paper, site-wide */
   --surface-body: #F6F1E6;
+  --surface-base: #F6F1E6;   /* alias for --surface-body used in Tour/demo */
   --surface-soft: #ECE5D6;
   --surface-raised: #FCFAF4;
   --surface-inverse: #141413;
@@ -84,6 +85,7 @@
 
 .dark {
   --surface-body: #141413;
+  --surface-base: #141413;   /* alias for --surface-body used in Tour/demo */
   --surface-soft: #232220;
   --surface-raised: #1c1b19;
   --surface-inverse: #F6F1E6;
@@ -450,14 +452,14 @@
   background-color: #F6F1E6; /* warm cream paper */
 }
 .dark .home-root { background-color: #141413; }
-.home-root .body-text {
+.body-text {
   color: var(--ink-body);
   font-size: 1.0625rem;
   line-height: 1.72;
   letter-spacing: 0.003em;
 }
 @media (min-width: 768px) {
-  .home-root .body-text { font-size: 1.1875rem; }
+  .body-text { font-size: 1.1875rem; }
 }
 
 /* Very soft warm grain — natural, not technical. */

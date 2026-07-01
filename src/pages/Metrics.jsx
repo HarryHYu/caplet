@@ -226,25 +226,25 @@ export default function Metrics() {
                   layout="vertical"
                   margin={{ top: 0, right: 24, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line-soft)" opacity={0.4} horizontal={false} />
-                  <XAxis type="number" tick={{ fill: 'var(--color-text-dim)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--line-soft)" opacity={0.4} horizontal={false} />
+                  <XAxis type="number" tick={{ fill: 'var(--text-dim)', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis
                     dataKey="title"
                     type="category"
                     width={150}
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
                     tickFormatter={(v) => (v.length > 22 ? v.slice(0, 22) + '…' : v)}
                     axisLine={false}
                     tickLine={false}
                   />
                   <Tooltip
                     contentStyle={{
-                      background: 'var(--color-surface-raised)',
-                      border: '1px solid var(--color-line-soft)',
+                      background: 'var(--surface-raised)',
+                      border: '1px solid var(--line-soft)',
                       borderRadius: 0,
                       fontSize: 12,
                     }}
-                    cursor={{ fill: 'var(--color-surface-raised)' }}
+                    cursor={{ fill: 'var(--surface-raised)' }}
                   />
                   <Bar dataKey="completions" radius={0} maxBarSize={20}>
                     {topCourses.map((_, i) => (
