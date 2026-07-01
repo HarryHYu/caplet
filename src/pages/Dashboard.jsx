@@ -11,7 +11,8 @@ import {
     FireIcon,
     ArrowRightIcon,
     CheckCircleIcon,
-    BookmarkIcon
+    BookmarkIcon,
+    DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
@@ -226,6 +227,19 @@ export default function Dashboard() {
                                             <p className="text-xs font-bold text-text-muted mt-1">
                                                 {savedSlides.length} {savedSlides.length === 1 ? 'slide' : 'slides'} flagged
                                             </p>
+                                        </div>
+                                    </div>
+                                    <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                                </Link>
+                                <Link
+                                    to="/essays"
+                                    className="group flex w-full items-center justify-between gap-4 rounded-2xl block-cream px-5 py-4 shadow-[0_16px_36px_-30px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform duration-200"
+                                >
+                                    <div className="min-w-0 flex items-center gap-3">
+                                        <DocumentTextIcon className="w-5 h-5 shrink-0 text-accent" />
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold text-text-primary truncate group-hover:text-accent transition-colors">Essay Memoriser</p>
+                                            <p className="text-xs font-bold text-text-muted mt-1">Practice your essays with AI</p>
                                         </div>
                                     </div>
                                     <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-all" />

@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useReveal } from '../lib/useReveal';
 
 const SettingsProfile = () => {
-  useReveal();
   const { user, updateProfile } = useAuth();
   const [form, setForm] = useState({
     firstName: '',
@@ -60,7 +58,7 @@ const SettingsProfile = () => {
   };
 
   return (
-    <div className="reveal">
+    <div>
       <div className="mb-10">
         <p className="font-hand text-lg text-accent mb-1">Your details</p>
         <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-text-primary">

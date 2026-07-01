@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import AffiliateListings from '../../components/affiliates/AffiliateListings';
 import { Link } from 'react-router-dom';
 
 const formatCurrency = (value) =>
@@ -136,42 +137,45 @@ const MortgageCalculator = () => {
               result.error ? (
                 <p className="text-sm font-semibold text-accent">{result.error}</p>
               ) : (
-                <div className="space-y-10">
-                  <div>
-                    <p className="text-xs font-semibold text-text-dim mb-3">Monthly Repayment</p>
-                    <p className="text-5xl font-display font-extrabold tracking-tight text-blue">
-                      {formatCurrency(result.monthlyPayment)}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-surface-raised rounded-2xl p-6">
-                      <p className="text-xs font-semibold text-text-dim mb-1">Weekly</p>
-                      <p className="text-lg font-bold">{formatCurrency(result.weeklyPayment)}</p>
+                <>
+                  <div className="space-y-10">
+                    <div>
+                      <p className="text-xs font-semibold text-text-dim mb-3">Monthly Repayment</p>
+                      <p className="text-5xl font-display font-extrabold tracking-tight text-blue">
+                        {formatCurrency(result.monthlyPayment)}
+                      </p>
                     </div>
-                    <div className="bg-surface-raised rounded-2xl p-6">
-                      <p className="text-xs font-semibold text-text-dim mb-1">Fortnightly</p>
-                      <p className="text-lg font-bold">{formatCurrency(result.fortnightlyPayment)}</p>
-                    </div>
-                  </div>
 
-                  <div className="bg-surface-raised rounded-2xl p-6 space-y-6">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-xs font-semibold text-text-dim mb-1">Total Repaid</p>
-                        <p className="text-xl font-bold">{formatCurrency(result.totalPayments)}</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-surface-raised rounded-2xl p-6">
+                        <p className="text-xs font-semibold text-text-dim mb-1">Weekly</p>
+                        <p className="text-lg font-bold">{formatCurrency(result.weeklyPayment)}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs font-semibold text-text-dim mb-1">Total Interest</p>
-                        <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
+                      <div className="bg-surface-raised rounded-2xl p-6">
+                        <p className="text-xs font-semibold text-text-dim mb-1">Fortnightly</p>
+                        <p className="text-lg font-bold">{formatCurrency(result.fortnightlyPayment)}</p>
                       </div>
                     </div>
 
-                    <p className="text-xs text-text-dim leading-relaxed">
-                      Paying a little more each month, or switching to fortnightly payments, can cut years off your loan and save you interest.
-                    </p>
+                    <div className="bg-surface-raised rounded-2xl p-6 space-y-6">
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-xs font-semibold text-text-dim mb-1">Total Repaid</p>
+                          <p className="text-xl font-bold">{formatCurrency(result.totalPayments)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-semibold text-text-dim mb-1">Total Interest</p>
+                          <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-text-dim leading-relaxed">
+                        Paying a little more each month, or switching to fortnightly payments, can cut years off your loan and save you interest.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                  <AffiliateListings type="realestate" maxBudget={parseFloat(loanAmount) || undefined} />
+                </>
               )
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center">

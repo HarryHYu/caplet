@@ -6,6 +6,7 @@ import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import SlideRenderer from '../components/lesson/SlideRenderer';
 import DesmosCalculator from '../components/lesson/DesmosCalculator';
+import LessonTutor from '../components/lesson/LessonTutor';
 import { normalizeSlide, INTERACTIVE_TYPES, slideKindLabel } from '../lib/slideSchema';
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -698,6 +699,11 @@ const LessonPlayer = () => {
                 );
               })}
             </div>
+
+            {/* AI Tutor — scoped to current slide */}
+            {lesson && slides.length > 0 && (
+              <LessonTutor slide={slides[currentSlideIndex]} lessonId={lesson.id} />
+            )}
 
             {/* Footer controls */}
             <div data-tour-id="lesson-footer" className="shrink-0 flex items-center justify-between gap-4">

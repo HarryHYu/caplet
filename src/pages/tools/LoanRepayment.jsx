@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import AffiliateListings from '../../components/affiliates/AffiliateListings';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
@@ -132,35 +133,38 @@ const LoanRepayment = () => {
               result.error ? (
                 <p className="text-sm font-semibold text-accent">{result.error}</p>
               ) : (
-                <div className="space-y-10">
-                  <div>
-                    <p className="text-xs font-semibold text-text-dim mb-3">Monthly Payment</p>
-                    <p className="text-5xl font-display font-extrabold tracking-tight text-text-primary">
-                      {formatCurrency(result.monthlyPayment)}
-                    </p>
-                  </div>
-
-                  <div className="space-y-8">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-xs font-semibold text-text-dim mb-1">Total Paid</p>
-                        <p className="text-xl font-bold">{formatCurrency(result.totalPayments)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-semibold text-text-dim mb-1">Total Interest</p>
-                        <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
-                      </div>
+                <>
+                  <div className="space-y-10">
+                    <div>
+                      <p className="text-xs font-semibold text-text-dim mb-3">Monthly Payment</p>
+                      <p className="text-5xl font-display font-extrabold tracking-tight text-text-primary">
+                        {formatCurrency(result.monthlyPayment)}
+                      </p>
                     </div>
 
-                    <div className="bg-surface-raised/60 rounded-2xl p-5">
-                      <p className="text-xs font-semibold text-text-dim mb-3">Schedule</p>
-                      <div className="flex items-center gap-4 text-sm font-semibold">
-                        <span className="text-text-primary">{result.numPayments} Payments</span>
-                        <span className="text-text-muted">Fixed monthly</span>
+                    <div className="space-y-8">
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-xs font-semibold text-text-dim mb-1">Total Paid</p>
+                          <p className="text-xl font-bold">{formatCurrency(result.totalPayments)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-semibold text-text-dim mb-1">Total Interest</p>
+                          <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-surface-raised/60 rounded-2xl p-5">
+                        <p className="text-xs font-semibold text-text-dim mb-3">Schedule</p>
+                        <div className="flex items-center gap-4 text-sm font-semibold">
+                          <span className="text-text-primary">{result.numPayments} Payments</span>
+                          <span className="text-text-muted">Fixed monthly</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                  <AffiliateListings type="car" maxBudget={parseFloat(loanAmount) || undefined} />
+                </>
               )
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40">
