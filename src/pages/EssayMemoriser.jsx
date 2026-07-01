@@ -68,6 +68,11 @@ function toLetterHint(text) {
     }).join('');
 }
 
+/** First letter of every word, concatenated — the hardest possible hint. */
+function toAcronym(text) {
+    return String(text || '').trim().split(/\s+/).filter(Boolean).map((w) => w[0]).join('');
+}
+
 function splitSentences(text) {
     return String(text || '').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
 }
@@ -177,6 +182,26 @@ function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500 }) {
     );
 }
 
+/** A small pill-group toggle, used for in-mode hint-style switches. */
+function HintToggle({ options, value, onChange }) {
+    return (
+        <div className="flex items-center gap-1 p-1 bg-surface-body rounded-full border border-line-soft">
+            {options.map((opt) => (
+                <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => onChange(opt.key)}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
+                        value === opt.key ? 'bg-accent text-white' : 'text-text-dim hover:text-text-primary'
+                    }`}
+                >
+                    {opt.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 function SessionDone({ onRestart }) {
     return (
         <div className="text-center py-14">
@@ -193,14 +218,14 @@ function SessionDone({ onRestart }) {
     );
 }
 
-// ── MODE 1 — SPOTLIGHT (narrative reader, one block at a time) ──────────────
+// ── READ — story view, colour-annotated, or exactly as saved ────────────────
 
 function SpotlightMode({ essay }) {
     const structure = essay.parsedStructure || {};
     const segments = buildSpotlightSegments(structure);
     const [idx, setIdx] = useState(0);
 
-    if (!segments.length) return <p className="text-sm text-text-muted italic">Nothing to spotlight.</p>;
+    if (!segments.length) return <p className="text-sm text-text-muted italic">Nothing to read yet.</p>;
 
     const seg = segments[idx];
     const bg =
@@ -261,673 +286,6 @@ function SpotlightMode({ essay }) {
         </div>
     );
 }
-
-// ── MODE 2 — RECALL (existing SRS chunk mode) ───────────────────────────────
-
-function RecallChunks({ essay, onScheduled }) {
-    const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
-    const [pIndex, setPIndex] = useState(0);
-    const [graded, setGraded] = useState(false);
-    const [busy, setBusy] = useState(false);
-    const [revealed, setRevealed] = useState(false);
-    const [done, setDone] = useState(false);
-
-    const reset = () => { setPIndex(0); setGraded(false); setRevealed(false); setDone(false); };
-
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs were found in this essay.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
-
-    const current = paras[pIndex];
-    const cloze = buildTopicSentenceCloze(current, pIndex);
-    const cue = pIndex === 0
-        ? (structure.thesis ? `Thesis: "${structure.thesis}"` : 'Recall your first body paragraph.')
-        : `Previous paragraph ended: "${lastSentence(paras[pIndex - 1].text)}". What comes next?`;
-
-    const grade = async (recall) => {
-        setBusy(true);
-        try {
-            await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall);
-            await Promise.all(
-                (current.quotes || []).map((_, qIdx) =>
-                    api.submitReview('quote', quoteItemId(essay.id, pIndex, qIdx), recall).catch(() => {}),
-                ),
-            );
-            onScheduled?.();
-        } catch (e) { console.warn('SRS submit failed:', e?.message || e); }
-        setBusy(false);
-        setGraded(true);
-    };
-
-    const next = () => {
-        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setGraded(false); setRevealed(false); }
-        else setDone(true);
-    };
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
-            </div>
-            <p className="text-sm text-text-muted italic mb-6 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
-
-            {cloze ? (
-                <SlideRenderer key={`p-${pIndex}`} slide={cloze} onSubmit={(correct) => grade(correct ? 'pass' : 'fail')} />
-            ) : (
-                <div>
-                    <p className="text-base text-text-primary font-serif mb-4">
-                        Recall the opening: <strong>{current.topicSentence || '(no topic sentence)'}</strong>
-                    </p>
-                    {!graded && (
-                        <GradeButtons busy={busy} onFail={() => grade('fail')} onPass={() => grade('pass')} passLabel="Got it" />
-                    )}
-                </div>
-            )}
-
-            {graded && (
-                <div className="mt-6">
-                    {!revealed ? (
-                        <button type="button" onClick={() => setRevealed(true)}
-                            className="text-sm font-medium text-accent hover:opacity-70 transition-opacity">
-                            Show full paragraph
-                        </button>
-                    ) : (
-                        <div className="p-5 rounded-2xl bg-block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                            <p className="text-sm md:text-base text-text-primary leading-relaxed whitespace-pre-wrap font-serif">{current.text}</p>
-                        </div>
-                    )}
-                    <button type="button" onClick={next}
-                        className="btn-primary mt-5 inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
-                        {pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'}
-                    </button>
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ── MODE 3 — GUIDED TYPE (word-by-word; first letter of next word is hint) ───
-
-function GuidedTypeMode({ essay, onScheduled }) {
-    const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
-    const [pIndex, setPIndex] = useState(0);
-    const [wordIdx, setWordIdx] = useState(0);
-    const [current, setCurrent] = useState('');
-    const [history, setHistory] = useState([]); // [{target, typed, correct}]
-    const [paraDone, setParaDone] = useState(false);
-    const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
-    const inputRef = useRef(null);
-
-    const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setParaDone(false); setDone(false); };
-
-    useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
-
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
-
-    const para = paras[pIndex];
-    const words = para.text.trim().split(/\s+/).filter(Boolean);
-    const targetWord = words[wordIdx] || '';
-
-    const commitWord = () => {
-        const typed = current.trim();
-        if (!typed || paraDone) return;
-        const isCorrect = normalise(typed) === normalise(targetWord);
-        const newHistory = [...history, { target: targetWord, typed, correct: isCorrect }];
-        setHistory(newHistory);
-        setCurrent('');
-        if (wordIdx + 1 >= words.length) setParaDone(true);
-        else setWordIdx((i) => i + 1);
-    };
-
-    const advance = async (recall) => {
-        setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
-        setBusy(false);
-        if (pIndex + 1 < paras.length) {
-            setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setHistory([]); setParaDone(false);
-        } else setDone(true);
-    };
-
-    const correct = history.filter((h) => h.correct).length;
-    const accuracy = history.length ? Math.round((correct / history.length) * 100) : 0;
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim/60 px-2 py-1 border border-line-soft rounded-lg">Guided</span>
-            </div>
-            <p className="text-xs font-medium text-text-dim mb-4">Type each word. The first letter of the next word appears after you type.</p>
-
-            {/* Word stream display */}
-            <div className="p-5 rounded-2xl bg-surface-body border border-line-soft font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 mb-5 min-h-[100px]">
-                {words.map((w, i) => {
-                    if (i < history.length) {
-                        const h = history[i];
-                        return (
-                            <span key={i} title={!h.correct ? `You wrote: "${h.typed}"` : undefined}
-                                className={h.correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 line-through'}>
-                                {w}
-                            </span>
-                        );
-                    }
-                    if (i === wordIdx && !paraDone) {
-                        return (
-                            <span key={i} className="font-bold text-accent border-b-2 border-accent">
-                                {w[0]}{'_'.repeat(Math.max(0, w.length - 1))}
-                            </span>
-                        );
-                    }
-                    return (
-                        <span key={i} className="text-text-dim/25 select-none">
-                            {w[0]}{'─'.repeat(Math.max(0, w.length - 1))}
-                        </span>
-                    );
-                })}
-            </div>
-
-            {!paraDone ? (
-                <div>
-                    <div className="flex items-center gap-3">
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={current}
-                            onChange={(e) => setCurrent(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); commitWord(); } }}
-                            placeholder={targetWord ? `${targetWord[0]}___` : ''}
-                            className="flex-1 px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim/60 outline-none focus:border-accent transition-colors font-serif"
-                            autoComplete="off" autoCorrect="off" spellCheck={false}
-                        />
-                        <button type="button" onClick={commitWord} disabled={!current.trim()}
-                            className="btn-primary px-5 py-3 inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            <ArrowRightIcon className="w-4 h-4" />
-                        </button>
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                        <p className="text-[10px] text-text-dim/50">Space or Enter to confirm each word</p>
-                        <SneakPeek text={targetWord} label="Peek this word" autoHideMs={2000} />
-                    </div>
-                </div>
-            ) : (
-                <div>
-                    <div className="flex items-center gap-3 mb-4">
-                        <span className="text-2xl font-display font-extrabold text-text-primary">{accuracy}%</span>
-                        <span className="text-xs text-text-dim">{correct}/{history.length} words</span>
-                    </div>
-                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
-                        passLabel={accuracy >= 80 ? 'Got it' : 'Close enough'} />
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ── MODE 4 — TYPE (free-type full paragraph, word diff) ─────────────────────
-
-function TypeMode({ essay, onScheduled }) {
-    const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
-    const [pIndex, setPIndex] = useState(0);
-    const [typed, setTyped] = useState('');
-    const [submitted, setSubmitted] = useState(false);
-    const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
-
-    const reset = () => { setPIndex(0); setTyped(''); setSubmitted(false); setDone(false); };
-
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
-
-    const current = paras[pIndex];
-    const cue = pIndex === 0
-        ? (structure.thesis ? `Thesis: "${structure.thesis}"` : 'Recall paragraph 1.')
-        : `Previous ending: "${lastSentence(paras[pIndex - 1].text)}"`;
-
-    const diff = submitted ? diffWords(current.text, typed) : null;
-    const accuracy = diff ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
-
-    const advance = async (recall) => {
-        setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
-        setBusy(false);
-        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setSubmitted(false); }
-        else setDone(true);
-    };
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim/60 px-2 py-1 border border-line-soft rounded-lg">Free type</span>
-            </div>
-            <p className="text-sm text-text-muted italic mb-5 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
-
-            {!submitted ? (
-                <>
-                    <textarea value={typed} onChange={(e) => setTyped(e.target.value)}
-                        placeholder="Type the paragraph from memory…"
-                        rows={7}
-                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
-                    />
-                    <div className="flex items-center justify-between mt-3">
-                        <SneakPeek text={current.text} label="Sneak peek" />
-                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            Check →
-                        </button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <DiffDisplay original={current.text} typed={typed} className="mb-5" />
-                    <details className="mb-3">
-                        <summary className="text-sm font-medium text-accent cursor-pointer hover:opacity-70">Show original</summary>
-                        <p className="mt-3 p-4 rounded-2xl bg-block-cream font-serif text-sm leading-relaxed whitespace-pre-wrap">{current.text}</p>
-                    </details>
-                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
-                        passLabel={accuracy >= 75 ? 'Got it' : 'Good enough'} />
-                </>
-            )}
-        </div>
-    );
-}
-
-// ── MODE 5 — SENTENCE STARTS (first word of each sentence shown) ─────────────
-
-function SentenceStartsMode({ essay, onScheduled }) {
-    const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
-    const [pIndex, setPIndex] = useState(0);
-    const [sIndex, setSIndex] = useState(0);
-    const [typed, setTyped] = useState('');
-    const [submitted, setSubmitted] = useState(false);
-    const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
-
-    const reset = () => { setPIndex(0); setSIndex(0); setTyped(''); setSubmitted(false); setDone(false); };
-
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
-
-    const para = paras[pIndex];
-    const sentences = splitSentences(para.text);
-    const sentence = sentences[sIndex] || '';
-    const firstWord = sentence.split(/\s+/)[0] || '';
-    const rest = sentence.slice(firstWord.length).trimStart();
-
-    const diff = submitted ? diffWords(rest, typed) : null;
-    const accuracy = diff ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
-
-    const goNext = async (recall) => {
-        if (sIndex + 1 < sentences.length) {
-            setSIndex((i) => i + 1); setTyped(''); setSubmitted(false);
-        } else {
-            setBusy(true);
-            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
-            setBusy(false);
-            if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setTyped(''); setSubmitted(false); }
-            else setDone(true);
-        }
-    };
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-text-dim">
-                    Para {pIndex + 1}/{paras.length} · Sentence {sIndex + 1}/{sentences.length}
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim/60 px-2 py-1 border border-line-soft rounded-lg">Sentence starts</span>
-            </div>
-
-            <div className="flex items-baseline gap-2 mb-5 p-4 bg-surface-body rounded-2xl border border-line-soft">
-                <span className="text-lg font-bold font-serif text-accent">{firstWord}</span>
-                <span className="text-text-dim/60 text-sm">… type the rest of this sentence</span>
-            </div>
-
-            {!submitted ? (
-                <>
-                    <textarea value={typed} onChange={(e) => setTyped(e.target.value)}
-                        placeholder="Complete the sentence…"
-                        rows={3}
-                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
-                    />
-                    <div className="flex items-center justify-between mt-3">
-                        <SneakPeek text={rest} label="Sneak peek" />
-                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            Check →
-                        </button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <div className="flex flex-wrap gap-x-1.5 gap-y-1.5 p-4 rounded-2xl bg-surface-body border border-line-soft font-serif text-base mb-4">
-                        <span className="text-accent font-bold">{firstWord}</span>
-                        {diff?.map((d, i) => (
-                            <span key={i} title={d.typed ? `You wrote: "${d.typed}"` : undefined}
-                                className={
-                                    d.status === 'correct' ? 'text-emerald-600 dark:text-emerald-400' :
-                                    d.status === 'missed' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-500 px-0.5 rounded italic' :
-                                    'bg-amber-100 dark:bg-amber-900/30 text-amber-600 px-0.5 rounded line-through'
-                                }>{d.word}</span>
-                        ))}
-                    </div>
-                    <p className="text-sm text-text-dim mb-4 p-3 rounded-xl bg-block-cream font-serif leading-relaxed">{sentence}</p>
-                    <GradeButtons busy={busy}
-                        onFail={() => { setTyped(''); setSubmitted(false); }}
-                        onPass={() => goNext(accuracy >= 70 ? 'pass' : 'fail')}
-                        passLabel={sIndex + 1 < sentences.length ? 'Next sentence →' : pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'} />
-                </>
-            )}
-        </div>
-    );
-}
-
-// ── MODE 6 — LETTERS (first letter of every word as hint) ───────────────────
-
-function LettersMode({ essay, onScheduled }) {
-    const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
-    const [pIndex, setPIndex] = useState(0);
-    const [typed, setTyped] = useState('');
-    const [submitted, setSubmitted] = useState(false);
-    const [revealed, setRevealed] = useState(false);
-    const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
-
-    const reset = () => { setPIndex(0); setTyped(''); setSubmitted(false); setRevealed(false); setDone(false); };
-
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
-
-    const current = paras[pIndex];
-    const hint = toLetterHint(current.text);
-    const cue = pIndex === 0
-        ? (structure.thesis ? `Thesis: "${structure.thesis}"` : 'First paragraph')
-        : `After: "${lastSentence(paras[pIndex - 1].text)}"`;
-
-    const diff = submitted ? diffWords(current.text, typed) : null;
-    const accuracy = diff ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
-
-    const advance = async (recall) => {
-        setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
-        setBusy(false);
-        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setSubmitted(false); setRevealed(false); }
-        else setDone(true);
-    };
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim/60 px-2 py-1 border border-line-soft rounded-lg">First letters</span>
-            </div>
-            <p className="text-sm text-text-muted italic mb-4 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
-            <div className="p-4 rounded-2xl bg-block-cream border border-line-soft font-mono text-sm leading-relaxed tracking-wide text-text-dim select-none mb-5 break-words">
-                {hint}
-            </div>
-
-            {!submitted ? (
-                <>
-                    <textarea value={typed} onChange={(e) => setTyped(e.target.value)}
-                        placeholder="Type the full paragraph using the first-letter hints above…"
-                        rows={6}
-                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-sm resize-none"
-                    />
-                    <div className="flex items-center justify-between mt-3">
-                        <SneakPeek text={current.text} label="Sneak peek" />
-                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            Check →
-                        </button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <DiffDisplay original={current.text} typed={typed} className="mb-4" />
-                    {!revealed ? (
-                        <button type="button" onClick={() => setRevealed(true)}
-                            className="text-sm font-medium text-accent hover:opacity-70 transition-opacity mb-4 block">
-                            Show full paragraph
-                        </button>
-                    ) : (
-                        <p className="mb-4 p-4 rounded-2xl bg-block-cream font-serif text-sm leading-relaxed whitespace-pre-wrap">{current.text}</p>
-                    )}
-                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
-                        passLabel={accuracy >= 75 ? 'Got it' : 'Close enough'} />
-                </>
-            )}
-        </div>
-    );
-}
-
-// ── MODE 7 — SENTENCES (read → hide → type each sentence) ──────────────────
-
-function SentencesMode({ essay, onScheduled }) {
-    const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
-    const [pIndex, setPIndex] = useState(0);
-    const [sIndex, setSIndex] = useState(0);
-    const [phase, setPhase] = useState('read'); // 'read' | 'type' | 'diff'
-    const [typed, setTyped] = useState('');
-    const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
-    const textareaRef = useRef(null);
-
-    const reset = () => { setPIndex(0); setSIndex(0); setPhase('read'); setTyped(''); setDone(false); };
-
-    useEffect(() => { if (phase === 'type') textareaRef.current?.focus(); }, [phase]);
-
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
-
-    const para = paras[pIndex];
-    const sentences = splitSentences(para.text);
-    const sentence = sentences[sIndex] || '';
-    const total = sentences.length;
-
-    const diff = phase === 'diff' ? diffWords(sentence, typed) : null;
-    const accuracy = diff ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
-
-    const goNext = async () => {
-        const recall = accuracy >= 70 ? 'pass' : 'fail';
-        if (sIndex + 1 < total) { setSIndex((i) => i + 1); setPhase('read'); setTyped(''); }
-        else {
-            setBusy(true);
-            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
-            setBusy(false);
-            if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setPhase('read'); setTyped(''); }
-            else setDone(true);
-        }
-    };
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-text-dim">Para {pIndex + 1}/{paras.length} · Sentence {sIndex + 1}/{total}</span>
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 border rounded-lg ${
-                    phase === 'read' ? 'text-blue-500 border-blue-400/50' :
-                    phase === 'type' ? 'text-accent border-accent/50' :
-                    'text-emerald-600 border-emerald-500/50'
-                }`}>
-                    {phase === 'read' ? 'Read it' : phase === 'type' ? 'Type it' : 'Result'}
-                </span>
-            </div>
-
-            {phase === 'read' && (
-                <div>
-                    <p className="text-xs font-medium text-text-dim mb-3">Read this sentence. Then hide it and type it from memory.</p>
-                    <div className="p-6 rounded-2xl bg-block-blue min-h-[80px] flex items-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                        <p className="font-serif text-base md:text-lg leading-relaxed text-text-primary">{sentence}</p>
-                    </div>
-                    <button type="button" onClick={() => setPhase('type')}
-                        className="btn-primary mt-5 inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
-                        Hide &amp; type
-                    </button>
-                </div>
-            )}
-
-            {phase === 'type' && (
-                <div>
-                    <div className="p-4 rounded-2xl bg-surface-body border-2 border-dashed border-line-soft text-text-dim/40 italic text-sm mb-4 min-h-[56px] font-serif flex items-center">
-                        — hidden —
-                    </div>
-                    <textarea
-                        ref={textareaRef}
-                        value={typed}
-                        onChange={(e) => setTyped(e.target.value)}
-                        placeholder="Type the sentence from memory…"
-                        rows={3}
-                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
-                        onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && typed.trim()) setPhase('diff'); }}
-                    />
-                    <div className="flex items-center gap-3 mt-3">
-                        <button type="button" onClick={() => setPhase('read')}
-                            className="text-sm font-medium text-text-dim hover:text-accent transition-colors">
-                            Peek again
-                        </button>
-                        <button type="button" onClick={() => setPhase('diff')} disabled={!typed.trim()}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            Check →
-                        </button>
-                    </div>
-                    <p className="text-[10px] text-text-dim/50 mt-2">Cmd/Ctrl+Enter to check</p>
-                </div>
-            )}
-
-            {phase === 'diff' && diff && (
-                <div>
-                    <div className="flex items-center gap-3 mb-4">
-                        <span className="text-2xl font-display font-extrabold text-text-primary">{accuracy}%</span>
-                        <span className="text-xs text-text-dim">{diff.filter((d) => d.status === 'correct').length}/{diff.length} words</span>
-                    </div>
-                    <div className="p-5 rounded-2xl bg-surface-body border border-line-soft font-serif text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1 mb-4">
-                        {diff.map((d, i) => (
-                            <span key={i} title={d.typed ? `You wrote: "${d.typed}"` : undefined}
-                                className={
-                                    d.status === 'correct' ? 'text-emerald-600 dark:text-emerald-400' :
-                                    d.status === 'missed' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-500 px-0.5 rounded italic' :
-                                    'bg-amber-100 dark:bg-amber-900/30 text-amber-600 px-0.5 rounded line-through'
-                                }>{d.word}</span>
-                        ))}
-                    </div>
-                    <p className="text-sm font-serif text-text-muted leading-relaxed mb-5 p-4 rounded-2xl bg-block-cream">{sentence}</p>
-                    <div className="flex items-center gap-3">
-                        <button type="button" onClick={() => { setPhase('read'); setTyped(''); }}
-                            className="text-sm font-semibold text-text-dim border border-line-soft rounded-xl px-5 py-2.5 hover:border-text-dim transition-colors">
-                            Retry sentence
-                        </button>
-                        <button type="button" disabled={busy} onClick={goNext}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            {sIndex + 1 < total ? 'Next sentence →' : pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'}
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ── MODE 8 — ACRONYM (just the first letter of each word, hardest) ──────────
-
-function AcronymMode({ essay, onScheduled }) {
-    const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
-    const [pIndex, setPIndex] = useState(0);
-    const [typed, setTyped] = useState('');
-    const [submitted, setSubmitted] = useState(false);
-    const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
-
-    const reset = () => { setPIndex(0); setTyped(''); setSubmitted(false); setDone(false); };
-
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} />;
-
-    const current = paras[pIndex];
-    const acronym = current.text.trim().split(/\s+/).filter(Boolean).map((w) => w[0]).join('');
-
-    const diff = submitted ? diffWords(current.text, typed) : null;
-    const accuracy = diff ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
-
-    const advance = async (recall) => {
-        setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
-        setBusy(false);
-        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setSubmitted(false); }
-        else setDone(true);
-    };
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-rose-500/70 px-2 py-1 border border-rose-400/40 rounded-lg">Hardest</span>
-            </div>
-            <p className="text-xs font-medium text-text-dim mb-3">Just the first letter of every word. Reconstruct the full paragraph.</p>
-
-            <div className="p-5 rounded-2xl bg-block-cream border border-line-soft mb-5">
-                <p className="font-mono text-sm md:text-base tracking-[0.15em] text-text-primary font-bold leading-relaxed break-all">
-                    {acronym}
-                </p>
-            </div>
-
-            {!submitted ? (
-                <>
-                    <textarea value={typed} onChange={(e) => setTyped(e.target.value)}
-                        placeholder="Type the full paragraph from the first letters above…"
-                        rows={7}
-                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-sm resize-none"
-                    />
-                    <div className="flex items-center justify-between mt-3">
-                        <SneakPeek text={current.text} label="Sneak peek" />
-                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            Check →
-                        </button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <DiffDisplay original={current.text} typed={typed} className="mb-4" />
-                    <p className="mb-4 p-4 rounded-2xl bg-block-cream font-serif text-sm leading-relaxed whitespace-pre-wrap">{current.text}</p>
-                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
-                        passLabel={accuracy >= 70 ? 'Got it' : 'Close enough'} />
-                </>
-            )}
-        </div>
-    );
-}
-
-// ── MODE — ORIGINAL (raw, unannotated, exactly as saved) ────────────────────
-
-function OriginalEssayMode({ essay }) {
-    const text = essay.originalText || '';
-    if (!text.trim()) return <p className="text-sm text-text-muted italic">No essay text saved.</p>;
-    const paragraphs = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
-
-    return (
-        <div>
-            <p className="text-xs font-medium text-text-dim/70 mb-6">
-                Exactly what you saved — no segmentation, no highlighting.
-            </p>
-            <div className="max-w-2xl mx-auto space-y-6">
-                {paragraphs.map((p, i) => (
-                    <p key={i} className="font-serif text-base md:text-lg leading-relaxed text-text-primary whitespace-pre-wrap">
-                        {p}
-                    </p>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-// ── MODE — ANNOTATED (colour-coded thesis / topic sentences / quotes) ───────
 
 function AnnotatedLegend() {
     const items = [
@@ -1031,6 +389,495 @@ function AnnotatedEssayMode({ essay }) {
     );
 }
 
+function OriginalEssayMode({ essay }) {
+    const text = essay.originalText || '';
+    if (!text.trim()) return <p className="text-sm text-text-muted italic">No essay text saved.</p>;
+    const paragraphs = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+
+    return (
+        <div className="max-w-2xl mx-auto space-y-6">
+            {paragraphs.map((p, i) => (
+                <p key={i} className="font-serif text-base md:text-lg leading-relaxed text-text-primary whitespace-pre-wrap">
+                    {p}
+                </p>
+            ))}
+        </div>
+    );
+}
+
+const READ_VIEWS = [
+    { key: 'story', label: 'Story' },
+    { key: 'annotated', label: 'Annotated' },
+    { key: 'original', label: 'Original' },
+];
+
+/**
+ * "Read" — the natural first stop for any essay: skim it block-by-block
+ * (Story), see its structure colour-coded (Annotated), or check exactly what
+ * was saved with zero AI touch (Original). One tab, three lenses, so this
+ * doesn't eat three separate slots in the practice nav.
+ */
+function ReadMode({ essay }) {
+    const [view, setView] = useState('story');
+    return (
+        <div>
+            <div className="flex justify-center mb-6">
+                <HintToggle options={READ_VIEWS} value={view} onChange={setView} />
+            </div>
+            {view === 'story' && <SpotlightMode essay={essay} />}
+            {view === 'annotated' && <AnnotatedEssayMode essay={essay} />}
+            {view === 'original' && <OriginalEssayMode essay={essay} />}
+        </div>
+    );
+}
+
+// ── RECALL — spaced-repetition cloze on topic sentences ─────────────────────
+
+function RecallChunks({ essay, onScheduled }) {
+    const structure = essay.parsedStructure || {};
+    const paras = structure.bodyParagraphs || [];
+    const [pIndex, setPIndex] = useState(0);
+    const [graded, setGraded] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const [revealed, setRevealed] = useState(false);
+    const [done, setDone] = useState(false);
+
+    const reset = () => { setPIndex(0); setGraded(false); setRevealed(false); setDone(false); };
+
+    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs were found in this essay.</p>;
+    if (done) return <SessionDone onRestart={reset} />;
+
+    const current = paras[pIndex];
+    const cloze = buildTopicSentenceCloze(current, pIndex);
+    const cue = pIndex === 0
+        ? (structure.thesis ? `Thesis: "${structure.thesis}"` : 'Recall your first body paragraph.')
+        : `Previous paragraph ended: "${lastSentence(paras[pIndex - 1].text)}". What comes next?`;
+
+    const grade = async (recall) => {
+        setBusy(true);
+        try {
+            await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall);
+            await Promise.all(
+                (current.quotes || []).map((_, qIdx) =>
+                    api.submitReview('quote', quoteItemId(essay.id, pIndex, qIdx), recall).catch(() => {}),
+                ),
+            );
+            onScheduled?.();
+        } catch (e) { console.warn('SRS submit failed:', e?.message || e); }
+        setBusy(false);
+        setGraded(true);
+    };
+
+    const next = () => {
+        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setGraded(false); setRevealed(false); }
+        else setDone(true);
+    };
+
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
+            </div>
+            <p className="text-sm text-text-muted italic mb-6 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
+
+            {cloze ? (
+                <SlideRenderer key={`p-${pIndex}`} slide={cloze} onSubmit={(correct) => grade(correct ? 'pass' : 'fail')} />
+            ) : (
+                <div>
+                    <p className="text-base text-text-primary font-serif mb-4">
+                        Recall the opening: <strong>{current.topicSentence || '(no topic sentence)'}</strong>
+                    </p>
+                    {!graded && (
+                        <GradeButtons busy={busy} onFail={() => grade('fail')} onPass={() => grade('pass')} passLabel="Got it" />
+                    )}
+                </div>
+            )}
+
+            {graded && (
+                <div className="mt-6">
+                    {!revealed ? (
+                        <button type="button" onClick={() => setRevealed(true)}
+                            className="text-sm font-medium text-accent hover:opacity-70 transition-opacity">
+                            Show full paragraph
+                        </button>
+                    ) : (
+                        <div className="p-5 rounded-2xl bg-block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                            <p className="text-sm md:text-base text-text-primary leading-relaxed whitespace-pre-wrap font-serif">{current.text}</p>
+                        </div>
+                    )}
+                    <button type="button" onClick={next}
+                        className="btn-primary mt-5 inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+                        {pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'}
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── WORD BY WORD — type one word at a time; next letter revealed as you go ──
+
+function GuidedTypeMode({ essay, onScheduled }) {
+    const structure = essay.parsedStructure || {};
+    const paras = structure.bodyParagraphs || [];
+    const [pIndex, setPIndex] = useState(0);
+    const [wordIdx, setWordIdx] = useState(0);
+    const [current, setCurrent] = useState('');
+    const [history, setHistory] = useState([]); // [{target, typed, correct}]
+    const [paraDone, setParaDone] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const [done, setDone] = useState(false);
+    const inputRef = useRef(null);
+
+    const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setParaDone(false); setDone(false); };
+
+    useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
+
+    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
+    if (done) return <SessionDone onRestart={reset} />;
+
+    const para = paras[pIndex];
+    const words = para.text.trim().split(/\s+/).filter(Boolean);
+    const targetWord = words[wordIdx] || '';
+
+    const commitWord = () => {
+        const typed = current.trim();
+        if (!typed || paraDone) return;
+        const isCorrect = normalise(typed) === normalise(targetWord);
+        const newHistory = [...history, { target: targetWord, typed, correct: isCorrect }];
+        setHistory(newHistory);
+        setCurrent('');
+        if (wordIdx + 1 >= words.length) setParaDone(true);
+        else setWordIdx((i) => i + 1);
+    };
+
+    const advance = async (recall) => {
+        setBusy(true);
+        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
+        setBusy(false);
+        if (pIndex + 1 < paras.length) {
+            setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setHistory([]); setParaDone(false);
+        } else setDone(true);
+    };
+
+    const correct = history.filter((h) => h.correct).length;
+    const accuracy = history.length ? Math.round((correct / history.length) * 100) : 0;
+
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
+            </div>
+            <p className="text-xs font-medium text-text-dim mb-4">Type each word. The first letter of the next word appears after you type.</p>
+
+            {/* Word stream display */}
+            <div className="p-5 rounded-2xl bg-surface-body border border-line-soft font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 mb-5 min-h-[100px]">
+                {words.map((w, i) => {
+                    if (i < history.length) {
+                        const h = history[i];
+                        return (
+                            <span key={i} title={!h.correct ? `You wrote: "${h.typed}"` : undefined}
+                                className={h.correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 line-through'}>
+                                {w}
+                            </span>
+                        );
+                    }
+                    if (i === wordIdx && !paraDone) {
+                        return (
+                            <span key={i} className="font-bold text-accent border-b-2 border-accent">
+                                {w[0]}{'_'.repeat(Math.max(0, w.length - 1))}
+                            </span>
+                        );
+                    }
+                    return (
+                        <span key={i} className="text-text-dim/25 select-none">
+                            {w[0]}{'─'.repeat(Math.max(0, w.length - 1))}
+                        </span>
+                    );
+                })}
+            </div>
+
+            {!paraDone ? (
+                <div>
+                    <div className="flex items-center gap-3">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={current}
+                            onChange={(e) => setCurrent(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); commitWord(); } }}
+                            placeholder={targetWord ? `${targetWord[0]}___` : ''}
+                            className="flex-1 px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim/60 outline-none focus:border-accent transition-colors font-serif"
+                            autoComplete="off" autoCorrect="off" spellCheck={false}
+                        />
+                        <button type="button" onClick={commitWord} disabled={!current.trim()}
+                            className="btn-primary px-5 py-3 inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            <ArrowRightIcon className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <div className="flex items-center justify-between mt-3">
+                        <p className="text-[10px] text-text-dim/50">Space or Enter to confirm each word</p>
+                        <SneakPeek text={targetWord} label="Peek this word" autoHideMs={2000} />
+                    </div>
+                </div>
+            ) : (
+                <div>
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl font-display font-extrabold text-text-primary">{accuracy}%</span>
+                        <span className="text-xs text-text-dim">{correct}/{history.length} words</span>
+                    </div>
+                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
+                        passLabel={accuracy >= 80 ? 'Got it' : 'Close enough'} />
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── SENTENCE BY SENTENCE — rebuild the essay one sentence at a time ─────────
+
+const SENTENCE_HINTS = [
+    { key: 'readFirst', label: 'Read first' },
+    { key: 'firstWord', label: 'First word only' },
+];
+
+const startingPhase = (hintStyle) => (hintStyle === 'firstWord' ? 'type' : 'read');
+
+/**
+ * Merges the old "Sentences" (read → hide → type) and "Starts" (only the
+ * first word is cued) flows into one tab with a hint-style toggle, since
+ * they're the same underlying drill — just how much of a head start you get.
+ */
+function SentenceMode({ essay, onScheduled }) {
+    const structure = essay.parsedStructure || {};
+    const paras = structure.bodyParagraphs || [];
+    const [hintStyle, setHintStyle] = useState('readFirst');
+    const [pIndex, setPIndex] = useState(0);
+    const [sIndex, setSIndex] = useState(0);
+    const [phase, setPhase] = useState('read'); // 'read' | 'type' | 'diff'
+    const [typed, setTyped] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [done, setDone] = useState(false);
+    const textareaRef = useRef(null);
+
+    const reset = () => { setPIndex(0); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setDone(false); };
+
+    useEffect(() => { if (phase === 'type') textareaRef.current?.focus(); }, [phase]);
+    useEffect(() => { setPhase(startingPhase(hintStyle)); setTyped(''); }, [hintStyle]);
+
+    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
+    if (done) return <SessionDone onRestart={reset} />;
+
+    const para = paras[pIndex];
+    const sentences = splitSentences(para.text);
+    const sentence = sentences[sIndex] || '';
+    const total = sentences.length;
+    const firstWord = sentence.split(/\s+/)[0] || '';
+    const rest = sentence.slice(firstWord.length).trimStart();
+    const targetText = hintStyle === 'firstWord' ? rest : sentence;
+
+    const diff = phase === 'diff' ? diffWords(targetText, typed) : null;
+    const accuracy = diff ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
+
+    const goNext = async () => {
+        const recall = accuracy >= 70 ? 'pass' : 'fail';
+        if (sIndex + 1 < total) { setSIndex((i) => i + 1); setPhase(startingPhase(hintStyle)); setTyped(''); }
+        else {
+            setBusy(true);
+            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
+            setBusy(false);
+            if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); }
+            else setDone(true);
+        }
+    };
+
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+                <span className="text-xs font-medium text-text-dim">Para {pIndex + 1}/{paras.length} · Sentence {sIndex + 1}/{total}</span>
+                <HintToggle options={SENTENCE_HINTS} value={hintStyle} onChange={setHintStyle} />
+            </div>
+
+            {phase === 'read' && (
+                <div>
+                    <p className="text-xs font-medium text-text-dim mb-3">Read this sentence. Then hide it and type it from memory.</p>
+                    <div className="p-6 rounded-2xl bg-block-blue min-h-[80px] flex items-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                        <p className="font-serif text-base md:text-lg leading-relaxed text-text-primary">{sentence}</p>
+                    </div>
+                    <button type="button" onClick={() => setPhase('type')}
+                        className="btn-primary mt-5 inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+                        Hide &amp; type
+                    </button>
+                </div>
+            )}
+
+            {phase === 'type' && (
+                <div>
+                    {hintStyle === 'firstWord' ? (
+                        <div className="flex items-baseline gap-2 mb-4 p-4 bg-surface-body rounded-2xl border border-line-soft">
+                            <span className="text-lg font-bold font-serif text-accent">{firstWord}</span>
+                            <span className="text-text-dim/60 text-sm">… type the rest of this sentence</span>
+                        </div>
+                    ) : (
+                        <div className="p-4 rounded-2xl bg-surface-body border-2 border-dashed border-line-soft text-text-dim/40 italic text-sm mb-4 min-h-[56px] font-serif flex items-center">
+                            — hidden —
+                        </div>
+                    )}
+                    <textarea
+                        ref={textareaRef}
+                        value={typed}
+                        onChange={(e) => setTyped(e.target.value)}
+                        placeholder={hintStyle === 'firstWord' ? 'Complete the sentence…' : 'Type the sentence from memory…'}
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
+                        onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && typed.trim()) setPhase('diff'); }}
+                    />
+                    <div className="flex items-center justify-between mt-3">
+                        <SneakPeek text={sentence} label="Sneak peek" />
+                        <button type="button" onClick={() => setPhase('diff')} disabled={!typed.trim()}
+                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            Check →
+                        </button>
+                    </div>
+                    <p className="text-[10px] text-text-dim/50 mt-2">Cmd/Ctrl+Enter to check</p>
+                </div>
+            )}
+
+            {phase === 'diff' && diff && (
+                <div>
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl font-display font-extrabold text-text-primary">{accuracy}%</span>
+                        <span className="text-xs text-text-dim">{diff.filter((d) => d.status === 'correct').length}/{diff.length} words</span>
+                    </div>
+                    <div className="p-5 rounded-2xl bg-surface-body border border-line-soft font-serif text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1 mb-4">
+                        {hintStyle === 'firstWord' && <span className="text-accent font-bold">{firstWord}&nbsp;</span>}
+                        {diff.map((d, i) => (
+                            <span key={i} title={d.typed ? `You wrote: "${d.typed}"` : undefined}
+                                className={
+                                    d.status === 'correct' ? 'text-emerald-600 dark:text-emerald-400' :
+                                    d.status === 'missed' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-500 px-0.5 rounded italic' :
+                                    'bg-amber-100 dark:bg-amber-900/30 text-amber-600 px-0.5 rounded line-through'
+                                }>{d.word}</span>
+                        ))}
+                    </div>
+                    <p className="text-sm font-serif text-text-muted leading-relaxed mb-5 p-4 rounded-2xl bg-block-cream">{sentence}</p>
+                    <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => { setPhase(startingPhase(hintStyle)); setTyped(''); }}
+                            className="text-sm font-semibold text-text-dim border border-line-soft rounded-xl px-5 py-2.5 hover:border-text-dim transition-colors">
+                            Retry sentence
+                        </button>
+                        <button type="button" disabled={busy} onClick={goNext}
+                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            {sIndex + 1 < total ? 'Next sentence →' : pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'}
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── TYPE IT — free-type a full paragraph; choose how much hint you get ──────
+
+const TYPE_HINTS = [
+    { key: 'none', label: 'No hint' },
+    { key: 'letters', label: 'First letters' },
+    { key: 'acronym', label: 'Acronym' },
+];
+
+/**
+ * Merges the old "Type" (blank page), "Letters" (first letter of every word)
+ * and "Acronym" (just the letters, hardest) tabs into one flow — they're the
+ * exact same check-a-whole-paragraph mechanic, just a different hint above
+ * the textarea. A toggle keeps that variety without three near-identical tabs.
+ */
+function TypeItMode({ essay, onScheduled }) {
+    const structure = essay.parsedStructure || {};
+    const paras = structure.bodyParagraphs || [];
+    const [hint, setHint] = useState('letters');
+    const [pIndex, setPIndex] = useState(0);
+    const [typed, setTyped] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [revealed, setRevealed] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const [done, setDone] = useState(false);
+
+    const reset = () => { setPIndex(0); setTyped(''); setSubmitted(false); setRevealed(false); setDone(false); };
+
+    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
+    if (done) return <SessionDone onRestart={reset} />;
+
+    const current = paras[pIndex];
+    const cue = pIndex === 0
+        ? (structure.thesis ? `Thesis: "${structure.thesis}"` : 'First paragraph.')
+        : `Previous ending: "${lastSentence(paras[pIndex - 1].text)}"`;
+    const hintBlock = hint === 'letters' ? toLetterHint(current.text) : hint === 'acronym' ? toAcronym(current.text) : null;
+
+    const diff = submitted ? diffWords(current.text, typed) : null;
+    const accuracy = diff ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
+
+    const advance = async (recall) => {
+        setBusy(true);
+        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
+        setBusy(false);
+        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setSubmitted(false); setRevealed(false); }
+        else setDone(true);
+    };
+
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
+                <HintToggle options={TYPE_HINTS} value={hint} onChange={setHint} />
+            </div>
+            <p className="text-sm text-text-muted italic mb-5 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
+
+            {hintBlock && (
+                <div className="p-4 rounded-2xl bg-block-cream border border-line-soft mb-5">
+                    <p className={
+                        hint === 'acronym'
+                            ? 'font-mono text-sm md:text-base tracking-[0.15em] text-text-primary font-bold leading-relaxed break-all'
+                            : 'font-mono text-sm leading-relaxed tracking-wide text-text-dim select-none break-words'
+                    }>
+                        {hintBlock}
+                    </p>
+                </div>
+            )}
+
+            {!submitted ? (
+                <>
+                    <textarea value={typed} onChange={(e) => setTyped(e.target.value)}
+                        placeholder={hint === 'none' ? 'Type the paragraph from memory…' : 'Type the full paragraph using the hint above…'}
+                        rows={7}
+                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-sm resize-none"
+                    />
+                    <div className="flex items-center justify-between mt-3">
+                        <SneakPeek text={current.text} label="Sneak peek" />
+                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
+                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            Check →
+                        </button>
+                    </div>
+                </>
+            ) : (
+                <>
+                    <DiffDisplay original={current.text} typed={typed} className="mb-4" />
+                    {!revealed ? (
+                        <button type="button" onClick={() => setRevealed(true)}
+                            className="text-sm font-medium text-accent hover:opacity-70 transition-opacity mb-4 block">
+                            Show full paragraph
+                        </button>
+                    ) : (
+                        <p className="mb-4 p-4 rounded-2xl bg-block-cream font-serif text-sm leading-relaxed whitespace-pre-wrap">{current.text}</p>
+                    )}
+                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
+                        passLabel={accuracy >= 75 ? 'Got it' : 'Close enough'} />
+                </>
+            )}
+        </div>
+    );
+}
+
 // ── New essay form ──────────────────────────────────────────────────────────
 
 function NewEssayForm({ onCreated }) {
@@ -1107,25 +954,44 @@ function NewEssayForm({ onCreated }) {
 
 // ── Essay detail ────────────────────────────────────────────────────────────
 
-const MODES = [
-    { key: 'spotlight',  label: 'Spotlight',  desc: 'Read through' },
-    { key: 'annotated',  label: 'Annotated',  desc: 'Thesis, topic sentences & quotes highlighted' },
-    { key: 'original',   label: 'Original',   desc: 'Exactly what you saved — no highlighting' },
-    { key: 'recall',     label: 'Recall',     desc: 'SRS cloze' },
-    { key: 'guided',     label: 'Guided',     desc: 'Word-by-word' },
-    { key: 'type',       label: 'Type',       desc: 'Free type' },
-    { key: 'sentences',  label: 'Sentences',  desc: 'Read → type' },
-    { key: 'starts',     label: 'Starts',     desc: 'First word cue' },
-    { key: 'letters',    label: 'Letters',    desc: 'First letters' },
-    { key: 'acronym',    label: 'Acronym',    desc: 'Hardest' },
-    { key: 'quotes',     label: 'Quotes',     desc: 'Quote cards' },
-    { key: 'order',      label: 'Order',      desc: 'Para order' },
+// Grouped so the tab bar reads as a progression — understand it, practise
+// recalling it (three flavours), keep it long-term, then optional drills —
+// instead of a flat wall of a dozen equally-weighted buttons.
+const MODE_GROUPS = [
+    {
+        group: 'Understand',
+        modes: [
+            { key: 'read', label: 'Read', desc: 'Skim it block-by-block, see its structure colour-coded, or read exactly what you saved.' },
+        ],
+    },
+    {
+        group: 'Practice',
+        modes: [
+            { key: 'wordbyword', label: 'Word by word', desc: 'Type one word at a time — a hint for the next word appears once you confirm.' },
+            { key: 'sentence', label: 'Sentence by sentence', desc: 'Rebuild the essay one sentence at a time, from a full read or just the first word.' },
+            { key: 'typeit', label: 'Type it', desc: 'Type a whole paragraph from memory. Choose no hint, first letters, or just an acronym.' },
+        ],
+    },
+    {
+        group: 'Long-term',
+        modes: [
+            { key: 'recall', label: 'Recall', desc: 'Spaced-repetition cloze — the same 1/3/7/14-day ladder that keeps this essay in memory for exam day.' },
+        ],
+    },
+    {
+        group: 'Drills',
+        modes: [
+            { key: 'quotes', label: 'Quotes', desc: 'Flashcards on every quote in the essay and the technique it demonstrates.' },
+            { key: 'order', label: 'Order', desc: 'Drag your body paragraphs back into their original order.' },
+        ],
+    },
 ];
+const ALL_MODES = MODE_GROUPS.flatMap((g) => g.modes);
 
 function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
     const [parsing, setParsing] = useState(false);
     const [parseError, setParseError] = useState(null);
-    const [mode, setMode] = useState('spotlight');
+    const [mode, setMode] = useState('read');
     const [dueCount, setDueCount] = useState(0);
 
     const structure = essay.parsedStructure;
@@ -1149,6 +1015,8 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
 
     const quoteCards = structure ? buildQuoteCards(structure) : null;
     const paragraphOrder = structure ? buildParagraphOrder(structure) : null;
+    const activeMode = ALL_MODES.find((m) => m.key === mode);
+    const activeGroup = MODE_GROUPS.find((g) => g.modes.some((m) => m.key === mode));
 
     return (
         <div>
@@ -1162,9 +1030,10 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
                     <span className="section-kicker">Essay</span>
                     <h1 className="text-4xl md:text-6xl break-words">{essay.title}</h1>
                     {dueCount > 0 && (
-                        <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-accent">
+                        <button type="button" onClick={() => setMode('recall')}
+                            className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-accent hover:opacity-75 transition-opacity">
                             <AcademicCapIcon className="w-4 h-4" /> {dueCount} item{dueCount === 1 ? '' : 's'} due for review
-                        </p>
+                        </button>
                     )}
                 </div>
                 <button type="button" onClick={() => onDeleted?.(essay.id)}
@@ -1206,36 +1075,39 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
                 </div>
             ) : (
                 <div>
-                    {/* ── Mode tab bar (scrollable) ── */}
-                    <div className="flex gap-1 mb-8 overflow-x-auto pb-px border-b border-line-soft">
-                        {MODES.map((t) => (
-                            <button key={t.key} type="button" onClick={() => setMode(t.key)}
-                                className={`shrink-0 px-4 py-3 text-sm font-medium -mb-px border-b-2 transition-colors whitespace-nowrap ${
-                                    mode === t.key
-                                        ? 'border-accent text-accent'
-                                        : 'border-transparent text-text-dim hover:text-text-primary'
-                                }`}>
-                                {t.label}
-                            </button>
+                    {/* ── Mode tab bar, grouped by stage of learning ── */}
+                    <div className="flex items-stretch gap-1 mb-4 overflow-x-auto pb-px border-b border-line-soft">
+                        {MODE_GROUPS.map((g, gi) => (
+                            <div key={g.group} className={`flex items-center gap-1 shrink-0 ${gi > 0 ? 'pl-2 ml-1 border-l border-line-soft' : ''}`}>
+                                <span className="hidden lg:inline text-[10px] font-bold uppercase tracking-widest text-text-dim/40 mr-1 whitespace-nowrap">
+                                    {g.group}
+                                </span>
+                                {g.modes.map((t) => (
+                                    <button key={t.key} type="button" onClick={() => setMode(t.key)}
+                                        className={`shrink-0 px-4 py-3 text-sm font-medium -mb-px border-b-2 transition-colors whitespace-nowrap ${
+                                            mode === t.key
+                                                ? 'border-accent text-accent'
+                                                : 'border-transparent text-text-dim hover:text-text-primary'
+                                        }`}>
+                                        {t.label}
+                                    </button>
+                                ))}
+                            </div>
                         ))}
                     </div>
 
-                    {/* ── Mode description ── */}
-                    <p className="text-xs font-medium text-text-dim/60 mb-6">
-                        {MODES.find((m) => m.key === mode)?.desc}
+                    {/* ── Active mode context ── */}
+                    <p className="text-xs font-medium text-text-dim/70 mb-6">
+                        <span className="text-text-dim/40 uppercase tracking-wide mr-1.5">{activeGroup?.group}</span>
+                        {activeMode?.desc}
                     </p>
 
                     <div className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                        {mode === 'spotlight' && <SpotlightMode essay={essay} />}
-                        {mode === 'annotated' && <AnnotatedEssayMode essay={essay} />}
-                        {mode === 'original' && <OriginalEssayMode essay={essay} />}
+                        {mode === 'read' && <ReadMode essay={essay} />}
                         {mode === 'recall' && <RecallChunks essay={essay} onScheduled={loadDue} />}
-                        {mode === 'guided' && <GuidedTypeMode essay={essay} onScheduled={loadDue} />}
-                        {mode === 'type' && <TypeMode essay={essay} onScheduled={loadDue} />}
-                        {mode === 'sentences' && <SentencesMode essay={essay} onScheduled={loadDue} />}
-                        {mode === 'starts' && <SentenceStartsMode essay={essay} onScheduled={loadDue} />}
-                        {mode === 'letters' && <LettersMode essay={essay} onScheduled={loadDue} />}
-                        {mode === 'acronym' && <AcronymMode essay={essay} onScheduled={loadDue} />}
+                        {mode === 'wordbyword' && <GuidedTypeMode essay={essay} onScheduled={loadDue} />}
+                        {mode === 'sentence' && <SentenceMode essay={essay} onScheduled={loadDue} />}
+                        {mode === 'typeit' && <TypeItMode essay={essay} onScheduled={loadDue} />}
                         {mode === 'quotes' && (
                             quoteCards
                                 ? <SlideRenderer slide={quoteCards} onSubmit={() => {}} />
@@ -1261,6 +1133,7 @@ export default function EssayMemoriser() {
     const [essay, setEssay] = useState(null);
     const [opening, setOpening] = useState(false);
     const [isParsing, setIsParsing] = useState(false);
+    const [dueByEssay, setDueByEssay] = useState({}); // essayId -> due count
     const mountedRef = useRef(true);
 
     useReveal();
@@ -1271,8 +1144,18 @@ export default function EssayMemoriser() {
     }, []);
 
     const loadEssays = useCallback(async () => {
-        const data = await api.getEssays().catch(() => null);
-        if (mountedRef.current) setEssays(data?.essays || []);
+        const [essaysData, dueData] = await Promise.all([
+            api.getEssays().catch(() => null),
+            api.getDueReviewItems('essayParagraph').catch(() => null),
+        ]);
+        if (!mountedRef.current) return;
+        setEssays(essaysData?.essays || []);
+        const counts = {};
+        (dueData?.items || []).forEach((it) => {
+            const essayId = String(it.itemId).split(':')[0];
+            counts[essayId] = (counts[essayId] || 0) + 1;
+        });
+        setDueByEssay(counts);
     }, []);
 
     useEffect(() => {
@@ -1333,7 +1216,7 @@ export default function EssayMemoriser() {
                 {essay ? (
                     <EssayDetail
                         essay={essay}
-                        onBack={() => { setEssay(null); setIsParsing(false); }}
+                        onBack={() => { setEssay(null); setIsParsing(false); loadEssays(); }}
                         onParsed={handleParsed}
                         onDeleted={handleDelete}
                         isParsing={isParsing}
@@ -1344,7 +1227,8 @@ export default function EssayMemoriser() {
                             <span className="section-kicker">Essay memoriser</span>
                             <h1 className="text-5xl md:text-7xl">Learn it by heart.</h1>
                             <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
-                                Caplet breaks your essay into its real structure, then drills you on it eight different ways.
+                                Caplet breaks your essay into its real structure, then walks you from a first read to
+                                word-perfect, exam-ready recall.
                             </p>
                         </header>
 
@@ -1361,18 +1245,28 @@ export default function EssayMemoriser() {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-3">
-                                        {essays.map((e) => (
-                                            <button key={e.id} type="button" onClick={() => openEssay(e.id)}
-                                                className="bg-surface-raised rounded-2xl p-5 text-left flex items-center justify-between gap-4 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">{e.title}</p>
-                                                    <p className="text-xs font-medium text-text-dim mt-1">
-                                                        {e.parsed ? `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}` : 'Not parsed yet'}
-                                                    </p>
-                                                </div>
-                                                <ArrowRightIcon className="w-4 h-4 text-text-dim shrink-0 group-hover:text-accent transition-colors" />
-                                            </button>
-                                        ))}
+                                        {essays.map((e) => {
+                                            const due = dueByEssay[String(e.id)] || 0;
+                                            return (
+                                                <button key={e.id} type="button" onClick={() => openEssay(e.id)}
+                                                    className="bg-surface-raised rounded-2xl p-5 text-left flex items-center justify-between gap-4 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">{e.title}</p>
+                                                        <p className="text-xs font-medium text-text-dim mt-1">
+                                                            {e.parsed ? `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}` : 'Not parsed yet'}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 shrink-0">
+                                                        {due > 0 && (
+                                                            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-accent/10 text-accent">
+                                                                {due} due
+                                                            </span>
+                                                        )}
+                                                        <ArrowRightIcon className="w-4 h-4 text-text-dim group-hover:text-accent transition-colors" />
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>

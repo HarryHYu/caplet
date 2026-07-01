@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-// Mock the API singleton — the list view only calls getEssays on mount.
+// Mock the API singleton — the list view calls getEssays and getDueReviewItems
+// (for the per-essay "N due" badges) in parallel on mount.
 vi.mock('../services/api', () => ({
   default: {
     getEssays: vi.fn().mockResolvedValue({ essays: [] }),
+    getDueReviewItems: vi.fn().mockResolvedValue({ items: [] }),
     getProxiedImageSrc: (u) => u,
   },
 }));
