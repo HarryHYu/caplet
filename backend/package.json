@@ -1,7 +1,7 @@
 {
   "name": "caplet-backend",
   "version": "1.0.0",
-  "description": "Backend API for Caplet financial education platform",
+  "description": "Backend API for Caplet — a free open platform for structured courses, interactive tools, and collaborative workspaces.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

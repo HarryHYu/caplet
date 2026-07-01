@@ -384,7 +384,7 @@ function GuidedTypeMode({ essay, onScheduled }) {
 
     const advance = async (recall) => {
         setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch {}
+        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
         setBusy(false);
         if (pIndex + 1 < paras.length) {
             setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setHistory([]); setParaDone(false);
@@ -492,7 +492,7 @@ function TypeMode({ essay, onScheduled }) {
 
     const advance = async (recall) => {
         setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch {}
+        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
         setBusy(false);
         if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setSubmitted(false); }
         else setDone(true);
@@ -567,7 +567,7 @@ function SentenceStartsMode({ essay, onScheduled }) {
             setSIndex((i) => i + 1); setTyped(''); setSubmitted(false);
         } else {
             setBusy(true);
-            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch {}
+            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
             setBusy(false);
             if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setTyped(''); setSubmitted(false); }
             else setDone(true);
@@ -655,7 +655,7 @@ function LettersMode({ essay, onScheduled }) {
 
     const advance = async (recall) => {
         setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch {}
+        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
         setBusy(false);
         if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setSubmitted(false); setRevealed(false); }
         else setDone(true);
@@ -739,7 +739,7 @@ function SentencesMode({ essay, onScheduled }) {
         if (sIndex + 1 < total) { setSIndex((i) => i + 1); setPhase('read'); setTyped(''); }
         else {
             setBusy(true);
-            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch {}
+            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
             setBusy(false);
             if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setPhase('read'); setTyped(''); }
             else setDone(true);
@@ -857,7 +857,7 @@ function AcronymMode({ essay, onScheduled }) {
 
     const advance = async (recall) => {
         setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch {}
+        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
         setBusy(false);
         if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setSubmitted(false); }
         else setDone(true);
@@ -896,7 +896,8 @@ function AcronymMode({ essay, onScheduled }) {
                 <>
                     <DiffDisplay original={current.text} typed={typed} className="mb-4" />
                     <p className="mb-4 p-4 rounded-2xl bg-block-cream font-serif text-sm leading-relaxed whitespace-pre-wrap">{current.text}</p>
-                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')} />
+                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
+                        passLabel={accuracy >= 70 ? 'Got it' : 'Close enough'} />
                 </>
             )}
         </div>

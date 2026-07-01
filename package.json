@@ -1,6 +1,6 @@
 {
   "name": "caplet",
-  "description": "Financial education platform for Australians - bridging the financial literacy gap with free, accessible content",
+  "description": "A free open platform for structured courses, interactive tools, and collaborative workspaces — build anything, for anyone.",
   "private": true,
   "version": "1.0.0",
   "type": "module",
