@@ -665,6 +665,26 @@ class ApiService {
   }
 
   /**
+   * Affiliate listings filtered by type + budget.
+   * Falls back to the bundled sample dataset when the backend is unavailable
+   * (the endpoint is not yet shipped) so <AffiliateListings /> always renders.
+   * Never rejects — resolves to an array even on failure.
+   */
+  async getAffiliateListings(type, maxBudget) {
+    try {
+      const qs = new URLSearchParams();
+      if (type) qs.set('type', type);
+      if (maxBudget != null) qs.set('maxBudget', maxBudget);
+      const data = await this.request(`/affiliates/listings?${qs}`);
+      if (Array.isArray(data?.listings)) return data.listings;
+    } catch {
+      // Backend not yet shipped — fall through to sample data.
+    }
+    const { sampleListings } = await import('../components/affiliates/sampleListings.js');
+    return sampleListings(type, maxBudget);
+  }
+
+  /**
    * Proxied image URL for hosts that may be blocked or don't hotlink (Reddit, Imgur, Google Drive, Cloudinary).
    * Backend fetches the image so the browser only hits your API.
    */

@@ -15,7 +15,7 @@ const columns = [
     heading: 'Support',
     links: [
       { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Documentation', path: '/docs' },
+      { label: 'Contact', path: '/contact' },
       { label: 'Terms and privacy', path: '/terms' },
     ],
   },

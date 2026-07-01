@@ -171,7 +171,7 @@ function AppShell() {
           </Route>
           <Route path="/profile/:userId" element={<UserProfile />} />
           <Route path="/terms" element={<Terms />} />
-          <Route path="/metrics" element={<Metrics />} />
+          <Route path="/metrics" element={<RequireAdmin><Metrics /></RequireAdmin>} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />
           <Route path="/editor" element={<Editor />} />

@@ -6,7 +6,7 @@ import api from '../services/api';
 
 const Survey = () => {
   useReveal();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [formData, setFormData] = useState({
     age: '',
     tracksSpending: '',
@@ -93,9 +93,11 @@ const Survey = () => {
               Your answers help us improve Caplet for students and teachers.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link to="/survey-results" className="btn-primary text-sm px-10 py-4">
-                View results
-              </Link>
+              {user?.role === 'admin' && (
+                <Link to="/survey-results" className="btn-primary text-sm px-10 py-4">
+                  View results
+                </Link>
+              )}
               <Link to={isAuthenticated ? '/courses' : '/'} className="btn-secondary text-sm px-10 py-4">
                 {isAuthenticated ? 'Return to Academy' : 'Return Home'}
               </Link>
