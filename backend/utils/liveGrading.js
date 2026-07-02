@@ -235,6 +235,23 @@ function computePoints({ correct, elapsedMs, windowMs }) {
   return Math.round(MIN_POINTS + (MAX_POINTS - MIN_POINTS) * remainingFraction);
 }
 
+const STREAK_BONUS_PER_LEVEL = 50;
+const MAX_STREAK_BONUS = 250;
+
+/**
+ * Kahoot-style streak bonus: a flat bonus on top of the speed score once a
+ * participant has answered correctly at least twice in a row. `streak` is
+ * the consecutive-correct count *including* the answer just graded (so the
+ * first correct answer in a run is streak=1 and earns no bonus yet; the
+ * second is streak=2 and starts the bonus). Capped so a long streak can't
+ * dwarf the base speed score. Any wrong/no answer resets streak to 0
+ * upstream, which naturally yields a bonus of 0 here.
+ */
+function computeStreakBonus(streak) {
+  if (!streak || streak < 2) return 0;
+  return Math.min((streak - 1) * STREAK_BONUS_PER_LEVEL, MAX_STREAK_BONUS);
+}
+
 module.exports = {
   GRADABLE_TYPES,
   isGradable,
@@ -242,6 +259,9 @@ module.exports = {
   prepareQuestion,
   gradeResponse,
   computePoints,
+  computeStreakBonus,
   MAX_POINTS,
   MIN_POINTS,
+  STREAK_BONUS_PER_LEVEL,
+  MAX_STREAK_BONUS,
 };

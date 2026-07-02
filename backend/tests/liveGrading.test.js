@@ -8,8 +8,10 @@ const {
   prepareQuestion,
   gradeResponse,
   computePoints,
+  computeStreakBonus,
   MAX_POINTS,
   MIN_POINTS,
+  MAX_STREAK_BONUS,
 } = require('../utils/liveGrading');
 
 // Deterministic "rng" that always swaps with the last remaining index —
@@ -225,5 +227,23 @@ describe('computePoints', () => {
   it('falls back to max points when there is no timer window', () => {
     expect(computePoints({ correct: true, elapsedMs: 5000, windowMs: 0 })).toBe(MAX_POINTS);
     expect(computePoints({ correct: true, elapsedMs: 5000, windowMs: null })).toBe(MAX_POINTS);
+  });
+});
+
+describe('computeStreakBonus', () => {
+  it('gives no bonus for a streak of 0 or 1', () => {
+    expect(computeStreakBonus(0)).toBe(0);
+    expect(computeStreakBonus(1)).toBe(0);
+  });
+
+  it('grows the bonus with each consecutive correct answer', () => {
+    expect(computeStreakBonus(2)).toBe(50);
+    expect(computeStreakBonus(3)).toBe(100);
+    expect(computeStreakBonus(4)).toBe(150);
+  });
+
+  it('caps the bonus so a very long streak cannot dwarf the base score', () => {
+    expect(computeStreakBonus(6)).toBe(MAX_STREAK_BONUS);
+    expect(computeStreakBonus(50)).toBe(MAX_STREAK_BONUS);
   });
 });

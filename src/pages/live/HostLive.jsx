@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion as Motion } from 'framer-motion';
 import api from '../../services/api';
 import { connectHostSocket } from '../../services/liveSocket';
 import SlideRenderer from '../../components/lesson/SlideRenderer';
 import CapletLoader from '../../components/CapletLoader';
 import MathText from '../../components/MathText';
+import AnimatedLeaderboard from '../../components/live/AnimatedLeaderboard';
+import Podium from '../../components/live/Podium';
 
 const TYPE_LABELS = {
   choice: 'Choice question',
@@ -65,43 +68,6 @@ function RosterList({ roster }) {
           {p.nickname}
         </span>
       ))}
-    </div>
-  );
-}
-
-function Podium({ leaderboard }) {
-  const top3 = leaderboard.slice(0, 3);
-  const order = [1, 0, 2].filter((i) => top3[i]); // silver, gold, bronze layout
-  const heights = { 0: 'h-28', 1: 'h-40', 2: 'h-20' };
-  const medalColors = { 0: 'bg-slate-300 text-slate-900', 1: 'bg-amber-400 text-amber-950', 2: 'bg-orange-300 text-orange-950' };
-
-  return (
-    <div>
-      <div className="flex items-end justify-center gap-4 mb-8">
-        {order.map((i) => {
-          const p = top3[i];
-          return (
-            <div key={p.id} className="flex flex-col items-center gap-2 w-24">
-              <p className="text-sm font-bold text-text-primary truncate max-w-full">{p.nickname}</p>
-              <p className="text-xs text-text-dim">{p.score} pts</p>
-              <div className={`w-full rounded-t-xl flex items-center justify-center font-display font-extrabold text-lg ${heights[i]} ${medalColors[i]}`}>
-                {i + 1}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      {leaderboard.length > 3 && (
-        <ol className="space-y-1.5 max-w-md mx-auto">
-          {leaderboard.slice(3).map((p) => (
-            <li key={p.id} className="flex items-center justify-between px-4 py-2 rounded-xl bg-surface-raised border border-line-soft text-sm">
-              <span className="text-text-dim font-mono">{p.rank}.</span>
-              <span className="text-text-primary font-medium truncate">{p.nickname}</span>
-              <span className="text-text-dim">{p.score} pts</span>
-            </li>
-          ))}
-        </ol>
-      )}
     </div>
   );
 }
@@ -272,7 +238,14 @@ export default function HostLive() {
                 Slide {current.slideIndex + 1} / {current.slideCount}
               </span>
               {session.status === 'question_open' && remainingMs != null && (
-                <span className="font-mono">{Math.ceil(remainingMs / 1000)}s remaining</span>
+                <Motion.span
+                  key={Math.ceil(remainingMs / 1000)}
+                  initial={{ scale: remainingMs < 5000 ? 1.4 : 1.1, opacity: 0.6 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className={`font-mono font-bold ${remainingMs < 5000 ? 'text-rose-500' : ''}`}
+                >
+                  {Math.ceil(remainingMs / 1000)}s remaining
+                </Motion.span>
               )}
             </div>
 
@@ -296,9 +269,10 @@ export default function HostLive() {
                             <span className="text-sm text-text-muted w-6 shrink-0">{String.fromCharCode(65 + i)}</span>
                             <span className="text-sm text-text-primary w-40 shrink-0 truncate"><MathText>{opt}</MathText></span>
                             <div className="flex-1 h-6 rounded-full bg-surface-soft overflow-hidden">
-                              <div
-                                className="h-full bg-accent/70 rounded-full transition-all duration-300"
-                                style={{ width: `${(count / max) * 100}%` }}
+                              <Motion.div
+                                className="h-full bg-accent/70 rounded-full"
+                                animate={{ width: `${(count / max) * 100}%` }}
+                                transition={{ type: 'spring', stiffness: 260, damping: 26 }}
                               />
                             </div>
                             <span className="text-sm font-mono text-text-dim w-6 text-right shrink-0">{count}</span>
@@ -324,15 +298,7 @@ export default function HostLive() {
                 <p className="text-sm font-bold text-text-primary mb-3">
                   {reveal.correctCount} / {reveal.totalAnswered} got it right
                 </p>
-                <ol className="space-y-1">
-                  {reveal.leaderboard.slice(0, 5).map((p) => (
-                    <li key={p.id} className="flex items-center justify-between text-sm">
-                      <span className="text-text-dim font-mono">{p.rank}.</span>
-                      <span className="text-text-primary font-medium truncate">{p.nickname}</span>
-                      <span className="text-text-dim">{p.score} pts</span>
-                    </li>
-                  ))}
-                </ol>
+                <AnimatedLeaderboard entries={reveal.leaderboard} limit={5} />
               </div>
             )}
 
@@ -353,7 +319,11 @@ export default function HostLive() {
         {session.status === 'finished' && (
           <div className="space-y-8">
             <h2 className="text-xl font-display font-bold text-center">Final results</h2>
-            <Podium leaderboard={finalLeaderboard || []} />
+            {finalLeaderboard?.length ? (
+              <Podium leaderboard={finalLeaderboard} />
+            ) : (
+              <p className="text-center text-text-muted">No players finished this session.</p>
+            )}
             <div className="flex justify-center">
               <button type="button" onClick={() => navigate('/dashboard')} className="btn-secondary">
                 Back to dashboard

@@ -19,7 +19,7 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../middleware/auth');
 const { LiveSession, LiveParticipant, LiveResponse, Lesson } = require('../models');
 const { normalizeSlide } = require('../utils/slideSchema');
-const { isGradable, prepareQuestion, gradeResponse, computePoints } = require('../utils/liveGrading');
+const { isGradable, prepareQuestion, gradeResponse, computePoints, computeStreakBonus } = require('../utils/liveGrading');
 
 const DEFAULT_QUESTION_MS = 20000;
 const MAX_RESPONSE_ARRAY_LEN = 64;
@@ -37,13 +37,14 @@ function parseLessonSlides(raw) {
 }
 
 // sessionId -> { hostSocketId, participantSockets: Map(participantId -> socketId),
-//                slides: normalizedSlide[], round: activeRound | null }
+//                slides: normalizedSlide[], round: activeRound | null,
+//                streaks: Map(participantId -> { current, best }) }
 const rooms = new Map();
 
 function getRoom(sessionId) {
   let room = rooms.get(sessionId);
   if (!room) {
-    room = { hostSocketId: null, participantSockets: new Map(), slides: null, round: null };
+    room = { hostSocketId: null, participantSockets: new Map(), slides: null, round: null, streaks: new Map() };
     rooms.set(sessionId, room);
   }
   return room;
@@ -146,13 +147,24 @@ function attachLiveSocket(httpServer) {
     });
   }
 
-  async function currentLeaderboard(sessionId, limit = null) {
+  /** `room` is optional so external/offline callers can still get a plain leaderboard. */
+  async function currentLeaderboard(sessionId, limit, room) {
     const participants = await LiveParticipant.findAll({
       where: { sessionId },
       order: [['totalScore', 'DESC']],
       ...(limit ? { limit } : {}),
     });
-    return participants.map((p, i) => ({ id: p.id, nickname: p.nickname, score: p.totalScore, rank: i + 1 }));
+    return participants.map((p, i) => {
+      const s = room?.streaks?.get(p.id);
+      return {
+        id: p.id,
+        nickname: p.nickname,
+        score: p.totalScore,
+        rank: i + 1,
+        streak: s?.current || 0,
+        bestStreak: s?.best || 0,
+      };
+    });
   }
 
   /** Pushes slide `index` to everyone in the room; opens a timed round if it's gradable. */
@@ -241,7 +253,7 @@ function attachLiveSocket(httpServer) {
     session.status = 'reveal';
     await session.save();
 
-    const leaderboard = await currentLeaderboard(sessionId, 10);
+    const leaderboard = await currentLeaderboard(sessionId, 10, room);
 
     live.to(sessionId).emit('results:reveal', {
       slideIndex: round.slideIndex,
@@ -251,7 +263,7 @@ function attachLiveSocket(httpServer) {
       leaderboard,
     });
 
-    // Private per-player result (their own correctness/points/rank), not broadcast.
+    // Private per-player result (their own correctness/points/rank/streak), not broadcast.
     const rankByParticipant = new Map(leaderboard.map((l) => [l.id, l.rank]));
     for (const [participantId, result] of round.responses.entries()) {
       const socketId = room.participantSockets.get(participantId);
@@ -261,6 +273,9 @@ function attachLiveSocket(httpServer) {
         slideIndex: round.slideIndex,
         correct: result.correct,
         pointsAwarded: result.points,
+        basePoints: result.basePoints,
+        streakBonus: result.streakBonus,
+        streak: result.streak,
         totalScore: participant?.totalScore ?? null,
         rank: rankByParticipant.get(participantId) ?? null,
       });
@@ -276,7 +291,7 @@ function attachLiveSocket(httpServer) {
     session.endedAt = new Date();
     await session.save();
 
-    const leaderboard = await currentLeaderboard(sessionId);
+    const leaderboard = await currentLeaderboard(sessionId, null, room);
     live.to(sessionId).emit('session:ended', { leaderboard });
     rooms.delete(sessionId);
   }
@@ -444,9 +459,17 @@ function attachLiveSocket(httpServer) {
           const elapsedMs = now - round.opensAt;
           const response = sanitizeResponsePayload(payload.response);
           const correct = gradeResponse(round.answerKey, response);
-          const points = computePoints({ correct, elapsedMs, windowMs: round.windowMs });
+          const basePoints = computePoints({ correct, elapsedMs, windowMs: round.windowMs });
 
-          round.responses.set(participantId, { correct, points, response });
+          const streakInfo = room.streaks.get(participantId) || { current: 0, best: 0 };
+          const nextStreak = correct ? streakInfo.current + 1 : 0;
+          const streakBonus = computeStreakBonus(nextStreak);
+          const points = basePoints + streakBonus;
+          streakInfo.current = nextStreak;
+          streakInfo.best = Math.max(streakInfo.best, nextStreak);
+          room.streaks.set(participantId, streakInfo);
+
+          round.responses.set(participantId, { correct, points, basePoints, streakBonus, streak: nextStreak, response });
 
           await LiveResponse.create({
             sessionId,
@@ -483,7 +506,7 @@ function attachLiveSocket(httpServer) {
             });
           }
 
-          ack?.({ ok: true, correct, pointsAwarded: points });
+          ack?.({ ok: true, correct, pointsAwarded: points, basePoints, streakBonus, streak: nextStreak });
         } catch (e) {
           console.error('Live participant:answer failed:', e);
           ack?.({ ok: false, error: 'Could not submit your answer' });

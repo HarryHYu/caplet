@@ -1,9 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import { connectParticipantSocket } from '../../services/liveSocket';
 import SlideRenderer from '../../components/lesson/SlideRenderer';
 import MathText from '../../components/MathText';
+import AnimatedLeaderboard from '../../components/live/AnimatedLeaderboard';
+import Podium from '../../components/live/Podium';
+import useCountUp from '../../lib/useCountUp';
+import { fireCelebration } from '../../lib/confetti';
 
 /* ──────────────────────────────────────────────────────────────────────────
    Shared bits
@@ -28,12 +33,81 @@ function TimerBar({ opensAt, windowMs }) {
   const remainingMs = useCountdown(opensAt, windowMs);
   if (remainingMs == null || !windowMs) return null;
   const pct = Math.max(0, Math.min(100, (remainingMs / windowMs) * 100));
+  const seconds = Math.ceil(remainingMs / 1000);
+  const low = pct < 25;
   return (
-    <div className="h-1.5 w-full rounded-full bg-surface-soft overflow-hidden">
-      <div
-        className={`h-full transition-all duration-100 ${pct < 25 ? 'bg-rose-500' : 'bg-accent'}`}
-        style={{ width: `${pct}%` }}
-      />
+    <div>
+      <div className="h-2.5 w-full rounded-full bg-surface-soft overflow-hidden">
+        <Motion.div
+          className={`h-full rounded-full ${low ? 'bg-rose-500' : pct < 55 ? 'bg-amber-400' : 'bg-accent'}`}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.12, ease: 'linear' }}
+        />
+      </div>
+      <Motion.p
+        key={seconds}
+        initial={{ scale: low ? 1.35 : 1.1, opacity: 0.6 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className={`text-center text-xs font-bold mt-1.5 tabular-nums ${low ? 'text-rose-500' : 'text-text-dim'}`}
+      >
+        {seconds}s
+      </Motion.p>
+    </div>
+  );
+}
+
+/** Big bouncy checkmark/cross + count-up points + streak badge, shared by the
+    immediate answer ack and the round-reveal moment. */
+function AnswerCelebration({ correct, pointsAwarded, streakBonus, streak, rank }) {
+  const points = useCountUp(pointsAwarded ?? 0, 800);
+  const firedRef = useRef(false);
+  useEffect(() => {
+    if (correct && !firedRef.current) {
+      firedRef.current = true;
+      fireCelebration();
+    }
+  }, [correct]);
+
+  return (
+    <div className="text-center py-10">
+      <Motion.div
+        initial={{ scale: 0, rotate: -25 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 16 }}
+        className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center text-4xl mb-4 ${
+          correct ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'
+        }`}
+      >
+        {correct ? '✓' : '✕'}
+      </Motion.div>
+      <Motion.p
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12 }}
+        className={`text-3xl font-display font-extrabold mb-2 ${correct ? 'text-emerald-500' : 'text-rose-500'}`}
+      >
+        {correct ? 'Correct!' : 'Not quite'}
+      </Motion.p>
+      <Motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.25 }}
+        className="text-text-muted tabular-nums"
+      >
+        +{points} points{rank ? ` · rank #${rank}` : ''}
+      </Motion.p>
+      <AnimatePresence>
+        {streak >= 2 && (
+          <Motion.div
+            initial={{ scale: 0, opacity: 0, y: -6 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ delay: 0.45, type: 'spring', stiffness: 380, damping: 15 }}
+            className="inline-flex items-center gap-1.5 mt-4 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-500 font-bold text-sm"
+          >
+            🔥 {streak} in a row!{streakBonus > 0 ? ` · +${streakBonus} streak bonus` : ''}
+          </Motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -538,28 +612,31 @@ export default function PlayLive() {
   if (finalLeaderboard) {
     const mine = finalLeaderboard.find((p) => p.id === participant.id);
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center px-4 bg-surface-body text-text-primary">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-4 py-10 bg-surface-body text-text-primary overflow-y-auto">
         <div className="w-full max-w-sm text-center">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent mb-3">Session ended</p>
-          <h1 className="text-3xl font-display font-extrabold tracking-tight mb-2">
-            {mine ? `#${mine.rank}` : '—'}
-          </h1>
-          <p className="text-text-muted mb-8">{mine ? `${mine.score} points` : 'Thanks for playing!'}</p>
-          <ol className="space-y-1.5 mb-8">
-            {finalLeaderboard.slice(0, 10).map((p) => (
-              <li
-                key={p.id}
-                className={`flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm ${
-                  p.id === participant.id ? 'border-accent bg-accent/10' : 'border-line-soft bg-surface-raised'
-                }`}
+          {mine ? (
+            <>
+              <Motion.h1
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+                className="text-4xl font-display font-extrabold tracking-tight mb-2"
               >
-                <span className="text-text-dim font-mono">{p.rank}.</span>
-                <span className="text-text-primary font-medium truncate">{p.nickname}</span>
-                <span className="text-text-dim">{p.score} pts</span>
-              </li>
-            ))}
-          </ol>
-          <button type="button" onClick={() => navigate('/')} className="btn-secondary">
+                #{mine.rank}
+              </Motion.h1>
+              <p className="text-text-muted mb-1">{mine.score.toLocaleString()} points</p>
+              {mine.bestStreak >= 2 && (
+                <p className="text-sm text-orange-500 font-bold mb-6">🔥 Best streak: {mine.bestStreak}</p>
+              )}
+            </>
+          ) : (
+            <p className="text-text-muted mb-8">Thanks for playing!</p>
+          )}
+          <div className={mine?.bestStreak >= 2 ? '' : 'mt-6'}>
+            <Podium leaderboard={finalLeaderboard} highlightId={participant.id} />
+          </div>
+          <button type="button" onClick={() => navigate('/')} className="btn-secondary mt-8">
             Done
           </button>
         </div>
@@ -577,16 +654,23 @@ export default function PlayLive() {
           <p className="text-text-muted mb-6">Waiting for the host to start…</p>
           {connError && <p className="text-sm text-rose-500 mb-4">{connError}</p>}
           <div className="flex flex-wrap justify-center gap-2">
-            {roster.map((p) => (
-              <span
-                key={p.id}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
-                  p.id === participant.id ? 'border-accent text-accent bg-accent/10' : 'border-line-soft text-text-dim'
-                }`}
-              >
-                {p.nickname}
-              </span>
-            ))}
+            <AnimatePresence initial={false}>
+              {roster.map((p) => (
+                <Motion.span
+                  key={p.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
+                    p.id === participant.id ? 'border-accent text-accent bg-accent/10' : 'border-line-soft text-text-dim'
+                  }`}
+                >
+                  {p.nickname}
+                </Motion.span>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -619,51 +703,45 @@ export default function PlayLive() {
 
           {current.status === 'question_open' && myAnswer && !ackResult && !isReveal && (
             <div className="text-center py-16">
-              <p className="text-xl font-display font-bold">Locked in!</p>
+              <Motion.p
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity }}
+                className="text-xl font-display font-bold"
+              >
+                Locked in!
+              </Motion.p>
               <p className="text-text-muted mt-2">Waiting for the round to end…</p>
             </div>
           )}
 
           {(myAnswer && ackResult && !isReveal) && (
-            <div className="text-center py-16">
-              <p className={`text-3xl font-display font-extrabold mb-2 ${ackResult.correct ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {ackResult.correct ? 'Correct!' : 'Not quite'}
-              </p>
-              <p className="text-text-muted">+{ackResult.pointsAwarded} points</p>
-            </div>
+            <AnswerCelebration
+              correct={ackResult.correct}
+              pointsAwarded={ackResult.pointsAwarded}
+              streakBonus={ackResult.streakBonus}
+              streak={ackResult.streak}
+            />
           )}
 
           {isReveal && (
-            <div className="text-center py-10">
+            <div className="text-center">
               {youResult ? (
-                <>
-                  <p className={`text-3xl font-display font-extrabold mb-2 ${youResult.correct ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {youResult.correct ? 'Correct!' : 'Not quite'}
-                  </p>
-                  <p className="text-text-muted mb-6">
-                    +{youResult.pointsAwarded} points · rank #{youResult.rank ?? '—'}
-                  </p>
-                </>
+                <AnswerCelebration
+                  correct={youResult.correct}
+                  pointsAwarded={youResult.pointsAwarded}
+                  streakBonus={youResult.streakBonus}
+                  streak={youResult.streak}
+                  rank={youResult.rank}
+                />
               ) : (
-                <p className="text-text-muted mb-6">Round over</p>
+                <p className="text-text-muted mb-6 py-10">Round over</p>
               )}
               {reveal && (
-                <ol className="space-y-1.5 max-w-xs mx-auto">
-                  {reveal.leaderboard.slice(0, 5).map((p) => (
-                    <li
-                      key={p.id}
-                      className={`flex items-center justify-between px-4 py-2 rounded-xl border text-sm ${
-                        p.id === participant.id ? 'border-accent bg-accent/10' : 'border-line-soft bg-surface-raised'
-                      }`}
-                    >
-                      <span className="text-text-dim font-mono">{p.rank}.</span>
-                      <span className="text-text-primary font-medium truncate">{p.nickname}</span>
-                      <span className="text-text-dim">{p.score} pts</span>
-                    </li>
-                  ))}
-                </ol>
+                <div className="max-w-xs mx-auto">
+                  <AnimatedLeaderboard entries={reveal.leaderboard} highlightId={participant.id} limit={5} />
+                </div>
               )}
-              <p className="text-xs text-text-dim mt-6">Waiting for the host to continue…</p>
+              <p className="text-xs text-text-dim mt-6 mb-10">Waiting for the host to continue…</p>
             </div>
           )}
         </div>
