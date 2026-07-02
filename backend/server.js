@@ -6,6 +6,7 @@ const { testConnection } = require('./config/database');
 const { runMigrations } = require('./config/migrationRunner');
 const { syncDatabase } = require('./models');
 const seedProductionDatabase = require('./scripts/seed-production');
+const { attachLiveSocket } = require('./realtime/liveSocket');
 require('dotenv').config();
 
 const app = express();
@@ -120,6 +121,7 @@ app.use('/api/financial-profile', require('./routes/financialProfile'));
 app.use('/api/review', require('./routes/review'));
 app.use('/api/essays', require('./routes/essays'));
 app.use('/api/events', require('./routes/events'));
+app.use('/api/live', require('./routes/live'));
 app.use('/api', require('./routes/proxy'));
 
 // Error handling middleware
@@ -190,6 +192,10 @@ const startServer = async () => {
     // so long AI generation requests (which can take 60–90 s) don't get cut off.
     server.keepAliveTimeout = 120000; // 2 min
     server.headersTimeout   = 125000; // must be > keepAliveTimeout
+
+    // Live hosted quiz sessions (Kahoot-style) — Socket.IO on the same
+    // http.Server/port, under the /live namespace.
+    attachLiveSocket(server);
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);

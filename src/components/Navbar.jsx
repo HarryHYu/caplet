@@ -51,8 +51,9 @@ const Navbar = () => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
-  const hidePaths = ['/login', '/register'];
+  const hidePaths = ['/login', '/register', '/play'];
   if (hidePaths.includes(location.pathname)) return null;
+  if (location.pathname.startsWith('/live/host')) return null;
 
   const initials = user
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || user.firstName?.[0]?.toUpperCase() || 'U'
@@ -104,6 +105,17 @@ const Navbar = () => {
  
           {/* Actions */}
           <div className="flex items-center gap-1.5 md:gap-2 relative z-10 shrink-0">
+            {/* Join a live (Kahoot-style) session — no account needed */}
+            <Link
+              to="/play"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-[0.06em] text-text-muted hover:text-accent hover:bg-surface-soft transition-all duration-200"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Join Live
+            </Link>
+
             {/* Theme toggle */}
             <button
               type="button"
@@ -237,6 +249,13 @@ const Navbar = () => {
                 </Link>
               );
             })}
+            <Link
+              to="/play"
+              onClick={() => setIsOpen(false)}
+              className="px-3 py-2.5 text-xs font-bold tracking-[0.1em] text-text-primary hover:bg-surface-soft transition-colors"
+            >
+              Join Live
+            </Link>
             {!isAuthenticated && (
               <Link
                 to="/register"

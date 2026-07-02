@@ -684,6 +684,31 @@ class ApiService {
     return sampleListings(type, maxBudget);
   }
 
+  // Live hosted quiz sessions (Kahoot-style) — REST covers create/join/resume
+  // only; gameplay itself runs over Socket.IO (see src/services/liveSocket.js).
+  async createLiveSession(lessonId, { classroomId, questionSeconds } = {}) {
+    return this.request('/live/sessions', {
+      method: 'POST',
+      body: JSON.stringify({ lessonId, classroomId, questionSeconds }),
+    });
+  }
+
+  /** `idOrCode` accepts either the session id (right after creation) or its short code. */
+  async getLiveSession(idOrCode) {
+    return this.request(`/live/sessions/${idOrCode}`);
+  }
+
+  async previewLiveSessionByCode(code) {
+    return this.request(`/live/code/${encodeURIComponent(code)}`);
+  }
+
+  async joinLiveSession(code, nickname) {
+    return this.request('/live/join', {
+      method: 'POST',
+      body: JSON.stringify({ code, nickname }),
+    });
+  }
+
   /**
    * Proxied image URL for hosts that may be blocked or don't hotlink (Reddit, Imgur, Google Drive, Cloudinary).
    * Backend fetches the image so the browser only hits your API.

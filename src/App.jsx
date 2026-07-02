@@ -52,6 +52,8 @@ import Metrics from './pages/Metrics';
 import Survey from './pages/Survey';
 import SurveyResults from './pages/SurveyResults';
 import Editor from './pages/Editor';
+import HostLive from './pages/live/HostLive';
+import PlayLive from './pages/live/PlayLive';
 import NotFound from './pages/NotFound';
 import CapletLoader from './components/CapletLoader';
 import { GOOGLE_OAUTH_CLIENT_ID } from './config/googleClient';
@@ -175,6 +177,8 @@ function AppShell() {
           <Route path="/survey" element={<Survey />} />
           <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />
           <Route path="/editor" element={<Editor />} />
+          <Route path="/live/host/:code" element={<RequireAuth><HostLive /></RequireAuth>} />
+          <Route path="/play" element={<PlayLive />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

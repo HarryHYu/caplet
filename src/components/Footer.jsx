@@ -34,9 +34,10 @@ const Footer = () => {
   const { isAuthenticated } = useAuth();
   const homePath = isAuthenticated ? '/dashboard' : '/';
 
-  if (['/login', '/register'].includes(location.pathname)) return null;
+  if (['/login', '/register', '/play'].includes(location.pathname)) return null;
   if (/\/courses\/[^/]+\/lessons\/[^/]+/.test(location.pathname)) return null;
   if (['/editor', '/metrics', '/survey-results'].includes(location.pathname)) return null;
+  if (location.pathname.startsWith('/live/host')) return null;
 
   return (
     <footer className="bg-surface-soft text-text-primary">

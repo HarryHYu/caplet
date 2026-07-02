@@ -224,6 +224,7 @@ const LessonPlayer = () => {
   const [savedSlides, setSavedSlides] = useState(new Map());
   const [savingSlide, setSavingSlide] = useState(false);
   const autoCategorizeTimer = useRef(null);
+  const [startingLive, setStartingLive] = useState(false);
 
 
   /* ---------- Data loading ---------- */
@@ -424,6 +425,20 @@ const LessonPlayer = () => {
     [isAuthenticated, lesson?.id],
   );
 
+  const hostLive = useCallback(async () => {
+    if (!lesson?.id || startingLive) return;
+    setStartingLive(true);
+    try {
+      const { session } = await api.createLiveSession(lesson.id);
+      navigate(`/live/host/${session.code}`);
+    } catch (e) {
+      setSaveError('Could not start a live session: ' + (e.message || 'Unknown error'));
+      setTimeout(() => setSaveError(null), 6000);
+    } finally {
+      setStartingLive(false);
+    }
+  }, [lesson?.id, startingLive, navigate]);
+
   /* ---------- Keyboard nav ---------- */
   useEffect(() => {
     const onKey = (e) => {
@@ -559,6 +574,22 @@ const LessonPlayer = () => {
                   </svg>
                   Completed
                 </span>
+              )}
+
+              {/* Host a live Kahoot-style session for this lesson */}
+              {isAuthenticated && hasSlides && (
+                <button
+                  type="button"
+                  onClick={hostLive}
+                  disabled={startingLive}
+                  className="hidden sm:inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-accent hover:border-accent/60 transition-colors disabled:opacity-50"
+                  aria-label="Host a live session"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <span className="hidden md:inline text-xs font-medium">{startingLive ? 'Starting…' : 'Host Live'}</span>
+                </button>
               )}
 
               {/* Calculator toggle */}

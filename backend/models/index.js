@@ -17,6 +17,9 @@ const SavedSlide = require('./SavedSlide');
 const UserFinancialProfile = require('./UserFinancialProfile');
 const ReviewItem = require('./ReviewItem');
 const Essay = require('./Essay');
+const LiveSession = require('./LiveSession');
+const LiveParticipant = require('./LiveParticipant');
+const LiveResponse = require('./LiveResponse');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -215,6 +218,24 @@ ReviewItem.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 User.hasMany(Essay, { foreignKey: 'userId', as: 'essays', onDelete: 'CASCADE' });
 Essay.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Live hosted quiz sessions (Kahoot-style)
+User.hasMany(LiveSession, { foreignKey: 'hostUserId', as: 'hostedLiveSessions', onDelete: 'CASCADE' });
+LiveSession.belongsTo(User, { foreignKey: 'hostUserId', as: 'host' });
+Lesson.hasMany(LiveSession, { foreignKey: 'lessonId', as: 'liveSessions', onDelete: 'CASCADE' });
+LiveSession.belongsTo(Lesson, { foreignKey: 'lessonId', as: 'lesson' });
+Classroom.hasMany(LiveSession, { foreignKey: 'classroomId', as: 'liveSessions' });
+LiveSession.belongsTo(Classroom, { foreignKey: 'classroomId', as: 'classroom' });
+
+LiveSession.hasMany(LiveParticipant, { foreignKey: 'sessionId', as: 'participants', onDelete: 'CASCADE' });
+LiveParticipant.belongsTo(LiveSession, { foreignKey: 'sessionId', as: 'session' });
+User.hasMany(LiveParticipant, { foreignKey: 'userId', as: 'liveParticipations' });
+LiveParticipant.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+LiveSession.hasMany(LiveResponse, { foreignKey: 'sessionId', as: 'responses', onDelete: 'CASCADE' });
+LiveResponse.belongsTo(LiveSession, { foreignKey: 'sessionId', as: 'session' });
+LiveParticipant.hasMany(LiveResponse, { foreignKey: 'participantId', as: 'responses', onDelete: 'CASCADE' });
+LiveResponse.belongsTo(LiveParticipant, { foreignKey: 'participantId', as: 'participant' });
+
 // Sync database
 // NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
 // This sync() call is a no-op fallback (force: false prevents any schema changes).
@@ -250,5 +271,8 @@ module.exports = {
   UserFinancialProfile,
   ReviewItem,
   Essay,
+  LiveSession,
+  LiveParticipant,
+  LiveResponse,
   syncDatabase
 };
