@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { connectHostSocket } from '../../services/liveSocket';
 import SlideRenderer from '../../components/lesson/SlideRenderer';
 import CapletLoader from '../../components/CapletLoader';
+import MathText from '../../components/MathText';
 
 const TYPE_LABELS = {
   choice: 'Choice question',
@@ -13,6 +14,22 @@ const TYPE_LABELS = {
   hotspot: 'Hotspot',
   timeline: 'Timeline',
 };
+
+// When a {{blank}} sits inside a $...$/$$...$$ math span, leaving it as-is
+// breaks the delimiter balance and KaTeX renders garbage; mirrors
+// SlideRenderer.jsx's sanitizeFillBlankTemplate. The host console has no
+// input fields, so once the template is math-safe, blank markers are
+// swapped for a plain visual placeholder instead of being parsed.
+function questionHeadline(slide) {
+  if (!slide) return 'Live question';
+  if (slide.type === 'fillblank') {
+    const sanitized = (slide.template || '')
+      .replace(/\$\$([\s\S]*?)\$\$/g, (m, inner) => (/\{\{\d+\}\}/.test(inner) ? inner : m))
+      .replace(/\$([^$\n]+?)\$/g, (m, inner) => (/\{\{\d+\}\}/.test(inner) ? inner : m));
+    return sanitized.replace(/\{\{\d+\}\}/g, '▁▁▁▁');
+  }
+  return slide.question || slide.prompt || 'Live question';
+}
 
 function useCountdown(opensAt, windowMs) {
   const [remainingMs, setRemainingMs] = useState(null);
@@ -260,13 +277,13 @@ export default function HostLive() {
             </div>
 
             <div className="rounded-3xl border border-line-soft bg-surface-raised overflow-hidden min-h-[220px]">
-              {session.status === 'question_open' || (session.status === 'reveal' && reveal?.slideIndex === current.slideIndex) ? (
+              {session.status === 'question_open' || session.status === 'reveal' ? (
                 <div className="p-8">
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent mb-3">
                     {TYPE_LABELS[current.slide.type] || 'Question'}
                   </p>
                   <h2 className="text-xl md:text-2xl font-display font-bold mb-6">
-                    {current.slide.question || current.slide.prompt || current.slide.template || 'Live question'}
+                    <MathText>{questionHeadline(current.slide)}</MathText>
                   </h2>
 
                   {answerCount?.distribution && (current.slide.options || []).length > 0 && (
@@ -276,7 +293,8 @@ export default function HostLive() {
                         const max = Math.max(1, ...answerCount.distribution);
                         return (
                           <div key={i} className="flex items-center gap-3">
-                            <span className="text-sm text-text-muted w-8 shrink-0">{String.fromCharCode(65 + i)}</span>
+                            <span className="text-sm text-text-muted w-6 shrink-0">{String.fromCharCode(65 + i)}</span>
+                            <span className="text-sm text-text-primary w-40 shrink-0 truncate"><MathText>{opt}</MathText></span>
                             <div className="flex-1 h-6 rounded-full bg-surface-soft overflow-hidden">
                               <div
                                 className="h-full bg-accent/70 rounded-full transition-all duration-300"

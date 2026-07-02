@@ -109,10 +109,22 @@ function LiveChoice({ slide, onAnswer, locked }) {
   );
 }
 
+// When a {{blank}} sits inside a $...$/$$...$$ math span, splitting the
+// template on the blank marker leaves each half with an unbalanced $
+// delimiter and KaTeX renders garbage. Mirrors SlideRenderer.jsx's
+// sanitizeFillBlankTemplate — strip the delimiters from any math span that
+// contains a blank so the surrounding punctuation just renders as plain text.
+function sanitizeFillBlankTemplate(template) {
+  let t = template;
+  t = t.replace(/\$\$([\s\S]*?)\$\$/g, (match, inner) => (/\{\{\d+\}\}/.test(inner) ? inner : match));
+  t = t.replace(/\$([^$\n]+?)\$/g, (match, inner) => (/\{\{\d+\}\}/.test(inner) ? inner : match));
+  return t;
+}
+
 function LiveFillBlank({ slide, onAnswer, locked }) {
   const [answers, setAnswers] = useState(() => new Array(slide.blanks?.length || 0).fill(''));
   const parts = useMemo(() => {
-    const template = slide.template || '';
+    const template = sanitizeFillBlankTemplate(slide.template || '');
     const out = [];
     const regex = /\{\{(\d+)\}\}/g;
     let last = 0;
