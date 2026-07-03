@@ -64,7 +64,7 @@ const Navbar = () => {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-shadow duration-300 bg-surface-body/80 backdrop-blur-md text-text-primary ${
+      className={`fixed top-0 inset-x-0 z-50 transition-shadow duration-300 bg-surface-body/90 backdrop-blur-md text-text-primary ${
         scrolled ? 'shadow-[0_6px_24px_-16px_rgba(0,0,0,0.4)]' : ''
       }`}
     >
@@ -85,8 +85,8 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          {/* Desktop nav — pushed to the right, next to the action cluster */}
+          <nav className="hidden md:flex items-center gap-1 ml-auto">
             {isAuthenticated && (
               <Link
                 to="/dashboard"
