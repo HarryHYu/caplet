@@ -72,10 +72,14 @@ const principles = [
 ];
 
 const faqItems = [
-  { question: 'Is Caplet really free?', answer: 'Yes. Caplet is an open learning playground. Teachers and students can build and complete whole courses with no subscription tiers and no user limits.' },
-  { question: 'How do I publish my own curriculum?', answer: 'Sign up, open your dashboard, and create a course. Compile lessons, drag in blocks, and share the link the moment it is ready.' },
-  { question: 'Can I host Caplet on my own servers?', answer: 'Yes. Caplet is fully open-source. Pull the code from the repository and deploy it on your own servers or a private cloud.' },
-  { question: 'Does it support grading and tests?', answer: 'It does. Embed live coding playgrounds, quiz blocks, and grading workflows that track student progress automatically.' },
+  { question: 'Is Caplet really free?', answer: 'Yes, genuinely. Caplet is an open learning playground with no subscription tiers, no per-seat pricing, and no user limits. Teachers and students build and complete whole courses without ever hitting a paywall, and there are no ads and nothing sold on the side. The finance tools, the lesson builder, the AI tutor, and classrooms are all included.' },
+  { question: 'How do I publish my own curriculum?', answer: 'Sign up, open your dashboard, and create a course. Add modules and lessons, then drag in blocks: rich text, images, video, live code, graphing panels, and quizzes. Rearrange anything, preview it the way a student would see it, and share the link the moment it is ready. You can keep editing after publishing, and every change goes live instantly.' },
+  { question: 'Can I host Caplet on my own servers?', answer: 'Yes. Caplet is fully open-source. Pull the code from the repository and deploy it on your own servers or a private cloud. It runs a React frontend and a Node and Express backend, using Postgres in production and SQLite for local development, so a single laptop is enough to get started.' },
+  { question: 'Does it support grading and tests?', answer: 'It does. Embed live coding playgrounds with test runners, quiz blocks, and grading workflows that track every learner automatically. Group students into classrooms, set assignments with due dates, and watch submissions arrive in real time, with spaced repetition to help the material actually stick.' },
+  { question: 'Are the financial calculators specific to Australia?', answer: 'Yes. Every calculator is built around Australian rules, including income tax brackets, the Medicare levy, superannuation, GST, and HECS and HELP. The new Debt Sequencer models HECS the way it actually works, indexed once a year rather than charged monthly interest, so the guidance stays correct instead of copying a generic overseas template. These are educational tools, not personal financial advice.' },
+  { question: 'Is my financial data private?', answer: 'Your figures never leave your account. Your financial profile is stored against your login and used only to pre-fill the tools you choose to open. We do not sell data, we do not show ads, and nothing you enter is shared with third parties.' },
+  { question: 'Do I need to know how to code to build a lesson?', answer: 'Not at all. Building a lesson is drag-and-drop, and you can assemble a full lesson in minutes without writing a single line of code. If you do want code, the live IDE runs Python, JavaScript, and HTML right in the browser, so you can add runnable examples whenever they help.' },
+  { question: 'Can I use AI to help build a course?', answer: 'Yes. Describe a topic and Caplet drafts structured slides, quizzes, and a lesson plan for you to edit, so a blank page is never the starting point. An in-slide AI tutor also gives students hints and worked examples without leaving the lesson. The AI helps you create; it never touches the deterministic finance calculators.' },
 ];
 
 const showcaseTabs = [
@@ -292,9 +296,9 @@ const Home = () => {
             </button>
 
             {/* hand-drawn note pointing at the primary action */}
-            <div className="hero-note hidden sm:block absolute -bottom-14 left-1/2 -translate-x-[7.5rem] -rotate-6 pointer-events-none">
+            <div className="hero-note hidden sm:block absolute -bottom-16 left-1/2 -translate-x-[9rem] -rotate-6 pointer-events-none">
               <span className="font-hand text-xl text-mark">it’s genuinely free</span>
-              <Arrow className="absolute -top-9 -right-10 w-14 h-10" pathClass="hero-arrow hero-mark" stroke="stroke-mark" />
+              <Arrow className="absolute -top-11 left-2 w-16 h-12 rotate-180" pathClass="hero-arrow hero-mark" stroke="stroke-mark" />
             </div>
           </div>
         </div>
@@ -361,15 +365,15 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ───────── FINTECH / FINANCIAL LITERACY ───────── */}
-      <section className="py-24 md:py-32 px-6 md:px-10" data-mark>
+      {/* ───────── FINANCE BAND (financial literacy, grouped, own dark background) ───────── */}
+      <section className="bg-[#171717] border-y border-white/10 py-24 md:py-32 px-6 md:px-10" data-mark>
         <div className="max-w-[1200px] mx-auto">
           <div className="reveal max-w-3xl">
-            <p className="font-hand text-xl text-blue mb-3 -rotate-2">built for Australia 🇦🇺</p>
-            <h2 className="font-bricolage font-extrabold text-text-primary leading-[1.02] tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">
+            <p className="font-hand text-xl text-blue-300 mb-3 -rotate-2">built for Australia 🇦🇺</p>
+            <h2 className="font-bricolage font-extrabold text-white leading-[1.02] tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">
               Money, <span className="hl-swipe">made to make sense</span>
             </h2>
-            <p className="body-text mt-6 max-w-2xl">
+            <p className="body-text !text-white/70 mt-6 max-w-2xl">
               Caplet began as a free financial-literacy platform for Australians, and that is still its
               backbone. Learn tax, super, mortgages, and investing by running the numbers yourself, not
               by reading another explainer. Every calculator is built around Australian rules, and your
@@ -378,30 +382,87 @@ const Home = () => {
           </div>
 
           <div className="reveal-stagger grid sm:grid-cols-3 gap-5 mt-12">
-            <div className="rounded-3xl block-blue p-7">
-              <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-text-primary">20+</div>
-              <p className="body-text !text-[1rem] !leading-[1.55] mt-2">interactive financial calculators, from income tax to your FIRE number</p>
+            <div className="rounded-3xl bg-white/[0.05] border border-white/10 p-7">
+              <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-blue-300">20+</div>
+              <p className="!text-[1rem] !leading-[1.55] mt-2 text-white/65">interactive financial calculators, from income tax to your FIRE number</p>
             </div>
-            <div className="rounded-3xl block-green p-7">
-              <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-text-primary">AU-ready</div>
-              <p className="body-text !text-[1rem] !leading-[1.55] mt-2">tuned to Australian tax brackets, superannuation, and GST</p>
+            <div className="rounded-3xl bg-white/[0.05] border border-white/10 p-7">
+              <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-emerald-300">AU-ready</div>
+              <p className="!text-[1rem] !leading-[1.55] mt-2 text-white/65">tuned to Australian tax brackets, superannuation, and GST</p>
             </div>
-            <div className="rounded-3xl block-amber p-7">
-              <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-text-primary">$0</div>
-              <p className="body-text !text-[1rem] !leading-[1.55] mt-2">free forever, with no ads and no selling your data</p>
+            <div className="rounded-3xl bg-white/[0.05] border border-white/10 p-7">
+              <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-amber-300">$0</div>
+              <p className="!text-[1rem] !leading-[1.55] mt-2 text-white/65">free forever, with no ads and no selling your data</p>
             </div>
           </div>
 
           <div className="reveal mt-10">
-            <p className="font-hand text-lg text-blue mb-3">run the numbers on</p>
+            <p className="font-hand text-lg text-blue-300 mb-3">run the numbers on</p>
             <div className="flex flex-wrap gap-2.5">
               {calculators.map((c) => (
-                <span key={c} className="px-3.5 py-2 rounded-full bg-surface-raised text-sm font-semibold text-text-primary">{c}</span>
+                <span key={c} className="px-3.5 py-2 rounded-full bg-white/[0.06] border border-white/10 text-sm font-semibold text-white/80">{c}</span>
               ))}
               <Link to="/tools" data-cursor className="px-4 py-2 rounded-full bg-[color:var(--mark-blue)] text-white text-sm font-bold hover:-translate-y-0.5 transition-transform inline-flex items-center gap-1.5">
                 See every tool
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
+            </div>
+          </div>
+
+          {/* Debt Sequencer: newest finance tool, revealed like the other sections */}
+          <div className="reveal rounded-[2rem] bg-[#262626] text-white p-8 md:p-12 mt-16 grid md:grid-cols-2 gap-x-10 gap-y-8 items-center">
+            <div>
+              <span className="font-hand text-xl text-white/55">just added</span>
+              <h3 className="font-bricolage font-extrabold text-3xl md:text-4xl mt-1 mb-4">Debt Sequencer</h3>
+              <p className="text-white/70 text-[1.05rem] leading-[1.7] mb-7 max-w-md">
+                See what each of your debts actually costs to carry, ranked so a spare dollar clears the most
+                cost first. HECS and HELP are handled on their own terms, indexed once a year, not treated like a
+                credit card.
+              </p>
+              <Link to="/tools/debt-sequencer" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-black font-bold hover:-translate-y-0.5 transition-transform">
+                Try the Debt Sequencer
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+              </Link>
+            </div>
+
+            {/* mock cost-ranking preview */}
+            <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-6 space-y-3">
+              <p className="font-hand text-lg text-white/55 mb-1">cost ranking</p>
+              {[
+                { n: '1', label: 'Store card', rate: '24%', note: 'costs the most to carry' },
+                { n: '2', label: 'Visa', rate: '19.9%', note: 'next by interest cost' },
+              ].map((r) => (
+                <div key={r.n} className="flex items-center gap-3 rounded-xl bg-white/[0.06] p-4">
+                  <span className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center text-sm font-extrabold flex-shrink-0">{r.n}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-base">{r.label}</span>
+                      <span className="text-sm text-white/60">{r.rate}</span>
+                    </div>
+                    <p className="text-sm text-white/55">{r.note}</p>
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center gap-3 rounded-xl border border-white/15 p-4">
+                <span className="w-10 h-8 rounded-lg bg-white/10 text-white flex items-center justify-center text-[11px] font-extrabold flex-shrink-0">HECS</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-base">HECS / HELP</span>
+                    <span className="text-sm text-white/60">~3.2% indexed</span>
+                  </div>
+                  <p className="text-sm text-white/55">shown separately, not monthly interest</p>
+                </div>
+              </div>
+            </div>
+
+            {/* playful finance elements filling the bottom of the black block */}
+            <div className="md:col-span-2 mt-2 border-t border-white/10 pt-7 flex flex-wrap items-center gap-2.5">
+              {[
+                '💳 credit card', '🛍️ BNPL', '🎓 HECS / HELP', '🏦 personal loan',
+                '📊 avalanche order', '📉 less interest', '％ indexation', '💰 spare cash first',
+              ].map((t, i) => (
+                <span key={t} className={`text-sm font-semibold text-white/75 bg-white/[0.06] border border-white/10 rounded-full px-3.5 py-1.5 ${i % 2 ? '-rotate-1' : 'rotate-1'}`}>{t}</span>
+              ))}
             </div>
           </div>
         </div>
@@ -630,15 +691,32 @@ const Home = () => {
           <h2 className="font-bricolage font-extrabold leading-[1.02] tracking-[-0.03em] text-[clamp(2.25rem,5vw,4rem)] max-w-3xl mx-auto">
             Build your first course in an afternoon.
           </h2>
+          <p className="mt-6 text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
+            Start from a blank canvas or let AI draft your first lesson, add live code and quizzes, and share it
+            with a single link. Or skip straight to the money tools and run your own numbers on tax, super,
+            mortgages, and debt. Everything here is free, open-source, and built for Australia.
+          </p>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-2.5">
+            {['Free forever', 'Open-source', 'Built for Australia', 'No ads, no lock-in', 'Your data stays yours'].map((t) => (
+              <span key={t} className="text-sm font-semibold text-white bg-white/15 rounded-full px-4 py-2">{t}</span>
+            ))}
+          </div>
+
           <div className="mt-9 flex flex-wrap gap-3 justify-center">
             <Link to="/register" className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-[color:var(--mark-blue)] text-base font-bold hover:-translate-y-0.5 transition-transform">
               Create a course
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </Link>
+            <Link to="/tools" className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white/15 text-white text-base font-bold hover:bg-white/25 transition-colors">
+              Explore the tools
+            </Link>
             <Link to="/courses" className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white/15 text-white text-base font-bold hover:bg-white/25 transition-colors">
               Browse the curriculum
             </Link>
           </div>
+
+          <p className="mt-7 text-sm text-white/70">No credit card, and no account needed just to look around.</p>
         </div>
       </section>
     </div>

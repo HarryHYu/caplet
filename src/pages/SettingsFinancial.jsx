@@ -39,7 +39,7 @@ const SettingsFinancial = () => {
           savingsBalance: numStr(p.savingsBalance),
           superBalance: numStr(p.superBalance),
           monthlyExpenses: numStr(p.monthlyExpenses),
-          debts: Array.isArray(p.debts) ? p.debts.filter(Boolean).map((d) => ({ label: d.label || '', balance: numStr(d.balance), rate: numStr(d.rate) })) : [],
+          debts: Array.isArray(p.debts) ? p.debts.filter(Boolean).map((d) => ({ label: d.label || '', balance: numStr(d.balance), rate: numStr(d.rate), type: d.type })) : [],
           goals: Array.isArray(p.goals) ? p.goals.filter(Boolean).map((g) => ({ label: g.label || '', target: numStr(g.target) })) : [],
         });
       })
@@ -90,7 +90,9 @@ const SettingsFinancial = () => {
         monthlyExpenses: money(form.monthlyExpenses),
         debts: form.debts
           .filter((d) => d.label.trim() || String(d.balance).trim())
-          .map((d) => ({ label: d.label.trim(), balance: Number(d.balance) || 0, rate: Number(d.rate) || 0 })),
+          // Preserve the optional `type` set by the Debt Sequencer even though
+          // this form has no type editor — otherwise saving here would strip it.
+          .map((d) => ({ label: d.label.trim(), balance: Number(d.balance) || 0, rate: Number(d.rate) || 0, ...(d.type ? { type: d.type } : {}) })),
         goals: form.goals
           .filter((g) => g.label.trim() || String(g.target).trim())
           .map((g) => ({ label: g.label.trim(), target: Number(g.target) || 0 })),
@@ -102,7 +104,7 @@ const SettingsFinancial = () => {
         savingsBalance: numStr(p.savingsBalance),
         superBalance: numStr(p.superBalance),
         monthlyExpenses: numStr(p.monthlyExpenses),
-        debts: (p.debts || []).filter(Boolean).map((d) => ({ label: d.label || '', balance: numStr(d.balance), rate: numStr(d.rate) })),
+        debts: (p.debts || []).filter(Boolean).map((d) => ({ label: d.label || '', balance: numStr(d.balance), rate: numStr(d.rate), type: d.type })),
         goals: (p.goals || []).filter(Boolean).map((g) => ({ label: g.label || '', target: numStr(g.target) })),
       });
       setMessage({ type: 'success', text: 'Financial profile saved.' });

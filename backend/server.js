@@ -118,6 +118,7 @@ app.use('/api/ai', require('./routes/ai'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/saved-slides', require('./routes/savedSlides'));
 app.use('/api/financial-profile', require('./routes/financialProfile'));
+app.use('/api/debt-sequencing', require('./routes/debtSequencing'));
 app.use('/api/review', require('./routes/review'));
 app.use('/api/essays', require('./routes/essays'));
 app.use('/api/events', require('./routes/events'));

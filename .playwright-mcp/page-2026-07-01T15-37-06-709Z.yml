@@ -1,0 +1,149 @@
+- generic [ref=e3]:
+  - banner [ref=e56]:
+    - generic [ref=e58]:
+      - link "Caplet logo Caplet." [ref=e59] [cursor=pointer]:
+        - /url: /dashboard
+        - img "Caplet logo" [ref=e61]
+        - generic [ref=e62]: Caplet.
+      - navigation [ref=e63]:
+        - link "Dashboard" [ref=e64] [cursor=pointer]:
+          - /url: /dashboard
+        - link "Curriculum" [ref=e65] [cursor=pointer]:
+          - /url: /courses
+        - link "Academy" [ref=e66] [cursor=pointer]:
+          - /url: /classes
+        - link "Instruments" [ref=e67] [cursor=pointer]:
+          - /url: /tools
+      - generic [ref=e68]:
+        - button "toggle dark mode" [ref=e69] [cursor=pointer]:
+          - img [ref=e70]
+        - button "ET Editor" [ref=e73] [cursor=pointer]:
+          - generic [ref=e74]: ET
+          - generic [ref=e75]: Editor
+          - img [ref=e76]
+  - main [ref=e4]:
+    - generic [ref=e79]:
+      - generic [ref=e81]:
+        - generic [ref=e82]: welcome back
+        - heading "Good evening, Editor." [level=1] [ref=e83]
+        - paragraph [ref=e84]: Great to see you again. You have 0 active courses in progress.
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - paragraph [ref=e87]:
+            - text: Modules Active
+            - img [ref=e88]
+          - paragraph [ref=e90]: "0"
+        - generic [ref=e91]:
+          - paragraph [ref=e92]:
+            - text: Completed
+            - img [ref=e93]
+          - paragraph [ref=e95]: "0"
+        - generic [ref=e96]:
+          - paragraph [ref=e97]:
+            - text: Academy Classes
+            - img [ref=e98]
+          - paragraph [ref=e100]: "0"
+        - generic [ref=e101]:
+          - paragraph [ref=e102]:
+            - text: Saved Slides
+            - img [ref=e103]
+          - paragraph [ref=e105]: "0"
+      - generic [ref=e106]:
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - generic [ref=e110]:
+              - generic [ref=e111]: Academy
+              - heading "My Classes" [level=2] [ref=e112]
+            - link "View All Classes" [ref=e113] [cursor=pointer]:
+              - /url: /classes
+          - generic [ref=e115]:
+            - paragraph [ref=e116]: No classes yet
+            - paragraph [ref=e117]: Join or create a class to see it here.
+        - generic [ref=e118]:
+          - generic [ref=e120]: My Courses
+          - generic [ref=e121]:
+            - generic [ref=e122]: Revision
+            - generic [ref=e123]:
+              - link "Archived slides 0 slides flagged" [ref=e124] [cursor=pointer]:
+                - /url: /revision
+                - generic [ref=e125]:
+                  - img [ref=e126]
+                  - generic [ref=e128]:
+                    - paragraph [ref=e129]: Archived slides
+                    - paragraph [ref=e130]: 0 slides flagged
+                - img [ref=e131]
+              - link "Essay Memoriser Practice your essays with AI" [ref=e133] [cursor=pointer]:
+                - /url: /essays
+                - generic [ref=e134]:
+                  - img [ref=e135]
+                  - generic [ref=e137]:
+                    - paragraph [ref=e138]: Essay Memoriser
+                    - paragraph [ref=e139]: Practice your essays with AI
+                - img [ref=e140]
+          - generic [ref=e143]:
+            - img [ref=e144]
+            - heading "Daily Insight" [level=4] [ref=e147]
+            - blockquote [ref=e148]: "\"Compound interest is the eighth wonder of the world. He who understands it, earns it. He who does not, pays it.\""
+            - paragraph [ref=e149]: Albert Einstein
+  - contentinfo [ref=e150]:
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - generic [ref=e153]:
+          - link "Caplet logo Caplet." [ref=e154] [cursor=pointer]:
+            - /url: /dashboard
+            - img "Caplet logo" [ref=e155]
+            - generic [ref=e156]: Caplet.
+          - paragraph [ref=e157]: learn anything, for free
+          - paragraph [ref=e158]: A free, open platform for building interactive courses, financial tools, and classrooms.
+        - generic [ref=e159]:
+          - heading "Learn" [level=3] [ref=e160]
+          - list [ref=e161]:
+            - listitem [ref=e162]:
+              - link "Courses" [ref=e163] [cursor=pointer]:
+                - /url: /courses
+                - text: Courses
+            - listitem [ref=e165]:
+              - link "Classes" [ref=e166] [cursor=pointer]:
+                - /url: /classes
+                - text: Classes
+            - listitem [ref=e168]:
+              - link "Tools" [ref=e169] [cursor=pointer]:
+                - /url: /tools
+                - text: Tools
+            - listitem [ref=e171]:
+              - link "Essay memoriser" [ref=e172] [cursor=pointer]:
+                - /url: /essays
+                - text: Essay memoriser
+        - generic [ref=e174]:
+          - heading "Support" [level=3] [ref=e175]
+          - list [ref=e176]:
+            - listitem [ref=e177]:
+              - link "Dashboard" [ref=e178] [cursor=pointer]:
+                - /url: /dashboard
+                - text: Dashboard
+            - listitem [ref=e180]:
+              - link "Contact" [ref=e181] [cursor=pointer]:
+                - /url: /contact
+                - text: Contact
+            - listitem [ref=e183]:
+              - link "Terms and privacy" [ref=e184] [cursor=pointer]:
+                - /url: /terms
+                - text: Terms and privacy
+        - generic [ref=e186]:
+          - heading "Contact" [level=3] [ref=e187]
+          - list [ref=e188]:
+            - listitem [ref=e189]:
+              - link "Twitter" [ref=e190] [cursor=pointer]:
+                - /url: /dashboard
+                - text: Twitter
+            - listitem [ref=e192]:
+              - link "GitHub" [ref=e193] [cursor=pointer]:
+                - /url: /dashboard
+                - text: GitHub
+            - listitem [ref=e195]:
+              - link "Email" [ref=e196] [cursor=pointer]:
+                - /url: /dashboard
+                - text: Email
+      - generic [ref=e198]:
+        - paragraph [ref=e199]: © 2026 Caplet
+        - paragraph [ref=e200]: Free and open-source.

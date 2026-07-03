@@ -23,6 +23,7 @@ import EmergencyFund from './pages/tools/EmergencyFund';
 import NetWorth from './pages/tools/NetWorth';
 import InflationCalculator from './pages/tools/InflationCalculator';
 import CreditCardPayoff from './pages/tools/CreditCardPayoff';
+import DebtSequencer from './pages/tools/DebtSequencer';
 import ROICalculator from './pages/tools/ROICalculator';
 import RentVsBuy from './pages/tools/RentVsBuy';
 import DebtToIncome from './pages/tools/DebtToIncome';
@@ -151,6 +152,7 @@ function AppShell() {
           <Route path="/tools/net-worth" element={<NetWorth />} />
           <Route path="/tools/inflation" element={<InflationCalculator />} />
           <Route path="/tools/credit-card-payoff" element={<CreditCardPayoff />} />
+          <Route path="/tools/debt-sequencer" element={<DebtSequencer />} />
           <Route path="/tools/roi" element={<ROICalculator />} />
           <Route path="/tools/rent-vs-buy" element={<RentVsBuy />} />
           <Route path="/tools/debt-to-income" element={<DebtToIncome />} />

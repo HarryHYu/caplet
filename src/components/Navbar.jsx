@@ -66,18 +66,18 @@ const Navbar = () => {
       }`}
     >
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
-        <div className="h-11 md:h-12 flex items-center justify-between gap-4">
+        <div className="h-14 md:h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}
           <Link to={homePath} className="flex items-center gap-2 group relative z-10 shrink-0">
-            <div className="w-6 h-6 md:w-7 md:h-7 rounded-full overflow-hidden ring-1 ring-line-soft group-hover:ring-accent transition-all duration-300">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden ring-1 ring-line-soft group-hover:ring-accent transition-all duration-300">
               <img
                 src="/logo.png"
                 alt="Caplet logo"
                 className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
               />
             </div>
-            <span className="text-sm md:text-base font-serif italic font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors duration-300">
+            <span className="text-base md:text-lg font-serif italic font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors duration-300">
               Caplet.
             </span>
           </Link>
@@ -91,7 +91,7 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                  className={`relative px-2.5 py-1.5 text-[11px] font-bold tracking-[0.08em] transition-all duration-200 ${
+                  className={`relative px-3 py-2 text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
                     active
                       ? 'text-text-primary font-black border-b-2 border-accent'
                       : 'text-text-muted hover:text-text-primary hover:bg-surface-soft rounded-none'
@@ -204,7 +204,7 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/register"
-                className="hidden md:inline-flex items-center justify-center bg-accent hover:bg-accent-strong text-white font-bold text-[11px] tracking-[0.12em] px-4 py-1.5 rounded-lg transition-all duration-300"
+                className="hidden md:inline-flex items-center justify-center bg-accent hover:bg-accent-strong text-white font-bold text-xs tracking-[0.1em] px-4 py-2 rounded-lg transition-all duration-300"
               >
                 Get started
               </Link>

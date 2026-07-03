@@ -125,6 +125,17 @@ const tools = [
     ),
   },
   {
+    title: 'Debt Sequencer',
+    description: 'Rank your debts by what they actually cost to carry, with HECS/HELP handled on its own terms.',
+    path: '/tools/debt-sequencer',
+    category: 'Debt & Loans',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-3-3m3 3l3-3" />
+      </svg>
+    ),
+  },
+  {
     title: 'Debt-to-Income Ratio',
     description: 'Calculate your DTI ratio, the first thing lenders check before approving any loan.',
     path: '/tools/debt-to-income',

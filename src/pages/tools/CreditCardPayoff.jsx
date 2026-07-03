@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { standardDebtPayoff } from '../../lib/debtMath';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
@@ -20,14 +21,19 @@ const CreditCardPayoff = () => {
       setResult({ error: 'Please enter valid values for all fields.' });
       return;
     }
-    if (P <= B * r) {
+
+    // Core payoff math is shared with the backend debt engine via src/lib/debtMath.js
+    // (kept in sync by parity tests on both sides). The minimum-payment simulation
+    // below stays local to this tool.
+    const { months, totalPaid, totalInterest, neverPayoff } = standardDebtPayoff({
+      balance: B,
+      annualRate: parseFloat(apr),
+      monthlyPayment: P,
+    });
+    if (neverPayoff) {
       setResult({ error: 'Monthly payment is too low to cover interest — the balance will never be paid off. Increase your payment.' });
       return;
     }
-
-    const months = Math.ceil(-Math.log(1 - (B * r) / P) / Math.log(1 + r));
-    const totalPaid = P * months;
-    const totalInterest = totalPaid - B;
     const years = Math.floor(months / 12);
     const remMonths = months % 12;
 
