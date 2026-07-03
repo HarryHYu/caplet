@@ -1,26 +1,23 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET, requireAuth } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
+const { resolveEditorWorkspaceId } = require('../middleware/editorAuth');
 const { generateLessonSlides, getClient } = require('../services/lessonAI');
 
 const router = express.Router();
 
 /**
- * The AI endpoints reuse the editor JWT — only people who entered an
- * editor access code can call them. Regular site users never see this.
+ * The AI endpoints reuse the editor workspace concept purely for rate
+ * limiting — /editor itself is public, so this no longer requires a code,
+ * just resolves everyone to the shared default workspace bucket.
  */
-function requireEditor(req, res, next) {
+async function requireEditor(req, res, next) {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.typ !== 'editor' || !decoded.wid) {
-      return res.status(401).json({ message: 'Invalid editor token' });
-    }
-    req.workspaceId = decoded.wid;
+    req.workspaceId = await resolveEditorWorkspaceId(token);
     next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid token' });
+  } catch (e) {
+    console.error('Editor workspace resolution failed:', e);
+    res.status(500).json({ message: 'Internal server error' });
   }
 }
 

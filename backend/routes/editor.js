@@ -6,6 +6,7 @@ const Lesson = require('../models/Lesson');
 const EditorWorkspace = require('../models/EditorWorkspace');
 const { digestEditorCode } = require('../utils/editorCode');
 const { JWT_SECRET } = require('../middleware/auth');
+const { resolveEditorWorkspaceId } = require('../middleware/editorAuth');
 const { validateSlides } = require('../utils/slideSchema');
 
 const router = express.Router();
@@ -61,18 +62,17 @@ function sortCourseContent(course) {
   return course;
 }
 
-function authenticateEditor(req, res, next) {
+// /editor is public — no code required anymore. Resolves to the shared
+// default workspace unless the caller happens to send a still-valid editor
+// JWT from before the gate was removed.
+async function authenticateEditor(req, res, next) {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.typ !== 'editor' || !decoded.wid) {
-      return res.status(401).json({ message: 'Invalid editor token' });
-    }
-    req.workspaceId = decoded.wid;
+    req.workspaceId = await resolveEditorWorkspaceId(token);
     next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid token' });
+  } catch (e) {
+    console.error('Editor workspace resolution failed:', e);
+    res.status(500).json({ message: 'Internal server error' });
   }
 }
 

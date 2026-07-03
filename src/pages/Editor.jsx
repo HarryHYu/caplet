@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { normalizeSlide, warnSlide, SLIDE_DEFAULTS, slideKindLabel, SLIDE_PALETTE } from '../lib/slideSchema';
 import SlideForm from '../components/editor/SlideForms';
@@ -38,66 +37,6 @@ function slideSummary(slide) {
     case 'desmos': return n.title || (n.expressions || []).map((e) => e.latex).join(', ').slice(0, 60) || 'Desmos graph';
     default: return n.type;
   }
-}
-
-/* ── Code entry screen ─────────────────────────────────────────────────────── */
-
-function CodeEntry({ onEnter }) {
-  const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await api.editorEnter(code.trim());
-      onEnter();
-    } catch (err) {
-      setError(err.message || 'Could not enter workspace');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-[100dvh] pt-14 md:pt-16 bg-surface-body flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="absolute inset-0 grid-technical opacity-[0.14] pointer-events-none" />
-      <div className="relative w-full max-w-sm">
-        <p className="font-mono text-[10px] font-medium text-accent/60 uppercase tracking-[0.22em] mb-6">
-          Lesson workspace
-        </p>
-        <h1 className="text-[2.6rem] font-display font-bold text-text-primary tracking-tight leading-none mb-3">
-          Access code
-        </h1>
-        <p className="text-[14px] text-text-dim leading-relaxed mb-10">
-          Enter the code your admin shared with you.
-        </p>
-        <form data-tour-id="editor-code-form" onSubmit={submit} className="space-y-5">
-          <input
-            type="password"
-            autoComplete="off"
-            placeholder="Paste your code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="w-full border-b-2 border-line-soft bg-transparent pb-3 text-text-primary text-[15px] focus:border-accent focus:outline-none transition-colors duration-200 placeholder:text-text-dim/40"
-          />
-          {error && <p className="text-[13px] text-rose-500">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading || !code.trim()}
-            className="btn-primary w-full py-3"
-          >
-            {loading ? 'Checking…' : 'Continue'}
-          </button>
-        </form>
-        <Link to="/" className="inline-block mt-8 text-[13px] text-text-dim hover:text-accent transition-colors duration-150">
-          ← Back to home
-        </Link>
-      </div>
-    </div>
-  );
 }
 
 /* ── Inline rename ─────────────────────────────────────────────────────────── */
@@ -679,9 +618,6 @@ function LessonBuilder({ lessonId, draft, setDraft, saveMsg, onNewSlide, onAddSl
 /* ── Top-level page ────────────────────────────────────────────────────────── */
 
 export default function Editor() {
-  const [hasToken, setHasToken] = useState(
-    typeof sessionStorage !== 'undefined' && !!sessionStorage.getItem('editorToken'),
-  );
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState('');
@@ -706,11 +642,6 @@ export default function Editor() {
       return data.courses || [];
     } catch (e) {
       setGlobalError(e.message || 'Failed to load workspace');
-      if (e.status === 401) {
-        api.clearEditorToken();
-        setHasToken(false);
-        setCourses([]);
-      }
       return [];
     } finally {
       setLoading(false);
@@ -718,8 +649,8 @@ export default function Editor() {
   }, []);
 
   useEffect(() => {
-    if (hasToken) reload();
-  }, [hasToken, reload]);
+    reload();
+  }, [reload]);
 
   const currentSig = useMemo(() => {
     if (!draft) return '';
@@ -939,15 +870,6 @@ export default function Editor() {
   };
 
 
-  const leave = () => {
-    api.clearEditorToken();
-    setHasToken(false);
-    setCourses([]);
-    setSelected(null);
-    setDraft(null);
-    setOriginalSig('');
-  };
-
   useEffect(() => {
     const handler = (e) => {
       if (!dirty) return undefined;
@@ -958,10 +880,6 @@ export default function Editor() {
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [dirty]);
-
-  if (!hasToken) {
-    return <CodeEntry onEnter={() => setHasToken(true)} />;
-  }
 
   const inLessonMode = !!selected;
 
@@ -1051,13 +969,6 @@ export default function Editor() {
                   className="h-7 px-3 rounded-md border border-line-soft text-[12px] font-medium text-text-dim hover:text-text-primary hover:border-text-dim/40 transition-colors duration-150"
                 >
                   Refresh
-                </button>
-                <button
-                  type="button"
-                  onClick={leave}
-                  className="h-7 px-3 rounded-md border border-line-soft text-[12px] font-medium text-text-dim hover:text-text-primary hover:border-text-dim/40 transition-colors duration-150"
-                >
-                  Leave
                 </button>
               </div>
             </>

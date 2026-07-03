@@ -6,6 +6,7 @@ const User = require('../models/User');
 const { Classroom, ClassMembership, Lesson, Course, Module } = require('../models');
 const { presignPost, publicObjectUrl, SIZE_LIMITS } = require('../services/s3Presign');
 const { JWT_SECRET } = require('../middleware/auth');
+const { resolveEditorWorkspaceId } = require('../middleware/editorAuth');
 
 const router = express.Router();
 
@@ -17,27 +18,36 @@ const MIME_TO_EXT = {
 };
 
 /**
- * Uploads can be authenticated with either a regular user JWT or an
- * editor JWT (issued by /api/editor/enter). The editor variant only
- * exposes req.editorWorkspaceId, not req.user.
+ * Uploads can be authenticated with either a regular user JWT or an editor
+ * JWT. /editor itself is public now (no code required), so anyone with no
+ * token — or a stale/invalid one — is resolved to the shared default
+ * workspace rather than rejected; purposes that genuinely require a login
+ * (avatar, class assets) still get blocked below where req.user is checked.
  */
 const authenticateUserOrEditor = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.typ === 'editor' && decoded.wid) {
-      req.editorWorkspaceId = decoded.wid;
-      return next();
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.typ === 'editor' && decoded.wid) {
+          req.editorWorkspaceId = decoded.wid;
+          return next();
+        }
+        const user = await User.findByPk(decoded.userId);
+        if (user) {
+          req.user = user;
+          return next();
+        }
+      } catch {
+        // fall through to anonymous editor access below
+      }
     }
-    const user = await User.findByPk(decoded.userId);
-    if (!user) return res.status(401).json({ message: 'Invalid token' });
-
-    req.user = user;
+    req.editorWorkspaceId = await resolveEditorWorkspaceId(null);
     next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid token' });
+  } catch (e) {
+    console.error('Upload auth error:', e);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
