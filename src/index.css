@@ -21,9 +21,9 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Surfaces — warm cream paper, site-wide */
-  --surface-body: #F6F1E6;
-  --surface-base: #F6F1E6;   /* alias for --surface-body used in Tour/demo */
+  /* Surfaces — light cream paper, site-wide */
+  --surface-body: #F8F5EF;
+  --surface-base: #F8F5EF;   /* alias for --surface-body used in Tour/demo */
   --surface-soft: #ECE5D6;
   --surface-raised: #FCFAF4;
   --surface-inverse: #141413;
@@ -37,7 +37,7 @@
   --text-primary: #1C1A16;
   --text-muted: #756F63;
   --text-dim: #ABA391;
-  --text-contrast: #F6F1E6;
+  --text-contrast: #F8F5EF;
 
   /* Lines — warm and soft, so outlines recede */
   --line-soft: #DCD4C2;
@@ -88,7 +88,7 @@
   --surface-base: #141413;   /* alias for --surface-body used in Tour/demo */
   --surface-soft: #232220;
   --surface-raised: #1c1b19;
-  --surface-inverse: #F6F1E6;
+  --surface-inverse: #F8F5EF;
 
   --text-primary: #F2EEE4;
   --text-muted: #B4AD9E;
@@ -459,7 +459,7 @@
 /* Readable body text + comfortable rhythm for everything inside the homepage. */
 .home-root {
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
-  background-color: #F6F1E6; /* warm cream paper */
+  background-color: #F8F5EF; /* light cream paper */
 }
 .dark .home-root { background-color: #141413; }
 .body-text {
