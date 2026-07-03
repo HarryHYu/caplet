@@ -112,6 +112,43 @@ function AnswerCelebration({ correct, pointsAwarded, streakBonus, streak, rank }
   );
 }
 
+// Persists the joined participant's identity across page reloads (phone lock
+// screens, a backgrounded tab getting discarded, an accidental refresh, a
+// flaky connection triggering a manual reload, etc). Without this, refreshing
+// mid-game would re-run handleJoin and mint a brand new participant — showing
+// up as a duplicate entry on the leaderboard with their score reset to zero.
+// Scoped to sessionStorage (not localStorage) so it naturally clears once the
+// tab/game is actually done with, and namespaced by session code so joining a
+// second, different game in the same tab doesn't resurrect the old one.
+function participantStorageKey(code) {
+  return `caplet:live:${(code || '').toUpperCase()}`;
+}
+
+function loadStoredParticipant(code) {
+  try {
+    const raw = sessionStorage.getItem(participantStorageKey(code));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveStoredParticipant(code, participant) {
+  try {
+    sessionStorage.setItem(participantStorageKey(code), JSON.stringify(participant));
+  } catch {
+    /* private-browsing storage quota, etc — reconnect just won't survive a refresh */
+  }
+}
+
+function clearStoredParticipant(code) {
+  try {
+    sessionStorage.removeItem(participantStorageKey(code));
+  } catch {
+    /* no-op */
+  }
+}
+
 function shuffleArray(items) {
   const arr = items.slice();
   for (let i = arr.length - 1; i > 0; i--) {
@@ -542,10 +579,13 @@ function JoinScreen({ onJoin, joining, joinError, initialCode }) {
 export default function PlayLive() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const urlCode = searchParams.get('code') || '';
 
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState(null);
-  const [participant, setParticipant] = useState(null); // { token, id, nickname, sessionId }
+  // { token, id, nickname, sessionId, code } — code is kept alongside so a
+  // reload can find the right sessionStorage slot again from the URL alone.
+  const [participant, setParticipant] = useState(() => loadStoredParticipant(urlCode));
 
   const [roster, setRoster] = useState([]);
   const [current, setCurrent] = useState(null); // state:update
@@ -555,6 +595,7 @@ export default function PlayLive() {
   const [youResult, setYouResult] = useState(null); // you:result
   const [finalLeaderboard, setFinalLeaderboard] = useState(null);
   const [connError, setConnError] = useState(null);
+  const [answerError, setAnswerError] = useState(null);
 
   const socketRef = useRef(null);
 
@@ -563,7 +604,9 @@ export default function PlayLive() {
     setJoinError(null);
     try {
       const data = await api.joinLiveSession(code, nickname);
-      setParticipant({ token: data.token, id: data.participant.id, nickname: data.participant.nickname, sessionId: data.session.id });
+      const joined = { token: data.token, id: data.participant.id, nickname: data.participant.nickname, sessionId: data.session.id, code };
+      saveStoredParticipant(code, joined);
+      setParticipant(joined);
     } catch (e) {
       setJoinError(e.message || 'Could not join — check the code and try again');
     } finally {
@@ -576,12 +619,32 @@ export default function PlayLive() {
     const socket = connectParticipantSocket(participant.token);
     socketRef.current = socket;
 
-    socket.on('connect_error', (e) => setConnError(e.message || 'Connection error'));
+    socket.on('connect_error', (e) => {
+      setConnError(e.message || 'Connection error');
+      // The stored token is no longer valid (session cleaned up, expired,
+      // etc) — drop it so the user gets a fresh join screen instead of
+      // silently retrying against a dead session forever.
+      if (e.message === 'unauthorized') {
+        clearStoredParticipant(participant.code);
+        setParticipant(null);
+      }
+    });
     socket.on('lobby:roster', (d) => setRoster(d.players || []));
     socket.on('state:update', (d) => {
       setCurrent(d);
-      setMyAnswer(null);
-      setAckResult(null);
+      setAnswerError(null);
+      // A reconnect mid-round (dropped wifi, phone lock screen, an
+      // accidental refresh) lands here too — `yourAnswer` tells us this
+      // participant already answered this exact round, so jump straight to
+      // the locked-in/celebration state instead of showing the answer form
+      // again (submitting a second time would just be silently rejected).
+      if (d.yourAnswer) {
+        setMyAnswer({ response: null });
+        setAckResult(d.yourAnswer);
+      } else {
+        setMyAnswer(null);
+        setAckResult(null);
+      }
       setReveal(null);
       setYouResult(null);
     });
@@ -595,10 +658,11 @@ export default function PlayLive() {
   const submitAnswer = (response) => {
     if (!current || myAnswer) return;
     setMyAnswer({ response });
+    setAnswerError(null);
     socketRef.current.emit('participant:answer', { slideIndex: current.slideIndex, response }, (ack) => {
       if (!ack?.ok) {
         setMyAnswer(null);
-        setJoinError(ack?.error || null);
+        setAnswerError(ack?.error || 'Could not submit your answer — try again');
         return;
       }
       setAckResult(ack);
@@ -636,7 +700,11 @@ export default function PlayLive() {
           <div className={mine?.bestStreak >= 2 ? '' : 'mt-6'}>
             <Podium leaderboard={finalLeaderboard} highlightId={participant.id} />
           </div>
-          <button type="button" onClick={() => navigate('/')} className="btn-secondary mt-8">
+          <button
+            type="button"
+            onClick={() => { clearStoredParticipant(participant.code); navigate('/'); }}
+            className="btn-secondary mt-8"
+          >
             Done
           </button>
         </div>
@@ -698,7 +766,10 @@ export default function PlayLive() {
           )}
 
           {current.status === 'question_open' && !myAnswer && !isReveal && LiveComp && (
-            <LiveComp slide={current.slide} onAnswer={submitAnswer} locked={false} />
+            <div>
+              {answerError && <p className="text-sm text-rose-500 text-center mb-3">{answerError}</p>}
+              <LiveComp slide={current.slide} onAnswer={submitAnswer} locked={false} />
+            </div>
           )}
 
           {current.status === 'question_open' && myAnswer && !ackResult && !isReveal && (

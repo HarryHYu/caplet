@@ -30,6 +30,13 @@ const LiveParticipant = sequelize.define('LiveParticipant', {
     allowNull: false,
     defaultValue: 0
   },
+  // Durable copy of the in-memory room.streaks best — survives the session
+  // ending (which deletes that ephemeral state) and server restarts.
+  bestStreak: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
+  },
   connected: {
     type: DataTypes.BOOLEAN,
     allowNull: false,

@@ -38,7 +38,8 @@ function parseLessonSlides(raw) {
 
 // sessionId -> { hostSocketId, participantSockets: Map(participantId -> socketId),
 //                slides: normalizedSlide[], round: activeRound | null,
-//                streaks: Map(participantId -> { current, best }) }
+//                streaks: Map(participantId -> { current, best }),
+//                lastReveal: { slideIndex, revealPayload, youResultByParticipant } | undefined }
 const rooms = new Map();
 
 function getRoom(sessionId) {
@@ -147,7 +148,13 @@ function attachLiveSocket(httpServer) {
     });
   }
 
-  /** `room` is optional so external/offline callers can still get a plain leaderboard. */
+  /**
+   * `room` is optional so external/offline callers can still get a plain
+   * leaderboard. `bestStreak` prefers the live in-memory value (if this
+   * room's game is still running) but falls back to the durable DB column —
+   * that column is what a reconnect-after-`endSession` or a post-restart
+   * request sees, since `room.streaks` no longer exists at that point.
+   */
   async function currentLeaderboard(sessionId, limit, room) {
     const participants = await LiveParticipant.findAll({
       where: { sessionId },
@@ -162,7 +169,7 @@ function attachLiveSocket(httpServer) {
         score: p.totalScore,
         rank: i + 1,
         streak: s?.current || 0,
-        bestStreak: s?.best || 0,
+        bestStreak: Math.max(s?.best || 0, p.bestStreak || 0),
       };
     });
   }
@@ -254,22 +261,21 @@ function attachLiveSocket(httpServer) {
     await session.save();
 
     const leaderboard = await currentLeaderboard(sessionId, 10, room);
-
-    live.to(sessionId).emit('results:reveal', {
+    const revealPayload = {
       slideIndex: round.slideIndex,
       totalAnswered: round.responses.size,
       totalParticipants: allParticipants.length,
       correctCount,
       leaderboard,
-    });
+    };
+    live.to(sessionId).emit('results:reveal', revealPayload);
 
     // Private per-player result (their own correctness/points/rank/streak), not broadcast.
     const rankByParticipant = new Map(leaderboard.map((l) => [l.id, l.rank]));
+    const youResultByParticipant = new Map();
     for (const [participantId, result] of round.responses.entries()) {
-      const socketId = room.participantSockets.get(participantId);
-      if (!socketId) continue;
       const participant = allParticipants.find((p) => p.id === participantId);
-      live.to(socketId).emit('you:result', {
+      const youResult = {
         slideIndex: round.slideIndex,
         correct: result.correct,
         pointsAwarded: result.points,
@@ -278,8 +284,18 @@ function attachLiveSocket(httpServer) {
         streak: result.streak,
         totalScore: participant?.totalScore ?? null,
         rank: rankByParticipant.get(participantId) ?? null,
-      });
+      };
+      youResultByParticipant.set(participantId, youResult);
+      const socketId = room.participantSockets.get(participantId);
+      if (socketId) live.to(socketId).emit('you:result', youResult);
     }
+
+    // Cached so a host/participant reconnecting while still on the reveal
+    // screen (e.g. a flaky connection, or just refreshing to double-check a
+    // score) sees the same results instead of a bare, dataless slide —
+    // `room.round` above is already cleared, so this is the only place that
+    // information still exists once revealRound() returns.
+    room.lastReveal = { slideIndex: round.slideIndex, revealPayload, youResultByParticipant };
   }
 
   async function endSession(sessionId, room) {
@@ -335,6 +351,16 @@ function attachLiveSocket(httpServer) {
               opensAt: null,
               windowMs: null,
             });
+            if (session.status === 'reveal' && room.lastReveal?.slideIndex === session.currentSlideIndex) {
+              socket.emit('results:reveal', room.lastReveal.revealPayload);
+            }
+          } else if (session?.status === 'finished') {
+            // The host refreshed after clicking Finish (or after the last
+            // question auto-advanced past the end) — endSession() already
+            // deleted the old room, so `room` here is a brand new empty one;
+            // currentLeaderboard falls back to the DB for score/bestStreak.
+            const leaderboard = await currentLeaderboard(sessionId, null, room);
+            socket.emit('session:ended', { leaderboard });
           }
         } catch (e) {
           console.error('Live host reconnect catch-up failed:', e);
@@ -421,6 +447,12 @@ function attachLiveSocket(httpServer) {
             const slide = room.slides?.[room.round.slideIndex];
             if (slide) {
               const { publicSlide } = prepareQuestion(slide);
+              // If they'd already answered before dropping/refreshing, tell
+              // the client so it can go straight to the "locked in" /
+              // celebration state instead of showing the answer form again —
+              // re-submitting at that point would just fail silently server
+              // side ("Already answered"), with no clear feedback in the UI.
+              const already = room.round.responses.get(participantId);
               socket.emit('state:update', {
                 slideIndex: room.round.slideIndex,
                 slideCount: room.slides.length,
@@ -428,17 +460,31 @@ function attachLiveSocket(httpServer) {
                 slide: publicSlide,
                 opensAt: room.round.opensAt,
                 windowMs: room.round.windowMs,
+                yourAnswer: already
+                  ? { correct: already.correct, pointsAwarded: already.points, basePoints: already.basePoints, streakBonus: already.streakBonus, streak: already.streak }
+                  : null,
               });
             }
-          } else if (session?.status === 'active' && room.slides?.[session.currentSlideIndex]) {
+          } else if (
+            (session?.status === 'active' || session?.status === 'reveal') &&
+            room.slides?.[session.currentSlideIndex]
+          ) {
             socket.emit('state:update', {
               slideIndex: session.currentSlideIndex,
               slideCount: room.slides.length,
-              status: 'active',
+              status: session.status === 'reveal' ? 'reveal' : 'active',
               slide: room.slides[session.currentSlideIndex],
               opensAt: null,
               windowMs: null,
             });
+            if (session.status === 'reveal' && room.lastReveal?.slideIndex === session.currentSlideIndex) {
+              socket.emit('results:reveal', room.lastReveal.revealPayload);
+              const youResult = room.lastReveal.youResultByParticipant.get(participantId);
+              if (youResult) socket.emit('you:result', youResult);
+            }
+          } else if (session?.status === 'finished') {
+            const leaderboard = await currentLeaderboard(sessionId, null, room);
+            socket.emit('session:ended', { leaderboard });
           }
         } catch (e) {
           console.error('Live participant connect handling failed:', e);
@@ -483,6 +529,11 @@ function attachLiveSocket(httpServer) {
           const participant = await LiveParticipant.findByPk(participantId);
           if (participant) {
             await participant.increment('totalScore', { by: points });
+            // Only a DB write when a new personal best is actually reached,
+            // so a long game isn't doing an extra write on every question.
+            if (streakInfo.best > (participant.bestStreak || 0)) {
+              await participant.update({ bestStreak: streakInfo.best });
+            }
           }
 
           if (room.hostSocketId) {
