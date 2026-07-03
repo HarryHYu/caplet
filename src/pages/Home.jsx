@@ -95,6 +95,18 @@ const Home = () => {
   const [activeShowcaseTab, setActiveShowcaseTab] = useState('workspace');
   const [activeFaq, setActiveFaq] = useState(0);
 
+  // The welcome page is intentionally a single colour: force the light theme
+  // while it is mounted (the theme toggle is hidden here — see Navbar), then
+  // restore the user's saved theme on leave so the dashboard and every other
+  // page keep dark mode.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('dark');
+    return () => {
+      if (localStorage.getItem('theme') === 'dark') root.classList.add('dark');
+    };
+  }, []);
+
   useEffect(() => {
     const reduce =
       typeof window !== 'undefined' &&
@@ -674,7 +686,7 @@ const Home = () => {
                   </button>
                   <div className={`grid transition-all duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                     <div className="overflow-hidden">
-                      <p className="px-6 pb-6 body-text !text-[1rem] !leading-[1.65] max-w-2xl">{item.answer}</p>
+                      <p className="px-6 pb-6 body-text !text-[1rem] !leading-[1.65]">{item.answer}</p>
                     </div>
                   </div>
                 </div>

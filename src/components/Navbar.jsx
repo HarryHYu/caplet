@@ -6,15 +6,18 @@ import { useTheme } from '../contexts/ThemeContext';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showExplore, setShowExplore] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const menuRef = useRef(null);
+  const exploreRef = useRef(null);
 
   useEffect(() => {
     setIsOpen(false);
     setShowUserMenu(false);
+    setShowExplore(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -28,28 +31,28 @@ const Navbar = () => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowUserMenu(false);
       }
+      if (exploreRef.current && !exploreRef.current.contains(e.target)) {
+        setShowExplore(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const allNavItems = [
-    { path: '/dashboard', label: 'Dashboard', privateOnly: true },
+  // The three destinations that live under the single "Explore" dropdown.
+  const exploreItems = [
     { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
     { path: '/classes', label: 'Academy', tourId: 'nav-academy' },
     { path: '/tools', label: 'Instruments', tourId: 'nav-instruments' },
   ];
 
-  const navItems = allNavItems.filter((item) => {
-    if (isAuthenticated) return !item.publicOnly;
-    return !item.privateOnly;
-  });
-
   const homePath = isAuthenticated ? '/dashboard' : '/';
+  const isHome = location.pathname === '/';
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
+  const exploreActive = exploreItems.some((item) => isActive(item.path));
 
   const hidePaths = ['/login', '/register', '/play'];
   if (hidePaths.includes(location.pathname)) return null;
@@ -77,30 +80,71 @@ const Navbar = () => {
                 className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
               />
             </div>
-            <span className="text-base md:text-lg font-serif italic font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors duration-300">
+            <span className="text-lg md:text-xl font-bricolage font-extrabold tracking-[-0.02em] text-text-primary group-hover:text-accent transition-colors duration-300">
               Caplet.
             </span>
           </Link>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                  className={`relative px-3 py-2 text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
-                    active
-                      ? 'text-text-primary font-black border-b-2 border-accent'
-                      : 'text-text-muted hover:text-text-primary hover:bg-surface-soft rounded-none'
-                  }`}
+            {isAuthenticated && (
+              <Link
+                to="/dashboard"
+                className={`relative px-3 py-2 text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
+                  isActive('/dashboard')
+                    ? 'text-text-primary font-black border-b-2 border-accent'
+                    : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
+                }`}
+              >
+                Dashboard
+              </Link>
+            )}
+
+            {/* Single "Explore" button grouping Curriculum, Academy, Instruments */}
+            <div className="relative" ref={exploreRef}>
+              <button
+                type="button"
+                onClick={() => setShowExplore((v) => !v)}
+                aria-expanded={showExplore}
+                aria-haspopup="true"
+                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
+                  exploreActive || showExplore
+                    ? 'text-text-primary font-black'
+                    : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
+                }`}
+              >
+                Explore
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${showExplore ? 'rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 >
-                  {item.label}
-                </Link>
-              );
-            })}
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showExplore && (
+                <div className="absolute top-full left-0 mt-2 w-52 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                  {exploreItems.map((item) => {
+                    const active = isActive(item.path);
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setShowExplore(false)}
+                        {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
+                        className={`block px-4 py-2.5 text-sm font-bold tracking-[0.04em] transition-colors ${
+                          active
+                            ? 'text-accent bg-accent-soft'
+                            : 'text-text-primary hover:bg-surface-soft'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
  
           {/* Actions */}
@@ -116,7 +160,8 @@ const Navbar = () => {
               Join Live
             </Link>
 
-            {/* Theme toggle */}
+            {/* Theme toggle — hidden on the single-colour welcome page */}
+            {!isHome && (
             <button
               type="button"
               onClick={toggleTheme}
@@ -133,7 +178,8 @@ const Navbar = () => {
                 </svg>
               )}
             </button>
- 
+            )}
+
  
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
@@ -231,7 +277,10 @@ const Navbar = () => {
         {/* Mobile menu */}
         {isOpen && (
           <div className="md:hidden border-t border-line-soft py-3 flex flex-col gap-0.5">
-            {navItems.map((item) => {
+            {(isAuthenticated
+              ? [{ path: '/dashboard', label: 'Dashboard' }, ...exploreItems]
+              : exploreItems
+            ).map((item) => {
               const active = isActive(item.path);
               return (
                 <Link
