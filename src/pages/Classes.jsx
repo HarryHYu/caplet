@@ -6,7 +6,6 @@ import CapletLoader from '../components/CapletLoader';
 import { useReveal } from '../lib/useReveal';
 
 const Classes = () => {
-  useReveal();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -17,6 +16,10 @@ const Classes = () => {
   const [joinCode, setJoinCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Re-run once content renders (past the loading gate), else there are no
+  // .reveal elements on mount and nothing animates.
+  useReveal(undefined, [loading]);
 
   useEffect(() => {
     if (!isAuthenticated) {
