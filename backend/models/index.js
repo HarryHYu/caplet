@@ -20,6 +20,8 @@ const Essay = require('./Essay');
 const LiveSession = require('./LiveSession');
 const LiveParticipant = require('./LiveParticipant');
 const LiveResponse = require('./LiveResponse');
+const CdrConnection = require('./CdrConnection');
+const CdrTransaction = require('./CdrTransaction');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -236,6 +238,14 @@ LiveResponse.belongsTo(LiveSession, { foreignKey: 'sessionId', as: 'session' });
 LiveParticipant.hasMany(LiveResponse, { foreignKey: 'participantId', as: 'responses', onDelete: 'CASCADE' });
 LiveResponse.belongsTo(LiveParticipant, { foreignKey: 'participantId', as: 'participant' });
 
+// Financial Twin: CDR consent connections and their ingested transactions.
+// CASCADE both ways so deleting a user removes every trace of ingested data,
+// and revoking a connection can bulk-delete its transactions.
+User.hasMany(CdrConnection, { foreignKey: 'userId', as: 'cdrConnections', onDelete: 'CASCADE' });
+CdrConnection.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+CdrConnection.hasMany(CdrTransaction, { foreignKey: 'connectionId', as: 'transactions', onDelete: 'CASCADE' });
+CdrTransaction.belongsTo(CdrConnection, { foreignKey: 'connectionId', as: 'connection' });
+
 // Sync database
 // NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
 // This sync() call is a no-op fallback (force: false prevents any schema changes).
@@ -274,5 +284,7 @@ module.exports = {
   LiveSession,
   LiveParticipant,
   LiveResponse,
+  CdrConnection,
+  CdrTransaction,
   syncDatabase
 };

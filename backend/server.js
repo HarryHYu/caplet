@@ -119,6 +119,7 @@ app.use('/api/chat', require('./routes/chat'));
 app.use('/api/saved-slides', require('./routes/savedSlides'));
 app.use('/api/financial-profile', require('./routes/financialProfile'));
 app.use('/api/debt-sequencing', require('./routes/debtSequencing'));
+app.use('/api/financial-twin', require('./routes/financialTwin'));
 app.use('/api/review', require('./routes/review'));
 app.use('/api/essays', require('./routes/essays'));
 app.use('/api/events', require('./routes/events'));
@@ -143,6 +144,12 @@ app.use((req, res) => {
 // Start server
 const startServer = async () => {
   try {
+    // CDR safety gate: refuse to start if real CDR credentials are present
+    // without the accreditation flag, so mocked and real Financial Twin modes
+    // can never be confused. Throws CdrBootSafetyError → caught below → exit(1).
+    const { assertCdrBootSafety } = require('./services/cdr');
+    assertCdrBootSafety(process.env);
+
     // Test database connection
     await testConnection();
 
