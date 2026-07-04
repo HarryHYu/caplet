@@ -34,6 +34,9 @@ const Footer = () => {
   const { isAuthenticated } = useAuth();
   const homePath = isAuthenticated ? '/dashboard' : '/';
 
+  // The full information footer belongs to the visitor-facing homepage only.
+  // Once signed in (or anywhere other than the landing page), hide it.
+  if (isAuthenticated || location.pathname !== '/') return null;
   if (['/login', '/register', '/play'].includes(location.pathname)) return null;
   if (/\/courses\/[^/]+\/lessons\/[^/]+/.test(location.pathname)) return null;
   if (['/editor', '/metrics', '/survey-results'].includes(location.pathname)) return null;

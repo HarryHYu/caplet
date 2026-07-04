@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../contexts/CoursesContext';
+import { useLayout } from '../contexts/LayoutContext';
 import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
@@ -24,6 +25,7 @@ export default function Dashboard() {
     const [classes, setClasses] = useState([]);
     const [savedSlides, setSavedSlides] = useState([]);
     const [dueCount, setDueCount] = useState(0);
+    const { navMode } = useLayout();
 
     useReveal(undefined, [loading, coursesLoading]);
 
@@ -92,9 +94,14 @@ export default function Dashboard() {
     };
 
 
+    // In vertical-rail mode the top navbar is gone on desktop, so the page no
+    // longer needs the tall top clearance the fixed navbar demanded.
+    const topPad = navMode === 'vertical' ? 'pt-24 lg:pt-12' : 'pt-24';
+
     return (
-        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+        <div className={`min-h-screen bg-surface-body ${topPad} pb-24 selection:bg-accent selection:text-white`}>
             <div className="container-custom">
+                <div className="min-w-0 flex-1">
                 {/* Header Section */}
                 <header className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal">
                     <div>
@@ -288,6 +295,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </div>

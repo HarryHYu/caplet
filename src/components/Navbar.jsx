@@ -2,8 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLayout } from '../contexts/LayoutContext';
 
-const Navbar = () => {
+// `mobileOnly` is set when the vertical rail owns navigation on large screens —
+// the top bar then only appears on mobile, so the two never overlap.
+const Navbar = ({ mobileOnly = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showExplore, setShowExplore] = useState(false);
@@ -11,6 +14,7 @@ const Navbar = () => {
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const { toggleNavMode } = useLayout();
   const menuRef = useRef(null);
   const exploreRef = useRef(null);
 
@@ -65,6 +69,8 @@ const Navbar = () => {
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-shadow duration-300 bg-surface-body/90 backdrop-blur-md text-text-primary ${
+        mobileOnly ? 'lg:hidden' : ''
+      } ${
         scrolled ? 'shadow-[0_6px_24px_-16px_rgba(0,0,0,0.4)]' : ''
       }`}
     >
@@ -90,9 +96,9 @@ const Navbar = () => {
             {isAuthenticated && (
               <Link
                 to="/dashboard"
-                className={`relative px-3 py-2 text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
+                className={`relative px-3 py-2 rounded-lg text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
                   isActive('/dashboard')
-                    ? 'text-text-primary font-black border-b-2 border-accent'
+                    ? 'text-accent bg-accent-soft'
                     : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
                 }`}
               >
@@ -107,9 +113,11 @@ const Navbar = () => {
                 onClick={() => setShowExplore((v) => !v)}
                 aria-expanded={showExplore}
                 aria-haspopup="true"
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
-                  exploreActive || showExplore
-                    ? 'text-text-primary font-black'
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
+                  exploreActive
+                    ? 'text-accent bg-accent-soft'
+                    : showExplore
+                    ? 'text-text-primary bg-surface-soft'
                     : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
                 }`}
               >
@@ -160,6 +168,22 @@ const Navbar = () => {
               Join Live
             </Link>
 
+            {/* Switch the whole app to the vertical side rail (signed-in only) */}
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={toggleNavMode}
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
+                aria-label="Switch to side bar navigation"
+                title="Use side bar"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth={2} />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 4v16" />
+                </svg>
+              </button>
+            )}
+
             {/* Theme toggle — hidden on the single-colour welcome page */}
             {!isHome && (
             <button
@@ -208,14 +232,14 @@ const Navbar = () => {
                 </button>
  
                 {showUserMenu && (
-                  <div className="absolute top-full right-0 mt-2 w-48 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <div className="px-3 py-2 mb-1 border-b border-line-soft">
+                  <div className="absolute top-full right-0 mt-2 w-52 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="px-4 py-2 mb-1 border-b border-line-soft">
                       <p className="text-xs font-medium text-text-dim truncate">{user?.email || ''}</p>
                     </div>
                     <Link
                       to="/settings"
                       onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-text-primary hover:bg-surface-soft transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold tracking-[0.04em] text-text-primary hover:bg-surface-soft transition-colors"
                     >
                       <svg className="w-3.5 h-3.5 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -226,7 +250,7 @@ const Navbar = () => {
                     <Link
                       to="/demo"
                       onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-text-primary hover:bg-surface-soft transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold tracking-[0.04em] text-text-primary hover:bg-surface-soft transition-colors"
                     >
                       <svg className="w-3.5 h-3.5 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.869v6.262a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
@@ -237,7 +261,7 @@ const Navbar = () => {
                     <button
                       type="button"
                       onClick={logout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold tracking-[0.04em] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
