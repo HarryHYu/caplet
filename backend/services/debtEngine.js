@@ -170,17 +170,46 @@ function hecsCompulsoryRepayment(repaymentIncome) {
 }
 
 /**
- * Projects a HELP balance forward. Unlike a credit card, growth is indexation
- * applied once per year — NOT monthly compounding.
+ * One HECS/HELP year, as a pure step function. This is the SINGLE home for the
+ * within-year mechanics — calculateHecsProjection's deterministic loop and the
+ * Financial Twin's Monte Carlo trials (services/twinProjection.js) both call it,
+ * so the two can never disagree about how a HELP year works.
  *
- * Order of operations each year (a JUDGMENT CALL, aligned with the 2025
- * indexation reform that credits repayments made during the year BEFORE
- * indexation, so borrowers aren't indexed on amounts they've effectively repaid):
+ * Order of operations (a JUDGMENT CALL, aligned with the 2025 indexation reform
+ * that credits repayments made during the year BEFORE indexation, so borrowers
+ * aren't indexed on amounts they've effectively repaid):
  *   1. subtract voluntary repayment      (user-chosen, optional)
  *   2. subtract compulsory repayment     (income-contingent, derived)
  *   3. apply indexation to the remainder (once, on 1 June)
- *   4. grow repayment income for next year
  * A human should confirm this ordering against the ATO's current mechanics.
+ *
+ * @param {{ openingBalance:number, repaymentIncome:number,
+ *           indexationRate:number, voluntaryAnnual?:number }} args
+ *   indexationRate is a FRACTION (0.032, not 3.2).
+ * @returns {{ voluntaryApplied:number, compulsoryApplied:number,
+ *             indexationApplied:number, closingBalance:number }}
+ */
+function hecsYearStep({ openingBalance, repaymentIncome, indexationRate, voluntaryAnnual = 0 }) {
+  const bal = Math.max(0, toNumber(openingBalance));
+  const idx = Math.max(0, toNumber(indexationRate));
+  const voluntary = Math.max(0, toNumber(voluntaryAnnual));
+  const compulsory = hecsCompulsoryRepayment(repaymentIncome);
+
+  const voluntaryApplied = Math.min(voluntary, bal);
+  const afterVoluntary = Math.max(0, bal - voluntary);
+  const compulsoryApplied = Math.min(compulsory, afterVoluntary);
+  const afterCompulsory = Math.max(0, afterVoluntary - compulsory);
+  const indexationApplied = Math.round(afterCompulsory * idx);
+  const closingBalance = afterCompulsory + indexationApplied;
+
+  return { voluntaryApplied, compulsoryApplied, indexationApplied, closingBalance };
+}
+
+/**
+ * Projects a HELP balance forward. Unlike a credit card, growth is indexation
+ * applied once per year — NOT monthly compounding. Each year is one
+ * hecsYearStep (see above for the order of operations), then repayment income
+ * grows for the following year.
  *
  * @returns {{ startBalance:number, compulsoryRepayment:number,
  *             projectedBalanceAfterIndexation:number, projection:Array }}
@@ -208,25 +237,24 @@ function calculateHecsProjection({
   let income = Math.max(0, Math.round(toNumber(repaymentIncome)));
 
   for (let year = 1; year <= horizon && bal > 0; year += 1) {
-    const compulsory = hecsCompulsoryRepayment(income);
-    const voluntaryApplied = Math.min(voluntary, bal);
-    const afterVoluntary = Math.max(0, bal - voluntary);
-    const compulsoryApplied = Math.min(compulsory, afterVoluntary);
-    const afterCompulsory = Math.max(0, afterVoluntary - compulsory);
-    const indexationApplied = Math.round(afterCompulsory * idx);
-    const closingBalance = afterCompulsory + indexationApplied;
+    const step = hecsYearStep({
+      openingBalance: bal,
+      repaymentIncome: income,
+      indexationRate: idx,
+      voluntaryAnnual: voluntary,
+    });
 
     projection.push({
       year,
       openingBalance: bal,
       repaymentIncome: income,
-      voluntaryRepayment: voluntaryApplied,
-      compulsoryRepayment: compulsoryApplied,
-      indexationApplied,
-      closingBalance,
+      voluntaryRepayment: step.voluntaryApplied,
+      compulsoryRepayment: step.compulsoryApplied,
+      indexationApplied: step.indexationApplied,
+      closingBalance: step.closingBalance,
     });
 
-    bal = closingBalance;
+    bal = step.closingBalance;
     income = Math.max(0, Math.round(income * (1 + incomeGrowth)));
   }
 
@@ -463,6 +491,7 @@ module.exports = {
   CALCULATOR_DISCLAIMER,
   STANDARD_PAYOFF_PARITY_CASES,
   hecsCompulsoryRepayment,
+  hecsYearStep,
   calculateHecsProjection,
   calculateStandardDebtPayoff,
   sequenceDebts,
