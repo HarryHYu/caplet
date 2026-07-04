@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useReveal } from '../../lib/useReveal';
 
 const TAX_BRACKETS = [
   { threshold: 0, rate: 0, base: 0 },
@@ -60,14 +61,16 @@ const TaxCalculator = () => {
     });
   };
 
+  useReveal();
+
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-16">
+        <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
               <span className="font-hand text-2xl text-accent">Tools, compliance</span>
-              <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mt-3 mb-6">
+              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-3 mb-6">
                 Tax <br />Architecture
               </h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
@@ -81,7 +84,7 @@ const TaxCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Assessment Parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-10">
               <div>
@@ -127,7 +130,7 @@ const TaxCalculator = () => {
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Fiscal Summary</h2>
 
             {result ? (

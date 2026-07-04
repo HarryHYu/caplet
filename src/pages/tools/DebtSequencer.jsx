@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import CapletLoader from '../../components/CapletLoader';
+import { useReveal } from '../../lib/useReveal';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(
@@ -78,6 +79,8 @@ const DebtSequencer = () => {
   const removeDebt = (i) => setDebts((d) => d.filter((_, idx) => idx !== i));
   const updateDebt = (i, key, value) => setDebts((d) => d.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
 
+  useReveal();
+
   const handleRun = async (e) => {
     e.preventDefault();
     setRunning(true);
@@ -112,11 +115,11 @@ const DebtSequencer = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-16">
+        <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
               <span className="font-hand text-accent text-lg">Tools &rarr; Debt &amp; Loans</span>
-              <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mt-4 mb-8">Debt<br />Sequencer.</h1>
+              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-4 mb-8">Debt<br />Sequencer.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 Compare what each of your debts actually costs to carry, so you can see which one a spare
                 dollar clears the most cost from &mdash; with HECS handled on its own terms, not as a credit card.
@@ -142,7 +145,7 @@ const DebtSequencer = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* ---------------- Form panel ---------------- */}
-            <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
               <form onSubmit={handleRun} className="space-y-12">
                 {/* Ordinary debts */}
                 <section>
@@ -235,7 +238,7 @@ const DebtSequencer = () => {
             </div>
 
             {/* ---------------- Results panel ---------------- */}
-            <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
               <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Cost ranking</h2>
               {!result ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center">
