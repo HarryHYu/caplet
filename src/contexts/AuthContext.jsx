@@ -22,7 +22,27 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const token = localStorage.getItem('token');
+        let token = localStorage.getItem('token');
+
+        // "autodev mode": skip the login screen while testing locally. This whole
+        // block only exists in the dev build — import.meta.env.DEV is statically
+        // false in production, so Vite strips it (and the credentials) at build time.
+        // Enable by setting VITE_DEV_AUTOLOGIN=true (+ VITE_DEV_EMAIL / VITE_DEV_PASSWORD)
+        // in your local .env, pointing at the local backend.
+        if (!token && import.meta.env.DEV && import.meta.env.VITE_DEV_AUTOLOGIN === 'true') {
+          try {
+            const res = await api.login({
+              email: import.meta.env.VITE_DEV_EMAIL,
+              password: import.meta.env.VITE_DEV_PASSWORD,
+            });
+            api.setToken(res.token);
+            token = res.token;
+            console.info('[autodev] auto-logged in as', res.user?.email);
+          } catch (e) {
+            console.warn('[autodev] auto-login failed — falling back to the login screen:', e.message);
+          }
+        }
+
         if (token) {
           setIsAuthenticated(true);
           api.setToken(token);
