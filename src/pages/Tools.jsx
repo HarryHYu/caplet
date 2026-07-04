@@ -125,6 +125,17 @@ const tools = [
     ),
   },
   {
+    title: 'Financial Twin',
+    description: 'A live simulation of your finances, projected 10\u201320 years ahead as ranges of scenarios \u2014 not a single guess.',
+    path: '/tools/financial-twin',
+    category: 'Savings & Growth',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l4-6 4 3 5-8 5 6M3 21h18" />
+      </svg>
+    ),
+  },
+  {
     title: 'Debt Sequencer',
     description: 'Rank your debts by what they actually cost to carry, with HECS/HELP handled on its own terms.',
     path: '/tools/debt-sequencer',

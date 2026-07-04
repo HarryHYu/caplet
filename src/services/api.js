@@ -369,6 +369,32 @@ class ApiService {
     return this.request(`/debt-sequencing${queryString ? `?${queryString}` : ''}`);
   }
 
+  // Financial Twin — mocked-CDR ingestion + seeded Monte Carlo projection.
+  async connectFinancialTwin(persona) {
+    return this.request('/financial-twin/connect', {
+      method: 'POST',
+      body: JSON.stringify(persona ? { persona } : {}),
+    });
+  }
+
+  async getFinancialTwinConnection() {
+    return this.request('/financial-twin/connection');
+  }
+
+  async revokeFinancialTwin() {
+    return this.request('/financial-twin/connection/revoke', { method: 'POST' });
+  }
+
+  async getFinancialTwinCategorized() {
+    return this.request('/financial-twin/categorized');
+  }
+
+  // params: { seed?, trials?, years? } — same seed always returns the same ranges.
+  async getFinancialTwinProjection(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/financial-twin/projection${queryString ? `?${queryString}` : ''}`);
+  }
+
   // Progress
   async updateLessonProgress(lessonId, progressData) {
     return this.request(`/progress/lesson/${lessonId}`, {

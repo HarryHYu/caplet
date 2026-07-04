@@ -33,6 +33,7 @@ import BreakEven from './pages/tools/BreakEven';
 import FIRENumber from './pages/tools/FIRENumber';
 import RuleOf72 from './pages/tools/RuleOf72';
 import CapitalGains from './pages/tools/CapitalGains';
+import FinancialTwin from './pages/tools/FinancialTwin';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import ModuleDetail from './pages/ModuleDetail';
@@ -147,6 +148,7 @@ function AppRoutes() {
           <Route path="/tools/fire-number" element={<FIRENumber />} />
           <Route path="/tools/rule-of-72" element={<RuleOf72 />} />
           <Route path="/tools/capital-gains" element={<CapitalGains />} />
+          <Route path="/tools/financial-twin" element={<FinancialTwin />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
