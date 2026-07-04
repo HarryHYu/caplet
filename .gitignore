@@ -35,6 +35,13 @@ backend/caplet.db.bak
 **/caplet.db
 **/caplet.db.bak
 
+# Test coverage output
+coverage
+backend/coverage
+
+# Playwright MCP session artifacts
+.playwright-mcp/
+
 # Env and secrets (never commit)
 .env
 backend/.env

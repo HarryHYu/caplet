@@ -570,6 +570,43 @@ Linting:
 npm run lint
 ```
 
+## Financial Twin Engine
+
+A live, consent-driven simulation of a student's financial trajectory, built on top of the debt engine. It ingests bank/BNPL/super transaction data through a Consumer Data Right (CDR) adapter, categorizes it deterministically, and projects HELP balance, super, and savings forward 10–20+ years as a seeded Monte Carlo **range of scenarios** (percentile bands, never a single number, never advice).
+
+### Mocked vs real CDR modes
+
+Caplet is **not yet an accredited CDR data recipient**, so the engine runs entirely against a mocked provider that mimics the real CDR flow (consent handshake → token exchange → paginated, enveloped data calls → revocation):
+
+- `CDR_MODE=mock` (default) — synthetic personas in `backend/services/cdr/fixtures/personas.js`, including deliberately messy cases: irregular BNPL instalments, misclassifiable merchants, partial data, consent revoked mid-sync.
+- `CDR_MODE=real` — **refused at boot** unless `CDR_ACCREDITED=true`. Any real credential env var (`CDR_CLIENT_ID`, `CDR_CLIENT_SECRET`, `CDR_PRIVATE_KEY_PATH`) present without that flag also refuses boot (`assertCdrBootSafety` in `backend/services/cdr/index.js`), so mocked and real modes can never be confused. The real client drops in behind `getCdrProvider()` with no downstream changes.
+
+### Architecture
+
+| Piece | Where | Notes |
+|---|---|---|
+| CDR adapter boundary | `backend/services/cdr/` | Provider factory, error classes, payload validation, string-decimal → whole-dollar normalization |
+| Categorizer | `backend/services/twinCategorizer.js` | Deterministic rules; ambiguous input fails safe to `uncertain`; HECS requires an explicit ATO+HELP signal and is never consumer debt |
+| Assumptions | `backend/services/twinAssumptions.js` | Every economic figure carries an effective date + source, echoed in API responses |
+| Projection | `backend/services/twinProjection.js` | Seeded (mulberry32) Monte Carlo; reuses `debtEngine.hecsYearStep` so HECS math has one home; seed echoed for reproducibility |
+| API | `backend/routes/financialTwin.js` | `/api/financial-twin/{connect,connection,connection/revoke,categorized,projection}` (auth required) |
+| Storage | `cdr_connections`, `cdr_transactions` (migration 016) | Minimized snapshot only; revoking consent hard-deletes all stored transactions |
+| UI | `src/pages/tools/FinancialTwin.jsx` (`/tools/financial-twin`) | Fan chart of percentile bands, uncertain-transaction review list, assumptions provenance table |
+
+### Data protection
+
+Ingested transactions are stored minimally (no merchant names, no provider brands, no account numbers), are hard-deleted on consent revocation, and are never written to logs — `backend/services/twinLog.js` logs identifiers and counts only and throws if passed financial fields.
+
+### Running its tests
+
+```bash
+cd backend
+npx jest tests/cdrProvider.test.js tests/twinCategorizer.test.js tests/twinProjection.test.js tests/twinCompliance.test.js tests/financialTwin.test.js
+npm test        # or simply the whole suite
+```
+
+The suite includes adversarial categorization cases, a zero-volatility parity gate (the Monte Carlo engine must reproduce `calculateHecsProjection` exactly), seeded-reproducibility checks, and compliance-language tests asserting no output ever reads as personal advice or names a real provider. Frontend: `npx vitest run src/test/financialTwin.test.jsx`.
+
 ## Deployment
 
 ### Frontend
