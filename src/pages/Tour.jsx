@@ -116,7 +116,7 @@ const SCENES = [
     avatarLeft: '50%',
     caption: {
       title: "And beyond",
-      body: "Caplet is the platform students and teachers use today. CapletMark is how we turn that into a scalable business. Live quiz sessions, adaptive practice, certifications, open API — the infrastructure for how people learn.",
+      body: "Caplet is the platform students and teachers use today — live, Kahoot-style quiz sessions included. CapletMark is how we turn that into a scalable business. Adaptive practice, certifications, an open API — the infrastructure for how people learn next.",
     },
   },
 ];
@@ -424,27 +424,25 @@ function CourseCover({ title }) {
 function SimHome() {
   return (
     <div className="absolute inset-0 bg-surface-body text-text-primary relative selection:bg-accent selection:text-text-contrast overflow-hidden">
-      <section className="relative h-full flex items-center overflow-hidden">
-        <div className="absolute inset-0 grid-technical opacity-40 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-surface-body pointer-events-none" />
-        <div className="container-custom relative z-10 w-full text-center py-32">
-          <div className="max-w-4xl mx-auto text-text-primary">
-            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter mb-8">
-              Money,<br />
-              <span className="font-serif italic font-medium text-accent-strong">Simplified.</span>
-            </h1>
-            <p className="text-xl sm:text-2xl font-display font-medium max-w-2xl mx-auto text-text-muted leading-relaxed mb-12">
-              Structured financial education for Australians.<br />
-              No products. No catch. Just clarity.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <button className="bg-accent hover:bg-accent-strong text-white font-display font-semibold px-10 py-5 rounded-full transition-all duration-300 shadow-xl">
-                Get Started Free
-              </button>
-              <button className="text-text-muted hover:text-text-primary font-display font-bold text-sm transition-all duration-300 py-4 px-6">
-                Browse Registry <span>&rarr;</span>
-              </button>
-            </div>
+      <section className="relative h-full flex items-center justify-center overflow-hidden">
+        <div className="relative z-10 flex flex-col items-center text-center max-w-3xl px-5 mx-auto">
+          <p className="font-hand text-2xl md:text-[1.65rem] text-blue mb-5 -rotate-2">free, open, and a little playful</p>
+          <h1 className="font-bricolage font-extrabold text-text-primary leading-[0.96] tracking-[-0.03em] text-[clamp(3rem,8.5vw,6.25rem)]">
+            Build, learn,<br />
+            and ship anything.
+          </h1>
+          <p className="body-text mt-8 max-w-xl mx-auto">
+            Caplet is a free, open platform for building interactive courses and learning from them.
+            Lessons, live code, graphing, quizzes. No subscriptions. No lock-in.
+          </p>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <button className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-[color:var(--mark-blue)] text-white text-base font-bold shadow-[0_12px_30px_-10px_rgba(19,81,170,0.5)]">
+              Start building
+              <span aria-hidden>&rarr;</span>
+            </button>
+            <button className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl block-blue text-text-primary text-base font-bold">
+              See how it works
+            </button>
           </div>
         </div>
       </section>
@@ -469,10 +467,10 @@ function SimCourses() {
       <div className="container-custom" style={{ paddingTop: '5rem' }}>
         {/* Header — exact copy from Courses.jsx */}
         <header className="mb-16">
-          <span className="section-kicker">Library</span>
-          <h1 className="text-6xl md:text-8xl mb-12">Curriculum.</h1>
-          <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
-            Browse our course library designed for Australian learners.
+          <p className="font-hand text-2xl text-accent mb-3 -rotate-2">Pick something to learn</p>
+          <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mb-8">Curriculum</h1>
+          <p className="text-xl md:text-2xl text-text-muted max-w-xl leading-relaxed">
+            Browse the full course library and start wherever you like.
           </p>
         </header>
 
@@ -939,10 +937,10 @@ function SimClasses() {
         {/* Header — exact copy from Classes.jsx */}
         <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-12">
           <div>
-            <span className="section-kicker">Faculty Admissions</span>
-            <h1 className="text-6xl md:text-8xl mb-12">The Academy.</h1>
-            <p className="text-2xl text-text-muted font-serif italic max-w-xl leading-relaxed">
-              Collaborative learning environments structured for peer progression and academic leadership.
+            <span className="font-hand text-accent text-2xl">Learn together</span>
+            <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mb-12 mt-2">The Academy.</h1>
+            <p className="text-2xl text-text-muted max-w-xl leading-relaxed">
+              Collaborative learning environments built for peer progression and academic leadership.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -1520,10 +1518,9 @@ function SimMarkMarket() {
 
 /* ─────────────────────────── SimFuture ─────────────────────────────────── */
 const FUTURE_ITEMS = [
-  { label: 'Live Kahoot-style Mode',          desc: 'Real-time quizzes, leaderboards, instant feedback — all running on actual course content, not separate decks.' },
   { label: 'AI Essay Marking',                desc: 'Students write long-form answers; a model trained against real marking rubrics grades and returns targeted, specific feedback.' },
   { label: 'Adaptive Practice Paths',         desc: 'Difficulty adjusts per student based on their quiz history. Everyone works at the level that pushes them exactly enough.' },
-  { label: 'Gamification Layer',              desc: 'One shared currency across lessons, games and activities — points, streaks, leaderboards, cross-platform rewards.' },
+  { label: 'Shared Currency, Platform-wide',  desc: 'One economy that works across every lesson, game, and activity on Caplet — earn it anywhere, spend it anywhere.' },
   { label: 'Assessment & Certification',      desc: 'Formal assessments with custom rubrics, auto-generated certificates, and per-school progress reporting dashboards.' },
   { label: 'Open Platform & API',             desc: 'Caplet becomes infrastructure — publishers, developers, and institutions build on top of it for any subject, any audience, anywhere.' },
 ];
