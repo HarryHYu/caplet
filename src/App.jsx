@@ -183,7 +183,9 @@ function AppShell() {
   const { isAuthenticated } = useAuth();
   const { navMode } = useLayout();
 
-  // Tour gets a completely standalone layout — no Navbar/Footer/flex wrapper
+  // Tour gets a completely standalone layout — no Navbar/Footer/flex wrapper,
+  // and no site-wide marker cursor (the tour draws its own scripted pointer,
+  // and having both on screen at once looks like a bug).
   if (pathname === '/demo') {
     return (
       <Routes>
@@ -205,6 +207,7 @@ function AppShell() {
   if (vertical) {
     return (
       <div className="min-h-screen bg-surface-body lg:flex">
+        <MarkerCursor />
         <Sidebar />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <Navbar mobileOnly />
@@ -219,6 +222,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MarkerCursor />
       <Navbar />
       <main className="flex-grow">
         <AppRoutes />
@@ -237,7 +241,6 @@ function App() {
           <LayoutProvider>
             <Router>
               <ScrollToTop />
-              <MarkerCursor />
               <AppShell />
             </Router>
           </LayoutProvider>

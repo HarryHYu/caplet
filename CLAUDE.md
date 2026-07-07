@@ -35,7 +35,7 @@ Monorepo: React frontend at the root, Node.js/Express backend in `backend/`. The
 - **State**: React Context only — `AuthContext`, `CoursesContext`, `ThemeContext` in `src/contexts/`. No Redux or Zustand.
 - **API layer**: Singleton `ApiService` class in [src/services/api.js](src/services/api.js). All backend calls go through this. Auth JWT stored in `localStorage`; editor session token in `sessionStorage`.
 - **Design system**: CSS custom properties defined in [src/index.css](src/index.css) map to Tailwind tokens in [tailwind.config.js](tailwind.config.js). All colors go through `surface-*`, `text-*`, `accent-*`, `line-*` tokens — never raw hex in components. Dark mode is `class`-based.
-- **Fonts**: Plus Jakarta Sans (`font-display`), Outfit (`font-body`), Lora (`font-serif`), JetBrains Mono (`font-mono`).
+- **Fonts**: Bricolage Grotesque (`font-display`/`font-bricolage`), Hanken Grotesk (`font-body`/`font-hanken`), Shantell Sans (`font-hand`, casual kicker labels), Lora (`font-serif`), JetBrains Mono (`font-mono`).
 
 ### Backend (Express 5 + Sequelize + PostgreSQL)
 
