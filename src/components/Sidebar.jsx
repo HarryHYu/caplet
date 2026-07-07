@@ -60,8 +60,8 @@ export default function Sidebar() {
     const items = [
         { path: '/dashboard', label: 'Dashboard', icon: Squares2X2Icon },
         { path: '/courses', label: 'Curriculum', icon: BookOpenIcon },
-        { path: '/classes', label: 'Academy', icon: AcademicCapIcon },
-        { path: '/tools', label: 'Instruments', icon: WrenchScrewdriverIcon },
+        { path: '/classes', label: 'Classes', icon: AcademicCapIcon },
+        { path: '/fintools', label: 'Financial Tools', icon: WrenchScrewdriverIcon },
         { path: '/revision', label: 'Revision', icon: ArrowPathIcon, badge: dueCount },
         { path: '/essays', label: 'Essays', icon: DocumentTextIcon, badge: savedCount },
     ];

@@ -71,7 +71,7 @@ const CreditCardPayoff = () => {
                 See exactly how long it takes to clear your balance, and how much interest you save by paying more.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
+            <Link to="/fintools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
           </div>
         </header>
 

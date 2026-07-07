@@ -52,7 +52,7 @@ const BreakEven = () => {
                 Find out exactly how many units you need to sell before you start making money.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">Back to Tools</Link>
+            <Link to="/fintools" className="btn-secondary text-sm px-8">Back to Tools</Link>
           </div>
         </header>
 

@@ -44,8 +44,8 @@ const Widget = ({ className = '', tilt = '0deg', delay = '0s', block = 'block-cr
 
 const features = [
   { tag: 'build', title: 'Lesson builder', body: 'Drag blocks onto the page: text, images, video, code, quizzes. Arrange a whole lesson in minutes.', to: '/courses', block: 'block-blue' },
-  { tag: 'code', title: 'Live code IDE', body: 'Python, JavaScript, and HTML run right in the browser, with test runners and an AI debugger.', to: '/tools', block: 'block-blue' },
-  { tag: 'graph', title: 'Desmos and plotting', body: 'Drop in graphing panels and geometry widgets. A student drags a slider and the curve responds.', to: '/tools', block: 'block-green' },
+  { tag: 'code', title: 'Live code IDE', body: 'Python, JavaScript, and HTML run right in the browser, with test runners and an AI debugger.', to: '/fintools', block: 'block-blue' },
+  { tag: 'graph', title: 'Desmos and plotting', body: 'Drop in graphing panels and geometry widgets. A student drags a slider and the curve responds.', to: '/fintools', block: 'block-green' },
   { tag: 'check', title: 'Quizzes and grading', body: 'Mix in quiz blocks and grading workflows that track every student’s progress automatically.', to: '/courses', block: 'block-amber' },
   { tag: 'ai', title: 'AI lesson generation', body: 'Describe a topic and Caplet drafts structured slides, quizzes, and a lesson plan for you to edit.', to: '/courses', block: 'block-blue' },
   { tag: 'class', title: 'Classrooms', body: 'Group students into classes, set assignments, and watch submissions arrive in real time.', to: '/classes', block: 'block-blue' },
@@ -411,7 +411,7 @@ const Home = () => {
               {calculators.map((c) => (
                 <span key={c} className="px-3.5 py-2 rounded-full bg-white/[0.06] border border-white/10 text-sm font-semibold text-white/80">{c}</span>
               ))}
-              <Link to="/tools" data-cursor className="px-4 py-2 rounded-full bg-[color:var(--mark-blue)] text-white text-sm font-bold hover:-translate-y-0.5 transition-transform inline-flex items-center gap-1.5">
+              <Link to="/fintools" data-cursor className="px-4 py-2 rounded-full bg-[color:var(--mark-blue)] text-white text-sm font-bold hover:-translate-y-0.5 transition-transform inline-flex items-center gap-1.5">
                 See every tool
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
@@ -428,7 +428,7 @@ const Home = () => {
                 cost first. HECS and HELP are handled on their own terms, indexed once a year, not treated like a
                 credit card.
               </p>
-              <Link to="/tools/debt-sequencer" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-black font-bold hover:-translate-y-0.5 transition-transform">
+              <Link to="/fintools/debt-sequencer" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-black font-bold hover:-translate-y-0.5 transition-transform">
                 Try the Debt Sequencer
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
@@ -600,7 +600,7 @@ const Home = () => {
                   <div className="flex-1">
                     <h3 className="font-bricolage font-bold text-3xl text-text-primary mb-4">Run real code, right in the browser</h3>
                     <p className="body-text mb-7 max-w-md">Python, JavaScript, and HTML with instant visual feedback, test runners, and an AI debugger on hand. Nothing to install.</p>
-                    <Link to="/tools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
+                    <Link to="/fintools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
                       Open the playground
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                     </Link>
@@ -636,7 +636,7 @@ const Home = () => {
                   <div className="flex-1">
                     <h3 className="font-bricolage font-bold text-3xl text-text-primary mb-4">Graphing that students can touch</h3>
                     <p className="body-text mb-7 max-w-md">Drop interactive geometry and graphing panels into a lesson. Drag a parameter and watch the curve move, live.</p>
-                    <Link to="/tools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
+                    <Link to="/fintools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
                       Plot a graph
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                     </Link>
@@ -717,7 +717,7 @@ const Home = () => {
               Create a course
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </Link>
-            <Link to="/tools" className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white/15 text-white text-base font-bold hover:bg-white/25 transition-colors">
+            <Link to="/fintools" className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white/15 text-white text-base font-bold hover:bg-white/25 transition-colors">
               Explore the tools
             </Link>
             <Link to="/courses" className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white/15 text-white text-base font-bold hover:bg-white/25 transition-colors">

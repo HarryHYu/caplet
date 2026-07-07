@@ -74,7 +74,7 @@ const SavingsGoal = () => {
                 Set a savings goal and see how long it takes to get there.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">
+            <Link to="/fintools" className="btn-secondary text-sm px-8">
               &larr; Back to tools
             </Link>
           </div>

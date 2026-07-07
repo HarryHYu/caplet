@@ -77,7 +77,7 @@ const TaxCalculator = () => {
                 Work out your fiscal obligation and net outcome based on residency brackets.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
+            <Link to="/fintools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
               &larr; Back to Tools
             </Link>
           </div>

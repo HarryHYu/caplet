@@ -91,7 +91,7 @@ const RentVsBuy = () => {
                 Compare the true total cost of renting versus buying a home over any time horizon.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">Back to Tools</Link>
+            <Link to="/fintools" className="btn-secondary text-sm px-8">Back to Tools</Link>
           </div>
         </header>
 

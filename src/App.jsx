@@ -11,7 +11,8 @@ import Tour from './pages/Tour';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Contact from './pages/Contact';
-import Tools from './pages/Tools';
+import FinancialTools from './pages/FinancialTools';
+import EduTools from './pages/EduTools';
 import TaxCalculator from './pages/tools/TaxCalculator';
 import BudgetPlanner from './pages/tools/BudgetPlanner';
 import SavingsGoal from './pages/tools/SavingsGoal';
@@ -125,29 +126,31 @@ function AppRoutes() {
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/tools" element={<Tools />} />
+          <Route path="/fintools" element={<FinancialTools />} />
+          <Route path="/tools" element={<Navigate to="/fintools" replace />} />
+          <Route path="/edutools" element={<EduTools />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
-          <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
-          <Route path="/tools/savings-goal" element={<SavingsGoal />} />
-          <Route path="/tools/loan-repayment" element={<LoanRepayment />} />
-          <Route path="/tools/compound-interest" element={<CompoundInterest />} />
-          <Route path="/tools/mortgage" element={<MortgageCalculator />} />
-          <Route path="/tools/super-contribution" element={<SuperContribution />} />
-          <Route path="/tools/gst" element={<GSTCalculator />} />
-          <Route path="/tools/salary" element={<SalaryCalculator />} />
-          <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
-          <Route path="/tools/net-worth" element={<NetWorth />} />
-          <Route path="/tools/inflation" element={<InflationCalculator />} />
-          <Route path="/tools/credit-card-payoff" element={<CreditCardPayoff />} />
-          <Route path="/tools/debt-sequencer" element={<DebtSequencer />} />
-          <Route path="/tools/roi" element={<ROICalculator />} />
-          <Route path="/tools/rent-vs-buy" element={<RentVsBuy />} />
-          <Route path="/tools/debt-to-income" element={<DebtToIncome />} />
-          <Route path="/tools/break-even" element={<BreakEven />} />
-          <Route path="/tools/fire-number" element={<FIRENumber />} />
-          <Route path="/tools/rule-of-72" element={<RuleOf72 />} />
-          <Route path="/tools/capital-gains" element={<CapitalGains />} />
+          <Route path="/fintools/tax-calculator" element={<TaxCalculator />} />
+          <Route path="/fintools/budget-planner" element={<BudgetPlanner />} />
+          <Route path="/fintools/savings-goal" element={<SavingsGoal />} />
+          <Route path="/fintools/loan-repayment" element={<LoanRepayment />} />
+          <Route path="/fintools/compound-interest" element={<CompoundInterest />} />
+          <Route path="/fintools/mortgage" element={<MortgageCalculator />} />
+          <Route path="/fintools/super-contribution" element={<SuperContribution />} />
+          <Route path="/fintools/gst" element={<GSTCalculator />} />
+          <Route path="/fintools/salary" element={<SalaryCalculator />} />
+          <Route path="/fintools/emergency-fund" element={<EmergencyFund />} />
+          <Route path="/fintools/net-worth" element={<NetWorth />} />
+          <Route path="/fintools/inflation" element={<InflationCalculator />} />
+          <Route path="/fintools/credit-card-payoff" element={<CreditCardPayoff />} />
+          <Route path="/fintools/debt-sequencer" element={<DebtSequencer />} />
+          <Route path="/fintools/roi" element={<ROICalculator />} />
+          <Route path="/fintools/rent-vs-buy" element={<RentVsBuy />} />
+          <Route path="/fintools/debt-to-income" element={<DebtToIncome />} />
+          <Route path="/fintools/break-even" element={<BreakEven />} />
+          <Route path="/fintools/fire-number" element={<FIRENumber />} />
+          <Route path="/fintools/rule-of-72" element={<RuleOf72 />} />
+          <Route path="/fintools/capital-gains" element={<CapitalGains />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />

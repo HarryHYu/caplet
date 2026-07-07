@@ -140,7 +140,7 @@ export default function Dashboard() {
                     {[
                         { label: 'Modules Active', value: inProgressCourses.length, icon: BookOpenIcon, block: 'block-blue' },
                         { label: 'Completed', value: completedCourses.length, icon: CheckCircleIcon, block: 'block-green' },
-                        { label: 'Academy Classes', value: classes.length, icon: AcademicCapIcon, block: 'block-amber' },
+                        { label: 'Classes', value: classes.length, icon: AcademicCapIcon, block: 'block-amber' },
                         { label: 'Saved Slides', value: savedSlides.length, icon: BookmarkIcon, block: 'block-cream' }
                     ].map((stat) => (
                         <div key={stat.label} className={`${stat.block} rounded-3xl p-8 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200`}>
@@ -191,11 +191,11 @@ export default function Dashboard() {
                             </div>
                         )}
 
-                        {/* Recent Academy Enrollments */}
+                        {/* Recent class enrollments */}
                         <div className="reveal">
                             <div className="flex items-end justify-between mb-6">
                                 <div>
-                                    <span className="font-hand text-lg text-blue -rotate-2 inline-block mb-1">academy</span>
+                                    <span className="font-hand text-lg text-blue -rotate-2 inline-block mb-1">classes</span>
                                     <h2 className="font-display font-bold tracking-tight text-3xl md:text-4xl text-text-primary">My Classes</h2>
                                 </div>
                                 <Link to="/classes" className="text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">View All Classes</Link>
@@ -242,9 +242,12 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Revision — its own section, mirrors "My Courses" */}
+                        {/* Education tools — its own section, mirrors "My Courses" */}
                         <div className="reveal">
-                            <span className="font-hand text-lg text-blue -rotate-2 inline-block mb-1">revision</span>
+                            <div className="flex items-end justify-between mb-1">
+                                <span className="font-hand text-lg text-blue -rotate-2 inline-block">education tools</span>
+                                <Link to="/edutools" className="text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">View all</Link>
+                            </div>
                             <div className="mt-6 space-y-4">
                                 <Link
                                     to="/revision"

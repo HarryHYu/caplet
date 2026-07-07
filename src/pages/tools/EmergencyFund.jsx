@@ -52,7 +52,7 @@ const EmergencyFund = () => {
                 Analyze your capital resilience and define the liquidity buffer you need for unexpected transitions.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
+            <Link to="/fintools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
               Back to Tools
             </Link>
           </div>

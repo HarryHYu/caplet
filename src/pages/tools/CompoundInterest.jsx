@@ -60,7 +60,7 @@ const CompoundInterest = () => {
                 See how your savings grow with <span className="hl-swipe hl-blue">compounding</span> over time.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
+            <Link to="/fintools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
               &larr; Back to tools
             </Link>
           </div>

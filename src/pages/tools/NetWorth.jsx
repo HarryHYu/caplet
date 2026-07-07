@@ -64,7 +64,7 @@ const NetWorth = () => {
                 Total assets minus total liabilities, the single most honest number in personal finance.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">&larr; Back to Tools</Link>
+            <Link to="/fintools" className="btn-secondary text-sm px-8">&larr; Back to Tools</Link>
           </div>
         </header>
 

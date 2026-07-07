@@ -32,17 +32,20 @@ The frontend routes are defined in `src/App.jsx`.
 | `/courses/:courseId` | Course detail page with modules and lessons. |
 | `/courses/:courseId/modules/:moduleId` | Module detail page. |
 | `/courses/:courseId/lessons/:lessonId` | Slide-based lesson player. |
-| `/tools` | Index of financial calculators. |
-| `/tools/tax-calculator` | Australian income tax calculator. |
-| `/tools/budget-planner` | Budget planner. |
-| `/tools/savings-goal` | Savings goal calculator. |
-| `/tools/loan-repayment` | Loan repayment calculator. |
-| `/tools/compound-interest` | Compound interest calculator. |
-| `/tools/mortgage` | Mortgage calculator. |
-| `/tools/super-contribution` | Super contribution calculator. |
-| `/tools/gst` | GST calculator. |
-| `/tools/salary` | Salary calculator. |
-| `/tools/emergency-fund` | Emergency fund calculator. |
+| `/fintools` | Index of financial calculators (formerly `/tools`, which now redirects here). |
+| `/fintools/tax-calculator` | Australian income tax calculator. |
+| `/fintools/budget-planner` | Budget planner. |
+| `/fintools/savings-goal` | Savings goal calculator. |
+| `/fintools/loan-repayment` | Loan repayment calculator. |
+| `/fintools/compound-interest` | Compound interest calculator. |
+| `/fintools/mortgage` | Mortgage calculator. |
+| `/fintools/super-contribution` | Super contribution calculator. |
+| `/fintools/gst` | GST calculator. |
+| `/fintools/salary` | Salary calculator. |
+| `/fintools/emergency-fund` | Emergency fund calculator. |
+| `/edutools` | Index of education tools (revision and essay memoriser). |
+| `/demo` | Standalone product demo/tour, available whether signed in or not. |
+| `/play` | Join a live Kahoot-style quiz session (Caplet Live). |
 | `/contact` | Contact page. |
 | `/terms` | Terms page. |
 | `/profile/:userId` | Public user profile. |
@@ -54,6 +57,7 @@ The frontend routes are defined in `src/App.jsx`.
 |---|---|
 | `/dashboard` | User dashboard and learning overview. |
 | `/revision` | Saved slide review. Users can organize saved slides and generate summary slides with AI. |
+| `/essays` | Essay memoriser — practise recalling essays with AI feedback. |
 | `/classes` | Class list and class creation/joining. |
 | `/classes/:classId` | Class detail page with announcements, assignments, members, comments, and completion controls. |
 | `/settings/profile` | User profile settings. |

@@ -7,8 +7,8 @@ const columns = [
     links: [
       { label: 'Courses', path: '/courses' },
       { label: 'Classes', path: '/classes' },
-      { label: 'Tools', path: '/tools' },
-      { label: 'Essay memoriser', path: '/essays' },
+      { label: 'Financial tools', path: '/fintools' },
+      { label: 'Education tools', path: '/edutools' },
     ],
   },
   {

@@ -35,7 +35,7 @@ export function nextAction(profile = {}) {
       title: 'Build a debt payoff plan',
       rationale:
         'You listed outstanding debt. Clearing high-interest balances is usually the highest-return move you can make.',
-      to: `/tools/credit-card-payoff?balance=${balance}&apr=${apr}`,
+      to: `/fintools/credit-card-payoff?balance=${balance}&apr=${apr}`,
     };
   }
 
@@ -46,7 +46,7 @@ export function nextAction(profile = {}) {
       title: 'Start an emergency fund',
       rationale:
         'A small cash buffer keeps a surprise expense from turning into debt. Even a few hundred dollars helps.',
-      to: '/tools/emergency-fund',
+      to: '/fintools/emergency-fund',
     };
   }
 
@@ -57,7 +57,7 @@ export function nextAction(profile = {}) {
       title: 'Boost your super',
       rationale:
         'Extra contributions early in your working life compound the hardest — small amounts now go a long way.',
-      to: '/tools/super-contribution',
+      to: '/fintools/super-contribution',
     };
   }
 
@@ -67,6 +67,6 @@ export function nextAction(profile = {}) {
     title: 'Map your path to financial independence',
     rationale:
       'Your foundations look solid — see what reaching financial independence would actually take.',
-    to: '/tools/fire-number',
+    to: '/fintools/fire-number',
   };
 }

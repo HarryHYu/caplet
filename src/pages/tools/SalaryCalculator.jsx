@@ -59,7 +59,7 @@ const SalaryCalculator = () => {
                 Work out your net pay and see how your total compensation package breaks down.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">
+            <Link to="/fintools" className="btn-secondary text-sm px-8">
               Back to Tools
             </Link>
           </div>

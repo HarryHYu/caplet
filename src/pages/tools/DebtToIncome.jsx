@@ -57,7 +57,7 @@ const DebtToIncome = () => {
                 Your DTI is the first thing lenders check. Know yours before they do.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">Back to tools</Link>
+            <Link to="/fintools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">Back to tools</Link>
           </div>
         </header>
 

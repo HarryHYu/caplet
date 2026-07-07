@@ -57,7 +57,7 @@ const BudgetPlanner = () => {
                 See your monthly cash flow at a glance and track how you allocate across your main cost centers.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">
+            <Link to="/fintools" className="btn-secondary text-sm px-8">
               &larr; Back to Tools
             </Link>
           </div>

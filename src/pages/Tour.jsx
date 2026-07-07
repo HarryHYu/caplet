@@ -357,8 +357,8 @@ function SimNavbar({ active }) {
   const { isDark, toggleTheme } = useTheme();
   const navItems = [
     { label: 'Curriculum', id: 'curriculum' },
-    { label: 'Academy',    id: 'academy' },
-    { label: 'Instruments', id: 'instruments' },
+    { label: 'Classes',    id: 'academy' },
+    { label: 'Financial Tools', id: 'instruments' },
   ];
   return (
     <header className="fixed top-0 inset-x-0 z-50 bg-surface-body/95 backdrop-blur-2xl shadow-[0_1px_0_var(--line-soft),0_4px_24px_rgba(0,0,0,0.06)] text-text-primary">
