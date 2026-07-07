@@ -59,6 +59,7 @@ import HostLive from './pages/live/HostLive';
 import PlayLive from './pages/live/PlayLive';
 import NotFound from './pages/NotFound';
 import CapletLoader from './components/CapletLoader';
+import MarkerCursor from './components/MarkerCursor';
 import { GOOGLE_OAUTH_CLIENT_ID } from './config/googleClient';
 
 function FullPageSpinner() {
@@ -233,6 +234,7 @@ function App() {
           <LayoutProvider>
             <Router>
               <ScrollToTop />
+              <MarkerCursor />
               <AppShell />
             </Router>
           </LayoutProvider>

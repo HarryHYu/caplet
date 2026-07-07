@@ -161,7 +161,7 @@ export default function Dashboard() {
                         {/* Resume Session */}
                         {lastAccessed && lastAccessedCourse && (
                             <div className="reveal">
-                                <span className="section-kicker">Continue Learning</span>
+                                <span className="font-hand text-lg text-blue -rotate-2 inline-block mb-1">continue learning</span>
                                 <div className="mt-6 group relative overflow-hidden block-blue rounded-3xl p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200">
                                     <div className="flex flex-col md:flex-row gap-10 items-center">
                                         <div className="w-40 h-40 shrink-0 rounded-2xl overflow-hidden bg-surface-raised shadow-[0_16px_36px_-24px_rgba(20,20,18,0.4)]">
@@ -195,7 +195,7 @@ export default function Dashboard() {
                         <div className="reveal">
                             <div className="flex items-end justify-between mb-6">
                                 <div>
-                                    <span className="section-kicker">Academy</span>
+                                    <span className="font-hand text-lg text-blue -rotate-2 inline-block mb-1">academy</span>
                                     <h2 className="font-display font-bold tracking-tight text-3xl md:text-4xl text-text-primary">My Classes</h2>
                                 </div>
                                 <Link to="/classes" className="text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">View All Classes</Link>
@@ -224,7 +224,7 @@ export default function Dashboard() {
                     {/* Sidebar */}
                     <div className="lg:col-span-4 space-y-20">
                         <div className="reveal">
-                            <span className="section-kicker">My Courses</span>
+                            <span className="font-hand text-lg text-blue -rotate-2 inline-block mb-1">my courses</span>
                             <div className="mt-6 reveal-stagger space-y-4">
                                 {courses.slice(0, 4).map(course => (
                                     <Link
@@ -244,7 +244,7 @@ export default function Dashboard() {
 
                         {/* Revision — its own section, mirrors "My Courses" */}
                         <div className="reveal">
-                            <span className="section-kicker">Revision</span>
+                            <span className="font-hand text-lg text-blue -rotate-2 inline-block mb-1">revision</span>
                             <div className="mt-6 space-y-4">
                                 <Link
                                     to="/revision"

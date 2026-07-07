@@ -54,7 +54,7 @@ const Footer = () => {
                 alt="Caplet logo"
                 className="w-9 h-9 object-contain rounded-full overflow-hidden transition-transform group-hover:scale-110"
               />
-              <span className="text-2xl font-serif italic font-bold tracking-tight text-text-primary">Caplet.</span>
+              <span className="text-2xl font-bricolage font-extrabold tracking-[-0.02em] text-text-primary">Caplet.</span>
             </Link>
             <p className="font-hand text-xl text-accent mt-5 -rotate-2">learn anything, for free</p>
             <p className="text-sm text-text-muted mt-3 max-w-xs leading-relaxed">

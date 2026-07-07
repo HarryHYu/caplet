@@ -11,11 +11,15 @@
 
    ROLES
    -----
-   --font-body     Outfit              — default body text everywhere.
-   --font-display  Plus Jakarta Sans   — headlines, hero text, big numbers,
-                                          structural UI labels.
-   --font-serif    Lora                — editorial italic accents, the
-                                          wordmark, italic course / lesson
+   --font-body     Hanken Grotesk      — default body text everywhere.
+   --font-display  Bricolage Grotesque — headlines, hero text, big numbers,
+                                          structural UI labels, and the "Caplet."
+                                          wordmark (see .font-bricolage below).
+   --font-hand     Shantell Sans       — casual hand-written "kicker" labels
+                                          above headings, tilted with -rotate-2.
+   --font-serif    Lora                — occasional editorial-italic accents
+                                          in longer body copy; no longer used
+                                          for the wordmark or page headings.
    --font-mono     JetBrains Mono      — code, kbd, numeric badges, slide
                                           counters.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -528,9 +532,14 @@
   stroke-dashoffset: 1;
 }
 
-/* Marker cursor — an ink-blue nib with a soft trailing ring. */
+/* Marker cursor — an ink-blue nib with a soft trailing ring, used site-wide
+   (mounted once in App.jsx). Text inputs keep a native text-beam cursor so
+   typing still feels normal on forms, the editor, and the essay memoriser. */
 html.cursor-on,
 html.cursor-on * { cursor: none !important; }
+html.cursor-on input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='button']):not([type='submit']),
+html.cursor-on textarea,
+html.cursor-on [contenteditable='true'] { cursor: text !important; }
 
 .marker-cursor { position: fixed; top: 0; left: 0; z-index: 90; pointer-events: none; }
 .marker-cursor .mc-ring,
@@ -546,9 +555,9 @@ html.cursor-on * { cursor: none !important; }
   opacity: 0.4;
   transition: opacity 0.25s ease, border-width 0.25s ease;
 }
-.marker-cursor.is-active .mc-dot { width: 5px; height: 5px; left: -2.5px; top: -2.5px; }
-.marker-cursor.is-active .mc-ring { opacity: 0.9; border-width: 2px; }
-.marker-cursor.is-press .mc-dot { width: 14px; height: 14px; left: -7px; top: -7px; opacity: 0.85; }
+.marker-cursor .mc-dot.is-active { width: 5px; height: 5px; left: -2.5px; top: -2.5px; }
+.marker-cursor .mc-ring.is-active { opacity: 0.9; border-width: 2px; }
+.marker-cursor .mc-dot.is-press { width: 14px; height: 14px; left: -7px; top: -7px; opacity: 0.85; }
 
 /* Ambient drift for pinned bits. */
 @keyframes soft-float {

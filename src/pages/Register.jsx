@@ -9,13 +9,14 @@ const Register = () => {
 
       {/* Left — Brand Panel */}
       <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative bg-surface-inverse overflow-hidden flex-col">
-        <div className="absolute inset-0 grid-technical opacity-[0.06] pointer-events-none" />
+        <div className="absolute top-[24%] left-[10%] w-[38vw] h-[38vw] max-w-[480px] max-h-[480px] rounded-full bg-accent/40 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[10%] right-[8%] w-[24vw] h-[24vw] max-w-[320px] max-h-[320px] rounded-full bg-[color:var(--mark-amber)]/25 blur-[110px] pointer-events-none" />
 
         {/* Wordmark */}
         <div className="relative z-10 p-12 xl:p-16">
           <Link to="/" className="group inline-flex items-center">
-            <span className="font-serif italic text-xl text-text-contrast group-hover:text-accent transition-colors duration-200">
-              Caplet
+            <span className="font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-contrast group-hover:text-accent transition-colors duration-200">
+              Caplet.
             </span>
           </Link>
         </div>
@@ -27,12 +28,11 @@ const Register = () => {
               free, open, and a little playful
             </span>
             <h2 className="text-6xl xl:text-7xl font-display font-extrabold text-text-contrast leading-[0.95] tracking-tight mb-6">
-              Start for free,<br />
+              Start building,<br />
               <span className="text-accent">learn for life.</span>
             </h2>
             <p className="text-text-dim text-xl leading-relaxed">
-              Structured financial education for Australians.<br />
-              No products. No catch. Just clarity.
+              Courses, live code, graphing, quizzes, and classrooms — all free, all open-source.
             </p>
           </div>
         </div>
@@ -43,11 +43,11 @@ const Register = () => {
 
         {/* Top bar: mobile wordmark + back to home */}
         <div className="flex items-center justify-between px-8 lg:px-16 xl:px-24 pt-10">
-          <Link to="/" className="lg:hidden font-serif italic text-xl text-text-primary hover:text-accent transition-colors">
-            Caplet
+          <Link to="/" className="lg:hidden font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors">
+            Caplet.
           </Link>
-          <Link to="/" className="ml-auto text-sm text-text-dim hover:text-text-primary transition-colors">
-            ← Back to home
+          <Link to="/" className="ml-auto text-sm font-bold text-text-dim hover:text-accent transition-colors">
+            Back to home
           </Link>
         </div>
 

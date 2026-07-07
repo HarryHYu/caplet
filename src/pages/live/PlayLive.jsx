@@ -526,7 +526,7 @@ function JoinScreen({ onJoin, joining, joinError, initialCode }) {
     <div className="min-h-[100dvh] flex items-center justify-center px-4 bg-surface-body text-text-primary">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <p className="font-serif italic text-2xl text-accent mb-1">Caplet.</p>
+          <p className="font-bricolage font-extrabold text-2xl text-accent mb-1">Caplet.</p>
           <h1 className="text-2xl font-display font-extrabold tracking-tight">Join a live session</h1>
         </div>
 
@@ -717,7 +717,7 @@ export default function PlayLive() {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center px-4 bg-surface-body text-text-primary">
         <div className="w-full max-w-sm text-center">
-          <p className="font-serif italic text-xl text-accent mb-1">Caplet.</p>
+          <p className="font-bricolage font-extrabold text-xl text-accent mb-1">Caplet.</p>
           <h1 className="text-xl font-display font-bold mb-2">You're in, {participant.nickname}!</h1>
           <p className="text-text-muted mb-6">Waiting for the host to start…</p>
           {connError && <p className="text-sm text-rose-500 mb-4">{connError}</p>}

@@ -229,7 +229,6 @@ function getSlidePreview(savedSlide) {
 }
 
 export default function Revision() {
-    useReveal();
     const [savedSlides, setSavedSlides] = useState([]);
     const [loading, setLoading] = useState(true);
     const [organizing, setOrganizing] = useState(false);
@@ -240,6 +239,8 @@ export default function Revision() {
     // Spaced-repetition: slides due for review + the active-recall session.
     const [due, setDue] = useState([]);
     const [reviewOpen, setReviewOpen] = useState(false);
+
+    useReveal(undefined, [loading]);
 
     const refetch = async () => {
         const data = await api.getSavedSlides().catch(() => null);
@@ -317,9 +318,9 @@ export default function Revision() {
     return (
         <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
             <div className="container-custom">
-                <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 reveal-text">
+                <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 reveal">
                     <div>
-                        <span className="font-hand text-accent text-lg">Your revision</span>
+                        <span className="font-hand text-accent text-lg -rotate-2 inline-block mb-1">your revision</span>
                         <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight">Archived slides.</h1>
                         <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
                             Every slide you've flagged, organized into topics by AI.

@@ -123,7 +123,7 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
       <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-4 border-b border-line-soft sticky top-0 bg-surface-raised z-10">
         <div className="min-w-0">
           <p className="text-xs font-medium text-text-dim mb-2">Curriculum</p>
-          <h3 className="text-base font-serif italic text-text-primary truncate">{course.title}</h3>
+          <h3 className="text-base font-display font-bold text-text-primary truncate">{course.title}</h3>
         </div>
         {onClose && (
           <button
@@ -543,13 +543,13 @@ const LessonPlayer = () => {
                     </>
                   )}
                 </div>
-                <p className="text-sm font-serif italic text-text-primary truncate max-w-md">
+                <p className="text-sm font-display font-bold text-text-primary truncate max-w-md">
                   {lesson.title}
                 </p>
               </div>
 
               <div className="md:hidden min-w-0">
-                <p className="text-sm font-serif italic text-text-primary truncate max-w-[200px]">
+                <p className="text-sm font-display font-bold text-text-primary truncate max-w-[200px]">
                   {lesson.title}
                 </p>
               </div>

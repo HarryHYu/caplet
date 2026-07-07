@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * Marker cursor for the homepage.
+ * Site-wide marker cursor (mounted once in App.jsx).
  *
- * A coral nib tracks the pointer tightly while a soft ring trails behind it
- * with easing; over interactive elements the ring tightens around the nib.
- * Disabled on touch devices and when the visitor prefers reduced motion (the
- * native cursor is used instead). Cleans up on unmount, so other pages keep
- * their normal cursor.
+ * An ink-blue nib tracks the pointer tightly while a soft ring trails behind
+ * it with easing; over interactive elements the ring tightens around the
+ * nib. Disabled on touch devices and when the visitor prefers reduced motion
+ * (the native cursor is used instead). Text inputs/textareas keep a native
+ * text-beam cursor (see index.css) so typing still feels normal.
  */
 const INTERACTIVE = 'a, button, [role="button"], [data-cursor], summary, label, input, select';
 

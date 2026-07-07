@@ -95,18 +95,18 @@ function WorkspaceOverview({
 
       {/* Page header */}
       <div data-tour-id="editor-workspace" className="relative border-b border-line-soft overflow-hidden">
-        <div className="absolute inset-0 grid-technical opacity-[0.12] pointer-events-none" />
+        <div className="absolute top-[-20%] left-[8%] w-[26vw] h-[26vw] max-w-[340px] max-h-[340px] rounded-full bg-[color:var(--block-blue)] blur-[110px] pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface-body to-transparent pointer-events-none" />
         <div className="relative max-w-3xl mx-auto px-6 md:px-10 pt-14 pb-12">
-          <p className="font-mono text-[10px] font-medium text-accent/60 uppercase tracking-[0.22em] mb-5">
-            Lesson workspace
+          <p className="font-hand text-xl text-blue -rotate-2 mb-3 inline-block">
+            lesson workspace
           </p>
           <div className="flex items-end justify-between gap-8">
             <div className="min-w-0">
-              <h1 className="text-[2.75rem] font-display font-bold text-text-primary tracking-tight leading-none mb-3">
+              <h1 className="text-[2.75rem] font-display font-extrabold text-text-primary tracking-tight leading-none mb-3">
                 Your courses
               </h1>
-              <p className="text-[14px] font-serif italic text-text-dim leading-relaxed">
+              <p className="text-[15px] text-text-dim leading-relaxed">
                 Build, organise, and publish lessons for your students.
               </p>
             </div>
@@ -903,12 +903,12 @@ export default function Editor() {
 
               <span className="shrink-0 w-px h-3.5 bg-line-soft" />
               {selectedCourse && (
-                <span className="text-[13px] font-serif italic text-text-dim truncate max-w-[90px] md:max-w-[160px]">{selectedCourse.title}</span>
+                <span className="text-[13px] font-bold text-text-dim truncate max-w-[90px] md:max-w-[160px]">{selectedCourse.title}</span>
               )}
               {selectedModule && (
                 <>
                   <span className="text-text-dim/40 shrink-0 text-[11px]">/</span>
-                  <span className="text-[13px] font-serif italic text-text-dim truncate max-w-[90px] md:max-w-[160px]">{selectedModule.title}</span>
+                  <span className="text-[13px] font-bold text-text-dim truncate max-w-[90px] md:max-w-[160px]">{selectedModule.title}</span>
                 </>
               )}
               {dirty && (

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import MarkerCursor from '../components/home/MarkerCursor';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -178,8 +177,6 @@ const Home = () => {
 
   return (
     <div ref={rootRef} className="home-root text-text-primary relative selection:bg-[color:var(--mark-blue)] selection:text-white overflow-x-clip">
-      <MarkerCursor />
-
       {/* ───────── HERO ───────── */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-16">
         {/* soft ambient washes for depth */}

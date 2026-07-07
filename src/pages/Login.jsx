@@ -31,12 +31,11 @@ const Login = () => {
                             Welcome back
                         </span>
                         <h2 className="text-6xl xl:text-7xl font-display font-extrabold text-white leading-[0.95] tracking-tight mb-6">
-                            Your money,<br />
-                            finally clear.
+                            Good to<br />
+                            see you again.
                         </h2>
                         <p className="text-white/80 text-xl leading-relaxed">
-                            Structured financial education for Australians.<br />
-                            No products, no catch, just clarity.
+                            Pick up your courses, classes, and tools right where you left off.
                         </p>
                     </div>
                 </div>

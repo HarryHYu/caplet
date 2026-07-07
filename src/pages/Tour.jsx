@@ -368,7 +368,7 @@ function SimNavbar({ active }) {
             <div className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden ring-1 ring-line-soft">
               <img src="/logo.png" alt="Caplet" className="w-full h-full object-contain" />
             </div>
-            <span className="text-lg md:text-xl font-serif italic font-bold tracking-tight text-text-primary">Caplet.</span>
+            <span className="text-lg md:text-xl font-bricolage font-extrabold tracking-[-0.02em] text-text-primary">Caplet.</span>
           </div>
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map(({ label, id }) => (
@@ -734,7 +734,7 @@ function SimLessonShell({ slideIdx = 0, totalSlides = 6, showCalc = false, slide
                   <span className="text-text-dim/50">/</span>
                   <span className="truncate">Budgeting</span>
                 </div>
-                <p className="text-sm font-serif italic text-text-primary truncate max-w-md">Tracking Your Spending</p>
+                <p className="text-sm font-display font-bold text-text-primary truncate max-w-md">Tracking Your Spending</p>
               </div>
             </div>
             {/* Right: progress indicators + buttons */}
@@ -864,7 +864,7 @@ function SimLessonIntro() {
   return (
     <SimLessonShell slideIdx={0} slideLabel="Text">
       <div className="absolute inset-0 flex flex-col items-center justify-center px-10 text-center gap-6 max-w-3xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-serif italic font-bold text-text-primary leading-snug">Tracking Your Spending</h2>
+        <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary leading-snug">Tracking Your Spending</h2>
         <p className="text-lg text-text-muted leading-relaxed max-w-xl">
           Before you manage money well, you need to know where it goes. In Australia, most households underestimate their discretionary spending by 30–40%.
         </p>
@@ -888,7 +888,7 @@ function SimLessonMCQ() {
       <div className="absolute inset-0 flex items-center justify-center px-8">
         <div className="w-full max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-wide text-accent mb-3">Multiple Choice</p>
-          <h2 className="text-2xl font-serif italic font-bold text-text-primary mb-7 leading-snug">
+          <h2 className="text-2xl font-display font-bold text-text-primary mb-7 leading-snug">
             Which of the following is NOT a feature of Australia's superannuation system?
           </h2>
           <div className="space-y-3">
@@ -915,7 +915,7 @@ function SimLessonCalc() {
     <SimLessonShell slideIdx={2} showCalc slideLabel="Multiple Choice">
       <div className="absolute inset-0 flex items-center justify-center px-8">
         <div className="w-full max-w-2xl opacity-25">
-          <h2 className="text-2xl font-serif italic font-bold text-text-primary leading-snug">
+          <h2 className="text-2xl font-display font-bold text-text-primary leading-snug">
             Which of the following is NOT a feature of Australia's superannuation system?
           </h2>
         </div>
@@ -954,36 +954,40 @@ function SimClasses() {
           </div>
         </header>
 
-        {/* Leadership Portfolio */}
-        <section className="mb-16">
-          <h2 className="text-sm font-semibold text-accent mb-12 border-b border-line-soft pb-6">Leadership Portfolio</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-line-soft border border-line-soft">
+        {/* Classes You Teach — exact copy from Classes.jsx */}
+        <section className="mb-32">
+          <h2 className="font-display font-bold tracking-tight text-2xl mb-12">
+            Classes You Teach
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {simTeachingClasses.map((cls) => (
               <div
                 key={cls.name}
                 data-sim-id={cls.code === 'CAP-4821' ? 'class-link' : undefined}
-                className="bg-surface-body p-12 group transition-all duration-700 hover:bg-surface-raised flex flex-col justify-between cursor-default"
+                className="block-blue rounded-3xl p-10 group flex flex-col justify-between shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform cursor-default"
               >
                 <div>
-                  <div className="flex justify-between items-start mb-12">
-                    <h3 className="text-3xl font-serif italic group-hover:translate-x-2 transition-transform duration-700">{cls.name}</h3>
-                    <span className="text-xs font-medium px-3 py-1 bg-text-primary text-surface-body group-hover:bg-accent transition-colors">Owner</span>
+                  <div className="flex justify-between items-start mb-12 gap-4">
+                    <h3 className="font-display font-bold tracking-tight text-3xl">{cls.name}</h3>
+                    <span className="text-xs font-bold px-3 py-1 rounded-xl bg-accent text-white shrink-0">Owner</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between pt-12 border-t border-line-soft">
-                  <span className="text-sm font-medium text-text-dim">Passkey Protocol:</span>
-                  <span className="text-xs font-bold font-mono tracking-widest text-text-primary group-hover:text-accent transition-colors">{cls.code}</span>
+                <div className="flex items-center justify-between pt-8">
+                  <span className="text-sm font-medium text-text-dim">Class code</span>
+                  <span className="text-xs font-bold font-mono tracking-widest text-accent">{cls.code}</span>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Enrollment Registry */}
+        {/* Classes You're In */}
         <section>
-          <h2 className="text-sm font-semibold text-accent mb-12 border-b border-line-soft pb-6">Enrollment Registry</h2>
-          <div className="p-24 border border-line-soft text-center bg-surface-soft">
-            <p className="text-sm font-medium text-text-dim italic">Awaiting first academy registration.</p>
+          <h2 className="font-display font-bold tracking-tight text-2xl mb-12">
+            Classes You're In
+          </h2>
+          <div className="p-16 rounded-3xl text-center block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <p className="text-sm font-medium text-text-dim">Join your first class to get started.</p>
           </div>
         </section>
       </div>
@@ -1022,24 +1026,25 @@ function SimClassDetail() {
     <div className="absolute inset-0 bg-surface-body overflow-hidden selection:bg-accent selection:text-white">
       <div className="container-custom space-y-8" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         {/* Class header — exact copy from ClassDetail.jsx */}
-        <div className="bg-surface-body border border-line-soft p-10">
+        <div className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
             <div className="flex-1">
               <button className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent transition-colors">
                 ← Back to Classes
               </button>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-text-primary mb-4">Year 11 Commerce A</h1>
+              <p className="font-hand text-accent text-lg -rotate-2 inline-block mb-2">your classroom</p>
+              <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-text-primary mb-4">Year 11 Commerce A</h1>
               <p className="text-sm font-medium text-text-muted leading-relaxed max-w-2xl">
                 Financial literacy and economic principles for Year 11 Commerce students.
               </p>
-              <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft border border-line-soft">
+              <div className="mt-8 inline-flex items-center gap-4 px-5 py-3 bg-surface-soft rounded-xl">
                 <span className="text-xs font-semibold text-text-dim">Class Code:</span>
                 <span className="font-mono font-bold text-text-primary text-sm">CAP-4821</span>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-6">
-              <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft border border-line-soft min-w-[240px]">
-                <div className="w-10 h-10 rounded-sm bg-text-primary flex items-center justify-center text-surface-body text-xs font-bold">HY</div>
+              <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft rounded-2xl min-w-[240px]">
+                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold">HY</div>
                 <div>
                   <p className="text-xs font-medium text-text-dim mb-1">Signed in as</p>
                   <p className="text-sm font-bold text-text-primary">Harry Y</p>
@@ -1051,11 +1056,11 @@ function SimClassDetail() {
         </div>
 
         {/* Tab bar — exact copy */}
-        <nav className="flex gap-1 bg-surface-soft border border-line-soft p-1">
+        <nav className="inline-flex gap-1 bg-surface-soft rounded-2xl p-1.5">
           {['Stream', 'Classwork', 'People'].map((tab, i) => (
             <button key={tab} type="button"
-              className={`px-8 py-3 text-sm font-medium transition-all duration-200 ${i === 0
-                ? 'bg-text-primary text-surface-body'
+              className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${i === 0
+                ? 'bg-accent text-white shadow-sm'
                 : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'}`}
             >
               {tab}
@@ -1066,15 +1071,15 @@ function SimClassDetail() {
         {/* Stream — exact copy structure with fake announcements */}
         <div className="space-y-5">
           {/* Teacher composer */}
-          <div className="bg-surface-body border border-line-soft p-8 hover:border-accent transition-colors mb-4">
+          <div className="bg-surface-raised rounded-3xl p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] mb-4">
             <div className="flex gap-6">
-              <div className="flex-shrink-0 w-12 h-12 rounded-sm bg-text-primary flex items-center justify-center text-surface-body text-xs font-bold ring-4 ring-line-soft">HY</div>
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold">HY</div>
               <div className="flex-1">
-                <div className="w-full px-5 py-4 border border-line-soft text-text-dim text-sm font-medium">
+                <div className="w-full px-5 py-4 rounded-2xl bg-surface-soft text-text-dim text-sm font-medium">
                   Post an announcement...
                 </div>
                 <div className="flex justify-end mt-6">
-                  <button className="px-10 py-3 bg-text-primary text-surface-body text-sm font-medium opacity-40">Post Announcement</button>
+                  <button className="px-10 py-3 rounded-2xl bg-accent text-white text-sm font-bold opacity-40">Post Announcement</button>
                 </div>
               </div>
             </div>
@@ -1082,10 +1087,10 @@ function SimClassDetail() {
 
           {/* Fake announcements */}
           {fakeAnnouncements.map((a) => (
-            <div key={a.id} className="bg-surface-body border border-line-soft p-8 hover:border-accent transition-all group">
+            <div key={a.id} className="bg-surface-raised rounded-3xl p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] group">
               <div className="flex items-center justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-sm bg-text-primary flex items-center justify-center text-surface-body text-xs font-bold shadow-sm">{a.initials}</div>
+                  <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold shadow-sm">{a.initials}</div>
                   <div>
                     <p className="text-sm font-bold text-text-primary">{a.author}</p>
                     <span className="text-xs font-medium text-text-dim mt-1 block">Posted {a.time}</span>
@@ -1098,8 +1103,8 @@ function SimClassDetail() {
               <div className="border-t border-line-soft pt-4 space-y-3">
                 {a.comments.map((c) => (
                   <div key={c.id} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-sm bg-surface-raised border border-line-soft flex items-center justify-center text-[9px] font-bold text-text-dim shrink-0">{c.initials}</div>
-                    <div className="flex-1 min-w-0 bg-surface-soft px-4 py-3 border border-line-soft">
+                    <div className="w-7 h-7 rounded-full bg-surface-soft flex items-center justify-center text-[9px] font-bold text-text-dim shrink-0">{c.initials}</div>
+                    <div className="flex-1 min-w-0 bg-surface-soft rounded-2xl px-4 py-3">
                       <p className="text-xs font-bold text-text-primary mb-1">{c.author} <span className="font-normal text-text-dim">{c.time}</span></p>
                       <p className="text-sm text-text-primary">{c.text}</p>
                     </div>
@@ -1107,8 +1112,8 @@ function SimClassDetail() {
                 ))}
                 {/* Comment input */}
                 <div className="flex items-center gap-3 mt-2">
-                  <div className="w-7 h-7 rounded-sm bg-text-primary flex items-center justify-center text-[9px] font-bold text-surface-body shrink-0">HY</div>
-                  <div className="flex-1 px-4 py-2 border border-line-soft text-xs text-text-dim/40">Add a comment...</div>
+                  <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[9px] font-bold text-white shrink-0">HY</div>
+                  <div className="flex-1 px-4 py-2 rounded-2xl bg-surface-soft text-xs text-text-dim/40">Add a comment...</div>
                 </div>
               </div>
             </div>
@@ -1148,14 +1153,14 @@ function SimEditor() {
       {/* WorkspaceOverview — exact copy from Editor.jsx */}
       <div className="flex-1 min-h-0 overflow-y-auto bg-surface-body">
         <div className="relative border-b border-line-soft overflow-hidden">
-          <div className="absolute inset-0 grid-technical opacity-[0.12] pointer-events-none" />
+          <div className="absolute top-[-20%] left-[8%] w-[26vw] h-[26vw] max-w-[340px] max-h-[340px] rounded-full bg-[color:var(--block-blue)] blur-[110px] pointer-events-none" />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface-body to-transparent pointer-events-none" />
           <div className="relative max-w-3xl mx-auto px-6 md:px-10 pt-14 pb-12">
-            <p className="font-mono text-[10px] font-medium text-accent/60 uppercase tracking-[0.22em] mb-5">Lesson workspace</p>
+            <p className="font-hand text-xl text-blue -rotate-2 mb-3 inline-block">lesson workspace</p>
             <div className="flex items-end justify-between gap-8">
               <div className="min-w-0">
-                <h1 className="text-[2.75rem] font-display font-bold text-text-primary tracking-tight leading-none mb-3">Your courses</h1>
-                <p className="text-[14px] font-serif italic text-text-dim leading-relaxed">Build, organise, and publish lessons for your students.</p>
+                <h1 className="text-[2.75rem] font-display font-extrabold text-text-primary tracking-tight leading-none mb-3">Your courses</h1>
+                <p className="text-[15px] text-text-dim leading-relaxed">Build, organise, and publish lessons for your students.</p>
               </div>
               <button className="btn-primary shrink-0 px-4 py-2 text-sm font-medium">+ Course</button>
             </div>
@@ -1241,9 +1246,9 @@ function SimEditorAI() {
         <div className="px-4 md:px-6 h-12 flex items-center gap-2 md:gap-3 min-w-0">
           <button className="shrink-0 text-[13px] font-medium text-text-dim hover:text-text-primary transition-colors">← Workspace</button>
           <span className="shrink-0 w-px h-3.5 bg-line-soft" />
-          <span className="text-[13px] font-serif italic text-text-dim truncate max-w-[120px]">Money Basics</span>
+          <span className="text-[13px] font-bold text-text-dim truncate max-w-[120px]">Money Basics</span>
           <span className="text-text-dim/40 shrink-0 text-[11px]">/</span>
-          <span className="text-[13px] font-serif italic text-text-dim truncate max-w-[120px]">Income &amp; Tax</span>
+          <span className="text-[13px] font-bold text-text-dim truncate max-w-[120px]">Income &amp; Tax</span>
           <div className="ml-auto flex items-center gap-1.5 shrink-0">
             <button className="h-8 px-3 rounded-full border border-accent/60 bg-accent/[0.08] text-accent text-sm font-medium flex items-center gap-1.5">
               <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 0.75 L6.4 3.6 L9.25 5.5 L6.4 7.4 L5.5 10.25 L4.6 7.4 L1.75 5.5 L4.6 3.6 Z" fill="currentColor" /></svg>
@@ -1528,8 +1533,8 @@ function SimFuture() {
   return (
     <div className="absolute inset-0 bg-surface-body flex items-center justify-center px-6 md:px-12 lg:px-20 overflow-hidden">
       <div className="max-w-2xl w-full">
-        <span className="section-kicker">Roadmap</span>
-        <h2 className="text-5xl md:text-6xl font-serif font-bold text-text-primary mb-3">
+        <span className="font-hand text-xl text-accent -rotate-2 inline-block mb-3">roadmap</span>
+        <h2 className="text-5xl md:text-6xl font-display font-extrabold tracking-tight text-text-primary mb-3">
           The infrastructure<br />for how people learn
         </h2>
         <p className="text-text-muted mb-8 leading-relaxed max-w-lg">

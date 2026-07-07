@@ -1071,7 +1071,7 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
                 <div className="min-w-0">
-                    <span className="section-kicker">Essay</span>
+                    <span className="font-hand text-lg text-accent -rotate-2 inline-block mb-1">essay</span>
                     <h1 className="text-4xl md:text-6xl break-words">{essay.title}</h1>
                     {dueCount > 0 && (
                         <button type="button" onClick={() => setMode('recall')}
@@ -1193,7 +1193,7 @@ export default function EssayMemoriser() {
     const [dueByEssay, setDueByEssay] = useState({}); // essayId -> due count
     const mountedRef = useRef(true);
 
-    useReveal();
+    useReveal(undefined, [loading]);
 
     useEffect(() => {
         mountedRef.current = true;
@@ -1280,9 +1280,9 @@ export default function EssayMemoriser() {
                     />
                 ) : (
                     <>
-                        <header className="mb-12 reveal-text">
-                            <span className="section-kicker">Essay memoriser</span>
-                            <h1 className="text-5xl md:text-7xl">Learn it by heart.</h1>
+                        <header className="mb-12 reveal">
+                            <span className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">essay memoriser</span>
+                            <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl">Learn it by heart.</h1>
                             <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
                                 Caplet breaks your essay into its real structure, then walks you from a first read to
                                 word-perfect, exam-ready recall.
