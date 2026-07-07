@@ -11,27 +11,27 @@ import gsap from 'gsap';
  * The classes are plain markers with no hidden state in CSS, so if JS never
  * runs (or the visitor prefers reduced motion) everything is simply visible.
  *
- * This intentionally uses IntersectionObserver rather than GSAP ScrollTrigger.
- * ScrollTrigger only evaluates "is this element already past its trigger
- * point?" once, synchronously, at creation — on a page that's still settling
- * (fonts, async siblings shifting layout, or a Lenis/smooth-scroll setup that
- * doesn't emit native scroll events the same way) that single check can miss,
- * leaving the content stuck at its hidden "from" state forever, with no
- * further scroll ever re-checking it. IntersectionObserver has no such gap:
- * it always reports the element's real current visibility, immediately, and
- * keeps working no matter what's driving the scroll.
+ * Anything already on screen when this runs is shown as-is, immediately, with
+ * no animation — only content that's genuinely still below the fold animates
+ * in as the visitor scrolls to it (via IntersectionObserver, which — unlike
+ * ScrollTrigger's own toggle system — can't miss and get stuck invisible).
  */
-function onceVisible(el, rootMargin, callback) {
+function reveal(trigger, targets, vars, rootMargin, observers) {
+  if (trigger.getBoundingClientRect().top < window.innerHeight) {
+    gsap.set(targets, { y: 0, opacity: 1 });
+    return;
+  }
+  gsap.set(targets, { y: vars.y, opacity: 0 });
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        callback();
+        gsap.to(targets, { y: 0, opacity: 1, ...vars });
         io.unobserve(entry.target);
       }
     });
   }, { rootMargin, threshold: 0 });
-  io.observe(el);
-  return io;
+  io.observe(trigger);
+  observers.push(io);
 }
 
 export function useReveal(scopeRef, deps = []) {
@@ -44,17 +44,11 @@ export function useReveal(scopeRef, deps = []) {
     const observers = [];
 
     scope.querySelectorAll('.reveal').forEach((el) => {
-      gsap.set(el, { y: 36, opacity: 0 });
-      observers.push(onceVisible(el, '0px 0px -12% 0px', () => {
-        gsap.to(el, { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' });
-      }));
+      reveal(el, el, { y: 36, duration: 0.7, ease: 'power3.out' }, '0px 0px -12% 0px', observers);
     });
 
     scope.querySelectorAll('.reveal-stagger').forEach((group) => {
-      gsap.set(group.children, { y: 28, opacity: 0 });
-      observers.push(onceVisible(group, '0px 0px -15% 0px', () => {
-        gsap.to(group.children, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', stagger: 0.08 });
-      }));
+      reveal(group, group.children, { y: 28, duration: 0.6, ease: 'power3.out', stagger: 0.08 }, '0px 0px -15% 0px', observers);
     });
 
     return () => observers.forEach((io) => io.disconnect());

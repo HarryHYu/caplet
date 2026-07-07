@@ -87,19 +87,27 @@ const showcaseTabs = [
   { id: 'geometry', label: 'Graphing' },
 ];
 
-// Fires `callback` once when `el` first becomes visible (immediately if it
-// already is). Used instead of ScrollTrigger for one-shot reveals — see the
-// note above the reveal setup in the effect below for why.
-function onceVisible(el, rootMargin, callback, registry) {
+// Anything already on screen when this runs is shown as-is, immediately, with
+// no animation — only content that's genuinely still below the fold animates
+// in as the visitor scrolls to it. Used instead of ScrollTrigger's own toggle
+// system, which checks "is this already past its trigger point?" once,
+// synchronously, at creation — with Lenis driving the scroll that single
+// check can miss, leaving a section stuck at its hidden "from" state forever.
+function reveal(trigger, targets, fromVars, toVars, rootMargin, registry) {
+  if (trigger.getBoundingClientRect().top < window.innerHeight) {
+    gsap.set(targets, toVars);
+    return;
+  }
+  gsap.set(targets, fromVars);
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        callback();
+        gsap.to(targets, toVars);
         io.unobserve(entry.target);
       }
     });
   }, { rootMargin, threshold: 0 });
-  io.observe(el);
+  io.observe(trigger);
   registry.push(io);
 }
 
@@ -160,35 +168,18 @@ const Home = () => {
         .from('.widget', { y: 18, opacity: 0, scale: 0.92, duration: 0.6, stagger: 0.08 }, '-=1.1');
 
       // Section reveals + living annotations (ink marks draw, highlights swipe).
-      // These deliberately use IntersectionObserver rather than ScrollTrigger's
-      // own toggle system: ScrollTrigger checks "is this already past its
-      // trigger point?" once, synchronously, at creation, and with Lenis
-      // driving the scroll that single check (and Lenis's own scroll events)
-      // can miss, leaving a section stuck at its hidden "from" state forever
-      // with nothing left to re-check it. IntersectionObserver always reports
-      // real, current visibility regardless of what's driving the scroll.
       gsap.utils.toArray('.reveal').forEach((el) => {
-        gsap.set(el, { y: 40, opacity: 0 });
-        onceVisible(el, '0px 0px -14% 0px', () => {
-          gsap.to(el, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' });
-        }, observers);
+        reveal(el, el, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, '0px 0px -14% 0px', observers);
       });
       gsap.utils.toArray('.reveal-stagger').forEach((group) => {
-        gsap.set(group.children, { y: 34, opacity: 0 });
-        onceVisible(group, '0px 0px -16% 0px', () => {
-          gsap.to(group.children, { y: 0, opacity: 1, duration: 0.65, ease: 'power3.out', stagger: 0.1 });
-        }, observers);
+        reveal(group, group.children, { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.65, ease: 'power3.out', stagger: 0.1 }, '0px 0px -16% 0px', observers);
       });
       gsap.utils.toArray('.ink-draw:not(.hero-mark)').forEach((p) => {
         const trigger = p.closest('[data-mark]') || p;
-        onceVisible(trigger, '0px 0px -18% 0px', () => {
-          gsap.to(p, { strokeDashoffset: 0, duration: 0.7, ease: 'power2.inOut' });
-        }, observers);
+        reveal(trigger, p, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, ease: 'power2.inOut' }, '0px 0px -18% 0px', observers);
       });
       gsap.utils.toArray('.hl-swipe:not(.hero-mark)').forEach((el) => {
-        onceVisible(el, '0px 0px -14% 0px', () => {
-          gsap.to(el, { '--hl-w': '100%', duration: 0.55, ease: 'power2.out' });
-        }, observers);
+        reveal(el, el, { '--hl-w': '0%' }, { '--hl-w': '100%', duration: 0.55, ease: 'power2.out' }, '0px 0px -14% 0px', observers);
       });
 
       // Lenis-woven parallax: the whole widget constellation drifts with scroll.
