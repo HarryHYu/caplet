@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const UserFinancialProfile = require('../models/UserFinancialProfile');
 const { requireAuth } = require('../middleware/auth');
+const { VALID_DEBT_TYPES } = require('../services/debtEngine');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -10,6 +11,7 @@ router.use(requireAuth);
 // user always sees this default rather than triggering a create-on-read.
 const EMPTY_PROFILE = {
   annualIncome: null,
+  hecsBalance: null,
   savingsBalance: null,
   superBalance: null,
   monthlyExpenses: null,
@@ -23,6 +25,7 @@ function serialize(profile) {
   return {
     id: profile.id,
     annualIncome: profile.annualIncome,
+    hecsBalance: profile.hecsBalance,
     savingsBalance: profile.savingsBalance,
     superBalance: profile.superBalance,
     monthlyExpenses: profile.monthlyExpenses,
@@ -68,6 +71,7 @@ const moneyRule = (field) =>
 // fields present in the body are changed.
 router.put('/', [
   moneyRule('annualIncome'),
+  moneyRule('hecsBalance'),
   moneyRule('savingsBalance'),
   moneyRule('superBalance'),
   moneyRule('monthlyExpenses'),
@@ -76,6 +80,7 @@ router.put('/', [
   body('debts.*.label').optional().isString().trim().isLength({ max: 80 }),
   body('debts.*.balance').optional({ values: 'null' }).isFloat({ min: 0 }),
   body('debts.*.rate').optional({ values: 'null' }).isFloat({ min: 0, max: 100 }),
+  body('debts.*.type').optional().isIn(VALID_DEBT_TYPES),
   body('goals').optional().isArray(),
   body('goals.*.label').optional().isString().trim().isLength({ max: 80 }),
   body('goals.*.target').optional({ values: 'null' }).isFloat({ min: 0 })
@@ -93,7 +98,7 @@ router.put('/', [
 
     const b = req.body;
     const updates = {};
-    ['annualIncome', 'savingsBalance', 'superBalance', 'monthlyExpenses'].forEach((f) => {
+    ['annualIncome', 'hecsBalance', 'savingsBalance', 'superBalance', 'monthlyExpenses'].forEach((f) => {
       if (b[f] !== undefined) {
         updates[f] = b[f] === null || b[f] === '' ? null : Number(b[f]);
       }
@@ -101,11 +106,17 @@ router.put('/', [
     if (b.currency !== undefined) updates.currency = b.currency;
     // Normalize to canonical objects, dropping null/non-object entries so a
     // crafted payload (the per-element rules are all optional) can't store a
-    // null that would later crash readers.
+    // null that would later crash readers. `type` is additive and optional: it
+    // is only carried through when it is a recognised value, so existing debts
+    // without a type keep the original { label, balance, rate } shape.
     if (b.debts !== undefined) {
       updates.debts = (Array.isArray(b.debts) ? b.debts : [])
         .filter((d) => d && typeof d === 'object')
-        .map((d) => ({ label: String(d.label || ''), balance: Number(d.balance) || 0, rate: Number(d.rate) || 0 }));
+        .map((d) => {
+          const debt = { label: String(d.label || ''), balance: Number(d.balance) || 0, rate: Number(d.rate) || 0 };
+          if (VALID_DEBT_TYPES.includes(d.type)) debt.type = d.type;
+          return debt;
+        });
     }
     if (b.goals !== undefined) {
       updates.goals = (Array.isArray(b.goals) ? b.goals : [])

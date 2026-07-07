@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useReveal } from '../../lib/useReveal';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
@@ -57,10 +58,12 @@ const SavingsGoal = () => {
     });
   };
 
+  useReveal();
+
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-16">
+        <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
               <span className="font-hand text-2xl text-accent">Savings goal</span>
@@ -78,7 +81,7 @@ const SavingsGoal = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <h2 className="font-display font-bold tracking-tight text-lg mb-10">Your numbers</h2>
             <form onSubmit={handleSubmit} className="space-y-16">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -163,7 +166,7 @@ const SavingsGoal = () => {
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <h2 className="font-display font-bold tracking-tight text-lg mb-10">Your projection</h2>
 
             {result ? (

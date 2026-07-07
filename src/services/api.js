@@ -361,6 +361,14 @@ class ApiService {
     });
   }
 
+  // Debt sequencing — ranks the saved profile's debts by cost and compares HECS
+  // separately. Assumptions (indexationRate, extraMonthlyAmount, voluntaryAnnual)
+  // are passed as query params; balances/income come from the saved profile.
+  async getDebtSequencing(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/debt-sequencing${queryString ? `?${queryString}` : ''}`);
+  }
+
   // Progress
   async updateLessonProgress(lessonId, progressData) {
     return this.request(`/progress/lesson/${lessonId}`, {

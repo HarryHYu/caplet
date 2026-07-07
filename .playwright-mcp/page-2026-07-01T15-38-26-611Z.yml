@@ -1,0 +1,443 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - link "Caplet logo Caplet." [ref=e7]:
+        - /url: /
+        - img "Caplet logo" [ref=e9]
+        - generic [ref=e10]: Caplet.
+      - navigation [ref=e11]:
+        - link "Curriculum" [ref=e12]:
+          - /url: /courses
+        - link "Academy" [ref=e13]:
+          - /url: /classes
+        - link "Instruments" [ref=e14]:
+          - /url: /tools
+      - generic [ref=e15]:
+        - button "toggle dark mode" [ref=e16]:
+          - img [ref=e17]
+        - link "Get started" [ref=e19]:
+          - /url: /register
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic: 1,240 learning now
+          - generic:
+            - generic:
+              - paragraph: ask anything
+              - paragraph: How does compound interest work?
+              - paragraph: It is interest earned on interest. Let us plot it.
+          - generic:
+            - generic:
+              - paragraph: drag & drop
+              - generic:
+                - generic: Text
+                - generic: Code
+                - generic: Quiz
+              - generic:
+                - generic: Live preview
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic: "def value(x):"
+                  - generic: return x ** 2
+                  - generic: "> 2.56"
+          - generic:
+            - generic:
+              - generic:
+                - generic: f(x) = sin x
+                - generic: drag me
+              - generic:
+                - img
+          - generic:
+            - generic:
+              - generic:
+                - generic: compounding
+                - generic: +8.5%
+              - generic:
+                - img
+          - generic:
+            - generic:
+              - generic:
+                - generic: quick check
+                - img
+              - generic:
+                - generic: A whole number
+                - generic: A fraction
+                - generic: An integer
+        - generic [ref=e23]:
+          - paragraph [ref=e24]: free, open, and a little playful
+          - heading "Build, learn, and ship anything ." [level=1] [ref=e25]:
+            - generic [ref=e26]: Build, learn,
+            - generic [ref=e27]:
+              - text: and ship
+              - generic [ref=e28]:
+                - text: anything
+                - img
+              - text: .
+          - paragraph [ref=e29]: Caplet is a free, open platform for building interactive courses and learning from them. Lessons, live code, graphing, quizzes. No subscriptions. No lock-in.
+          - generic [ref=e30]:
+            - link "Start building" [ref=e31]:
+              - /url: /register
+              - text: Start building
+              - img [ref=e32]
+            - button "See how it works" [ref=e34]
+            - generic:
+              - text: it’s genuinely free
+              - img
+      - generic [ref=e36]:
+        - heading "Most platforms profit from confusion. We exist to end it ." [level=2] [ref=e37]:
+          - text: Most platforms profit from confusion. We exist to
+          - generic [ref=e38]:
+            - text: end it
+            - img
+          - text: .
+        - paragraph [ref=e39]: "Learning tools love a locked door: a paywall here, an export you cannot take with you there. Caplet goes the other way. Everything is free, the code is open, and the lessons are built to be played with, not just read."
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - text: free
+          - heading "Free, always" [level=3] [ref=e43]
+          - paragraph [ref=e44]: Build courses, tools, and workspaces for any subject. No tiers, no paywalls, no per-seat pricing.
+          - generic [ref=e45]: yes, actually free ✓
+        - generic [ref=e46]:
+          - text: open
+          - heading "Open source" [level=3] [ref=e47]
+          - paragraph [ref=e48]: The whole codebase is yours to read, fork, and self-host. Own your classroom and its data.
+        - generic [ref=e49]:
+          - text: hands
+          - heading "Hands-on" [level=3] [ref=e50]
+          - paragraph [ref=e51]: Fifteen and more block types, from rich text and quizzes to live IDEs and graphing calculators.
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - heading "Everything is in the box" [level=2] [ref=e55]
+          - paragraph [ref=e56]: no add-ons. no upsells.
+        - generic [ref=e57]:
+          - 'link "build Lesson builder Drag blocks onto the page: text, images, video, code, quizzes. Arrange a whole lesson in minutes." [ref=e58]':
+            - /url: /courses
+            - text: build
+            - heading "Lesson builder" [level=3] [ref=e59]:
+              - text: Lesson builder
+              - img [ref=e60]
+            - paragraph [ref=e62]: "Drag blocks onto the page: text, images, video, code, quizzes. Arrange a whole lesson in minutes."
+          - link "code Live code IDE Python, JavaScript, and HTML run right in the browser, with test runners and an AI debugger." [ref=e63]:
+            - /url: /tools
+            - text: code
+            - heading "Live code IDE" [level=3] [ref=e64]:
+              - text: Live code IDE
+              - img [ref=e65]
+            - paragraph [ref=e67]: Python, JavaScript, and HTML run right in the browser, with test runners and an AI debugger.
+          - link "graph Desmos and plotting Drop in graphing panels and geometry widgets. A student drags a slider and the curve responds." [ref=e68]:
+            - /url: /tools
+            - text: graph
+            - heading "Desmos and plotting" [level=3] [ref=e69]:
+              - text: Desmos and plotting
+              - img [ref=e70]
+            - paragraph [ref=e72]: Drop in graphing panels and geometry widgets. A student drags a slider and the curve responds.
+          - link "check Quizzes and grading Mix in quiz blocks and grading workflows that track every student’s progress automatically." [ref=e73]:
+            - /url: /courses
+            - text: check
+            - heading "Quizzes and grading" [level=3] [ref=e74]:
+              - text: Quizzes and grading
+              - img [ref=e75]
+            - paragraph [ref=e77]: Mix in quiz blocks and grading workflows that track every student’s progress automatically.
+          - link "ai AI lesson generation Describe a topic and Caplet drafts structured slides, quizzes, and a lesson plan for you to edit." [ref=e78]:
+            - /url: /courses
+            - text: ai
+            - heading "AI lesson generation" [level=3] [ref=e79]:
+              - text: AI lesson generation
+              - img [ref=e80]
+            - paragraph [ref=e82]: Describe a topic and Caplet drafts structured slides, quizzes, and a lesson plan for you to edit.
+          - link "class Classrooms Group students into classes, set assignments, and watch submissions arrive in real time." [ref=e83]:
+            - /url: /classes
+            - text: class
+            - heading "Classrooms" [level=3] [ref=e84]:
+              - text: Classrooms
+              - img [ref=e85]
+            - paragraph [ref=e87]: Group students into classes, set assignments, and watch submissions arrive in real time.
+      - generic [ref=e89]:
+        - generic [ref=e90]:
+          - paragraph [ref=e91]: built for Australia 🇦🇺
+          - heading "Money, made to make sense" [level=2] [ref=e92]
+          - paragraph [ref=e93]: Caplet began as a free financial-literacy platform for Australians, and that is still its backbone. Learn tax, super, mortgages, and investing by running the numbers yourself, not by reading another explainer. Every calculator is built around Australian rules, and your figures never leave your account.
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - generic [ref=e96]: 20+
+            - paragraph [ref=e97]: interactive financial calculators, from income tax to your FIRE number
+          - generic [ref=e98]:
+            - generic [ref=e99]: AU-ready
+            - paragraph [ref=e100]: tuned to Australian tax brackets, superannuation, and GST
+          - generic [ref=e101]:
+            - generic [ref=e102]: $0
+            - paragraph [ref=e103]: free forever, with no ads and no selling your data
+        - generic [ref=e104]:
+          - paragraph [ref=e105]: run the numbers on
+          - generic [ref=e106]:
+            - generic [ref=e107]: Income tax
+            - generic [ref=e108]: Superannuation
+            - generic [ref=e109]: Mortgage
+            - generic [ref=e110]: GST
+            - generic [ref=e111]: Compound interest
+            - generic [ref=e112]: Budget planner
+            - generic [ref=e113]: Savings goal
+            - generic [ref=e114]: Net worth
+            - generic [ref=e115]: FIRE number
+            - generic [ref=e116]: Salary
+            - generic [ref=e117]: Capital gains
+            - generic [ref=e118]: Rule of 72
+            - generic [ref=e119]: Emergency fund
+            - generic [ref=e120]: Loan repayment
+            - generic [ref=e121]: Inflation
+            - generic [ref=e122]: Rent vs buy
+            - generic [ref=e123]: Credit-card payoff
+            - generic [ref=e124]: Debt-to-income
+            - link "See every tool" [ref=e125]:
+              - /url: /tools
+              - text: See every tool
+              - img [ref=e126]
+        - generic [ref=e128]:
+          - generic [ref=e129]:
+            - text: just added
+            - heading "Debt Sequencer" [level=3] [ref=e130]
+            - paragraph [ref=e131]: See what each of your debts actually costs to carry, ranked so a spare dollar clears the most cost first. HECS and HELP are handled on their own terms, indexed once a year, not treated like a credit card.
+            - link "Try the Debt Sequencer" [ref=e132]:
+              - /url: /tools/debt-sequencer
+              - text: Try the Debt Sequencer
+              - img [ref=e133]
+          - generic [ref=e135]:
+            - paragraph [ref=e136]: cost ranking
+            - generic [ref=e137]:
+              - generic [ref=e138]: "1"
+              - generic [ref=e139]:
+                - generic [ref=e140]:
+                  - generic [ref=e141]: Store card
+                  - generic [ref=e142]: 24%
+                - paragraph [ref=e143]: costs the most to carry
+            - generic [ref=e144]:
+              - generic [ref=e145]: "2"
+              - generic [ref=e146]:
+                - generic [ref=e147]:
+                  - generic [ref=e148]: Visa
+                  - generic [ref=e149]: 19.9%
+                - paragraph [ref=e150]: next by interest cost
+            - generic [ref=e151]:
+              - generic [ref=e152]: HECS
+              - generic [ref=e153]:
+                - generic [ref=e154]:
+                  - generic [ref=e155]: HECS / HELP
+                  - generic [ref=e156]: ~3.2% indexed
+                - paragraph [ref=e157]: shown separately, not monthly interest
+          - generic [ref=e158]:
+            - generic [ref=e159]: 💳 credit card
+            - generic [ref=e160]: 🛍️ BNPL
+            - generic [ref=e161]: 🎓 HECS / HELP
+            - generic [ref=e162]: 🏦 personal loan
+            - generic [ref=e163]: 📊 avalanche order
+            - generic [ref=e164]: 📉 less interest
+            - generic [ref=e165]: ％ indexation
+            - generic [ref=e166]: 💰 spare cash first
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - heading "Just shipped" [level=2] [ref=e170]
+          - paragraph [ref=e171]: fresh out of the workshop
+        - generic [ref=e172]:
+          - generic [ref=e173]:
+            - text: brand new
+            - heading "Essay Memoriser" [level=3] [ref=e174]
+            - paragraph [ref=e175]: Paste an essay or drop in a PDF. Caplet turns it into cloze gaps, quote cards, and paragraph-order drills, then schedules them with spaced repetition so the whole thing actually sticks before exam day.
+            - link "Try the memoriser" [ref=e176]:
+              - /url: /essays
+              - text: Try the memoriser
+              - img [ref=e177]
+          - generic [ref=e179]:
+            - generic [ref=e180]:
+              - text: cloze gap
+              - paragraph [ref=e181]:
+                - text: In 1788 the First Fleet arrived, marking the start of
+                - text: settlement.
+            - generic [ref=e183]:
+              - generic [ref=e184]: paragraph order
+              - generic [ref=e185]: "1"
+              - generic [ref=e186]: "2"
+              - generic [ref=e187]: "3"
+              - generic [ref=e188]: "4"
+              - img
+            - generic [ref=e189]:
+              - text: Quote card
+              - generic [ref=e190]: tap to flip
+        - generic [ref=e191]:
+          - link "recall Spaced-repetition review Saved slides, quotes, and essay paragraphs resurface right before you would forget them." [ref=e192]:
+            - /url: /revision
+            - text: recall
+            - heading "Spaced-repetition review" [level=3] [ref=e193]:
+              - text: Spaced-repetition review
+              - img [ref=e194]
+            - paragraph [ref=e196]: Saved slides, quotes, and essay paragraphs resurface right before you would forget them.
+          - link "tutor In-slide AI tutor Stuck on a slide? Ask for a hint or a worked example without ever leaving the lesson." [ref=e197]:
+            - /url: /courses
+            - text: tutor
+            - heading "In-slide AI tutor" [level=3] [ref=e198]:
+              - text: In-slide AI tutor
+              - img [ref=e199]
+            - paragraph [ref=e201]: Stuck on a slide? Ask for a hint or a worked example without ever leaving the lesson.
+          - link "profile Financial profile Add your income, goals, and accounts once, and examples across Caplet use your real numbers." [ref=e202]:
+            - /url: /settings/financial
+            - text: profile
+            - heading "Financial profile" [level=3] [ref=e203]:
+              - text: Financial profile
+              - img [ref=e204]
+            - paragraph [ref=e206]: Add your income, goals, and accounts once, and examples across Caplet use your real numbers.
+      - generic [ref=e208]:
+        - generic [ref=e209]:
+          - heading "See it in action" [level=2] [ref=e210]
+          - generic [ref=e211]: try the tabs
+        - generic [ref=e212]:
+          - generic [ref=e213]:
+            - button "Lesson builder" [ref=e214]
+            - button "Live code" [ref=e215]
+            - button "Graphing" [ref=e216]
+          - generic [ref=e218]:
+            - generic [ref=e219]:
+              - heading "A canvas you can drag, drop, and play with" [level=3] [ref=e220]
+              - paragraph [ref=e221]: Draft slides, drop in coding challenges, embed videos, and run a live classroom. The builder stays out of your way and keeps every block editable.
+              - link "Open the builder" [ref=e222]:
+                - /url: /courses
+                - text: Open the builder
+                - img [ref=e223]
+            - generic [ref=e226]:
+              - generic [ref=e227]:
+                - generic [ref=e228]: Text
+                - generic [ref=e229]: Code
+                - generic [ref=e230]: Chart
+                - generic [ref=e231]: Quiz
+              - generic [ref=e232]:
+                - generic [ref=e233]: Drop a block here
+                - generic [ref=e238]: Live preview
+      - generic [ref=e240]:
+        - heading "Common questions" [level=2] [ref=e241]
+        - generic [ref=e242]:
+          - generic [ref=e243]:
+            - button "Is Caplet really free?" [expanded] [ref=e244]:
+              - generic [ref=e245]: Is Caplet really free?
+              - img [ref=e246]
+            - paragraph [ref=e250]: Yes, genuinely. Caplet is an open learning playground with no subscription tiers, no per-seat pricing, and no user limits. Teachers and students build and complete whole courses without ever hitting a paywall, and there are no ads and nothing sold on the side. The finance tools, the lesson builder, the AI tutor, and classrooms are all included.
+          - generic [ref=e251]:
+            - button "How do I publish my own curriculum?" [ref=e252]:
+              - generic [ref=e253]: How do I publish my own curriculum?
+              - img [ref=e254]
+            - paragraph [ref=e256]: "Sign up, open your dashboard, and create a course. Add modules and lessons, then drag in blocks: rich text, images, video, live code, graphing panels, and quizzes. Rearrange anything, preview it the way a student would see it, and share the link the moment it is ready. You can keep editing after publishing, and every change goes live instantly."
+          - generic [ref=e257]:
+            - button "Can I host Caplet on my own servers?" [ref=e258]:
+              - generic [ref=e259]: Can I host Caplet on my own servers?
+              - img [ref=e260]
+            - paragraph [ref=e262]: Yes. Caplet is fully open-source. Pull the code from the repository and deploy it on your own servers or a private cloud. It runs a React frontend and a Node and Express backend, using Postgres in production and SQLite for local development, so a single laptop is enough to get started.
+          - generic [ref=e263]:
+            - button "Does it support grading and tests?" [ref=e264]:
+              - generic [ref=e265]: Does it support grading and tests?
+              - img [ref=e266]
+            - paragraph [ref=e268]: It does. Embed live coding playgrounds with test runners, quiz blocks, and grading workflows that track every learner automatically. Group students into classrooms, set assignments with due dates, and watch submissions arrive in real time, with spaced repetition to help the material actually stick.
+          - generic [ref=e269]:
+            - button "Are the financial calculators specific to Australia?" [ref=e270]:
+              - generic [ref=e271]: Are the financial calculators specific to Australia?
+              - img [ref=e272]
+            - paragraph [ref=e274]: Yes. Every calculator is built around Australian rules, including income tax brackets, the Medicare levy, superannuation, GST, and HECS and HELP. The new Debt Sequencer models HECS the way it actually works, indexed once a year rather than charged monthly interest, so the guidance stays correct instead of copying a generic overseas template. These are educational tools, not personal financial advice.
+          - generic [ref=e275]:
+            - button "Is my financial data private?" [ref=e276]:
+              - generic [ref=e277]: Is my financial data private?
+              - img [ref=e278]
+            - paragraph [ref=e280]: Your figures never leave your account. Your financial profile is stored against your login and used only to pre-fill the tools you choose to open. We do not sell data, we do not show ads, and nothing you enter is shared with third parties.
+          - generic [ref=e281]:
+            - button "Do I need to know how to code to build a lesson?" [ref=e282]:
+              - generic [ref=e283]: Do I need to know how to code to build a lesson?
+              - img [ref=e284]
+            - paragraph [ref=e286]: Not at all. Building a lesson is drag-and-drop, and you can assemble a full lesson in minutes without writing a single line of code. If you do want code, the live IDE runs Python, JavaScript, and HTML right in the browser, so you can add runnable examples whenever they help.
+          - generic [ref=e287]:
+            - button "Can I use AI to help build a course?" [ref=e288]:
+              - generic [ref=e289]: Can I use AI to help build a course?
+              - img [ref=e290]
+            - paragraph [ref=e292]: Yes. Describe a topic and Caplet drafts structured slides, quizzes, and a lesson plan for you to edit, so a blank page is never the starting point. An in-slide AI tutor also gives students hints and worked examples without leaving the lesson. The AI helps you create; it never touches the deterministic finance calculators.
+      - generic [ref=e294]:
+        - paragraph [ref=e295]: ready when you are
+        - heading "Build your first course in an afternoon." [level=2] [ref=e296]
+        - paragraph [ref=e297]: Start from a blank canvas or let AI draft your first lesson, add live code and quizzes, and share it with a single link. Or skip straight to the money tools and run your own numbers on tax, super, mortgages, and debt. Everything here is free, open-source, and built for Australia.
+        - generic [ref=e298]:
+          - generic [ref=e299]: Free forever
+          - generic [ref=e300]: Open-source
+          - generic [ref=e301]: Built for Australia
+          - generic [ref=e302]: No ads, no lock-in
+          - generic [ref=e303]: Your data stays yours
+        - generic [ref=e304]:
+          - link "Create a course" [ref=e305]:
+            - /url: /register
+            - text: Create a course
+            - img [ref=e306]
+          - link "Explore the tools" [ref=e308]:
+            - /url: /tools
+          - link "Browse the curriculum" [ref=e309]:
+            - /url: /courses
+        - paragraph [ref=e310]: No credit card, and no account needed just to look around.
+  - contentinfo [ref=e311]:
+    - generic [ref=e312]:
+      - generic [ref=e313]:
+        - generic [ref=e314]:
+          - link "Caplet logo Caplet." [ref=e315]:
+            - /url: /
+            - img "Caplet logo" [ref=e316]
+            - generic [ref=e317]: Caplet.
+          - paragraph [ref=e318]: learn anything, for free
+          - paragraph [ref=e319]: A free, open platform for building interactive courses, financial tools, and classrooms.
+        - generic [ref=e320]:
+          - heading "Learn" [level=3] [ref=e321]
+          - list [ref=e322]:
+            - listitem [ref=e323]:
+              - link "Courses" [ref=e324]:
+                - /url: /courses
+                - text: Courses
+            - listitem [ref=e326]:
+              - link "Classes" [ref=e327]:
+                - /url: /classes
+                - text: Classes
+            - listitem [ref=e329]:
+              - link "Tools" [ref=e330]:
+                - /url: /tools
+                - text: Tools
+            - listitem [ref=e332]:
+              - link "Essay memoriser" [ref=e333]:
+                - /url: /essays
+                - text: Essay memoriser
+        - generic [ref=e335]:
+          - heading "Support" [level=3] [ref=e336]
+          - list [ref=e337]:
+            - listitem [ref=e338]:
+              - link "Dashboard" [ref=e339]:
+                - /url: /dashboard
+                - text: Dashboard
+            - listitem [ref=e341]:
+              - link "Contact" [ref=e342]:
+                - /url: /contact
+                - text: Contact
+            - listitem [ref=e344]:
+              - link "Terms and privacy" [ref=e345]:
+                - /url: /terms
+                - text: Terms and privacy
+        - generic [ref=e347]:
+          - heading "Contact" [level=3] [ref=e348]
+          - list [ref=e349]:
+            - listitem [ref=e350]:
+              - link "Twitter" [ref=e351]:
+                - /url: /
+                - text: Twitter
+            - listitem [ref=e353]:
+              - link "GitHub" [ref=e354]:
+                - /url: /
+                - text: GitHub
+            - listitem [ref=e356]:
+              - link "Email" [ref=e357]:
+                - /url: /
+                - text: Email
+      - generic [ref=e359]:
+        - paragraph [ref=e360]: © 2026 Caplet
+        - paragraph [ref=e361]: Free and open-source.

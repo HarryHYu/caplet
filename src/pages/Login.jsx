@@ -18,8 +18,8 @@ const Login = () => {
                 {/* Wordmark */}
                 <div className="relative z-10 p-12 xl:p-16">
                     <Link to="/" className="group inline-flex items-center">
-                        <span className="font-display font-extrabold tracking-tight text-2xl text-white group-hover:opacity-80 transition-opacity duration-200">
-                            Caplet
+                        <span className="font-bricolage font-extrabold tracking-[-0.02em] text-2xl text-white group-hover:opacity-80 transition-opacity duration-200">
+                            Caplet.
                         </span>
                     </Link>
                 </div>
@@ -47,8 +47,8 @@ const Login = () => {
 
                 {/* Top bar: mobile wordmark + back to home */}
                 <div className="flex items-center justify-between px-8 lg:px-16 xl:px-24 pt-10">
-                    <Link to="/" className="lg:hidden font-display font-extrabold tracking-tight text-xl text-text-primary hover:text-accent transition-colors">
-                        Caplet
+                    <Link to="/" className="lg:hidden font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors">
+                        Caplet.
                     </Link>
                     <Link to="/" className="ml-auto text-sm font-bold text-text-dim hover:text-accent transition-colors">
                         Back to home

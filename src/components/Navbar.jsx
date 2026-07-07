@@ -2,19 +2,26 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLayout } from '../contexts/LayoutContext';
 
-const Navbar = () => {
+// `mobileOnly` is set when the vertical rail owns navigation on large screens —
+// the top bar then only appears on mobile, so the two never overlap.
+const Navbar = ({ mobileOnly = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showExplore, setShowExplore] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const { toggleNavMode } = useLayout();
   const menuRef = useRef(null);
+  const exploreRef = useRef(null);
 
   useEffect(() => {
     setIsOpen(false);
     setShowUserMenu(false);
+    setShowExplore(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -28,28 +35,28 @@ const Navbar = () => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowUserMenu(false);
       }
+      if (exploreRef.current && !exploreRef.current.contains(e.target)) {
+        setShowExplore(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const allNavItems = [
-    { path: '/dashboard', label: 'Dashboard', privateOnly: true },
+  // The three destinations that live under the single "Explore" dropdown.
+  const exploreItems = [
     { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
     { path: '/classes', label: 'Academy', tourId: 'nav-academy' },
     { path: '/tools', label: 'Instruments', tourId: 'nav-instruments' },
   ];
 
-  const navItems = allNavItems.filter((item) => {
-    if (isAuthenticated) return !item.publicOnly;
-    return !item.privateOnly;
-  });
-
   const homePath = isAuthenticated ? '/dashboard' : '/';
+  const isHome = location.pathname === '/';
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
+  const exploreActive = exploreItems.some((item) => isActive(item.path));
 
   const hidePaths = ['/login', '/register', '/play'];
   if (hidePaths.includes(location.pathname)) return null;
@@ -61,46 +68,91 @@ const Navbar = () => {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-shadow duration-300 bg-surface-body/80 backdrop-blur-md text-text-primary ${
+      className={`fixed top-0 inset-x-0 z-50 transition-shadow duration-300 bg-surface-body/90 backdrop-blur-md text-text-primary ${
+        mobileOnly ? 'lg:hidden' : ''
+      } ${
         scrolled ? 'shadow-[0_6px_24px_-16px_rgba(0,0,0,0.4)]' : ''
       }`}
     >
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
-        <div className="h-11 md:h-12 flex items-center justify-between gap-4">
+        <div className="h-14 md:h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}
           <Link to={homePath} className="flex items-center gap-2 group relative z-10 shrink-0">
-            <div className="w-6 h-6 md:w-7 md:h-7 rounded-full overflow-hidden ring-1 ring-line-soft group-hover:ring-accent transition-all duration-300">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden ring-1 ring-line-soft group-hover:ring-accent transition-all duration-300">
               <img
                 src="/logo.png"
                 alt="Caplet logo"
                 className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
               />
             </div>
-            <span className="text-sm md:text-base font-serif italic font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors duration-300">
+            <span className="text-lg md:text-xl font-bricolage font-extrabold tracking-[-0.02em] text-text-primary group-hover:text-accent transition-colors duration-300">
               Caplet.
             </span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                  className={`relative px-2.5 py-1.5 text-[11px] font-bold tracking-[0.08em] transition-all duration-200 ${
-                    active
-                      ? 'text-text-primary font-black border-b-2 border-accent'
-                      : 'text-text-muted hover:text-text-primary hover:bg-surface-soft rounded-none'
-                  }`}
+          {/* Desktop nav — pushed to the right, next to the action cluster */}
+          <nav className="hidden md:flex items-center gap-1 ml-auto">
+            {isAuthenticated && (
+              <Link
+                to="/dashboard"
+                className={`relative px-3 py-2 rounded-lg text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
+                  isActive('/dashboard')
+                    ? 'text-accent bg-accent-soft'
+                    : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
+                }`}
+              >
+                Dashboard
+              </Link>
+            )}
+
+            {/* Single "Explore" button grouping Curriculum, Academy, Instruments */}
+            <div className="relative" ref={exploreRef}>
+              <button
+                type="button"
+                onClick={() => setShowExplore((v) => !v)}
+                aria-expanded={showExplore}
+                aria-haspopup="true"
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
+                  exploreActive
+                    ? 'text-accent bg-accent-soft'
+                    : showExplore
+                    ? 'text-text-primary bg-surface-soft'
+                    : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
+                }`}
+              >
+                Explore
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${showExplore ? 'rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 >
-                  {item.label}
-                </Link>
-              );
-            })}
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showExplore && (
+                <div className="absolute top-full left-0 mt-2 w-52 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                  {exploreItems.map((item) => {
+                    const active = isActive(item.path);
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setShowExplore(false)}
+                        {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
+                        className={`block px-4 py-2.5 text-sm font-bold tracking-[0.04em] transition-colors ${
+                          active
+                            ? 'text-accent bg-accent-soft'
+                            : 'text-text-primary hover:bg-surface-soft'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
  
           {/* Actions */}
@@ -116,7 +168,24 @@ const Navbar = () => {
               Join Live
             </Link>
 
-            {/* Theme toggle */}
+            {/* Switch the whole app to the vertical side rail (signed-in only) */}
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={toggleNavMode}
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
+                aria-label="Switch to side bar navigation"
+                title="Use side bar"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth={2} />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 4v16" />
+                </svg>
+              </button>
+            )}
+
+            {/* Theme toggle — hidden on the single-colour welcome page */}
+            {!isHome && (
             <button
               type="button"
               onClick={toggleTheme}
@@ -133,7 +202,8 @@ const Navbar = () => {
                 </svg>
               )}
             </button>
- 
+            )}
+
  
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
@@ -162,14 +232,14 @@ const Navbar = () => {
                 </button>
  
                 {showUserMenu && (
-                  <div className="absolute top-full right-0 mt-2 w-48 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <div className="px-3 py-2 mb-1 border-b border-line-soft">
+                  <div className="absolute top-full right-0 mt-2 w-52 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="px-4 py-2 mb-1 border-b border-line-soft">
                       <p className="text-xs font-medium text-text-dim truncate">{user?.email || ''}</p>
                     </div>
                     <Link
                       to="/settings"
                       onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-text-primary hover:bg-surface-soft transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold tracking-[0.04em] text-text-primary hover:bg-surface-soft transition-colors"
                     >
                       <svg className="w-3.5 h-3.5 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -180,7 +250,7 @@ const Navbar = () => {
                     <Link
                       to="/demo"
                       onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-text-primary hover:bg-surface-soft transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold tracking-[0.04em] text-text-primary hover:bg-surface-soft transition-colors"
                     >
                       <svg className="w-3.5 h-3.5 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.869v6.262a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
@@ -191,7 +261,7 @@ const Navbar = () => {
                     <button
                       type="button"
                       onClick={logout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold tracking-[0.04em] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -204,7 +274,7 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/register"
-                className="hidden md:inline-flex items-center justify-center bg-accent hover:bg-accent-strong text-white font-bold text-[11px] tracking-[0.12em] px-4 py-1.5 rounded-lg transition-all duration-300"
+                className="hidden md:inline-flex items-center justify-center bg-accent hover:bg-accent-strong text-white font-bold text-xs tracking-[0.1em] px-4 py-2 rounded-lg transition-all duration-300"
               >
                 Get started
               </Link>
@@ -231,7 +301,10 @@ const Navbar = () => {
         {/* Mobile menu */}
         {isOpen && (
           <div className="md:hidden border-t border-line-soft py-3 flex flex-col gap-0.5">
-            {navItems.map((item) => {
+            {(isAuthenticated
+              ? [{ path: '/dashboard', label: 'Dashboard' }, ...exploreItems]
+              : exploreItems
+            ).map((item) => {
               const active = isActive(item.path);
               return (
                 <Link

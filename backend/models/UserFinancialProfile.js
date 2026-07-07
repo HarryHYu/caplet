@@ -10,8 +10,12 @@ const { sequelize } = require('../config/database');
  *
  * `debts` and `goals` are JSON arrays stored as TEXT (the same pattern as
  * User.preferences) so they work on both SQLite and Postgres:
- *   debts: [{ label: string, balance: number, rate: number }]
+ *   debts: [{ label: string, balance: number, rate: number, type?: 'credit_card'|'bnpl'|'personal_loan'|'other' }]
  *   goals: [{ label: string, target: number }]
+ *
+ * `hecsBalance` is a separate whole-dollar INTEGER column (not part of `debts`)
+ * because HECS/HELP behaves differently from ordinary debt — indexed once a year,
+ * income-contingent repayment, no interest "rate". See services/debtEngine.js.
  */
 const UserFinancialProfile = sequelize.define('UserFinancialProfile', {
   id: {
@@ -25,6 +29,10 @@ const UserFinancialProfile = sequelize.define('UserFinancialProfile', {
     unique: true
   },
   annualIncome: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  hecsBalance: {
     type: DataTypes.INTEGER,
     allowNull: true
   },

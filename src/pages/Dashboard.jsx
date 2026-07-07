@@ -10,6 +10,7 @@ import {
     AcademicCapIcon,
     FireIcon,
     ArrowRightIcon,
+    ArrowPathIcon,
     CheckCircleIcon,
     BookmarkIcon,
     DocumentTextIcon
@@ -22,6 +23,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
     const [savedSlides, setSavedSlides] = useState([]);
+    const [dueCount, setDueCount] = useState(0);
 
     useReveal(undefined, [loading, coursesLoading]);
 
@@ -36,10 +38,11 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [progressData, classesData, savedSlidesData] = await Promise.all([
+                const [progressData, classesData, savedSlidesData, dueData] = await Promise.all([
                     api.getUserProgress(),
                     api.getClasses(),
                     api.getSavedSlides().catch(() => null),
+                    api.getDueReviewItems().catch(() => null),
                 ]);
                 setUserProgress(progressData?.progress || []);
                 const allClasses = [
@@ -48,6 +51,7 @@ export default function Dashboard() {
                 ];
                 setClasses(allClasses);
                 setSavedSlides(savedSlidesData?.savedSlides || []);
+                setDueCount(dueData?.items?.length || 0);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             } finally {
@@ -95,7 +99,7 @@ export default function Dashboard() {
                 <header className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal">
                     <div>
                         <span className="font-hand text-2xl text-blue -rotate-2 inline-block mb-2">welcome back</span>
-                        <h1 className="font-bricolage font-extrabold tracking-tight text-text-primary text-5xl md:text-7xl leading-[0.96]">
+                        <h1 className="font-display font-extrabold tracking-tight text-text-primary text-5xl md:text-7xl leading-[0.96]">
                             {getGreeting()}, {user?.firstName || 'Student'}.
                         </h1>
                         <p className="mt-7 text-xl text-text-muted font-medium max-w-xl">
@@ -104,6 +108,32 @@ export default function Dashboard() {
                     </div>
 
                 </header>
+
+                {/* Due for review — the day's spaced-repetition nudge; only shown when something is actually due */}
+                {dueCount > 0 && (
+                    <Link
+                        to="/revision"
+                        className="reveal group mb-20 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between block-amber rounded-3xl p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200"
+                    >
+                        <div className="flex items-center gap-5">
+                            <span className="grid place-items-center w-14 h-14 shrink-0 rounded-2xl bg-surface-raised shadow-[0_16px_36px_-30px_rgba(20,20,18,0.3)]">
+                                <ArrowPathIcon className="w-7 h-7 text-accent" />
+                            </span>
+                            <div>
+                                <p className="font-display font-extrabold tracking-tight text-2xl md:text-3xl text-text-primary leading-tight">
+                                    {dueCount} {dueCount === 1 ? 'item' : 'items'} due for review today
+                                </p>
+                                <p className="text-sm font-bold text-text-muted mt-1.5">
+                                    A few minutes of spaced review keeps it from fading.
+                                </p>
+                            </div>
+                        </div>
+                        <span className="shrink-0 inline-flex items-center gap-2 rounded-2xl bg-accent px-6 py-3 text-sm font-bold text-white group-hover:bg-accent-strong transition-colors">
+                            Review now
+                            <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                    </Link>
+                )}
 
                 {/* Stats Matrix */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-20 reveal-stagger">
@@ -118,7 +148,7 @@ export default function Dashboard() {
                                 {stat.label}
                                 <stat.icon className="w-5 h-5 text-accent opacity-70" />
                             </p>
-                            <p className="font-bricolage font-extrabold tracking-tight text-5xl text-text-primary">
+                            <p className="font-display font-extrabold tracking-tight text-5xl text-text-primary">
                                 {stat.value}
                             </p>
                         </div>
@@ -142,7 +172,7 @@ export default function Dashboard() {
                                             />
                                         </div>
                                         <div className="flex-1 w-full">
-                                            <h3 className="font-bricolage font-bold tracking-tight text-3xl md:text-4xl text-text-primary mb-6">{lastAccessedCourse.title}</h3>
+                                            <h3 className="font-display font-bold tracking-tight text-3xl md:text-4xl text-text-primary mb-6">{lastAccessedCourse.title}</h3>
                                             <div className="w-full bg-surface-raised h-2 rounded-full mb-7 overflow-hidden">
                                                 <div
                                                     className="bg-accent h-full rounded-full transition-all duration-1000 ease-out"
@@ -166,7 +196,7 @@ export default function Dashboard() {
                             <div className="flex items-end justify-between mb-6">
                                 <div>
                                     <span className="section-kicker">Academy</span>
-                                    <h2 className="font-bricolage font-bold tracking-tight text-3xl md:text-4xl text-text-primary">My Classes</h2>
+                                    <h2 className="font-display font-bold tracking-tight text-3xl md:text-4xl text-text-primary">My Classes</h2>
                                 </div>
                                 <Link to="/classes" className="text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">View All Classes</Link>
                             </div>
@@ -250,7 +280,7 @@ export default function Dashboard() {
                         <div className="reveal rounded-3xl bg-[color:var(--mark-blue)] text-white p-10 relative overflow-hidden shadow-[0_30px_60px_-38px_rgba(19,81,170,0.7)]">
                             <div className="relative z-10">
                                 <FireIcon className="w-10 h-10 text-white mb-7" />
-                                <h4 className="font-bricolage font-bold tracking-tight text-2xl mb-5">Daily Insight</h4>
+                                <h4 className="font-display font-bold tracking-tight text-2xl mb-5">Daily Insight</h4>
                                 <blockquote className="text-base font-medium leading-relaxed text-white/85 mb-7">
                                     "Compound interest is the eighth wonder of the world. He who understands it, earns it. He who does not, pays it."
                                 </blockquote>

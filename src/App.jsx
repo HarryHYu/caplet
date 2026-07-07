@@ -4,7 +4,9 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CoursesProvider } from './contexts/CoursesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { LayoutProvider, useLayout } from './contexts/LayoutContext';
 import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import Tour from './pages/Tour';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -23,6 +25,7 @@ import EmergencyFund from './pages/tools/EmergencyFund';
 import NetWorth from './pages/tools/NetWorth';
 import InflationCalculator from './pages/tools/InflationCalculator';
 import CreditCardPayoff from './pages/tools/CreditCardPayoff';
+import DebtSequencer from './pages/tools/DebtSequencer';
 import ROICalculator from './pages/tools/ROICalculator';
 import RentVsBuy from './pages/tools/RentVsBuy';
 import DebtToIncome from './pages/tools/DebtToIncome';
@@ -112,24 +115,9 @@ function RequireAdmin({ children }) {
   return children;
 }
 
-/* Separate component so useLocation is inside Router */
-function AppShell() {
-  const { pathname } = useLocation();
-
-  // Tour gets a completely standalone layout — no Navbar/Footer/flex wrapper
-  if (pathname === '/demo') {
-    return (
-      <Routes>
-        <Route path="/demo" element={<Tour />} />
-      </Routes>
-    );
-  }
-
+function AppRoutes() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow">
-        <Routes>
+    <Routes>
           <Route path="/" element={<HomeOrRedirect />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
@@ -151,6 +139,7 @@ function AppShell() {
           <Route path="/tools/net-worth" element={<NetWorth />} />
           <Route path="/tools/inflation" element={<InflationCalculator />} />
           <Route path="/tools/credit-card-payoff" element={<CreditCardPayoff />} />
+          <Route path="/tools/debt-sequencer" element={<DebtSequencer />} />
           <Route path="/tools/roi" element={<ROICalculator />} />
           <Route path="/tools/rent-vs-buy" element={<RentVsBuy />} />
           <Route path="/tools/debt-to-income" element={<DebtToIncome />} />
@@ -180,7 +169,55 @@ function AppShell() {
           <Route path="/live/host/:code" element={<RequireAuth><HostLive /></RequireAuth>} />
           <Route path="/play" element={<PlayLive />} />
           <Route path="*" element={<NotFound />} />
-        </Routes>
+    </Routes>
+  );
+}
+
+/* Separate component so useLocation is inside Router */
+function AppShell() {
+  const { pathname } = useLocation();
+  const { isAuthenticated } = useAuth();
+  const { navMode } = useLayout();
+
+  // Tour gets a completely standalone layout — no Navbar/Footer/flex wrapper
+  if (pathname === '/demo') {
+    return (
+      <Routes>
+        <Route path="/demo" element={<Tour />} />
+      </Routes>
+    );
+  }
+
+  // Pages that suppress all chrome (their own full-bleed layouts).
+  const bareChrome =
+    ['/login', '/register', '/play'].includes(pathname) ||
+    pathname.startsWith('/live/host');
+
+  // The vertical rail only makes sense for signed-in users, and never on the
+  // bare-chrome auth/live pages. When it's active the top navbar is dropped on
+  // large screens (the two never coexist) but kept on mobile as the nav.
+  const vertical = navMode === 'vertical' && isAuthenticated && !bareChrome;
+
+  if (vertical) {
+    return (
+      <div className="min-h-screen bg-surface-body lg:flex">
+        <Sidebar />
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+          <Navbar mobileOnly />
+          <main className="flex-grow">
+            <AppRoutes />
+          </main>
+          <Footer />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-grow">
+        <AppRoutes />
       </main>
       <Footer />
     </div>
@@ -193,10 +230,12 @@ function App() {
       <GoogleOAuthProvider clientId={GOOGLE_OAUTH_CLIENT_ID}>
       <AuthProvider>
         <CoursesProvider>
-          <Router>
-            <ScrollToTop />
-            <AppShell />
-          </Router>
+          <LayoutProvider>
+            <Router>
+              <ScrollToTop />
+              <AppShell />
+            </Router>
+          </LayoutProvider>
         </CoursesProvider>
       </AuthProvider>
       </GoogleOAuthProvider>

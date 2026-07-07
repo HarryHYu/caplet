@@ -1,0 +1,33 @@
+- generic [ref=f2e3]:
+  - banner [ref=f2e4]:
+    - generic [ref=f2e6]:
+      - link "Caplet logo Caplet." [ref=f2e7] [cursor=pointer]:
+        - /url: /dashboard
+        - img "Caplet logo" [ref=f2e9]
+        - generic [ref=f2e10]: Caplet.
+      - navigation [ref=f2e11]:
+        - link "Dashboard" [ref=f2e12] [cursor=pointer]:
+          - /url: /dashboard
+        - link "Curriculum" [ref=f2e13] [cursor=pointer]:
+          - /url: /courses
+        - link "Academy" [ref=f2e14] [cursor=pointer]:
+          - /url: /classes
+        - link "Instruments" [ref=f2e15] [cursor=pointer]:
+          - /url: /tools
+      - generic [ref=f2e16]:
+        - button "toggle dark mode" [ref=f2e17] [cursor=pointer]:
+          - img [ref=f2e18]
+        - button "ET Editor" [ref=f2e21] [cursor=pointer]:
+          - generic [ref=f2e22]: ET
+          - generic [ref=f2e23]: Editor
+          - img [ref=f2e24]
+  - main [ref=f2e26]:
+    - generic [ref=f2e28]:
+      - paragraph [ref=f2e29]: Lesson workspace
+      - heading "Access code" [level=1] [ref=f2e30]
+      - paragraph [ref=f2e31]: Enter the code your admin shared with you.
+      - generic [ref=f2e32]:
+        - textbox "Paste your code" [ref=f2e33]
+        - button "Continue" [disabled] [ref=f2e34]
+      - link "← Back to home" [ref=f2e35] [cursor=pointer]:
+        - /url: /

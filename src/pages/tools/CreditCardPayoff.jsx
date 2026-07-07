@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { standardDebtPayoff } from '../../lib/debtMath';
+import { useReveal } from '../../lib/useReveal';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
@@ -20,14 +22,19 @@ const CreditCardPayoff = () => {
       setResult({ error: 'Please enter valid values for all fields.' });
       return;
     }
-    if (P <= B * r) {
+
+    // Core payoff math is shared with the backend debt engine via src/lib/debtMath.js
+    // (kept in sync by parity tests on both sides). The minimum-payment simulation
+    // below stays local to this tool.
+    const { months, totalPaid, totalInterest, neverPayoff } = standardDebtPayoff({
+      balance: B,
+      annualRate: parseFloat(apr),
+      monthlyPayment: P,
+    });
+    if (neverPayoff) {
       setResult({ error: 'Monthly payment is too low to cover interest — the balance will never be paid off. Increase your payment.' });
       return;
     }
-
-    const months = Math.ceil(-Math.log(1 - (B * r) / P) / Math.log(1 + r));
-    const totalPaid = P * months;
-    const totalInterest = totalPaid - B;
     const years = Math.floor(months / 12);
     const remMonths = months % 12;
 
@@ -50,14 +57,16 @@ const CreditCardPayoff = () => {
     setResult({ months, years, remMonths, totalPaid, totalInterest, minPayment, interestSaved, monthsSaved, minMonths });
   };
 
+  useReveal();
+
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="mb-16">
+        <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
               <span className="font-hand text-accent text-lg">Tools &rarr; Debt & Loans</span>
-              <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mt-4 mb-8">Credit Card<br />Payoff.</h1>
+              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-4 mb-8">Credit Card<br />Payoff.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 See exactly how long it takes to clear your balance, and how much interest you save by paying more.
               </p>
@@ -67,7 +76,7 @@ const CreditCardPayoff = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Debt Parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-10">
               <div>
@@ -107,7 +116,7 @@ const CreditCardPayoff = () => {
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Payoff Projection</h2>
             {result ? (
               result.error ? (

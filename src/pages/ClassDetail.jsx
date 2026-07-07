@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 
@@ -12,6 +13,7 @@ const ClassDetail = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [showNewAssignment, setShowNewAssignment] = useState(false);
+  useReveal(undefined, [loading]);
   const [assignmentForm, setAssignmentForm] = useState({
     title: '',
     description: '',
@@ -499,8 +501,8 @@ const ClassDetail = () => {
 
   return (
     <div className="min-h-screen bg-surface-body py-32 px-6 selection:bg-accent selection:text-white">
-      <div className="container-custom space-y-12">
-        <div className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-10 animate-slide-up">
+      <div className="container-custom space-y-12 reveal-stagger">
+        <div className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
             <div className="flex-1">
               <button

@@ -1,0 +1,41 @@
+- generic [ref=f2e3]:
+  - banner [ref=f2e4]:
+    - generic [ref=f2e6]:
+      - link "Caplet logo Caplet." [ref=f2e7] [cursor=pointer]:
+        - /url: /dashboard
+        - img "Caplet logo" [ref=f2e9]
+        - generic [ref=f2e10]: Caplet.
+      - navigation [ref=f2e11]:
+        - link "Dashboard" [ref=f2e12] [cursor=pointer]:
+          - /url: /dashboard
+        - link "Curriculum" [ref=f2e13] [cursor=pointer]:
+          - /url: /courses
+        - link "Academy" [ref=f2e14] [cursor=pointer]:
+          - /url: /classes
+        - link "Instruments" [ref=f2e15] [cursor=pointer]:
+          - /url: /tools
+      - generic [ref=f2e16]:
+        - button "toggle dark mode" [ref=f2e17] [cursor=pointer]:
+          - img [ref=f2e18]
+        - button "ET Editor" [ref=f2e21] [cursor=pointer]:
+          - generic [ref=f2e22]: ET
+          - generic [ref=f2e23]: Editor
+          - img [ref=f2e24]
+  - main [ref=f2e26]:
+    - generic [ref=f2e37]:
+      - generic [ref=f2e39]:
+        - paragraph [ref=f2e40]: Workspace
+        - generic [ref=f2e41]:
+          - button "Refresh" [ref=f2e42] [cursor=pointer]
+          - button "Leave" [ref=f2e43] [cursor=pointer]
+      - generic [ref=f2e44]:
+        - generic [ref=f2e46]:
+          - paragraph [ref=f2e47]: Lesson workspace
+          - generic [ref=f2e49]:
+            - heading "Your courses" [level=1] [ref=f2e50]
+            - paragraph [ref=f2e51]: Build, organise, and publish lessons for your students.
+        - generic [ref=f2e53]:
+          - paragraph [ref=f2e54]: empty workspace
+          - paragraph [ref=f2e55]: No courses yet
+          - paragraph [ref=f2e56]: Your workspace is empty. Add a course to start building.
+          - button "+ Create your first course" [ref=f2e57] [cursor=pointer]
