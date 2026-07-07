@@ -87,6 +87,22 @@ const showcaseTabs = [
   { id: 'geometry', label: 'Graphing' },
 ];
 
+// Fires `callback` once when `el` first becomes visible (immediately if it
+// already is). Used instead of ScrollTrigger for one-shot reveals — see the
+// note above the reveal setup in the effect below for why.
+function onceVisible(el, rootMargin, callback, registry) {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        callback();
+        io.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin, threshold: 0 });
+  io.observe(el);
+  registry.push(io);
+}
+
 const Home = () => {
   const rootRef = useRef(null);
   const heroRef = useRef(null);
@@ -128,6 +144,8 @@ const Home = () => {
     gsap.ticker.lagSmoothing(0);
     removeTicker = () => gsap.ticker.remove(raf);
 
+    const observers = [];
+
     const ctx = gsap.context(() => {
       // Hero opens, then writes its own annotations on top.
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
@@ -141,20 +159,36 @@ const Home = () => {
         .from('.hero-note', { opacity: 0, scale: 0.85, rotate: -8, duration: 0.4 }, '-=0.2')
         .from('.widget', { y: 18, opacity: 0, scale: 0.92, duration: 0.6, stagger: 0.08 }, '-=1.1');
 
-      // Section reveals.
+      // Section reveals + living annotations (ink marks draw, highlights swipe).
+      // These deliberately use IntersectionObserver rather than ScrollTrigger's
+      // own toggle system: ScrollTrigger checks "is this already past its
+      // trigger point?" once, synchronously, at creation, and with Lenis
+      // driving the scroll that single check (and Lenis's own scroll events)
+      // can miss, leaving a section stuck at its hidden "from" state forever
+      // with nothing left to re-check it. IntersectionObserver always reports
+      // real, current visibility regardless of what's driving the scroll.
       gsap.utils.toArray('.reveal').forEach((el) => {
-        gsap.from(el, { y: 40, opacity: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 86%' } });
+        gsap.set(el, { y: 40, opacity: 0 });
+        onceVisible(el, '0px 0px -14% 0px', () => {
+          gsap.to(el, { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' });
+        }, observers);
       });
       gsap.utils.toArray('.reveal-stagger').forEach((group) => {
-        gsap.from(group.children, { y: 34, opacity: 0, duration: 0.65, ease: 'power3.out', stagger: 0.1, scrollTrigger: { trigger: group, start: 'top 84%' } });
+        gsap.set(group.children, { y: 34, opacity: 0 });
+        onceVisible(group, '0px 0px -16% 0px', () => {
+          gsap.to(group.children, { y: 0, opacity: 1, duration: 0.65, ease: 'power3.out', stagger: 0.1 });
+        }, observers);
       });
-
-      // Living annotations: ink marks draw + highlights swipe as they enter view.
       gsap.utils.toArray('.ink-draw:not(.hero-mark)').forEach((p) => {
-        gsap.to(p, { strokeDashoffset: 0, duration: 0.7, ease: 'power2.inOut', scrollTrigger: { trigger: p.closest('[data-mark]') || p, start: 'top 82%' } });
+        const trigger = p.closest('[data-mark]') || p;
+        onceVisible(trigger, '0px 0px -18% 0px', () => {
+          gsap.to(p, { strokeDashoffset: 0, duration: 0.7, ease: 'power2.inOut' });
+        }, observers);
       });
       gsap.utils.toArray('.hl-swipe:not(.hero-mark)').forEach((el) => {
-        gsap.to(el, { '--hl-w': '100%', duration: 0.55, ease: 'power2.out', scrollTrigger: { trigger: el, start: 'top 86%' } });
+        onceVisible(el, '0px 0px -14% 0px', () => {
+          gsap.to(el, { '--hl-w': '100%', duration: 0.55, ease: 'power2.out' });
+        }, observers);
       });
 
       // Lenis-woven parallax: the whole widget constellation drifts with scroll.
@@ -163,6 +197,7 @@ const Home = () => {
 
     return () => {
       ctx.revert();
+      observers.forEach((io) => io.disconnect());
       lenisRef.current?.destroy();
       lenisRef.current = null;
       removeTicker?.();
