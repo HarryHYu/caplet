@@ -599,7 +599,7 @@ The backend is configured for Railway:
 - Entry point: `backend/server.js`
 - Start command: `npm start`
 - Production database: PostgreSQL through `DATABASE_URL`
-- Production frontend origins allowed by CORS include `caplet.org`, `www.caplet.org`, `caplet.vercel.app`, local development origins, and matching Vercel preview domains (plus `capletedu.org`/`www.capletedu.org` temporarily, kept during the domain migration).
+- Production frontend origins allowed by CORS include `caplet.org`, `www.caplet.org`, `capletedu.org`, `www.capletedu.org` (both domains are live permanently, not just during a migration window), `caplet.vercel.app`, local development origins, and matching Vercel preview domains.
 
 Required production variables:
 

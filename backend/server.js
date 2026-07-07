@@ -18,7 +18,7 @@ const allowedOrigins = new Set([
   process.env.FRONTEND_URL || 'http://localhost:5173',
   'https://caplet.org',
   'https://www.caplet.org',
-  // TODO: remove once the capletedu.org → caplet.org migration is confirmed stable.
+  // capletedu.org is kept running permanently alongside caplet.org, not just during migration.
   'https://capletedu.org',
   'https://www.capletedu.org',
   'https://caplet.vercel.app'
