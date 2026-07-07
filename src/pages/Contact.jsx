@@ -31,10 +31,10 @@ const Contact = () => {
                   We typically respond within one to two business days.
                 </p>
                 <a
-                  href="mailto:contact@capletedu.org"
+                  href="mailto:contact@caplet.org"
                   className="text-2xl md:text-3xl font-display font-bold tracking-tight text-accent hover:text-text-primary transition-colors inline-block"
                 >
-                  contact@capletedu.org
+                  contact@caplet.org
                 </a>
               </div>
             </div>

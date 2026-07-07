@@ -599,7 +599,7 @@ The backend is configured for Railway:
 - Entry point: `backend/server.js`
 - Start command: `npm start`
 - Production database: PostgreSQL through `DATABASE_URL`
-- Production frontend origins allowed by CORS include `capletedu.org`, `www.capletedu.org`, `caplet.vercel.app`, local development origins, and matching Vercel preview domains.
+- Production frontend origins allowed by CORS include `caplet.org`, `www.caplet.org`, `caplet.vercel.app`, local development origins, and matching Vercel preview domains (plus `capletedu.org`/`www.capletedu.org` temporarily, kept during the domain migration).
 
 Required production variables:
 
@@ -607,7 +607,7 @@ Required production variables:
 DATABASE_URL=
 JWT_SECRET=
 ADMIN_BOOTSTRAP_TOKEN=
-FRONTEND_URL=https://capletedu.org
+FRONTEND_URL=https://caplet.org
 NODE_ENV=production
 ```
 
@@ -649,6 +649,6 @@ Some older docs may still mention removed financial planning tables or Sequelize
 
 ## Contact
 
-contact@capletedu.org
+contact@caplet.org
 
 Caplet — build anything, for anyone.

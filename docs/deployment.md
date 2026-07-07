@@ -48,7 +48,7 @@ npm start         # node server.js
 | `OPENAI_API_KEY` | OpenAI API key for the AI financial advisor |
 | `JWT_SECRET` | Secret for JWT token signing — use a long, random string |
 | `NODE_ENV` | `production` or `development` |
-| `FRONTEND_URL` | Frontend URL for CORS (e.g. `https://capletedu.org`) |
+| `FRONTEND_URL` | Frontend URL for CORS (e.g. `https://caplet.org`) |
 
 ### Frontend
 
@@ -90,7 +90,7 @@ npm start         # node server.js
    ```bash
    railway variables set NODE_ENV=production
    railway variables set JWT_SECRET=your-super-secure-jwt-secret
-   railway variables set FRONTEND_URL=https://capletedu.org
+   railway variables set FRONTEND_URL=https://caplet.org
    railway variables set OPENAI_API_KEY=sk-...
    ```
 
@@ -116,7 +116,7 @@ Push to the `main` branch → Vercel auto-deploys.
 
 ### Custom Domain
 
-The frontend is live at **[capletedu.org](https://capletedu.org)**.
+The frontend is live at **[caplet.org](https://caplet.org)** (migrated from `capletedu.org`).
 
 To configure a custom domain:
 1. Add the domain in the Vercel dashboard
@@ -167,7 +167,7 @@ See [content-pipeline.md](./content-pipeline.md) for the lesson JSON format.
 - [ ] `VITE_API_URL` set in Vercel environment variables
 - [ ] CORS configured correctly (`FRONTEND_URL` matches actual frontend URL)
 - [ ] Health check working: `https://your-backend.railway.app/health`
-- [ ] Custom domain configured (capletedu.org)
+- [ ] Custom domain configured (caplet.org)
 - [ ] SSL certificates active
 - [ ] Database seeded with course content
 
