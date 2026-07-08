@@ -14,6 +14,9 @@ class ApiService {
       ? [ENV_API_BASE_URL]
       : (import.meta.env.DEV ? DEV_API_BASE_URLS : [PROD_API_BASE_URL]);
     this.token = localStorage.getItem('token');
+    // When true, request() serves fixtures from the demo resolver instead of
+    // hitting the network. Toggled on only inside the /demo sandbox.
+    this.demoMode = false;
   }
 
   setToken(token) {
@@ -37,6 +40,13 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
+    // Demo sandbox: short-circuit to fixtures. Covers every method (incl. AI,
+    // since _aiRequest funnels through request()), so no backend is touched.
+    if (this.demoMode) {
+      const { resolveDemo } = await import('../demo/demoResolver.js');
+      return resolveDemo((options.method || 'GET').toUpperCase(), endpoint, options);
+    }
+
     const { auth, ...rest } = options;
     const config = {
       headers: {

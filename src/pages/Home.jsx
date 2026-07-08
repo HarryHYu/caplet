@@ -4,8 +4,38 @@ import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useReveal, revealOnScroll } from '../lib/useReveal';
+import Glyph from '../components/SubjectGlyph';
+import { faculties, subjectCount } from '../data/hscSubjects';
 
 gsap.registerPlugin(ScrollTrigger);
+
+/* ── Resource Library showcase — subjects spread across 3 scrolling shelves ── */
+
+const shelfSubjects = faculties.flatMap((f) =>
+  f.subjects.map((s) => ({ ...s, block: f.block, text: f.text })),
+);
+const shelfColumns = [[], [], []];
+shelfSubjects.forEach((s, i) => shelfColumns[i % 3].push(s));
+
+const ShelfTile = ({ s }) => (
+  <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${s.block} ${s.text}`}>
+      <Glyph>{s.glyph}</Glyph>
+    </span>
+    <span className="min-w-0 flex-1">
+      <span className="block truncate font-display text-sm font-bold leading-tight text-white">{s.name}</span>
+      <span className="block truncate text-xs text-white/45">{s.tag}</span>
+    </span>
+  </div>
+);
+
+// What every subject shelf is built around — shown at the foot of the section.
+const libraryPerks = [
+  { kicker: 'aligned', title: 'Syllabus-mapped', body: 'Every lesson is tagged to the exact NSW syllabus dot points, so nothing in the exam catches you off guard.' },
+  { kicker: 'shown', title: 'Worked examples', body: 'Model answers and step-by-step solutions for the questions that actually turn up in papers.' },
+  { kicker: 'sticky', title: 'Spaced revision', body: 'Flag a slide and it resurfaces right before you would forget it — no cramming the night before.' },
+  { kicker: 'timed', title: 'Exam-ready', body: 'Past-paper-style questions with instant feedback, so you practise the way you are marked.' },
+];
 
 /* ── Hand-drawn ink marks (drawn on scroll via the .ink-draw class) ───────── */
 
@@ -386,7 +416,7 @@ const Home = () => {
             <h2 className="font-bricolage font-extrabold text-white leading-[1.02] tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">
               Money, <span className="hl-swipe">made to make sense</span>
             </h2>
-            <p className="body-text !text-white/70 mt-6 max-w-2xl">
+            <p className="body-text !text-white/70 mt-6 max-w-3xl text-justify">
               Caplet began as a free financial-literacy platform for Australians, and that is still its
               backbone. Learn tax, super, mortgages, and investing by running the numbers yourself, not
               by reading another explainer. Every calculator is built around Australian rules, and your
@@ -542,6 +572,86 @@ const Home = () => {
                 <p className="body-text !text-[1rem] !leading-[1.6]">{f.body}</p>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── RESOURCE LIBRARY ───────── */}
+      <section className="bg-[#171717] border-y border-white/10 py-24 md:py-32 px-6 md:px-10" data-mark>
+        <div className="max-w-[1200px] mx-auto">
+          <div className="grid items-center gap-12 md:grid-cols-2 lg:gap-16">
+            {/* Left — the pitch */}
+            <div className="reveal">
+              <p className="font-hand text-xl text-blue-300 mb-4 -rotate-2">every HSC subject, one shelf</p>
+              <h2 className="font-bricolage font-extrabold text-white leading-[1.02] tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">
+                A resource library for the&nbsp;whole HSC.
+              </h2>
+              <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/70">
+                Syllabus-mapped lessons, worked examples and revision for every subject — English through Extension&nbsp;2, Chemistry to Business Studies. The catalogue is stocked; new lessons land on the shelves each week.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-2.5">
+                {faculties.map((f) => (
+                  <span key={f.name} className={`${f.block} ${f.text} rounded-full px-3 py-1 text-xs font-bold`}>
+                    {f.name}
+                  </span>
+                ))}
+              </div>
+              <Link
+                to="/library"
+                className="mt-9 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold tracking-[0.04em] text-[#171717] transition-colors duration-200 hover:bg-white/90"
+              >
+                Browse the library
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+            </div>
+
+            {/* Right — endless subject shelf (three columns drifting in parallax) */}
+            <div className="reveal">
+              <div className="marquee-shelf marquee-mask relative grid h-[440px] grid-cols-3 gap-3 overflow-hidden md:h-[480px]">
+                {shelfColumns.map((col, i) => (
+                  <div
+                    key={i}
+                    className={`flex flex-col gap-3 ${i === 1 ? 'animate-marquee-down' : 'animate-marquee-up'}`}
+                  >
+                    {[...col, ...col].map((s, j) => (
+                      <ShelfTile key={`${s.name}-${j}`} s={s} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Foot — what every shelf is built around, plus the catalogue at a glance */}
+          <div className="mt-16 border-t border-white/10 pt-14 md:mt-20">
+            <div className="reveal mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <h3 className="font-bricolage text-2xl font-extrabold tracking-[-0.02em] text-white md:text-3xl">What's on every shelf</h3>
+              <p className="font-hand text-lg -rotate-2 text-blue-300">built for the syllabus</p>
+            </div>
+            <div className="reveal-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {libraryPerks.map((p) => (
+                <div key={p.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition-colors duration-200 hover:border-white/25">
+                  <span className="font-hand text-lg text-blue-300">{p.kicker}</span>
+                  <h4 className="mt-1 font-bricolage text-lg font-bold text-white">{p.title}</h4>
+                  <p className="mt-2 text-sm leading-relaxed text-white/60">{p.body}</p>
+                </div>
+              ))}
+            </div>
+            <div className="reveal mt-12 flex flex-wrap items-center gap-x-12 gap-y-6">
+              {[
+                { n: subjectCount, l: 'subjects catalogued' },
+                { n: faculties.length, l: 'faculties' },
+                { n: 'Weekly', l: 'new lessons land' },
+                { n: 'Free', l: 'no paywall, ever' },
+              ].map((stat) => (
+                <div key={stat.l}>
+                  <div className="font-bricolage text-3xl font-extrabold text-white md:text-4xl">{stat.n}</div>
+                  <div className="mt-1 text-xs font-bold uppercase tracking-wide text-white/45">{stat.l}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

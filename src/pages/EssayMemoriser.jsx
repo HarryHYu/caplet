@@ -97,32 +97,70 @@ function buildSpotlightSegments(structure) {
 
 // ── Shared UI ───────────────────────────────────────────────────────────────
 
-function DiffDisplay({ original, typed, className = '' }) {
-    const diff = diffWords(original, typed);
-    const correct = diff.filter((d) => d.status === 'correct').length;
-    const pct = Math.round((correct / diff.length) * 100);
+/**
+ * Live word-by-word check panel. Renders the target text as a scaffold and,
+ * as `typed` grows, fills each position green (match) or amber (miss) — so the
+ * checking surface sits *beside* the input and updates on every keystroke.
+ * No submit, no scrolling back up to see how you did.
+ *
+ *  - currentHint  how to cue the word you're on: 'firstletter' | 'dashes' | 'none'
+ *  - showRemaining faint dashes for words you haven't reached yet
+ *  - prefix       a fixed lead-in shown before the scaffold (e.g. a given first word)
+ */
+function LiveCheck({ target, typed, currentHint = 'none', showRemaining = false, title = 'Live check', prefix = '' }) {
+    const targetWords = String(target || '').trim().split(/\s+/).filter(Boolean);
+    const raw = String(typed || '');
+    const typedWords = raw.split(/\s+/).filter(Boolean);
+    const midWord = raw.length > 0 && !/\s$/.test(raw); // last token still being typed
+    const committed = midWord ? typedWords.length - 1 : typedWords.length;
+
+    let correct = 0;
+    for (let i = 0; i < committed; i++) {
+        if (normalise(typedWords[i]) === normalise(targetWords[i] || '')) correct++;
+    }
+    const pct = committed ? Math.round((correct / committed) * 100) : 0;
+    const complete = targetWords.length > 0 && committed >= targetWords.length;
+
     return (
-        <div className={className}>
-            <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl font-display font-extrabold text-text-primary">{pct}%</span>
-                <span className="text-xs font-medium text-text-dim">{correct}/{diff.length} words correct</span>
+        <div>
+            <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-text-dim">{title}</span>
+                <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{pct}%</span>
+                    <span className="text-[11px] font-medium text-text-dim tabular-nums">{committed}/{targetWords.length}</span>
+                </div>
             </div>
-            <div className="p-5 rounded-2xl bg-surface-body border border-line-soft font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1 gap-y-1.5">
-                {diff.map((d, i) => (
-                    <span
-                        key={i}
-                        title={d.typed ? `You wrote: "${d.typed}"` : undefined}
-                        className={
-                            d.status === 'correct'
-                                ? 'text-emerald-600 dark:text-emerald-400'
-                                : d.status === 'missed'
-                                    ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-500 px-0.5 rounded italic'
-                                    : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-0.5 rounded line-through'
-                        }
-                    >
-                        {d.word}
-                    </span>
-                ))}
+            <div className="p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[140px]">
+                {prefix && <span className="text-accent font-bold">{prefix}</span>}
+                {targetWords.length === 0 && <span className="text-text-dim italic text-sm">Nothing to check yet.</span>}
+                {targetWords.map((w, i) => {
+                    if (i < committed) {
+                        const ok = normalise(typedWords[i]) === normalise(w);
+                        if (ok) return <span key={i} className="text-emerald-600 dark:text-emerald-400">{w}</span>;
+                        return (
+                            <span key={i} className="rounded px-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                                {w}<span className="line-through opacity-50 ml-1">{typedWords[i]}</span>
+                            </span>
+                        );
+                    }
+                    if (i === committed && !complete) {
+                        const cue = currentHint === 'firstletter'
+                            ? w[0] + '─'.repeat(Math.max(0, w.length - 1))
+                            : currentHint === 'dashes'
+                                ? '─'.repeat(w.length)
+                                : '';
+                        return (
+                            <span key={i} className="font-bold text-accent border-b-2 border-accent">
+                                {cue}<span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-pulse" />
+                            </span>
+                        );
+                    }
+                    if (showRemaining) {
+                        return <span key={i} className="text-text-dim select-none">{w[0]}{'─'.repeat(Math.max(0, w.length - 1))}</span>;
+                    }
+                    return null;
+                })}
+                {complete && <span className="ml-1 text-emerald-500 font-bold">✓</span>}
             </div>
         </div>
     );
@@ -170,7 +208,7 @@ function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500 }) {
                 onClick={toggle}
                 className={`text-xs font-semibold rounded-full px-3 py-1.5 inline-flex items-center gap-1.5 border transition-colors ${
                     peeking
-                        ? 'border-accent text-accent bg-accent/10'
+                        ? 'border-accent text-accent bg-accent-soft'
                         : 'border-line-soft text-text-dim hover:border-accent hover:text-accent'
                 }`}
             >
@@ -259,8 +297,8 @@ function SpotlightMode({ essay }) {
 
     const seg = segments[idx];
     const bg =
-        seg.type === 'thesis' ? 'bg-block-blue' :
-        seg.type === 'conclusion' ? 'bg-block-cream' :
+        seg.type === 'thesis' ? 'block-blue' :
+        seg.type === 'conclusion' ? 'block-cream' :
         'bg-surface-raised';
 
     return (
@@ -276,10 +314,10 @@ function SpotlightMode({ essay }) {
             </div>
 
             <div className={`${bg} rounded-3xl p-8 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] min-h-[180px]`}>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-accent/80 mb-4 block">{seg.label}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-accent mb-4 block">{seg.label}</span>
                 <p className="font-serif text-base md:text-lg leading-relaxed text-text-primary whitespace-pre-wrap">{seg.text}</p>
                 {(seg.quotes || []).length > 0 && (
-                    <div className="mt-6 space-y-2 border-t border-line-soft/50 pt-5">
+                    <div className="mt-6 space-y-2 border-t border-line-soft pt-5">
                         {seg.quotes.map((q, i) => (
                             <p key={i} className="text-sm font-serif text-text-muted italic">
                                 &ldquo;{q.text}&rdquo;{q.highLeverage ? ' ⭐' : ''}
@@ -290,7 +328,7 @@ function SpotlightMode({ essay }) {
                 {(seg.techniques || []).length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
                         {seg.techniques.map((t, i) => (
-                            <span key={i} className="text-xs font-semibold px-2.5 py-1 bg-accent/10 text-accent rounded-full">{t}</span>
+                            <span key={i} className="text-xs font-semibold px-2.5 py-1 bg-accent-soft text-accent rounded-full">{t}</span>
                         ))}
                     </div>
                 )}
@@ -459,7 +497,7 @@ function ReadMode({ essay, onStartPractice }) {
             {view === 'original' && <OriginalEssayMode essay={essay} />}
 
             {onStartPractice && (
-                <div className="flex justify-center mt-10 pt-8 border-t border-line-soft/60">
+                <div className="flex justify-center mt-10 pt-8 border-t border-line-soft">
                     <button type="button" onClick={onStartPractice}
                         className="text-sm font-semibold text-accent hover:opacity-70 transition-opacity inline-flex items-center gap-2">
                         Know it well enough to try recalling it? <span className="underline">Start practising</span>
@@ -542,7 +580,7 @@ function RecallChunks({ essay, onScheduled, onNext, nextLabel }) {
                             Show full paragraph
                         </button>
                     ) : (
-                        <div className="p-5 rounded-2xl bg-block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                        <div className="p-5 rounded-2xl block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                             <p className="text-sm md:text-base text-text-primary leading-relaxed whitespace-pre-wrap font-serif">{current.text}</p>
                         </div>
                     )}
@@ -569,10 +607,14 @@ function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(false);
     const inputRef = useRef(null);
+    const currentRef = useRef(null);
 
     const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setParaDone(false); setDone(false); };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
+    // Keep the word you're on visible inside its own scroll area, so a long
+    // paragraph never pushes it (or the input) out of view.
+    useEffect(() => { currentRef.current?.scrollIntoView({ block: 'nearest' }); }, [wordIdx, paraDone]);
 
     if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
@@ -608,70 +650,81 @@ function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
         <div>
             <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
+                <span className="text-xs font-medium text-text-dim tabular-nums">{correct}/{history.length} correct</span>
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
-            <p className="text-xs font-medium text-text-dim mb-4">Type each word. The first letter of the next word appears after you type.</p>
+            <p className="text-xs font-medium text-text-dim mb-4">Type each word. The next word's first letter appears as you go.</p>
 
-            {/* Word stream display */}
-            <div className="p-5 rounded-2xl bg-surface-body border border-line-soft font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 mb-5 min-h-[100px]">
-                {words.map((w, i) => {
-                    if (i < history.length) {
-                        const h = history[i];
+            <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
+                {/* Left — the word stream you're rebuilding (scrolls on its own) */}
+                <div className="p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[220px] lg:min-h-[300px] max-h-[52vh] overflow-y-auto">
+                    {words.map((w, i) => {
+                        if (i < history.length) {
+                            const h = history[i];
+                            if (h.correct) return <span key={i} className="text-emerald-600 dark:text-emerald-400">{w}</span>;
+                            return (
+                                <span key={i} className="rounded px-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                                    {w}<span className="line-through opacity-50 ml-1">{h.typed}</span>
+                                </span>
+                            );
+                        }
+                        if (i === wordIdx && !paraDone) {
+                            return (
+                                <span key={i} ref={currentRef} className="font-bold text-accent border-b-2 border-accent">
+                                    {w[0]}{'─'.repeat(Math.max(0, w.length - 1))}
+                                </span>
+                            );
+                        }
                         return (
-                            <span key={i} title={!h.correct ? `You wrote: "${h.typed}"` : undefined}
-                                className={h.correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 line-through'}>
-                                {w}
+                            <span key={i} className="text-text-dim select-none">
+                                {w[0]}{'─'.repeat(Math.max(0, w.length - 1))}
                             </span>
                         );
-                    }
-                    if (i === wordIdx && !paraDone) {
-                        return (
-                            <span key={i} className="font-bold text-accent border-b-2 border-accent">
-                                {w[0]}{'_'.repeat(Math.max(0, w.length - 1))}
-                            </span>
-                        );
-                    }
-                    return (
-                        <span key={i} className="text-text-dim/25 select-none">
-                            {w[0]}{'─'.repeat(Math.max(0, w.length - 1))}
-                        </span>
-                    );
-                })}
+                    })}
+                </div>
+
+                {/* Right — input + running score, pinned so it never scrolls away */}
+                <div className="lg:sticky lg:top-24 self-start">
+                    {!paraDone ? (
+                        <div className="p-5 rounded-2xl bg-surface-body border border-line-soft">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Next word</span>
+                                <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    value={current}
+                                    onChange={(e) => setCurrent(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); commitWord(); } }}
+                                    placeholder={targetWord ? `${targetWord[0]}…` : ''}
+                                    className="flex-1 px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif"
+                                    autoComplete="off" autoCorrect="off" spellCheck={false}
+                                />
+                                <button type="button" onClick={commitWord} disabled={!current.trim()}
+                                    className="btn-primary px-5 py-3 inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                                    <ArrowRightIcon className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="flex items-center justify-between mt-3">
+                                <p className="text-[10px] text-text-dim">Space or Enter to confirm</p>
+                                <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-5 rounded-2xl block-blue">
+                            <div className="flex items-baseline gap-3 mb-1">
+                                <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
+                                <span className="text-xs text-text-dim">{correct}/{history.length} words</span>
+                            </div>
+                            <p className="text-xs text-text-muted mb-4">Paragraph rebuilt. How did that feel?</p>
+                            <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
+                                passLabel={accuracy >= 80 ? 'Got it' : 'Close enough'} />
+                        </div>
+                    )}
+                </div>
             </div>
-
-            {!paraDone ? (
-                <div>
-                    <div className="flex items-center gap-3">
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={current}
-                            onChange={(e) => setCurrent(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); commitWord(); } }}
-                            placeholder={targetWord ? `${targetWord[0]}___` : ''}
-                            className="flex-1 px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim/60 outline-none focus:border-accent transition-colors font-serif"
-                            autoComplete="off" autoCorrect="off" spellCheck={false}
-                        />
-                        <button type="button" onClick={commitWord} disabled={!current.trim()}
-                            className="btn-primary px-5 py-3 inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            <ArrowRightIcon className="w-4 h-4" />
-                        </button>
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                        <p className="text-[10px] text-text-dim/50">Space or Enter to confirm each word</p>
-                        <SneakPeek text={targetWord} label="Peek this word" autoHideMs={2000} />
-                    </div>
-                </div>
-            ) : (
-                <div>
-                    <div className="flex items-center gap-3 mb-4">
-                        <span className="text-2xl font-display font-extrabold text-text-primary">{accuracy}%</span>
-                        <span className="text-xs text-text-dim">{correct}/{history.length} words</span>
-                    </div>
-                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
-                        passLabel={accuracy >= 80 ? 'Got it' : 'Close enough'} />
-                </div>
-            )}
         </div>
     );
 }
@@ -696,16 +749,17 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
     const [hintStyle, setHintStyle] = useState('readFirst');
     const [pIndex, setPIndex] = useState(0);
     const [sIndex, setSIndex] = useState(0);
-    const [phase, setPhase] = useState('read'); // 'read' | 'type' | 'diff'
+    const [phase, setPhase] = useState('read'); // 'read' | 'type'
     const [typed, setTyped] = useState('');
+    const [revealed, setRevealed] = useState(false);
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(false);
     const textareaRef = useRef(null);
 
-    const reset = () => { setPIndex(0); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setDone(false); };
+    const reset = () => { setPIndex(0); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); setDone(false); };
 
-    useEffect(() => { if (phase === 'type') textareaRef.current?.focus(); }, [phase]);
-    useEffect(() => { setPhase(startingPhase(hintStyle)); setTyped(''); }, [hintStyle]);
+    useEffect(() => { if (phase === 'type') textareaRef.current?.focus(); }, [phase, sIndex, pIndex]);
+    useEffect(() => { setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }, [hintStyle]);
 
     if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
@@ -718,17 +772,17 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
     const rest = sentence.slice(firstWord.length).trimStart();
     const targetText = hintStyle === 'firstWord' ? rest : sentence;
 
-    const diff = phase === 'diff' ? diffWords(targetText, typed) : null;
-    const accuracy = diff ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
+    const graded = diffWords(targetText, typed);
+    const accuracy = graded.length ? Math.round((graded.filter((d) => d.status === 'correct').length / graded.length) * 100) : 0;
 
     const goNext = async () => {
         const recall = accuracy >= 70 ? 'pass' : 'fail';
-        if (sIndex + 1 < total) { setSIndex((i) => i + 1); setPhase(startingPhase(hintStyle)); setTyped(''); }
+        if (sIndex + 1 < total) { setSIndex((i) => i + 1); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }
         else {
             setBusy(true);
             try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
             setBusy(false);
-            if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); }
+            if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }
             else setDone(true);
         }
     };
@@ -741,10 +795,10 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
 
-            {phase === 'read' && (
+            {phase === 'read' ? (
                 <div>
-                    <p className="text-xs font-medium text-text-dim mb-3">Read this sentence. Then hide it and type it from memory.</p>
-                    <div className="p-6 rounded-2xl bg-block-blue min-h-[80px] flex items-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                    <p className="text-xs font-medium text-text-dim mb-3">Read this sentence, then hide it and type it from memory.</p>
+                    <div className="p-6 rounded-2xl block-blue min-h-[80px] flex items-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                         <p className="font-serif text-base md:text-lg leading-relaxed text-text-primary">{sentence}</p>
                     </div>
                     <button type="button" onClick={() => setPhase('type')}
@@ -752,67 +806,65 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
                         Hide &amp; type
                     </button>
                 </div>
-            )}
-
-            {phase === 'type' && (
-                <div>
-                    {hintStyle === 'firstWord' ? (
-                        <div className="flex items-baseline gap-2 mb-4 p-4 bg-surface-body rounded-2xl border border-line-soft">
-                            <span className="text-lg font-bold font-serif text-accent">{firstWord}</span>
-                            <span className="text-text-dim/60 text-sm">… type the rest of this sentence</span>
+            ) : (
+                <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
+                    {/* Left — write it */}
+                    <div>
+                        {hintStyle === 'firstWord' ? (
+                            <div className="flex items-baseline gap-2 mb-3 p-4 bg-surface-body rounded-2xl border border-line-soft">
+                                <span className="text-lg font-bold font-serif text-accent">{firstWord}</span>
+                                <span className="text-text-dim text-sm">… finish the sentence</span>
+                            </div>
+                        ) : (
+                            <div className="p-3 rounded-2xl bg-surface-body border-2 border-dashed border-line-soft text-text-dim italic text-xs mb-3 font-serif">
+                                Sentence hidden — type it from memory.
+                            </div>
+                        )}
+                        <textarea
+                            ref={textareaRef}
+                            value={typed}
+                            onChange={(e) => setTyped(e.target.value)}
+                            placeholder={hintStyle === 'firstWord' ? 'Complete the sentence…' : 'Type the sentence from memory…'}
+                            rows={5}
+                            className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
+                            onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && typed.trim()) goNext(); }}
+                        />
+                        <div className="flex items-center justify-between gap-3 mt-3">
+                            <SneakPeek text={sentence} label="Sneak peek" />
+                            <div className="flex items-center gap-2">
+                                {typed.trim() && (
+                                    <button type="button" onClick={() => { setTyped(''); setRevealed(false); textareaRef.current?.focus(); }}
+                                        className="text-sm font-semibold text-text-dim border border-line-soft rounded-xl px-4 py-2.5 hover:border-text-dim transition-colors">
+                                        Clear
+                                    </button>
+                                )}
+                                <button type="button" disabled={busy || !typed.trim()} onClick={goNext}
+                                    className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                                    {sIndex + 1 < total ? 'Next sentence →' : pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'}
+                                </button>
+                            </div>
                         </div>
-                    ) : (
-                        <div className="p-4 rounded-2xl bg-surface-body border-2 border-dashed border-line-soft text-text-dim/40 italic text-sm mb-4 min-h-[56px] font-serif flex items-center">
-                            — hidden —
-                        </div>
-                    )}
-                    <textarea
-                        ref={textareaRef}
-                        value={typed}
-                        onChange={(e) => setTyped(e.target.value)}
-                        placeholder={hintStyle === 'firstWord' ? 'Complete the sentence…' : 'Type the sentence from memory…'}
-                        rows={3}
-                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
-                        onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && typed.trim()) setPhase('diff'); }}
-                    />
-                    <div className="flex items-center justify-between mt-3">
-                        <SneakPeek text={sentence} label="Sneak peek" />
-                        <button type="button" onClick={() => setPhase('diff')} disabled={!typed.trim()}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            Check →
-                        </button>
+                        <p className="text-[10px] text-text-dim mt-2">Checks live as you type · Cmd/Ctrl+Enter for next</p>
                     </div>
-                    <p className="text-[10px] text-text-dim/50 mt-2">Cmd/Ctrl+Enter to check</p>
-                </div>
-            )}
 
-            {phase === 'diff' && diff && (
-                <div>
-                    <div className="flex items-center gap-3 mb-4">
-                        <span className="text-2xl font-display font-extrabold text-text-primary">{accuracy}%</span>
-                        <span className="text-xs text-text-dim">{diff.filter((d) => d.status === 'correct').length}/{diff.length} words</span>
-                    </div>
-                    <div className="p-5 rounded-2xl bg-surface-body border border-line-soft font-serif text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1 mb-4">
-                        {hintStyle === 'firstWord' && <span className="text-accent font-bold">{firstWord}&nbsp;</span>}
-                        {diff.map((d, i) => (
-                            <span key={i} title={d.typed ? `You wrote: "${d.typed}"` : undefined}
-                                className={
-                                    d.status === 'correct' ? 'text-emerald-600 dark:text-emerald-400' :
-                                    d.status === 'missed' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-500 px-0.5 rounded italic' :
-                                    'bg-amber-100 dark:bg-amber-900/30 text-amber-600 px-0.5 rounded line-through'
-                                }>{d.word}</span>
-                        ))}
-                    </div>
-                    <p className="text-sm font-serif text-text-muted leading-relaxed mb-5 p-4 rounded-2xl bg-block-cream">{sentence}</p>
-                    <div className="flex items-center gap-3">
-                        <button type="button" onClick={() => { setPhase(startingPhase(hintStyle)); setTyped(''); }}
-                            className="text-sm font-semibold text-text-dim border border-line-soft rounded-xl px-5 py-2.5 hover:border-text-dim transition-colors">
-                            Retry sentence
-                        </button>
-                        <button type="button" disabled={busy} onClick={goNext}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            {sIndex + 1 < total ? 'Next sentence →' : pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'}
-                        </button>
+                    {/* Right — live check, always beside your typing */}
+                    <div className="lg:sticky lg:top-24 self-start">
+                        <LiveCheck
+                            target={targetText}
+                            typed={typed}
+                            prefix={hintStyle === 'firstWord' ? `${firstWord} ` : ''}
+                            currentHint="dashes"
+                            showRemaining
+                            title="Live check"
+                        />
+                        {!revealed ? (
+                            <button type="button" onClick={() => setRevealed(true)}
+                                className="mt-3 text-sm font-medium text-accent hover:opacity-70 transition-opacity">
+                                Reveal full sentence
+                            </button>
+                        ) : (
+                            <p className="mt-3 p-4 rounded-2xl block-cream font-serif text-sm leading-relaxed text-text-primary">{sentence}</p>
+                        )}
                     </div>
                 </div>
             )}
@@ -840,12 +892,14 @@ function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
     const [hint, setHint] = useState('letters');
     const [pIndex, setPIndex] = useState(0);
     const [typed, setTyped] = useState('');
-    const [submitted, setSubmitted] = useState(false);
     const [revealed, setRevealed] = useState(false);
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(false);
+    const textareaRef = useRef(null);
 
-    const reset = () => { setPIndex(0); setTyped(''); setSubmitted(false); setRevealed(false); setDone(false); };
+    const reset = () => { setPIndex(0); setTyped(''); setRevealed(false); setDone(false); };
+
+    useEffect(() => { textareaRef.current?.focus(); }, [pIndex]);
 
     if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
@@ -856,14 +910,14 @@ function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
         : `Previous ending: "${lastSentence(paras[pIndex - 1].text)}"`;
     const hintBlock = hint === 'letters' ? toLetterHint(current.text) : hint === 'acronym' ? toAcronym(current.text) : null;
 
-    const diff = submitted ? diffWords(current.text, typed) : null;
-    const accuracy = diff ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
+    const diff = diffWords(current.text, typed);
+    const accuracy = diff.length ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
 
     const advance = async (recall) => {
         setBusy(true);
         try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
         setBusy(false);
-        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setSubmitted(false); setRevealed(false); }
+        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setRevealed(false); }
         else setDone(true);
     };
 
@@ -876,48 +930,56 @@ function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
             <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-sm text-text-muted italic mb-5 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
 
-            {hintBlock && (
-                <div className="p-4 rounded-2xl bg-block-cream border border-line-soft mb-5">
-                    <p className={
-                        hint === 'acronym'
-                            ? 'font-mono text-sm md:text-base tracking-[0.15em] text-text-primary font-bold leading-relaxed break-all'
-                            : 'font-mono text-sm leading-relaxed tracking-wide text-text-dim select-none break-words'
-                    }>
-                        {hintBlock}
-                    </p>
-                </div>
-            )}
-
-            {!submitted ? (
-                <>
-                    <textarea value={typed} onChange={(e) => setTyped(e.target.value)}
-                        placeholder={hint === 'none' ? 'Type the paragraph from memory…' : 'Type the full paragraph using the hint above…'}
-                        rows={7}
+            <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
+                {/* Left — write the whole paragraph */}
+                <div>
+                    {hintBlock && (
+                        <div className="p-4 rounded-2xl block-cream border border-line-soft mb-3">
+                            <p className={
+                                hint === 'acronym'
+                                    ? 'font-mono text-sm md:text-base tracking-[0.15em] text-text-primary font-bold leading-relaxed break-all'
+                                    : 'font-mono text-sm leading-relaxed tracking-wide text-text-dim select-none break-words'
+                            }>
+                                {hintBlock}
+                            </p>
+                        </div>
+                    )}
+                    <textarea
+                        ref={textareaRef}
+                        value={typed}
+                        onChange={(e) => setTyped(e.target.value)}
+                        placeholder={hint === 'none' ? 'Type the paragraph from memory…' : 'Type the full paragraph using the hint…'}
+                        rows={10}
                         className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-sm resize-none"
                     />
-                    <div className="flex items-center justify-between mt-3">
+                    <div className="mt-3">
                         <SneakPeek text={current.text} label="Sneak peek" />
-                        <button type="button" onClick={() => setSubmitted(true)} disabled={!typed.trim()}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                            Check →
-                        </button>
                     </div>
-                </>
-            ) : (
-                <>
-                    <DiffDisplay original={current.text} typed={typed} className="mb-4" />
+                </div>
+
+                {/* Right — live check + grade, no scrolling to compare */}
+                <div className="lg:sticky lg:top-24 self-start">
+                    <LiveCheck
+                        target={current.text}
+                        typed={typed}
+                        currentHint="none"
+                        showRemaining={hint !== 'none'}
+                        title="Live check"
+                    />
                     {!revealed ? (
                         <button type="button" onClick={() => setRevealed(true)}
-                            className="text-sm font-medium text-accent hover:opacity-70 transition-opacity mb-4 block">
-                            Show full paragraph
+                            className="mt-3 text-sm font-medium text-accent hover:opacity-70 transition-opacity">
+                            Reveal full paragraph
                         </button>
                     ) : (
-                        <p className="mb-4 p-4 rounded-2xl bg-block-cream font-serif text-sm leading-relaxed whitespace-pre-wrap">{current.text}</p>
+                        <p className="mt-3 p-4 rounded-2xl block-cream font-serif text-sm leading-relaxed whitespace-pre-wrap text-text-primary">{current.text}</p>
                     )}
-                    <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
-                        passLabel={accuracy >= 75 ? 'Got it' : 'Close enough'} />
-                </>
-            )}
+                    <div className="mt-5 pt-5 border-t border-line-soft">
+                        <GradeButtons busy={busy || !typed.trim()} onFail={() => advance('fail')} onPass={() => advance('pass')}
+                            passLabel={accuracy >= 75 ? 'Got it' : 'Close enough'} />
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
@@ -1088,7 +1150,7 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
 
             {!structure ? (
                 /* ── Parse prompt / parsing banner ── */
-                <div className="bg-block-blue rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                <div className="block-blue rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                     {isParsing || parsing ? (
                         <>
                             <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-5" />
@@ -1123,7 +1185,7 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
                     <div className="flex items-stretch gap-1 mb-4 overflow-x-auto pb-px border-b border-line-soft">
                         {MODE_GROUPS.map((g, gi) => (
                             <div key={g.group} className={`flex items-center gap-1 shrink-0 ${gi > 0 ? 'pl-2 ml-1 border-l border-line-soft' : ''}`}>
-                                <span className="hidden lg:inline text-[10px] font-bold uppercase tracking-widest text-text-dim/40 mr-1 whitespace-nowrap">
+                                <span className="hidden lg:inline text-[10px] font-bold uppercase tracking-widest text-text-dim mr-1 whitespace-nowrap">
                                     {g.group}
                                 </span>
                                 {g.modes.map((t) => (
@@ -1142,8 +1204,8 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
                     </div>
 
                     {/* ── Active mode context ── */}
-                    <p className="text-xs font-medium text-text-dim/70 mb-6">
-                        <span className="text-text-dim/40 uppercase tracking-wide mr-1.5">{activeGroup?.group}</span>
+                    <p className="text-xs font-medium text-text-dim mb-6">
+                        <span className="text-text-dim uppercase tracking-wide mr-1.5">{activeGroup?.group}</span>
                         {activeMode?.desc}
                     </p>
 
@@ -1296,7 +1358,7 @@ export default function EssayMemoriser() {
                                 <h2 className="font-display text-lg font-extrabold tracking-tight text-text-primary mb-4">Your essays</h2>
                                 {opening && <p className="text-sm text-text-dim mb-3">Opening…</p>}
                                 {essays.length === 0 ? (
-                                    <div className="bg-block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                                    <div className="block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                                         <DocumentTextIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
                                         <p className="text-text-dim text-sm font-medium">No essays yet.</p>
                                     </div>
@@ -1309,7 +1371,7 @@ export default function EssayMemoriser() {
                                                     className="bg-surface-raised rounded-2xl p-5 text-left flex items-center justify-between gap-4 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
                                                     <div className="flex items-center gap-3 min-w-0">
                                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                                            e.parsed ? 'bg-emerald-500/10' : 'bg-accent/10'
+                                                            e.parsed ? 'bg-emerald-500/10' : 'bg-accent-soft'
                                                         }`}>
                                                             {e.parsed
                                                                 ? <BookOpenIcon className="w-4 h-4 text-emerald-500" />
@@ -1324,7 +1386,7 @@ export default function EssayMemoriser() {
                                                     </div>
                                                     <div className="flex items-center gap-3 shrink-0">
                                                         {due > 0 && (
-                                                            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-accent/10 text-accent">
+                                                            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-accent-soft text-accent">
                                                                 {due} due
                                                             </span>
                                                         )}

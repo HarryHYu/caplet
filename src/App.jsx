@@ -7,7 +7,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { LayoutProvider, useLayout } from './contexts/LayoutContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
-import Tour from './pages/Tour';
+import DemoApp from './pages/DemoApp';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Contact from './pages/Contact';
@@ -42,6 +42,7 @@ import CourseComplete from './pages/CourseComplete';
 import Dashboard from './pages/Dashboard';
 import Revision from './pages/Revision';
 import EssayMemoriser from './pages/EssayMemoriser';
+import Library from './pages/Library';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Classes from './pages/Classes';
@@ -151,6 +152,7 @@ function AppRoutes() {
           <Route path="/fintools/fire-number" element={<FIRENumber />} />
           <Route path="/fintools/rule-of-72" element={<RuleOf72 />} />
           <Route path="/fintools/capital-gains" element={<CapitalGains />} />
+          <Route path="/library" element={<Library />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
@@ -186,12 +188,11 @@ function AppShell() {
   // Tour gets a completely standalone layout — no Navbar/Footer/flex wrapper,
   // and no site-wide marker cursor (the tour draws its own scripted pointer,
   // and having both on screen at once looks like a bug).
+  // Reached only via in-app (SPA) navigation to /demo. DemoApp must own the
+  // router, so hard-load it — the App-level branch above then renders it.
   if (pathname === '/demo') {
-    return (
-      <Routes>
-        <Route path="/demo" element={<Tour />} />
-      </Routes>
-    );
+    window.location.replace('/demo');
+    return null;
   }
 
   // Pages that suppress all chrome (their own full-bleed layouts).
@@ -233,6 +234,18 @@ function AppShell() {
 }
 
 function App() {
+  // The /demo sandbox owns its own MemoryRouter, and React Router forbids
+  // nesting routers — so mount it ABOVE the app's BrowserRouter (only
+  // ThemeProvider is shared, for dark mode). DemoApp supplies its own auth,
+  // courses, and layout providers.
+  if (typeof window !== 'undefined' && window.location.pathname === '/demo') {
+    return (
+      <ThemeProvider>
+        <DemoApp />
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
       <GoogleOAuthProvider clientId={GOOGLE_OAUTH_CLIENT_ID}>
