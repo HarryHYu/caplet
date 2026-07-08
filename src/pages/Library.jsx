@@ -1,32 +1,85 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useReveal } from '../lib/useReveal';
+import { useMySubjects } from '../lib/useMySubjects';
 import Glyph from '../components/SubjectGlyph';
 import { faculties, subjectCount } from '../data/hscSubjects';
 
 /**
- * Resource Library — an HSC subject browser. Placeholder for now: the shelves
- * are laid out and each subject has its own hand-drawn glyph, but the per-subject
- * syllabus content is still being built, so every tile carries a "Soon" marker
- * instead of a link.
+ * Resource Library — an HSC subject browser. Mostly a placeholder for now: the
+ * shelves are laid out and each subject has its own hand-drawn glyph, but the
+ * per-subject syllabus content is still being built, so most tiles carry a
+ * "Soon" marker instead of a link. Subjects with `available: true` (see
+ * data/hscSubjects) link through to their shelf at /library/:slug.
  */
 
-const SubjectCard = ({ subject, block, text }) => (
-  <div className="relative flex items-center gap-4 rounded-2xl border border-line-soft bg-surface-raised p-4 pr-5 shadow-[0_20px_44px_-38px_rgba(20,20,18,0.45)] transition-colors duration-200 hover:border-accent/40">
-    {/* Subject glyph */}
+const SubjectCard = ({ subject, block, text }) => {
+  const iconFrame = (
     <div className={`shrink-0 grid h-12 w-12 place-items-center rounded-xl ${block} ${text}`}>
       <Glyph>{subject.glyph}</Glyph>
     </div>
+  );
+  const label = (
     <div className="min-w-0 flex-1">
       <h3 className="font-display font-bold leading-tight tracking-tight text-text-primary">{subject.name}</h3>
       <p className="text-sm text-text-muted">{subject.tag}</p>
     </div>
-    <span className="shrink-0 self-start rounded-full border border-line-soft bg-surface-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-text-dim">
-      Soon
-    </span>
-  </div>
+  );
+
+  if (subject.available) {
+    return (
+      <Link
+        to={`/library/${subject.slug}`}
+        className="relative flex items-center gap-4 rounded-2xl border border-line-soft bg-surface-raised p-4 pr-5 shadow-[0_20px_44px_-38px_rgba(20,20,18,0.45)] transition-colors duration-200 hover:border-accent/40"
+      >
+        {iconFrame}
+        {label}
+        <span className={`shrink-0 self-start rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${block} ${text}`}>
+          Open
+        </span>
+      </Link>
+    );
+  }
+
+  return (
+    <div className="relative flex items-center gap-4 rounded-2xl border border-line-soft bg-surface-raised p-4 pr-5 shadow-[0_20px_44px_-38px_rgba(20,20,18,0.45)] transition-colors duration-200 hover:border-accent/40">
+      {iconFrame}
+      {label}
+      <span className="shrink-0 self-start rounded-full border border-line-soft bg-surface-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-text-dim">
+        Soon
+      </span>
+    </div>
+  );
+};
+
+const SubjectChip = ({ subject, faculty, picked, onToggle }) => (
+  <button
+    type="button"
+    onClick={() => onToggle(subject.name)}
+    aria-pressed={picked}
+    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold transition-colors ${
+      picked
+        ? `border-transparent ${faculty.block} ${faculty.text}`
+        : 'border-line-soft bg-surface-raised text-text-muted hover:text-text-primary'
+    }`}
+  >
+    <Glyph className="h-4 w-4">{subject.glyph}</Glyph>
+    {subject.name}
+  </button>
 );
 
 const Library = () => {
   useReveal();
+  const { mySubjects, toggleSubject } = useMySubjects();
+  const [filterActive, setFilterActive] = useState(() => mySubjects.length > 0);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const visibleFaculties = useMemo(() => {
+    if (!filterActive) return faculties;
+    return faculties
+      .map((faculty) => ({ ...faculty, subjects: faculty.subjects.filter((s) => mySubjects.includes(s.name)) }))
+      .filter((faculty) => faculty.subjects.length > 0);
+  }, [filterActive, mySubjects]);
 
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
@@ -60,24 +113,90 @@ const Library = () => {
           </div>
         </header>
 
-        {/* Faculties → subject shelves */}
-        <div className="space-y-16">
-          {faculties.map((faculty) => (
-            <section key={faculty.name}>
-              <div className="mb-6 flex items-center gap-4">
-                <h2 className="font-display text-lg font-bold tracking-tight text-text-primary">{faculty.name}</h2>
-                <span className={`${faculty.block} ${faculty.text} rounded-full px-3 py-1 text-xs font-bold`}>
-                  {faculty.subjects.length}
-                </span>
-              </div>
-              <div className="reveal-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {faculty.subjects.map((subject) => (
-                  <SubjectCard key={subject.name} subject={subject} block={faculty.block} text={faculty.text} />
-                ))}
-              </div>
-            </section>
-          ))}
+        {/* Filter bar */}
+        <div className="reveal mb-10 flex flex-wrap items-center gap-3">
+          <div className="inline-flex rounded-full border border-line-soft bg-surface-raised p-1">
+            <button
+              type="button"
+              onClick={() => setFilterActive(false)}
+              className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${!filterActive ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'}`}
+            >
+              All subjects
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterActive(true)}
+              className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${filterActive ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'}`}
+            >
+              My subjects{mySubjects.length > 0 ? ` (${mySubjects.length})` : ''}
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPickerOpen((v) => !v)}
+            className="rounded-full border border-line-soft bg-surface-raised px-4 py-1.5 text-sm font-bold text-text-muted transition-colors hover:text-accent"
+          >
+            {pickerOpen ? 'Done choosing' : 'Choose your subjects'}
+          </button>
         </div>
+
+        {/* Subject picker */}
+        {pickerOpen && (
+          <div className="reveal mb-16 rounded-2xl border border-line-soft bg-surface-soft p-6">
+            <p className="mb-5 text-sm text-text-muted">Tap every subject you study — this filters the shelves below down to just yours.</p>
+            <div className="space-y-6">
+              {faculties.map((faculty) => (
+                <div key={faculty.name}>
+                  <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-dim">{faculty.name}</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {faculty.subjects.map((subject) => (
+                      <SubjectChip
+                        key={subject.name}
+                        subject={subject}
+                        faculty={faculty}
+                        picked={mySubjects.includes(subject.name)}
+                        onToggle={toggleSubject}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Faculties → subject shelves */}
+        {filterActive && mySubjects.length === 0 ? (
+          <div className="reveal rounded-2xl border border-dashed border-line-soft bg-surface-soft p-12 text-center">
+            <p className="font-display text-xl font-bold text-text-primary">No subjects picked yet</p>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-text-muted">Choose the subjects you study and this shelf will filter down to just them.</p>
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="mt-6 rounded-full bg-accent px-5 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+            >
+              Choose your subjects
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-16">
+            {visibleFaculties.map((faculty) => (
+              <section key={faculty.name}>
+                <div className="mb-6 flex items-center gap-4">
+                  <h2 className="font-display text-lg font-bold tracking-tight text-text-primary">{faculty.name}</h2>
+                  <span className={`${faculty.block} ${faculty.text} rounded-full px-3 py-1 text-xs font-bold`}>
+                    {faculty.subjects.length}
+                  </span>
+                </div>
+                <div className="reveal-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {faculty.subjects.map((subject) => (
+                    <SubjectCard key={subject.name} subject={subject} block={faculty.block} text={faculty.text} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
 
       </div>
     </div>

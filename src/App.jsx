@@ -43,6 +43,7 @@ import Dashboard from './pages/Dashboard';
 import Revision from './pages/Revision';
 import EssayMemoriser from './pages/EssayMemoriser';
 import Library from './pages/Library';
+import LibrarySubject from './pages/LibrarySubject';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Classes from './pages/Classes';
@@ -153,6 +154,7 @@ function AppRoutes() {
           <Route path="/fintools/rule-of-72" element={<RuleOf72 />} />
           <Route path="/fintools/capital-gains" element={<CapitalGains />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/library/:subject" element={<LibrarySubject />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
