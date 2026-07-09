@@ -342,7 +342,8 @@ async function buildGrounding(notes, opts) {
     const usedOutcomes = [...new Set(hits.map((h) => h.outcome_code).filter(Boolean))];
     return { grounding, usedOutcomes };
   } catch (e) {
-    console.warn('🔗 [library] grounding skipped:', e.message);
+    const cause = e.cause ? ` | cause: ${e.cause.code || e.cause.message} @ ${LIBRARY_API_URL}` : '';
+    console.warn('🔗 [library] grounding skipped:', e.message, cause);
     return { grounding: '', usedOutcomes: [] };
   }
 }
