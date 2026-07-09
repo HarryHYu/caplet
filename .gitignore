@@ -27,6 +27,8 @@ dist-ssr
 .claude/
 .agent/
 AGENTS.md
+.playwright-cli/
+output/
 .playwright-mcp/
 
 # Local DB (testing only; production uses PostgreSQL)

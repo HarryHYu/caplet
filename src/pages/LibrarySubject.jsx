@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { useReveal } from '../lib/useReveal';
 import Glyph from '../components/SubjectGlyph';
 import { faculties } from '../data/hscSubjects';
+import ResourceLibrary from './ResourceLibrary';
 
 /**
  * A single subject's shelf, e.g. /library/economics. Generic — driven entirely
@@ -34,6 +35,10 @@ const LibrarySubject = () => {
   }
 
   const { subject, faculty } = match;
+
+  if (subject.slug === 'economics') {
+    return <ResourceLibrary />;
+  }
 
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">

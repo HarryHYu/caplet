@@ -180,6 +180,7 @@ function AppRoutes() {
           <Route path="/library" element={<Library />} />
           <Route path="/library/:subject" element={<LibrarySubject />} />
           <Route path="/courses" element={<Courses />} />
+          <Route path="/resources" element={<Navigate to="/library/economics" replace />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
           <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
