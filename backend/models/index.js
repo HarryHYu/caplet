@@ -20,6 +20,7 @@ const Essay = require('./Essay');
 const LiveSession = require('./LiveSession');
 const LiveParticipant = require('./LiveParticipant');
 const LiveResponse = require('./LiveResponse');
+const MarkedAttempt = require('./MarkedAttempt');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -236,6 +237,10 @@ LiveResponse.belongsTo(LiveSession, { foreignKey: 'sessionId', as: 'session' });
 LiveParticipant.hasMany(LiveResponse, { foreignKey: 'participantId', as: 'responses', onDelete: 'CASCADE' });
 LiveResponse.belongsTo(LiveParticipant, { foreignKey: 'participantId', as: 'participant' });
 
+// CapletMark: AI-marked practice attempts (HSC Economics answer marker)
+User.hasMany(MarkedAttempt, { foreignKey: 'userId', as: 'markedAttempts', onDelete: 'CASCADE' });
+MarkedAttempt.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // Sync database
 // NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
 // This sync() call is a no-op fallback (force: false prevents any schema changes).
@@ -274,5 +279,6 @@ module.exports = {
   LiveSession,
   LiveParticipant,
   LiveResponse,
+  MarkedAttempt,
   syncDatabase
 };
