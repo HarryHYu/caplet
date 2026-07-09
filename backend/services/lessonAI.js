@@ -16,7 +16,6 @@
 
 const OpenAI = require('openai');
 const { validateSlides } = require('../utils/slideSchema');
-const { retrieve } = require('./library/retriever');
 
 let _client = null;
 function getClient() {
@@ -306,23 +305,22 @@ app: graphing | geometry | 3d | scientific | classic
 // generation at the shared library.
 const LIBRARY_API_URL = process.env.LIBRARY_API_URL;
 
-/** Retrieve grounding chunks from the library service (preferred) or embedded retriever. */
+/** Retrieve grounding chunks from the standalone library service over HTTP. */
 async function retrieveGrounding(query, filters) {
-  if (LIBRARY_API_URL) {
-    const url = `${LIBRARY_API_URL.replace(/\/+$/, '')}/api/library/search`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind: 'curriculum', query, filters, k: 12 }),
-    });
-    if (!res.ok) throw new Error(`library API responded ${res.status}`);
-    const data = await res.json();
-    const hits = data.results || [];
-    console.log(`🔗 [library API] ${url} → retrieved ${hits.length} chunk(s)`);
-    return hits;
+  if (!LIBRARY_API_URL) {
+    console.log('🔗 [library] LIBRARY_API_URL not set — generating UNGROUNDED');
+    return [];
   }
-  const hits = await retrieve({ kind: 'curriculum', filters, queryText: query, k: 12 });
-  console.log(`🔗 [library local] retrieved ${hits.length} chunk(s)`);
+  const url = `${LIBRARY_API_URL.replace(/\/+$/, '')}/api/library/search`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind: 'curriculum', query, filters, k: 12 }),
+  });
+  if (!res.ok) throw new Error(`library API responded ${res.status}`);
+  const data = await res.json();
+  const hits = data.results || [];
+  console.log(`🔗 [library API] ${url} → retrieved ${hits.length} chunk(s)`);
   return hits;
 }
 
