@@ -44,8 +44,8 @@ function throttle(req, res, next) {
 }
 
 router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
-  const ALLOWED_MODELS    = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
-  const FORMATTER_MODELS  = ['gpt-5.4-nano', 'gpt-5.4-mini'];
+  const ALLOWED_MODELS    = ['gpt-4o-mini', 'gpt-4o-mini', 'gpt-4o', 'gpt-4o'];
+  const FORMATTER_MODELS  = ['gpt-4o-mini', 'gpt-4o-mini'];
 
   const notes             = (req.body?.notes ?? '').toString();
   const title             = (req.body?.title ?? '').toString().slice(0, 200);
@@ -53,8 +53,8 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
   const audience          = (req.body?.audience ?? '').toString().slice(0, 100);
   const outputDescription = (req.body?.outputDescription ?? '').toString().slice(0, 2000);
   const slideCount        = Math.min(Math.max(parseInt(req.body?.slideCount, 10) || 15, 1), 50);
-  const model             = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
-  const formatterModel    = FORMATTER_MODELS.includes(req.body?.formatterModel) ? req.body.formatterModel : 'gpt-5.4-mini';
+  const model             = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-4o-mini';
+  const formatterModel    = FORMATTER_MODELS.includes(req.body?.formatterModel) ? req.body.formatterModel : 'gpt-4o-mini';
 
   if (!notes.trim() || notes.trim().length < 20) {
     return res.status(400).json({
@@ -89,14 +89,14 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
 // Conversational chat: interprets a natural-language message and either
 // generates slides (action="generate") or answers the question (action="message").
 router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
-  const ALLOWED_MODELS   = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
-  const FORMATTER_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini'];
+  const ALLOWED_MODELS   = ['gpt-4o-mini', 'gpt-4o-mini', 'gpt-4o', 'gpt-4o'];
+  const FORMATTER_MODELS = ['gpt-4o-mini', 'gpt-4o-mini'];
   const message          = (req.body?.message ?? '').toString().trim().slice(0, 2000);
   const notes            = (req.body?.notes ?? '').toString().slice(0, 30000); // attachment / pasted content
   const lessonTitle      = (req.body?.lessonTitle ?? '').toString().slice(0, 200);
   const existingCount    = parseInt(req.body?.existingSlideCount, 10) || 0;
-  const model            = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
-  const formatterModel   = FORMATTER_MODELS.includes(req.body?.formatterModel) ? req.body.formatterModel : 'gpt-5.4-mini';
+  const model            = ALLOWED_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-4o-mini';
+  const formatterModel   = FORMATTER_MODELS.includes(req.body?.formatterModel) ? req.body.formatterModel : 'gpt-4o-mini';
   const slideCount       = req.body?.slideCount ? Math.min(Math.max(parseInt(req.body.slideCount, 10) || 10, 1), 40) : null;
 
   if (!message) return res.status(400).json({ message: 'Message is required.' });
@@ -110,7 +110,7 @@ router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
   try {
     // Intent classification always uses mini — it's a simple routing task.
     const intent = await client.chat.completions.create({
-      model: 'gpt-5.4-mini',
+      model: 'gpt-4o-mini',
       max_completion_tokens: 400,
       messages: [
         {

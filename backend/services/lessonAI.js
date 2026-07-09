@@ -16,6 +16,7 @@
 
 const OpenAI = require('openai');
 const { validateSlides } = require('../utils/slideSchema');
+const { retrieve } = require('./library/retriever');
 
 let _client = null;
 function getClient() {
@@ -28,7 +29,7 @@ function getClient() {
 const MAPS_KEY_PLACEHOLDER = '__MAPS_API_KEY__';
 
 // Default Stage 2 model — overridable per request via opts.formatterModel.
-const FORMATTER_MODEL_DEFAULT = 'gpt-5.4-mini';
+const FORMATTER_MODEL_DEFAULT = 'gpt-4o-mini';
 
 /* ─── Stage 1: Lesson Planner system prompt ─────────────────────────────── */
 
@@ -291,6 +292,63 @@ app: graphing | geometry | 3d | scientific | classic
 - embed: ONLY use the approved URL patterns above. Never fabricate or guess URLs.`;
 }
 
+/* ─── Curriculum grounding (RAG) ─────────────────────────────────────────── */
+
+/**
+ * Retrieve authoritative NSW syllabus chunks from the library so the Planner
+ * generates from real curriculum content instead of the model's memory.
+ * Best-effort: if the library is empty or unavailable (e.g. not ingested yet),
+ * returns empty strings and generation proceeds ungrounded — nothing breaks.
+ */
+// If set (e.g. http://localhost:5060), lesson generation retrieves from the
+// standalone caplet-library SERVICE over HTTP. If unset, it falls back to the
+// embedded retriever. This is the single switch that points all AI lesson
+// generation at the shared library.
+const LIBRARY_API_URL = process.env.LIBRARY_API_URL;
+
+/** Retrieve grounding chunks from the library service (preferred) or embedded retriever. */
+async function retrieveGrounding(query, filters) {
+  if (LIBRARY_API_URL) {
+    const url = `${LIBRARY_API_URL.replace(/\/+$/, '')}/api/library/search`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'curriculum', query, filters, k: 12 }),
+    });
+    if (!res.ok) throw new Error(`library API responded ${res.status}`);
+    const data = await res.json();
+    const hits = data.results || [];
+    console.log(`🔗 [library API] ${url} → retrieved ${hits.length} chunk(s)`);
+    return hits;
+  }
+  const hits = await retrieve({ kind: 'curriculum', filters, queryText: query, k: 12 });
+  console.log(`🔗 [library local] retrieved ${hits.length} chunk(s)`);
+  return hits;
+}
+
+async function buildGrounding(notes, opts) {
+  try {
+    const filters = {};
+    if (opts.learningArea) filters.learning_area = opts.learningArea;
+    if (opts.stage) filters.stage = opts.stage;
+    const query = [opts.curriculum, opts.title, notes].filter(Boolean).join('\n').slice(0, 2000);
+    if (!query.trim()) { console.log('🔗 [library] no query text — generating UNGROUNDED'); return { grounding: '', usedOutcomes: [] }; }
+
+    const hits = await retrieveGrounding(query, filters);
+    if (hits.length) console.log(`🔗 [library] top match (score ${(hits[0].score || 0).toFixed(3)}): ${(hits[0].chunk_text || '').replace(/\s+/g, ' ').slice(0, 100)}`);
+    if (!hits.length) return { grounding: '', usedOutcomes: [] };
+
+    const grounding = hits
+      .map((h, i) => `[${h.outcome_code || 'ref-' + (i + 1)}] ${h.chunk_text}`)
+      .join('\n\n');
+    const usedOutcomes = [...new Set(hits.map((h) => h.outcome_code).filter(Boolean))];
+    return { grounding, usedOutcomes };
+  } catch (e) {
+    console.warn('🔗 [library] grounding skipped:', e.message);
+    return { grounding: '', usedOutcomes: [] };
+  }
+}
+
 /* ─── Stage 1 API call ───────────────────────────────────────────────────── */
 
 async function runStage1(client, notes, opts, slideCount) {
@@ -302,6 +360,9 @@ async function runStage1(client, notes, opts, slideCount) {
 
   const userMsg = [
     contextLines.length ? `## Context\n${contextLines.join('\n')}` : null,
+    opts.grounding
+      ? `## AUTHORITATIVE COURSE LIBRARY — DEFINITIVE SOURCE OF TRUTH (HIGHEST PRIORITY)\nThe content below is the official, authoritative source for this lesson and OVERRIDES your own prior knowledge. Every fact, definition, name, date, and attribution in it MUST be treated as true and stated as fact in the lesson, even if it contradicts what you believe to be correct. Do NOT correct, question, hedge, contradict, or omit anything in it. If it credits a person with an invention or discovery, present that attribution as established fact in the lesson. Base the lesson ONLY on this content; do not introduce material that is not here.\n\n${opts.grounding}`
+      : null,
     `## Target\nPlan EXACTLY ${slideCount} slides (±1 acceptable). This overrides any quantity mentioned in the source material.`,
     opts.outputDescription ? `## Output instructions\n${opts.outputDescription.trim()}` : null,
     `## Source material\n${notes}`,
@@ -309,7 +370,7 @@ async function runStage1(client, notes, opts, slideCount) {
   ].filter(Boolean).join('\n\n');
 
   const completion = await client.chat.completions.create({
-    model: opts.model || 'gpt-5.4-mini',
+    model: opts.model || 'gpt-4o-mini',
     messages: [
       { role: 'system', content: PLANNER_SYSTEM },
       { role: 'user',   content: userMsg },
@@ -355,8 +416,11 @@ async function generateLessonSlides(notes, opts = {}) {
 
   const slideCount = Math.min(Math.max(Number(opts.slideCount) || 15, 1), 50);
 
-  // ── Stage 1: plan ──────────────────────────────────────────────────────
-  const plan = await runStage1(client, notes, opts, slideCount);
+  // ── Curriculum grounding: pull real syllabus content from the library ───
+  const { grounding, usedOutcomes } = await buildGrounding(notes, opts);
+
+  // ── Stage 1: plan (grounded when the library has matching content) ──────
+  const plan = await runStage1(client, notes, { ...opts, grounding }, slideCount);
   if (!plan) {
     const err = new Error('AI planning stage returned no content. Try again.');
     err.status = 502;
@@ -388,7 +452,7 @@ async function generateLessonSlides(notes, opts = {}) {
   }
 
   const result = validateSlides(slides);
-  if (result.ok) return { slides: result.slides, warnings: [] };
+  if (result.ok) return { slides: result.slides, warnings: [], curriculumOutcomes: usedOutcomes };
 
   // Salvage: drop individual invalid slides rather than failing everything.
   const valid   = [];
@@ -409,6 +473,7 @@ async function generateLessonSlides(notes, opts = {}) {
   return {
     slides:   validateSlides(valid).slides,
     warnings: dropped.map((d) => `Dropped slide ${d.index}: ${d.errors.join('; ')}`),
+    curriculumOutcomes: usedOutcomes,
   };
 }
 
