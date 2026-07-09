@@ -24,7 +24,7 @@ const SettingsAccount = () => {
   return (
     <div>
       <div className="mb-12">
-        <p className="font-hand text-accent text-lg mb-1">Your account</p>
+        <p className="font-hand text-accent text-lg -rotate-2 inline-block mb-1">your account</p>
         <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Account Settings</h2>
         <p className="text-sm font-medium text-text-dim mt-2">
           Manage your account role and preferences.

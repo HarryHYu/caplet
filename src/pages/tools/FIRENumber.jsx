@@ -65,7 +65,7 @@ const FIRENumber = () => {
                 Calculate how much you need to retire, and how long until you get there.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">&larr; Back to tools</Link>
+            <Link to="/fintools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">&larr; Back to tools</Link>
           </div>
         </header>
 

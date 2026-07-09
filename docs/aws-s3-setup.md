@@ -8,7 +8,7 @@ Images (avatars, class logos/banners, lesson inline images, course covers) uploa
 |--------|---------|
 | **S3 bucket** | Stores files under `uploads/...` keys |
 | **IAM user** | Access key used only by the Railway API (never the frontend) |
-| **Bucket CORS** | Lets `capletedu.org` / `localhost` send `PUT` to S3 |
+| **Bucket CORS** | Lets `caplet.org` / `localhost` send `PUT` to S3 |
 | **Bucket policy (optional)** | Public **read** for `uploads/*` so `<img src="...">` works without signing every GET |
 
 API route: **`POST /api/uploads/presign`** (requires login).  
@@ -66,6 +66,8 @@ S3 → your bucket → **Permissions** → **Cross-origin resource sharing (CORS
     "AllowedMethods": ["GET", "PUT", "HEAD"],
     "AllowedOrigins": [
       "http://localhost:5173",
+      "https://caplet.org",
+      "https://www.caplet.org",
       "https://capletedu.org",
       "https://www.capletedu.org",
       "https://caplet.vercel.app"

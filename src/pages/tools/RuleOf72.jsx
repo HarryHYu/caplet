@@ -46,7 +46,7 @@ const RuleOf72 = () => {
                 Divide 72 by an interest rate to find how many years it takes to double your money, or work it the other way around.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
+            <Link to="/fintools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
           </div>
         </header>
 

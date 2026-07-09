@@ -67,7 +67,7 @@ const SuperContribution = () => {
                 Project your superannuation balance and see how steady contributions build long-term equity.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">
+            <Link to="/fintools" className="btn-secondary text-sm px-8">
               Back to tools
             </Link>
           </div>

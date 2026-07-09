@@ -125,7 +125,7 @@ const DebtSequencer = () => {
                 dollar clears the most cost from &mdash; with HECS handled on its own terms, not as a credit card.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
+            <Link to="/fintools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
           </div>
         </header>
 

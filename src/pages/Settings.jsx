@@ -1,24 +1,13 @@
-import { useEffect } from 'react';
 import { Outlet, NavLink, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { useReveal } from '../lib/useReveal';
 
 const Settings = () => {
   const { isAuthenticated } = useAuth();
   const { pathname } = useLocation();
 
-  // Run reveal animations once on mount (header + nav), then refresh
-  // ScrollTrigger whenever the active tab changes so outlet content animates in.
-  useEffect(() => {
-    // Short delay so the Outlet child has rendered before we measure positions.
-    const id = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 50);
-    return () => clearTimeout(id);
-  }, [pathname]);
+  // Re-run on tab change so the Outlet's own content (which swaps out) reveals too.
+  useReveal(undefined, [pathname]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -33,8 +22,8 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <div className="mb-20">
-          <span className="font-hand text-2xl text-accent">Your space</span>
+        <div className="mb-20 reveal">
+          <span className="font-hand text-2xl text-accent -rotate-2 inline-block">your space</span>
           <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-2 mb-6">
             Account settings
           </h1>
@@ -43,7 +32,7 @@ const Settings = () => {
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-10">
+        <div className="flex flex-col md:flex-row gap-10 reveal">
           <nav className="w-full md:w-72 flex-shrink-0">
             <ul className="space-y-3">
               {navItems.map((item) => (

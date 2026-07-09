@@ -60,7 +60,7 @@ const SettingsProfile = () => {
   return (
     <div>
       <div className="mb-10">
-        <p className="font-hand text-lg text-accent mb-1">Your details</p>
+        <p className="font-hand text-lg text-accent -rotate-2 inline-block mb-1">your details</p>
         <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-text-primary">
           Profile Details
         </h2>

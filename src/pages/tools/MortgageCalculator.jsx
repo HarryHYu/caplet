@@ -60,7 +60,7 @@ const MortgageCalculator = () => {
                 Work out your repayments, total interest, and the real cost of a property loan over its full term.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">
+            <Link to="/fintools" className="btn-secondary text-sm px-8">
               &larr; Back to Tools
             </Link>
           </div>

@@ -92,7 +92,7 @@ const CapitalGains = () => {
                 Estimate CGT on the sale of shares, property, or other assets under Australian tax rules.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
+            <Link to="/fintools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
           </div>
         </header>
 

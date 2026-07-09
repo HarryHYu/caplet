@@ -76,6 +76,10 @@ function isSameOrigin(origin, allowedOrigins) {
 function attachLiveSocket(httpServer) {
   const allowedOrigins = new Set([
     process.env.FRONTEND_URL || 'http://localhost:5173',
+    'https://caplet.org',
+    'https://www.caplet.org',
+    // capletedu.org stays live indefinitely alongside caplet.org — old links (e.g. a VC
+    // demo) may still point here. No fixed removal date; drop it once nothing depends on it.
     'https://capletedu.org',
     'https://www.capletedu.org',
     'https://caplet.vercel.app',

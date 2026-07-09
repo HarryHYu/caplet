@@ -102,7 +102,7 @@ const SurveyResults = () => {
               <h1 className="font-display text-6xl md:text-8xl mb-8 font-extrabold tracking-tight">
                 Literacy <br />Spectrum
               </h1>
-              <p className="text-xl text-text-muted leading-relaxed font-serif max-w-xl">
+              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 A synthesis of crowd-sourced financial knowledge and perceived competency across our community.
               </p>
             </div>
@@ -222,7 +222,7 @@ const SurveyResults = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 relative z-10">
             <div>
               <h2 className="font-display text-lg font-extrabold tracking-tight mb-2">Confidence Self-Assessment</h2>
-              <p className="text-base font-serif text-text-dim">Distribution of perceived knowledge levels (1 to 10 scale).</p>
+              <p className="text-base text-text-dim">Distribution of perceived knowledge levels (1 to 10 scale).</p>
             </div>
             <div className="block-cream rounded-2xl px-6 py-4 text-center shrink-0">
               <span className="text-sm font-semibold text-text-muted block mb-1">Average confidence</span>

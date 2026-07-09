@@ -80,9 +80,9 @@ const CourseComplete = () => {
     return (
       <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
         <div className="container-custom max-w-2xl reveal">
-          <span className="section-kicker">Almost There</span>
+          <span className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">almost there</span>
           <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8">Not quite<br />finished.</h1>
-          <p className="text-lg text-text-muted font-serif italic mb-12 leading-relaxed">
+          <p className="text-lg text-text-muted mb-12 leading-relaxed">
             You&apos;ve completed {cp.completedLessons} of {cp.totalLessons} lessons in
             {course?.title ? ` ${course.title}` : ' this course'}. Finish the rest to unlock your next step.
           </p>
@@ -102,12 +102,11 @@ const CourseComplete = () => {
       <div className="container-custom max-w-3xl">
         {/* Acknowledgement */}
         <header className="mb-16 reveal">
-          <span className="section-kicker">Course Complete</span>
-          <p className="font-hand text-2xl text-accent mb-3">Nice work.</p>
+          <p className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">nice work</p>
           <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8">
             {course?.title ? course.title : 'Course'}<br />complete.
           </h1>
-          <p className="text-xl text-text-muted font-serif italic max-w-xl leading-relaxed">
+          <p className="text-xl text-text-muted max-w-xl leading-relaxed">
             {cp
               ? `You finished all ${cp.totalLessons} lesson${cp.totalLessons === 1 ? '' : 's'}. That's real progress, now let's put it to work.`
               : "That's real progress, now let's put it to work."}

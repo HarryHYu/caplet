@@ -3,9 +3,39 @@ import { Link } from 'react-router-dom';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import MarkerCursor from '../components/home/MarkerCursor';
+import { useReveal, revealOnScroll } from '../lib/useReveal';
+import Glyph from '../components/SubjectGlyph';
+import { faculties, subjectCount } from '../data/hscSubjects';
 
 gsap.registerPlugin(ScrollTrigger);
+
+/* ── Resource Library showcase — subjects spread across 3 scrolling shelves ── */
+
+const shelfSubjects = faculties.flatMap((f) =>
+  f.subjects.map((s) => ({ ...s, block: f.block, text: f.text })),
+);
+const shelfColumns = [[], [], []];
+shelfSubjects.forEach((s, i) => shelfColumns[i % 3].push(s));
+
+const ShelfTile = ({ s }) => (
+  <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${s.block} ${s.text}`}>
+      <Glyph>{s.glyph}</Glyph>
+    </span>
+    <span className="min-w-0 flex-1">
+      <span className="block truncate font-display text-sm font-bold leading-tight text-white">{s.name}</span>
+      <span className="block truncate text-xs text-white/45">{s.tag}</span>
+    </span>
+  </div>
+);
+
+// What every subject shelf is built around — shown at the foot of the section.
+const libraryPerks = [
+  { kicker: 'aligned', title: 'Syllabus-mapped', body: 'Every lesson is tagged to the exact NSW syllabus dot points, so nothing in the exam catches you off guard.' },
+  { kicker: 'shown', title: 'Worked examples', body: 'Model answers and step-by-step solutions for the questions that actually turn up in papers.' },
+  { kicker: 'sticky', title: 'Spaced revision', body: 'Flag a slide and it resurfaces right before you would forget it — no cramming the night before.' },
+  { kicker: 'timed', title: 'Exam-ready', body: 'Past-paper-style questions with instant feedback, so you practise the way you are marked.' },
+];
 
 /* ── Hand-drawn ink marks (drawn on scroll via the .ink-draw class) ───────── */
 
@@ -45,8 +75,8 @@ const Widget = ({ className = '', tilt = '0deg', delay = '0s', block = 'block-cr
 
 const features = [
   { tag: 'build', title: 'Lesson builder', body: 'Drag blocks onto the page: text, images, video, code, quizzes. Arrange a whole lesson in minutes.', to: '/courses', block: 'block-blue' },
-  { tag: 'code', title: 'Live code IDE', body: 'Python, JavaScript, and HTML run right in the browser, with test runners and an AI debugger.', to: '/tools', block: 'block-blue' },
-  { tag: 'graph', title: 'Desmos and plotting', body: 'Drop in graphing panels and geometry widgets. A student drags a slider and the curve responds.', to: '/tools', block: 'block-green' },
+  { tag: 'code', title: 'Live code IDE', body: 'Python, JavaScript, and HTML run right in the browser, with test runners and an AI debugger.', to: '/fintools', block: 'block-blue' },
+  { tag: 'graph', title: 'Desmos and plotting', body: 'Drop in graphing panels and geometry widgets. A student drags a slider and the curve responds.', to: '/fintools', block: 'block-green' },
   { tag: 'check', title: 'Quizzes and grading', body: 'Mix in quiz blocks and grading workflows that track every student’s progress automatically.', to: '/courses', block: 'block-amber' },
   { tag: 'ai', title: 'AI lesson generation', body: 'Describe a topic and Caplet drafts structured slides, quizzes, and a lesson plan for you to edit.', to: '/courses', block: 'block-blue' },
   { tag: 'class', title: 'Classrooms', body: 'Group students into classes, set assignments, and watch submissions arrive in real time.', to: '/classes', block: 'block-blue' },
@@ -95,6 +125,12 @@ const Home = () => {
   const [activeShowcaseTab, setActiveShowcaseTab] = useState('workspace');
   const [activeFaq, setActiveFaq] = useState(0);
 
+  // Card grids and section reveals are the same shared behaviour as every
+  // other page. The effect below only adds what's unique to the home page:
+  // the hero's own intro timeline, hand-drawn ink marks, highlighter swipes,
+  // and Lenis-driven parallax.
+  useReveal(rootRef);
+
   // The welcome page is intentionally a single colour: force the light theme
   // while it is mounted (the theme toggle is hidden here — see Navbar), then
   // restore the user's saved theme on leave so the dashboard and every other
@@ -129,6 +165,8 @@ const Home = () => {
     gsap.ticker.lagSmoothing(0);
     removeTicker = () => gsap.ticker.remove(raf);
 
+    const observers = [];
+
     const ctx = gsap.context(() => {
       // Hero opens, then writes its own annotations on top.
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
@@ -142,20 +180,14 @@ const Home = () => {
         .from('.hero-note', { opacity: 0, scale: 0.85, rotate: -8, duration: 0.4 }, '-=0.2')
         .from('.widget', { y: 18, opacity: 0, scale: 0.92, duration: 0.6, stagger: 0.08 }, '-=1.1');
 
-      // Section reveals.
-      gsap.utils.toArray('.reveal').forEach((el) => {
-        gsap.from(el, { y: 40, opacity: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 86%' } });
-      });
-      gsap.utils.toArray('.reveal-stagger').forEach((group) => {
-        gsap.from(group.children, { y: 34, opacity: 0, duration: 0.65, ease: 'power3.out', stagger: 0.1, scrollTrigger: { trigger: group, start: 'top 84%' } });
-      });
-
-      // Living annotations: ink marks draw + highlights swipe as they enter view.
+      // Living annotations: ink marks draw + highlights swipe as they enter
+      // view. (Card grids and section reveals are handled by useReveal above.)
       gsap.utils.toArray('.ink-draw:not(.hero-mark)').forEach((p) => {
-        gsap.to(p, { strokeDashoffset: 0, duration: 0.7, ease: 'power2.inOut', scrollTrigger: { trigger: p.closest('[data-mark]') || p, start: 'top 82%' } });
+        const trigger = p.closest('[data-mark]') || p;
+        revealOnScroll(trigger, p, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, ease: 'power2.inOut' }, '0px 0px -18% 0px', observers);
       });
       gsap.utils.toArray('.hl-swipe:not(.hero-mark)').forEach((el) => {
-        gsap.to(el, { '--hl-w': '100%', duration: 0.55, ease: 'power2.out', scrollTrigger: { trigger: el, start: 'top 86%' } });
+        revealOnScroll(el, el, { '--hl-w': '0%' }, { '--hl-w': '100%', duration: 0.55, ease: 'power2.out' }, '0px 0px -14% 0px', observers);
       });
 
       // Lenis-woven parallax: the whole widget constellation drifts with scroll.
@@ -164,6 +196,7 @@ const Home = () => {
 
     return () => {
       ctx.revert();
+      observers.forEach((io) => io.disconnect());
       lenisRef.current?.destroy();
       lenisRef.current = null;
       removeTicker?.();
@@ -178,8 +211,6 @@ const Home = () => {
 
   return (
     <div ref={rootRef} className="home-root text-text-primary relative selection:bg-[color:var(--mark-blue)] selection:text-white overflow-x-clip">
-      <MarkerCursor />
-
       {/* ───────── HERO ───────── */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-16">
         {/* soft ambient washes for depth */}
@@ -385,7 +416,7 @@ const Home = () => {
             <h2 className="font-bricolage font-extrabold text-white leading-[1.02] tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">
               Money, <span className="hl-swipe">made to make sense</span>
             </h2>
-            <p className="body-text !text-white/70 mt-6 max-w-2xl">
+            <p className="body-text !text-white/70 mt-6 max-w-3xl text-justify">
               Caplet began as a free financial-literacy platform for Australians, and that is still its
               backbone. Learn tax, super, mortgages, and investing by running the numbers yourself, not
               by reading another explainer. Every calculator is built around Australian rules, and your
@@ -414,7 +445,7 @@ const Home = () => {
               {calculators.map((c) => (
                 <span key={c} className="px-3.5 py-2 rounded-full bg-white/[0.06] border border-white/10 text-sm font-semibold text-white/80">{c}</span>
               ))}
-              <Link to="/tools" data-cursor className="px-4 py-2 rounded-full bg-[color:var(--mark-blue)] text-white text-sm font-bold hover:-translate-y-0.5 transition-transform inline-flex items-center gap-1.5">
+              <Link to="/fintools" data-cursor className="px-4 py-2 rounded-full bg-[color:var(--mark-blue)] text-white text-sm font-bold hover:-translate-y-0.5 transition-transform inline-flex items-center gap-1.5">
                 See every tool
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
@@ -431,7 +462,7 @@ const Home = () => {
                 cost first. HECS and HELP are handled on their own terms, indexed once a year, not treated like a
                 credit card.
               </p>
-              <Link to="/tools/debt-sequencer" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-black font-bold hover:-translate-y-0.5 transition-transform">
+              <Link to="/fintools/debt-sequencer" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-black font-bold hover:-translate-y-0.5 transition-transform">
                 Try the Debt Sequencer
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
@@ -545,6 +576,86 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ───────── RESOURCE LIBRARY ───────── */}
+      <section className="bg-[#171717] border-y border-white/10 py-24 md:py-32 px-6 md:px-10" data-mark>
+        <div className="max-w-[1200px] mx-auto">
+          <div className="grid items-center gap-12 md:grid-cols-2 lg:gap-16">
+            {/* Left — the pitch */}
+            <div className="reveal">
+              <p className="font-hand text-xl text-blue-300 mb-4 -rotate-2">every HSC subject, one shelf</p>
+              <h2 className="font-bricolage font-extrabold text-white leading-[1.02] tracking-[-0.03em] text-[clamp(2rem,4.5vw,3.5rem)]">
+                A resource library for the&nbsp;whole HSC.
+              </h2>
+              <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/70">
+                Syllabus-mapped lessons, worked examples and revision for every subject — English through Extension&nbsp;2, Chemistry to Business Studies. The catalogue is stocked; new lessons land on the shelves each week.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-2.5">
+                {faculties.map((f) => (
+                  <span key={f.name} className={`${f.block} ${f.text} rounded-full px-3 py-1 text-xs font-bold`}>
+                    {f.name}
+                  </span>
+                ))}
+              </div>
+              <Link
+                to="/library"
+                className="mt-9 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold tracking-[0.04em] text-[#171717] transition-colors duration-200 hover:bg-white/90"
+              >
+                Browse the library
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+            </div>
+
+            {/* Right — endless subject shelf (three columns drifting in parallax) */}
+            <div className="reveal">
+              <div className="marquee-shelf marquee-mask relative grid h-[440px] grid-cols-3 gap-3 overflow-hidden md:h-[480px]">
+                {shelfColumns.map((col, i) => (
+                  <div
+                    key={i}
+                    className={`flex flex-col gap-3 ${i === 1 ? 'animate-marquee-down' : 'animate-marquee-up'}`}
+                  >
+                    {[...col, ...col].map((s, j) => (
+                      <ShelfTile key={`${s.name}-${j}`} s={s} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Foot — what every shelf is built around, plus the catalogue at a glance */}
+          <div className="mt-16 border-t border-white/10 pt-14 md:mt-20">
+            <div className="reveal mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <h3 className="font-bricolage text-2xl font-extrabold tracking-[-0.02em] text-white md:text-3xl">What's on every shelf</h3>
+              <p className="font-hand text-lg -rotate-2 text-blue-300">built for the syllabus</p>
+            </div>
+            <div className="reveal-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {libraryPerks.map((p) => (
+                <div key={p.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition-colors duration-200 hover:border-white/25">
+                  <span className="font-hand text-lg text-blue-300">{p.kicker}</span>
+                  <h4 className="mt-1 font-bricolage text-lg font-bold text-white">{p.title}</h4>
+                  <p className="mt-2 text-sm leading-relaxed text-white/60">{p.body}</p>
+                </div>
+              ))}
+            </div>
+            <div className="reveal mt-12 flex flex-wrap items-center gap-x-12 gap-y-6">
+              {[
+                { n: subjectCount, l: 'subjects catalogued' },
+                { n: faculties.length, l: 'faculties' },
+                { n: 'Weekly', l: 'new lessons land' },
+                { n: 'Free', l: 'no paywall, ever' },
+              ].map((stat) => (
+                <div key={stat.l}>
+                  <div className="font-bricolage text-3xl font-extrabold text-white md:text-4xl">{stat.n}</div>
+                  <div className="mt-1 text-xs font-bold uppercase tracking-wide text-white/45">{stat.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ───────── SEE IT IN ACTION ───────── */}
       <section className="py-20 md:py-28 px-6 md:px-10">
         <div className="max-w-[1200px] mx-auto">
@@ -603,7 +714,7 @@ const Home = () => {
                   <div className="flex-1">
                     <h3 className="font-bricolage font-bold text-3xl text-text-primary mb-4">Run real code, right in the browser</h3>
                     <p className="body-text mb-7 max-w-md">Python, JavaScript, and HTML with instant visual feedback, test runners, and an AI debugger on hand. Nothing to install.</p>
-                    <Link to="/tools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
+                    <Link to="/fintools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
                       Open the playground
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                     </Link>
@@ -639,7 +750,7 @@ const Home = () => {
                   <div className="flex-1">
                     <h3 className="font-bricolage font-bold text-3xl text-text-primary mb-4">Graphing that students can touch</h3>
                     <p className="body-text mb-7 max-w-md">Drop interactive geometry and graphing panels into a lesson. Drag a parameter and watch the curve move, live.</p>
-                    <Link to="/tools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
+                    <Link to="/fintools" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[color:var(--mark-blue)] text-white font-bold hover:-translate-y-0.5 transition-transform">
                       Plot a graph
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                     </Link>
@@ -720,7 +831,7 @@ const Home = () => {
               Create a course
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </Link>
-            <Link to="/tools" className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white/15 text-white text-base font-bold hover:bg-white/25 transition-colors">
+            <Link to="/fintools" className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white/15 text-white text-base font-bold hover:bg-white/25 transition-colors">
               Explore the tools
             </Link>
             <Link to="/courses" className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-white/15 text-white text-base font-bold hover:bg-white/25 transition-colors">

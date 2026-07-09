@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useReveal } from '../lib/useReveal';
+import ToolCard from '../components/ToolCard';
 
 const tools = [
   {
     title: 'Income Tax Calculator',
     description: 'Estimate your annual Australian income tax, Medicare levy, and net pay.',
-    path: '/tools/tax-calculator',
+    path: '/fintools/tax-calculator',
     category: 'Tax & Income',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -17,7 +17,7 @@ const tools = [
   {
     title: 'Salary Calculator',
     description: 'Calculate your take-home pay from gross salary, including tax, Medicare, and super.',
-    path: '/tools/salary',
+    path: '/fintools/salary',
     category: 'Tax & Income',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -28,7 +28,7 @@ const tools = [
   {
     title: 'GST Calculator',
     description: 'Add or remove GST (10%) from amounts for Australian Goods and Services Tax calculations.',
-    path: '/tools/gst',
+    path: '/fintools/gst',
     category: 'Tax & Income',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -39,7 +39,7 @@ const tools = [
   {
     title: 'Budget Planner',
     description: 'Plan your monthly budget and track spending across different categories.',
-    path: '/tools/budget-planner',
+    path: '/fintools/budget-planner',
     category: 'Budgeting',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -50,7 +50,7 @@ const tools = [
   {
     title: 'Emergency Fund Calculator',
     description: 'Calculate how much you should have in your emergency fund to cover unexpected expenses.',
-    path: '/tools/emergency-fund',
+    path: '/fintools/emergency-fund',
     category: 'Budgeting',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -61,7 +61,7 @@ const tools = [
   {
     title: 'Savings Goal Calculator',
     description: 'Calculate how long it takes to reach your savings goal with contributions and interest.',
-    path: '/tools/savings-goal',
+    path: '/fintools/savings-goal',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -72,7 +72,7 @@ const tools = [
   {
     title: 'Compound Interest Calculator',
     description: 'See how your money grows with compound interest and regular contributions over time.',
-    path: '/tools/compound-interest',
+    path: '/fintools/compound-interest',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -83,7 +83,7 @@ const tools = [
   {
     title: 'Super Contribution Calculator',
     description: 'Project your superannuation balance with employer and personal contributions.',
-    path: '/tools/super-contribution',
+    path: '/fintools/super-contribution',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -94,7 +94,7 @@ const tools = [
   {
     title: 'Loan Repayment Calculator',
     description: 'Calculate monthly loan repayments, total interest, and total amount payable.',
-    path: '/tools/loan-repayment',
+    path: '/fintools/loan-repayment',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -105,7 +105,7 @@ const tools = [
   {
     title: 'Mortgage Calculator',
     description: 'Calculate home loan repayments, total interest, and explore different payment frequencies.',
-    path: '/tools/mortgage',
+    path: '/fintools/mortgage',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -116,7 +116,7 @@ const tools = [
   {
     title: 'Credit Card Payoff',
     description: 'See exactly how long it takes to clear your balance and how much interest you can save by paying more.',
-    path: '/tools/credit-card-payoff',
+    path: '/fintools/credit-card-payoff',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -138,7 +138,7 @@ const tools = [
   {
     title: 'Debt Sequencer',
     description: 'Rank your debts by what they actually cost to carry, with HECS/HELP handled on its own terms.',
-    path: '/tools/debt-sequencer',
+    path: '/fintools/debt-sequencer',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -149,7 +149,7 @@ const tools = [
   {
     title: 'Debt-to-Income Ratio',
     description: 'Calculate your DTI ratio, the first thing lenders check before approving any loan.',
-    path: '/tools/debt-to-income',
+    path: '/fintools/debt-to-income',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -160,7 +160,7 @@ const tools = [
   {
     title: 'Capital Gains Estimator',
     description: 'Estimate CGT on shares, property, or other assets under Australian tax rules including the 50% discount.',
-    path: '/tools/capital-gains',
+    path: '/fintools/capital-gains',
     category: 'Tax & Income',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -171,7 +171,7 @@ const tools = [
   {
     title: 'Inflation Calculator',
     description: 'See how inflation erodes purchasing power over time, or how much something will cost in the future.',
-    path: '/tools/inflation',
+    path: '/fintools/inflation',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -182,7 +182,7 @@ const tools = [
   {
     title: 'Rule of 72',
     description: 'Find out how long it takes to double your money at a given rate, or what rate you need to hit a target.',
-    path: '/tools/rule-of-72',
+    path: '/fintools/rule-of-72',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -193,7 +193,7 @@ const tools = [
   {
     title: 'Net Worth Calculator',
     description: 'Add up all your assets and liabilities to find your true net worth and your debt-to-asset ratio.',
-    path: '/tools/net-worth',
+    path: '/fintools/net-worth',
     category: 'Wealth & Investing',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -204,7 +204,7 @@ const tools = [
   {
     title: 'ROI Calculator',
     description: 'Calculate total return on investment and annualised CAGR for any asset (shares, property, business, or otherwise).',
-    path: '/tools/roi',
+    path: '/fintools/roi',
     category: 'Wealth & Investing',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -215,7 +215,7 @@ const tools = [
   {
     title: 'FIRE Number Calculator',
     description: 'Calculate how much you need to retire early and how long it will take you to get there.',
-    path: '/tools/fire-number',
+    path: '/fintools/fire-number',
     category: 'Wealth & Investing',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -227,7 +227,7 @@ const tools = [
   {
     title: 'Rent vs Buy Calculator',
     description: 'Compare the true total cost of renting versus buying a home over any time horizon.',
-    path: '/tools/rent-vs-buy',
+    path: '/fintools/rent-vs-buy',
     category: 'Property',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -238,7 +238,7 @@ const tools = [
   {
     title: 'Break-Even Calculator',
     description: 'Find how many units you need to sell to cover costs and what it takes to hit a profit target.',
-    path: '/tools/break-even',
+    path: '/fintools/break-even',
     category: 'Business',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -250,7 +250,7 @@ const tools = [
 
 const categories = ['Tax & Income', 'Budgeting', 'Savings & Growth', 'Debt & Loans', 'Wealth & Investing', 'Property', 'Business'];
 
-const Tools = () => {
+const FinancialTools = () => {
   useReveal();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -364,32 +364,4 @@ const Tools = () => {
   );
 };
 
-const ToolCard = ({ tool }) => (
-  <Link
-    to={tool.path}
-    className="group flex flex-col gap-4 p-6 bg-surface-raised rounded-2xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform duration-200"
-  >
-    <div className="flex items-start justify-between">
-      <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-accent text-white shadow-[0_12px_24px_-16px_rgba(20,20,18,0.5)]">
-        {tool.icon}
-      </div>
-      <svg
-        className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200"
-        fill="none" stroke="currentColor" viewBox="0 0 24 24"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7v10" />
-      </svg>
-    </div>
-
-    <div className="flex-1">
-      <h3 className="font-display font-bold tracking-tight text-base text-text-primary mb-1.5 group-hover:text-accent transition-colors duration-200">
-        {tool.title}
-      </h3>
-      <p className="text-sm text-text-muted leading-relaxed line-clamp-2">
-        {tool.description}
-      </p>
-    </div>
-  </Link>
-);
-
-export default Tools;
+export default FinancialTools;

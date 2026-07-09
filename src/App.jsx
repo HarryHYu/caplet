@@ -7,11 +7,12 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { LayoutProvider, useLayout } from './contexts/LayoutContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
-import Tour from './pages/Tour';
+import DemoApp from './pages/DemoApp';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Contact from './pages/Contact';
-import Tools from './pages/Tools';
+import FinancialTools from './pages/FinancialTools';
+import EduTools from './pages/EduTools';
 import TaxCalculator from './pages/tools/TaxCalculator';
 import BudgetPlanner from './pages/tools/BudgetPlanner';
 import SavingsGoal from './pages/tools/SavingsGoal';
@@ -42,6 +43,8 @@ import CourseComplete from './pages/CourseComplete';
 import Dashboard from './pages/Dashboard';
 import Revision from './pages/Revision';
 import EssayMemoriser from './pages/EssayMemoriser';
+import Library from './pages/Library';
+import LibrarySubject from './pages/LibrarySubject';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Classes from './pages/Classes';
@@ -60,6 +63,7 @@ import HostLive from './pages/live/HostLive';
 import PlayLive from './pages/live/PlayLive';
 import NotFound from './pages/NotFound';
 import CapletLoader from './components/CapletLoader';
+import MarkerCursor from './components/MarkerCursor';
 import { GOOGLE_OAUTH_CLIENT_ID } from './config/googleClient';
 
 function FullPageSpinner() {
@@ -125,30 +129,56 @@ function AppRoutes() {
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/tools" element={<Tools />} />
+          <Route path="/fintools" element={<FinancialTools />} />
+          <Route path="/tools" element={<Navigate to="/fintools" replace />} />
+          <Route path="/edutools" element={<EduTools />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/tools/tax-calculator" element={<TaxCalculator />} />
-          <Route path="/tools/budget-planner" element={<BudgetPlanner />} />
-          <Route path="/tools/savings-goal" element={<SavingsGoal />} />
-          <Route path="/tools/loan-repayment" element={<LoanRepayment />} />
-          <Route path="/tools/compound-interest" element={<CompoundInterest />} />
-          <Route path="/tools/mortgage" element={<MortgageCalculator />} />
-          <Route path="/tools/super-contribution" element={<SuperContribution />} />
-          <Route path="/tools/gst" element={<GSTCalculator />} />
-          <Route path="/tools/salary" element={<SalaryCalculator />} />
-          <Route path="/tools/emergency-fund" element={<EmergencyFund />} />
-          <Route path="/tools/net-worth" element={<NetWorth />} />
-          <Route path="/tools/inflation" element={<InflationCalculator />} />
-          <Route path="/tools/credit-card-payoff" element={<CreditCardPayoff />} />
-          <Route path="/tools/debt-sequencer" element={<DebtSequencer />} />
-          <Route path="/tools/roi" element={<ROICalculator />} />
-          <Route path="/tools/rent-vs-buy" element={<RentVsBuy />} />
-          <Route path="/tools/debt-to-income" element={<DebtToIncome />} />
-          <Route path="/tools/break-even" element={<BreakEven />} />
-          <Route path="/tools/fire-number" element={<FIRENumber />} />
-          <Route path="/tools/rule-of-72" element={<RuleOf72 />} />
-          <Route path="/tools/capital-gains" element={<CapitalGains />} />
-          <Route path="/tools/financial-twin" element={<FinancialTwin />} />
+          <Route path="/fintools/tax-calculator" element={<TaxCalculator />} />
+          <Route path="/fintools/budget-planner" element={<BudgetPlanner />} />
+          <Route path="/fintools/savings-goal" element={<SavingsGoal />} />
+          <Route path="/fintools/loan-repayment" element={<LoanRepayment />} />
+          <Route path="/fintools/compound-interest" element={<CompoundInterest />} />
+          <Route path="/fintools/mortgage" element={<MortgageCalculator />} />
+          <Route path="/fintools/super-contribution" element={<SuperContribution />} />
+          <Route path="/fintools/gst" element={<GSTCalculator />} />
+          <Route path="/fintools/salary" element={<SalaryCalculator />} />
+          <Route path="/fintools/emergency-fund" element={<EmergencyFund />} />
+          <Route path="/fintools/net-worth" element={<NetWorth />} />
+          <Route path="/fintools/inflation" element={<InflationCalculator />} />
+          <Route path="/fintools/credit-card-payoff" element={<CreditCardPayoff />} />
+          <Route path="/fintools/debt-sequencer" element={<DebtSequencer />} />
+          <Route path="/fintools/roi" element={<ROICalculator />} />
+          <Route path="/fintools/rent-vs-buy" element={<RentVsBuy />} />
+          <Route path="/fintools/debt-to-income" element={<DebtToIncome />} />
+          <Route path="/fintools/break-even" element={<BreakEven />} />
+          <Route path="/fintools/fire-number" element={<FIRENumber />} />
+          <Route path="/fintools/rule-of-72" element={<RuleOf72 />} />
+          <Route path="/fintools/capital-gains" element={<CapitalGains />} />
+          <Route path="/fintools/financial-twin" element={<FinancialTwin />} />
+          <Route path="/tools/tax-calculator" element={<Navigate to="/fintools/tax-calculator" replace />} />
+          <Route path="/tools/budget-planner" element={<Navigate to="/fintools/budget-planner" replace />} />
+          <Route path="/tools/savings-goal" element={<Navigate to="/fintools/savings-goal" replace />} />
+          <Route path="/tools/loan-repayment" element={<Navigate to="/fintools/loan-repayment" replace />} />
+          <Route path="/tools/compound-interest" element={<Navigate to="/fintools/compound-interest" replace />} />
+          <Route path="/tools/mortgage" element={<Navigate to="/fintools/mortgage" replace />} />
+          <Route path="/tools/super-contribution" element={<Navigate to="/fintools/super-contribution" replace />} />
+          <Route path="/tools/gst" element={<Navigate to="/fintools/gst" replace />} />
+          <Route path="/tools/salary" element={<Navigate to="/fintools/salary" replace />} />
+          <Route path="/tools/emergency-fund" element={<Navigate to="/fintools/emergency-fund" replace />} />
+          <Route path="/tools/net-worth" element={<Navigate to="/fintools/net-worth" replace />} />
+          <Route path="/tools/inflation" element={<Navigate to="/fintools/inflation" replace />} />
+          <Route path="/tools/credit-card-payoff" element={<Navigate to="/fintools/credit-card-payoff" replace />} />
+          <Route path="/tools/debt-sequencer" element={<Navigate to="/fintools/debt-sequencer" replace />} />
+          <Route path="/tools/roi" element={<Navigate to="/fintools/roi" replace />} />
+          <Route path="/tools/rent-vs-buy" element={<Navigate to="/fintools/rent-vs-buy" replace />} />
+          <Route path="/tools/debt-to-income" element={<Navigate to="/fintools/debt-to-income" replace />} />
+          <Route path="/tools/break-even" element={<Navigate to="/fintools/break-even" replace />} />
+          <Route path="/tools/fire-number" element={<Navigate to="/fintools/fire-number" replace />} />
+          <Route path="/tools/rule-of-72" element={<Navigate to="/fintools/rule-of-72" replace />} />
+          <Route path="/tools/capital-gains" element={<Navigate to="/fintools/capital-gains" replace />} />
+          <Route path="/tools/financial-twin" element={<Navigate to="/fintools/financial-twin" replace />} />
+          <Route path="/library" element={<Library />} />
+          <Route path="/library/:subject" element={<LibrarySubject />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
@@ -181,13 +211,14 @@ function AppShell() {
   const { isAuthenticated } = useAuth();
   const { navMode } = useLayout();
 
-  // Tour gets a completely standalone layout — no Navbar/Footer/flex wrapper
+  // Tour gets a completely standalone layout — no Navbar/Footer/flex wrapper,
+  // and no site-wide marker cursor (the tour draws its own scripted pointer,
+  // and having both on screen at once looks like a bug).
+  // Reached only via in-app (SPA) navigation to /demo. DemoApp must own the
+  // router, so hard-load it — the App-level branch above then renders it.
   if (pathname === '/demo') {
-    return (
-      <Routes>
-        <Route path="/demo" element={<Tour />} />
-      </Routes>
-    );
+    window.location.replace('/demo');
+    return null;
   }
 
   // Pages that suppress all chrome (their own full-bleed layouts).
@@ -203,6 +234,7 @@ function AppShell() {
   if (vertical) {
     return (
       <div className="min-h-screen bg-surface-body lg:flex">
+        <MarkerCursor />
         <Sidebar />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <Navbar mobileOnly />
@@ -217,6 +249,7 @@ function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <MarkerCursor />
       <Navbar />
       <main className="flex-grow">
         <AppRoutes />
@@ -227,6 +260,18 @@ function AppShell() {
 }
 
 function App() {
+  // The /demo sandbox owns its own MemoryRouter, and React Router forbids
+  // nesting routers — so mount it ABOVE the app's BrowserRouter (only
+  // ThemeProvider is shared, for dark mode). DemoApp supplies its own auth,
+  // courses, and layout providers.
+  if (typeof window !== 'undefined' && window.location.pathname === '/demo') {
+    return (
+      <ThemeProvider>
+        <DemoApp />
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
       <GoogleOAuthProvider clientId={GOOGLE_OAUTH_CLIENT_ID}>
