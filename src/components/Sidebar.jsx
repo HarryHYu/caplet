@@ -7,6 +7,7 @@ import api from '../services/api';
 import {
     Squares2X2Icon,
     BookOpenIcon,
+    BuildingLibraryIcon,
     AcademicCapIcon,
     WrenchScrewdriverIcon,
     ArrowPathIcon,
@@ -16,6 +17,7 @@ import {
     ViewColumnsIcon,
     SunIcon,
     MoonIcon,
+    ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -28,7 +30,7 @@ import {
  */
 export default function Sidebar() {
     const location = useLocation();
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const { sidebarCollapsed: collapsed, toggleSidebar, toggleNavMode } = useLayout();
 
@@ -59,6 +61,7 @@ export default function Sidebar() {
 
     const items = [
         { path: '/dashboard', label: 'Dashboard', icon: Squares2X2Icon },
+        { path: '/library', label: 'Library', icon: BuildingLibraryIcon },
         { path: '/courses', label: 'Curriculum', icon: BookOpenIcon },
         { path: '/classes', label: 'Classes', icon: AcademicCapIcon },
         { path: '/fintools', label: 'Financial Tools', icon: WrenchScrewdriverIcon },
@@ -200,6 +203,20 @@ export default function Sidebar() {
                             </span>
                         )}
                     </Link>
+
+                    {/* Sign out — the rail's own logout, so you can leave while in side-bar mode */}
+                    <button
+                        type="button"
+                        onClick={logout}
+                        title={collapsed ? 'Sign out' : undefined}
+                        aria-label="Sign out"
+                        className={`group relative flex items-center gap-3.5 rounded-2xl px-3 py-2.5 text-red-500 transition-colors duration-200 hover:bg-red-50 dark:hover:bg-red-900/20 ${collapsed ? 'justify-center' : ''}`}
+                    >
+                        <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0" />
+                        {!collapsed && (
+                            <span className="text-sm font-bold tracking-[0.02em]">Sign out</span>
+                        )}
+                    </button>
 
                     <div className="my-1 border-t border-line-soft" />
 

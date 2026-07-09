@@ -27,6 +27,7 @@ dist-ssr
 .claude/
 .agent/
 AGENTS.md
+.playwright-mcp/
 
 # Local DB (testing only; production uses PostgreSQL)
 caplet.db

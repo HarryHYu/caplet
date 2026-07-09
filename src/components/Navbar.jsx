@@ -9,16 +9,22 @@ import { useLayout } from '../contexts/LayoutContext';
 const Navbar = ({ mobileOnly = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNavMenu, setShowNavMenu] = useState(false);
+  const [showTryMenu, setShowTryMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { toggleNavMode } = useLayout();
   const menuRef = useRef(null);
+  const navMenuRef = useRef(null);
+  const tryMenuRef = useRef(null);
 
   useEffect(() => {
     setIsOpen(false);
     setShowUserMenu(false);
+    setShowNavMenu(false);
+    setShowTryMenu(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -32,6 +38,12 @@ const Navbar = ({ mobileOnly = false }) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowUserMenu(false);
       }
+      if (navMenuRef.current && !navMenuRef.current.contains(e.target)) {
+        setShowNavMenu(false);
+      }
+      if (tryMenuRef.current && !tryMenuRef.current.contains(e.target)) {
+        setShowTryMenu(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -39,10 +51,18 @@ const Navbar = ({ mobileOnly = false }) => {
 
   const allNavItems = [
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
+    { path: '/library', label: 'Library' },
     { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
     { path: '/classes', label: 'Classes', tourId: 'nav-academy' },
     { path: '/fintools', label: 'Financial Tools', tourId: 'nav-instruments' },
     { path: '/edutools', label: 'Education Tools', tourId: 'nav-edutools' },
+  ];
+
+  // Things a visitor can "try" without picking a section — grouped into their own
+  // toggle so the top bar stays uncluttered.
+  const tryItems = [
+    { path: '/demo', label: 'Demo' },
+    { path: '/play', label: 'Caplet Live' },
   ];
 
   const navItems = allNavItems.filter((item) => {
@@ -57,6 +77,11 @@ const Navbar = ({ mobileOnly = false }) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  // The folded toggle reads "Menu" by default, then takes on the current
+  // section's name once you're inside one.
+  const activeNavItem = navItems.find((item) => isActive(item.path));
+  const navLabel = activeNavItem ? activeNavItem.label : 'Menu';
+
   const hidePaths = ['/login', '/register', '/play'];
   if (hidePaths.includes(location.pathname)) return null;
   if (location.pathname.startsWith('/live/host')) return null;
@@ -67,7 +92,7 @@ const Navbar = ({ mobileOnly = false }) => {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-shadow duration-300 bg-surface-body/90 backdrop-blur-md text-text-primary ${
+      className={`fixed top-0 inset-x-0 z-50 transition-shadow duration-300 bg-surface-body text-text-primary ${
         mobileOnly ? 'lg:hidden' : ''
       } ${
         scrolled ? 'shadow-[0_6px_24px_-16px_rgba(0,0,0,0.4)]' : ''
@@ -90,51 +115,93 @@ const Navbar = ({ mobileOnly = false }) => {
             </span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => {
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                  className={`relative px-3 py-2 rounded-lg text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
-                    active
-                      ? 'text-accent bg-accent-soft'
-                      : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+          {/* Right cluster — folded nav toggles pinned to the far right, then actions */}
+          <div className="flex items-center gap-2 md:gap-3">
+
+          {/* Desktop nav — folded into two toggles */}
+          <nav className="hidden lg:flex items-center gap-1.5">
+            {/* Sections menu */}
+            <div className="relative" ref={navMenuRef}>
+              <button
+                type="button"
+                onClick={() => { setShowNavMenu((v) => !v); setShowTryMenu(false); }}
+                aria-expanded={showNavMenu}
+                aria-haspopup="true"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold tracking-[0.06em] whitespace-nowrap transition-all duration-200 ${
+                  showNavMenu || navItems.some((i) => isActive(i.path))
+                    ? 'text-accent bg-accent-soft'
+                    : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
+                }`}
+              >
+                {navLabel}
+                <svg className={`w-3 h-3 shrink-0 transition-transform duration-200 ${showNavMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showNavMenu && (
+                <div className="absolute top-full left-0 mt-2 w-56 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                  {navItems.map((item) => {
+                    const active = isActive(item.path);
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
+                        className={`flex items-center px-3 py-2.5 text-sm font-bold tracking-[0.04em] transition-colors ${
+                          active ? 'text-accent bg-accent-soft' : 'text-text-primary hover:bg-surface-soft'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Try menu — demo & live, no account needed */}
+            <div className="relative" ref={tryMenuRef}>
+              <button
+                type="button"
+                onClick={() => { setShowTryMenu((v) => !v); setShowNavMenu(false); }}
+                aria-expanded={showTryMenu}
+                aria-haspopup="true"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
+                  showTryMenu || tryItems.some((i) => isActive(i.path))
+                    ? 'text-accent bg-accent-soft'
+                    : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
+                }`}
+              >
+                Try
+                <svg className={`w-3 h-3 transition-transform duration-200 ${showTryMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showTryMenu && (
+                <div className="absolute top-full left-0 mt-2 w-52 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                  {tryItems.map((item) => {
+                    const active = isActive(item.path);
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center px-3 py-2.5 text-sm font-bold tracking-[0.04em] transition-colors ${
+                          active ? 'text-accent bg-accent-soft' : 'text-text-primary hover:bg-surface-soft'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Actions */}
           <div className="flex items-center gap-1.5 md:gap-2 relative z-10 shrink-0">
-            {/* Product demo — available whether signed in or not */}
-            <Link
-              to="/demo"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-[0.06em] text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.869v6.262a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-              </svg>
-              Demo
-            </Link>
-
-            {/* Join a live (Kahoot-style) session — no account needed */}
-            <Link
-              to="/play"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-[0.06em] text-text-muted hover:text-accent hover:bg-surface-soft transition-all duration-200"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Caplet Live
-            </Link>
-
             {/* Switch the whole app to the vertical side rail (signed-in only) */}
             {isAuthenticated && (
               <button
@@ -251,6 +318,7 @@ const Navbar = ({ mobileOnly = false }) => {
                 )}
               </svg>
             </button>
+          </div>
           </div>
         </div>
 

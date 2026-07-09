@@ -55,6 +55,16 @@
   --surface-error: rgba(220, 38, 38, 0.06);
   --border-error: rgba(220, 38, 38, 0.15);
 
+  /* Footer — deliberately dark in BOTH themes (not overridden in .dark),
+     so the information/links section always reads as an inked-in base. */
+  --footer-bg: #141413;
+  --footer-raised: #1F1E1B;
+  --footer-line: rgba(248, 245, 239, 0.12);
+  --footer-text: #F4F0E7;
+  --footer-muted: #A9A294;
+  --footer-dim: #726C60;
+  --footer-accent: #5B9BF0;
+
   /* Homepage — handmade-modern "living annotations" (homepage-scoped, see src/pages/Home.jsx) */
   --ink-body: #2B2A26;        /* readable body ink, darker than text-muted */
   --mark-ink: #24252b;        /* hand-drawn pencil/ink marks */
@@ -514,11 +524,33 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
 }
 .animate-soft-float { animation: soft-float 7s ease-in-out infinite; }
 
+/* Endless vertical subject shelf — the Resource Library showcase.
+   Each column holds its tiles twice; sliding 50% loops seamlessly. */
+@keyframes marquee-up {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+@keyframes marquee-down {
+  from { transform: translateY(-50%); }
+  to { transform: translateY(0); }
+}
+.animate-marquee-up { animation: marquee-up 26s linear infinite; }
+.animate-marquee-down { animation: marquee-down 32s linear infinite; }
+/* Let the columns rest so a reader can inspect a tile. */
+.marquee-shelf:hover .animate-marquee-up,
+.marquee-shelf:hover .animate-marquee-down { animation-play-state: paused; }
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-soft-float,
   .animate-float,
   .animate-pulse,
   .animate-ping,
+  .animate-marquee-up,
+  .animate-marquee-down,
   .animate-bounce { animation: none !important; }
   html { scroll-behavior: auto !important; }
 }
