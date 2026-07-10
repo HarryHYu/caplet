@@ -710,6 +710,29 @@ class ApiService {
     return this.request(`/economics-marker/${id}`, { method: 'DELETE' });
   }
 
+  // Personal study plan — persisted seven-day plan and completion tracking.
+  async getStudyPlan() {
+    return this.request('/study-plan');
+  }
+
+  async generateStudyPlan(config) {
+    return this.request('/study-plan/generate', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    });
+  }
+
+  async regenerateStudyPlan() {
+    return this.request('/study-plan/regenerate', { method: 'POST' });
+  }
+
+  async updateStudyTask(taskId, completed) {
+    return this.request(`/study-plan/tasks/${encodeURIComponent(taskId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ completed }),
+    });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');

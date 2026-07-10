@@ -12,6 +12,7 @@ import {
     WrenchScrewdriverIcon,
     ArrowPathIcon,
     DocumentTextIcon,
+    CalendarDaysIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
     ViewColumnsIcon,
@@ -61,6 +62,7 @@ export default function Sidebar() {
 
     const items = [
         { path: '/dashboard', label: 'Dashboard', icon: Squares2X2Icon },
+        { path: '/study-plan', label: 'Study Plan', icon: CalendarDaysIcon },
         { path: '/library', label: 'Library', icon: BuildingLibraryIcon },
         { path: '/courses', label: 'Curriculum', icon: BookOpenIcon },
         { path: '/classes', label: 'Classes', icon: AcademicCapIcon },

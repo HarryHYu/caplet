@@ -24,6 +24,7 @@ const columns = [
     heading: 'Study',
     links: [
       { label: 'Dashboard', path: '/dashboard' },
+      { label: 'Personal study plan', path: '/study-plan' },
       { label: 'Revision queue', path: '/revision' },
       { label: 'Essay memoriser', path: '/essays' },
       { label: 'Education tools', path: '/edutools' },
@@ -34,6 +35,7 @@ const columns = [
     links: [
       { label: 'Home', path: '/' },
       { label: 'Contact', path: '/contact' },
+      { label: 'Trust center', path: '/trust' },
       { label: 'Terms & privacy', path: '/terms' },
     ],
   },
@@ -198,6 +200,9 @@ const Footer = () => {
             <span>Made in Australia</span>
           </div>
           <div className="flex items-center gap-5">
+            <Link to="/trust" className="text-xs font-medium text-[var(--footer-muted)] hover:text-[var(--footer-accent)] transition-colors">
+              Trust center
+            </Link>
             <Link to="/terms" className="text-xs font-medium text-[var(--footer-muted)] hover:text-[var(--footer-accent)] transition-colors">
               Terms
             </Link>

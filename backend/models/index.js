@@ -23,6 +23,7 @@ const LiveResponse = require('./LiveResponse');
 const CdrConnection = require('./CdrConnection');
 const CdrTransaction = require('./CdrTransaction');
 const MarkedAttempt = require('./MarkedAttempt');
+const StudyPlan = require('./StudyPlan');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -251,6 +252,10 @@ CdrTransaction.belongsTo(CdrConnection, { foreignKey: 'connectionId', as: 'conne
 User.hasMany(MarkedAttempt, { foreignKey: 'userId', as: 'markedAttempts', onDelete: 'CASCADE' });
 MarkedAttempt.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// One current personal study plan per student.
+User.hasOne(StudyPlan, { foreignKey: 'userId', as: 'studyPlan', onDelete: 'CASCADE' });
+StudyPlan.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // Sync database
 // NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
 // This sync() call is a no-op fallback (force: false prevents any schema changes).
@@ -292,5 +297,6 @@ module.exports = {
   CdrConnection,
   CdrTransaction,
   MarkedAttempt,
+  StudyPlan,
   syncDatabase
 };

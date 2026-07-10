@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
@@ -215,6 +216,10 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
             <span className="font-semibold">Create account</span>
           )}
         </button>
+        <p className="text-center text-xs font-medium leading-relaxed text-text-dim">
+          By creating an account, you agree to Caplet&apos;s{' '}
+          <Link to="/trust" className="font-bold text-accent hover:text-accent-strong">trust, privacy and terms information</Link>.
+        </p>
       </form>
     </div>
   );

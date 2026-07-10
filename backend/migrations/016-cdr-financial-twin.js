@@ -1,5 +1,5 @@
 /**
- * Migration 017: create the Financial Twin's CDR tables.
+ * Migration: create the Financial Twin's CDR tables.
  *
  * cdr_connections  — one row per consented (mock or real) CDR link; holds the
  *                    consent lifecycle and a minimized accounts snapshot.

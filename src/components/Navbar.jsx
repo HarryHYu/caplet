@@ -51,6 +51,7 @@ const Navbar = ({ mobileOnly = false }) => {
 
   const allNavItems = [
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
+    { path: '/study-plan', label: 'Study Plan', privateOnly: true },
     { path: '/library', label: 'Library' },
     { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
     { path: '/classes', label: 'Classes', tourId: 'nav-academy' },

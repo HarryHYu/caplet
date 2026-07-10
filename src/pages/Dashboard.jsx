@@ -13,7 +13,8 @@ import {
     ArrowPathIcon,
     CheckCircleIcon,
     BookmarkIcon,
-    DocumentTextIcon
+    DocumentTextIcon,
+    CalendarDaysIcon
 } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
@@ -24,6 +25,7 @@ export default function Dashboard() {
     const [classes, setClasses] = useState([]);
     const [savedSlides, setSavedSlides] = useState([]);
     const [dueCount, setDueCount] = useState(0);
+    const [studyPlan, setStudyPlan] = useState(null);
 
     useReveal(undefined, [loading, coursesLoading]);
 
@@ -38,11 +40,12 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [progressData, classesData, savedSlidesData, dueData] = await Promise.all([
+                const [progressData, classesData, savedSlidesData, dueData, studyPlanData] = await Promise.all([
                     api.getUserProgress(),
                     api.getClasses(),
                     api.getSavedSlides().catch(() => null),
                     api.getDueReviewItems().catch(() => null),
+                    api.getStudyPlan().catch(() => null),
                 ]);
                 setUserProgress(progressData?.progress || []);
                 const allClasses = [
@@ -52,6 +55,7 @@ export default function Dashboard() {
                 setClasses(allClasses);
                 setSavedSlides(savedSlidesData?.savedSlides || []);
                 setDueCount(dueData?.items?.length || 0);
+                setStudyPlan(studyPlanData?.studyPlan || null);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             } finally {
@@ -83,6 +87,10 @@ export default function Dashboard() {
     const lastCoursePct = lastCourseAllLessons.length > 0
         ? Math.round((lastCourseCompleted / lastCourseAllLessons.length) * 100)
         : 0;
+    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const nextStudyTask = [...(studyPlan?.tasks || [])]
+        .filter(task => !task.completed)
+        .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -108,6 +116,34 @@ export default function Dashboard() {
                     </div>
 
                 </header>
+
+                {nextStudyTask ? (
+                    <Link
+                        to="/study-plan"
+                        className="reveal group mb-8 flex flex-col gap-6 rounded-3xl block-blue p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] transition-transform duration-200 hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div className="flex items-center gap-5">
+                            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-surface-raised shadow-[0_16px_36px_-30px_rgba(20,20,18,0.3)]">
+                                <CalendarDaysIcon className="h-7 w-7 text-accent" />
+                            </span>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
+                                    {nextStudyTask.dueDate === today ? 'Today’s next task' : 'Next study task'}
+                                </p>
+                                <p className="mt-1 font-display text-2xl font-extrabold tracking-tight text-text-primary">{nextStudyTask.title}</p>
+                                <p className="mt-1 text-sm font-bold text-text-muted">{nextStudyTask.subjectLabel} · {nextStudyTask.estimatedMinutes} minutes</p>
+                            </div>
+                        </div>
+                        <span className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-accent px-6 py-3 text-sm font-bold text-white">
+                            Open plan <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </span>
+                    </Link>
+                ) : (
+                    <Link to="/study-plan" className="reveal mb-8 flex items-center justify-between gap-5 rounded-3xl block-blue p-7 text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">
+                        Build a personal weekly study plan
+                        <ArrowRightIcon className="h-4 w-4" />
+                    </Link>
+                )}
 
                 {/* Due for review — the day's spaced-repetition nudge; only shown when something is actually due */}
                 {dueCount > 0 && (

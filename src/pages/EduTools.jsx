@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import ToolCard from '../components/ToolCard';
@@ -87,6 +88,15 @@ const EduTools = () => {
             </div>
           </div>
         </header>
+
+        <div className="reveal mb-12 flex flex-col gap-5 rounded-3xl block-amber p-7 md:flex-row md:items-center md:justify-between">
+          <p className="max-w-3xl text-sm font-semibold leading-relaxed text-text-muted">
+            AI feedback is practice guidance, not an official result. Check important feedback with a teacher and the original source.
+          </p>
+          <Link to="/trust#ai" className="shrink-0 text-sm font-bold text-accent hover:text-accent-strong">
+            Understand AI limitations →
+          </Link>
+        </div>
 
         {/* Tool grid — grouped by category */}
         <div className="space-y-16">

@@ -56,6 +56,8 @@ import SettingsFinancial from './pages/SettingsFinancial';
 import SettingsAccount from './pages/SettingsAccount';
 import UserProfile from './pages/UserProfile';
 import Terms from './pages/Terms';
+import TrustCenter from './pages/TrustCenter';
+import StudyPlan from './pages/StudyPlan';
 import Metrics from './pages/Metrics';
 import Survey from './pages/Survey';
 import SurveyResults from './pages/SurveyResults';
@@ -126,6 +128,7 @@ function AppRoutes() {
     <Routes>
           <Route path="/" element={<HomeOrRedirect />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/study-plan" element={<RequireAuth><StudyPlan /></RequireAuth>} />
           <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
           <Route path="/edutools/economics-marker" element={<RequireAuth><EconomicsMarker /></RequireAuth>} />
@@ -197,6 +200,7 @@ function AppRoutes() {
           </Route>
           <Route path="/profile/:userId" element={<UserProfile />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/trust" element={<TrustCenter />} />
           <Route path="/metrics" element={<RequireAdmin><Metrics /></RequireAdmin>} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />

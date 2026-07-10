@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useReveal } from '../lib/useReveal';
 import ToolCard from '../components/ToolCard';
 
@@ -287,6 +288,15 @@ const FinancialTools = () => {
             </div>
           </div>
         </header>
+
+        <div className="reveal mb-12 flex flex-col gap-5 rounded-3xl block-blue p-7 md:flex-row md:items-center md:justify-between">
+          <p className="max-w-3xl text-sm font-semibold leading-relaxed text-text-muted">
+            These tools provide general education and scenario estimates, not personal financial advice. Inputs and assumptions can change the result.
+          </p>
+          <Link to="/trust#financial-education" className="shrink-0 text-sm font-bold text-accent hover:text-accent-strong">
+            How financial tools are framed →
+          </Link>
+        </div>
 
         {/* Search */}
         <div className="mb-16 reveal">

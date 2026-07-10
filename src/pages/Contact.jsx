@@ -1,4 +1,5 @@
 import { useReveal } from '../lib/useReveal';
+import { Link } from 'react-router-dom';
 
 const Contact = () => {
   useReveal();
@@ -56,6 +57,9 @@ const Contact = () => {
                 <p className="text-xs text-text-dim leading-relaxed">
                   Caplet provides financial literacy education only, not personalised financial advice. Schools and teachers remain responsible for meeting local requirements.
                 </p>
+                <Link to="/trust" className="mt-4 inline-flex text-sm font-bold text-accent hover:text-accent-strong">
+                  Read the Trust Center →
+                </Link>
               </div>
             </div>
           </div>
