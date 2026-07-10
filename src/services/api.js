@@ -690,6 +690,26 @@ class ApiService {
     return this.request(`/essays/${id}`, { method: 'DELETE' });
   }
 
+  // CapletMark — HSC Economics answer marker (AI-marked practice attempts)
+  async markEconomicsAnswer({ question, markValue, responseType, studentAnswer, focusArea }) {
+    return this.request('/economics-marker', {
+      method: 'POST',
+      body: JSON.stringify({ question, markValue, responseType, studentAnswer, focusArea }),
+    });
+  }
+
+  async getEconomicsAttempts() {
+    return this.request('/economics-marker');
+  }
+
+  async getEconomicsAttempt(id) {
+    return this.request(`/economics-marker/${id}`);
+  }
+
+  async deleteEconomicsAttempt(id) {
+    return this.request(`/economics-marker/${id}`, { method: 'DELETE' });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');

@@ -43,6 +43,7 @@ import CourseComplete from './pages/CourseComplete';
 import Dashboard from './pages/Dashboard';
 import Revision from './pages/Revision';
 import EssayMemoriser from './pages/EssayMemoriser';
+import EconomicsMarker from './pages/EconomicsMarker';
 import Library from './pages/Library';
 import LibrarySubject from './pages/LibrarySubject';
 import Login from './pages/Login';
@@ -127,6 +128,7 @@ function AppRoutes() {
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
+          <Route path="/edutools/economics-marker" element={<RequireAuth><EconomicsMarker /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/fintools" element={<FinancialTools />} />

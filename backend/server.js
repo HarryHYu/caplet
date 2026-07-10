@@ -126,6 +126,7 @@ app.use('/api/debt-sequencing', require('./routes/debtSequencing'));
 app.use('/api/financial-twin', require('./routes/financialTwin'));
 app.use('/api/review', require('./routes/review'));
 app.use('/api/essays', require('./routes/essays'));
+app.use('/api/economics-marker', require('./routes/economicsMarker'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/live', require('./routes/live'));
 app.use('/api', require('./routes/proxy'));

@@ -22,6 +22,7 @@ const LiveParticipant = require('./LiveParticipant');
 const LiveResponse = require('./LiveResponse');
 const CdrConnection = require('./CdrConnection');
 const CdrTransaction = require('./CdrTransaction');
+const MarkedAttempt = require('./MarkedAttempt');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -246,6 +247,10 @@ CdrConnection.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 CdrConnection.hasMany(CdrTransaction, { foreignKey: 'connectionId', as: 'transactions', onDelete: 'CASCADE' });
 CdrTransaction.belongsTo(CdrConnection, { foreignKey: 'connectionId', as: 'connection' });
 
+// CapletMark: AI-marked practice attempts (HSC Economics answer marker)
+User.hasMany(MarkedAttempt, { foreignKey: 'userId', as: 'markedAttempts', onDelete: 'CASCADE' });
+MarkedAttempt.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // Sync database
 // NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
 // This sync() call is a no-op fallback (force: false prevents any schema changes).
@@ -286,5 +291,6 @@ module.exports = {
   LiveResponse,
   CdrConnection,
   CdrTransaction,
+  MarkedAttempt,
   syncDatabase
 };

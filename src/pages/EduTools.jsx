@@ -5,6 +5,17 @@ import ToolCard from '../components/ToolCard';
 
 const eduTools = [
   {
+    title: 'CapletMark',
+    description: 'Paste an HSC Economics answer and get an estimated mark, band feedback, what was missing, and a stronger model answer.',
+    path: '/edutools/economics-marker',
+    category: 'Practice',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 4.556-3.03 8.25-9 9-5.97-.75-9-4.444-9-9V5.25a48.474 48.474 0 006-1.5A48.474 48.474 0 0012 3.75z" />
+      </svg>
+    ),
+  },
+  {
     title: 'Archived Slides',
     description: 'Spaced-repetition revision — flag slides while you learn, then review them right before they fade.',
     path: '/revision',
@@ -28,7 +39,7 @@ const eduTools = [
   },
 ];
 
-const categories = ['Revision'];
+const categories = ['Practice', 'Revision'];
 
 const EduTools = () => {
   useReveal();
@@ -65,7 +76,7 @@ const EduTools = () => {
                 Education <br />tools.
               </h1>
               <p className="text-xl text-text-muted max-w-xl leading-relaxed">
-                Free tools for reviewing what you've learned — flagged slides and essay practice, both backed by spaced repetition.
+                Free tools for practising and reviewing what you've learned — AI-marked answers, flagged slides, and essay practice.
               </p>
             </div>
             <div className="shrink-0 hidden md:block">
