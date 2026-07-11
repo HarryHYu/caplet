@@ -21,7 +21,7 @@ describe('ResourceLibrary page', () => {
   it('gives students focused destinations from the Economics overview', () => {
     renderEconomics('/library/economics');
 
-    expect(screen.getByRole('heading', { name: /Economics, organised around your next move/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Economics' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Year 11 Foundations/i })).toHaveAttribute('href', '/library/economics/year-11');
     expect(screen.getByRole('link', { name: /Year 12 HSC course/i })).toHaveAttribute('href', '/library/economics/year-12');
     expect(screen.getByRole('link', { name: /Timed practice Exam packs/i })).toHaveAttribute('href', '/library/economics/exam-practice');
@@ -40,9 +40,10 @@ describe('ResourceLibrary page', () => {
     expect(screen.getByText(/Original Caplet practice stimulus/i)).toBeInTheDocument();
   });
 
-  it('serves the Economics overview from the latest library subject route', () => {
+  it('keeps the overview free of duplicate navigation and count blocks', () => {
     renderEconomics('/library/economics');
-    expect(screen.getByRole('navigation', { name: 'Economics library' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Assessment guide' })).toHaveAttribute('href', '/library/economics/assessment');
+    expect(screen.queryByRole('navigation', { name: 'Economics library' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Focus areas')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link')).toHaveLength(4);
   });
 });

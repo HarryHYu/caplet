@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext();
 
@@ -12,32 +12,33 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [isDark, setIsDark] = useState(() => {
-    // Check localStorage first, then system preference
+  const getSystemPreference = () => window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+  const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem('theme');
-    if (stored) {
-      return stored === 'dark';
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return ['light', 'dark', 'system'].includes(stored) ? stored : 'system';
   });
+  const [systemIsDark, setSystemIsDark] = useState(getSystemPreference);
+  const isDark = theme === 'dark' || (theme === 'system' && systemIsDark);
 
   useEffect(() => {
-    // Update document class and localStorage
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDark]);
+    const media = window.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!media) return undefined;
+    const syncSystemPreference = (event) => setSystemIsDark(event.matches);
+    media.addEventListener?.('change', syncSystemPreference);
+    return () => media.removeEventListener?.('change', syncSystemPreference);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', theme);
+  }, [isDark, theme]);
 
   const toggleTheme = () => {
-    setIsDark(!isDark);
+    setTheme(isDark ? 'light' : 'dark');
   };
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, isDark, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

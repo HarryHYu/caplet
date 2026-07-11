@@ -13,7 +13,6 @@ import {
   economicsOutcomes,
   economicsResourceLibrary,
   getEconomicsAreaResources,
-  getEconomicsResourceStats,
 } from '../data/economicsResourceLibrary';
 
 const typeLabels = {
@@ -75,21 +74,6 @@ function getVisibleResources(area, type, query) {
     const typeMatch = type === 'all' || resource.type === type;
     return typeMatch && matchesText(area, resource, query);
   });
-}
-
-function Stat({ icon, label, value, sub }) {
-  return (
-    <div className="border border-line-soft bg-surface-raised rounded-lg p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-2xl font-display font-extrabold tracking-tight text-text-primary">{value}</div>
-          <div className="mt-1 text-sm font-bold text-text-primary">{label}</div>
-          <div className="mt-1 text-xs font-medium text-text-muted leading-relaxed">{sub}</div>
-        </div>
-        {createElement(icon, { className: 'h-5 w-5 shrink-0 text-accent' })}
-      </div>
-    </div>
-  );
 }
 
 function OutcomeChip({ code }) {
@@ -597,20 +581,16 @@ function EconomicsNavigation({ active }) {
 }
 
 function EconomicsHub() {
-  const stats = useMemo(() => getEconomicsResourceStats(), []);
-
   return (
     <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <section className="rounded-2xl border border-line-soft bg-surface-raised px-6 py-10 md:px-10 md:py-14">
+        <section className="mb-10 max-w-3xl">
           <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Caplet learning library</p>
-          <h1 className="mt-3 max-w-3xl font-display text-4xl font-extrabold tracking-tight md:text-6xl">Economics, organised around your next move.</h1>
-          <p className="mt-5 max-w-2xl text-base font-medium leading-relaxed text-text-muted md:text-lg">
+          <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Economics</h1>
+          <p className="mt-4 max-w-2xl text-base font-medium leading-relaxed text-text-muted md:text-lg">
             Choose your year level, work through a complete exam pack, or check how the course is assessed. Each space stays focused so you can start studying without wading through the whole library.
           </p>
         </section>
-
-        <EconomicsNavigation active="overview" />
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {economicsPages.map((page) => (
@@ -624,12 +604,6 @@ function EconomicsHub() {
               <span className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-accent">Open <ArrowTopRightOnSquareIcon className="h-4 w-4" /></span>
             </Link>
           ))}
-        </section>
-
-        <section className="mt-8 grid gap-4 md:grid-cols-3">
-          <Stat icon={BookOpenIcon} label="Focus areas" value={stats.focusAreas} sub="Separated into Year 11 and Year 12 pathways" />
-          <Stat icon={ClipboardDocumentCheckIcon} label="Practice resources" value={stats.questions} sub="Drills, questions, stimulus sets and essays" />
-          <Stat icon={AcademicCapIcon} label="Outcomes mapped" value={stats.outcomes} sub="Aligned to ECO-11 and ECO-12 outcomes" />
         </section>
       </div>
     </main>

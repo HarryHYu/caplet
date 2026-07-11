@@ -131,18 +131,6 @@ const Home = () => {
   // and Lenis-driven parallax.
   useReveal(rootRef);
 
-  // The welcome page is intentionally a single colour: force the light theme
-  // while it is mounted (the theme toggle is hidden here — see Navbar), then
-  // restore the user's saved theme on leave so the dashboard and every other
-  // page keep dark mode.
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove('dark');
-    return () => {
-      if (localStorage.getItem('theme') === 'dark') root.classList.add('dark');
-    };
-  }, []);
-
   useEffect(() => {
     const reduce =
       typeof window !== 'undefined' &&
