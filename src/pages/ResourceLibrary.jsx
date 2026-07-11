@@ -1,4 +1,4 @@
-import { createElement, useEffect, useMemo, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   AcademicCapIcon,
@@ -7,7 +7,6 @@ import {
   ChartBarIcon,
   CheckCircleIcon,
   ClipboardDocumentCheckIcon,
-  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import {
   economicsOutcomes,
@@ -31,50 +30,6 @@ const typeMeta = {
   extendedResponse: { label: 'Essay', title: 'Extended Response' },
   stimulusSet: { label: 'Stimulus', title: 'Stimulus Set' },
 };
-
-function matchesText(area, resource, query) {
-  if (!query) return true;
-  const haystack = [
-    area.title,
-    area.focus,
-    area.description,
-    ...area.contentGroups,
-    ...area.outcomes,
-    resource?.stem,
-    resource?.question,
-    resource?.prompt,
-    resource?.sampleAnswer,
-    resource?.exemplarThesis,
-    resource?.keyIdea,
-    resource?.practicePrompt,
-    resource?.title,
-    resource?.context,
-    resource?.sampleResponse,
-    resource?.teacherMove,
-    resource?.quickCheck?.stem,
-    resource?.quickCheck?.explanation,
-    ...(resource?.options || []),
-    ...(resource?.quickCheck?.options || []),
-    ...(resource?.data || []).flatMap((row) => [row.indicator, row.unit, row.interpretation]),
-    ...(resource?.questions || []).flatMap((question) => [
-      question.prompt,
-      ...(question.markingGuide || []),
-      question.sampleAnswer,
-    ]),
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-
-  return haystack.includes(query.toLowerCase());
-}
-
-function getVisibleResources(area, type, query) {
-  return getEconomicsAreaResources(area).filter((resource) => {
-    const typeMatch = type === 'all' || resource.type === type;
-    return typeMatch && matchesText(area, resource, query);
-  });
-}
 
 function OutcomeChip({ code }) {
   return (
@@ -111,64 +66,84 @@ function QuestionShell({ resource, children }) {
 }
 
 function MultipleChoiceResource({ resource }) {
+  const [selected, setSelected] = useState('');
+  const [checked, setChecked] = useState(false);
+
   return (
     <QuestionShell resource={resource}>
-      <h4 className="text-base font-bold leading-snug text-text-primary">{resource.stem}</h4>
+      <h2 className="text-xl font-bold leading-snug text-text-primary">{resource.stem}</h2>
       <div className="mt-4 grid gap-2">
         {resource.options.map((option, index) => {
           const letter = String.fromCharCode(65 + index);
+          const isSelected = selected === letter;
+          const isCorrect = checked && letter === resource.answer;
+          const isWrong = checked && isSelected && letter !== resource.answer;
           return (
-            <div key={option} className="flex gap-3 rounded-md border border-line-soft bg-surface-soft px-3 py-2">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-surface-raised text-xs font-extrabold text-text-muted">
+            <button
+              key={option}
+              type="button"
+              disabled={checked}
+              onClick={() => setSelected(letter)}
+              className={`flex gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
+                isCorrect ? 'border-emerald-500 bg-emerald-500/10' : isWrong ? 'border-red-500 bg-red-500/10' : isSelected ? 'border-accent bg-accent-soft' : 'border-line-soft bg-surface-soft hover:border-accent'
+              }`}
+            >
+              <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md text-xs font-extrabold ${isSelected ? 'bg-accent text-white' : 'bg-surface-raised text-text-muted'}`}>
                 {letter}
               </span>
               <span className="text-sm font-medium leading-relaxed text-text-primary">{option}</span>
-            </div>
+            </button>
           );
         })}
       </div>
-      <details className="mt-4 rounded-md border border-line-soft bg-surface-soft px-4 py-3">
-        <summary className="cursor-pointer text-sm font-extrabold text-text-primary">Show answer and explanation</summary>
-        <p className="mt-3 text-sm font-semibold text-accent">Answer: {resource.answer}</p>
-        <p className="mt-2 text-sm leading-relaxed text-text-muted">{resource.explanation}</p>
-      </details>
+      {!checked ? (
+        <button type="button" disabled={!selected} onClick={() => setChecked(true)} className="mt-5 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">
+          Check answer
+        </button>
+      ) : (
+        <div className="mt-5 rounded-lg bg-surface-soft p-4" role="status">
+          <p className="font-extrabold text-text-primary">{selected === resource.answer ? 'Correct' : `The answer is ${resource.answer}`}</p>
+          <p className="mt-2 text-sm leading-relaxed text-text-muted">{resource.explanation}</p>
+        </div>
+      )}
     </QuestionShell>
   );
 }
 
 function ShortAnswerResource({ resource }) {
+  const [answer, setAnswer] = useState('');
+  const [reviewing, setReviewing] = useState(false);
+
   return (
     <QuestionShell resource={resource}>
-      <h4 className="text-base font-bold leading-snug text-text-primary">{resource.question}</h4>
+      <h2 className="text-xl font-bold leading-snug text-text-primary">{resource.question}</h2>
       {resource.stimulus ? (
         <p className="mt-3 rounded-md border border-line-soft bg-surface-soft px-4 py-3 text-sm font-medium leading-relaxed text-text-muted">
           {resource.stimulus}
         </p>
       ) : null}
-      <div className="mt-4">
-        <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-text-dim">Marking guide</div>
-        <ul className="grid gap-2">
-          {resource.markingGuide.map((item) => (
-            <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted">
-              <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <details className="mt-4 rounded-md border border-line-soft bg-surface-soft px-4 py-3">
-        <summary className="cursor-pointer text-sm font-extrabold text-text-primary">Show sample response</summary>
-        <p className="mt-3 text-sm leading-relaxed text-text-muted">{resource.sampleAnswer}</p>
-      </details>
+      <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={reviewing} rows={7} placeholder="Write your response here…" className="mt-5 w-full resize-y rounded-xl border border-line-soft bg-surface-soft p-4 text-sm leading-relaxed text-text-primary outline-none placeholder:text-text-dim focus:border-accent" />
+      {!reviewing ? <button type="button" disabled={!answer.trim()} onClick={() => setReviewing(true)} className="mt-4 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review response</button> : (
+        <div className="mt-5 rounded-xl bg-surface-soft p-5">
+          <p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Check for</p>
+          <ul className="mt-3 grid gap-2">{resource.markingGuide.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" /><span>{item}</span></li>)}</ul>
+          <p className="mt-5 text-xs font-extrabold uppercase tracking-wide text-text-dim">Sample response</p>
+          <p className="mt-2 text-sm leading-relaxed text-text-muted">{resource.sampleAnswer}</p>
+        </div>
+      )}
     </QuestionShell>
   );
 }
 
 function ExtendedResponseResource({ resource }) {
+  const [answer, setAnswer] = useState('');
+  const [reviewing, setReviewing] = useState(false);
+
   return (
     <QuestionShell resource={resource}>
-      <h4 className="text-base font-bold leading-snug text-text-primary">{resource.prompt}</h4>
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <h2 className="text-xl font-bold leading-snug text-text-primary">{resource.prompt}</h2>
+      <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={reviewing} rows={10} placeholder="Plan or write your response here…" className="mt-5 w-full resize-y rounded-xl border border-line-soft bg-surface-soft p-4 text-sm leading-relaxed text-text-primary outline-none placeholder:text-text-dim focus:border-accent" />
+      {!reviewing ? <button type="button" disabled={!answer.trim()} onClick={() => setReviewing(true)} className="mt-4 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review response</button> : <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div>
           <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-text-dim">Planning frame</div>
           <ol className="grid gap-2">
@@ -189,16 +164,20 @@ function ExtendedResponseResource({ resource }) {
             ))}
           </div>
         </div>
-      </div>
-      <details className="mt-4 rounded-md border border-line-soft bg-surface-soft px-4 py-3">
-        <summary className="cursor-pointer text-sm font-extrabold text-text-primary">Show exemplar thesis</summary>
+        <div className="lg:col-span-2 rounded-lg bg-surface-soft px-4 py-3">
+          <p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Exemplar thesis</p>
         <p className="mt-3 text-sm leading-relaxed text-text-muted">{resource.exemplarThesis}</p>
-      </details>
+        </div>
+      </div>}
     </QuestionShell>
   );
 }
 
 function TopicDrillResource({ resource }) {
+  const [selected, setSelected] = useState('');
+  const [answer, setAnswer] = useState('');
+  const [reviewing, setReviewing] = useState(false);
+
   return (
     <QuestionShell resource={resource}>
       <h4 className="text-lg font-extrabold leading-snug text-text-primary">{resource.title}</h4>
@@ -214,39 +193,27 @@ function TopicDrillResource({ resource }) {
             {resource.quickCheck.options.map((option, index) => {
               const letter = String.fromCharCode(65 + index);
               return (
-                <div key={option} className="flex gap-2 text-sm leading-relaxed text-text-muted">
-                  <span className="font-extrabold text-text-primary">{letter}.</span>
+                <button key={option} type="button" disabled={reviewing} onClick={() => setSelected(letter)} className={`flex gap-2 rounded-md border px-3 py-2 text-left text-sm leading-relaxed ${selected === letter ? 'border-accent bg-accent-soft text-text-primary' : 'border-line-soft bg-surface-raised text-text-muted'}`}>
+                  <span className="font-extrabold">{letter}.</span>
                   <span>{option}</span>
-                </div>
+                </button>
               );
             })}
           </div>
-          <details className="mt-3">
-            <summary className="cursor-pointer text-sm font-extrabold text-text-primary">Show answer</summary>
+          {reviewing ? <div className="mt-3">
             <p className="mt-2 text-sm font-semibold text-accent">Answer: {resource.quickCheck.answer}</p>
             <p className="mt-1 text-sm leading-relaxed text-text-muted">{resource.quickCheck.explanation}</p>
-          </details>
+          </div> : null}
         </div>
 
         <div className="rounded-md border border-line-soft bg-surface-soft p-4">
           <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-text-dim">Short response</div>
           <p className="text-sm font-bold leading-relaxed text-text-primary">{resource.practicePrompt}</p>
-          <ul className="mt-3 grid gap-2">
-            {resource.markingGuide.map((item) => (
-              <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted">
-                <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={reviewing} rows={5} placeholder="Write your response…" className="mt-3 w-full resize-y rounded-lg border border-line-soft bg-surface-raised p-3 text-sm leading-relaxed text-text-primary outline-none focus:border-accent" />
         </div>
       </div>
 
-      <details className="mt-4 rounded-md border border-line-soft bg-surface-soft px-4 py-3">
-        <summary className="cursor-pointer text-sm font-extrabold text-text-primary">Show target response and teaching move</summary>
-        <p className="mt-3 text-sm leading-relaxed text-text-muted">{resource.sampleAnswer}</p>
-        <p className="mt-3 text-sm font-semibold leading-relaxed text-text-primary">{resource.teacherMove}</p>
-      </details>
+      {!reviewing ? <button type="button" disabled={!selected || !answer.trim()} onClick={() => setReviewing(true)} className="mt-4 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review answers</button> : <div className="mt-4 rounded-lg bg-surface-soft p-4"><ul className="grid gap-2">{resource.markingGuide.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" /><span>{item}</span></li>)}</ul><p className="mt-4 text-sm leading-relaxed text-text-muted">{resource.sampleAnswer}</p><p className="mt-3 text-sm font-semibold leading-relaxed text-text-primary">{resource.teacherMove}</p></div>}
     </QuestionShell>
   );
 }
@@ -257,6 +224,8 @@ function formatStimulusValue(row) {
 }
 
 function StimulusSetResource({ resource }) {
+  const [answers, setAnswers] = useState(() => resource.questions.map(() => ''));
+  const [reviewing, setReviewing] = useState(false);
   const maxValue = Math.max(...resource.data.map((row) => Math.abs(Number(row.value)) || 0), 1);
 
   return (
@@ -299,7 +268,7 @@ function StimulusSetResource({ resource }) {
       </div>
 
       <div className="mt-4 grid gap-3">
-        {resource.questions.map((question) => (
+        {resource.questions.map((question, questionIndex) => (
           <div key={question.prompt} className="rounded-md border border-line-soft bg-surface-soft p-4">
             <div className="mb-2 flex items-start justify-between gap-3">
               <p className="text-sm font-extrabold leading-relaxed text-text-primary">{question.prompt}</p>
@@ -307,23 +276,17 @@ function StimulusSetResource({ resource }) {
                 {question.marks} marks
               </span>
             </div>
-            <ul className="grid gap-2">
-              {question.markingGuide.map((item) => (
-                <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted">
-                  <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            <textarea value={answers[questionIndex]} disabled={reviewing} onChange={(event) => setAnswers((current) => current.map((answer, index) => index === questionIndex ? event.target.value : answer))} rows={4} placeholder="Write your response…" className="mt-2 w-full resize-y rounded-lg border border-line-soft bg-surface-raised p-3 text-sm leading-relaxed text-text-primary outline-none focus:border-accent" />
+            {reviewing ? <ul className="mt-4 grid gap-2">{question.markingGuide.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" /><span>{item}</span></li>)}</ul> : null}
           </div>
         ))}
       </div>
 
-      <details className="mt-4 rounded-md border border-line-soft bg-surface-soft px-4 py-3">
-        <summary className="cursor-pointer text-sm font-extrabold text-text-primary">Show sample integrated response</summary>
+      {!reviewing ? <button type="button" disabled={answers.some((answer) => !answer.trim())} onClick={() => setReviewing(true)} className="mt-4 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review responses</button> : <div className="mt-4 rounded-md bg-surface-soft px-4 py-3">
+        <p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Sample integrated response</p>
         <p className="mt-3 text-sm leading-relaxed text-text-muted">{resource.sampleResponse}</p>
         <p className="mt-3 text-sm font-semibold leading-relaxed text-text-primary">{resource.teacherMove}</p>
-      </details>
+      </div>}
     </QuestionShell>
   );
 }
@@ -562,22 +525,8 @@ const economicsPages = [
   { to: '/library/economics/assessment', icon: ChartBarIcon, eyebrow: 'Plan smarter', title: 'Assessment guide', body: 'See the HSC paper shape, school weighting and official syllabus links.' },
 ];
 
-function EconomicsNavigation({ active }) {
-  return (
-    <nav aria-label="Economics library" className="mb-8 flex gap-2 overflow-x-auto border-b border-line-soft pb-3">
-      {[{ to: '/library/economics', label: 'Overview', key: 'overview' }, ...economicsPages.map((page) => ({ ...page, label: page.title, key: page.to.split('/').pop() }))].map((item) => (
-        <Link
-          key={item.to}
-          to={item.to}
-          className={`shrink-0 rounded-md px-3 py-2 text-sm font-extrabold transition-colors ${
-            active === item.key ? 'bg-accent text-white' : 'bg-surface-soft text-text-muted hover:bg-accent-soft hover:text-accent'
-          }`}
-        >
-          {item.label}
-        </Link>
-      ))}
-    </nav>
-  );
+function BackLink({ to, children }) {
+  return <Link to={to} className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-text-muted transition-colors hover:text-accent"><span aria-hidden="true">←</span>{children}</Link>;
 }
 
 function EconomicsHub() {
@@ -615,7 +564,7 @@ function AssessmentPage() {
   return (
     <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <EconomicsNavigation active="assessment" />
+        <BackLink to="/library/economics">Economics</BackLink>
         <section className="mb-8 max-w-3xl">
           <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Assessment guide</p>
           <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Know what the course asks of you.</h1>
@@ -637,233 +586,95 @@ function OfficialSources() {
   return <section className="rounded-xl border border-line-soft bg-surface-raised p-5"><p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Official source links</p><div className="mt-4 grid gap-3 md:grid-cols-2">{economicsResourceLibrary.officialSources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="rounded-lg border border-line-soft bg-surface-soft p-4 hover:border-accent"><span className="flex items-start justify-between gap-3"><span className="text-sm font-extrabold leading-snug text-text-primary">{source.title}</span><ArrowTopRightOnSquareIcon className="h-4 w-4 shrink-0 text-accent" /></span><span className="mt-2 block text-xs font-medium leading-relaxed text-text-muted">{source.note}</span></a>)}</div></section>;
 }
 
-export default function ResourceLibrary() {
-  const { section, focusId } = useParams();
-  const [year, setYear] = useState('all');
-  const [type, setType] = useState('all');
-  const [query, setQuery] = useState('');
-  const [activeId, setActiveId] = useState(economicsResourceLibrary.focusAreas[0].id);
-
-  useEffect(() => {
-    if (section === 'year-11' || section === 'year-12') {
-      const nextYear = section === 'year-11' ? '11' : '12';
-      setYear(nextYear);
-      setType('all');
-      setQuery('');
-      setActiveId(economicsResourceLibrary.focusAreas.find((area) => String(area.year) === nextYear)?.id || economicsResourceLibrary.focusAreas[0].id);
-    }
-    if (focusId) {
-      const area = economicsResourceLibrary.focusAreas.find((item) => item.id === focusId);
-      if (area) { setYear(String(area.year)); setActiveId(area.id); setType('all'); setQuery(''); }
-    }
-  }, [section, focusId]);
-
-  const filteredAreas = useMemo(() => {
-    return economicsResourceLibrary.focusAreas
-      .map((area) => ({
-        ...area,
-        visibleResources: getVisibleResources(area, type, query),
-      }))
-      .filter((area) => {
-        const yearMatch = year === 'all' || String(area.year) === year;
-        return yearMatch && area.visibleResources.length > 0;
-      });
-  }, [year, type, query]);
-
-  const activeArea = filteredAreas.find((area) => area.id === activeId) || filteredAreas[0];
-
-  if (!section) return <EconomicsHub />;
-  if (section === 'exam-practice') return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom"><EconomicsNavigation active="exam-practice" /><section className="mb-8 max-w-3xl"><p className="text-sm font-extrabold uppercase tracking-wide text-accent">Timed practice</p><h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Exam practice, in one place.</h1><p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Choose a pack when you are ready to work under paper-style conditions, then use the guides to review deliberately.</p></section><ExamPracticePacksSection /></div></main>;
-  if (section === 'assessment') return <AssessmentPage />;
-
+function YearPage({ year }) {
+  const areas = economicsResourceLibrary.focusAreas.filter((area) => area.year === year);
   return (
-    <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
-      <div className="container-custom">
-        <EconomicsNavigation active={section} />
-        <section className="mb-8 max-w-3xl">
-          <p className="text-sm font-extrabold uppercase tracking-wide text-accent">{section === 'year-11' ? 'Year 11 foundations' : 'Year 12 HSC course'}</p>
-          <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">{section === 'year-11' ? 'Build the economic toolkit.' : 'Practise the HSC course with intent.'}</h1>
-          <p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Choose one focus area at a time, then use the filters to make a short, purposeful practice set.</p>
+    <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary">
+      <div className="container-custom max-w-6xl">
+        <BackLink to="/library/economics">Economics</BackLink>
+        <section className="mb-10 max-w-3xl">
+          <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Year {year}</p>
+          <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">{year === 11 ? 'Build the economic toolkit.' : 'Practise the HSC course.'}</h1>
+          <p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Choose a topic. You will work through one activity at a time and review each response before moving on.</p>
         </section>
-
-        <section id="practice-library" className="mb-8 scroll-mt-24 rounded-lg border border-line-soft bg-surface-raised p-4">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_14rem_16rem]">
-            <label className="block">
-              <span className="mb-2 block text-xs font-extrabold uppercase tracking-wide text-text-dim">Search library</span>
-              <span className="flex items-center gap-3 rounded-lg border border-line-soft bg-surface-soft px-4 py-3">
-                <MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-text-dim" />
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search topics, outcomes, questions..."
-                  className="w-full bg-transparent text-sm font-semibold text-text-primary outline-none placeholder:text-text-dim"
-                />
-              </span>
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-xs font-extrabold uppercase tracking-wide text-text-dim">Year</span>
-              <select
-                value={year}
-                onChange={(event) => setYear(event.target.value)}
-                className="w-full rounded-lg border border-line-soft bg-surface-soft px-4 py-3 text-sm font-bold text-text-primary outline-none focus:border-accent"
-              >
-                <option value="all">All years</option>
-                <option value="11">Year 11</option>
-                <option value="12">Year 12</option>
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-xs font-extrabold uppercase tracking-wide text-text-dim">Resource type</span>
-              <select
-                value={type}
-                onChange={(event) => setType(event.target.value)}
-                className="w-full rounded-lg border border-line-soft bg-surface-soft px-4 py-3 text-sm font-bold text-text-primary outline-none focus:border-accent"
-              >
-                {Object.entries(typeLabels).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line-soft pt-4">
-            <div className="flex flex-wrap gap-2 text-xs font-extrabold text-text-muted">
-              <span className="rounded-md bg-surface-soft px-2.5 py-1">Year: {year === 'all' ? 'All' : year}</span>
-              <span className="rounded-md bg-surface-soft px-2.5 py-1">Type: {typeLabels[type]}</span>
-              {query ? <span className="rounded-md bg-surface-soft px-2.5 py-1">Search: {query}</span> : null}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setYear('all');
-                setType('all');
-                setQuery('');
-                setActiveId(economicsResourceLibrary.focusAreas[0].id);
-              }}
-              className="rounded-md border border-line-soft bg-surface-soft px-3 py-2 text-xs font-extrabold text-text-primary hover:border-accent hover:text-accent"
-            >
-              Clear filters
-            </button>
-          </div>
+        <section className="grid gap-4 md:grid-cols-2">
+          {areas.map((area) => {
+            const resourceCount = getEconomicsAreaResources(area).length;
+            return (
+              <Link key={area.id} to={`/library/economics/focus/${area.id}`} className="group rounded-xl border border-line-soft bg-surface-raised p-6 transition-colors hover:border-accent">
+                <p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">{area.focus}</p>
+                <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight group-hover:text-accent">{area.title}</h2>
+                <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{area.description}</p>
+                <p className="mt-5 text-sm font-extrabold text-accent">Start {resourceCount} activities <span aria-hidden="true">→</span></p>
+              </Link>
+            );
+          })}
         </section>
-
-        <div className="grid gap-8 lg:grid-cols-[21rem_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="mb-3 text-xs font-extrabold uppercase tracking-wide text-text-dim">
-              {filteredAreas.length} matching focus areas
-            </div>
-            <div className="grid gap-2">
-              {filteredAreas.map((area) => {
-                const active = activeArea?.id === area.id;
-                return (
-                  <Link
-                    key={area.id}
-                    to={`/library/economics/focus/${area.id}`}
-                    className={`rounded-lg border p-4 text-left transition-colors ${
-                      active
-                        ? 'border-accent bg-accent-soft text-accent'
-                        : 'border-line-soft bg-surface-raised text-text-primary hover:border-accent'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs font-extrabold uppercase tracking-wide">Year {area.year}</div>
-                        <div className="mt-1 text-sm font-extrabold leading-snug">{area.title}</div>
-                      </div>
-                      <span className="rounded-md bg-surface-soft px-2 py-1 text-xs font-extrabold text-text-muted">
-                        {area.visibleResources.length}
-                      </span>
-                    </div>
-                    <div className="mt-2 text-xs font-semibold leading-relaxed text-text-muted">{area.focus}</div>
-                  </Link>
-                );
-              })}
-            </div>
-          </aside>
-
-          {activeArea ? (
-            <section>
-              <div className="mb-6 border-b border-line-soft pb-6">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <span className="rounded-md bg-accent px-2.5 py-1 text-xs font-extrabold text-white">Year {activeArea.year}</span>
-                  <span className="rounded-md border border-line-soft bg-surface-soft px-2.5 py-1 text-xs font-extrabold text-text-muted">
-                    {activeArea.hours} indicative hours
-                  </span>
-                  <a
-                    href={activeArea.sourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-md border border-line-soft bg-surface-soft px-2.5 py-1 text-xs font-extrabold text-text-muted hover:text-accent"
-                  >
-                  NESA source
-                    <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
-                  </a>
-                </div>
-                <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary md:text-4xl">
-                  {activeArea.title}
-                </h2>
-                <p className="mt-3 max-w-3xl text-base font-medium leading-relaxed text-text-muted">
-                  {activeArea.description}
-                </p>
-              </div>
-
-              <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]">
-                <section>
-                  <div className="mb-3 text-xs font-extrabold uppercase tracking-wide text-text-dim">Content groups</div>
-                  <div className="flex flex-wrap gap-2">
-                    {activeArea.contentGroups.map((group) => (
-                      <span key={group} className="rounded-md border border-line-soft bg-surface-raised px-3 py-1.5 text-xs font-bold text-text-muted">
-                        {group}
-                      </span>
-                    ))}
-                  </div>
-                </section>
-                <section>
-                  <div className="mb-3 text-xs font-extrabold uppercase tracking-wide text-text-dim">Mapped outcomes</div>
-                  <div className="flex flex-wrap gap-2">
-                    {activeArea.outcomes.map((code) => (
-                      <OutcomeChip key={code} code={code} />
-                    ))}
-                  </div>
-                </section>
-              </div>
-
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Practice resources</h3>
-                <div className="text-sm font-bold text-text-muted">
-                  {activeArea.visibleResources.length} shown from {getEconomicsAreaResources(activeArea).length}
-                </div>
-              </div>
-
-              <div className="grid gap-5">
-                {activeArea.visibleResources.map((resource) => (
-                  <ResourceRenderer key={resource.id} resource={resource} />
-                ))}
-              </div>
-
-              <section className="mt-8 rounded-lg border border-line-soft bg-surface-raised p-5">
-                <div className="mb-3 text-xs font-extrabold uppercase tracking-wide text-text-dim">Teacher use</div>
-                <ul className="grid gap-2">
-                  {activeArea.teacherNotes.map((note) => (
-                    <li key={note} className="flex gap-2 text-sm leading-relaxed text-text-muted">
-                      <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                      <span>{note}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            </section>
-          ) : (
-            <section className="rounded-lg border border-line-soft bg-surface-raised p-8 text-center">
-              <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">No resources match</h2>
-              <p className="mt-2 text-sm font-medium text-text-muted">Clear the search or choose a broader filter.</p>
-            </section>
-          )}
-        </div>
-
-        <div className="mt-12"><OfficialSources /></div>
       </div>
     </main>
   );
+}
+
+function PracticePlayer({ area }) {
+  const [type, setType] = useState('all');
+  const [index, setIndex] = useState(0);
+  const resources = getEconomicsAreaResources(area).filter((resource) => type === 'all' || resource.type === type);
+  const resource = resources[index];
+
+  useEffect(() => setIndex(0), [type, area.id]);
+
+  const move = (nextIndex) => {
+    setIndex(nextIndex);
+    if (import.meta.env.MODE !== 'test') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary">
+      <div className="mx-auto max-w-4xl px-6 md:px-10">
+        <BackLink to={`/library/economics/year-${area.year}`}>Year {area.year} topics</BackLink>
+        <header className="mb-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-extrabold uppercase tracking-wide text-accent">{area.focus}</p>
+              <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight md:text-4xl">{area.title}</h1>
+            </div>
+            <label className="block">
+              <span className="sr-only">Activity type</span>
+              <select value={type} onChange={(event) => setType(event.target.value)} className="rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm font-bold text-text-primary outline-none focus:border-accent">
+                {Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="mt-6 flex items-center gap-3">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-soft"><div className="h-full rounded-full bg-accent transition-all" style={{ width: `${((index + 1) / resources.length) * 100}%` }} /></div>
+            <span className="text-xs font-extrabold text-text-dim">{index + 1} / {resources.length}</span>
+          </div>
+        </header>
+
+        {resource ? <ResourceRenderer key={resource.id} resource={resource} /> : <p className="rounded-xl bg-surface-raised p-8 text-center text-text-muted">No activities in this category.</p>}
+
+        <div className="mt-6 flex items-center justify-between gap-4">
+          <button type="button" disabled={index === 0} onClick={() => move(index - 1)} className="rounded-xl border border-line-soft bg-surface-raised px-5 py-3 text-sm font-extrabold text-text-primary disabled:opacity-30">Previous</button>
+          <button type="button" disabled={index >= resources.length - 1} onClick={() => move(index + 1)} className="rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:opacity-30">Next activity</button>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function ExamPracticePage() {
+  return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom"><BackLink to="/library/economics">Economics</BackLink><section className="mb-8 max-w-3xl"><p className="text-sm font-extrabold uppercase tracking-wide text-accent">Timed practice</p><h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Exam practice</h1><p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Choose a pack when you are ready to work under paper-style conditions.</p></section><ExamPracticePacksSection /></div></main>;
+}
+
+export default function ResourceLibrary() {
+  const { section, focusId } = useParams();
+  const area = economicsResourceLibrary.focusAreas.find((item) => item.id === focusId);
+
+  if (!section) return <EconomicsHub />;
+  if (section === 'year-11') return <YearPage year={11} />;
+  if (section === 'year-12') return <YearPage year={12} />;
+  if (section === 'exam-practice') return <ExamPracticePage />;
+  if (section === 'assessment') return <AssessmentPage />;
+  if (section === 'focus' && area) return <PracticePlayer area={area} />;
+  return <EconomicsHub />;
 }

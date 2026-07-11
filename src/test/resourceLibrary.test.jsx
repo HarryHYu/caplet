@@ -27,17 +27,27 @@ describe('ResourceLibrary page', () => {
     expect(screen.getByRole('link', { name: /Timed practice Exam packs/i })).toHaveAttribute('href', '/library/economics/exam-practice');
   });
 
-  it('keeps Year 11 practice on its own page and retains resource filters', () => {
+  it('turns a year page into a simple topic picker', () => {
     renderEconomics('/library/economics/year-11');
 
     expect(screen.getByRole('heading', { name: /Build the economic toolkit/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/Year/i)).toHaveValue('11');
-    expect(screen.getByRole('option', { name: 'Stimulus sets' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Introduction to economics/i })).toHaveAttribute('href', '/library/economics/focus/year-11-introduction-to-economics');
+    expect(screen.queryByRole('navigation', { name: 'Economics library' })).not.toBeInTheDocument();
+  });
 
-    fireEvent.change(screen.getByLabelText(/Resource type/i), { target: { value: 'stimulusSet' } });
+  it('lets a student answer one activity at a time and then move on', () => {
+    renderEconomics('/library/economics/focus/year-11-introduction-to-economics');
 
-    expect(screen.getByText('Scarcity and local resource allocation')).toBeInTheDocument();
-    expect(screen.getByText(/Original Caplet practice stimulus/i)).toBeInTheDocument();
+    expect(screen.getByText('1 / 11')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next activity' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Check answer' })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /The wage and alternative use of time forgone/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Correct');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next activity' }));
+    expect(screen.getByText('2 / 11')).toBeInTheDocument();
   });
 
   it('keeps the overview free of duplicate navigation and count blocks', () => {
