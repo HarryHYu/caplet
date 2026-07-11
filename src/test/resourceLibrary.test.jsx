@@ -5,51 +5,44 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import LibrarySubject from '../pages/LibrarySubject';
 import ResourceLibrary from '../pages/ResourceLibrary';
 
-describe('ResourceLibrary page', () => {
-  it('renders stimulus sets as a first-class resource filter', () => {
-    render(<ResourceLibrary />);
+function renderEconomics(path) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route path="/library/economics/:section/:focusId" element={<ResourceLibrary />} />
+        <Route path="/library/economics/:section" element={<ResourceLibrary />} />
+        <Route path="/library/:subject" element={<LibrarySubject />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
 
-    expect(
-      screen.getByRole('heading', { name: /Economics resources for Year 11 and Year 12/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Choose what you need to practise now/i })).toBeInTheDocument();
-    expect(screen.getByText('HSC transition practice pack: Economics Stage 6 (2009)')).toBeInTheDocument();
-    expect(screen.getByText('New syllabus readiness pack: Economics 11-12 (2025)')).toBeInTheDocument();
+describe('ResourceLibrary page', () => {
+  it('gives students focused destinations from the Economics overview', () => {
+    renderEconomics('/library/economics');
+
+    expect(screen.getByRole('heading', { name: /Economics, organised around your next move/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Year 11 Foundations/i })).toHaveAttribute('href', '/library/economics/year-11');
+    expect(screen.getByRole('link', { name: /Year 12 HSC course/i })).toHaveAttribute('href', '/library/economics/year-12');
+    expect(screen.getByRole('link', { name: /Timed practice Exam packs/i })).toHaveAttribute('href', '/library/economics/exam-practice');
+  });
+
+  it('keeps Year 11 practice on its own page and retains resource filters', () => {
+    renderEconomics('/library/economics/year-11');
+
+    expect(screen.getByRole('heading', { name: /Build the economic toolkit/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Year/i)).toHaveValue('11');
     expect(screen.getByRole('option', { name: 'Stimulus sets' })).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/Resource type/i), { target: { value: 'stimulusSet' } });
 
     expect(screen.getByText('Scarcity and local resource allocation')).toBeInTheDocument();
     expect(screen.getByText(/Original Caplet practice stimulus/i)).toBeInTheDocument();
-    expect(screen.getByText('Available budget')).toBeInTheDocument();
-    expect(screen.getByText(/Show sample integrated response/i)).toBeInTheDocument();
   });
 
-  it('lets students jump into a study route from the access panel', () => {
-    render(<ResourceLibrary />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Stimulus practice/i }));
-
-    expect(screen.getByLabelText(/Resource type/i)).toHaveValue('stimulusSet');
-    expect(screen.getByText('Type: Stimulus sets')).toBeInTheDocument();
-    expect(screen.getByText('Scarcity and local resource allocation')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /Year 12 HSC content/i }));
-
-    expect(screen.getByLabelText(/Year/i)).toHaveValue('12');
-    expect(screen.getByRole('heading', { name: 'Economic issues in the Australian economy' })).toBeInTheDocument();
-  });
-
-  it('serves the rich economics resources from the latest library subject route', () => {
-    render(
-      <MemoryRouter initialEntries={['/library/economics']}>
-        <Routes>
-          <Route path="/library/:subject" element={<LibrarySubject />} />
-        </Routes>
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByRole('heading', { name: /Economics resources for Year 11 and Year 12/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /Choose what you need to practise now/i })).toBeInTheDocument();
+  it('serves the Economics overview from the latest library subject route', () => {
+    renderEconomics('/library/economics');
+    expect(screen.getByRole('navigation', { name: 'Economics library' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Assessment guide' })).toHaveAttribute('href', '/library/economics/assessment');
   });
 });

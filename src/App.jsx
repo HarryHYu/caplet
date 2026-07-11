@@ -46,6 +46,7 @@ import EssayMemoriser from './pages/EssayMemoriser';
 import EconomicsMarker from './pages/EconomicsMarker';
 import Library from './pages/Library';
 import LibrarySubject from './pages/LibrarySubject';
+import ResourceLibrary from './pages/ResourceLibrary';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Classes from './pages/Classes';
@@ -183,6 +184,8 @@ function AppRoutes() {
           <Route path="/tools/capital-gains" element={<Navigate to="/fintools/capital-gains" replace />} />
           <Route path="/tools/financial-twin" element={<Navigate to="/fintools/financial-twin" replace />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/library/economics/:section/:focusId" element={<ResourceLibrary />} />
+          <Route path="/library/economics/:section" element={<ResourceLibrary />} />
           <Route path="/library/:subject" element={<LibrarySubject />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/resources" element={<Navigate to="/library/economics" replace />} />

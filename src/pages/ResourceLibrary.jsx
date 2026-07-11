@@ -1,4 +1,5 @@
-import { createElement, useMemo, useState } from 'react';
+import { createElement, useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import {
   AcademicCapIcon,
   ArrowTopRightOnSquareIcon,
@@ -6,8 +7,6 @@ import {
   ChartBarIcon,
   CheckCircleIcon,
   ClipboardDocumentCheckIcon,
-  DocumentTextIcon,
-  ListBulletIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -78,18 +77,6 @@ function getVisibleResources(area, type, query) {
   });
 }
 
-function scrollToSection(id) {
-  if (typeof document === 'undefined') return;
-  const element = document.getElementById(id);
-  if (typeof element?.scrollIntoView === 'function') {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-}
-
-function getTypeCount(area, type) {
-  return getEconomicsAreaResources(area).filter((resource) => resource.type === type).length;
-}
-
 function Stat({ icon, label, value, sub }) {
   return (
     <div className="border border-line-soft bg-surface-raised rounded-lg p-4">
@@ -102,125 +89,6 @@ function Stat({ icon, label, value, sub }) {
         {createElement(icon, { className: 'h-5 w-5 shrink-0 text-accent' })}
       </div>
     </div>
-  );
-}
-
-function StudyRouteButton({ icon, label, description, meta, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-lg border border-line-soft bg-surface-raised p-4 text-left transition-colors hover:border-accent hover:bg-accent-soft"
-    >
-      <div className="mb-3 flex items-start justify-between gap-4">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
-          {createElement(icon, { className: 'h-5 w-5' })}
-        </span>
-        <span className="rounded-md border border-line-soft bg-surface-soft px-2 py-1 text-xs font-extrabold text-text-muted">
-          {meta}
-        </span>
-      </div>
-      <div className="text-base font-extrabold leading-snug text-text-primary">{label}</div>
-      <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{description}</p>
-    </button>
-  );
-}
-
-function StudyAccessPanel({ onStudyRoute, onFocusArea }) {
-  return (
-    <section className="mb-8 rounded-lg border border-line-soft bg-surface-raised p-5">
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Study access</div>
-          <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-text-primary">
-            Choose what you need to practise now
-          </h2>
-        </div>
-        <a
-          href="#practice-library"
-          className="inline-flex items-center gap-2 rounded-md border border-line-soft bg-surface-soft px-3 py-2 text-sm font-extrabold text-text-primary hover:border-accent hover:text-accent"
-        >
-          Browse all resources
-          <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-        </a>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        <StudyRouteButton
-          icon={ClipboardDocumentCheckIcon}
-          label="HSC exam packs"
-          description="Start with full paper-style practice for the transition course and the new syllabus."
-          meta={`${economicsResourceLibrary.examPracticePacks.length} packs`}
-          onClick={() => onStudyRoute({ target: 'exam-packs' })}
-        />
-        <StudyRouteButton
-          icon={BookOpenIcon}
-          label="Year 11 foundations"
-          description="Work through models, markets, sectors and the tools used in later HSC answers."
-          meta="6 focus areas"
-          onClick={() => onStudyRoute({ year: '11', type: 'all' })}
-        />
-        <StudyRouteButton
-          icon={AcademicCapIcon}
-          label="Year 12 HSC content"
-          description="Practise economic issues, policy management and Australia in the global economy."
-          meta="3 focus areas"
-          onClick={() => onStudyRoute({ year: '12', type: 'all' })}
-        />
-        <StudyRouteButton
-          icon={ChartBarIcon}
-          label="Stimulus practice"
-          description="Use data tables, short prompts and sample integrated responses to build evidence use."
-          meta="9 sets"
-          onClick={() => onStudyRoute({ year: 'all', type: 'stimulusSet' })}
-        />
-        <StudyRouteButton
-          icon={DocumentTextIcon}
-          label="Essay practice"
-          description="Use planning frames and band guides for extended response preparation."
-          meta="9 essays"
-          onClick={() => onStudyRoute({ year: 'all', type: 'extendedResponse' })}
-        />
-      </div>
-
-      <div className="mt-6 overflow-hidden rounded-lg border border-line-soft bg-surface-soft">
-        <div className="grid gap-3 border-b border-line-soft px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-text-dim md:grid-cols-[4.5rem_minmax(0,1.2fr)_4rem_4rem_4rem_4rem_4rem_6rem]">
-          <span>Year</span>
-          <span>Focus area</span>
-          <span>Drills</span>
-          <span>MCQ</span>
-          <span>Short</span>
-          <span>Stimulus</span>
-          <span>Essays</span>
-          <span>Open</span>
-        </div>
-        {economicsResourceLibrary.focusAreas.map((area) => (
-          <div
-            key={area.id}
-            className="grid gap-3 border-b border-line-soft px-4 py-3 text-sm last:border-b-0 md:grid-cols-[4.5rem_minmax(0,1.2fr)_4rem_4rem_4rem_4rem_4rem_6rem] md:items-center"
-          >
-            <span className="font-extrabold text-accent">Year {area.year}</span>
-            <span>
-              <span className="block font-extrabold leading-snug text-text-primary">{area.title}</span>
-              <span className="mt-1 block text-xs font-medium leading-relaxed text-text-muted">{area.focus}</span>
-            </span>
-            <span className="font-bold text-text-muted">{getTypeCount(area, 'topicDrill')}</span>
-            <span className="font-bold text-text-muted">{getTypeCount(area, 'multipleChoice')}</span>
-            <span className="font-bold text-text-muted">{getTypeCount(area, 'shortAnswer')}</span>
-            <span className="font-bold text-text-muted">{getTypeCount(area, 'stimulusSet')}</span>
-            <span className="font-bold text-text-muted">{getTypeCount(area, 'extendedResponse')}</span>
-            <button
-              type="button"
-              onClick={() => onFocusArea(area)}
-              className="inline-flex items-center justify-center gap-1 rounded-md border border-line-soft bg-surface-raised px-3 py-2 text-xs font-extrabold text-text-primary hover:border-accent hover:text-accent"
-            >
-              Open
-              <ListBulletIcon className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -703,38 +571,118 @@ function ResourceRenderer({ resource }) {
   return <ExtendedResponseResource resource={resource} />;
 }
 
-export default function ResourceLibrary() {
+const economicsPages = [
+  { to: '/library/economics/year-11', icon: BookOpenIcon, eyebrow: 'Year 11', title: 'Foundations', body: 'Build the models, vocabulary and economic thinking that underpin every later topic.' },
+  { to: '/library/economics/year-12', icon: AcademicCapIcon, eyebrow: 'Year 12', title: 'HSC course', body: 'Practise economic issues, policy management and Australia in the global economy.' },
+  { to: '/library/economics/exam-practice', icon: ClipboardDocumentCheckIcon, eyebrow: 'Timed practice', title: 'Exam packs', body: 'Work through paper-style questions, marking prompts and official anchors.' },
+  { to: '/library/economics/assessment', icon: ChartBarIcon, eyebrow: 'Plan smarter', title: 'Assessment guide', body: 'See the HSC paper shape, school weighting and official syllabus links.' },
+];
+
+function EconomicsNavigation({ active }) {
+  return (
+    <nav aria-label="Economics library" className="mb-8 flex gap-2 overflow-x-auto border-b border-line-soft pb-3">
+      {[{ to: '/library/economics', label: 'Overview', key: 'overview' }, ...economicsPages.map((page) => ({ ...page, label: page.title, key: page.to.split('/').pop() }))].map((item) => (
+        <Link
+          key={item.to}
+          to={item.to}
+          className={`shrink-0 rounded-md px-3 py-2 text-sm font-extrabold transition-colors ${
+            active === item.key ? 'bg-accent text-white' : 'bg-surface-soft text-text-muted hover:bg-accent-soft hover:text-accent'
+          }`}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function EconomicsHub() {
   const stats = useMemo(() => getEconomicsResourceStats(), []);
+
+  return (
+    <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
+      <div className="container-custom">
+        <section className="rounded-2xl border border-line-soft bg-surface-raised px-6 py-10 md:px-10 md:py-14">
+          <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Caplet learning library</p>
+          <h1 className="mt-3 max-w-3xl font-display text-4xl font-extrabold tracking-tight md:text-6xl">Economics, organised around your next move.</h1>
+          <p className="mt-5 max-w-2xl text-base font-medium leading-relaxed text-text-muted md:text-lg">
+            Choose your year level, work through a complete exam pack, or check how the course is assessed. Each space stays focused so you can start studying without wading through the whole library.
+          </p>
+        </section>
+
+        <EconomicsNavigation active="overview" />
+
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {economicsPages.map((page) => (
+            <Link key={page.to} to={page.to} className="group rounded-xl border border-line-soft bg-surface-raised p-5 transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_18px_40px_-30px_rgba(20,20,18,0.55)]">
+              <span className="grid h-11 w-11 place-items-center rounded-lg bg-accent-soft text-accent">
+                {createElement(page.icon, { className: 'h-5 w-5' })}
+              </span>
+              <p className="mt-5 text-xs font-extrabold uppercase tracking-wide text-text-dim">{page.eyebrow}</p>
+              <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-text-primary group-hover:text-accent">{page.title}</h2>
+              <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{page.body}</p>
+              <span className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-accent">Open <ArrowTopRightOnSquareIcon className="h-4 w-4" /></span>
+            </Link>
+          ))}
+        </section>
+
+        <section className="mt-8 grid gap-4 md:grid-cols-3">
+          <Stat icon={BookOpenIcon} label="Focus areas" value={stats.focusAreas} sub="Separated into Year 11 and Year 12 pathways" />
+          <Stat icon={ClipboardDocumentCheckIcon} label="Practice resources" value={stats.questions} sub="Drills, questions, stimulus sets and essays" />
+          <Stat icon={AcademicCapIcon} label="Outcomes mapped" value={stats.outcomes} sub="Aligned to ECO-11 and ECO-12 outcomes" />
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function AssessmentPage() {
   const assessment = economicsResourceLibrary.assessmentBlueprint;
+  return (
+    <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
+      <div className="container-custom">
+        <EconomicsNavigation active="assessment" />
+        <section className="mb-8 max-w-3xl">
+          <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Assessment guide</p>
+          <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Know what the course asks of you.</h1>
+          <p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Use this as a planning reference for HSC-style practice and school assessments. Check the official links below for the current rules.</p>
+        </section>
+        <section className="mb-8 rounded-xl border border-line-soft bg-surface-raised p-5 md:p-7">
+          <div className="mb-6 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">External examination</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight">Paper structure</h2></div><span className="rounded-md bg-accent-soft px-3 py-2 text-sm font-extrabold text-accent">{assessment.externalExam.totalMarks} marks</span></div>
+          <p className="mb-4 text-sm font-bold text-text-muted">{assessment.externalExam.time}</p>
+          <div className="grid gap-3 md:grid-cols-2">{assessment.externalExam.sections.map((section) => <div key={section.label} className="rounded-lg border border-line-soft bg-surface-soft p-4"><div className="flex justify-between gap-3"><span className="font-extrabold">{section.label}</span><span className="font-extrabold text-accent">{section.marks} marks</span></div><p className="mt-2 text-sm leading-relaxed text-text-muted">{section.format}</p></div>)}</div>
+        </section>
+        <section className="mb-8 grid gap-3 md:grid-cols-3">{assessment.schoolAssessmentComponents.map((component) => <div key={component.component} className="rounded-lg border border-line-soft bg-surface-raised p-4"><div className="flex justify-between gap-3"><span className="text-sm font-extrabold leading-snug">{component.component}</span><span className="shrink-0 text-sm font-extrabold text-accent">{component.weighting}%</span></div><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-soft"><div className="h-full rounded-full bg-accent" style={{ width: `${component.weighting}%` }} /></div></div>)}</section>
+        <OfficialSources />
+      </div>
+    </main>
+  );
+}
+
+function OfficialSources() {
+  return <section className="rounded-xl border border-line-soft bg-surface-raised p-5"><p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Official source links</p><div className="mt-4 grid gap-3 md:grid-cols-2">{economicsResourceLibrary.officialSources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="rounded-lg border border-line-soft bg-surface-soft p-4 hover:border-accent"><span className="flex items-start justify-between gap-3"><span className="text-sm font-extrabold leading-snug text-text-primary">{source.title}</span><ArrowTopRightOnSquareIcon className="h-4 w-4 shrink-0 text-accent" /></span><span className="mt-2 block text-xs font-medium leading-relaxed text-text-muted">{source.note}</span></a>)}</div></section>;
+}
+
+export default function ResourceLibrary() {
+  const { section, focusId } = useParams();
   const [year, setYear] = useState('all');
   const [type, setType] = useState('all');
   const [query, setQuery] = useState('');
   const [activeId, setActiveId] = useState(economicsResourceLibrary.focusAreas[0].id);
 
-  const handleStudyRoute = ({ target, year: nextYear = 'all', type: nextType = 'all' }) => {
-    setQuery('');
-
-    if (target === 'exam-packs') {
-      scrollToSection('exam-packs');
-      return;
+  useEffect(() => {
+    if (section === 'year-11' || section === 'year-12') {
+      const nextYear = section === 'year-11' ? '11' : '12';
+      setYear(nextYear);
+      setType('all');
+      setQuery('');
+      setActiveId(economicsResourceLibrary.focusAreas.find((area) => String(area.year) === nextYear)?.id || economicsResourceLibrary.focusAreas[0].id);
     }
-
-    setYear(nextYear);
-    setType(nextType);
-    const nextArea = economicsResourceLibrary.focusAreas.find((area) => nextYear === 'all' || String(area.year) === nextYear);
-    if (nextArea) {
-      setActiveId(nextArea.id);
+    if (focusId) {
+      const area = economicsResourceLibrary.focusAreas.find((item) => item.id === focusId);
+      if (area) { setYear(String(area.year)); setActiveId(area.id); setType('all'); setQuery(''); }
     }
-    scrollToSection('practice-library');
-  };
-
-  const handleFocusAreaAccess = (area) => {
-    setQuery('');
-    setYear(String(area.year));
-    setType('all');
-    setActiveId(area.id);
-    scrollToSection('practice-library');
-  };
+  }, [section, focusId]);
 
   const filteredAreas = useMemo(() => {
     return economicsResourceLibrary.focusAreas
@@ -750,93 +698,19 @@ export default function ResourceLibrary() {
 
   const activeArea = filteredAreas.find((area) => area.id === activeId) || filteredAreas[0];
 
+  if (!section) return <EconomicsHub />;
+  if (section === 'exam-practice') return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom"><EconomicsNavigation active="exam-practice" /><section className="mb-8 max-w-3xl"><p className="text-sm font-extrabold uppercase tracking-wide text-accent">Timed practice</p><h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Exam practice, in one place.</h1><p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Choose a pack when you are ready to work under paper-style conditions, then use the guides to review deliberately.</p></section><ExamPracticePacksSection /></div></main>;
+  if (section === 'assessment') return <AssessmentPage />;
+
   return (
     <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <section className="mb-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
-          <div>
-            <p className="mb-3 text-sm font-extrabold uppercase tracking-wide text-accent">Caplet Mark Library</p>
-            <h1 className="font-display text-4xl font-extrabold tracking-tight text-text-primary md:text-6xl">
-              Economics resources for Year 11 and Year 12
-            </h1>
-            <p className="mt-4 max-w-3xl text-base font-medium leading-relaxed text-text-muted md:text-lg">
-              A syllabus-aligned bank of original practice resources built around the official NSW Economics 11-12
-              focus areas, outcomes and assessment styles.
-            </p>
-          </div>
-          <div className="rounded-lg border border-line-soft bg-surface-raised p-4">
-            <div className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Source status</div>
-            <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">
-              {economicsResourceLibrary.implementationNote}
-            </p>
-          </div>
+        <EconomicsNavigation active={section} />
+        <section className="mb-8 max-w-3xl">
+          <p className="text-sm font-extrabold uppercase tracking-wide text-accent">{section === 'year-11' ? 'Year 11 foundations' : 'Year 12 HSC course'}</p>
+          <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">{section === 'year-11' ? 'Build the economic toolkit.' : 'Practise the HSC course with intent.'}</h1>
+          <p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Choose one focus area at a time, then use the filters to make a short, purposeful practice set.</p>
         </section>
-
-        <section className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <Stat icon={BookOpenIcon} label="Focus areas" value={stats.focusAreas} sub="Official Year 11 and Year 12 structure" />
-          <Stat icon={ClipboardDocumentCheckIcon} label="Practice resources" value={stats.questions} sub="Topic drills, stimulus sets, MCQ, short answer and essays" />
-          <Stat icon={ClipboardDocumentCheckIcon} label="Exam packs" value={stats.examPacks} sub={`${stats.examItems} paper items and section prompts`} />
-          <Stat icon={AcademicCapIcon} label="Outcomes mapped" value={stats.outcomes} sub="ECO-11 and ECO-12 outcome coverage" />
-          <Stat icon={CheckCircleIcon} label="Content groups" value={stats.contentGroups} sub="Searchable syllabus tags" />
-        </section>
-
-        <StudyAccessPanel onStudyRoute={handleStudyRoute} onFocusArea={handleFocusAreaAccess} />
-
-        <section className="mb-8 rounded-lg border border-line-soft bg-surface-raised p-5">
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Assessment shape</div>
-              <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-text-primary">
-                Built around the official Economics assessment demands
-              </h2>
-            </div>
-            <div className="rounded-md bg-accent-soft px-3 py-2 text-sm font-extrabold text-accent">
-              {assessment.externalExam.totalMarks} mark HSC paper
-            </div>
-          </div>
-
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-            <div>
-              <div className="mb-3 text-xs font-extrabold uppercase tracking-wide text-text-dim">
-                External examination: {assessment.externalExam.time}
-              </div>
-              <div className="grid gap-2 md:grid-cols-2">
-                {assessment.externalExam.sections.map((section) => (
-                  <div key={section.label} className="rounded-md border border-line-soft bg-surface-soft p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-extrabold text-text-primary">{section.label}</span>
-                      <span className="text-xs font-extrabold text-accent">{section.marks} marks</span>
-                    </div>
-                    <p className="mt-2 text-xs font-medium leading-relaxed text-text-muted">{section.format}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="mb-3 text-xs font-extrabold uppercase tracking-wide text-text-dim">
-                School assessment weightings
-              </div>
-              <div className="grid gap-2">
-                {assessment.schoolAssessmentComponents.map((component) => (
-                  <div key={component.component} className="rounded-md border border-line-soft bg-surface-soft p-3">
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <span className="text-sm font-bold leading-snug text-text-primary">{component.component}</span>
-                      <span className="text-xs font-extrabold text-accent">{component.weighting}%</span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-surface-raised">
-                      <div className="h-full rounded-full bg-accent" style={{ width: `${component.weighting}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div id="exam-packs" className="scroll-mt-24">
-          <ExamPracticePacksSection />
-        </div>
 
         <section id="practice-library" className="mb-8 scroll-mt-24 rounded-lg border border-line-soft bg-surface-raised p-4">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_14rem_16rem]">
@@ -909,10 +783,9 @@ export default function ResourceLibrary() {
               {filteredAreas.map((area) => {
                 const active = activeArea?.id === area.id;
                 return (
-                  <button
+                  <Link
                     key={area.id}
-                    type="button"
-                    onClick={() => setActiveId(area.id)}
+                    to={`/library/economics/focus/${area.id}`}
                     className={`rounded-lg border p-4 text-left transition-colors ${
                       active
                         ? 'border-accent bg-accent-soft text-accent'
@@ -929,7 +802,7 @@ export default function ResourceLibrary() {
                       </span>
                     </div>
                     <div className="mt-2 text-xs font-semibold leading-relaxed text-text-muted">{area.focus}</div>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -1015,26 +888,7 @@ export default function ResourceLibrary() {
           )}
         </div>
 
-        <section className="mt-12 rounded-lg border border-line-soft bg-surface-raised p-5">
-          <div className="mb-3 text-xs font-extrabold uppercase tracking-wide text-text-dim">Official source links</div>
-          <div className="grid gap-3 md:grid-cols-3">
-            {economicsResourceLibrary.officialSources.map((source) => (
-              <a
-                key={source.url}
-                href={source.url}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg border border-line-soft bg-surface-soft p-4 hover:border-accent"
-              >
-                <span className="flex items-start justify-between gap-3">
-                  <span className="text-sm font-extrabold leading-snug text-text-primary">{source.title}</span>
-                  <ArrowTopRightOnSquareIcon className="h-4 w-4 shrink-0 text-accent" />
-                </span>
-                <span className="mt-2 block text-xs font-medium leading-relaxed text-text-muted">{source.note}</span>
-              </a>
-            ))}
-          </div>
-        </section>
+        <div className="mt-12"><OfficialSources /></div>
       </div>
     </main>
   );
