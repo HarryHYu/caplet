@@ -44,6 +44,7 @@ import Dashboard from './pages/Dashboard';
 import Revision from './pages/Revision';
 import EssayMemoriser from './pages/EssayMemoriser';
 import EconomicsMarker from './pages/EconomicsMarker';
+import EconomicsExam from './pages/EconomicsExam';
 import Library from './pages/Library';
 import LibrarySubject from './pages/LibrarySubject';
 import ResourceLibrary from './pages/ResourceLibrary';
@@ -105,7 +106,7 @@ function RequireAuth({ children }) {
 
   if (loading) return <FullPageSpinner />;
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}`, returnState: location.state }} />;
   }
   return children;
 }
@@ -116,7 +117,7 @@ function RequireAdmin({ children }) {
 
   if (loading) return <FullPageSpinner />;
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}`, returnState: location.state }} />;
   }
   if (user?.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
@@ -133,6 +134,7 @@ function AppRoutes() {
           <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
           <Route path="/edutools/economics-marker" element={<RequireAuth><EconomicsMarker /></RequireAuth>} />
+          <Route path="/library/economics/exam-practice/:packId/session" element={<RequireAuth><EconomicsExam /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/fintools" element={<FinancialTools />} />

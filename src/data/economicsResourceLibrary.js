@@ -2552,6 +2552,31 @@ export const getEconomicsAreaResources = (area) => [
   ...(area.stimulusSets || []),
 ];
 
+export function getExamPackMarkableQuestions(pack) {
+  return (pack?.sections || []).flatMap((section, sectionIndex) => (section.items || []).flatMap((item, itemIndex) => {
+    const base = { focusArea: item.title || section.label, stimulus: item.stimulus || '', section: section.label };
+    if (Array.isArray(item.parts)) {
+      return item.parts.map((part, partIndex) => ({
+        id: `${pack.id}:${sectionIndex}:${itemIndex}:${partIndex}`,
+        prompt: part.prompt,
+        markValue: part.marks,
+        responseType: 'short_answer',
+        ...base,
+      }));
+    }
+    if (item.prompt) {
+      return [{
+        id: `${pack.id}:${sectionIndex}:${itemIndex}`,
+        prompt: item.prompt,
+        markValue: item.marks || 20,
+        responseType: section.label === 'Section III' ? 'stimulus_response' : 'extended_response',
+        ...base,
+      }];
+    }
+    return [];
+  }));
+}
+
 const getExamPackItemCount = (pack) =>
   pack.sections.reduce(
     (total, section) => total + (section.sampleItems?.length || 0) + (section.items?.length || 0),

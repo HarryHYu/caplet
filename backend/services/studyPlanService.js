@@ -185,7 +185,9 @@ function markerSignal(attempt) {
       topic,
       reason: 'Your latest marked answer identified this as the next improvement area',
       source: 'marked-answer',
-      priority: 'high'
+      priority: 'high',
+      resourcePath: raw.sourceFocusId ? `/library/economics/focus/${raw.sourceFocusId}?resource=${encodeURIComponent(raw.sourceResourceId || '')}` : null,
+      resourceLabel: raw.sourceFocusId ? 'Retry the linked Economics activity' : null,
     }
   };
 }
@@ -215,8 +217,8 @@ function generatePlan(configInput, { marker = null, existingTasks = [], now = ne
       subjectLabel: definition.label,
       topic: weak.topic,
       title: `${resource.kind}: ${weak.topic}`,
-      resourceLabel: resource.label,
-      resourcePath: resource.path,
+      resourceLabel: weak.resourceLabel || resource.label,
+      resourcePath: weak.resourcePath || resource.path,
       estimatedMinutes: config.minutesPerDay,
       priority,
       completed: false,

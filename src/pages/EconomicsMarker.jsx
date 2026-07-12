@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useReveal } from '../lib/useReveal';
 import CapletLoader from '../components/CapletLoader';
@@ -60,7 +61,10 @@ function MarkRing({ mark, total }) {
   );
 }
 
-function FeedbackResult({ attempt, onNew }) {
+function FeedbackResult({ attempt, onNew, returnTo }) {
+  const retryTo = attempt.sourceFocusId
+    ? `/library/economics/focus/${attempt.sourceFocusId}?resource=${encodeURIComponent(attempt.sourceResourceId || '')}`
+    : returnTo;
   return (
     <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-line-soft">
@@ -126,20 +130,33 @@ function FeedbackResult({ attempt, onNew }) {
         </div>
       )}
 
-      <button type="button" onClick={onNew}
-        className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
-        <SparklesIcon className="w-4 h-4" /> Mark another answer
-      </button>
+      {attempt.improvement ? (
+        <div className={`mb-8 rounded-2xl border p-5 ${attempt.improvement.change > 0 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-line-soft bg-surface-soft'}`}>
+          <p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Compared with your last try</p>
+          <p className="mt-2 text-sm font-bold leading-relaxed text-text-primary">{attempt.improvement.message}</p>
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap gap-3">
+        <button type="button" onClick={onNew}
+          className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+          <SparklesIcon className="w-4 h-4" /> Mark another answer
+        </button>
+        <Link to="/study-plan" className="inline-flex items-center gap-2 rounded-xl border border-line-soft bg-surface-raised px-5 py-3 text-sm font-extrabold text-text-primary hover:border-accent hover:text-accent">
+          Use this in my study plan <ArrowRightIcon className="h-4 w-4" />
+        </Link>
+        {retryTo ? <Link to={retryTo} className="inline-flex items-center gap-2 rounded-xl border border-line-soft bg-surface-raised px-5 py-3 text-sm font-extrabold text-text-primary hover:border-accent hover:text-accent">Practise this gap again</Link> : null}
+      </div>
     </div>
   );
 }
 
-function MarkingForm({ onMarked }) {
-  const [question, setQuestion] = useState('');
-  const [markValue, setMarkValue] = useState(6);
-  const [responseType, setResponseType] = useState('short_answer');
-  const [focusArea, setFocusArea] = useState('');
-  const [studentAnswer, setStudentAnswer] = useState('');
+function MarkingForm({ onMarked, initialDraft = {} }) {
+  const [question, setQuestion] = useState(initialDraft.question || '');
+  const [markValue, setMarkValue] = useState(initialDraft.markValue || 6);
+  const [responseType, setResponseType] = useState(initialDraft.responseType || 'short_answer');
+  const [focusArea, setFocusArea] = useState(initialDraft.focusArea || '');
+  const [studentAnswer, setStudentAnswer] = useState(initialDraft.studentAnswer || '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -158,8 +175,11 @@ function MarkingForm({ onMarked }) {
         responseType,
         studentAnswer,
         focusArea: focusArea.trim(),
+        sourceResourceId: initialDraft.sourceResourceId,
+        sourcePromptId: initialDraft.sourcePromptId,
+        sourceFocusId: initialDraft.sourceFocusId,
       });
-      onMarked(res.attempt);
+      onMarked(res.attempt, res.improvement);
     } catch (e2) {
       setError(e2?.message || 'Could not mark this answer right now.');
     } finally {
@@ -179,6 +199,7 @@ function MarkingForm({ onMarked }) {
 
   return (
     <form onSubmit={submit} className="bg-surface-raised rounded-3xl p-6 md:p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+      {initialDraft.sourceFocusId ? <div className="mb-5 rounded-xl border border-accent/20 bg-accent-soft px-4 py-3 text-sm font-bold text-text-primary">From Economics · {initialDraft.focusArea}</div> : null}
       <label className="block text-xs font-bold uppercase tracking-wide text-text-dim mb-2">Question</label>
       <textarea
         value={question}
@@ -222,8 +243,10 @@ function MarkingForm({ onMarked }) {
         onChange={(e) => setStudentAnswer(e.target.value)}
         placeholder="Write or paste your answer here…"
         rows={9}
-        className="w-full px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-body resize-y"
+        className="min-h-[15rem] w-full px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-colors font-body resize-y leading-7"
       />
+
+      <div className="mt-2 flex items-center justify-between text-xs font-medium text-text-dim"><span>Be specific: use terms, effects, and evidence.</span><span className="tabular-nums">{studentAnswer.trim() ? studentAnswer.trim().split(/\s+/).length : 0} words</span></div>
 
       {error && <p className="text-sm text-rose-400 mt-3 font-medium">{error}</p>}
 
@@ -272,6 +295,8 @@ function HistoryList({ attempts, onOpen, onDelete }) {
 }
 
 export default function EconomicsMarker() {
+  const location = useLocation();
+  const markerDraft = location.state?.markerDraft || {};
   const [attempts, setAttempts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(null); // full attempt currently shown as feedback
@@ -298,8 +323,8 @@ export default function EconomicsMarker() {
     })();
   }, [loadAttempts]);
 
-  const handleMarked = (attempt) => {
-    setActive(attempt);
+  const handleMarked = (attempt, improvement) => {
+    setActive({ ...attempt, improvement });
     loadAttempts();
   };
 
@@ -336,7 +361,7 @@ export default function EconomicsMarker() {
             </button>
             <p className="text-xs font-bold uppercase tracking-wide text-text-dim mb-2">{RESPONSE_TYPES.find((t) => t.key === active.responseType)?.label || 'Answer'}</p>
             <h1 className="font-display font-extrabold tracking-tight text-2xl md:text-3xl mb-8">{active.question}</h1>
-            <FeedbackResult attempt={active} onNew={() => setActive(null)} />
+            <FeedbackResult attempt={active} onNew={() => setActive(null)} returnTo={markerDraft.returnTo} />
           </div>
         ) : (
           <>
@@ -351,7 +376,7 @@ export default function EconomicsMarker() {
             </header>
 
             <div className="reveal-stagger space-y-10">
-              <MarkingForm onMarked={handleMarked} />
+              <MarkingForm key={markerDraft.resourceId || 'blank-marker'} onMarked={handleMarked} initialDraft={markerDraft} />
 
               <div>
                 <div className="flex items-center justify-between mb-4">

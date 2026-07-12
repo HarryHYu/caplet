@@ -16,6 +16,8 @@ const { markEconomicsAnswer } = require('../services/economicsMarker');
 const router = express.Router();
 router.use(requireAuth);
 
+const sourceText = (value, limit = 200) => String(value || '').trim().slice(0, limit) || null;
+
 // 15 markings per user per 15 minutes — generous for real practice, cheap to abuse-proof.
 const recent = new Map();
 const WINDOW_MS = 15 * 60 * 1000;
@@ -38,6 +40,15 @@ function throttle(req, res, next) {
 // POST /api/economics-marker — mark and persist one attempt
 router.post('/', throttle, async (req, res) => {
   try {
+    const sourceResourceId = sourceText(req.body?.sourceResourceId);
+    const sourcePromptId = sourceText(req.body?.sourcePromptId);
+    const sourceFocusId = sourceText(req.body?.sourceFocusId);
+    const previous = sourceResourceId
+      ? await MarkedAttempt.findOne({
+          where: { userId: req.user.id, sourceResourceId },
+          order: [['createdAt', 'DESC']],
+        })
+      : null;
     const result = await markEconomicsAnswer({
       question: req.body?.question,
       markValue: req.body?.markValue,
@@ -49,9 +60,26 @@ router.post('/', throttle, async (req, res) => {
     const attempt = await MarkedAttempt.create({
       userId: req.user.id,
       ...result,
+      sourceResourceId,
+      sourcePromptId,
+      sourceFocusId,
     });
 
-    res.status(201).json({ attempt });
+    const previousMark = Number(previous?.estimatedMark);
+    const currentMark = Number(attempt?.estimatedMark ?? result.estimatedMark);
+    const improvement = Number.isFinite(previousMark) && Number.isFinite(currentMark)
+      ? {
+          previousMark,
+          markValue: result.markValue,
+          change: currentMark - previousMark,
+          message: currentMark > previousMark
+            ? `Improved by ${currentMark - previousMark} mark${currentMark - previousMark === 1 ? '' : 's'} from your last try.`
+            : currentMark < previousMark
+              ? `This is ${previousMark - currentMark} mark${previousMark - currentMark === 1 ? '' : 's'} below your last try — use the gaps below to rebuild it.`
+              : 'You matched your previous mark. Focus on one missing idea to move it higher.',
+        }
+      : null;
+    res.status(201).json({ attempt, improvement });
   } catch (e) {
     const status = e.status || 502;
     if (status >= 500) console.error('Economics marker error:', e.message);

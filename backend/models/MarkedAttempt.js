@@ -42,6 +42,20 @@ const MarkedAttempt = sequelize.define('MarkedAttempt', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  // Optional library provenance. Free-form CapletMark submissions deliberately
+  // leave these null; sourced attempts can be retried in one click.
+  sourceResourceId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  sourcePromptId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  sourceFocusId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   studentAnswer: {
     type: DataTypes.TEXT,
     allowNull: false

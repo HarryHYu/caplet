@@ -691,10 +691,10 @@ class ApiService {
   }
 
   // CapletMark — HSC Economics answer marker (AI-marked practice attempts)
-  async markEconomicsAnswer({ question, markValue, responseType, studentAnswer, focusArea }) {
+  async markEconomicsAnswer({ question, markValue, responseType, studentAnswer, focusArea, sourceResourceId, sourcePromptId, sourceFocusId }) {
     return this.request('/economics-marker', {
       method: 'POST',
-      body: JSON.stringify({ question, markValue, responseType, studentAnswer, focusArea }),
+      body: JSON.stringify({ question, markValue, responseType, studentAnswer, focusArea, sourceResourceId, sourcePromptId, sourceFocusId }),
     });
   }
 
@@ -708,6 +708,26 @@ class ApiService {
 
   async deleteEconomicsAttempt(id) {
     return this.request(`/economics-marker/${id}`, { method: 'DELETE' });
+  }
+
+  async startEconomicsExam(payload) {
+    return this.request('/economics-exams', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async getEconomicsExam(sessionId) {
+    return this.request(`/economics-exams/${sessionId}`);
+  }
+
+  async getEconomicsExamSessions() {
+    return this.request('/economics-exams');
+  }
+
+  async saveEconomicsExam(sessionId, answers) {
+    return this.request(`/economics-exams/${sessionId}`, { method: 'PATCH', body: JSON.stringify({ answers }) });
+  }
+
+  async submitEconomicsExam(sessionId) {
+    return this.request(`/economics-exams/${sessionId}/submit`, { method: 'POST' });
   }
 
   // Personal study plan — persisted seven-day plan and completion tracking.

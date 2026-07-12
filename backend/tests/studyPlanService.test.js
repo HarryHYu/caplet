@@ -76,4 +76,17 @@ describe('studyPlanService', () => {
     expect(next.weakTopics[0]).toMatchObject({ topic: 'Fiscal policy evaluation', source: 'marked-answer' });
     expect(next.signalSummary).toContain('12/20');
   });
+
+  test('deep-links a sourced marked answer back to its exact Economics activity', () => {
+    const marker = {
+      id: 'attempt-2', updatedAt: '2026-07-10T05:00:00Z', estimatedMark: 3, markValue: 6,
+      focusArea: 'Monetary policy', gaps: [], sourceResourceId: 'eco12-management-sa-1',
+      sourceFocusId: 'year-12-economic-management',
+    };
+    const plan = generatePlan(validConfig, { marker, now: new Date('2026-07-10T03:00:00Z') });
+    expect(plan.tasks[0]).toMatchObject({
+      resourceLabel: 'Retry the linked Economics activity',
+      resourcePath: '/library/economics/focus/year-12-economic-management?resource=eco12-management-sa-1',
+    });
+  });
 });

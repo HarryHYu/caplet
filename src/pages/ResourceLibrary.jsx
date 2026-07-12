@@ -1,7 +1,8 @@
 import { createElement, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   AcademicCapIcon,
+  ArrowRightIcon,
   ArrowTopRightOnSquareIcon,
   BookOpenIcon,
   ChartBarIcon,
@@ -65,6 +66,20 @@ function QuestionShell({ resource, children }) {
   );
 }
 
+function AnswerEditor({ value, onChange, disabled, rows = 7, placeholder = 'Write your response here…' }) {
+  const words = value.trim() ? value.trim().split(/\s+/).length : 0;
+  return (
+    <div className="mt-5 overflow-hidden rounded-2xl border border-line-soft bg-surface-soft transition-colors focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/10">
+      <div className="flex items-center justify-between border-b border-line-soft bg-surface-raised px-4 py-2.5">
+        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-text-dim">Your working draft</span>
+        <span className="text-xs font-bold tabular-nums text-text-dim">{words} {words === 1 ? 'word' : 'words'}</span>
+      </div>
+      <textarea value={value} onChange={onChange} disabled={disabled} rows={rows} placeholder={placeholder} className="min-h-[9rem] w-full resize-y bg-transparent p-4 text-[15px] leading-7 text-text-primary outline-none placeholder:text-text-dim disabled:cursor-not-allowed disabled:opacity-70" />
+      <p className="border-t border-line-soft px-4 py-2.5 text-xs font-medium leading-relaxed text-text-muted">Build the chain: define the idea → explain the effect → apply the question or stimulus.</p>
+    </div>
+  );
+}
+
 function MultipleChoiceResource({ resource }) {
   const [selected, setSelected] = useState('');
   const [checked, setChecked] = useState(false);
@@ -110,7 +125,38 @@ function MultipleChoiceResource({ resource }) {
   );
 }
 
-function ShortAnswerResource({ resource }) {
+function MarkWithCapletLink({ draft }) {
+  const hasAnswer = Boolean(draft.studentAnswer?.trim());
+  if (!hasAnswer) {
+    return <span className="text-xs font-bold text-text-dim">Write an answer to unlock AI feedback.</span>;
+  }
+  return (
+    <Link
+      to="/edutools/economics-marker"
+      state={{ markerDraft: draft }}
+      className="inline-flex items-center rounded-xl border border-accent bg-accent-soft px-5 py-3 text-sm font-extrabold text-accent transition-colors hover:bg-accent hover:text-white"
+    >
+      Mark with Caplet
+    </Link>
+  );
+}
+
+function markerDraft({ area, resource, question, markValue, responseType, studentAnswer, suffix = '' }) {
+  return {
+    resourceId: `${resource.id}${suffix}`,
+    sourceResourceId: resource.id,
+    sourcePromptId: `${resource.id}${suffix}`,
+    sourceFocusId: area.id,
+    question,
+    markValue,
+    responseType,
+    studentAnswer,
+    focusArea: area.title,
+    returnTo: `/library/economics/focus/${area.id}`,
+  };
+}
+
+function ShortAnswerResource({ resource, area }) {
   const [answer, setAnswer] = useState('');
   const [reviewing, setReviewing] = useState(false);
 
@@ -122,8 +168,8 @@ function ShortAnswerResource({ resource }) {
           {resource.stimulus}
         </p>
       ) : null}
-      <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={reviewing} rows={7} placeholder="Write your response here…" className="mt-5 w-full resize-y rounded-xl border border-line-soft bg-surface-soft p-4 text-sm leading-relaxed text-text-primary outline-none placeholder:text-text-dim focus:border-accent" />
-      {!reviewing ? <button type="button" disabled={!answer.trim()} onClick={() => setReviewing(true)} className="mt-4 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review response</button> : (
+      <AnswerEditor value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={reviewing} />
+      {!reviewing ? <div className="mt-4 flex flex-wrap items-center gap-3"><button type="button" disabled={!answer.trim()} onClick={() => setReviewing(true)} className="rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review response</button><MarkWithCapletLink draft={markerDraft({ area, resource, question: resource.question, markValue: resource.marks, responseType: 'short_answer', studentAnswer: answer })} /></div> : (
         <div className="mt-5 rounded-xl bg-surface-soft p-5">
           <p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Check for</p>
           <ul className="mt-3 grid gap-2">{resource.markingGuide.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" /><span>{item}</span></li>)}</ul>
@@ -135,15 +181,15 @@ function ShortAnswerResource({ resource }) {
   );
 }
 
-function ExtendedResponseResource({ resource }) {
+function ExtendedResponseResource({ resource, area }) {
   const [answer, setAnswer] = useState('');
   const [reviewing, setReviewing] = useState(false);
 
   return (
     <QuestionShell resource={resource}>
       <h2 className="text-xl font-bold leading-snug text-text-primary">{resource.prompt}</h2>
-      <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={reviewing} rows={10} placeholder="Plan or write your response here…" className="mt-5 w-full resize-y rounded-xl border border-line-soft bg-surface-soft p-4 text-sm leading-relaxed text-text-primary outline-none placeholder:text-text-dim focus:border-accent" />
-      {!reviewing ? <button type="button" disabled={!answer.trim()} onClick={() => setReviewing(true)} className="mt-4 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review response</button> : <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <AnswerEditor value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={reviewing} rows={11} placeholder="Plan or write your response here…" />
+      {!reviewing ? <div className="mt-4 flex flex-wrap items-center gap-3"><button type="button" disabled={!answer.trim()} onClick={() => setReviewing(true)} className="rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review response</button><MarkWithCapletLink draft={markerDraft({ area, resource, question: resource.prompt, markValue: resource.marks, responseType: 'extended_response', studentAnswer: answer })} /></div> : <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div>
           <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-text-dim">Planning frame</div>
           <ol className="grid gap-2">
@@ -173,7 +219,7 @@ function ExtendedResponseResource({ resource }) {
   );
 }
 
-function TopicDrillResource({ resource }) {
+function TopicDrillResource({ resource, area }) {
   const [selected, setSelected] = useState('');
   const [answer, setAnswer] = useState('');
   const [reviewing, setReviewing] = useState(false);
@@ -209,11 +255,11 @@ function TopicDrillResource({ resource }) {
         <div className="rounded-md border border-line-soft bg-surface-soft p-4">
           <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-text-dim">Short response</div>
           <p className="text-sm font-bold leading-relaxed text-text-primary">{resource.practicePrompt}</p>
-          <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={reviewing} rows={5} placeholder="Write your response…" className="mt-3 w-full resize-y rounded-lg border border-line-soft bg-surface-raised p-3 text-sm leading-relaxed text-text-primary outline-none focus:border-accent" />
+          <AnswerEditor value={answer} onChange={(event) => setAnswer(event.target.value)} disabled={reviewing} rows={5} placeholder="Write your response…" />
         </div>
       </div>
 
-      {!reviewing ? <button type="button" disabled={!selected || !answer.trim()} onClick={() => setReviewing(true)} className="mt-4 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review answers</button> : <div className="mt-4 rounded-lg bg-surface-soft p-4"><ul className="grid gap-2">{resource.markingGuide.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" /><span>{item}</span></li>)}</ul><p className="mt-4 text-sm leading-relaxed text-text-muted">{resource.sampleAnswer}</p><p className="mt-3 text-sm font-semibold leading-relaxed text-text-primary">{resource.teacherMove}</p></div>}
+      {!reviewing ? <div className="mt-4 flex flex-wrap items-center gap-3"><button type="button" disabled={!selected || !answer.trim()} onClick={() => setReviewing(true)} className="rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review answers</button><MarkWithCapletLink draft={markerDraft({ area, resource, question: resource.practicePrompt, markValue: resource.marks, responseType: 'short_answer', studentAnswer: answer })} /></div> : <div className="mt-4 rounded-lg bg-surface-soft p-4"><ul className="grid gap-2">{resource.markingGuide.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" /><span>{item}</span></li>)}</ul><p className="mt-4 text-sm leading-relaxed text-text-muted">{resource.sampleAnswer}</p><p className="mt-3 text-sm font-semibold leading-relaxed text-text-primary">{resource.teacherMove}</p></div>}
     </QuestionShell>
   );
 }
@@ -223,7 +269,7 @@ function formatStimulusValue(row) {
   return row.unit ? `${value} ${row.unit}` : value;
 }
 
-function StimulusSetResource({ resource }) {
+function StimulusSetResource({ resource, area }) {
   const [answers, setAnswers] = useState(() => resource.questions.map(() => ''));
   const [reviewing, setReviewing] = useState(false);
   const maxValue = Math.max(...resource.data.map((row) => Math.abs(Number(row.value)) || 0), 1);
@@ -276,7 +322,8 @@ function StimulusSetResource({ resource }) {
                 {question.marks} marks
               </span>
             </div>
-            <textarea value={answers[questionIndex]} disabled={reviewing} onChange={(event) => setAnswers((current) => current.map((answer, index) => index === questionIndex ? event.target.value : answer))} rows={4} placeholder="Write your response…" className="mt-2 w-full resize-y rounded-lg border border-line-soft bg-surface-raised p-3 text-sm leading-relaxed text-text-primary outline-none focus:border-accent" />
+            <AnswerEditor value={answers[questionIndex]} disabled={reviewing} onChange={(event) => setAnswers((current) => current.map((answer, index) => index === questionIndex ? event.target.value : answer))} rows={4} placeholder="Write your response…" />
+            {!reviewing ? <div className="mt-3"><MarkWithCapletLink draft={markerDraft({ area, resource, question: question.prompt, markValue: question.marks, responseType: 'stimulus_response', studentAnswer: answers[questionIndex], suffix: `:question:${questionIndex + 1}` })} /></div> : null}
             {reviewing ? <ul className="mt-4 grid gap-2">{question.markingGuide.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" /><span>{item}</span></li>)}</ul> : null}
           </div>
         ))}
@@ -387,7 +434,7 @@ function ExamConstructedItem({ item }) {
   );
 }
 
-function ExamPracticePackCard({ pack }) {
+function ExamPracticePackCard({ pack, detail = false }) {
   return (
     <article className="rounded-lg border border-line-soft bg-surface-raised p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
@@ -416,6 +463,13 @@ function ExamPracticePackCard({ pack }) {
         {pack.transitionNote}
       </p>
 
+      <Link to={`/library/economics/exam-practice/${pack.id}/session`} className="mb-5 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white hover:bg-accent-strong">
+        Start timed written session <ClipboardDocumentCheckIcon className="h-4 w-4" />
+      </Link>
+
+      {!detail ? <Link to={`/library/economics/exam-practice/${pack.id}`} className="mb-5 ml-3 inline-flex items-center gap-2 rounded-xl border border-line-soft bg-surface-raised px-5 py-3 text-sm font-extrabold text-text-primary hover:border-accent hover:text-accent">Browse pack contents <ArrowRightIcon className="h-4 w-4" /></Link> : null}
+
+      {detail ? <>
       <div className="grid gap-3">
         {pack.sections.map((section) => (
           <details key={section.label} className="rounded-md border border-line-soft bg-surface-soft px-4 py-3">
@@ -483,11 +537,12 @@ function ExamPracticePackCard({ pack }) {
           </div>
         </div>
       </div>
+      </> : null}
     </article>
   );
 }
 
-function ExamPracticePacksSection() {
+function ExamPracticePacksSection({ detail = false }) {
   return (
     <section className="mb-8">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
@@ -503,19 +558,19 @@ function ExamPracticePacksSection() {
       </div>
       <div className="grid gap-5">
         {economicsResourceLibrary.examPracticePacks.map((pack) => (
-          <ExamPracticePackCard key={pack.id} pack={pack} />
+          <ExamPracticePackCard key={pack.id} pack={pack} detail={detail} />
         ))}
       </div>
     </section>
   );
 }
 
-function ResourceRenderer({ resource }) {
-  if (resource.type === 'topicDrill') return <TopicDrillResource resource={resource} />;
+function ResourceRenderer({ resource, area }) {
+  if (resource.type === 'topicDrill') return <TopicDrillResource resource={resource} area={area} />;
   if (resource.type === 'multipleChoice') return <MultipleChoiceResource resource={resource} />;
-  if (resource.type === 'shortAnswer') return <ShortAnswerResource resource={resource} />;
-  if (resource.type === 'stimulusSet') return <StimulusSetResource resource={resource} />;
-  return <ExtendedResponseResource resource={resource} />;
+  if (resource.type === 'shortAnswer') return <ShortAnswerResource resource={resource} area={area} />;
+  if (resource.type === 'stimulusSet') return <StimulusSetResource resource={resource} area={area} />;
+  return <ExtendedResponseResource resource={resource} area={area} />;
 }
 
 const economicsPages = [
@@ -559,8 +614,13 @@ function EconomicsHub() {
   );
 }
 
+const assessmentPages = [
+  { id: 'exam-structure', eyebrow: 'External exam', title: 'Paper structure', body: 'See sections, marks and timing before choosing how to practise.' },
+  { id: 'school-assessment', eyebrow: 'School tasks', title: 'Assessment weighting', body: 'Understand the components your school assessments are built around.' },
+  { id: 'official-sources', eyebrow: 'Reference', title: 'Official sources', body: 'Open the syllabus, assessment and standards links in one clean place.' },
+];
+
 function AssessmentPage() {
-  const assessment = economicsResourceLibrary.assessmentBlueprint;
   return (
     <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
       <div className="container-custom">
@@ -570,16 +630,17 @@ function AssessmentPage() {
           <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Know what the course asks of you.</h1>
           <p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Use this as a planning reference for HSC-style practice and school assessments. Check the official links below for the current rules.</p>
         </section>
-        <section className="mb-8 rounded-xl border border-line-soft bg-surface-raised p-5 md:p-7">
-          <div className="mb-6 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">External examination</p><h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight">Paper structure</h2></div><span className="rounded-md bg-accent-soft px-3 py-2 text-sm font-extrabold text-accent">{assessment.externalExam.totalMarks} marks</span></div>
-          <p className="mb-4 text-sm font-bold text-text-muted">{assessment.externalExam.time}</p>
-          <div className="grid gap-3 md:grid-cols-2">{assessment.externalExam.sections.map((section) => <div key={section.label} className="rounded-lg border border-line-soft bg-surface-soft p-4"><div className="flex justify-between gap-3"><span className="font-extrabold">{section.label}</span><span className="font-extrabold text-accent">{section.marks} marks</span></div><p className="mt-2 text-sm leading-relaxed text-text-muted">{section.format}</p></div>)}</div>
-        </section>
-        <section className="mb-8 grid gap-3 md:grid-cols-3">{assessment.schoolAssessmentComponents.map((component) => <div key={component.component} className="rounded-lg border border-line-soft bg-surface-raised p-4"><div className="flex justify-between gap-3"><span className="text-sm font-extrabold leading-snug">{component.component}</span><span className="shrink-0 text-sm font-extrabold text-accent">{component.weighting}%</span></div><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-soft"><div className="h-full rounded-full bg-accent" style={{ width: `${component.weighting}%` }} /></div></div>)}</section>
-        <OfficialSources />
+        <section className="grid gap-4 md:grid-cols-3">{assessmentPages.map((page) => <Link key={page.id} to={`/library/economics/assessment/${page.id}`} className="group rounded-2xl border border-line-soft bg-surface-raised p-6 transition-all hover:-translate-y-0.5 hover:border-accent"><p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">{page.eyebrow}</p><h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight group-hover:text-accent">{page.title}</h2><p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{page.body}</p><span className="mt-6 inline-flex items-center gap-1 text-sm font-extrabold text-accent">Open <ArrowRightIcon className="h-4 w-4" /></span></Link>)}</section>
       </div>
     </main>
   );
+}
+
+function AssessmentDetailPage({ pageId }) {
+  const assessment = economicsResourceLibrary.assessmentBlueprint;
+  const page = assessmentPages.find((item) => item.id === pageId);
+  if (!page) return <AssessmentPage />;
+  return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom max-w-5xl"><BackLink to="/library/economics/assessment">Assessment guide</BackLink><header className="mb-8 max-w-3xl"><p className="text-sm font-extrabold uppercase tracking-wide text-accent">{page.eyebrow}</p><h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">{page.title}</h1></header>{pageId === 'exam-structure' ? <section className="rounded-2xl border border-line-soft bg-surface-raised p-6 md:p-8"><div className="mb-6 flex items-end justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">External examination</p><p className="mt-2 text-sm font-bold text-text-muted">{assessment.externalExam.time}</p></div><span className="rounded-lg bg-accent-soft px-3 py-2 text-sm font-extrabold text-accent">{assessment.externalExam.totalMarks} marks</span></div><div className="grid gap-3 md:grid-cols-2">{assessment.externalExam.sections.map((section) => <div key={section.label} className="rounded-xl border border-line-soft bg-surface-soft p-5"><div className="flex justify-between gap-3"><span className="font-extrabold">{section.label}</span><span className="font-extrabold text-accent">{section.marks} marks</span></div><p className="mt-2 text-sm leading-relaxed text-text-muted">{section.format}</p></div>)}</div></section> : null}{pageId === 'school-assessment' ? <section className="grid gap-4 md:grid-cols-3">{assessment.schoolAssessmentComponents.map((component) => <div key={component.component} className="rounded-2xl border border-line-soft bg-surface-raised p-6"><div className="flex justify-between gap-3"><span className="text-sm font-extrabold leading-snug">{component.component}</span><span className="text-sm font-extrabold text-accent">{component.weighting}%</span></div><div className="mt-5 h-2 overflow-hidden rounded-full bg-surface-soft"><div className="h-full rounded-full bg-accent" style={{ width: `${component.weighting}%` }} /></div></div>)}</section> : null}{pageId === 'official-sources' ? <OfficialSources /> : null}</div></main>;
 }
 
 function OfficialSources() {
@@ -618,10 +679,16 @@ function YearPage({ year }) {
 function PracticePlayer({ area }) {
   const [type, setType] = useState('all');
   const [index, setIndex] = useState(0);
+  const [searchParams] = useSearchParams();
   const resources = getEconomicsAreaResources(area).filter((resource) => type === 'all' || resource.type === type);
   const resource = resources[index];
+  const requestedResourceId = searchParams.get('resource');
 
-  useEffect(() => setIndex(0), [type, area.id]);
+  useEffect(() => {
+    const filteredResources = getEconomicsAreaResources(area).filter((item) => type === 'all' || item.type === type);
+    const requestedIndex = filteredResources.findIndex((item) => item.id === requestedResourceId);
+    setIndex(requestedIndex >= 0 ? requestedIndex : 0);
+  }, [type, area, requestedResourceId]);
 
   const move = (nextIndex) => {
     setIndex(nextIndex);
@@ -651,7 +718,7 @@ function PracticePlayer({ area }) {
           </div>
         </header>
 
-        {resource ? <ResourceRenderer key={resource.id} resource={resource} /> : <p className="rounded-xl bg-surface-raised p-8 text-center text-text-muted">No activities in this category.</p>}
+        {resource ? <ResourceRenderer key={resource.id} resource={resource} area={area} /> : <p className="rounded-xl bg-surface-raised p-8 text-center text-text-muted">No activities in this category.</p>}
 
         <div className="mt-6 flex items-center justify-between gap-4">
           <button type="button" disabled={index === 0} onClick={() => move(index - 1)} className="rounded-xl border border-line-soft bg-surface-raised px-5 py-3 text-sm font-extrabold text-text-primary disabled:opacity-30">Previous</button>
@@ -663,7 +730,11 @@ function PracticePlayer({ area }) {
 }
 
 function ExamPracticePage() {
-  return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom"><BackLink to="/library/economics">Economics</BackLink><section className="mb-8 max-w-3xl"><p className="text-sm font-extrabold uppercase tracking-wide text-accent">Timed practice</p><h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Exam practice</h1><p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Choose a pack when you are ready to work under paper-style conditions.</p></section><ExamPracticePacksSection /></div></main>;
+  return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom max-w-5xl"><BackLink to="/library/economics">Economics</BackLink><section className="mb-10 max-w-3xl"><p className="text-sm font-extrabold uppercase tracking-wide text-accent">Timed practice</p><h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Choose an exam pack.</h1><p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Open a pack to browse its sections, or begin a focused timed written session straight away.</p></section><ExamPracticePacksSection /></div></main>;
+}
+
+function ExamPackDetailPage({ pack }) {
+  return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom max-w-5xl"><BackLink to="/library/economics/exam-practice">Exam practice</BackLink><ExamPracticePackCard pack={pack} detail /></div></main>;
 }
 
 export default function ResourceLibrary() {
@@ -673,7 +744,12 @@ export default function ResourceLibrary() {
   if (!section) return <EconomicsHub />;
   if (section === 'year-11') return <YearPage year={11} />;
   if (section === 'year-12') return <YearPage year={12} />;
+  if (section === 'exam-practice' && focusId) {
+    const pack = economicsResourceLibrary.examPracticePacks.find((item) => item.id === focusId);
+    return pack ? <ExamPackDetailPage pack={pack} /> : <ExamPracticePage />;
+  }
   if (section === 'exam-practice') return <ExamPracticePage />;
+  if (section === 'assessment' && focusId) return <AssessmentDetailPage pageId={focusId} />;
   if (section === 'assessment') return <AssessmentPage />;
   if (section === 'focus' && area) return <PracticePlayer area={area} />;
   return <EconomicsHub />;

@@ -51,6 +51,7 @@ describe('Economics marker routes', () => {
   beforeEach(() => {
     app = createTestApp();
     jest.clearAllMocks();
+    MarkedAttempt.findOne = jest.fn().mockResolvedValue(null);
   });
 
   describe('POST /api/economics-marker', () => {
@@ -76,6 +77,29 @@ describe('Economics marker routes', () => {
       expect(MarkedAttempt.create).toHaveBeenCalledWith(
         expect.objectContaining({ userId: 'test-user-1', estimatedMark: 4 }),
       );
+    });
+
+    it('keeps library source context and compares a retry to the prior attempt', async () => {
+      markEconomicsAnswer.mockResolvedValue(SAMPLE_RESULT);
+      MarkedAttempt.findOne = jest.fn().mockResolvedValue({ estimatedMark: 2 });
+      MarkedAttempt.create = jest.fn().mockResolvedValue({ id: 'a2', estimatedMark: 4, ...SAMPLE_RESULT });
+
+      const res = await request(app).post('/api/economics-marker').send({
+        question: SAMPLE_RESULT.question,
+        markValue: 6,
+        responseType: 'short_answer',
+        studentAnswer: SAMPLE_RESULT.studentAnswer,
+        sourceResourceId: 'eco12-policy-sa-1',
+        sourcePromptId: 'eco12-policy-sa-1',
+        sourceFocusId: 'year-12-economic-management',
+      });
+
+      expect(res.status).toBe(201);
+      expect(MarkedAttempt.create).toHaveBeenCalledWith(expect.objectContaining({
+        sourceResourceId: 'eco12-policy-sa-1',
+        sourceFocusId: 'year-12-economic-management',
+      }));
+      expect(res.body.improvement).toMatchObject({ previousMark: 2, change: 2 });
     });
 
     it('degrades gracefully with a 503 when AI is not configured', async () => {
@@ -113,7 +137,6 @@ describe('Economics marker routes', () => {
       MarkedAttempt.create = jest.fn().mockResolvedValue({ id: 'a1', ...SAMPLE_RESULT });
 
       for (let i = 0; i < 15; i++) {
-        // eslint-disable-next-line no-await-in-loop -- sequential requests needed to hit the per-user throttle window
         const ok = await request(app).post('/api/economics-marker').set('X-Test-User', 'rate-limit-user').send({
           question: 'Q', markValue: 6, responseType: 'short_answer', studentAnswer: 'A real attempt answer here.',
         });

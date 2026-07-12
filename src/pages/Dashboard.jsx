@@ -14,7 +14,9 @@ import {
     CheckCircleIcon,
     BookmarkIcon,
     DocumentTextIcon,
-    CalendarDaysIcon
+    CalendarDaysIcon,
+    ClipboardDocumentCheckIcon,
+    ClockIcon,
 } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
@@ -26,6 +28,7 @@ export default function Dashboard() {
     const [savedSlides, setSavedSlides] = useState([]);
     const [dueCount, setDueCount] = useState(0);
     const [studyPlan, setStudyPlan] = useState(null);
+    const [examSessions, setExamSessions] = useState([]);
 
     useReveal(undefined, [loading, coursesLoading]);
 
@@ -40,12 +43,13 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [progressData, classesData, savedSlidesData, dueData, studyPlanData] = await Promise.all([
+                const [progressData, classesData, savedSlidesData, dueData, studyPlanData, examSessionsData] = await Promise.all([
                     api.getUserProgress(),
                     api.getClasses(),
                     api.getSavedSlides().catch(() => null),
                     api.getDueReviewItems().catch(() => null),
                     api.getStudyPlan().catch(() => null),
+                    api.getEconomicsExamSessions().catch(() => null),
                 ]);
                 setUserProgress(progressData?.progress || []);
                 const allClasses = [
@@ -56,6 +60,7 @@ export default function Dashboard() {
                 setSavedSlides(savedSlidesData?.savedSlides || []);
                 setDueCount(dueData?.items?.length || 0);
                 setStudyPlan(studyPlanData?.studyPlan || null);
+                setExamSessions(examSessionsData?.sessions || []);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             } finally {
@@ -91,6 +96,9 @@ export default function Dashboard() {
     const nextStudyTask = [...(studyPlan?.tasks || [])]
         .filter(task => !task.completed)
         .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
+    const activeExam = examSessions.find((session) => session.status === 'in_progress') || null;
+    const recentExam = examSessions.find((session) => session.status === 'submitted') || null;
+    const examPath = (session) => `/library/economics/exam-practice/${session.packId}/session?session=${session.id}`;
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -143,6 +151,29 @@ export default function Dashboard() {
                         Build a personal weekly study plan
                         <ArrowRightIcon className="h-4 w-4" />
                     </Link>
+                )}
+
+                {(activeExam || recentExam) && (
+                    <section className="reveal mb-8 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
+                        {activeExam ? (
+                            <Link to={examPath(activeExam)} className="group flex flex-col justify-between rounded-3xl border border-accent/25 bg-surface-raised p-7 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] transition-transform hover:-translate-y-1">
+                                <div className="flex items-start gap-4">
+                                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent"><ClockIcon className="h-6 w-6" /></span>
+                                    <div>
+                                        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Resume exam practice</p>
+                                        <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight text-text-primary">{activeExam.packTitle}</h2>
+                                        <p className="mt-2 text-sm font-medium text-text-muted">{activeExam.answeredCount}/{activeExam.questionCount} written responses drafted</p>
+                                    </div>
+                                </div>
+                                <span className="mt-7 inline-flex items-center gap-2 text-sm font-extrabold text-accent">Resume session <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+                            </Link>
+                        ) : (
+                            <Link to="/library/economics/exam-practice" className="group rounded-3xl bg-block-cream p-7 transition-transform hover:-translate-y-1"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-raised text-accent"><ClipboardDocumentCheckIcon className="h-6 w-6" /></span><p className="mt-5 text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Exam practice</p><h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight">Start another timed session</h2></Link>
+                        )}
+                        {recentExam ? (
+                            <Link to={examPath(recentExam)} className="group rounded-3xl bg-block-cream p-7 transition-transform hover:-translate-y-1"><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-text-dim">Latest result</p><p className="mt-3 font-display text-4xl font-extrabold tracking-tight text-text-primary">{recentExam.estimatedMark}/{recentExam.availableMarks}</p><p className="mt-2 text-sm font-bold text-text-muted truncate">{recentExam.packTitle}</p><span className="mt-6 inline-flex items-center gap-2 text-sm font-extrabold text-accent">Review results <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span></Link>
+                        ) : null}
+                    </section>
                 )}
 
                 {/* Due for review — the day's spaced-repetition nudge; only shown when something is actually due */}

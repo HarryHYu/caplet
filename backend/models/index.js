@@ -24,6 +24,7 @@ const CdrConnection = require('./CdrConnection');
 const CdrTransaction = require('./CdrTransaction');
 const MarkedAttempt = require('./MarkedAttempt');
 const StudyPlan = require('./StudyPlan');
+const EconomicsExamSession = require('./EconomicsExamSession');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -256,6 +257,9 @@ MarkedAttempt.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 User.hasOne(StudyPlan, { foreignKey: 'userId', as: 'studyPlan', onDelete: 'CASCADE' });
 StudyPlan.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+User.hasMany(EconomicsExamSession, { foreignKey: 'userId', as: 'economicsExamSessions', onDelete: 'CASCADE' });
+EconomicsExamSession.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // Sync database
 // NOTE: Database schema is now managed by Umzug migrations in backend/migrations/.
 // This sync() call is a no-op fallback (force: false prevents any schema changes).
@@ -298,5 +302,6 @@ module.exports = {
   CdrTransaction,
   MarkedAttempt,
   StudyPlan,
+  EconomicsExamSession,
   syncDatabase
 };

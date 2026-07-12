@@ -63,7 +63,7 @@ const Login = () => {
                             </div>
                         )}
                         <LoginForm
-                            onSuccess={() => navigate(redirectPath, { replace: true })}
+                            onSuccess={() => navigate(redirectPath, { replace: true, state: location.state?.returnState })}
                             onSwitchToRegister={() => navigate('/register')}
                         />
                     </div>
