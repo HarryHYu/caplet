@@ -276,6 +276,23 @@
 
 @layer base {
   html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  summary {
+    touch-action: manipulation;
+  }
+
+  html {
     font-family: var(--font-body);
     color-scheme: light dark;
     background: var(--surface-body);
@@ -353,7 +370,7 @@
   }
 
   .btn-primary:active {
-    @apply translate-y-0;
+    @apply translate-y-0 scale-[0.98];
   }
 
   .btn-primary:disabled {
@@ -371,7 +388,7 @@
   }
 
   .btn-secondary:active {
-    @apply translate-y-0;
+    @apply translate-y-0 scale-[0.98];
   }
 
   /* Lesson reading mode — editorial, slightly larger, refined spacing.
@@ -466,6 +483,47 @@
 }
 
 @layer utilities {
+  @keyframes mobileNavPanelIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.985);
+      filter: blur(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes mobileNavItemIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .mobile-nav-panel {
+    transform-origin: top center;
+    background: color-mix(in srgb, var(--surface-raised) 94%, transparent);
+    box-shadow: 0 28px 55px -34px rgba(20, 20, 18, 0.55);
+    backdrop-filter: blur(22px) saturate(1.2);
+    -webkit-backdrop-filter: blur(22px) saturate(1.2);
+    animation: mobileNavPanelIn 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .mobile-nav-item {
+    opacity: 0;
+    animation: mobileNavItemIn 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .mobile-nav-item:nth-of-type(1) { animation-delay: 35ms; }
+  .mobile-nav-item:nth-of-type(2) { animation-delay: 60ms; }
+  .mobile-nav-item:nth-of-type(3) { animation-delay: 85ms; }
+  .mobile-nav-item:nth-of-type(4) { animation-delay: 110ms; }
+  .mobile-nav-item:nth-of-type(5) { animation-delay: 135ms; }
+  .mobile-nav-item:nth-of-type(6) { animation-delay: 160ms; }
+  .mobile-nav-item:nth-of-type(7) { animation-delay: 185ms; }
+  .mobile-nav-item:nth-of-type(8) { animation-delay: 210ms; }
+
   @keyframes fadeSlideUp {
     from {
       opacity: 0;
@@ -706,6 +764,15 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .animate-soft-float,
   .animate-float,
   .animate-pulse,

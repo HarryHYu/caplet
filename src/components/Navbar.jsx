@@ -27,6 +27,7 @@ const Navbar = ({ mobileOnly = false }) => {
   const userButtonRef = useRef(null);
   const navButtonRef = useRef(null);
   const tryButtonRef = useRef(null);
+  const mobileButtonRef = useRef(null);
 
   useEffect(() => {
     setIsOpen(false);
@@ -60,7 +61,8 @@ const Navbar = ({ mobileOnly = false }) => {
   useEffect(() => {
     const handleEscape = (event) => {
       if (event.key !== 'Escape') return;
-      if (showUserMenu) userButtonRef.current?.focus();
+      if (isOpen) mobileButtonRef.current?.focus();
+      else if (showUserMenu) userButtonRef.current?.focus();
       else if (showNavMenu) navButtonRef.current?.focus();
       else if (showTryMenu) tryButtonRef.current?.focus();
       setShowUserMenu(false);
@@ -70,7 +72,14 @@ const Navbar = ({ mobileOnly = false }) => {
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [showNavMenu, showTryMenu, showUserMenu]);
+  }, [isOpen, showNavMenu, showTryMenu, showUserMenu]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [isOpen]);
 
   const studyCoreItems = [
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
@@ -135,11 +144,11 @@ const Navbar = ({ mobileOnly = false }) => {
           <div className="flex min-w-0 items-center gap-2 md:gap-4">
             {/* Logo */}
             <Link to={homePath} className="flex items-center gap-2 group relative z-10 shrink-0">
-              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden ring-1 ring-line-soft group-hover:ring-accent transition-all duration-300">
+              <div className="grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft transition-all duration-300 group-hover:scale-105 group-hover:ring-accent">
                 <img
                   src="/logo.png"
                   alt="Caplet logo"
-                  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                  className="h-full w-full scale-105 rounded-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </div>
               <span className="hidden text-lg font-bricolage font-extrabold tracking-[-0.02em] text-text-primary transition-colors duration-300 group-hover:text-accent sm:inline md:text-xl">
@@ -259,7 +268,7 @@ const Navbar = ({ mobileOnly = false }) => {
               <button
                 type="button"
                 onClick={toggleNavMode}
-                className="w-11 h-11 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
+                className="hidden h-11 w-11 items-center justify-center rounded-full text-text-muted transition-all duration-200 hover:bg-surface-soft hover:text-text-primary active:scale-95 lg:flex"
                 aria-label="Switch to side bar navigation"
                 title="Use side bar"
               >
@@ -275,7 +284,7 @@ const Navbar = ({ mobileOnly = false }) => {
             <button
               type="button"
               onClick={toggleTheme}
-              className="w-11 h-11 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
+              className="w-11 h-11 flex items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200 active:scale-95"
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? (
@@ -299,7 +308,7 @@ const Navbar = ({ mobileOnly = false }) => {
                   aria-expanded={showUserMenu}
                   aria-haspopup="true"
                   aria-controls="account-navigation"
-                  className={`min-h-11 flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full border transition-all duration-200 ${
+                  className={`flex h-11 w-11 items-center justify-center gap-2 rounded-full border p-1.5 transition-all duration-200 active:scale-95 sm:w-auto sm:justify-start sm:pr-3 ${
                     showUserMenu
                       ? 'border-accent bg-accent-soft'
                       : 'border-line-soft hover:border-text-dim hover:bg-surface-soft'
@@ -361,20 +370,17 @@ const Navbar = ({ mobileOnly = false }) => {
 
             {/* Mobile hamburger */}
             {effectiveProductMode === 'study' && <button
+              ref={mobileButtonRef}
               type="button"
-              className="lg:hidden w-11 h-11 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all"
+              className={`relative lg:hidden h-11 w-11 rounded-full text-text-muted transition-[color,background-color,transform] duration-200 hover:bg-surface-soft hover:text-text-primary active:scale-95 ${isOpen ? 'bg-surface-soft text-text-primary' : ''}`}
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? 'close menu' : 'open menu'}
               aria-expanded={isOpen}
               aria-controls="mobile-navigation"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                )}
-              </svg>
+              <span className={`absolute left-1/2 top-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-current transition-transform duration-300 ${isOpen ? '-translate-y-1/2 rotate-45' : '-translate-y-[7px]'}`} />
+              <span className={`absolute left-1/2 top-1/2 h-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current transition-[width,opacity] duration-200 ${isOpen ? 'w-0 opacity-0' : 'w-5 opacity-100'}`} />
+              <span className={`absolute left-1/2 top-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-current transition-transform duration-300 ${isOpen ? '-translate-y-1/2 -rotate-45' : 'translate-y-[5px]'}`} />
             </button>}
           </div>
           </div>
@@ -382,7 +388,11 @@ const Navbar = ({ mobileOnly = false }) => {
 
         {/* Mobile menu */}
         {effectiveProductMode === 'study' && isOpen && (
-          <div id="mobile-navigation" className="lg:hidden border-t border-line-soft py-3 flex flex-col gap-0.5">
+          <div id="mobile-navigation" className="mobile-nav-panel lg:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain border-t border-line-soft px-2 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+            <div className="mb-2 flex items-center justify-between px-3 py-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-text-dim">Navigate</span>
+              <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-bold text-accent">Study</span>
+            </div>
             {navItems.map((item) => {
               const active = isItemActive(item);
               return (
@@ -392,27 +402,29 @@ const Navbar = ({ mobileOnly = false }) => {
                   onClick={() => setIsOpen(false)}
                   {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
                   aria-current={active ? 'page' : undefined}
-                  className={`min-h-11 flex items-center px-3 text-xs font-bold tracking-[0.1em] transition-colors ${
+                  className={`mobile-nav-item mb-1 flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm font-bold tracking-[0.04em] transition-[color,background-color,transform] active:scale-[0.98] ${
                     active
-                      ? 'text-accent bg-accent-soft rounded-none'
-                      : 'text-text-primary hover:bg-surface-soft rounded-none'
+                      ? 'bg-accent-soft text-accent'
+                      : 'text-text-primary hover:bg-surface-soft'
                   }`}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {active && <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_0_4px_var(--accent-soft)]" aria-hidden="true" />}
                 </Link>
               );
             })}
+            <div className="my-2 border-t border-line-soft" />
             <Link
               to="/demo"
               onClick={() => setIsOpen(false)}
-              className="min-h-11 flex items-center px-3 text-xs font-bold tracking-[0.1em] text-text-primary hover:bg-surface-soft transition-colors"
+              className="mobile-nav-item mb-1 flex min-h-12 items-center rounded-2xl px-4 text-sm font-bold text-text-primary transition-colors hover:bg-surface-soft"
             >
               Demo
             </Link>
             <Link
               to="/play"
               onClick={() => setIsOpen(false)}
-              className="min-h-11 flex items-center px-3 text-xs font-bold tracking-[0.1em] text-text-primary hover:bg-surface-soft transition-colors"
+              className="mobile-nav-item mb-1 flex min-h-12 items-center rounded-2xl px-4 text-sm font-bold text-text-primary transition-colors hover:bg-surface-soft"
             >
               Caplet Live
             </Link>
@@ -420,7 +432,7 @@ const Navbar = ({ mobileOnly = false }) => {
               <Link
                 to="/register"
                 onClick={() => setIsOpen(false)}
-                className="mt-2 btn-primary text-sm rounded-none"
+                className="mt-3 btn-primary min-h-12 text-sm"
               >
                 Get started
               </Link>

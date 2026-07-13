@@ -21,7 +21,6 @@ import {
     ViewColumnsIcon,
     SunIcon,
     MoonIcon,
-    ArrowRightOnRectangleIcon,
     ChartBarSquareIcon,
     LockClosedIcon,
 } from '@heroicons/react/24/outline';
@@ -36,7 +35,7 @@ import {
  */
 export default function Sidebar() {
     const location = useLocation();
-    const { user, logout, isAuthenticated } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
     const { isDark, toggleTheme } = useTheme();
     const { sidebarCollapsed: collapsed, toggleSidebar, toggleNavMode, productMode = 'study' } = useLayout();
@@ -94,31 +93,29 @@ export default function Sidebar() {
 
     // Shared row shape so nav links, footer actions and the account row line up.
     const row = (active) =>
-        `group relative flex items-center gap-3.5 rounded-2xl px-3 py-2.5 transition-colors duration-200 ${
-            collapsed ? 'justify-center' : ''
+        `group relative flex min-h-11 items-center gap-3.5 transition-[color,background-color,transform,box-shadow] duration-200 ease-out ${
+            collapsed ? 'mx-auto h-11 w-11 justify-center rounded-full p-0 active:scale-95' : 'rounded-2xl px-3 py-2.5 active:scale-[0.99]'
         } ${
             active
-                ? 'bg-accent-soft text-accent'
+                ? 'bg-accent-soft text-accent shadow-[0_10px_24px_-18px_rgba(19,81,170,0.8)]'
                 : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'
         }`;
 
     return (
         <aside
-            className={`hidden lg:flex shrink-0 sticky top-0 h-screen p-4 transition-[width] duration-300 ease-out ${
-                collapsed ? 'w-[92px]' : 'w-72'
+            className={`hidden lg:flex shrink-0 sticky top-0 h-screen p-4 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                collapsed ? 'w-[88px]' : 'w-72'
             }`}
         >
-            <div className="flex h-full w-full flex-col rounded-3xl bg-surface-raised p-3 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className={`flex h-full w-full flex-col bg-surface-raised shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] transition-[padding,border-radius] duration-300 ${collapsed ? 'rounded-[28px] p-2' : 'rounded-3xl p-3'}`}>
                 {/* Brand */}
                 <Link
                     to={productMode === 'money' ? '/money' : '/dashboard'}
-                    className={`flex items-center gap-3 rounded-2xl px-2 py-2 ${collapsed ? 'justify-center' : ''}`}
+                    className={`flex min-h-11 items-center gap-3 transition-transform duration-200 hover:scale-[1.02] ${collapsed ? 'mx-auto h-11 w-11 justify-center rounded-full p-0' : 'rounded-2xl px-2 py-2'}`}
                 >
-                    <img
-                        src="/logo.png"
-                        alt="Caplet"
-                        className="h-9 w-9 shrink-0 rounded-full object-contain ring-1 ring-line-soft"
-                    />
+                    <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft">
+                        <img src="/logo.png" alt="Caplet" className="h-full w-full scale-105 rounded-full object-cover" />
+                    </span>
                     {!collapsed && (
                         <span className="font-bricolage text-xl font-extrabold tracking-[-0.02em] text-text-primary">
                             Caplet.
@@ -144,8 +141,8 @@ export default function Sidebar() {
                                 title={collapsed ? label : undefined}
                                 className={row(active)}
                             >
-                                <span className="relative shrink-0">
-                                    <item.icon className={`w-5 h-5 ${active ? 'text-accent' : ''}`} />
+                                <span className="relative grid h-5 w-5 shrink-0 place-items-center">
+                                    <item.icon className={`h-5 w-5 ${active ? 'text-accent' : ''}`} aria-hidden="true" />
                                     {badge > 0 && collapsed && (
                                         <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-accent px-1 text-[10px] font-bold leading-none text-white">
                                             {badge > 9 ? '9+' : badge}
@@ -226,20 +223,6 @@ export default function Sidebar() {
                             </span>
                         )}
                     </Link>
-
-                    {/* Sign out — the rail's own logout, so you can leave while in side-bar mode */}
-                    <button
-                        type="button"
-                        onClick={logout}
-                        title={collapsed ? 'Sign out' : undefined}
-                        aria-label="Sign out"
-                        className={`group relative flex items-center gap-3.5 rounded-2xl px-3 py-2.5 text-red-500 transition-colors duration-200 hover:bg-red-50 dark:hover:bg-red-900/20 ${collapsed ? 'justify-center' : ''}`}
-                    >
-                        <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0" />
-                        {!collapsed && (
-                            <span className="text-sm font-bold tracking-[0.02em]">Sign out</span>
-                        )}
-                    </button>
 
                     <div className="my-1 border-t border-line-soft" />
 
