@@ -93,5 +93,6 @@ describe('StudyPlan', () => {
     expect(screen.getAllByRole('link', { name: /Economics resource library/i })[0]).toHaveAttribute('href', '/library/economics');
     fireEvent.click(screen.getByRole('button', { name: /Mark complete/i }));
     await waitFor(() => expect(api.updateStudyTask).toHaveBeenCalledWith('task-1', true));
+    expect(await screen.findByRole('status')).toHaveTextContent('Nice work');
   });
 });

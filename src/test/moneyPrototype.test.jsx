@@ -91,7 +91,9 @@ describe('Money overview and indicator interactions', () => {
 
     expect(screen.getByRole('heading', { name: 'Money, made understandable.' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Save for something/ }));
-    await user.click(screen.getByRole('button', { name: /Start with this/ }));
+    expect(screen.getByRole('heading', { name: 'Build a private savings scenario' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open My Money' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Open My Money' }));
 
     expect(screen.getByRole('heading', { name: 'Build a private savings scenario' })).toBeInTheDocument();
     expect(localStorage.getItem('caplet:money:intent')).toBe('"save"');
@@ -185,6 +187,21 @@ describe('My Money privacy states', () => {
 
     expect(await screen.findByText('Saved scenario deleted.')).toBeInTheDocument();
     expect(localStorage.getItem('caplet:money:savings-scenario')).toBeNull();
+  });
+
+  it('keeps an already-reached goal actionable and explains the completed timeline', async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter><MyMoney /></MemoryRouter>);
+
+    const target = screen.getByRole('spinbutton', { name: 'Target (AUD)' });
+    const startingAmount = screen.getByRole('spinbutton', { name: 'Starting amount (AUD)' });
+    await user.clear(target);
+    await user.type(target, '1000');
+    await user.clear(startingAmount);
+    await user.type(startingAmount, '1000');
+
+    expect(await screen.findByText(/already reaches this goal/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save sample scenario' })).toBeEnabled();
   });
 
   it('redirects an unauthenticated student before private figures render', async () => {

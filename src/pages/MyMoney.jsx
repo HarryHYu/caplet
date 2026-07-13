@@ -84,11 +84,12 @@ export default function MyMoney() {
 
   const baseTimeline = useMemo(() => calculateSavingsTimeline(values), [values]);
   const comparisonTimeline = useMemo(() => calculateSavingsTimeline({ ...values, monthly: (Number(values.monthly) || 0) + (Number(values.extra) || 0) }), [values]);
-  const valid = values.label.trim() && Number(values.target) > 0 && Number(values.current) >= 0 && Number(values.monthly) > 0 && Number(values.target) > Number(values.current);
+  const valid = Boolean(values.label.trim() && Number(values.target) > 0 && Number(values.current) >= 0 && Number(values.monthly) > 0);
   const targetAmount = Number(values.target) || 0;
   const currentAmount = Number(values.current) || 0;
-  const progress = targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
+  const progress = targetAmount > 0 ? Math.max(0, Math.min(100, Math.round((currentAmount / targetAmount) * 100))) : 0;
   const remaining = Math.max(0, targetAmount - currentAmount);
+  const goalReached = targetAmount > 0 && currentAmount >= targetAmount;
 
   const chooseMode = (mode) => {
     setNotice('');
@@ -139,6 +140,7 @@ export default function MyMoney() {
   const deleteScenario = async () => {
     setDeleting(true);
     const deletingScenario = savedScenario;
+    let syncFailed = false;
     removeMoneyStorage(MONEY_STORAGE_KEYS.savingsScenario);
     setSavedScenario(null);
     if (deletingScenario?.inputMode === 'own' && profile) {
@@ -148,11 +150,12 @@ export default function MyMoney() {
         setProfile(response.financialProfile || { ...profile, goals });
       } catch {
         setProfileAvailable(false);
+        syncFailed = true;
       }
     }
     setDeleteOpen(false);
     setDeleting(false);
-    setNotice('Saved scenario deleted.');
+    setNotice(syncFailed ? 'Saved scenario deleted on this device. Account sync is currently unavailable.' : 'Saved scenario deleted.');
   };
 
   return (
@@ -182,7 +185,7 @@ export default function MyMoney() {
         {notice && <div role="status" className="animate-slide-up mt-6 flex items-start gap-3 rounded-2xl bg-[color:var(--block-green)] px-5 py-4 text-sm font-bold text-text-primary"><CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--mark-green)]" aria-hidden="true" />{notice}</div>}
 
         {savedScenario && (
-          <section className="reveal mt-6 rounded-3xl bg-surface-raised p-7 shadow-[0_24px_60px_-42px_rgba(20,20,18,0.45)]" aria-labelledby="saved-scenario-title">
+          <section className="reveal mt-6 rounded-3xl bg-surface-raised p-7 shadow-[0_24px_60px_-42px_rgba(20,20,18,0.45)]" aria-busy={saving || deleting} aria-labelledby="saved-scenario-title">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <span className="section-kicker">Saved scenario</span>
@@ -195,11 +198,11 @@ export default function MyMoney() {
                 {formatSavedAt(savedScenario.savedAt) && <p className="mt-2 text-xs font-semibold text-text-dim">Saved on this device · {formatSavedAt(savedScenario.savedAt)}</p>}
               </div>
               <div className="flex flex-wrap gap-2">
-                <button type="button" aria-pressed={!masked} onClick={() => setMasked((value) => !value)} className="btn-secondary min-h-11">
+                <button type="button" aria-pressed={!masked} onClick={() => setMasked((value) => !value)} disabled={saving || deleting} className="btn-secondary min-h-11 disabled:opacity-50">
                   {masked ? <EyeIcon className="h-4 w-4" aria-hidden="true" /> : <EyeSlashIcon className="h-4 w-4" aria-hidden="true" />}
                   {masked ? 'Show figures' : 'Hide figures'}
                 </button>
-                <button type="button" onClick={() => setDeleteOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-surface-error px-5 py-3 text-sm font-bold text-text-error"><TrashIcon className="h-4 w-4" aria-hidden="true" /> Delete</button>
+                <button type="button" onClick={() => setDeleteOpen(true)} disabled={saving || deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-surface-error px-5 py-3 text-sm font-bold text-text-error transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-50"><TrashIcon className="h-4 w-4" aria-hidden="true" /> Delete</button>
               </div>
             </div>
           </section>
@@ -246,7 +249,8 @@ export default function MyMoney() {
                 {(props) => <input {...props} type="number" min="0" step="1" inputMode="decimal" value={values.extra} onChange={(event) => update('extra', event.target.value)} className="w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 hover:border-text-dim focus:border-accent focus:ring-4 focus:ring-accent-soft" />}
               </FormField>
             </div>
-            {!valid && <p className="mt-5 text-sm font-medium text-text-muted">Enter a target above the starting amount and a regular contribution to calculate a timeline.</p>}
+            {!valid && <p className="mt-5 text-sm font-medium text-text-muted">Add a goal name, target, starting amount and regular contribution to calculate a timeline.</p>}
+            {valid && goalReached && <p role="status" className="mt-5 flex items-start gap-2 text-sm font-bold text-accent"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />Your starting amount already reaches this goal; the timeline is complete.</p>}
             <button type="button" onClick={saveScenario} disabled={!valid || saving} aria-busy={saving} className="btn-primary mt-7 min-h-12 disabled:opacity-50">{saving ? 'Saving…' : inputMode === 'sample' ? 'Save sample scenario' : 'Save privately'}</button>
           </div>
 

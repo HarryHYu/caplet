@@ -22,6 +22,8 @@ const DAY_OPTIONS = [
   { value: 0, label: 'Sun' },
 ];
 
+const STEPS = ['Subjects', 'Schedule', 'Diagnostic'];
+
 const EMPTY_FORM = {
   yearLevel: '12',
   subjects: [],
@@ -43,6 +45,7 @@ export default function StudyPlan() {
   const [error, setError] = useState('');
   const [recommendation, setRecommendation] = useState(null);
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
+  const [taskNotice, setTaskNotice] = useState('');
 
   useReveal(undefined, [loading, plan, editing, step, recommendation]);
 
@@ -58,7 +61,7 @@ export default function StudyPlan() {
         setOptions(data?.options || { yearLevels: [], subjects: [] });
         setRecommendation(recommendationData?.recommendation || null);
       })
-      .catch((err) => setError(err.message || 'Could not load your study plan.'))
+      .catch((err) => { if (!cancelled) setError(err.message || 'Could not load your study plan.'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
@@ -121,10 +124,11 @@ export default function StudyPlan() {
   };
 
   const toggleTask = async (task) => {
-    if (updatingTaskId) return;
+    if (updatingTaskId || saving) return;
     const completed = !task.completed;
     setUpdatingTaskId(task.id);
     setError('');
+    setTaskNotice('');
     setPlan((current) => ({
       ...current,
       tasks: current.tasks.map((item) => item.id === task.id ? { ...item, completed } : item),
@@ -132,20 +136,24 @@ export default function StudyPlan() {
     try {
       const data = await api.updateStudyTask(task.id, completed);
       setPlan(data.studyPlan);
+      setTaskNotice(completed ? 'Nice work — task marked complete.' : 'Task reopened for this week.');
     } catch (err) {
       setPlan((current) => ({
         ...current,
         tasks: current.tasks.map((item) => item.id === task.id ? { ...item, completed: task.completed } : item),
       }));
       setError(err.message || 'Could not update that task.');
+      setTaskNotice('');
     } finally {
       setUpdatingTaskId(null);
     }
   };
 
   const regenerate = async () => {
+    if (saving || updatingTaskId) return;
     setSaving(true);
     setError('');
+    setTaskNotice('');
     try {
       const data = await api.regenerateStudyPlan();
       setPlan(data.studyPlan);
@@ -178,12 +186,15 @@ export default function StudyPlan() {
     );
   }
 
-  const completed = plan.tasks.filter((task) => task.completed).length;
-  const completion = plan.tasks.length ? Math.round((completed / plan.tasks.length) * 100) : 0;
-  const nextTask = findNextTask(plan.tasks);
+  const tasks = Array.isArray(plan.tasks) ? plan.tasks : [];
+  const completed = tasks.filter((task) => task.completed).length;
+  const completion = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
+  const nextTask = findNextTask(tasks);
   const today = todayIso();
-  const overdue = plan.tasks.filter((task) => !task.completed && task.dueDate < today).length;
-  const groupedTasks = groupTasks(plan.tasks);
+  const overdue = tasks.filter((task) => !task.completed && task.dueDate < today).length;
+  const groupedTasks = groupTasks(tasks);
+  const taskGroups = Object.entries(groupedTasks);
+  const weakTopics = Array.isArray(plan.weakTopics) ? plan.weakTopics : [];
 
   return (
     <div className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
@@ -195,16 +206,17 @@ export default function StudyPlan() {
             <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">{plan.signalSummary}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button type="button" onClick={beginEdit} className="btn-secondary">Change settings</button>
-            <button type="button" onClick={regenerate} disabled={saving} className="btn-primary">
-              <ArrowPathIcon className={`h-4 w-4 ${saving ? 'animate-spin' : ''}`} /> Refresh week
+            <button type="button" onClick={beginEdit} disabled={saving || Boolean(updatingTaskId)} className="btn-secondary disabled:opacity-50">Change settings</button>
+            <button type="button" onClick={regenerate} disabled={saving || Boolean(updatingTaskId)} aria-busy={saving} className="btn-primary disabled:opacity-50">
+              <ArrowPathIcon className={`h-4 w-4 ${saving ? 'animate-spin' : ''}`} aria-hidden="true" /> {saving ? 'Refreshing week…' : 'Refresh week'}
             </button>
           </div>
         </header>
 
-        {error && <div role="alert" className="mb-8 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{error}</div>}
+        {error && <div role="alert" className="animate-slide-up mb-8 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{error}</div>}
+        {taskNotice && <div role="status" className="animate-slide-up mb-8 flex items-center gap-2 rounded-2xl bg-[color:var(--block-green)] px-5 py-4 text-sm font-bold text-text-primary"><CheckCircleIcon className="h-5 w-5 text-[color:var(--mark-green)]" aria-hidden="true" />{taskNotice}</div>}
 
-        {recommendation && plan.subjects.includes(recommendation.subject || 'economics') && (
+        {recommendation && Array.isArray(plan.subjects) && plan.subjects.includes(recommendation.subject || 'economics') && (
           <section className="reveal mb-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--block-green)] p-7 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--mark-green)]">Live evidence update</p>
@@ -220,8 +232,8 @@ export default function StudyPlan() {
         )}
 
         <div className="reveal-stagger mb-14 grid gap-4 sm:grid-cols-3">
-          <Stat label="Weekly progress" value={`${completion}%`} detail={`${completed} of ${plan.tasks.length} tasks`} />
-          <Stat label="Study rhythm" value={`${plan.minutesPerDay}m`} detail={`${plan.availableDays.length} days each week`} />
+          <Stat label="Weekly progress" value={`${completion}%`} detail={`${completed} of ${tasks.length} tasks`} />
+          <Stat label="Study rhythm" value={`${plan.minutesPerDay}m`} detail={`${Array.isArray(plan.availableDays) ? plan.availableDays.length : 0} days each week`} />
           <Stat label="Overdue" value={overdue} detail={overdue ? 'Move these first' : 'You are on track'} />
         </div>
 
@@ -249,13 +261,13 @@ export default function StudyPlan() {
               </div>
             </div>
             <div className="space-y-4">
-              {Object.entries(groupedTasks).map(([date, tasks]) => (
+              {taskGroups.length ? taskGroups.map(([date, tasks]) => (
                 <div key={date} className="rounded-3xl bg-surface-raised p-5 md:p-6 shadow-[0_18px_40px_-32px_rgba(20,20,18,0.3)]">
                   <p className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-text-dim">{date === today ? `Today · ${formatDate(date)}` : formatDate(date)}</p>
                   <div className="space-y-3">
                     {tasks.map((task) => (
                       <div key={task.id} className={`flex gap-4 rounded-2xl p-4 transition-[background-color,transform,box-shadow] ${task.completed ? 'bg-[color:var(--block-green)]' : 'bg-surface-soft'} ${updatingTaskId === task.id ? 'opacity-70' : ''}`}>
-                        <button type="button" onClick={() => toggleTask(task)} aria-label={`${task.completed ? 'Mark incomplete' : 'Mark complete'}: ${task.title}`} aria-pressed={task.completed} aria-busy={updatingTaskId === task.id} disabled={Boolean(updatingTaskId)} className="mt-0.5 shrink-0 rounded-xl transition-transform hover:scale-105 active:scale-95 disabled:cursor-wait disabled:opacity-70">
+                        <button type="button" onClick={() => toggleTask(task)} aria-label={`${task.completed ? 'Mark incomplete' : 'Mark complete'}: ${task.title}`} aria-pressed={task.completed} aria-busy={updatingTaskId === task.id} disabled={Boolean(updatingTaskId || saving)} className="mt-0.5 shrink-0 rounded-xl transition-transform hover:scale-105 active:scale-95 disabled:cursor-wait disabled:opacity-70">
                           <CheckCircleIcon className={`h-7 w-7 ${task.completed ? 'animate-pop-in text-accent' : 'text-text-dim'}`} aria-hidden="true" />
                         </button>
                         <div className="min-w-0 flex-1">
@@ -265,14 +277,14 @@ export default function StudyPlan() {
                           </div>
                           <p className="mt-1 text-sm font-medium text-text-muted">{task.subjectLabel} · {task.estimatedMinutes} min</p>
                           <Link to={task.resourcePath} className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-accent hover:text-accent-strong">
-                            {task.resourceLabel} <ArrowRightIcon className="h-3.5 w-3.5" />
+                            {task.resourceLabel} <ArrowRightIcon className="h-3.5 w-3.5" aria-hidden="true" />
                           </Link>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              ))}
+              )) : <div className="rounded-3xl bg-surface-raised p-7 text-sm font-medium leading-relaxed text-text-muted">Your plan is ready, but there are no scheduled tasks yet. Refresh the week or adjust your settings to generate the next set of study actions.</div>}
             </div>
           </section>
 
@@ -280,16 +292,16 @@ export default function StudyPlan() {
             <section className="reveal rounded-3xl block-amber p-7">
               <h2 className="text-xl font-display font-extrabold tracking-tight">Priority topics</h2>
               <div className="mt-5 space-y-4">
-                {plan.weakTopics.map((topic) => (
+                {weakTopics.length ? weakTopics.map((topic) => (
                   <div key={`${topic.subject}:${topic.topic}`}>
                     <p className="text-sm font-bold text-text-primary">{topic.topic}</p>
                     <p className="mt-1 text-xs font-medium leading-relaxed text-text-muted">{topic.subjectLabel} · {topic.reason}</p>
                   </div>
-                ))}
+                )) : <p className="text-sm font-medium leading-relaxed text-text-muted">Marked work will add priority topics here as your evidence grows.</p>}
               </div>
             </section>
             <section className="reveal rounded-3xl block-blue p-7">
-              <CalendarDaysIcon className="h-7 w-7 text-accent" />
+              <CalendarDaysIcon className="h-7 w-7 text-accent" aria-hidden="true" />
               <h2 className="mt-4 text-xl font-display font-extrabold tracking-tight">Your goal</h2>
               <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{plan.goal}</p>
             </section>
@@ -324,7 +336,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
         </header>
 
         <div className="reveal mx-auto mb-8 flex max-w-xl items-center gap-3">
-          {['Subjects', 'Schedule', 'Diagnostic'].map((label, index) => (
+          {STEPS.map((label, index) => (
             <div key={label} className="flex flex-1 items-center gap-2">
               <button type="button" onClick={() => index < step && setStep(index)} disabled={index >= step} aria-label={`${index === step ? 'Current' : index < step ? 'Go back to' : 'Upcoming'} ${label} step`} aria-current={index === step ? 'step' : undefined} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold transition-transform active:scale-95 disabled:cursor-default ${index <= step ? 'bg-accent text-white' : 'bg-surface-soft text-text-dim'}`}>{index + 1}</button>
               <span className={`hidden text-xs font-bold sm:block ${index <= step ? 'text-text-primary' : 'text-text-dim'}`}>{label}</span>
@@ -332,8 +344,10 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
             </div>
           ))}
         </div>
+        <p className="reveal -mt-4 mb-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-text-dim" aria-live="polite">Step {step + 1} of {STEPS.length} · {STEPS[step]}</p>
 
         <div className="reveal rounded-3xl bg-surface-raised p-7 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div key={step} className="animate-slide-up">
           {step === 0 && (
             <div>
               <h2 className="text-3xl font-display font-extrabold tracking-tight">What are you studying?</h2>
@@ -396,6 +410,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
               </div>
             </div>
           )}
+          </div>
 
           {error && <div role="alert" className="animate-slide-up mt-7 flex items-center gap-3 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error"><ExclamationTriangleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />{error}</div>}
 
@@ -405,9 +420,9 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
               {step === 0 && cancel && <button type="button" onClick={cancel} className="btn-secondary">Cancel</button>}
             </div>
             {step < 2 ? (
-              <button type="button" onClick={next} className="btn-primary">Continue <ArrowRightIcon className="h-4 w-4" /></button>
+              <button type="button" onClick={next} className="btn-primary">Continue <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></button>
             ) : (
-              <button type="button" onClick={generate} disabled={saving} className="btn-primary"><SparklesIcon className="h-4 w-4" />{saving ? 'Building plan…' : 'Build my plan'}</button>
+              <button type="button" onClick={generate} disabled={saving} aria-busy={saving} className="btn-primary disabled:opacity-50"><SparklesIcon className="h-4 w-4" aria-hidden="true" />{saving ? 'Building plan…' : 'Build my plan'}</button>
             )}
           </div>
         </div>
