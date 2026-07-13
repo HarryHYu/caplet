@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { LayoutProvider } from '../contexts/LayoutContext';
@@ -77,6 +77,32 @@ describe('Money overview and indicator interactions', () => {
     expect(screen.getByRole('heading', { name: 'Build a private savings scenario' })).toBeInTheDocument();
     expect(localStorage.getItem('caplet:money:intent')).toBe('"save"');
     expect(localStorage.getItem('caplet:money:onboarded')).toBe('true');
+  });
+
+  it('uses the dated snapshot when the indicator registry has no observation yet', async () => {
+    let resolveIndicators;
+    api.getMoneyIndicators.mockReturnValueOnce(new Promise((resolve) => {
+      resolveIndicators = resolve;
+    }));
+
+    render(<MemoryRouter initialEntries={['/money']}><MoneyOverview /></MemoryRouter>);
+
+    await act(async () => {
+      resolveIndicators({
+        indicators: [{
+          key: 'au.cpi.headline.yoy',
+          displayTitle: 'Inflation',
+          nativeFrequency: 'monthly',
+          unit: 'percent',
+          current: null,
+          freshness: { state: 'unavailable', message: 'No validated observation is available.' },
+        }],
+      });
+    });
+
+    expect(screen.getByText('Inflation was 4.0% through the year to May 2026.')).toBeInTheDocument();
+    expect(screen.getAllByText('Dated local snapshot · not live')).toHaveLength(2);
+    expect(screen.getByText('Using a clearly labelled local snapshot.')).toBeInTheDocument();
   });
 
   it('keeps the official-data snapshot separate from a hypothetical experiment', async () => {
