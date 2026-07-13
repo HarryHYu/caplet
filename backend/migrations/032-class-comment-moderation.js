@@ -16,6 +16,12 @@ async function ensureIndex(queryInterface, tableName, fields, options) {
   await queryInterface.addIndex(tableName, fields, options);
 }
 
+async function ensureColumn(queryInterface, tableName, columnName, definition) {
+  const columns = await queryInterface.describeTable(tableName);
+  if (columns[columnName]) return;
+  await queryInterface.addColumn(tableName, columnName, definition);
+}
+
 module.exports = {
   async up(queryInterface, Sequelize) {
     if (!(await tableExists(queryInterface, 'comment_moderation_records'))) {
@@ -68,6 +74,21 @@ module.exports = {
         updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') },
       });
     }
+
+    // Older local databases may have the original moderation table from before
+    // queue routing and priority were introduced. Bring those schemas forward
+    // before creating indexes that depend on them.
+    await ensureColumn(queryInterface, 'comment_moderation_records', 'reviewQueue', {
+      type: Sequelize.STRING(32),
+      allowNull: false,
+      defaultValue: 'class_owner',
+    });
+    await ensureColumn(queryInterface, 'comment_moderation_records', 'priority', {
+      type: Sequelize.STRING(16),
+      allowNull: false,
+      defaultValue: 'standard',
+    });
+
     await ensureIndex(queryInterface, 'comment_moderation_records', ['commentId', 'reportedById'], {
       name: 'comment_moderation_reporter_comment_unique',
       unique: true,

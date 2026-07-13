@@ -42,8 +42,9 @@ export default function StudyPlan() {
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
   const [recommendation, setRecommendation] = useState(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState(null);
 
-  useReveal(undefined, [loading, plan, editing, step]);
+  useReveal(undefined, [loading, plan, editing, step, recommendation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,7 +121,10 @@ export default function StudyPlan() {
   };
 
   const toggleTask = async (task) => {
+    if (updatingTaskId) return;
     const completed = !task.completed;
+    setUpdatingTaskId(task.id);
+    setError('');
     setPlan((current) => ({
       ...current,
       tasks: current.tasks.map((item) => item.id === task.id ? { ...item, completed } : item),
@@ -134,6 +138,8 @@ export default function StudyPlan() {
         tasks: current.tasks.map((item) => item.id === task.id ? { ...item, completed: task.completed } : item),
       }));
       setError(err.message || 'Could not update that task.');
+    } finally {
+      setUpdatingTaskId(null);
     }
   };
 
@@ -175,7 +181,8 @@ export default function StudyPlan() {
   const completed = plan.tasks.filter((task) => task.completed).length;
   const completion = plan.tasks.length ? Math.round((completed / plan.tasks.length) * 100) : 0;
   const nextTask = findNextTask(plan.tasks);
-  const overdue = plan.tasks.filter((task) => !task.completed && task.dueDate < todayIso()).length;
+  const today = todayIso();
+  const overdue = plan.tasks.filter((task) => !task.completed && task.dueDate < today).length;
   const groupedTasks = groupTasks(plan.tasks);
 
   return (
@@ -202,7 +209,7 @@ export default function StudyPlan() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--mark-green)]">Live evidence update</p>
               <h2 className="mt-2 text-2xl font-display font-extrabold text-text-primary">
-                {recommendation.outcome?.title ? `Prioritise ${recommendation.outcome.title}` : 'Add a diagnostic signal'}
+                {recommendation.outcome?.title || 'Add a diagnostic signal'}
               </h2>
               <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">{recommendation.reason}</p>
             </div>
@@ -222,12 +229,12 @@ export default function StudyPlan() {
           <section className="reveal mb-14 overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 md:p-10 text-white shadow-[0_30px_60px_-38px_rgba(19,81,170,0.7)]">
             <div className="flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">{nextTask.dueDate === todayIso() ? 'Today’s next task' : `Next up · ${formatDate(nextTask.dueDate)}`}</p>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">{taskStatusLabel(nextTask, today)}</p>
                 <h2 className="mt-3 text-3xl md:text-4xl font-display font-extrabold tracking-tight">{nextTask.title}</h2>
                 <p className="mt-3 text-white/80">{nextTask.subjectLabel} · {nextTask.estimatedMinutes} minutes · {nextTask.priority} priority</p>
               </div>
-              <Link to={nextTask.resourcePath} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">
-                Start {nextTask.resourceLabel} <ArrowRightIcon className="h-4 w-4" />
+              <Link to={nextTask.resourcePath} className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent transition-transform hover:-translate-y-0.5">
+                {taskActionLabel(nextTask.resourceLabel)} <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
           </section>
@@ -244,12 +251,12 @@ export default function StudyPlan() {
             <div className="space-y-4">
               {Object.entries(groupedTasks).map(([date, tasks]) => (
                 <div key={date} className="rounded-3xl bg-surface-raised p-5 md:p-6 shadow-[0_18px_40px_-32px_rgba(20,20,18,0.3)]">
-                  <p className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-text-dim">{date === todayIso() ? `Today · ${formatDate(date)}` : formatDate(date)}</p>
+                  <p className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-text-dim">{date === today ? `Today · ${formatDate(date)}` : formatDate(date)}</p>
                   <div className="space-y-3">
                     {tasks.map((task) => (
-                      <div key={task.id} className={`flex gap-4 rounded-2xl p-4 transition-colors ${task.completed ? 'bg-block-green' : 'bg-surface-soft'}`}>
-                        <button type="button" onClick={() => toggleTask(task)} aria-label={`${task.completed ? 'Mark incomplete' : 'Mark complete'}: ${task.title}`} className="mt-0.5 shrink-0">
-                          <CheckCircleIcon className={`h-7 w-7 ${task.completed ? 'text-accent' : 'text-text-dim'}`} />
+                      <div key={task.id} className={`flex gap-4 rounded-2xl p-4 transition-[background-color,transform,box-shadow] ${task.completed ? 'bg-[color:var(--block-green)]' : 'bg-surface-soft'} ${updatingTaskId === task.id ? 'opacity-70' : ''}`}>
+                        <button type="button" onClick={() => toggleTask(task)} aria-label={`${task.completed ? 'Mark incomplete' : 'Mark complete'}: ${task.title}`} aria-pressed={task.completed} aria-busy={updatingTaskId === task.id} disabled={Boolean(updatingTaskId)} className="mt-0.5 shrink-0 rounded-xl transition-transform hover:scale-105 active:scale-95 disabled:cursor-wait disabled:opacity-70">
+                          <CheckCircleIcon className={`h-7 w-7 ${task.completed ? 'animate-pop-in text-accent' : 'text-text-dim'}`} aria-hidden="true" />
                         </button>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
@@ -319,7 +326,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
         <div className="reveal mx-auto mb-8 flex max-w-xl items-center gap-3">
           {['Subjects', 'Schedule', 'Diagnostic'].map((label, index) => (
             <div key={label} className="flex flex-1 items-center gap-2">
-              <button type="button" onClick={() => index < step && setStep(index)} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${index <= step ? 'bg-accent text-white' : 'bg-surface-soft text-text-dim'}`}>{index + 1}</button>
+              <button type="button" onClick={() => index < step && setStep(index)} disabled={index >= step} aria-label={`${index === step ? 'Current' : index < step ? 'Go back to' : 'Upcoming'} ${label} step`} aria-current={index === step ? 'step' : undefined} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold transition-transform active:scale-95 disabled:cursor-default ${index <= step ? 'bg-accent text-white' : 'bg-surface-soft text-text-dim'}`}>{index + 1}</button>
               <span className={`hidden text-xs font-bold sm:block ${index <= step ? 'text-text-primary' : 'text-text-dim'}`}>{label}</span>
               {index < 2 && <span className="h-px flex-1 bg-line-soft" />}
             </div>
@@ -330,8 +337,8 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
           {step === 0 && (
             <div>
               <h2 className="text-3xl font-display font-extrabold tracking-tight">What are you studying?</h2>
-              <label className="mt-8 block text-sm font-bold text-text-muted">Year level</label>
-              <select value={form.yearLevel} onChange={(event) => setForm((current) => ({ ...current, yearLevel: event.target.value }))} className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none focus:border-accent">
+              <label htmlFor="study-year-level" className="mt-8 block text-sm font-bold text-text-muted">Year level</label>
+              <select id="study-year-level" value={form.yearLevel} onChange={(event) => setForm((current) => ({ ...current, yearLevel: event.target.value }))} className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft">
                 {options.yearLevels.map((level) => <option key={level.value} value={level.value}>{level.label}</option>)}
               </select>
               <fieldset className="mt-8">
@@ -339,7 +346,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {options.subjects.map((subject) => {
                     const selected = form.subjects.includes(subject.value);
-                    return <button key={subject.value} type="button" onClick={() => toggleSubject(subject.value)} className={`rounded-2xl p-4 text-left text-sm font-bold transition-colors ${selected ? 'bg-accent text-white' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{subject.label}</button>;
+                    return <button key={subject.value} type="button" aria-pressed={selected} onClick={() => toggleSubject(subject.value)} className={`rounded-2xl p-4 text-left text-sm font-bold transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 ${selected ? 'bg-accent text-white shadow-[0_16px_32px_-24px_rgba(19,81,170,0.75)]' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{subject.label}</button>;
                   })}
                 </div>
               </fieldset>
@@ -349,22 +356,22 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
           {step === 1 && (
             <div>
               <h2 className="text-3xl font-display font-extrabold tracking-tight">When can you study?</h2>
-              <label className="mt-8 block text-sm font-bold text-text-muted">Main goal</label>
-              <input value={form.goal} maxLength={200} onChange={(event) => setForm((current) => ({ ...current, goal: event.target.value }))} className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none focus:border-accent" />
+              <label htmlFor="study-goal" className="mt-8 block text-sm font-bold text-text-muted">Main goal</label>
+              <input id="study-goal" value={form.goal} maxLength={200} onChange={(event) => setForm((current) => ({ ...current, goal: event.target.value }))} className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft" />
               <fieldset className="mt-8">
                 <legend className="text-sm font-bold text-text-muted">Available days</legend>
                 <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-7">
-                  {DAY_OPTIONS.map((day) => <button key={day.value} type="button" onClick={() => toggleDay(day.value)} className={`rounded-xl px-3 py-3 text-xs font-bold ${form.availableDays.includes(day.value) ? 'bg-accent text-white' : 'bg-surface-soft text-text-muted'}`}>{day.label}</button>)}
+                  {DAY_OPTIONS.map((day) => <button key={day.value} type="button" aria-pressed={form.availableDays.includes(day.value)} onClick={() => toggleDay(day.value)} className={`rounded-xl px-3 py-3 text-xs font-bold transition-[background-color,transform] duration-200 active:scale-95 ${form.availableDays.includes(day.value) ? 'bg-accent text-white' : 'bg-surface-soft text-text-muted'}`}>{day.label}</button>)}
                 </div>
               </fieldset>
-              <label className="mt-8 block text-sm font-bold text-text-muted">Minutes per study day</label>
-              <input type="range" min="15" max="120" step="5" value={form.minutesPerDay} onChange={(event) => setForm((current) => ({ ...current, minutesPerDay: Number(event.target.value) }))} className="mt-4 w-full accent-[var(--accent)]" />
+              <label htmlFor="minutes-per-study-day" className="mt-8 block text-sm font-bold text-text-muted">Minutes per study day</label>
+              <input id="minutes-per-study-day" type="range" min="15" max="120" step="5" value={form.minutesPerDay} aria-valuetext={`${form.minutesPerDay} minutes per study day`} onChange={(event) => setForm((current) => ({ ...current, minutesPerDay: Number(event.target.value) }))} className="mt-4 w-full accent-[var(--accent)]" />
               <p className="mt-2 text-sm font-bold text-accent">{form.minutesPerDay} minutes</p>
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 {selectedSubjects.map((subject) => (
-                  <label key={subject.value} className="text-sm font-bold text-text-muted">
+                  <label key={subject.value} htmlFor={`exam-date-${subject.value}`} className="text-sm font-bold text-text-muted">
                     {subject.label} exam date
-                    <input type="date" value={form.examDates[subject.value] || ''} onChange={(event) => setForm((current) => ({ ...current, examDates: { ...current.examDates, [subject.value]: event.target.value } }))} className="mt-2 block w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none focus:border-accent" />
+                    <input id={`exam-date-${subject.value}`} type="date" value={form.examDates[subject.value] || ''} onChange={(event) => setForm((current) => ({ ...current, examDates: { ...current.examDates, [subject.value]: event.target.value } }))} className="mt-2 block w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft" />
                   </label>
                 ))}
               </div>
@@ -381,7 +388,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
                     <legend className="text-base font-display font-bold text-text-primary"><span className="text-accent">{subject.label}:</span> {subject.diagnostic.question}</legend>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {subject.diagnostic.options.map((answer, index) => (
-                        <button key={answer} type="button" onClick={() => setForm((current) => ({ ...current, diagnosticAnswers: { ...current.diagnosticAnswers, [subject.value]: index } }))} className={`rounded-2xl p-4 text-left text-sm font-semibold ${form.diagnosticAnswers[subject.value] === index ? 'bg-accent text-white' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{answer}</button>
+                        <button key={answer} type="button" aria-pressed={form.diagnosticAnswers[subject.value] === index} onClick={() => setForm((current) => ({ ...current, diagnosticAnswers: { ...current.diagnosticAnswers, [subject.value]: index } }))} className={`rounded-2xl p-4 text-left text-sm font-semibold transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 ${form.diagnosticAnswers[subject.value] === index ? 'bg-accent text-white shadow-[0_16px_32px_-24px_rgba(19,81,170,0.75)]' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{answer}</button>
                       ))}
                     </div>
                   </fieldset>
@@ -390,7 +397,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
             </div>
           )}
 
-          {error && <div role="alert" className="mt-7 flex items-center gap-3 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error"><ExclamationTriangleIcon className="h-5 w-5" />{error}</div>}
+          {error && <div role="alert" className="animate-slide-up mt-7 flex items-center gap-3 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error"><ExclamationTriangleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />{error}</div>}
 
           <div className="mt-9 flex items-center justify-between gap-3 border-t border-line-soft pt-6">
             <div>
@@ -415,6 +422,18 @@ function Stat({ label, value, detail }) {
 
 function findNextTask(tasks) {
   return [...tasks].filter((task) => !task.completed).sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
+}
+
+function taskStatusLabel(task, today) {
+  if (task.dueDate < today) return `Overdue · ${formatDate(task.dueDate)}`;
+  if (task.dueDate === today) return 'Today’s next task';
+  return `Next up · ${formatDate(task.dueDate)}`;
+}
+
+function taskActionLabel(label) {
+  const clean = String(label || '').trim();
+  if (!clean) return 'Open task';
+  return /^(start|open|review|continue|browse)\b/i.test(clean) ? clean : `Start ${clean}`;
 }
 
 function groupTasks(tasks) {
