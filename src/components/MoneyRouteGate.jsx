@@ -2,7 +2,12 @@ import { Navigate, useLocation } from 'react-router-dom';
 import CapletLoader from './CapletLoader';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 
-export default function MoneyRouteGate({ children, flagKey = 'money.mode.pilot', fallbackPath = '/dashboard' }) {
+export default function MoneyRouteGate({
+  children,
+  flagKey = 'money.mode.pilot',
+  fallbackPath = '/dashboard',
+  unavailableMessage = '',
+}) {
   const location = useLocation();
   const { loading, isEnabled } = useFeatureFlags();
 
@@ -19,7 +24,16 @@ export default function MoneyRouteGate({ children, flagKey = 'money.mode.pilot',
   }
 
   if (!isEnabled(flagKey)) {
-    return <Navigate to={fallbackPath} replace state={{ from: location.pathname }} />;
+    return (
+      <Navigate
+        to={fallbackPath}
+        replace
+        state={{
+          from: location.pathname,
+          ...(unavailableMessage ? { moneyNotice: unavailableMessage } : {}),
+        }}
+      />
+    );
   }
 
   return children;

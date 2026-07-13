@@ -1,10 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import { useLayout } from '../contexts/LayoutContext';
+import { canAccessMoneyRoute } from '../config/productNavigation';
 
 export default function ProductModeSwitch({ collapsed = false, className = '' }) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
   const {
     productMode = 'study',
     setProductMode,
@@ -19,7 +22,12 @@ export default function ProductModeSwitch({ collapsed = false, className = '' })
       (prefix) => lastStudyRoute === prefix || lastStudyRoute?.startsWith(`${prefix}/`)
     );
     const studyDestination = isAuthenticated || publicStudyRoute ? lastStudyRoute : studyFallback;
-    navigate(mode === 'money' ? (lastMoneyRoute || '/money') : (studyDestination || studyFallback));
+    const moneyDestination = canAccessMoneyRoute(lastMoneyRoute, {
+      isAuthenticated,
+      featureFlagsLoading,
+      isFeatureEnabled: isEnabled,
+    }) ? lastMoneyRoute : '/money';
+    navigate(mode === 'money' ? moneyDestination : (studyDestination || studyFallback));
   };
 
   return (

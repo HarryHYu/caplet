@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import axe from 'axe-core';
@@ -7,6 +7,14 @@ import { FinancialAssumptions, FormField } from '../components/AccessibleUI';
 import FinancialTools from '../pages/FinancialTools';
 import TaxCalculator from '../pages/tools/TaxCalculator';
 import { getRouteMeta } from '../config/routeMeta';
+
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({ isAuthenticated: true }),
+}));
+
+vi.mock('../contexts/FeatureFlagContext', () => ({
+  useFeatureFlags: () => ({ loading: false, isEnabled: () => false }),
+}));
 
 afterEach(() => cleanup());
 

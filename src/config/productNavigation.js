@@ -5,7 +5,19 @@ export const moneyNavigation = [
   { path: '/money#learn', label: 'Learn', hash: '#learn' },
   { path: '/money/economy/inflation', label: 'Economy', activePrefix: '/money/economy' },
   { path: '/money/tools', label: 'Tools', activePrefix: '/money/tools' },
-  { path: '/money/my-money', label: 'My Money', activePrefix: '/money/my-money' },
+  {
+    path: '/money/my-money',
+    label: 'My Money',
+    activePrefix: '/money/my-money',
+    privateOnly: true,
+    flagKey: 'money.private.persistence',
+  },
+];
+
+const MONEY_ROUTE_REQUIREMENTS = [
+  { prefix: '/money/my-money', privateOnly: true, flagKey: 'money.private.persistence' },
+  { prefix: '/money/tools/debt-sequencer', privateOnly: true, flagKey: 'money.private.persistence' },
+  { prefix: '/money/tools/financial-twin', privateOnly: true, flagKey: 'money.financial_twin.enabled' },
 ];
 
 export const STUDY_ROUTE_PREFIXES = [
@@ -27,6 +39,25 @@ export function isMoneyPath(pathname = '') {
 
 export function isStudyPath(pathname = '') {
   return STUDY_ROUTE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+export function canAccessMoneyRoute(
+  route = '',
+  { isAuthenticated = false, featureFlagsLoading = false, isFeatureEnabled = () => false } = {},
+) {
+  const pathname = route.split(/[?#]/, 1)[0];
+  if (!isMoneyPath(pathname)) return false;
+  const requirement = MONEY_ROUTE_REQUIREMENTS.find(
+    ({ prefix }) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+  if (!requirement) return true;
+  if (requirement.privateOnly && !isAuthenticated) return false;
+  if (requirement.flagKey && featureFlagsLoading) return false;
+  return !requirement.flagKey || isFeatureEnabled(requirement.flagKey);
+}
+
+export function availableMoneyNavigation(options) {
+  return moneyNavigation.filter((item) => canAccessMoneyRoute(item.path, options));
 }
 
 export function isProductNavItemActive(item, location) {

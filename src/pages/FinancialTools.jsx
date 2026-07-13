@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useFeatureFlags } from '../contexts/FeatureFlagContext';
+import { canAccessMoneyRoute } from '../config/productNavigation';
 import { useReveal } from '../lib/useReveal';
 import ToolCard from '../components/ToolCard';
 
@@ -253,10 +256,17 @@ const categories = ['Tax & Income', 'Budgeting', 'Savings & Growth', 'Debt & Loa
 
 const FinancialTools = () => {
   useReveal();
+  const { isAuthenticated } = useAuth();
+  const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const availableTools = tools.filter((tool) => canAccessMoneyRoute(tool.path, {
+    isAuthenticated,
+    featureFlagsLoading,
+    isFeatureEnabled: isEnabled,
+  }));
 
-  const filteredTools = tools.filter(tool => {
+  const filteredTools = availableTools.filter(tool => {
     const query = searchQuery.toLowerCase();
     const matchesQuery = tool.title.toLowerCase().includes(query) ||
       tool.description.toLowerCase().includes(query) ||
@@ -289,7 +299,7 @@ const FinancialTools = () => {
             </div>
             <div className="shrink-0 hidden md:block">
               <div className="block-blue rounded-3xl px-8 py-6 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                <span className="text-5xl font-display font-extrabold tracking-tight text-blue">{tools.length}</span>
+                <span className="text-5xl font-display font-extrabold tracking-tight text-blue">{availableTools.length}</span>
                 <p className="text-xs font-bold text-text-muted mt-1 uppercase tracking-wide">Calculators</p>
               </div>
             </div>
@@ -377,7 +387,7 @@ const FinancialTools = () => {
           /* Grouped by category */
           <div data-tour-id="tools-grid" className="space-y-16">
             {categories.map(cat => {
-              const group = tools.filter(t => t.category === cat);
+              const group = availableTools.filter(t => t.category === cat);
               return (
                 <div key={cat}>
                   <div className="flex items-center gap-4 mb-6">

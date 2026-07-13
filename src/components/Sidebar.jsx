@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLayout } from '../contexts/LayoutContext';
 import api from '../services/api';
 import ProductModeSwitch from './ProductModeSwitch';
-import { isProductNavItemActive, moneyNavigation } from '../config/productNavigation';
+import { availableMoneyNavigation, isProductNavItemActive } from '../config/productNavigation';
 import {
     Squares2X2Icon,
     BookOpenIcon,
@@ -35,7 +36,8 @@ import {
  */
 export default function Sidebar() {
     const location = useLocation();
-    const { user, logout } = useAuth();
+    const { user, logout, isAuthenticated } = useAuth();
+    const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
     const { isDark, toggleTheme } = useTheme();
     const { sidebarCollapsed: collapsed, toggleSidebar, toggleNavMode, productMode = 'study' } = useLayout();
 
@@ -74,9 +76,16 @@ export default function Sidebar() {
         { path: '/essays', label: 'Essays', icon: DocumentTextIcon, badge: savedCount },
     ];
 
-    const moneyIcons = [Squares2X2Icon, BookOpenIcon, ChartBarSquareIcon, WrenchScrewdriverIcon, LockClosedIcon];
+    const moneyIcons = {
+        Overview: Squares2X2Icon,
+        Learn: BookOpenIcon,
+        Economy: ChartBarSquareIcon,
+        Tools: WrenchScrewdriverIcon,
+        'My Money': LockClosedIcon,
+    };
     const items = productMode === 'money'
-        ? moneyNavigation.map((item, index) => ({ ...item, icon: moneyIcons[index] }))
+        ? availableMoneyNavigation({ isAuthenticated, featureFlagsLoading, isFeatureEnabled: isEnabled })
+            .map((item) => ({ ...item, icon: moneyIcons[item.label] }))
         : studyItems;
 
     const initials = user

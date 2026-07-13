@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLayout } from '../contexts/LayoutContext';
 import ProductModeSwitch from './ProductModeSwitch';
@@ -16,6 +17,7 @@ const Navbar = ({ mobileOnly = false }) => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
+  const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
   const { isDark, toggleTheme } = useTheme();
   const { toggleNavMode, productMode = 'study' } = useLayout();
   const effectiveProductMode = productMode;
@@ -92,6 +94,7 @@ const Navbar = ({ mobileOnly = false }) => {
   ];
 
   const visibleItems = (items) => items.filter((item) => {
+    if (item.flagKey && (featureFlagsLoading || !isEnabled(item.flagKey))) return false;
     if (isAuthenticated) return !item.publicOnly;
     return !item.privateOnly;
   });

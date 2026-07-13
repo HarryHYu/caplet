@@ -5,11 +5,14 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { LayoutProvider } from '../contexts/LayoutContext';
 import ProductModeSwitch from '../components/ProductModeSwitch';
 import ProductModeRouteSync from '../components/ProductModeRouteSync';
+import MoneyRouteGate from '../components/MoneyRouteGate';
 import LegacyMoneyRedirect from '../components/LegacyMoneyRedirect';
 import MoneyOverview from '../pages/MoneyOverview';
 import MoneyInflation from '../pages/MoneyInflation';
 import MyMoney from '../pages/MyMoney';
+import FinancialTools from '../pages/FinancialTools';
 import { RequireAuth } from '../App';
+import { availableMoneyNavigation, canAccessMoneyRoute } from '../config/productNavigation';
 import api from '../services/api';
 
 const authState = vi.hoisted(() => ({
@@ -18,9 +21,22 @@ const authState = vi.hoisted(() => ({
   loading: false,
 }));
 
+const featureFlagState = vi.hoisted(() => ({
+  loading: false,
+  enabled: {},
+}));
+
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({ ...authState, logout: vi.fn() }),
   AuthProvider: ({ children }) => children,
+}));
+
+vi.mock('../contexts/FeatureFlagContext', () => ({
+  FeatureFlagProvider: ({ children }) => children,
+  useFeatureFlags: () => ({
+    loading: featureFlagState.loading,
+    isEnabled: (key, fallback = false) => featureFlagState.enabled[key] ?? fallback,
+  }),
 }));
 
 vi.mock('../services/api', () => ({
@@ -61,6 +77,8 @@ beforeEach(() => {
   localStorage.clear();
   authState.isAuthenticated = true;
   authState.loading = false;
+  featureFlagState.loading = false;
+  featureFlagState.enabled = {};
 });
 
 afterEach(() => cleanup());
@@ -68,6 +86,7 @@ afterEach(() => cleanup());
 describe('Money overview and indicator interactions', () => {
   it('turns a first-visit intent into one returning-student next action', async () => {
     const user = userEvent.setup();
+    featureFlagState.enabled = { 'money.private.persistence': true };
     render(<MemoryRouter initialEntries={['/money']}><MoneyOverview /></MemoryRouter>);
 
     expect(screen.getByRole('heading', { name: 'Money, made understandable.' })).toBeInTheDocument();
@@ -77,6 +96,22 @@ describe('Money overview and indicator interactions', () => {
     expect(screen.getByRole('heading', { name: 'Build a private savings scenario' })).toBeInTheDocument();
     expect(localStorage.getItem('caplet:money:intent')).toBe('"save"');
     expect(localStorage.getItem('caplet:money:onboarded')).toBe('true');
+  });
+
+  it('offers a usable savings fallback when private Money is unavailable', () => {
+    render(
+      <MemoryRouter initialEntries={[{
+        pathname: '/money',
+        state: { moneyNotice: 'My Money is not available for this account yet.' },
+      }]}>
+        <MoneyOverview />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent('My Money is not available');
+    expect(screen.getByRole('heading', { name: 'Private saving is coming later.' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Try the savings calculator/ })).toHaveAttribute('href', '/money/tools/savings-goal');
+    expect(screen.queryByRole('link', { name: 'Open My Money' })).not.toBeInTheDocument();
   });
 
   it('uses the dated snapshot when the indicator registry has no observation yet', async () => {
@@ -169,6 +204,27 @@ describe('My Money privacy states', () => {
   });
 });
 
+describe('Money tool availability', () => {
+  it('does not advertise gated tools that would immediately redirect', () => {
+    render(<MemoryRouter><FinancialTools /></MemoryRouter>);
+
+    expect(screen.queryByRole('heading', { name: 'Financial Twin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Debt Sequencer' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Savings Goal Calculator' })).toBeInTheDocument();
+  });
+
+  it('shows gated tools when their flags and authentication allow access', () => {
+    featureFlagState.enabled = {
+      'money.private.persistence': true,
+      'money.financial_twin.enabled': true,
+    };
+    render(<MemoryRouter><FinancialTools /></MemoryRouter>);
+
+    expect(screen.getByRole('heading', { name: 'Financial Twin' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Debt Sequencer' })).toBeInTheDocument();
+  });
+});
+
 describe('Money routing and mode persistence', () => {
   it('restores the last meaningful Money route when switching modes', async () => {
     const user = userEvent.setup();
@@ -200,6 +256,88 @@ describe('Money routing and mode persistence', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/money/economy/inflation?from=test');
     await waitFor(() => expect(localStorage.getItem('caplet:product-mode')).toBe('money'));
     await waitFor(() => expect(localStorage.getItem('caplet:last-money-route')).toBe('/money/economy/inflation?from=test'));
+  });
+
+  it('returns a disabled My Money route to the Money overview without poisoning reopen', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/money/my-money']}>
+        <LayoutProvider>
+          <ProductModeRouteSync />
+          <ProductModeSwitch />
+          <LocationView />
+          <Routes>
+            <Route
+              path="/money/my-money"
+              element={(
+                <MoneyRouteGate
+                  flagKey="money.private.persistence"
+                  fallbackPath="/money"
+                  unavailableMessage="My Money is not available for this account yet."
+                >
+                  <div>Private Money</div>
+                </MoneyRouteGate>
+              )}
+            />
+            <Route path="/money" element={<MoneyOverview />} />
+            <Route path="/dashboard" element={<div>Study dashboard</div>} />
+          </Routes>
+        </LayoutProvider>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Money, made understandable.' })).toBeInTheDocument();
+    expect(screen.getByText('My Money is not available for this account yet.')).toBeInTheDocument();
+    await waitFor(() => expect(localStorage.getItem('caplet:last-money-route')).toBe('/money'));
+
+    await user.click(screen.getByRole('button', { name: 'Study' }));
+    expect(await screen.findByText('Study dashboard')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Money' }));
+
+    expect(await screen.findByRole('heading', { name: 'Money, made understandable.' })).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/money');
+  });
+
+  it('does not remember an inaccessible private route before its gate resolves', async () => {
+    localStorage.setItem('caplet:last-money-route', '/money/tools');
+    render(
+      <MemoryRouter initialEntries={['/money/my-money']}>
+        <LayoutProvider>
+          <ProductModeRouteSync />
+          <LocationView />
+        </LayoutProvider>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(localStorage.getItem('caplet:product-mode')).toBe('money'));
+    expect(localStorage.getItem('caplet:last-money-route')).toBe('/money/tools');
+  });
+
+  it('repairs a previously saved inaccessible Money destination on mode switch', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('caplet:last-money-route', '/money/my-money');
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <LayoutProvider>
+          <ProductModeSwitch />
+          <LocationView />
+        </LayoutProvider>
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Money' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/money');
+  });
+
+  it('only exposes Money navigation that the current user can open', () => {
+    const disabled = () => false;
+    const privateEnabled = (key) => key === 'money.private.persistence';
+
+    expect(availableMoneyNavigation({ isAuthenticated: true, isFeatureEnabled: disabled }).map((item) => item.label)).not.toContain('My Money');
+    expect(availableMoneyNavigation({ isAuthenticated: true, isFeatureEnabled: privateEnabled }).map((item) => item.label)).toContain('My Money');
+    expect(canAccessMoneyRoute('/money/my-money', { isAuthenticated: true, featureFlagsLoading: true, isFeatureEnabled: privateEnabled })).toBe(false);
+    expect(canAccessMoneyRoute('/money/my-money', { isAuthenticated: false, isFeatureEnabled: privateEnabled })).toBe(false);
+    expect(canAccessMoneyRoute('/money/tools/savings-goal', { isAuthenticated: false, isFeatureEnabled: disabled })).toBe(true);
   });
 
   it('preserves old tool bookmarks, query strings and hashes', async () => {

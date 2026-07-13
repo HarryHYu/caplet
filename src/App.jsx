@@ -253,7 +253,7 @@ function AppRoutes() {
           <Route path="/money" element={<MoneyRouteGate><MoneyOverview /></MoneyRouteGate>} />
           <Route path="/money/economy" element={<MoneyRouteGate><Navigate to="/money/economy/inflation" replace /></MoneyRouteGate>} />
           <Route path="/money/economy/inflation" element={<MoneyRouteGate><MoneyInflation /></MoneyRouteGate>} />
-          <Route path="/money/my-money" element={<MoneyPilot><MoneyRouteGate flagKey="money.private.persistence"><RequireAuth><MyMoney /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
+          <Route path="/money/my-money" element={<MoneyPilot><MoneyRouteGate flagKey="money.private.persistence" fallbackPath="/money" unavailableMessage="My Money is not available for this account yet. You can still use Money learning and calculators without saving private figures."><RequireAuth><MyMoney /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
           <Route path="/money/tools" element={<MoneyRouteGate><FinancialTools /></MoneyRouteGate>} />
           <Route path="/fintools" element={<LegacyMoneyRedirect prefix="/fintools" />} />
           <Route path="/fintools/*" element={<LegacyMoneyRedirect prefix="/fintools" />} />

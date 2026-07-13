@@ -6,21 +6,35 @@ import {
   WrenchScrewdriverIcon,
   BookOpenIcon,
 } from '@heroicons/react/24/outline';
-import { isProductNavItemActive, moneyNavigation } from '../config/productNavigation';
+import { useAuth } from '../contexts/AuthContext';
+import { useFeatureFlags } from '../contexts/FeatureFlagContext';
+import { availableMoneyNavigation, isProductNavItemActive } from '../config/productNavigation';
 
-const icons = [HomeIcon, BookOpenIcon, ChartBarSquareIcon, WrenchScrewdriverIcon, LockClosedIcon];
+const icons = {
+  Overview: HomeIcon,
+  Learn: BookOpenIcon,
+  Economy: ChartBarSquareIcon,
+  Tools: WrenchScrewdriverIcon,
+  'My Money': LockClosedIcon,
+};
 
 export default function MoneyMobileNav() {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
+  const items = availableMoneyNavigation({ isAuthenticated, featureFlagsLoading, isFeatureEnabled: isEnabled });
 
   return (
     <nav
       aria-label="Money navigation"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line-soft bg-surface-raised/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur lg:hidden"
     >
-      <div className="mx-auto grid max-w-xl grid-cols-5 gap-1">
-        {moneyNavigation.map((item, index) => {
-          const Icon = icons[index];
+      <div
+        className="mx-auto grid max-w-xl gap-1"
+        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      >
+        {items.map((item) => {
+          const Icon = icons[item.label];
           const active = isProductNavItemActive(item, location);
           return (
             <Link
