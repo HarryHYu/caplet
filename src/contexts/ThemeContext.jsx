@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext();
+const palettes = ['paper', 'white', 'sky', 'sage', 'rose'];
 
 /* eslint-disable-next-line react-refresh/only-export-components */
 export const useTheme = () => {
@@ -18,6 +19,10 @@ export const ThemeProvider = ({ children }) => {
     return ['light', 'dark', 'system'].includes(stored) ? stored : 'system';
   });
   const [systemIsDark, setSystemIsDark] = useState(getSystemPreference);
+  const [palette, setPalette] = useState(() => {
+    const stored = localStorage.getItem('palette');
+    return palettes.includes(stored) ? stored : 'paper';
+  });
   const isDark = theme === 'dark' || (theme === 'system' && systemIsDark);
 
   useEffect(() => {
@@ -33,12 +38,17 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('theme', theme);
   }, [isDark, theme]);
 
+  useEffect(() => {
+    document.documentElement.dataset.palette = palette;
+    localStorage.setItem('palette', palette);
+  }, [palette]);
+
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, palette, setPalette, isDark, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

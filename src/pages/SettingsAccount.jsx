@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 
 const SettingsAccount = () => {
   const { user, updateProfile } = useAuth();
-  const { theme, setTheme } = useTheme();
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -43,37 +41,6 @@ const SettingsAccount = () => {
             {message.type === 'success' ? 'Success: ' : 'Error: '}{message.text}
           </div>
         )}
-        <div>
-          <h3 className="text-sm font-display font-bold tracking-tight text-text-primary mb-4">Appearance</h3>
-          <div className="rounded-2xl border border-line-soft bg-surface-soft p-2">
-            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Colour theme">
-              {[
-                { value: 'light', label: 'Light' },
-                { value: 'dark', label: 'Dark' },
-                { value: 'system', label: 'System' },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={theme === option.value}
-                  onClick={() => setTheme(option.value)}
-                  className={`rounded-xl px-3 py-3 text-sm font-bold transition-colors ${
-                    theme === option.value
-                      ? 'bg-surface-raised text-text-primary shadow-sm'
-                      : 'text-text-muted hover:bg-surface-raised/60 hover:text-text-primary'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-            <p className="px-2 pb-1 pt-3 text-xs font-medium leading-relaxed text-text-dim">
-              System follows your device’s appearance setting and updates automatically when it changes.
-            </p>
-          </div>
-        </div>
-
         <div>
           <h3 className="text-sm font-display font-bold tracking-tight text-text-primary mb-6">Access Level</h3>
           <div className="p-10 bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">

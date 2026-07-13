@@ -15,6 +15,7 @@ const Settings = () => {
 
   const navItems = [
     { path: '/settings/profile', label: 'Profile', description: 'Name, email, password, bio' },
+    { path: '/settings/appearance', label: 'Appearance', description: 'Theme and background colour' },
     { path: '/settings/financial', label: 'Financial', description: 'Income, savings, debts, and goals' },
     { path: '/settings/account', label: 'Account', description: 'Role, preferences' },
   ];

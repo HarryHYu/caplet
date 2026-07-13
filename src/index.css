@@ -84,6 +84,65 @@
   --block-green: rgba(63, 157, 107, 0.09);
 }
 
+/* User-selected light palettes. Each option changes the full surface system,
+   not only the body, so cards and controls remain clearly layered. */
+:root:not(.dark)[data-palette='white'] {
+  --surface-body: #FFFFFF;
+  --surface-base: #FFFFFF;
+  --surface-soft: #F0F2F5;
+  --surface-raised: #FBFCFE;
+  --line-soft: #DDE1E7;
+  --accent: #2856A3;
+  --accent-strong: #1D417D;
+  --accent-soft: rgba(40, 86, 163, 0.1);
+  --block-cream: #FFFFFF;
+  --block-blue: rgba(40, 86, 163, 0.07);
+}
+
+:root:not(.dark)[data-palette='sky'] {
+  --surface-body: #F2F7FC;
+  --surface-base: #F2F7FC;
+  --surface-soft: #DFEAF5;
+  --surface-raised: #FAFCFF;
+  --line-soft: #C9D9E8;
+  --accent: #1B5A91;
+  --accent-strong: #14466F;
+  --accent-soft: rgba(27, 90, 145, 0.11);
+  --mark-blue: #1B5A91;
+  --block-cream: #F8FBFE;
+  --block-blue: rgba(27, 90, 145, 0.08);
+}
+
+:root:not(.dark)[data-palette='sage'] {
+  --surface-body: #F4F8F1;
+  --surface-base: #F4F8F1;
+  --surface-soft: #E2EDDC;
+  --surface-raised: #FBFDF9;
+  --line-soft: #CDDCC5;
+  --accent: #2E6B4A;
+  --accent-strong: #23543A;
+  --accent-soft: rgba(46, 107, 74, 0.11);
+  --mark-blue: #2E6B4A;
+  --block-cream: #F9FCF7;
+  --block-blue: rgba(46, 107, 74, 0.08);
+  --block-green: rgba(63, 157, 107, 0.13);
+}
+
+:root:not(.dark)[data-palette='rose'] {
+  --surface-body: #FCF5F7;
+  --surface-base: #FCF5F7;
+  --surface-soft: #F2E1E7;
+  --surface-raised: #FFF9FB;
+  --line-soft: #E4CBD4;
+  --accent: #9A3D62;
+  --accent-strong: #79304D;
+  --accent-soft: rgba(154, 61, 98, 0.1);
+  --mark-blue: #9A3D62;
+  --block-cream: #FFF9FB;
+  --block-blue: rgba(154, 61, 98, 0.07);
+  --block-coral: rgba(232, 99, 63, 0.12);
+}
+
 .dark {
   --surface-body: #141413;
   --surface-base: #141413;   /* alias for --surface-body used in Tour/demo */

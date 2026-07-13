@@ -54,6 +54,7 @@ import Classes from './pages/Classes';
 import ClassDetail from './pages/ClassDetail';
 import Settings from './pages/Settings';
 import SettingsProfile from './pages/SettingsProfile';
+import SettingsAppearance from './pages/SettingsAppearance';
 import SettingsFinancial from './pages/SettingsFinancial';
 import SettingsAccount from './pages/SettingsAccount';
 import UserProfile from './pages/UserProfile';
@@ -200,6 +201,7 @@ function AppRoutes() {
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>}>
             <Route index element={<Navigate to="/settings/profile" replace />} />
             <Route path="profile" element={<SettingsProfile />} />
+            <Route path="appearance" element={<SettingsAppearance />} />
             <Route path="financial" element={<SettingsFinancial />} />
             <Route path="account" element={<SettingsAccount />} />
           </Route>
