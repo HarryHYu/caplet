@@ -10,7 +10,7 @@ export default defineConfig([
   {
     files: ['backend/**/*.js', '*.config.js'],
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: 2022,
       globals: globals.node,
       parserOptions: { sourceType: 'commonjs' },
     },
