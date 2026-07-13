@@ -32,6 +32,9 @@ describe('Navbar accessibility', () => {
 
     expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Library' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Practice' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Classes' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Study' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Money' })).toHaveAttribute('aria-pressed', 'false');
 

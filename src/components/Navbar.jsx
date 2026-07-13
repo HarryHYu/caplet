@@ -13,7 +13,6 @@ const Navbar = ({ mobileOnly = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNavMenu, setShowNavMenu] = useState(false);
-  const [showTryMenu, setShowTryMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
@@ -23,17 +22,14 @@ const Navbar = ({ mobileOnly = false }) => {
   const effectiveProductMode = productMode;
   const menuRef = useRef(null);
   const navMenuRef = useRef(null);
-  const tryMenuRef = useRef(null);
   const userButtonRef = useRef(null);
   const navButtonRef = useRef(null);
-  const tryButtonRef = useRef(null);
   const mobileButtonRef = useRef(null);
 
   useEffect(() => {
     setIsOpen(false);
     setShowUserMenu(false);
     setShowNavMenu(false);
-    setShowTryMenu(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -50,9 +46,6 @@ const Navbar = ({ mobileOnly = false }) => {
       if (navMenuRef.current && !navMenuRef.current.contains(e.target)) {
         setShowNavMenu(false);
       }
-      if (tryMenuRef.current && !tryMenuRef.current.contains(e.target)) {
-        setShowTryMenu(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -64,15 +57,13 @@ const Navbar = ({ mobileOnly = false }) => {
       if (isOpen) mobileButtonRef.current?.focus();
       else if (showUserMenu) userButtonRef.current?.focus();
       else if (showNavMenu) navButtonRef.current?.focus();
-      else if (showTryMenu) tryButtonRef.current?.focus();
       setShowUserMenu(false);
       setShowNavMenu(false);
-      setShowTryMenu(false);
       setIsOpen(false);
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, showNavMenu, showTryMenu, showUserMenu]);
+  }, [isOpen, showNavMenu, showUserMenu]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -84,14 +75,16 @@ const Navbar = ({ mobileOnly = false }) => {
   const studyCoreItems = [
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
     { path: '/library', label: 'Library' },
+    { path: '/practice', label: 'Practice', privateOnly: true },
+    { path: '/classes', label: 'Classes', privateOnly: true, tourId: 'nav-academy' },
   ];
 
   const studyMoreItems = [
     { path: '/study-plan', label: 'Study Plan', privateOnly: true },
-    { path: '/practice', label: 'Practice', privateOnly: true },
+    { path: '/revision', label: 'Revision', privateOnly: true },
+    { path: '/essays', label: 'Essays', privateOnly: true },
     { path: '/mastery', label: 'Mastery', privateOnly: true },
     { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
-    { path: '/classes', label: 'Classes', tourId: 'nav-academy' },
     { path: '/edutools', label: 'Education Tools', tourId: 'nav-edutools' },
   ];
 
@@ -109,7 +102,12 @@ const Navbar = ({ mobileOnly = false }) => {
   });
   const visibleCoreItems = effectiveProductMode === 'money' ? visibleItems(moneyNavigation) : visibleItems(studyCoreItems);
   const visibleMoreItems = effectiveProductMode === 'money' ? [] : visibleItems(studyMoreItems);
-  const navItems = [...visibleCoreItems, ...visibleMoreItems];
+  const visibleTryItems = effectiveProductMode === 'study' ? visibleItems(tryItems) : [];
+  const moreGroups = [
+    { label: 'Study tools', items: visibleMoreItems },
+    { label: 'Explore', items: visibleTryItems },
+  ].filter((group) => group.items.length > 0);
+  const moreItems = moreGroups.flatMap((group) => group.items);
 
   const homePath = effectiveProductMode === 'money' ? '/money' : isAuthenticated ? '/dashboard' : '/';
   const isHome = location.pathname === '/';
@@ -120,6 +118,7 @@ const Navbar = ({ mobileOnly = false }) => {
   const isItemActive = (item) => effectiveProductMode === 'money'
     ? isProductNavItemActive(item, location)
     : isActive(item.path);
+  const hasMoreActiveItem = moreItems.some((item) => isItemActive(item));
 
   const hidePaths = ['/login', '/register', '/play'];
   if (hidePaths.includes(location.pathname)) return null;
@@ -161,8 +160,8 @@ const Navbar = ({ mobileOnly = false }) => {
           {/* Right cluster — folded nav toggles pinned to the far right, then actions */}
           <div className="flex items-center gap-2 md:gap-3">
 
-          {/* Desktop nav — core destinations stay visible; secondary areas use disclosures. */}
-          <nav className="hidden lg:flex items-center gap-1.5">
+          {/* Desktop nav — four anchors stay visible; secondary areas use one disclosure. */}
+          <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-1">
             {visibleCoreItems.map((item) => (
               <Link
                 key={item.path}
@@ -177,85 +176,48 @@ const Navbar = ({ mobileOnly = false }) => {
               </Link>
             ))}
 
-            {/* More menu */}
-            {visibleMoreItems.length > 0 && <div className="relative" ref={navMenuRef}>
+            {/* More menu keeps planning, review, curriculum, and public extras together. */}
+            {moreItems.length > 0 && <div className="relative" ref={navMenuRef}>
               <button
                 ref={navButtonRef}
                 type="button"
-                onClick={() => { setShowNavMenu((v) => !v); setShowTryMenu(false); }}
+                onClick={() => setShowNavMenu((v) => !v)}
                 aria-expanded={showNavMenu}
                 aria-haspopup="true"
                 aria-controls="more-navigation"
                 className={`min-h-11 flex items-center gap-2 px-3 rounded-lg text-sm font-bold tracking-[0.06em] whitespace-nowrap transition-all duration-200 ${
-                  showNavMenu || visibleMoreItems.some((i) => isActive(i.path))
+                  showNavMenu || hasMoreActiveItem
                     ? 'text-accent bg-accent-soft'
                     : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
                 }`}
               >
                 More
-                <svg className={`w-3 h-3 shrink-0 transition-transform duration-200 ${showNavMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
+                <span className={`text-base leading-none transition-transform duration-200 ${showNavMenu ? 'rotate-90' : ''}`} aria-hidden="true">›</span>
               </button>
 
               {showNavMenu && (
-                <div id="more-navigation" className="absolute top-full left-0 mt-2 w-56 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                  {visibleMoreItems.map((item) => {
-                    const active = isActive(item.path);
-                    return (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                        className={`flex items-center px-3 py-2.5 text-sm font-bold tracking-[0.04em] transition-colors ${
-                          active ? 'text-accent bg-accent-soft' : 'text-text-primary hover:bg-surface-soft'
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>}
-
-            {/* Try menu — demo & live, no account needed */}
-            {effectiveProductMode === 'study' && <div className="relative" ref={tryMenuRef}>
-              <button
-                ref={tryButtonRef}
-                type="button"
-                onClick={() => { setShowTryMenu((v) => !v); setShowNavMenu(false); }}
-                aria-expanded={showTryMenu}
-                aria-haspopup="true"
-                aria-controls="try-navigation"
-                className={`min-h-11 flex items-center gap-2 px-3 rounded-lg text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
-                  showTryMenu || tryItems.some((i) => isActive(i.path))
-                    ? 'text-accent bg-accent-soft'
-                    : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
-                }`}
-              >
-                Try
-                <svg className={`w-3 h-3 transition-transform duration-200 ${showTryMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {showTryMenu && (
-                <div id="try-navigation" className="absolute top-full left-0 mt-2 w-52 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                  {tryItems.map((item) => {
-                    const active = isActive(item.path);
-                    return (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`flex items-center px-3 py-2.5 text-sm font-bold tracking-[0.04em] transition-colors ${
-                          active ? 'text-accent bg-accent-soft' : 'text-text-primary hover:bg-surface-soft'
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  })}
+                <div id="more-navigation" className="absolute top-full left-0 mt-2 w-60 overflow-hidden rounded-2xl border border-line-soft bg-surface-raised p-2 shadow-[0_18px_42px_-20px_rgba(20,20,18,0.35)] animate-in fade-in slide-in-from-top-1 duration-150">
+                  {moreGroups.map((group, groupIndex) => (
+                    <div key={group.label} className={groupIndex > 0 ? 'mt-2 border-t border-line-soft pt-2' : ''}>
+                      <p className="px-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-text-dim">{group.label}</p>
+                      {group.items.map((item) => {
+                        const active = isItemActive(item);
+                        return (
+                          <Link
+                            key={item.path}
+                            to={item.path}
+                            {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
+                            className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold tracking-[0.02em] transition-colors ${
+                              active ? 'bg-accent-soft text-accent' : 'text-text-primary hover:bg-surface-soft'
+                            }`}
+                          >
+                            {item.label}
+                            {active && <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>}
@@ -393,7 +355,7 @@ const Navbar = ({ mobileOnly = false }) => {
               <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-text-dim">Navigate</span>
               <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-bold text-accent">Study</span>
             </div>
-            {navItems.map((item) => {
+            {visibleCoreItems.map((item) => {
               const active = isItemActive(item);
               return (
                 <Link
@@ -413,21 +375,29 @@ const Navbar = ({ mobileOnly = false }) => {
                 </Link>
               );
             })}
-            <div className="my-2 border-t border-line-soft" />
-            <Link
-              to="/demo"
-              onClick={() => setIsOpen(false)}
-              className="mobile-nav-item mb-1 flex min-h-12 items-center rounded-2xl px-4 text-sm font-bold text-text-primary transition-colors hover:bg-surface-soft"
-            >
-              Demo
-            </Link>
-            <Link
-              to="/play"
-              onClick={() => setIsOpen(false)}
-              className="mobile-nav-item mb-1 flex min-h-12 items-center rounded-2xl px-4 text-sm font-bold text-text-primary transition-colors hover:bg-surface-soft"
-            >
-              Caplet Live
-            </Link>
+            {moreGroups.map((group) => (
+              <div key={group.label} className="mt-3 border-t border-line-soft pt-3">
+                <p className="mb-1 px-4 text-[10px] font-extrabold uppercase tracking-[0.16em] text-text-dim">{group.label}</p>
+                {group.items.map((item) => {
+                  const active = isItemActive(item);
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setIsOpen(false)}
+                      {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
+                      aria-current={active ? 'page' : undefined}
+                      className={`mobile-nav-item mb-1 flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm font-bold tracking-[0.04em] transition-[color,background-color,transform] active:scale-[0.98] ${
+                        active ? 'bg-accent-soft text-accent' : 'text-text-primary hover:bg-surface-soft'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      {active && <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_0_4px_var(--accent-soft)]" aria-hidden="true" />}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
             {!isAuthenticated && (
               <Link
                 to="/register"
