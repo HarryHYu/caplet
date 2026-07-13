@@ -185,9 +185,12 @@ function freshnessFor(series, observation, now = new Date()) {
   }
 
   return {
-    state: expected && now.getTime() < expected.getTime() ? 'current' : 'awaiting_release',
-    message: expected && now.getTime() < expected.getTime()
-      ? 'The latest expected release is available.'
+    // A registry entry without a release-calendar timestamp is not an
+    // error. It means the adapter has not supplied a date-specific expectation
+    // yet, so a validated observation can still be described as current.
+    state: !expected || now.getTime() < expected.getTime() ? 'current' : 'awaiting_release',
+    message: !expected || now.getTime() < expected.getTime()
+      ? 'The latest validated observation is available.'
       : 'The next source release is not yet due.',
     nextExpectedReleaseAt: expected?.toISOString() || null,
   };
@@ -320,7 +323,7 @@ async function upsertObservations(seriesKey, observations, { models = require('.
         periodEnd,
         periodLabel: input.periodLabel || observationDate,
         value,
-        previousValue: revised ? oldValue : existing?.previousValue || null,
+        previousValue: revised ? oldValue : (existing?.previousValue ?? null),
         releasedAt: dateValue(input.releasedAt),
         retrievedAt: dateValue(input.retrievedAt) || now,
         revisionState: revised ? 'revised' : existing?.revisionState || 'initial',

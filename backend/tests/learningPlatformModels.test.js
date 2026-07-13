@@ -52,8 +52,12 @@ describe('canonical learning-platform persistence', () => {
       ];
       for (const [tableName, Model] of schemaModels) {
         const columns = await queryInterface.describeTable(tableName);
+        // curriculumEditionId is introduced by the later curriculum-editions
+        // migration (037); this historical portability rehearsal intentionally
+        // exercises the earlier learning-platform migration (021) in isolation.
         const persistedAttributes = Object.values(Model.rawAttributes)
           .filter((attribute) => attribute.type?.key !== 'VIRTUAL')
+          .filter((attribute) => attribute.field !== 'curriculumEditionId')
           .map((attribute) => attribute.field)
           .sort();
         expect(Object.keys(columns).sort()).toEqual(persistedAttributes);

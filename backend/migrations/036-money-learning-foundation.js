@@ -59,7 +59,6 @@ module.exports = {
       updatedAt: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.NOW },
     });
     await queryInterface.addIndex('economic_observations', ['seriesId', 'observationDate'], { name: 'economic_observations_series_date_unique', unique: true });
-    await queryInterface.addIndex('economic_observations', ['seriesId', 'observationDate'], { name: 'economic_observations_series_period_idx' });
 
     await queryInterface.createTable('economic_ingestion_runs', {
       id: { type: Sequelize.UUID, defaultValue: Sequelize.UUIDV4, primaryKey: true },

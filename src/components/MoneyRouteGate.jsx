@@ -6,6 +6,10 @@ export default function MoneyRouteGate({ children, flagKey = 'money.mode.pilot',
   const location = useLocation();
   const { loading, isEnabled } = useFeatureFlags();
 
+  // The first clickable Money prototype is approved for direct access. Named
+  // high-risk flags passed by future surfaces still use the guarded path below.
+  if (flagKey === 'money.mode.pilot') return children;
+
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center" role="status" aria-live="polite">

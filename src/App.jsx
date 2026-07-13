@@ -229,6 +229,12 @@ function RequireAdmin({ children }) {
   return children;
 }
 
+// The approved prototype routes stay directly accessible. Higher-risk future
+// surfaces, such as Financial Twin, retain their own explicit feature gate.
+function MoneyPilot({ children }) {
+  return children;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -247,7 +253,7 @@ function AppRoutes() {
           <Route path="/money" element={<MoneyRouteGate><MoneyOverview /></MoneyRouteGate>} />
           <Route path="/money/economy" element={<MoneyRouteGate><Navigate to="/money/economy/inflation" replace /></MoneyRouteGate>} />
           <Route path="/money/economy/inflation" element={<MoneyRouteGate><MoneyInflation /></MoneyRouteGate>} />
-          <Route path="/money/my-money" element={<MoneyRouteGate flagKey="money.private.persistence"><RequireAuth><MyMoney /></RequireAuth></MoneyRouteGate>} />
+          <Route path="/money/my-money" element={<MoneyPilot><MoneyRouteGate flagKey="money.private.persistence"><RequireAuth><MyMoney /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
           <Route path="/money/tools" element={<MoneyRouteGate><FinancialTools /></MoneyRouteGate>} />
           <Route path="/fintools" element={<LegacyMoneyRedirect prefix="/fintools" />} />
           <Route path="/fintools/*" element={<LegacyMoneyRedirect prefix="/fintools" />} />
@@ -256,28 +262,28 @@ function AppRoutes() {
           <Route path="/edutools" element={<EduTools />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/pitch" element={<DemoPitch />} />
-          <Route path="/money/tools/tax-calculator" element={<TaxCalculator />} />
-          <Route path="/money/tools/budget-planner" element={<BudgetPlanner />} />
-          <Route path="/money/tools/savings-goal" element={<SavingsGoal />} />
-          <Route path="/money/tools/loan-repayment" element={<LoanRepayment />} />
-          <Route path="/money/tools/compound-interest" element={<CompoundInterest />} />
-          <Route path="/money/tools/mortgage" element={<MortgageCalculator />} />
-          <Route path="/money/tools/super-contribution" element={<SuperContribution />} />
-          <Route path="/money/tools/gst" element={<GSTCalculator />} />
-          <Route path="/money/tools/salary" element={<SalaryCalculator />} />
-          <Route path="/money/tools/emergency-fund" element={<EmergencyFund />} />
-          <Route path="/money/tools/net-worth" element={<NetWorth />} />
-          <Route path="/money/tools/inflation" element={<InflationCalculator />} />
-          <Route path="/money/tools/credit-card-payoff" element={<CreditCardPayoff />} />
-          <Route path="/money/tools/debt-sequencer" element={<DebtSequencer />} />
-          <Route path="/money/tools/roi" element={<ROICalculator />} />
-          <Route path="/money/tools/rent-vs-buy" element={<RentVsBuy />} />
-          <Route path="/money/tools/debt-to-income" element={<DebtToIncome />} />
-          <Route path="/money/tools/break-even" element={<BreakEven />} />
-          <Route path="/money/tools/fire-number" element={<FIRENumber />} />
-          <Route path="/money/tools/rule-of-72" element={<RuleOf72 />} />
-          <Route path="/money/tools/capital-gains" element={<CapitalGains />} />
-          <Route path="/money/tools/financial-twin" element={<FinancialTwin />} />
+          <Route path="/money/tools/tax-calculator" element={<MoneyPilot><TaxCalculator /></MoneyPilot>} />
+          <Route path="/money/tools/budget-planner" element={<MoneyPilot><BudgetPlanner /></MoneyPilot>} />
+          <Route path="/money/tools/savings-goal" element={<MoneyPilot><SavingsGoal /></MoneyPilot>} />
+          <Route path="/money/tools/loan-repayment" element={<MoneyPilot><LoanRepayment /></MoneyPilot>} />
+          <Route path="/money/tools/compound-interest" element={<MoneyPilot><CompoundInterest /></MoneyPilot>} />
+          <Route path="/money/tools/mortgage" element={<MoneyPilot><MortgageCalculator /></MoneyPilot>} />
+          <Route path="/money/tools/super-contribution" element={<MoneyPilot><SuperContribution /></MoneyPilot>} />
+          <Route path="/money/tools/gst" element={<MoneyPilot><GSTCalculator /></MoneyPilot>} />
+          <Route path="/money/tools/salary" element={<MoneyPilot><SalaryCalculator /></MoneyPilot>} />
+          <Route path="/money/tools/emergency-fund" element={<MoneyPilot><EmergencyFund /></MoneyPilot>} />
+          <Route path="/money/tools/net-worth" element={<MoneyPilot><NetWorth /></MoneyPilot>} />
+          <Route path="/money/tools/inflation" element={<MoneyPilot><InflationCalculator /></MoneyPilot>} />
+          <Route path="/money/tools/credit-card-payoff" element={<MoneyPilot><CreditCardPayoff /></MoneyPilot>} />
+          <Route path="/money/tools/debt-sequencer" element={<MoneyPilot><MoneyRouteGate flagKey="money.private.persistence" fallbackPath="/money/tools"><RequireAuth><DebtSequencer /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
+          <Route path="/money/tools/roi" element={<MoneyPilot><ROICalculator /></MoneyPilot>} />
+          <Route path="/money/tools/rent-vs-buy" element={<MoneyPilot><RentVsBuy /></MoneyPilot>} />
+          <Route path="/money/tools/debt-to-income" element={<MoneyPilot><DebtToIncome /></MoneyPilot>} />
+          <Route path="/money/tools/break-even" element={<MoneyPilot><BreakEven /></MoneyPilot>} />
+          <Route path="/money/tools/fire-number" element={<MoneyPilot><FIRENumber /></MoneyPilot>} />
+          <Route path="/money/tools/rule-of-72" element={<MoneyPilot><RuleOf72 /></MoneyPilot>} />
+          <Route path="/money/tools/capital-gains" element={<MoneyPilot><CapitalGains /></MoneyPilot>} />
+          <Route path="/money/tools/financial-twin" element={<MoneyPilot><MoneyRouteGate flagKey="money.financial_twin.enabled" fallbackPath="/money/tools"><RequireAuth><FinancialTwin /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
           <Route path="/library" element={<Library />} />
           <Route path="/library/economics/:section/:focusId" element={<ResourceLibrary />} />
           <Route path="/library/economics/:section" element={<ResourceLibrary />} />

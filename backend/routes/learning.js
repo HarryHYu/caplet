@@ -17,7 +17,12 @@ router.get('/mastery', async (req, res) => {
     const { CurriculumOutcome, MasteryState } = require('../models');
     const subject = String(req.query.subject || 'economics').toLowerCase();
     if (subject === 'economics') await require('../services/questionBankService').ensureEconomicsQuestionBank();
-    const outcomes = await CurriculumOutcome.findAll({ where: { subject, isActive: true }, order: [['sortOrder', 'ASC'], ['code', 'ASC']] });
+    const syllabusVersion = subject === 'economics'
+      ? String(req.query.syllabusVersion || 'NSW-2025')
+      : null;
+    const where = { subject, isActive: true };
+    if (syllabusVersion) where.syllabusVersion = syllabusVersion;
+    const outcomes = await CurriculumOutcome.findAll({ where, order: [['sortOrder', 'ASC'], ['code', 'ASC']] });
     const states = outcomes.length
       ? await MasteryState.findAll({ where: { userId: req.user.id, outcomeId: { [Op.in]: outcomes.map((outcome) => outcome.id) } } })
       : [];
@@ -47,6 +52,7 @@ router.get('/mastery', async (req, res) => {
     const averageProbability = rows.length ? rows.reduce((sum, row) => sum + row.probability, 0) / rows.length : 0;
     res.json({
       subject,
+      syllabusVersion,
       summary: { totalOutcomes: rows.length, mastered, dueForReview, averageProbability: Number(averageProbability.toFixed(4)) },
       outcomes: rows,
       generatedAt: now.toISOString(),

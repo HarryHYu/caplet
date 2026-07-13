@@ -415,6 +415,22 @@ class ApiService {
     return this.request(`/users/${userId}`);
   }
 
+  // Public, provenance-first Money learning data. These endpoints contain
+  // sourced observations only; they never read or write a student's private
+  // financial profile.
+  async getMoneyIndicators() {
+    return this.request('/money/indicators');
+  }
+
+  async getMoneyIndicatorHistory(key, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/money/indicators/${encodeURIComponent(key)}${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async resolveMoneyCurriculum(hscCohortYear) {
+    return this.request(`/money/curriculum/resolve?hscCohortYear=${encodeURIComponent(hscCohortYear)}`);
+  }
+
   // Financial profile (personal financial snapshot)
   async getFinancialProfile() {
     return this.request('/financial-profile');

@@ -19,17 +19,17 @@ export const MONEY_INTENTS = [
     id: 'save',
     label: 'Save for something',
     description: 'Compare how regular contributions change a goal timeline.',
-    actionTitle: 'Build a private savings scenario',
-    actionDescription: 'Start with sample numbers or choose to use your own figures.',
-    actionLabel: 'Open My Money',
-    to: '/money/my-money',
+    actionTitle: 'Try a synthetic savings scenario',
+    actionDescription: 'Use made-up numbers to see how a regular contribution changes a goal timeline.',
+    actionLabel: 'Try a savings calculator',
+    to: '/money/tools/savings-goal',
   },
   {
     id: 'inflation',
     label: 'Check the economy',
     description: 'Understand an Australian indicator and try a separate hypothetical example.',
     actionTitle: 'Understand inflation and everyday prices',
-    actionDescription: 'Read a dated ABS snapshot, then test a clearly labelled hypothetical rate.',
+    actionDescription: 'Read a dated, provenance-labelled ABS observation, then test a clearly labelled hypothetical rate.',
     actionLabel: 'Understand inflation',
     to: '/money/economy/inflation',
   },
@@ -43,20 +43,6 @@ export const MONEY_INTENTS = [
     to: '/money/tools',
   },
 ];
-
-export const CPI_SNAPSHOT = {
-  value: 4.0,
-  previousValue: 4.2,
-  unit: '% through the year',
-  referencePeriod: 'May 2026',
-  previousPeriod: 'April 2026',
-  released: '24 June 2026',
-  verified: '13 July 2026',
-  nextRelease: '29 July 2026',
-  sourceLabel: 'ABS Consumer Price Index, Australia',
-  sourceUrl: 'https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/consumer-price-index-australia/may-2026',
-  methodologyUrl: 'https://www.abs.gov.au/methodologies/consumer-price-index-australia-methodology/may-2026',
-};
 
 export function readMoneyStorage(key, fallback = null) {
   try {
@@ -91,4 +77,3 @@ export function calculateSavingsTimeline({ target, current, monthly }) {
   const months = remaining === 0 ? 0 : monthlyAmount > 0 ? Math.ceil(remaining / monthlyAmount) : null;
   return { target: targetAmount, current: currentAmount, monthly: monthlyAmount, remaining, months };
 }
-

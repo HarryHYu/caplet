@@ -204,6 +204,8 @@ const startServer = async () => {
     // registry must surface as unavailable rather than fabricated data.
     const { ensureMoneyRegistry } = require('./services/moneyData');
     await ensureMoneyRegistry();
+    const { ensureCurriculumEditions } = require('./services/curriculumEdition');
+    await ensureCurriculumEditions();
 
     // Seed production database if in production
     if (process.env.NODE_ENV === 'production') {

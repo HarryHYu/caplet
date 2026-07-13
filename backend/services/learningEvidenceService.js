@@ -3,12 +3,14 @@ const { refreshMastery } = require('./masteryEngine');
 
 function asPlain(value) { return value?.toJSON ? value.toJSON() : value; }
 
-async function outcomeIdsForContent(contentType, contentId, fallbackCodes = []) {
+async function outcomeIdsForContent(contentType, contentId, fallbackCodes = [], syllabusVersion = null) {
   const { ContentOutcome, CurriculumOutcome } = require('../models');
   const mappings = await ContentOutcome.findAll({ where: { contentType, contentId: String(contentId) } });
   if (mappings.length) return [...new Set(mappings.map((row) => row.outcomeId))];
   if (!fallbackCodes.length) return [];
-  const outcomes = await CurriculumOutcome.findAll({ where: { code: { [Op.in]: fallbackCodes }, isActive: true } });
+  const where = { code: { [Op.in]: fallbackCodes }, isActive: true };
+  if (syllabusVersion) where.syllabusVersion = syllabusVersion;
+  const outcomes = await CurriculumOutcome.findAll({ where });
   return outcomes.map((outcome) => outcome.id);
 }
 
@@ -67,7 +69,7 @@ async function recordEvidenceForOutcomes(input, options = {}) {
 async function recordLessonScoreEvidence({ userId, lesson, score, answers, occurredAt = new Date() }) {
   const metadata = lesson.metadata || {};
   const fallbackCodes = Array.isArray(metadata.outcomeCodes) ? metadata.outcomeCodes : Array.isArray(metadata.outcomes) ? metadata.outcomes : [];
-  const outcomeIds = await outcomeIdsForContent('lesson', lesson.id, fallbackCodes);
+  const outcomeIds = await outcomeIdsForContent('lesson', lesson.id, fallbackCodes, lesson.syllabusVersion || null);
   if (!outcomeIds.length) return [];
   return recordEvidenceForOutcomes({
     idempotencyKey: `lesson:${userId}:${lesson.id}:${occurredAt.toISOString()}`,

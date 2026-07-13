@@ -27,7 +27,6 @@ const EconomicObservation = sequelize.define('EconomicObservation', {
   timestamps: true,
   indexes: [
     { name: 'economic_observations_series_date_unique', unique: true, fields: ['seriesId', 'observationDate'] },
-    { name: 'economic_observations_series_period_idx', fields: ['seriesId', 'observationDate'] },
   ],
 });
 

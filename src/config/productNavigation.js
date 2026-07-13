@@ -5,6 +5,7 @@ export const moneyNavigation = [
   { path: '/money#learn', label: 'Learn', hash: '#learn' },
   { path: '/money/economy/inflation', label: 'Economy', activePrefix: '/money/economy' },
   { path: '/money/tools', label: 'Tools', activePrefix: '/money/tools' },
+  { path: '/money/my-money', label: 'My Money', activePrefix: '/money/my-money' },
 ];
 
 export const STUDY_ROUTE_PREFIXES = [

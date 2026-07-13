@@ -10,6 +10,7 @@ import MoneyOverview from '../pages/MoneyOverview';
 import MoneyInflation from '../pages/MoneyInflation';
 import MyMoney from '../pages/MyMoney';
 import { RequireAuth } from '../App';
+import api from '../services/api';
 
 const authState = vi.hoisted(() => ({
   user: { firstName: 'Ari', lastName: 'Student', email: 'ari@example.com' },
@@ -24,6 +25,28 @@ vi.mock('../contexts/AuthContext', () => ({
 
 vi.mock('../services/api', () => ({
   default: {
+    getMoneyIndicators: vi.fn().mockResolvedValue({
+      indicators: [{
+        key: 'au.cpi.headline.yoy',
+        displayTitle: 'Inflation',
+        nativeFrequency: 'monthly',
+        unit: 'percent',
+        sourceUrl: 'https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/consumer-price-index-australia/latest-release',
+        current: { value: 3.2, periodLabel: 'June 2026' },
+        freshness: { state: 'current', message: 'Latest validated release.' },
+      }],
+    }),
+    getMoneyIndicatorHistory: vi.fn().mockResolvedValue({
+      series: {
+        title: 'Consumer Price Index, All Groups',
+        nativeFrequency: 'monthly',
+        sourceUrl: 'https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/consumer-price-index-australia/latest-release',
+        source: { termsUrl: 'https://www.abs.gov.au/about/data-services/application-programming-interfaces-apis/indicator-api/terms-use' },
+      },
+      current: { value: 3.2, observationDate: '2026-06-01', periodLabel: 'June 2026', retrievedAt: '2026-07-13T00:00:00.000Z', revisionState: 'initial' },
+      freshness: { state: 'current', message: 'Latest validated release.' },
+      observations: [{ value: 3.2, observationDate: '2026-06-01', periodLabel: 'June 2026', revisionState: 'initial' }],
+    }),
     getFinancialProfile: vi.fn().mockResolvedValue({ financialProfile: { savingsBalance: 200, goals: [] } }),
     updateFinancialProfile: vi.fn().mockResolvedValue({ financialProfile: { savingsBalance: 350, goals: [] } }),
   },
@@ -60,9 +83,9 @@ describe('Money overview and indicator interactions', () => {
     const user = userEvent.setup();
     render(<MemoryRouter><MoneyInflation /></MemoryRouter>);
 
-    expect(screen.getByText('Dated local snapshot · not a live feed')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Official ABS release/ })).toHaveAttribute('href', expect.stringContaining('abs.gov.au'));
-    expect(screen.getByRole('table', { name: /Annual Consumer Price Index changes/ })).toBeInTheDocument();
+    expect(await screen.findByText('Official ABS series')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: /Official ABS release/ })).toHaveAttribute('href', expect.stringContaining('abs.gov.au'));
+    expect(screen.getByRole('table', { name: /Validated annual Consumer Price Index observations/ })).toBeInTheDocument();
 
     const rate = screen.getByRole('spinbutton', { name: /Assumed annual rate/ });
     await user.clear(rate);
@@ -71,6 +94,15 @@ describe('Money overview and indicator interactions', () => {
 
     expect(screen.getByText(/About \$25\.53/)).toBeInTheDocument();
     expect(screen.getByText(/mathematical scenario, not a price forecast/)).toBeInTheDocument();
+  });
+
+  it('labels the dated local fallback when official retrieval is unavailable', async () => {
+    api.getMoneyIndicatorHistory.mockRejectedValueOnce(new Error('offline'));
+    render(<MemoryRouter><MoneyInflation /></MemoryRouter>);
+
+    expect(await screen.findByText('Dated local snapshot · not a live feed')).toBeInTheDocument();
+    expect(screen.getByText(/Released 24 June 2026\. Next scheduled release 29 July 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Live retrieval is unavailable/)).toBeInTheDocument();
   });
 });
 
