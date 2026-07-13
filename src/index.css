@@ -144,6 +144,7 @@
 }
 
 .dark {
+  /* Paper — the warm default dark palette */
   --surface-body: #141413;
   --surface-base: #141413;   /* alias for --surface-body used in Tour/demo */
   --surface-soft: #232220;
@@ -183,6 +184,94 @@
   --block-coral: rgba(242, 132, 95, 0.12);
   --block-amber: rgba(240, 187, 92, 0.12);
   --block-green: rgba(95, 192, 140, 0.11);
+}
+
+/* User-selected dark palettes mirror their light counterparts while keeping
+   enough separation between the page, controls, and raised cards. */
+:root.dark[data-palette='white'] {
+  --surface-body: #111418;
+  --surface-base: #111418;
+  --surface-soft: #1D2228;
+  --surface-raised: #171B20;
+  --surface-inverse: #F7F9FB;
+  --text-primary: #F1F4F7;
+  --text-muted: #B5BEC8;
+  --text-dim: #909BA7;
+  --line-soft: #303841;
+  --line-strong: #F1F4F7;
+  --accent: #7DA8F0;
+  --accent-strong: #A5C4F5;
+  --accent-soft: rgba(125, 168, 240, 0.16);
+  --mark-blue: #7DA8F0;
+  --hl-blue: rgba(125, 168, 240, 0.26);
+  --block-cream: #171B20;
+  --block-blue: rgba(125, 168, 240, 0.13);
+}
+
+:root.dark[data-palette='sky'] {
+  --surface-body: #0D1822;
+  --surface-base: #0D1822;
+  --surface-soft: #172A3A;
+  --surface-raised: #11202D;
+  --surface-inverse: #F2F7FC;
+  --text-primary: #EFF6FA;
+  --text-muted: #ABC0CE;
+  --text-dim: #859EAE;
+  --line-soft: #294258;
+  --line-strong: #EFF6FA;
+  --accent: #78B9E8;
+  --accent-strong: #A7D4F2;
+  --accent-soft: rgba(120, 185, 232, 0.16);
+  --mark-blue: #78B9E8;
+  --hl-blue: rgba(120, 185, 232, 0.28);
+  --block-cream: #11202D;
+  --block-blue: rgba(120, 185, 232, 0.14);
+}
+
+:root.dark[data-palette='sage'] {
+  --surface-body: #101A14;
+  --surface-base: #101A14;
+  --surface-soft: #1C2D22;
+  --surface-raised: #152219;
+  --surface-inverse: #F4F8F1;
+  --text-primary: #F0F6ED;
+  --text-muted: #B2C5B5;
+  --text-dim: #8FA793;
+  --line-soft: #2D4735;
+  --line-strong: #F0F6ED;
+  --accent: #7CC69A;
+  --accent-strong: #A4DCB9;
+  --accent-soft: rgba(124, 198, 154, 0.16);
+  --mark-blue: #7CC69A;
+  --mark-green: #7CC69A;
+  --hl-blue: rgba(124, 198, 154, 0.27);
+  --hl-green: rgba(124, 198, 154, 0.27);
+  --block-cream: #152219;
+  --block-blue: rgba(124, 198, 154, 0.13);
+  --block-green: rgba(124, 198, 154, 0.14);
+}
+
+:root.dark[data-palette='rose'] {
+  --surface-body: #1B1014;
+  --surface-base: #1B1014;
+  --surface-soft: #301C23;
+  --surface-raised: #23151A;
+  --surface-inverse: #FCF5F7;
+  --text-primary: #FAF0F3;
+  --text-muted: #CEADB9;
+  --text-dim: #B18796;
+  --line-soft: #4A2D37;
+  --line-strong: #FAF0F3;
+  --accent: #DE87A8;
+  --accent-strong: #F1A9C2;
+  --accent-soft: rgba(222, 135, 168, 0.16);
+  --mark-blue: #DE87A8;
+  --mark-coral: #EE9A82;
+  --hl-blue: rgba(222, 135, 168, 0.27);
+  --hl-coral: rgba(238, 154, 130, 0.25);
+  --block-cream: #23151A;
+  --block-blue: rgba(222, 135, 168, 0.13);
+  --block-coral: rgba(238, 154, 130, 0.13);
 }
 
 @layer base {

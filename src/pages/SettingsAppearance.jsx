@@ -3,16 +3,16 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const appearanceOptions = [
   { value: 'light', label: 'Light', description: 'Use your chosen background', icon: SunIcon },
-  { value: 'dark', label: 'Dark', description: 'Use Caplet after dark', icon: MoonIcon },
+  { value: 'dark', label: 'Dark', description: 'Use its darker counterpart', icon: MoonIcon },
   { value: 'system', label: 'System', description: 'Match this device', icon: ComputerDesktopIcon },
 ];
 
 const paletteOptions = [
-  { value: 'paper', label: 'Paper', description: 'Warm and familiar', colours: ['#F8F5EF', '#ECE5D6', '#1351AA'] },
-  { value: 'white', label: 'Pure white', description: 'Clean and crisp', colours: ['#FFFFFF', '#F0F2F5', '#2856A3'] },
-  { value: 'sky', label: 'Sky', description: 'Cool and focused', colours: ['#F2F7FC', '#DFEAF5', '#1B5A91'] },
-  { value: 'sage', label: 'Sage', description: 'Soft and calm', colours: ['#F4F8F1', '#E2EDDC', '#2E6B4A'] },
-  { value: 'rose', label: 'Rose', description: 'Warm and gentle', colours: ['#FCF5F7', '#F2E1E7', '#9A3D62'] },
+  { value: 'paper', label: 'Paper', description: 'Warm and familiar', lightColours: ['#F8F5EF', '#ECE5D6', '#1351AA'], darkColours: ['#141413', '#232220', '#5B9BF0'] },
+  { value: 'white', label: 'Pure white', description: 'Clean and crisp', lightColours: ['#FFFFFF', '#F0F2F5', '#2856A3'], darkColours: ['#111418', '#1D2228', '#7DA8F0'] },
+  { value: 'sky', label: 'Sky', description: 'Cool and focused', lightColours: ['#F2F7FC', '#DFEAF5', '#1B5A91'], darkColours: ['#0D1822', '#172A3A', '#78B9E8'] },
+  { value: 'sage', label: 'Sage', description: 'Soft and calm', lightColours: ['#F4F8F1', '#E2EDDC', '#2E6B4A'], darkColours: ['#101A14', '#1C2D22', '#7CC69A'] },
+  { value: 'rose', label: 'Rose', description: 'Warm and gentle', lightColours: ['#FCF5F7', '#F2E1E7', '#9A3D62'], darkColours: ['#1B1014', '#301C23', '#DE87A8'] },
 ];
 
 export default function SettingsAppearance() {
@@ -20,7 +20,6 @@ export default function SettingsAppearance() {
 
   const choosePalette = (value) => {
     setPalette(value);
-    if (isDark) setTheme('light');
   };
 
   return (
@@ -53,7 +52,7 @@ export default function SettingsAppearance() {
                 className={`rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 ${selected ? 'border-accent bg-accent-soft shadow-sm' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
               >
                 <span className="flex items-center justify-between gap-3">
-                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${selected ? 'bg-accent text-white' : 'bg-surface-raised text-text-muted'}`}>
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${selected ? 'bg-accent text-text-contrast' : 'bg-surface-raised text-text-muted'}`}>
                     <ModeIcon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   {selected && <CheckIcon className="h-5 w-5 text-accent" aria-hidden="true" />}
@@ -70,14 +69,15 @@ export default function SettingsAppearance() {
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h3 id="background-palette-heading" className="font-display text-lg font-bold tracking-tight text-text-primary">Background colour</h3>
-            <p className="mt-1 text-sm font-medium text-text-dim">Updates backgrounds, cards, borders, and highlights throughout Caplet.</p>
+            <p className="mt-1 text-sm font-medium text-text-dim">Updates backgrounds, cards, borders, and highlights throughout Caplet in both light and dark mode.</p>
           </div>
-          {isDark && <span className="rounded-full bg-surface-soft px-3 py-1.5 text-xs font-bold text-text-muted">Choose a colour to switch to Light</span>}
+          <span className="rounded-full bg-surface-soft px-3 py-1.5 text-xs font-bold text-text-muted">Previewing {isDark ? 'dark' : 'light'} colours</span>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="radiogroup" aria-label="Background colour">
-          {paletteOptions.map(({ value, label, description, colours }) => {
+          {paletteOptions.map(({ value, label, description, lightColours, darkColours }) => {
             const selected = palette === value;
+            const colours = isDark ? darkColours : lightColours;
             return (
               <button
                 key={value}
@@ -92,7 +92,7 @@ export default function SettingsAppearance() {
                   <span className="absolute bottom-6 left-6 h-3 w-20 rounded-full bg-white/80" />
                   <span className="absolute bottom-6 right-6 h-7 w-7 rounded-full" style={{ backgroundColor: colours[2] }} />
                   {selected && (
-                    <span className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full text-white shadow-sm" style={{ backgroundColor: colours[2] }}>
+                    <span className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full text-[color:var(--surface-body)] shadow-sm" style={{ backgroundColor: colours[2] }}>
                       <CheckIcon className="h-4 w-4" aria-hidden="true" />
                     </span>
                   )}

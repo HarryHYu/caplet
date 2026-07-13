@@ -11,7 +11,7 @@ describe('SettingsAppearance', () => {
     delete document.documentElement.dataset.palette;
   });
 
-  it('offers global palettes and reveals a chosen palette from dark mode', () => {
+  it('offers global palettes and keeps a chosen palette in dark mode', () => {
     localStorage.setItem('theme', 'dark');
     render(<ThemeProvider><SettingsAppearance /></ThemeProvider>);
 
@@ -21,9 +21,10 @@ describe('SettingsAppearance', () => {
 
     fireEvent.click(screen.getByRole('radio', { name: /Sage/ }));
 
-    expect(localStorage.getItem('theme')).toBe('light');
+    expect(localStorage.getItem('theme')).toBe('dark');
     expect(localStorage.getItem('palette')).toBe('sage');
-    expect(document.documentElement).not.toHaveClass('dark');
+    expect(document.documentElement).toHaveClass('dark');
     expect(document.documentElement).toHaveAttribute('data-palette', 'sage');
+    expect(screen.getByText('Previewing dark colours')).toBeInTheDocument();
   });
 });
