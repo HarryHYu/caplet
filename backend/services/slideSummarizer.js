@@ -11,7 +11,7 @@ let _client = null;
 function getClient() {
   if (_client) return _client;
   if (!process.env.OPENAI_API_KEY) return null;
-  _client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  _client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 30000, maxRetries: 1 });
   return _client;
 }
 
@@ -43,6 +43,11 @@ async function summarizeSlides(items, opts = {}) {
   if (!Array.isArray(items) || items.length === 0) {
     const err = new Error('No slides to summarize.');
     err.status = 400;
+    throw err;
+  }
+  if (items.length > 30) {
+    const err = new Error('Too many slides to summarise in one request.');
+    err.status = 413;
     throw err;
   }
 

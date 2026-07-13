@@ -1,5 +1,7 @@
 const express = require('express');
+const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
+const { Op } = require('sequelize');
 const {
   User,
   Classroom,
@@ -10,18 +12,165 @@ const {
   Lesson,
   ClassAnnouncement,
   Comment,
+  CommentModerationRecord,
+  CommentModerationAction,
+  TeacherProfile,
 } = require('../models');
 const { sequelize } = require('../config/database');
+const { createRateLimiter } = require('../middleware/rateLimit');
+const { notifyModerationQueue } = require('../services/moderationNotifications');
+const {
+  ageInYears,
+  hasRecordedConsent,
+  latestConsent,
+  requiresGuardianConsent,
+} = require('../services/privacyConsent');
 
 const router = express.Router();
 
 const { requireAuth } = require('../middleware/auth');
 
-const requireTeacher = (req, res, next) => {
+const COMMENT_MAX_LENGTH = 2000;
+const COMMENT_REPORT_REASONS = ['bullying', 'harassment', 'inappropriate', 'privacy', 'spam', 'other'];
+const MODERATION_ACTION_STATUSES = ['reviewed', 'dismissed', 'actioned'];
+const INDEPENDENT_REVIEW_REASONS = new Set(['bullying', 'harassment', 'privacy']);
+const MODERATION_SLA_MS = 24 * 60 * 60 * 1000;
+const commentCreateLimiter = createRateLimiter({
+  scope: 'class_comment_create',
+  windowMs: 60 * 1000,
+  max: 10,
+  message: 'You are posting comments too quickly. Please wait a moment and try again.',
+});
+const commentReportLimiter = createRateLimiter({
+  scope: 'class_comment_report',
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: 'You have submitted several reports. Please wait before reporting again.',
+});
+const classJoinLimiter = createRateLimiter({
+  scope: 'class_join',
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many join attempts. Please wait before trying again.',
+});
+
+const hasVerifiedTeacherAccess = async (req) => {
+  if (req.user?.role === 'admin') return true;
+  if (req.user?.role !== 'instructor') return false;
+  if (req.teacherVerificationChecked) return req.teacherVerificationVerified === true;
+  const profile = await TeacherProfile.findOne({
+    where: { userId: req.user.id },
+    attributes: ['id', 'status'],
+  });
+  req.teacherVerificationChecked = true;
+  req.teacherVerificationVerified = profile?.status === 'verified';
+  return req.teacherVerificationVerified;
+};
+
+const isStaffViewer = async (req, membership) => (
+  req.user?.role === 'admin'
+  || (membership?.role === 'teacher' && await hasVerifiedTeacherAccess(req))
+);
+
+const userAttributes = (includeEmail) => [
+  'id',
+  'firstName',
+  'lastName',
+  ...(includeEmail ? ['email'] : []),
+];
+
+const userDto = (user, includeEmail = false) => {
+  if (!user) return null;
+  const dto = {
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+  };
+  if (includeEmail) dto.email = user.email;
+  return dto;
+};
+
+const moderationReportDto = (report, options = {}) => {
+  const now = options.now || new Date();
+  const createdAt = new Date(report.createdAt);
+  const dueAt = Number.isNaN(createdAt.getTime())
+    ? null
+    : new Date(createdAt.getTime() + MODERATION_SLA_MS);
+  const dto = {
+    id: report.id,
+    classroomId: report.classroomId,
+    commentId: report.commentId,
+    reason: report.reason,
+    details: report.details,
+    contentSnapshot: report.contentSnapshot,
+    status: report.status,
+    reviewQueue: report.reviewQueue,
+    priority: report.priority,
+    createdAt: report.createdAt,
+    dueAt,
+    overdue: report.status === 'pending' && dueAt ? dueAt.getTime() < now.getTime() : false,
+    reviewedAt: report.reviewedAt,
+    classroom: report.classroom
+      ? { id: report.classroom.id, name: report.classroom.name }
+      : null,
+    reporter: userDto(report.reporter, true),
+    commentAuthor: userDto(report.commentAuthor, true),
+    reviewer: userDto(report.reviewer, true),
+    actions: (report.actions || []).map((action) => ({
+      id: action.id,
+      fromStatus: action.fromStatus,
+      toStatus: action.toStatus,
+      note: action.note,
+      createdAt: action.createdAt,
+      actor: userDto(action.actor, true),
+    })),
+  };
+  if (options.includeNotification) {
+    dto.notification = {
+      status: report.notificationStatus || 'pending',
+      channel: report.notificationChannel || null,
+      attempts: Number(report.notificationAttempts || 0),
+      lastAttemptAt: report.notificationLastAttemptAt || null,
+      nextAttemptAt: report.notificationNextAttemptAt || null,
+      deliveredAt: report.notificationDeliveredAt || null,
+      lastError: report.notificationLastError || null,
+    };
+  }
+  return dto;
+};
+
+const moderationIncludes = (includeClassroom = false) => [
+  ...(includeClassroom
+    ? [{ model: Classroom, as: 'classroom', attributes: ['id', 'name'], required: false }]
+    : []),
+  { model: User, as: 'reporter', attributes: userAttributes(true), required: false },
+  { model: User, as: 'commentAuthor', attributes: userAttributes(true), required: false },
+  { model: User, as: 'reviewer', attributes: userAttributes(true), required: false },
+  {
+    model: CommentModerationAction,
+    as: 'actions',
+    include: [{ model: User, as: 'actor', attributes: userAttributes(true), required: false }],
+    required: false,
+  },
+];
+
+const moderationGuidance = Object.freeze({
+  targetReviewHours: 24,
+  serviceLevel: 'Class owners should review new reports within 24 hours.',
+  emergency: 'If anyone is in immediate danger, contact Triple Zero (000) or a trusted adult now. Do not wait for an in-app review.',
+});
+
+const requireTeacher = async (req, res, next) => {
   if (!req.user || (req.user.role !== 'instructor' && req.user.role !== 'admin')) {
     return res.status(403).json({ message: 'Teacher account required' });
   }
-  next();
+  if (!(await hasVerifiedTeacherAccess(req))) {
+    return res.status(403).json({
+      message: 'A currently verified teacher profile is required',
+      code: 'teacher_verification_required',
+    });
+  }
+  return next();
 };
 
 const generateClassCode = async () => {
@@ -30,13 +179,13 @@ const generateClassCode = async () => {
   for (let attempt = 0; attempt < 10; attempt++) {
     let code = '';
     for (let i = 0; i < 6; i++) {
-      code += chars[Math.floor(Math.random() * chars.length)];
+      code += chars[crypto.randomInt(chars.length)];
     }
     const existing = await Classroom.findOne({ where: { code } });
     if (!existing) return code;
   }
-  // Fallback to timestamp-based code
-  return `CL${Date.now().toString(36).toUpperCase()}`;
+  // Cryptographic fallback avoids predictable class identifiers even under collisions.
+  return `CL${crypto.randomBytes(12).toString('base64url').toUpperCase().replace(/[-_]/g, '').slice(0, 14)}`;
 };
 
 const requireTeacherInClass = async (req, res, classroomId) => {
@@ -46,13 +195,18 @@ const requireTeacherInClass = async (req, res, classroomId) => {
   const membership = await ClassMembership.findOne({
     where: { classroomId, userId: req.user.id },
   });
-  return !!membership && membership.role === 'teacher';
+  return !!membership && membership.role === 'teacher' && await hasVerifiedTeacherAccess(req);
 };
 
 /** True if user is the class owner (created the class). Only owner (or admin) can delete class, add/remove teachers, remove students. */
 const isClassOwner = (classroom, userId) => {
   return classroom && (classroom.createdBy === userId);
 };
+
+const canModerateClass = async (req, classroom) => (
+  req.user?.role === 'admin'
+  || (isClassOwner(classroom, req.user?.id) && await hasVerifiedTeacherAccess(req))
+);
 
 // Get all classes for current user (both teaching and enrolled)
 router.get('/', requireAuth, async (req, res) => {
@@ -70,6 +224,8 @@ router.get('/', requireAuth, async (req, res) => {
 
     const teaching = [];
     const student = [];
+    const hasTeachingMembership = memberships.some((membership) => membership.role === 'teacher');
+    const canAccessTeachingClasses = !hasTeachingMembership || await hasVerifiedTeacherAccess(req);
 
     for (const m of memberships) {
       const dto = {
@@ -80,13 +236,17 @@ router.get('/', requireAuth, async (req, res) => {
         createdAt: m.classroom.createdAt,
       };
       if (m.role === 'teacher') {
-        teaching.push(dto);
+        if (canAccessTeachingClasses) teaching.push(dto);
       } else {
         student.push(dto);
       }
     }
 
-    res.json({ teaching, student });
+    res.json({
+      teaching,
+      student,
+      teacherAccess: hasTeachingMembership ? canAccessTeachingClasses : null,
+    });
   } catch (error) {
     console.error('Get classes error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -134,6 +294,7 @@ router.post(
 router.post(
   '/join',
   requireAuth,
+  classJoinLimiter,
   [body('code').trim().isLength({ min: 4 })],
   async (req, res) => {
     try {
@@ -149,12 +310,43 @@ router.post(
         });
       }
 
+      if (ageInYears(req.user.dateOfBirth) === null) {
+        return res.status(403).json({
+          message: 'Add a valid date of birth in Settings → Profile before joining a classroom.',
+          code: 'age_confirmation_required',
+          consentRequired: true,
+        });
+      }
+      if (!(await hasRecordedConsent(req.user.id, 'classroom_data'))) {
+        return res.status(403).json({
+          message: 'Review and accept classroom data sharing in Settings → Privacy & data before joining.',
+          code: 'classroom_consent_required',
+          consentRequired: true,
+        });
+      }
+      if (requiresGuardianConsent(req.user)) {
+        const parentalConsent = await latestConsent(req.user.id, 'parental');
+        const parentalPurposes = Array.isArray(parentalConsent?.metadata?.purposes)
+          ? parentalConsent.metadata.purposes
+          : [];
+        const validParentalConsent = parentalConsent?.status === 'granted'
+          && parentalConsent.grantedAt
+          && !parentalConsent.withdrawnAt;
+        if (!validParentalConsent || !parentalPurposes.includes('classroom_data')) {
+          return res.status(403).json({
+            message: 'A parent or guardian must approve classroom participation before you can join.',
+            code: 'guardian_consent_required',
+            consentRequired: true,
+          });
+        }
+      }
+
       const { code } = req.body;
       const normalizedCode = code.trim().toUpperCase();
 
       const classroom = await Classroom.findOne({ where: { code: normalizedCode } });
       if (!classroom) {
-        return res.status(404).json({ message: 'Class not found. Check the code and try again.' });
+        return res.status(404).json({ message: 'Unable to join this class. Check the code and try again.' });
       }
 
       const [membership] = await ClassMembership.findOrCreate({
@@ -244,6 +436,9 @@ router.delete('/:id/members/:userId', requireAuth, async (req, res) => {
     if (!isClassOwner(classroom, req.user.id) && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Only the class owner can remove members' });
     }
+    if (req.user.role !== 'admin' && !(await hasVerifiedTeacherAccess(req))) {
+      return res.status(403).json({ message: 'A currently verified teacher profile is required', code: 'teacher_verification_required' });
+    }
 
     const targetUserId = req.params.userId;
     if (targetUserId === req.user.id) {
@@ -304,6 +499,9 @@ router.post(
       if (!isClassOwner(classroom, req.user.id) && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Only the class owner can add teachers' });
       }
+      if (req.user.role !== 'admin' && !(await hasVerifiedTeacherAccess(req))) {
+        return res.status(403).json({ message: 'A currently verified teacher profile is required', code: 'teacher_verification_required' });
+      }
 
       const email = req.body.email.trim().toLowerCase();
       const newTeacher = await User.findOne({ where: { email } });
@@ -312,6 +510,15 @@ router.post(
       }
       if (newTeacher.role !== 'instructor' && newTeacher.role !== 'admin') {
         return res.status(400).json({ message: 'That user is not a teacher account. They can join the class as a student with the class code.' });
+      }
+      if (newTeacher.role !== 'admin') {
+        const newTeacherProfile = await TeacherProfile.findOne({
+          where: { userId: newTeacher.id },
+          attributes: ['id', 'status'],
+        });
+        if (newTeacherProfile?.status !== 'verified') {
+          return res.status(400).json({ message: 'That teacher does not have a currently verified teacher profile.' });
+        }
       }
 
       const [membership, created] = await ClassMembership.findOrCreate({
@@ -355,6 +562,9 @@ router.delete('/:id', requireAuth, async (req, res) => {
     if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: 'Only the class owner can delete this class' });
     }
+    if (!isAdmin && !(await hasVerifiedTeacherAccess(req))) {
+      return res.status(403).json({ message: 'A currently verified teacher profile is required', code: 'teacher_verification_required' });
+    }
 
     await classroom.destroy();
     res.json({ message: 'Class deleted successfully' });
@@ -375,18 +585,23 @@ router.get('/:id', requireAuth, async (req, res) => {
     const membership = await ClassMembership.findOne({
       where: { classroomId: classroom.id, userId: req.user.id },
     });
-    if (!membership) {
+    if (!membership && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'You are not a member of this class' });
     }
+    const canViewContact = await isStaffViewer(req, membership);
+    if (membership?.role === 'teacher' && !canViewContact) {
+      return res.status(403).json({ message: 'A currently verified teacher profile is required', code: 'teacher_verification_required' });
+    }
+    const canViewPerformance = canViewContact;
 
     const memberships = await ClassMembership.findAll({
       where: { classroomId: classroom.id },
-      include: [{ model: User, as: 'user' }],
+      include: [{ model: User, as: 'user', attributes: userAttributes(canViewContact) }],
       order: [['createdAt', 'ASC']],
     });
 
     const includeSubmissions =
-      membership.role === 'teacher'
+      canViewPerformance
         ? {
           model: AssignmentSubmission,
           as: 'submissions',
@@ -411,17 +626,14 @@ router.get('/:id', requireAuth, async (req, res) => {
     });
 
     const members = memberships.map((m) => ({
-      id: m.user.id,
-      firstName: m.user.firstName,
-      lastName: m.user.lastName,
-      email: m.user.email,
+      ...userDto(m.user, canViewContact),
       role: m.role,
     }));
 
     const currentMemberIds = new Set(members.map((m) => m.id));
 
     const assignmentsDto = assignments.map((a) => {
-      if (membership.role === 'teacher') {
+      if (canViewPerformance) {
         const allSubmissions = (a.submissions || []).map((s) => ({
           id: s.id,
           studentId: s.studentId,
@@ -429,10 +641,7 @@ router.get('/:id', requireAuth, async (req, res) => {
           submittedAt: s.submittedAt,
           student: s.student
             ? {
-              id: s.student.id,
-              firstName: s.student.firstName,
-              lastName: s.student.lastName,
-              email: s.student.email,
+              ...userDto(s.student, true),
             }
             : null,
         }));
@@ -472,7 +681,7 @@ router.get('/:id', requireAuth, async (req, res) => {
           {
             model: User,
             as: 'author',
-            attributes: ['id', 'firstName', 'lastName', 'email'],
+            attributes: userAttributes(canViewContact),
             required: false,
           },
         ],
@@ -484,14 +693,7 @@ router.get('/:id', requireAuth, async (req, res) => {
         content: a.content,
         attachments: a.attachments || [],
         createdAt: a.createdAt,
-        author: a.author
-          ? {
-            id: a.author.id,
-            firstName: a.author.firstName,
-            lastName: a.author.lastName,
-            email: a.author.email,
-          }
-          : null,
+        author: userDto(a.author, canViewContact),
       }));
     } catch (announcementError) {
       console.warn('Failed to load announcements (non-critical):', announcementError.message);
@@ -499,7 +701,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     }
 
     // Leaderboard: students by completed assignment count (most first)
-    let leaderboard = [];
+    let fullLeaderboard = [];
     try {
       const studentMembers = memberships.filter((m) => m.role === 'student');
       if (studentMembers.length > 0) {
@@ -520,7 +722,7 @@ router.get('/:id', requireAuth, async (req, res) => {
           completed.forEach((r) => {
             if (countByStudent[r.studentId] !== undefined) countByStudent[r.studentId]++;
           });
-          leaderboard = studentMembers
+          fullLeaderboard = studentMembers
             .map((m) => ({
               userId: m.user.id,
               firstName: m.user.firstName,
@@ -529,7 +731,7 @@ router.get('/:id', requireAuth, async (req, res) => {
             }))
             .sort((a, b) => b.completedCount - a.completedCount);
         } else {
-          leaderboard = studentMembers.map((m) => ({
+          fullLeaderboard = studentMembers.map((m) => ({
             userId: m.user.id,
             firstName: m.user.firstName,
             lastName: m.user.lastName,
@@ -540,11 +742,29 @@ router.get('/:id', requireAuth, async (req, res) => {
     } catch (leaderboardErr) {
       console.warn('Leaderboard (non-critical):', leaderboardErr.message);
     }
+    const leaderboard = canViewPerformance ? fullLeaderboard : [];
+    const ownLeaderboardIndex = fullLeaderboard.findIndex((entry) => entry.userId === req.user.id);
+    const leaderboardSummary = canViewPerformance || ownLeaderboardIndex < 0
+      ? null
+      : {
+        position: ownLeaderboardIndex + 1,
+        totalStudents: fullLeaderboard.length,
+        completedCount: fullLeaderboard[ownLeaderboardIndex].completedCount,
+      };
 
     // Comment counts for announcements and assignments (so frontend can show comments open by default)
     try {
       const countRows = await Comment.findAll({
-        where: { classroomId: classroom.id },
+        where: {
+          classroomId: classroom.id,
+          ...(canViewContact ? {} : {
+            [Op.or]: [
+              { isPrivate: false },
+              { authorId: req.user.id },
+              { targetUserId: req.user.id },
+            ],
+          }),
+        },
         attributes: [
           'commentableType',
           'commentableId',
@@ -576,13 +796,14 @@ router.get('/:id', requireAuth, async (req, res) => {
         createdBy: classroom.createdBy,
       },
       membership: {
-        role: membership.role,
+        role: req.user.role === 'admin' ? 'admin' : membership.role,
         isOwner: isClassOwner(classroom, req.user.id),
       },
       members,
       assignments: assignmentsDto,
       announcements: announcementsDto,
       leaderboard,
+      leaderboardSummary,
     });
   } catch (error) {
     console.error('Get class detail error:', error);
@@ -610,7 +831,7 @@ router.post(
       const membership = await ClassMembership.findOne({
         where: { classroomId: classroom.id, userId: req.user.id },
       });
-      if (!membership || membership.role !== 'teacher') {
+      if (!membership || membership.role !== 'teacher' || !(await hasVerifiedTeacherAccess(req))) {
         return res.status(403).json({ message: 'Only teachers in this class can create assignments' });
       }
 
@@ -847,7 +1068,7 @@ router.post(
       if (!membership) {
         return res.status(403).json({ message: 'You are not a member of this class' });
       }
-      if (membership.role !== 'teacher') {
+      if (membership.role !== 'teacher' || !(await hasVerifiedTeacherAccess(req))) {
         return res.status(403).json({ message: 'Only teachers can post announcements' });
       }
 
@@ -946,13 +1167,17 @@ router.get('/:classId/announcements/:announcementId/comments', requireAuth, asyn
     const classroom = await Classroom.findByPk(classId);
     if (!classroom) return res.status(404).json({ message: 'Class not found' });
     const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
-    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
+    if (!membership && req.user.role !== 'admin') return res.status(403).json({ message: 'Not a member of this class' });
+    const canViewContact = await isStaffViewer(req, membership);
+    if (membership?.role === 'teacher' && !canViewContact) {
+      return res.status(403).json({ message: 'A currently verified teacher profile is required', code: 'teacher_verification_required' });
+    }
     const announcement = await ClassAnnouncement.findByPk(announcementId);
     if (!announcement || announcement.classroomId !== classroom.id) return res.status(404).json({ message: 'Announcement not found' });
 
     const comments = await Comment.findAll({
       where: { classroomId: classroom.id, commentableType: 'announcement', commentableId: announcementId },
-      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      include: [{ model: User, as: 'author', attributes: userAttributes(canViewContact) }],
       order: [['createdAt', 'ASC']],
     });
     res.json(comments.map((c) => ({
@@ -960,7 +1185,7 @@ router.get('/:classId/announcements/:announcementId/comments', requireAuth, asyn
       content: c.content,
       isPrivate: c.isPrivate,
       createdAt: c.createdAt,
-      author: c.author ? { id: c.author.id, firstName: c.author.firstName, lastName: c.author.lastName, email: c.author.email } : null,
+      author: userDto(c.author, canViewContact),
     })));
   } catch (error) {
     console.error('Get announcement comments error:', error);
@@ -968,7 +1193,12 @@ router.get('/:classId/announcements/:announcementId/comments', requireAuth, asyn
   }
 });
 
-router.post('/:classId/announcements/:announcementId/comments', requireAuth, [body('content').trim().isLength({ min: 1 })], async (req, res) => {
+router.post(
+  '/:classId/announcements/:announcementId/comments',
+  requireAuth,
+  commentCreateLimiter,
+  [body('content').trim().isLength({ min: 1, max: COMMENT_MAX_LENGTH })],
+  async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -976,7 +1206,11 @@ router.post('/:classId/announcements/:announcementId/comments', requireAuth, [bo
     const classroom = await Classroom.findByPk(classId);
     if (!classroom) return res.status(404).json({ message: 'Class not found' });
     const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
-    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
+    if (!membership && req.user.role !== 'admin') return res.status(403).json({ message: 'Not a member of this class' });
+    const canViewContact = await isStaffViewer(req, membership);
+    if (membership?.role === 'teacher' && !canViewContact) {
+      return res.status(403).json({ message: 'A currently verified teacher profile is required', code: 'teacher_verification_required' });
+    }
     const announcement = await ClassAnnouncement.findByPk(announcementId);
     if (!announcement || announcement.classroomId !== classroom.id) return res.status(404).json({ message: 'Announcement not found' });
 
@@ -990,20 +1224,21 @@ router.post('/:classId/announcements/:announcementId/comments', requireAuth, [bo
       targetUserId: null,
     });
     const withAuthor = await Comment.findByPk(comment.id, {
-      include: [{ model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      include: [{ model: User, as: 'author', attributes: userAttributes(canViewContact) }],
     });
     res.status(201).json({
       id: withAuthor.id,
       content: withAuthor.content,
       isPrivate: withAuthor.isPrivate,
       createdAt: withAuthor.createdAt,
-      author: withAuthor.author ? { id: withAuthor.author.id, firstName: withAuthor.author.firstName, lastName: withAuthor.author.lastName, email: withAuthor.author.email } : null,
+      author: userDto(withAuthor.author, canViewContact),
     });
   } catch (error) {
     console.error('Create announcement comment error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
-});
+  },
+);
 
 router.delete('/:classId/announcements/:announcementId/comments/:commentId', requireAuth, async (req, res) => {
   try {
@@ -1011,16 +1246,16 @@ router.delete('/:classId/announcements/:announcementId/comments/:commentId', req
     const classroom = await Classroom.findByPk(classId);
     if (!classroom) return res.status(404).json({ message: 'Class not found' });
     const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
-    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
-    if (membership.role !== 'teacher' && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Only teachers can delete comments' });
-    }
+    if (!membership && req.user.role !== 'admin') return res.status(403).json({ message: 'Not a member of this class' });
     const announcement = await ClassAnnouncement.findByPk(announcementId);
     if (!announcement || announcement.classroomId !== classroom.id) return res.status(404).json({ message: 'Announcement not found' });
     const comment = await Comment.findOne({
       where: { id: commentId, classroomId: classroom.id, commentableType: 'announcement', commentableId: announcementId },
     });
     if (!comment) return res.status(404).json({ message: 'Comment not found' });
+    if (!(await isStaffViewer(req, membership)) && comment.authorId !== req.user.id) {
+      return res.status(403).json({ message: 'You can only delete your own comments' });
+    }
     await comment.destroy();
     res.status(204).send();
   } catch (error) {
@@ -1036,34 +1271,41 @@ router.get('/:classId/assignments/:assignmentId/comments', requireAuth, async (r
     const classroom = await Classroom.findByPk(classId);
     if (!classroom) return res.status(404).json({ message: 'Class not found' });
     const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
-    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
+    if (!membership && req.user.role !== 'admin') return res.status(403).json({ message: 'Not a member of this class' });
     const assignment = await Assignment.findByPk(assignmentId);
     if (!assignment || assignment.classroomId !== classroom.id) return res.status(404).json({ message: 'Assignment not found' });
 
-    const isTeacher = membership.role === 'teacher';
+    const canViewContact = await isStaffViewer(req, membership);
+    if (membership?.role === 'teacher' && !canViewContact) {
+      return res.status(403).json({ message: 'A currently verified teacher profile is required', code: 'teacher_verification_required' });
+    }
     const allComments = await Comment.findAll({
-      where: { classroomId: classroom.id, commentableType: 'assignment', commentableId: assignmentId },
+      where: {
+        classroomId: classroom.id,
+        commentableType: 'assignment',
+        commentableId: assignmentId,
+        ...(canViewContact ? {} : {
+          [Op.or]: [
+            { isPrivate: false },
+            { authorId: req.user.id },
+            { targetUserId: req.user.id },
+          ],
+        }),
+      },
       include: [
-        { model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email'] },
+        { model: User, as: 'author', attributes: userAttributes(canViewContact) },
         { model: User, as: 'targetUser', attributes: ['id', 'firstName', 'lastName'], required: false },
       ],
       order: [['createdAt', 'ASC']],
     });
-    const filtered = allComments.filter((c) => {
-      if (!c.isPrivate) return true;
-      if (c.authorId === req.user.id) return true;
-      if (c.targetUserId === req.user.id) return true;
-      if (isTeacher) return true;
-      return false;
-    });
-    res.json(filtered.map((c) => ({
+    res.json(allComments.map((c) => ({
       id: c.id,
       content: c.content,
       isPrivate: c.isPrivate,
       targetUserId: c.targetUserId,
       targetUser: c.targetUser ? { id: c.targetUser.id, firstName: c.targetUser.firstName, lastName: c.targetUser.lastName } : null,
       createdAt: c.createdAt,
-      author: c.author ? { id: c.author.id, firstName: c.author.firstName, lastName: c.author.lastName, email: c.author.email } : null,
+      author: userDto(c.author, canViewContact),
     })));
   } catch (error) {
     console.error('Get assignment comments error:', error);
@@ -1071,7 +1313,12 @@ router.get('/:classId/assignments/:assignmentId/comments', requireAuth, async (r
   }
 });
 
-router.post('/:classId/assignments/:assignmentId/comments', requireAuth, [body('content').trim().isLength({ min: 1 })], async (req, res) => {
+router.post(
+  '/:classId/assignments/:assignmentId/comments',
+  requireAuth,
+  commentCreateLimiter,
+  [body('content').trim().isLength({ min: 1, max: COMMENT_MAX_LENGTH })],
+  async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -1080,18 +1327,21 @@ router.post('/:classId/assignments/:assignmentId/comments', requireAuth, [body('
     const classroom = await Classroom.findByPk(classId);
     if (!classroom) return res.status(404).json({ message: 'Class not found' });
     const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
-    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
+    if (!membership && req.user.role !== 'admin') return res.status(403).json({ message: 'Not a member of this class' });
+    const canViewContact = await isStaffViewer(req, membership);
+    if (membership?.role === 'teacher' && !canViewContact) {
+      return res.status(403).json({ message: 'A currently verified teacher profile is required', code: 'teacher_verification_required' });
+    }
     const assignment = await Assignment.findByPk(assignmentId);
     if (!assignment || assignment.classroomId !== classroom.id) return res.status(404).json({ message: 'Assignment not found' });
 
     const privateComment = !!isPrivate;
-    let targetId = targetUserId || null;
-    if (privateComment && membership.role === 'teacher' && targetUserId) {
+    let targetId = null;
+    if (privateComment && canViewContact && targetUserId) {
       const targetMember = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: targetUserId, role: 'student' } });
       if (!targetMember) return res.status(400).json({ message: 'Invalid target student for private comment' });
       targetId = targetUserId;
     }
-    if (privateComment && membership.role === 'student') targetId = null;
 
     const comment = await Comment.create({
       classroomId: classroom.id,
@@ -1104,7 +1354,7 @@ router.post('/:classId/assignments/:assignmentId/comments', requireAuth, [body('
     });
     const withAuthor = await Comment.findByPk(comment.id, {
       include: [
-        { model: User, as: 'author', attributes: ['id', 'firstName', 'lastName', 'email'] },
+        { model: User, as: 'author', attributes: userAttributes(canViewContact) },
         { model: User, as: 'targetUser', attributes: ['id', 'firstName', 'lastName'], required: false },
       ],
     });
@@ -1115,13 +1365,14 @@ router.post('/:classId/assignments/:assignmentId/comments', requireAuth, [body('
       targetUserId: withAuthor.targetUserId,
       targetUser: withAuthor.targetUser ? { id: withAuthor.targetUser.id, firstName: withAuthor.targetUser.firstName, lastName: withAuthor.targetUser.lastName } : null,
       createdAt: withAuthor.createdAt,
-      author: withAuthor.author ? { id: withAuthor.author.id, firstName: withAuthor.author.firstName, lastName: withAuthor.author.lastName, email: withAuthor.author.email } : null,
+      author: userDto(withAuthor.author, canViewContact),
     });
   } catch (error) {
     console.error('Create assignment comment error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
-});
+  },
+);
 
 router.delete('/:classId/assignments/:assignmentId/comments/:commentId', requireAuth, async (req, res) => {
   try {
@@ -1129,16 +1380,16 @@ router.delete('/:classId/assignments/:assignmentId/comments/:commentId', require
     const classroom = await Classroom.findByPk(classId);
     if (!classroom) return res.status(404).json({ message: 'Class not found' });
     const membership = await ClassMembership.findOne({ where: { classroomId: classroom.id, userId: req.user.id } });
-    if (!membership) return res.status(403).json({ message: 'Not a member of this class' });
-    if (membership.role !== 'teacher' && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Only teachers can delete comments' });
-    }
+    if (!membership && req.user.role !== 'admin') return res.status(403).json({ message: 'Not a member of this class' });
     const assignment = await Assignment.findByPk(assignmentId);
     if (!assignment || assignment.classroomId !== classroom.id) return res.status(404).json({ message: 'Assignment not found' });
     const comment = await Comment.findOne({
       where: { id: commentId, classroomId: classroom.id, commentableType: 'assignment', commentableId: assignmentId },
     });
     if (!comment) return res.status(404).json({ message: 'Comment not found' });
+    if (!(await isStaffViewer(req, membership)) && comment.authorId !== req.user.id) {
+      return res.status(403).json({ message: 'You can only delete your own comments' });
+    }
     await comment.destroy();
     res.status(204).send();
   } catch (error) {
@@ -1146,5 +1397,224 @@ router.delete('/:classId/assignments/:assignmentId/comments/:commentId', require
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+router.post(
+  '/:classId/comments/:commentId/reports',
+  requireAuth,
+  commentReportLimiter,
+  [
+    body('reason').isIn(COMMENT_REPORT_REASONS),
+    body('details').optional({ nullable: true }).trim().isLength({ max: 1000 }),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+      const classroom = await Classroom.findByPk(req.params.classId);
+      if (!classroom) return res.status(404).json({ message: 'Class not found' });
+      const membership = await ClassMembership.findOne({
+        where: { classroomId: classroom.id, userId: req.user.id },
+      });
+      if (!membership && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not a member of this class' });
+      }
+      const comment = await Comment.findOne({
+        where: { id: req.params.commentId, classroomId: classroom.id },
+      });
+      if (!comment) return res.status(404).json({ message: 'Comment not found' });
+      const canModerate = await isStaffViewer(req, membership);
+      const canSeePrivateComment = !comment.isPrivate
+        || canModerate
+        || comment.authorId === req.user.id
+        || comment.targetUserId === req.user.id;
+      if (!canSeePrivateComment) return res.status(404).json({ message: 'Comment not found' });
+      if (comment.authorId === req.user.id) {
+        return res.status(400).json({ message: 'You cannot report your own comment. You can delete it instead.' });
+      }
+
+      const [authorMembership, authorAccount] = await Promise.all([
+        ClassMembership.findOne({
+          where: { classroomId: classroom.id, userId: comment.authorId },
+        }),
+        User.findByPk(comment.authorId, { attributes: ['id', 'role'] }),
+      ]);
+      const staffAuthored = comment.authorId === classroom.createdBy
+        || authorMembership?.role === 'teacher'
+        || authorAccount?.role === 'instructor'
+        || authorAccount?.role === 'admin';
+      const independentReview = staffAuthored || INDEPENDENT_REVIEW_REASONS.has(req.body.reason);
+      const reviewQueue = independentReview ? 'admin' : 'class_owner';
+      const priority = INDEPENDENT_REVIEW_REASONS.has(req.body.reason) ? 'high' : 'standard';
+
+      const [record, created] = await CommentModerationRecord.findOrCreate({
+        where: { commentId: comment.id, reportedById: req.user.id },
+        defaults: {
+          classroomId: classroom.id,
+          commentId: comment.id,
+          reportedById: req.user.id,
+          commentAuthorId: comment.authorId,
+          reason: req.body.reason,
+          details: String(req.body.details || '').trim() || null,
+          contentSnapshot: String(comment.content || '').slice(0, COMMENT_MAX_LENGTH),
+          status: 'pending',
+          reviewQueue,
+          priority,
+          metadata: {
+            commentableType: comment.commentableType,
+            commentableId: comment.commentableId,
+          },
+        },
+      });
+      if (created) {
+        Promise.resolve(notifyModerationQueue({
+          record,
+          reportId: record.id,
+          classroomId: classroom.id,
+          reviewQueue,
+          priority,
+          reason: req.body.reason,
+        })).catch((notificationError) => {
+          console.error('Moderation notification persistence error:', notificationError.message);
+        });
+      }
+
+      return res.status(created ? 201 : 200).json({
+        report: {
+          id: record.id,
+          status: record.status,
+          reviewQueue: record.reviewQueue || reviewQueue,
+          createdAt: record.createdAt,
+        },
+        duplicate: !created,
+      });
+    } catch (error) {
+      console.error('Report class comment error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  },
+);
+
+router.get('/moderation/admin/reports', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
+    const status = String(req.query.status || 'pending');
+    if (status !== 'all' && !['pending', ...MODERATION_ACTION_STATUSES].includes(status)) {
+      return res.status(400).json({ message: 'Invalid moderation status' });
+    }
+    const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 50));
+    const reports = await CommentModerationRecord.findAll({
+      where: {
+        reviewQueue: 'admin',
+        ...(status === 'all' ? {} : { status }),
+      },
+      include: moderationIncludes(true),
+      order: [['createdAt', 'ASC']],
+      limit,
+    });
+    return res.json({
+      reports: reports.map((report) => moderationReportDto(report, { includeNotification: true })),
+      guidance: moderationGuidance,
+    });
+  } catch (error) {
+    console.error('List central moderation reports error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.get('/:classId/moderation/reports', requireAuth, async (req, res) => {
+  try {
+    const classroom = await Classroom.findByPk(req.params.classId);
+    if (!classroom) return res.status(404).json({ message: 'Class not found' });
+    if (!(await canModerateClass(req, classroom))) {
+      return res.status(403).json({ message: 'Only the class owner or an administrator can review reports' });
+    }
+    const status = String(req.query.status || 'pending');
+    if (status !== 'all' && !['pending', ...MODERATION_ACTION_STATUSES].includes(status)) {
+      return res.status(400).json({ message: 'Invalid moderation status' });
+    }
+    const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 50));
+    const reports = await CommentModerationRecord.findAll({
+      where: {
+        classroomId: classroom.id,
+        ...(status === 'all' ? {} : { status }),
+        ...(req.user.role === 'admin' ? {} : {
+          reviewQueue: 'class_owner',
+          commentAuthorId: { [Op.ne]: req.user.id },
+        }),
+      },
+      include: moderationIncludes(false),
+      order: [['createdAt', 'ASC']],
+      limit,
+    });
+    return res.json({
+      reports: reports.map((report) => moderationReportDto(report)),
+      guidance: moderationGuidance,
+    });
+  } catch (error) {
+    console.error('List class moderation reports error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.patch(
+  '/:classId/moderation/reports/:reportId',
+  requireAuth,
+  [
+    body('status').isIn(MODERATION_ACTION_STATUSES),
+    body('note').optional({ nullable: true }).trim().isLength({ max: 1000 }),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+      const classroom = await Classroom.findByPk(req.params.classId);
+      if (!classroom) return res.status(404).json({ message: 'Class not found' });
+      if (!(await canModerateClass(req, classroom))) {
+        return res.status(403).json({ message: 'Only the class owner or an administrator can review reports' });
+      }
+      const report = await CommentModerationRecord.findOne({
+        where: { id: req.params.reportId, classroomId: classroom.id },
+      });
+      if (!report) return res.status(404).json({ message: 'Report not found' });
+      if (req.user.role !== 'admin'
+        && (report.reviewQueue === 'admin' || report.commentAuthorId === req.user.id)) {
+        return res.status(403).json({
+          message: 'This report requires independent administrator review',
+          code: 'independent_review_required',
+        });
+      }
+      if (report.status === req.body.status) {
+        return res.status(409).json({ message: `Report is already ${report.status}` });
+      }
+      const previousStatus = report.status;
+      const reviewedAt = new Date();
+      await sequelize.transaction(async (transaction) => {
+        await report.update({
+          status: req.body.status,
+          reviewedById: req.user.id,
+          reviewedAt,
+        }, { transaction });
+        await CommentModerationAction.create({
+          reportId: report.id,
+          actorId: req.user.id,
+          fromStatus: previousStatus,
+          toStatus: req.body.status,
+          note: String(req.body.note || '').trim() || null,
+        }, { transaction });
+      });
+      return res.json({
+        report: {
+          id: report.id,
+          status: req.body.status,
+          reviewedById: req.user.id,
+          reviewedAt,
+        },
+      });
+    } catch (error) {
+      console.error('Update class moderation report error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  },
+);
 
 module.exports = router;

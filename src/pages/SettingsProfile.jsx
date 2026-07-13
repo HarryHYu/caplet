@@ -71,9 +71,10 @@ const SettingsProfile = () => {
       <form onSubmit={handleSubmit} className="space-y-8 bg-surface-raised rounded-3xl p-8 sm:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
         {message.text && (
           <div
+            role={message.type === 'error' ? 'alert' : 'status'}
             className={`px-6 py-4 rounded-2xl font-semibold text-sm ${message.type === 'success'
-              ? 'block-blue text-blue'
-              : 'bg-red-50 text-red-600'
+              ? 'bg-[color:var(--block-green)] text-text-primary'
+              : 'bg-surface-error text-text-error'
               }`}
           >
             {message.type === 'success' ? 'Success:' : 'Error:'} {message.text}
@@ -151,8 +152,13 @@ const SettingsProfile = () => {
             type="date"
             value={form.dateOfBirth}
             onChange={handleChange}
-            className="w-full px-4 py-3 rounded-xl bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm appearance-none"
+            required={!user?.dateOfBirth}
+            disabled={Boolean(user?.dateOfBirth)}
+            max={new Date().toISOString().slice(0, 10)}
+            autoComplete="bday"
+            className="w-full px-4 py-3 rounded-xl bg-surface-soft border border-line-soft focus:border-accent outline-none transition-all text-text-primary font-medium text-sm appearance-none disabled:cursor-not-allowed disabled:opacity-60"
           />
+          <p className="text-xs font-medium leading-relaxed text-text-dim">Used for age-appropriate privacy safeguards and never displayed publicly. Once set, contact support to correct it.</p>
         </div>
         <div className="space-y-3">
           <label htmlFor="bio" className="block text-sm font-semibold text-text-dim">

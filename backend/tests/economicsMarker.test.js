@@ -11,7 +11,10 @@ jest.mock('../services/economicsMarker', () => {
 // route's throttle Map persists for the lifetime of the module).
 jest.mock('../middleware/auth', () => ({
   requireAuth: (req, _res, next) => {
-    req.user = { id: req.header('X-Test-User') || 'test-user-1' };
+    req.user = {
+      id: req.header('X-Test-User') || 'test-user-1',
+      dateOfBirth: '1990-01-01'
+    };
     next();
   },
 }));

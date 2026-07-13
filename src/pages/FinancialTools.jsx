@@ -7,7 +7,7 @@ const tools = [
   {
     title: 'Income Tax Calculator',
     description: 'Estimate your annual Australian income tax, Medicare levy, and net pay.',
-    path: '/fintools/tax-calculator',
+    path: '/money/tools/tax-calculator',
     category: 'Tax & Income',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -18,7 +18,7 @@ const tools = [
   {
     title: 'Salary Calculator',
     description: 'Calculate your take-home pay from gross salary, including tax, Medicare, and super.',
-    path: '/fintools/salary',
+    path: '/money/tools/salary',
     category: 'Tax & Income',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -29,7 +29,7 @@ const tools = [
   {
     title: 'GST Calculator',
     description: 'Add or remove GST (10%) from amounts for Australian Goods and Services Tax calculations.',
-    path: '/fintools/gst',
+    path: '/money/tools/gst',
     category: 'Tax & Income',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -40,7 +40,7 @@ const tools = [
   {
     title: 'Budget Planner',
     description: 'Plan your monthly budget and track spending across different categories.',
-    path: '/fintools/budget-planner',
+    path: '/money/tools/budget-planner',
     category: 'Budgeting',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -51,7 +51,7 @@ const tools = [
   {
     title: 'Emergency Fund Calculator',
     description: 'Calculate how much you should have in your emergency fund to cover unexpected expenses.',
-    path: '/fintools/emergency-fund',
+    path: '/money/tools/emergency-fund',
     category: 'Budgeting',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -62,7 +62,7 @@ const tools = [
   {
     title: 'Savings Goal Calculator',
     description: 'Calculate how long it takes to reach your savings goal with contributions and interest.',
-    path: '/fintools/savings-goal',
+    path: '/money/tools/savings-goal',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -73,7 +73,7 @@ const tools = [
   {
     title: 'Compound Interest Calculator',
     description: 'See how your money grows with compound interest and regular contributions over time.',
-    path: '/fintools/compound-interest',
+    path: '/money/tools/compound-interest',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -84,7 +84,7 @@ const tools = [
   {
     title: 'Super Contribution Calculator',
     description: 'Project your superannuation balance with employer and personal contributions.',
-    path: '/fintools/super-contribution',
+    path: '/money/tools/super-contribution',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -95,7 +95,7 @@ const tools = [
   {
     title: 'Loan Repayment Calculator',
     description: 'Calculate monthly loan repayments, total interest, and total amount payable.',
-    path: '/fintools/loan-repayment',
+    path: '/money/tools/loan-repayment',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -106,7 +106,7 @@ const tools = [
   {
     title: 'Mortgage Calculator',
     description: 'Calculate home loan repayments, total interest, and explore different payment frequencies.',
-    path: '/fintools/mortgage',
+    path: '/money/tools/mortgage',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -117,7 +117,7 @@ const tools = [
   {
     title: 'Credit Card Payoff',
     description: 'See exactly how long it takes to clear your balance and how much interest you can save by paying more.',
-    path: '/fintools/credit-card-payoff',
+    path: '/money/tools/credit-card-payoff',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -128,7 +128,7 @@ const tools = [
   {
     title: 'Financial Twin',
     description: 'A live simulation of your finances, projected 10\u201320 years ahead as ranges of scenarios \u2014 not a single guess.',
-    path: '/tools/financial-twin',
+    path: '/money/tools/financial-twin',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -139,7 +139,7 @@ const tools = [
   {
     title: 'Debt Sequencer',
     description: 'Rank your debts by what they actually cost to carry, with HECS/HELP handled on its own terms.',
-    path: '/fintools/debt-sequencer',
+    path: '/money/tools/debt-sequencer',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -150,7 +150,7 @@ const tools = [
   {
     title: 'Debt-to-Income Ratio',
     description: 'Calculate your DTI ratio, the first thing lenders check before approving any loan.',
-    path: '/fintools/debt-to-income',
+    path: '/money/tools/debt-to-income',
     category: 'Debt & Loans',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -161,7 +161,7 @@ const tools = [
   {
     title: 'Capital Gains Estimator',
     description: 'Estimate CGT on shares, property, or other assets under Australian tax rules including the 50% discount.',
-    path: '/fintools/capital-gains',
+    path: '/money/tools/capital-gains',
     category: 'Tax & Income',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -172,7 +172,7 @@ const tools = [
   {
     title: 'Inflation Calculator',
     description: 'See how inflation erodes purchasing power over time, or how much something will cost in the future.',
-    path: '/fintools/inflation',
+    path: '/money/tools/inflation',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -183,7 +183,7 @@ const tools = [
   {
     title: 'Rule of 72',
     description: 'Find out how long it takes to double your money at a given rate, or what rate you need to hit a target.',
-    path: '/fintools/rule-of-72',
+    path: '/money/tools/rule-of-72',
     category: 'Savings & Growth',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -194,7 +194,7 @@ const tools = [
   {
     title: 'Net Worth Calculator',
     description: 'Add up all your assets and liabilities to find your true net worth and your debt-to-asset ratio.',
-    path: '/fintools/net-worth',
+    path: '/money/tools/net-worth',
     category: 'Wealth & Investing',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -205,7 +205,7 @@ const tools = [
   {
     title: 'ROI Calculator',
     description: 'Calculate total return on investment and annualised CAGR for any asset (shares, property, business, or otherwise).',
-    path: '/fintools/roi',
+    path: '/money/tools/roi',
     category: 'Wealth & Investing',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -216,7 +216,7 @@ const tools = [
   {
     title: 'FIRE Number Calculator',
     description: 'Calculate how much you need to retire early and how long it will take you to get there.',
-    path: '/fintools/fire-number',
+    path: '/money/tools/fire-number',
     category: 'Wealth & Investing',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -228,7 +228,7 @@ const tools = [
   {
     title: 'Rent vs Buy Calculator',
     description: 'Compare the true total cost of renting versus buying a home over any time horizon.',
-    path: '/fintools/rent-vs-buy',
+    path: '/money/tools/rent-vs-buy',
     category: 'Property',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -239,7 +239,7 @@ const tools = [
   {
     title: 'Break-Even Calculator',
     description: 'Find how many units you need to sell to cover costs and what it takes to hit a profit target.',
-    path: '/fintools/break-even',
+    path: '/money/tools/break-even',
     category: 'Business',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
@@ -254,15 +254,22 @@ const categories = ['Tax & Income', 'Budgeting', 'Savings & Growth', 'Debt & Loa
 const FinancialTools = () => {
   useReveal();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   const filteredTools = tools.filter(tool => {
     const query = searchQuery.toLowerCase();
-    return tool.title.toLowerCase().includes(query) ||
+    const matchesQuery = tool.title.toLowerCase().includes(query) ||
       tool.description.toLowerCase().includes(query) ||
       tool.category.toLowerCase().includes(query);
+    const matchesCategory = selectedCategory === 'All' || tool.category === selectedCategory;
+    return matchesQuery && matchesCategory;
   });
 
-  const isSearching = searchQuery.trim().length > 0;
+  const isFiltering = searchQuery.trim().length > 0 || selectedCategory !== 'All';
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('All');
+  };
 
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
@@ -299,12 +306,14 @@ const FinancialTools = () => {
         </div>
 
         {/* Search */}
-        <div className="mb-16 reveal">
+        <div className="mb-16 reveal sticky top-14 md:top-16 z-20 -mx-6 px-6 py-3 bg-surface-body/95 backdrop-blur md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent">
           <div className="relative max-w-lg">
             <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
+              id="financial-tool-search"
+              aria-label="Search financial calculators"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -315,7 +324,8 @@ const FinancialTools = () => {
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-surface-soft hover:bg-line-soft text-text-dim hover:text-text-primary transition-all"
+                aria-label="Clear calculator search"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-text-dim hover:text-text-primary transition-all"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -323,10 +333,26 @@ const FinancialTools = () => {
               </button>
             )}
           </div>
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-2" aria-label="Filter calculators by category">
+            {['All', ...categories].map((category) => {
+              const selected = selectedCategory === category;
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-bold transition-colors ${selected ? 'bg-accent text-white' : 'border border-line-soft bg-surface-raised text-text-muted hover:text-text-primary'}`}
+                >
+                  {category}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Tool grid — searched */}
-        {isSearching ? (
+        {isFiltering ? (
           filteredTools.length > 0 ? (
             <div>
               <p className="text-sm font-bold text-text-muted mb-8">{filteredTools.length} result{filteredTools.length !== 1 ? 's' : ''}</p>
@@ -340,10 +366,10 @@ const FinancialTools = () => {
             <div className="py-24 text-center block-cream rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
               <p className="text-text-primary font-display font-bold text-xl mb-3">No match found.</p>
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={clearFilters}
                 className="text-sm font-bold text-accent hover:text-accent-strong transition-colors"
               >
-                Clear search
+                Clear filters
               </button>
             </div>
           )

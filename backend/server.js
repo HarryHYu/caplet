@@ -1,19 +1,29 @@
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');
 const { testConnection } = require('./config/database');
 const { runMigrations } = require('./config/migrationRunner');
-const { syncDatabase } = require('./models');
 const seedProductionDatabase = require('./scripts/seed-production');
 const { attachLiveSocket } = require('./realtime/liveSocket');
-require('dotenv').config();
+const { requestContext } = require('./middleware/requestContext');
+const { createRateLimiter } = require('./middleware/rateLimit');
+const { assertSharedLimiterConfiguration } = require('./services/distributedLimitStore');
 
 const app = express();
 const PORT = process.env.PORT || 5002;
 
+// Railway terminates TLS one hop in front of Express. Trust exactly that hop
+// in production so IP-based abuse controls distinguish clients without
+// accepting an arbitrary forwarded chain.
+app.set('trust proxy', process.env.TRUST_PROXY_HOPS
+  ? Math.max(0, Number(process.env.TRUST_PROXY_HOPS) || 0)
+  : process.env.NODE_ENV === 'production' ? 1 : false);
+
 // Middleware
 app.use(helmet());
+app.use(requestContext);
 const allowedOrigins = new Set([
   process.env.FRONTEND_URL || 'http://localhost:5173',
   'https://caplet.org',
@@ -50,9 +60,10 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const authLimiter = createRateLimiter({ scope: 'auth', windowMs: 15 * 60 * 1000, max: 120 });
 
 // Routes
 app.get('/', (req, res) => {
@@ -68,47 +79,29 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// DB health — proves the app can query Postgres (Railway Data tab uses a separate SSH path).
+// Backwards-compatible minimal database probe. Detailed migration and backup
+// state is available only through the authenticated /api/ops/admin endpoints.
 app.get('/health/db', async (req, res) => {
   const { sequelize } = require('./config/database');
   try {
     const [[{ ok }]] = await sequelize.query('SELECT 1 AS ok');
-    const [migrations] = await sequelize.query(
-      'SELECT name FROM "SequelizeMeta" ORDER BY name'
-    );
-    const [legacy] = await sequelize.query(`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-        AND table_name IN ('financial_plans', 'financial_states', 'check_ins', 'summaries')
-    `);
-    const [tables] = await sequelize.query(`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-      ORDER BY table_name
-    `);
-
     res.json({
       status: ok === 1 ? 'OK' : 'ERROR',
       timestamp: new Date().toISOString(),
-      migrations: migrations.map((row) => row.name),
-      legacyFinancialTablesRemaining: legacy.map((row) => row.table_name),
-      tableCount: tables.length,
-      tables: tables.map((row) => row.table_name),
+      requestId: req.requestId || null,
     });
   } catch (error) {
-    console.error('DB health check failed:', error);
+    console.error('DB health check failed:', error.message);
     res.status(503).json({
       status: 'ERROR',
       timestamp: new Date().toISOString(),
-      message: error.message,
+      requestId: req.requestId || null,
     });
   }
 });
 
 // API Routes
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/progress', require('./routes/progress'));
@@ -118,12 +111,15 @@ app.use('/api/metrics', require('./routes/metrics'));
 app.use('/api/classes', require('./routes/classes'));
 app.use('/api/uploads', require('./routes/uploads'));
 app.use('/api/editor', require('./routes/editor'));
+app.use('/api/editor', require('./routes/editorQuestions'));
+// AI routes apply their own user/workspace-aware quotas after authentication.
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/saved-slides', require('./routes/savedSlides'));
 app.use('/api/financial-profile', require('./routes/financialProfile'));
 app.use('/api/debt-sequencing', require('./routes/debtSequencing'));
 app.use('/api/financial-twin', require('./routes/financialTwin'));
+app.use('/api/money', require('./routes/money'));
 app.use('/api/review', require('./routes/review'));
 app.use('/api/essays', require('./routes/essays'));
 app.use('/api/economics-marker', require('./routes/economicsMarker'));
@@ -131,26 +127,42 @@ app.use('/api/economics-exams', require('./routes/economicsExams'));
 app.use('/api/study-plan', require('./routes/studyPlan'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/live', require('./routes/live'));
+app.use('/api/privacy', require('./routes/privacy'));
+app.use('/api/teacher-learning', require('./routes/teacherLearning'));
+app.use('/api/feature-flags', require('./routes/featureFlags'));
+app.use('/api/money', require('./routes/money'));
+app.use('/api/ops', require('./routes/operational'));
+app.use('/api', require('./routes/learning'));
 app.use('/api', require('./routes/proxy'));
 
 // Error handling middleware
-// eslint-disable-next-line no-unused-vars -- Express error middleware requires 4 args
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  if (res.headersSent) return next(err);
+  const requestedStatus = Number(err.status || err.statusCode || 500);
+  const status = requestedStatus >= 400 && requestedStatus < 600 ? requestedStatus : 500;
+  console.error(JSON.stringify({
+    event: 'request_error',
+    requestId: req.requestId || null,
+    status,
+    errorType: err.name || 'Error',
+    message: status >= 500 ? 'Internal server error' : err.message,
+  }));
+  res.status(status).json({
+    message: status >= 500 ? 'Something went wrong.' : err.message,
+    requestId: req.requestId || null,
   });
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({ message: 'Route not found', requestId: req.requestId || null });
 });
 
 // Start server
 const startServer = async () => {
   try {
+    assertSharedLimiterConfiguration(process.env);
+
     // CDR safety gate: refuse to start if real CDR credentials are present
     // without the accreditation flag, so mocked and real Financial Twin modes
     // can never be confused. Throws CdrBootSafetyError → caught below → exit(1).
@@ -187,13 +199,55 @@ const startServer = async () => {
     // Run database migrations
     await runMigrations();
 
-    // Safe no-op fallback sync (force: false prevents any schema changes)
-    await syncDatabase();
+    // Register the public ABS/RBA Money series without creating observations.
+    // Live ingestion remains an explicit, source-verified job; an empty
+    // registry must surface as unavailable rather than fabricated data.
+    const { ensureMoneyRegistry } = require('./services/moneyData');
+    await ensureMoneyRegistry();
 
     // Seed production database if in production
     if (process.env.NODE_ENV === 'production') {
       await seedProductionDatabase();
     }
+
+    // Enforce configured retention without delaying boot. Consent records and
+    // unresolved safety reports remain auditable; expired AI summaries,
+    // optional analytics events and old guardian-request contact details do not.
+    const { purgeExpiredData } = require('./services/dataRetention');
+    purgeExpiredData().catch((error) => console.error('Data retention sweep error:', error.message));
+    const retentionTimer = setInterval(() => {
+      purgeExpiredData().catch((error) => console.error('Data retention sweep error:', error.message));
+    }, Math.max(1, Number(process.env.DATA_RETENTION_SWEEP_HOURS || 6)) * 60 * 60 * 1000);
+    retentionTimer.unref?.();
+
+    // Moderation reports persist notification state before delivery. Failed or
+    // interrupted webhook/email attempts are retried with provider idempotency
+    // keys, so a provider outage cannot silently drop a safeguarding alert.
+    const { retryPendingModerationNotifications } = require('./services/moderationNotifications');
+    const retryModerationNotifications = () => retryPendingModerationNotifications()
+      .catch((error) => console.error('Moderation notification retry error:', error.message));
+    retryModerationNotifications();
+    const moderationNotificationTimer = setInterval(
+      retryModerationNotifications,
+      Math.max(15000, Number(process.env.MODERATION_NOTIFICATION_SWEEP_MS) || 60000),
+    );
+    moderationNotificationTimer.unref?.();
+
+    // Persist readiness and backup incidents before sending a redacted,
+    // idempotent webhook. A failed delivery remains queued for the next sweep.
+    const { runOperationalMonitor } = require('./services/operationalAlerts');
+    const monitorOperations = () => runOperationalMonitor()
+      .catch((error) => console.error(JSON.stringify({
+        event: 'operational_monitor_error',
+        errorType: error?.name || 'Error',
+        message: 'Operational monitoring could not complete',
+      })));
+    monitorOperations();
+    const operationalMonitorTimer = setInterval(
+      monitorOperations,
+      Math.max(15000, Number(process.env.OPS_MONITOR_INTERVAL_MS) || 60000),
+    );
+    operationalMonitorTimer.unref?.();
 
     // Start server
     const server = app.listen(PORT, () => {

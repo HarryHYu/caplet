@@ -69,6 +69,7 @@ router.put('/lesson/:lessonId', requireAuth, [
         status: 'not_started'
       });
     }
+    const previousStatus = progress.status;
 
     // Update progress
     const updateData = {};
@@ -88,6 +89,25 @@ router.put('/lesson/:lessonId', requireAuth, [
     updateData.lastAccessedAt = new Date();
 
     await progress.update(updateData);
+
+    if (status && status !== previousStatus && ['in_progress', 'completed'].includes(status)) {
+      const eventType = status === 'completed' ? 'lesson_completed' : 'lesson_started';
+      const day = new Date().toISOString().slice(0, 10);
+      const { recordProductEvent } = require('../services/productEvents');
+      await recordProductEvent({
+        idempotencyKey: `${eventType}:${req.user.id}:${lessonId}:${day}`,
+        type: eventType,
+        userId: req.user.id,
+        feature: 'lesson_player',
+        entityType: 'lesson',
+        entityId: lessonId,
+        metadata: {
+          courseId,
+          moduleId: lesson.moduleId,
+          timeSpentSeconds: Number(timeSpent || progress.timeSpent || 0),
+        },
+      });
+    }
 
     res.json({
       message: 'Progress updated successfully',
@@ -344,8 +364,18 @@ router.post('/:lessonId/score', requireAuth, async (req, res) => {
       });
     }
 
-    const merged = { ...(progress.quizScores || {}), _score: { score, answers, scoredAt: new Date().toISOString() } };
+    const scoredAt = new Date();
+    const merged = { ...(progress.quizScores || {}), _score: { score, answers, scoredAt: scoredAt.toISOString() } };
     await progress.update({ quizScores: merged, lastAccessedAt: new Date() });
+
+    // Mastery evidence is additive to the legacy lesson-progress record. A
+    // content author must map the lesson to outcomes before it contributes.
+    try {
+      const { recordLessonScoreEvidence } = require('../services/learningEvidenceService');
+      await recordLessonScoreEvidence({ userId: req.user.id, lesson, score, answers, occurredAt: scoredAt });
+    } catch (evidenceError) {
+      console.error('Lesson score evidence error:', evidenceError.message);
+    }
 
     res.json({ saved: true, score });
   } catch (error) {

@@ -1,25 +1,44 @@
+/* eslint-disable react-refresh/only-export-components -- calculator configuration and pure helpers are exported for regression tests */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../../lib/useReveal';
+import { FinancialAssumptions, FormField } from '../../components/AccessibleUI';
 
-const TAX_BRACKETS = [
-  { threshold: 0, rate: 0, base: 0 },
-  { threshold: 18200, rate: 0.19, base: 0 },
-  { threshold: 45000, rate: 0.325, base: 5092 },
-  { threshold: 120000, rate: 0.37, base: 29467 },
-  { threshold: 180000, rate: 0.45, base: 51667 },
-];
+export const TAX_YEARS = {
+  '2025-26': {
+    label: '2025–26',
+    brackets: [
+      { threshold: 0, rate: 0, base: 0 },
+      { threshold: 18200, rate: 0.16, base: 0 },
+      { threshold: 45000, rate: 0.30, base: 4288 },
+      { threshold: 135000, rate: 0.37, base: 31288 },
+      { threshold: 190000, rate: 0.45, base: 51638 },
+    ],
+  },
+  '2026-27': {
+    label: '2026–27',
+    brackets: [
+      { threshold: 0, rate: 0, base: 0 },
+      { threshold: 18200, rate: 0.15, base: 0 },
+      { threshold: 45000, rate: 0.30, base: 4020 },
+      { threshold: 135000, rate: 0.37, base: 31020 },
+      { threshold: 190000, rate: 0.45, base: 51370 },
+    ],
+  },
+};
+
+export const DEFAULT_TAX_YEAR = '2026-27';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
 
-/* eslint-disable-next-line react-refresh/only-export-components -- shared util */
-export const calculateTax = (income) => {
+export const calculateTax = (income, year = DEFAULT_TAX_YEAR) => {
   if (!income || income <= 0) return 0;
 
+  const brackets = TAX_YEARS[year]?.brackets || TAX_YEARS[DEFAULT_TAX_YEAR].brackets;
   let tax = 0;
-  for (let i = TAX_BRACKETS.length - 1; i >= 0; i -= 1) {
-    const bracket = TAX_BRACKETS[i];
+  for (let i = brackets.length - 1; i >= 0; i -= 1) {
+    const bracket = brackets[i];
     if (income > bracket.threshold) {
       tax = bracket.base + (income - bracket.threshold) * bracket.rate;
       break;
@@ -30,6 +49,7 @@ export const calculateTax = (income) => {
 
 const TaxCalculator = () => {
   const [income, setIncome] = useState('');
+  const [taxYear, setTaxYear] = useState(DEFAULT_TAX_YEAR);
   const [includeMedicare, setIncludeMedicare] = useState(true);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -45,7 +65,7 @@ const TaxCalculator = () => {
       return;
     }
 
-    const tax = calculateTax(parsedIncome);
+    const tax = calculateTax(parsedIncome, taxYear);
     const medicare = includeMedicare ? parsedIncome * 0.02 : 0;
     const totalTax = tax + medicare;
     const netIncome = parsedIncome - totalTax;
@@ -58,6 +78,7 @@ const TaxCalculator = () => {
       totalTax,
       netIncome,
       effectiveRate,
+      taxYear,
     });
   };
 
@@ -87,42 +108,46 @@ const TaxCalculator = () => {
           <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Assessment Parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-10">
-              <div>
-                <label className="text-sm font-semibold text-text-dim mb-3 block">
-                  Annual taxable income (AUD)
-                </label>
-                <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition-shadow">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="100"
-                    value={income}
-                    onChange={(e) => setIncome(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full bg-transparent pl-6 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
-                  />
-                </div>
-              </div>
+              <FormField id="tax-year" label="Financial year">
+                {(fieldProps) => (
+                  <select {...fieldProps} value={taxYear} onChange={(e) => { setTaxYear(e.target.value); setResult(null); }} className="w-full rounded-xl border border-line-soft bg-surface-body px-4 py-4 text-base font-bold text-text-primary">
+                    {Object.entries(TAX_YEARS).map(([value, year]) => <option key={value} value={value}>{year.label}</option>)}
+                  </select>
+                )}
+              </FormField>
+
+              <FormField id="tax-income" label="Annual taxable income (AUD)" error={error} required>
+                {(fieldProps) => (
+                  <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition-shadow">
+                    <span aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
+                    <input
+                      {...fieldProps}
+                      type="number"
+                      min="0"
+                      step="100"
+                      value={income}
+                      onChange={(e) => setIncome(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full bg-transparent pl-6 pr-4 py-4 text-2xl font-bold text-text-primary placeholder:text-text-dim/60"
+                    />
+                  </div>
+                )}
+              </FormField>
 
               <div className="flex items-center gap-4 p-6 rounded-2xl bg-surface-body">
                 <input
                   id="medicare"
                   type="checkbox"
+                  aria-describedby="medicare-hint"
                   checked={includeMedicare}
                   onChange={(e) => setIncludeMedicare(e.target.checked)}
                   className="w-5 h-5 accent-accent bg-transparent"
                 />
                 <label htmlFor="medicare" className="text-sm font-semibold text-text-primary">
-                  Include Medicare levy (2.0%)
+                  Include simplified Medicare levy estimate (2.0%)
                 </label>
+                <p id="medicare-hint" className="sr-only">This simplified estimate excludes low-income thresholds, reductions, exemptions, and the Medicare levy surcharge.</p>
               </div>
-
-              {error && (
-                <div className="text-sm font-medium text-accent">
-                  {error}
-                </div>
-              )}
 
               <button type="submit" className="btn-primary w-full py-5 hover:-translate-y-0.5 transition-transform">
                 Calculate Tax
@@ -133,6 +158,7 @@ const TaxCalculator = () => {
           <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Fiscal Summary</h2>
 
+            <div aria-live="polite" aria-atomic="true" className="flex-1">
             {result ? (
               <div className="space-y-10">
                 <div>
@@ -161,7 +187,7 @@ const TaxCalculator = () => {
                   </div>
 
                   <div className="text-xs text-text-dim space-y-2 font-semibold">
-                    <p>• AU resident rates (2023-24)</p>
+                    <p>• AU resident rates ({TAX_YEARS[result.taxYear].label})</p>
                     <p>• Excludes HECS/HELP adjustments</p>
                     <p>• For educational purposes only</p>
                   </div>
@@ -173,7 +199,21 @@ const TaxCalculator = () => {
                 <p className="text-sm font-medium">Enter your income to see results.</p>
               </div>
             )}
+            </div>
           </div>
+        </div>
+
+        <div className="mt-8 reveal">
+          <FinancialAssumptions
+            period={TAX_YEARS[taxYear].label}
+            verified="13 July 2026"
+            included={['Australian resident marginal income-tax rates', 'Optional flat 2% Medicare levy estimate']}
+            excluded={['Offsets and deductions', 'HELP and other study loans', 'Medicare thresholds, reductions, exemptions, and surcharge']}
+            sources={[
+              { label: 'ATO tax-rate changes', href: 'https://www.ato.gov.au/api/public/content/0-307bd737-ce3a-4500-8a3d-77b5fd2a774a' },
+              { label: 'ATO calculators', href: 'https://www.ato.gov.au/calculators' },
+            ]}
+          />
         </div>
       </div>
     </div>
@@ -181,5 +221,3 @@ const TaxCalculator = () => {
 };
 
 export default TaxCalculator;
-
-

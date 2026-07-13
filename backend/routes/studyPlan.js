@@ -7,8 +7,10 @@ const {
   normalizeConfig,
   validateConfig,
   markerSignal,
+  recommendationSignal,
   generatePlan
 } = require('../services/studyPlanService');
+const { getNextRecommendation } = require('../services/recommendationEngine');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -52,14 +54,24 @@ async function latestMarkedAnswer(userId) {
   });
 }
 
-async function refreshFromMarkedAnswer(plan) {
+async function currentRecommendation(userId, subjects) {
+  if (!subjects.includes('economics')) return null;
+  await require('../services/questionBankService').ensureEconomicsQuestionBank();
+  return getNextRecommendation(userId, 'economics');
+}
+
+async function refreshFromLearningEvidence(plan) {
   if (!plan || !plan.subjects.includes('economics')) return plan;
-  const attempt = await latestMarkedAnswer(plan.userId);
-  const signal = markerSignal(attempt);
-  if (!signal || signal.fingerprint === plan.sourceFingerprint) return plan;
+  const [attempt, recommendation] = await Promise.all([
+    latestMarkedAnswer(plan.userId),
+    currentRecommendation(plan.userId, plan.subjects),
+  ]);
+  const fingerprints = [markerSignal(attempt)?.fingerprint, recommendationSignal(recommendation)?.fingerprint].filter(Boolean).join('|');
+  if (!fingerprints || fingerprints === plan.sourceFingerprint) return plan;
 
   const generated = generatePlan(configFromPlan(plan), {
     marker: attempt,
+    recommendation,
     existingTasks: plan.tasks
   });
   await plan.update({
@@ -76,7 +88,7 @@ async function refreshFromMarkedAnswer(plan) {
 router.get('/', async (req, res) => {
   try {
     let plan = await StudyPlan.findOne({ where: { userId: req.user.id } });
-    plan = await refreshFromMarkedAnswer(plan);
+    plan = await refreshFromLearningEvidence(plan);
     res.json({ studyPlan: serialize(plan), options: publicOptions() });
   } catch (error) {
     console.error('Get study plan error:', error);
@@ -92,9 +104,13 @@ router.post('/generate', async (req, res) => {
     if (errors.length) return res.status(400).json({ message: errors[0], errors });
 
     const existing = await StudyPlan.findOne({ where: { userId: req.user.id } });
-    const attempt = config.subjects.includes('economics') ? await latestMarkedAnswer(req.user.id) : null;
+    const [attempt, recommendation] = await Promise.all([
+      config.subjects.includes('economics') ? latestMarkedAnswer(req.user.id) : null,
+      currentRecommendation(req.user.id, config.subjects),
+    ]);
     const generated = generatePlan(config, {
       marker: attempt,
+      recommendation,
       existingTasks: existing?.tasks || []
     });
     const values = {
@@ -119,9 +135,13 @@ router.post('/regenerate', async (req, res) => {
   try {
     const plan = await StudyPlan.findOne({ where: { userId: req.user.id } });
     if (!plan) return res.status(404).json({ message: 'Create a study plan first' });
-    const attempt = plan.subjects.includes('economics') ? await latestMarkedAnswer(req.user.id) : null;
+    const [attempt, recommendation] = await Promise.all([
+      plan.subjects.includes('economics') ? latestMarkedAnswer(req.user.id) : null,
+      currentRecommendation(req.user.id, plan.subjects),
+    ]);
     const generated = generatePlan(configFromPlan(plan), {
       marker: attempt,
+      recommendation,
       existingTasks: plan.tasks
     });
     await plan.update({

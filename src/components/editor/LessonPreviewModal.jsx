@@ -73,7 +73,7 @@ export default function LessonPreviewModal({ open, onClose, title, slides }) {
         )}
       </header>
 
-      <main className="flex-1 min-h-0 max-w-[1400px] w-full mx-auto px-4 md:px-8 lg:px-12 py-5 md:py-7 flex flex-col gap-4 md:gap-5">
+      <div className="flex-1 min-h-0 max-w-[1400px] w-full mx-auto px-4 md:px-8 lg:px-12 py-5 md:py-7 flex flex-col gap-4 md:gap-5">
         {list.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-text-muted font-serif italic">Add some slides to preview.</p>
@@ -130,7 +130,7 @@ export default function LessonPreviewModal({ open, onClose, title, slides }) {
             </div>
           </>
         )}
-      </main>
+      </div>
     </div>
   );
 }

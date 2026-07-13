@@ -1,6 +1,10 @@
 const path = require('path');
 const { Sequelize } = require('sequelize');
 
+if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is required in production; refusing to use ephemeral SQLite storage.');
+}
+
 const sequelize = process.env.DATABASE_URL
   ? new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
@@ -24,6 +28,7 @@ const testConnection = async () => {
     console.log('✅ Database connection established.');
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);
+    throw error;
   }
 };
 

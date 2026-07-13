@@ -18,6 +18,8 @@ const sections = [
   { id: 'ai', label: 'AI limitations', icon: CpuChipIcon },
   { id: 'financial-education', label: 'Financial education', icon: CurrencyDollarIcon },
   { id: 'your-choices', label: 'Your choices', icon: DocumentArrowDownIcon },
+  { id: 'retention', label: 'Retention & deletion', icon: DocumentArrowDownIcon },
+  { id: 'providers', label: 'Providers & locations', icon: ArrowTopRightOnSquareIcon },
   { id: 'security', label: 'Security basics', icon: LockClosedIcon },
   { id: 'schools', label: 'Schools & teachers', icon: UserGroupIcon },
 ];
@@ -38,7 +40,7 @@ const TrustCenter = () => {
             where AI can help, where it can be wrong, and how our financial tools stay educational.
           </p>
           <div className="mt-8 flex flex-wrap gap-3 text-xs font-bold text-text-muted">
-            <span className="rounded-full bg-surface-raised px-4 py-2">Last reviewed 10 July 2026</span>
+            <span className="rounded-full bg-surface-raised px-4 py-2">Privacy notice v2.0 · 13 July 2026</span>
             <span className="rounded-full block-blue px-4 py-2 text-accent">Plain-language overview</span>
           </div>
         </header>
@@ -57,13 +59,14 @@ const TrustCenter = () => {
 
           <main className="reveal-stagger space-y-6 max-w-4xl">
             <TrustSection id="privacy" title="Privacy overview" icon={ShieldCheckIcon} tone="block-blue">
-              <p>We collect the information needed to operate an account and deliver learning features: account details, course and classroom activity, saved work, study progress and the content a user chooses to submit.</p>
-              <p>Financial profile or Financial Twin information is kept separate from general learning content and is used only to provide the feature the user requested. We do not sell student data or use it to place advertising.</p>
+              <p>Caplet is the service operator responsible for this notice. Contact <a className="font-bold text-accent" href="mailto:contact@caplet.org">contact@caplet.org</a> for its privacy contact. We collect the information needed to create and secure an account, provide learning and classroom features, save chosen work, measure optional product analytics, respond to support or safety issues, and meet legal obligations.</p>
+              <p>Core service data is processed to deliver the feature a user or school requests. Optional AI processing, learning analytics and classroom sharing use a recorded consent choice and can be withdrawn. We do not sell personal information or use student data to target advertising.</p>
             </TrustSection>
 
             <TrustSection id="student-data" title="Student data handling" icon={AcademicCapIcon} tone="block-green">
               <p>Student work may include lesson progress, assignment submissions, saved slides, essays, practice answers and study-plan activity. Teachers see information connected to classes they manage; they do not receive a student&apos;s private financial profile.</p>
-              <p>Students should avoid entering unnecessary personal, medical or highly sensitive information in free-text learning and AI fields.</p>
+              <p>Accounts with an unknown age are treated conservatively. Under-18 accounts require guardian permission before optional AI, analytics or classroom-data sharing is enabled. Peer profiles are minimised, class members do not receive learner email addresses, and learning evidence is limited to verified teachers with a current class relationship.</p>
+              <p>Students should avoid entering unnecessary personal, medical or highly sensitive information in free-text learning and AI fields. A user can report classroom content; reports about staff or serious safety concerns are routed outside the accused person&apos;s control.</p>
             </TrustSection>
 
             <TrustSection id="ai" title="AI limitations and human review" icon={CpuChipIcon} tone="block-amber">
@@ -83,8 +86,18 @@ const TrustCenter = () => {
             </TrustSection>
 
             <TrustSection id="your-choices" title="Account deletion and data export" icon={DocumentArrowDownIcon} tone="block-cream">
-              <p>To request a copy of account data or deletion of an account, email <a className="font-bold text-accent" href="mailto:contact@caplet.org?subject=Caplet%20data%20request">contact@caplet.org</a> from the address connected to the account. We will verify the request before acting.</p>
+              <p>Signed-in users can export a machine-readable copy, withdraw optional consent, clear AI history and permanently delete an account from <Link className="font-bold text-accent" to="/settings/privacy">Privacy settings</Link>. Profile settings provide direct correction for most account details. A parent, guardian or authorised representative can also contact us; identity and authority must be verified before access, correction or deletion.</p>
               <p>Financial Twin consent can be revoked inside that tool. Revocation removes the stored connection and imported transactions associated with it. Some records may need to be retained where required for security, legal or operational reasons.</p>
+            </TrustSection>
+
+            <TrustSection id="retention" title="Retention and deletion schedule" icon={DocumentArrowDownIcon} tone="block-blue">
+              <p>Account, saved-work and core learning records are kept while the account is active and are removed through verified account deletion, except for a narrowly required legal or safety record. AI history is kept only when enabled and expires after the user-selected 30-day to two-year period. Optional product-analytics events expire after 365 days. Expired guardian-request contact details are removed after 90 days.</p>
+              <p>Consent decisions and safety actions are kept as an audit record for as long as reasonably required to demonstrate the decision or manage an unresolved concern. Deleted information can remain temporarily in encrypted, access-controlled backups until the documented backup lifecycle completes; it is not restored for ordinary product use.</p>
+            </TrustSection>
+
+            <TrustSection id="providers" title="Service providers and overseas processing" icon={ArrowTopRightOnSquareIcon} tone="block-green">
+              <p>Caplet uses contracted infrastructure and optional feature providers. Current categories include Railway for backend/database hosting, Vercel for frontend delivery, S3-compatible storage for uploaded media, OpenAI for optional AI features, Google for optional sign-in and Resend for guardian-consent email delivery.</p>
+              <p>Processing locations depend on the production configuration and may include Australia and the United States. Before enabling a provider, Caplet must review its security and privacy terms and take reasonable steps for cross-border handling. Schools can request the current deployment and subprocessor register before procurement.</p>
             </TrustSection>
 
             <TrustSection id="security" title="Security basics" icon={LockClosedIcon} tone="block-green">
@@ -96,6 +109,11 @@ const TrustCenter = () => {
               <p>Schools and teachers remain responsible for student supervision, curriculum choices, classroom access, assessment decisions and compliance with their own policies and local requirements.</p>
               <p>Before using Caplet with a class, schools should review this information, decide which features are appropriate for their students and provide any notices or permissions their context requires.</p>
             </TrustSection>
+
+            <section className="rounded-3xl border border-line-soft bg-surface-raised p-8 text-sm font-medium leading-relaxed text-text-muted md:p-10">
+              <h2 className="font-display text-2xl font-extrabold text-text-primary">Privacy complaints and external help</h2>
+              <p className="mt-4">Email <a className="font-bold text-accent" href="mailto:contact@caplet.org?subject=Privacy%20complaint">contact@caplet.org</a> with the account, issue and preferred outcome. We will acknowledge the complaint, investigate it, explain the result and provide any available review path. If it is not resolved, you may contact the <a className="font-bold text-accent" href="https://www.oaic.gov.au/privacy/privacy-complaints" target="_blank" rel="noreferrer">Office of the Australian Information Commissioner</a>. Online-safety concerns can also be raised with the <a className="font-bold text-accent" href="https://www.esafety.gov.au/report" target="_blank" rel="noreferrer">eSafety Commissioner</a>.</p>
+            </section>
 
             <section id="contact" className="scroll-mt-28 rounded-3xl bg-[color:var(--mark-blue)] p-8 md:p-12 text-white shadow-[0_30px_60px_-38px_rgba(19,81,170,0.7)]">
               <p className="font-hand text-xl text-white/80 -rotate-2 inline-block mb-3">need a human?</p>
@@ -109,7 +127,7 @@ const TrustCenter = () => {
 
             <section className="rounded-3xl border border-line-soft p-8 text-sm text-text-muted leading-relaxed">
               <h2 className="font-display text-xl font-bold text-text-primary mb-3">Terms of use</h2>
-              <p>Use Caplet lawfully and respectfully. Do not attempt to access another person&apos;s account, disrupt the service, upload harmful material or present generated content as verified fact. The service is provided for learning and general information and may change as features improve.</p>
+              <p>Caplet&apos;s full terms cover accounts, child safety, classroom conduct, uploaded content, AI limitations, sponsored links, consumer rights and service changes. <Link className="font-bold text-accent" to="/terms">Read the terms of use.</Link></p>
             </section>
           </main>
         </div>

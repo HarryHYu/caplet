@@ -9,7 +9,7 @@ let _client = null;
 function getClient() {
   if (_client) return _client;
   if (!process.env.OPENAI_API_KEY) return null;
-  _client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  _client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 30000, maxRetries: 1 });
   return _client;
 }
 
@@ -62,6 +62,11 @@ async function categorizeSlides(items, opts = {}) {
     throw err;
   }
   if (!Array.isArray(items) || items.length === 0) return new Map();
+  if (items.length > 60) {
+    const err = new Error('Too many slides to categorise in one request.');
+    err.status = 413;
+    throw err;
+  }
 
   const lines = items.map((it, i) => {
     const ctx = [it.courseTitle, it.lessonTitle].filter(Boolean).join(' / ');

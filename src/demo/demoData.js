@@ -323,12 +323,14 @@ export const DEMO_SAVED_SLIDES = { savedSlides: [] };
 
 /* ─────────────────────────── Classes ───────────────────────────────────── */
 const HARRY = { id: 'demo-user', firstName: 'Harry', lastName: 'Y', email: 'harry.y@caplet.demo' };
-const STUDENTS = [
+export const DEMO_STUDENTS = [
   { id: 'stu-mia', firstName: 'Mia', lastName: 'Chen', email: 'mia.chen@school.edu' },
   { id: 'stu-liam', firstName: 'Liam', lastName: 'Novak', email: 'liam.novak@school.edu' },
   { id: 'stu-ava', firstName: 'Ava', lastName: 'Patel', email: 'ava.patel@school.edu' },
   { id: 'stu-noah', firstName: 'Noah', lastName: 'Kim', email: 'noah.kim@school.edu' },
 ];
+export const DEMO_STUDENT = { ...DEMO_STUDENTS[0], role: 'student', bio: 'Year 11 Commerce student.' };
+const STUDENTS = DEMO_STUDENTS;
 
 export const DEMO_CLASSES = {
   teaching: [{ id: 'cls-commerce', name: 'Year 11 Commerce A', code: 'CAP-4821', role: 'teacher', createdAt: '2026-02-03T09:00:00.000Z' }],
@@ -428,6 +430,66 @@ export function getAnnouncementComments(announcementId) {
 export function getAssignmentComments(assignmentId) {
   return ASSIGNMENT_COMMENTS[assignmentId] || [];
 }
+
+/* ───────────────────── Teacher evidence and next actions ─────────────── */
+export const DEMO_CURRICULUM_OUTCOMES = [
+  { id: 'outcome-demand', code: 'E11.2', title: 'Explain movements and shifts in demand', subject: 'economics', metadata: { level: 'outcome' } },
+  { id: 'outcome-policy', code: 'E11.4', title: 'Analyse the effects of government policy', subject: 'economics', metadata: { level: 'outcome' } },
+  { id: 'outcome-finance', code: 'C11.1', title: 'Apply personal finance concepts to decisions', subject: 'economics', metadata: { level: 'outcome' } },
+];
+
+export const DEMO_TEACHER_ANALYTICS = {
+  classroom: { id: 'cls-commerce', name: 'Year 11 Commerce A' },
+  analytics: {
+    threshold: 0.6,
+    summary: { studentCount: 4, outcomeCount: 3, evidenceCount: 31, studentsNeedingIntervention: 2 },
+    heatmap: {
+      students: DEMO_STUDENTS.map((student) => ({
+        id: student.id,
+        name: `${student.firstName} ${student.lastName}`,
+        email: student.email,
+      })),
+      outcomes: DEMO_CURRICULUM_OUTCOMES,
+      cells: [
+        { studentId: 'stu-mia', outcomeId: 'outcome-demand', probability: 0.82, evidenceCount: 4, status: 'secure' },
+        { studentId: 'stu-mia', outcomeId: 'outcome-policy', probability: 0.68, evidenceCount: 3, status: 'developing' },
+        { studentId: 'stu-mia', outcomeId: 'outcome-finance', probability: 0.88, evidenceCount: 4, status: 'secure' },
+        { studentId: 'stu-liam', outcomeId: 'outcome-demand', probability: 0.42, evidenceCount: 3, status: 'needs_support' },
+        { studentId: 'stu-liam', outcomeId: 'outcome-policy', probability: 0.55, evidenceCount: 2, status: 'needs_support' },
+        { studentId: 'stu-liam', outcomeId: 'outcome-finance', probability: 0.64, evidenceCount: 3, status: 'developing' },
+        { studentId: 'stu-ava', outcomeId: 'outcome-demand', probability: 0.76, evidenceCount: 3, status: 'developing' },
+        { studentId: 'stu-ava', outcomeId: 'outcome-policy', probability: 0.84, evidenceCount: 3, status: 'secure' },
+        { studentId: 'stu-ava', outcomeId: 'outcome-finance', probability: 0.79, evidenceCount: 3, status: 'secure' },
+        { studentId: 'stu-noah', outcomeId: 'outcome-demand', probability: 0.51, evidenceCount: 2, status: 'needs_support' },
+        { studentId: 'stu-noah', outcomeId: 'outcome-policy', probability: 0.62, evidenceCount: 2, status: 'developing' },
+        { studentId: 'stu-noah', outcomeId: 'outcome-finance', probability: 0.71, evidenceCount: 2, status: 'developing' },
+      ],
+    },
+    individualProfiles: [
+      {
+        student: { id: 'stu-liam', name: 'Liam Novak' },
+        averageProbability: 0.54,
+        evidenceCount: 8,
+        outcomes: [
+          { studentId: 'stu-liam', outcomeId: 'outcome-demand', probability: 0.42, evidenceCount: 3, outcome: DEMO_CURRICULUM_OUTCOMES[0] },
+          { studentId: 'stu-liam', outcomeId: 'outcome-policy', probability: 0.55, evidenceCount: 2, outcome: DEMO_CURRICULUM_OUTCOMES[1] },
+          { studentId: 'stu-liam', outcomeId: 'outcome-finance', probability: 0.64, evidenceCount: 3, outcome: DEMO_CURRICULUM_OUTCOMES[2] },
+        ],
+      },
+    ],
+    commonMisconceptions: [
+      { code: 'movement-vs-shift', count: 5, studentCount: 2, outcomeIds: ['outcome-demand'] },
+      { code: 'policy-lag', count: 3, studentCount: 2, outcomeIds: ['outcome-policy'] },
+    ],
+    studentsNeedingIntervention: [
+      { student: { id: 'stu-liam', name: 'Liam Novak' }, averageProbability: 0.54, weakOutcomeCount: 2, dueOutcomeCount: 1, priority: 'high', reasons: ['low_mastery', 'review_due'] },
+      { student: { id: 'stu-noah', name: 'Noah Kim' }, averageProbability: 0.61, weakOutcomeCount: 1, dueOutcomeCount: 0, priority: 'medium', reasons: ['low_mastery'] },
+    ],
+    recommendedGroups: [
+      { id: 'group-demand', outcome: DEMO_CURRICULUM_OUTCOMES[0], studentIds: ['stu-liam', 'stu-noah'], studentCount: 2, averageProbability: 0.465, reason: 'shared_weak_outcome', recommendedMode: 'remediation' },
+    ],
+  },
+};
 
 /* ─────────────────────────── Editor workspace tree ─────────────────────── */
 export const DEMO_EDITOR_TREE = {

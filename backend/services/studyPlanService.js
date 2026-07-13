@@ -192,11 +192,34 @@ function markerSignal(attempt) {
   };
 }
 
-function generatePlan(configInput, { marker = null, existingTasks = [], now = new Date() } = {}) {
+function recommendationSignal(recommendation) {
+  if (!recommendation || recommendation.subject !== 'economics') return null;
+  const outcome = recommendation.outcome;
+  if (!outcome?.id || !outcome.title) return null;
+  return {
+    fingerprint: `mastery:${outcome.id}:${recommendation.reasonCode || 'next'}:${Number(recommendation.score || 0).toFixed(2)}`,
+    summary: `Updated from your live Economics mastery evidence: ${recommendation.reason}`,
+    weakTopic: {
+      subject: 'economics',
+      subjectLabel: SUBJECTS.economics.label,
+      topic: outcome.title,
+      reason: recommendation.reason,
+      source: 'mastery',
+      priority: 'high',
+      resourcePath: recommendation.resourcePath || `/practice?mode=weak-topic&outcomeId=${encodeURIComponent(outcome.id)}`,
+      resourceLabel: 'Start adaptive practice',
+      outcomeId: outcome.id,
+      outcomeCode: outcome.code || null,
+    },
+  };
+}
+
+function generatePlan(configInput, { marker = null, recommendation = null, existingTasks = [], now = new Date() } = {}) {
   const config = normalizeConfig(configInput);
   const diagnosticTopics = diagnosticWeakTopics(config);
   const markerData = markerSignal(marker);
-  const weakTopics = mergeWeakTopics(diagnosticTopics, markerData?.weakTopic, config.subjects);
+  const masteryData = recommendationSignal(recommendation);
+  const weakTopics = mergeWeakTopics(diagnosticTopics, markerData?.weakTopic, masteryData?.weakTopic, config.subjects);
   const days = nextStudyDays(config.availableDays, now, 7);
   const completed = new Map(
     (Array.isArray(existingTasks) ? existingTasks : [])
@@ -232,16 +255,15 @@ function generatePlan(configInput, { marker = null, existingTasks = [], now = ne
     config,
     weakTopics,
     tasks,
-    sourceFingerprint: markerData?.fingerprint || diagnosticFingerprint(config),
-    signalSummary: markerData?.summary || 'Built from your quick subject diagnostic and exam deadlines.',
+    sourceFingerprint: [markerData?.fingerprint, masteryData?.fingerprint].filter(Boolean).join('|') || diagnosticFingerprint(config),
+    signalSummary: [masteryData?.summary, markerData?.summary].filter(Boolean).join(' ') || 'Built from your quick subject diagnostic and exam deadlines.',
     generatedAt: new Date(now).toISOString()
   };
 }
 
-function mergeWeakTopics(diagnosticTopics, markerTopic, subjects) {
-  const topics = markerTopic && subjects.includes(markerTopic.subject)
-    ? [markerTopic, ...diagnosticTopics]
-    : diagnosticTopics;
+function mergeWeakTopics(diagnosticTopics, markerTopic, masteryTopic, subjects) {
+  const liveTopics = [masteryTopic, markerTopic].filter((topic) => topic && subjects.includes(topic.subject));
+  const topics = [...liveTopics, ...diagnosticTopics];
   const seen = new Set();
   return topics.filter((item) => {
     const key = `${item.subject}:${item.topic.toLowerCase()}`;
@@ -298,6 +320,7 @@ module.exports = {
   normalizeConfig,
   validateConfig,
   markerSignal,
+  recommendationSignal,
   generatePlan,
   taskSignature
 };

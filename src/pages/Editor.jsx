@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { normalizeSlide, warnSlide, SLIDE_DEFAULTS, slideKindLabel, SLIDE_PALETTE } from '../lib/slideSchema';
 import SlideForm from '../components/editor/SlideForms';
 import LessonPreviewModal from '../components/editor/LessonPreviewModal';
 import AIChatPanel from '../components/editor/AIChatPanel';
+import useDialogFocus from '../lib/useDialogFocus';
 
 let _lid = 0;
 const localId = () => `s_${Date.now()}_${++_lid}`;
@@ -14,6 +16,24 @@ function decorate(slide) {
 }
 function strip(slides) {
   return slides.map(({ _id, ...rest }) => rest); // eslint-disable-line no-unused-vars
+}
+
+function lessonPayload(draft) {
+  return {
+    title: draft.title,
+    slides: strip(draft.slides || []),
+    syllabusVersion: draft.syllabusVersion || null,
+    difficulty: draft.difficulty || null,
+    estimatedMinutes: Number(draft.estimatedMinutes || 5),
+    assessmentPurpose: draft.assessmentPurpose || null,
+    sourceInfo: draft.sourceInfo || {},
+    outcomeIds: draft.outcomeIds || [],
+    metadata: draft.metadata || {},
+  };
+}
+
+function lessonSignature(draft) {
+  return draft ? JSON.stringify(lessonPayload(draft)) : '';
 }
 
 function slideSummary(slide) {
@@ -615,9 +635,213 @@ function LessonBuilder({ lessonId, draft, setDraft, saveMsg, onNewSlide, onAddSl
   return <div className="flex-1 min-h-0 overflow-y-auto bg-surface-body lesson-grid-bg">{slidePanel}</div>;
 }
 
-/* ── Top-level page ────────────────────────────────────────────────────────── */
+const LIFECYCLE_LABELS = {
+  draft: 'Draft',
+  in_review: 'In review',
+  approved: 'Approved',
+  published: 'Published',
+  superseded: 'Superseded',
+};
 
-export default function Editor() {
+const NEXT_LIFECYCLE = {
+  draft: ['in_review'],
+  in_review: ['draft', 'approved'],
+  approved: ['draft', 'published'],
+  published: ['superseded'],
+  superseded: [],
+};
+
+function ContentQualityDrawer({ draft, setDraft, outcomes, validation, history, busy, onValidate, onTransition, onCreateVersion, onClose }) {
+  const dialogRef = useDialogFocus({ onDismiss: onClose, dismissDisabled: busy });
+  const sourceInfo = draft.sourceInfo || {};
+  const selected = new Set((draft.outcomeIds || []).map(String));
+  const assessableOutcomes = outcomes.filter((outcome) => outcome.metadata?.level !== 'year');
+  const status = draft.lifecycleStatus || 'draft';
+  const humanReviewConfirmed = draft.metadata?.humanReviewConfirmed === true;
+  const updateReview = (patch) => setDraft((current) => ({
+    ...current,
+    metadata: { ...(current.metadata || {}), ...patch },
+  }));
+  const updateSource = (patch) => setDraft((current) => ({
+    ...current,
+    sourceInfo: { ...(current.sourceInfo || {}), ...patch },
+  }));
+  const toggleOutcome = (id) => setDraft((current) => {
+    const ids = new Set((current.outcomeIds || []).map(String));
+    if (ids.has(String(id))) ids.delete(String(id));
+    else ids.add(String(id));
+    return { ...current, outcomeIds: [...ids] };
+  });
+
+  return (
+    <div className="fixed inset-0 z-[80] flex justify-end bg-text-primary/30" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose(); }}>
+      <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="quality-title" className="relative h-full w-full max-w-xl overflow-y-auto bg-surface-body p-6 shadow-2xl md:p-8">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">Content governance</p>
+            <h2 id="quality-title" className="mt-2 text-3xl font-display font-extrabold tracking-tight">Quality and publishing</h2>
+          </div>
+          <button type="button" data-initial-focus onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full border border-line-soft text-xl text-text-muted" aria-label="Close">×</button>
+        </div>
+
+        <section className="mt-8 rounded-3xl bg-surface-raised p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-dim">Lifecycle</p>
+              <p className="mt-1 text-xl font-display font-extrabold text-text-primary">{LIFECYCLE_LABELS[status] || status}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {status === 'published' && (
+                <button type="button" disabled={busy} onClick={onCreateVersion} className="btn-primary px-4 py-2 text-xs disabled:opacity-50">
+                  Create new draft version
+                </button>
+              )}
+              {(NEXT_LIFECYCLE[status] || []).map((next) => (
+                <button key={next} type="button" disabled={busy} onClick={() => onTransition(next)} className="btn-secondary px-4 py-2 text-xs disabled:opacity-50">
+                  Move to {LIFECYCLE_LABELS[next]}
+                </button>
+              ))}
+            </div>
+          </div>
+          {status === 'in_review' && (
+            <div className="mt-5 rounded-2xl bg-surface-soft p-4">
+              <p className="text-xs font-medium leading-relaxed text-text-muted">Approval is attributed to the signed-in admin or verified teacher account.</p>
+              <label className="mt-4 flex items-start gap-3 text-sm font-medium text-text-muted">
+                <input type="checkbox" checked={humanReviewConfirmed} onChange={(event) => updateReview({ humanReviewConfirmed: event.target.checked })} className="mt-1 accent-[var(--accent)]" />
+                I checked curriculum accuracy, sources, answer feedback, and accessibility.
+              </label>
+            </div>
+          )}
+        </section>
+
+        <fieldset disabled={['published', 'superseded'].includes(status)} className="mt-6 grid gap-5 rounded-3xl bg-surface-raised p-6 sm:grid-cols-2 disabled:opacity-70">
+          <label className="text-sm font-bold text-text-muted">Syllabus version
+            <input value={draft.syllabusVersion || ''} onChange={(event) => setDraft((current) => ({ ...current, syllabusVersion: event.target.value }))} placeholder="NSW-2025" className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-text-primary outline-none focus:border-accent" />
+          </label>
+          <label className="text-sm font-bold text-text-muted">Difficulty
+            <select value={draft.difficulty || ''} onChange={(event) => setDraft((current) => ({ ...current, difficulty: event.target.value }))} className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-text-primary outline-none focus:border-accent">
+              <option value="">Choose</option><option value="foundation">Foundation</option><option value="core">Core</option><option value="extension">Extension</option><option value="exam">Exam</option>
+            </select>
+          </label>
+          <label className="text-sm font-bold text-text-muted">Estimated minutes
+            <input type="number" min="1" max="300" value={draft.estimatedMinutes || 5} onChange={(event) => setDraft((current) => ({ ...current, estimatedMinutes: Number(event.target.value) }))} className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-text-primary outline-none focus:border-accent" />
+          </label>
+          <label className="text-sm font-bold text-text-muted">Assessment purpose
+            <select value={draft.assessmentPurpose || ''} onChange={(event) => setDraft((current) => ({ ...current, assessmentPurpose: event.target.value }))} className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-text-primary outline-none focus:border-accent">
+              <option value="">Choose</option><option value="instruction">Instruction</option><option value="diagnostic">Diagnostic</option><option value="formative">Formative</option><option value="summative">Summative</option><option value="revision">Revision</option>
+            </select>
+          </label>
+          <label className="text-sm font-bold text-text-muted sm:col-span-2">Source URL
+            <input type="url" value={sourceInfo.sourceUrl || ''} onChange={(event) => updateSource({ sourceUrl: event.target.value })} className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-text-primary outline-none focus:border-accent" />
+          </label>
+          <label className="text-sm font-bold text-text-muted sm:col-span-2">Citation or attribution
+            <textarea value={sourceInfo.citation || ''} onChange={(event) => updateSource({ citation: event.target.value })} rows="2" className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-text-primary outline-none focus:border-accent" />
+          </label>
+          <label className="text-sm font-bold text-text-muted">Source reviewed
+            <input type="date" value={String(sourceInfo.reviewedAt || '').slice(0, 10)} onChange={(event) => updateSource({ reviewedAt: event.target.value })} className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-text-primary outline-none focus:border-accent" />
+          </label>
+        </fieldset>
+
+        <fieldset disabled={['published', 'superseded'].includes(status)} className="mt-6 rounded-3xl bg-surface-raised p-6 disabled:opacity-70">
+          <legend className="px-1 text-sm font-display font-extrabold text-text-primary">Curriculum outcomes</legend>
+          <p className="mt-1 text-xs font-medium text-text-muted">Map at least one assessable outcome before review.</p>
+          <div className="mt-4 max-h-72 space-y-2 overflow-y-auto pr-2">
+            {assessableOutcomes.map((outcome) => (
+              <label key={outcome.id} className="flex cursor-pointer items-start gap-3 rounded-xl bg-surface-soft p-3">
+                <input type="checkbox" checked={selected.has(String(outcome.id))} onChange={() => toggleOutcome(outcome.id)} className="mt-1 accent-[var(--accent)]" />
+                <span><span className="font-mono text-xs font-bold text-accent">{outcome.code}</span><span className="mt-0.5 block text-sm font-semibold text-text-primary">{outcome.title}</span></span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <section className="mt-6 rounded-3xl bg-surface-raised p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-lg font-display font-extrabold">Publishing checks</h3>
+            <button type="button" onClick={onValidate} disabled={busy} className="btn-primary px-4 py-2 text-xs disabled:opacity-50">{busy ? 'Checking…' : 'Run checks'}</button>
+          </div>
+          {validation ? (
+            <div className="mt-4 space-y-3" aria-live="polite">
+              <p className={`text-sm font-bold ${validation.ok ? 'text-[color:var(--mark-green)]' : 'text-text-error'}`}>{validation.ok ? 'Ready for review.' : `${validation.errors.length} blocking issue${validation.errors.length === 1 ? '' : 's'}.`}</p>
+              {[...(validation.errors || []), ...(validation.warnings || [])].map((item, index) => <p key={`${item.code}-${index}`} className="rounded-xl bg-surface-soft px-3 py-2 text-xs font-medium text-text-muted">{item.message}</p>)}
+            </div>
+          ) : <p className="mt-3 text-sm font-medium text-text-muted">Run checks for outcome mapping, slide validity, duplicated questions, accessible media, source freshness, and AI review.</p>}
+        </section>
+
+        <section className="mt-6 rounded-3xl bg-surface-raised p-6">
+          <h3 className="text-lg font-display font-extrabold">Version history</h3>
+          <div className="mt-4 space-y-2">
+            {history.length ? history.slice(0, 10).map((revision) => <div key={revision.id} className="rounded-xl bg-surface-soft p-3"><p className="text-sm font-bold">Version {revision.version}</p><p className="mt-1 text-xs font-medium text-text-muted">{revision.changeSummary || 'Lesson updated'} · {new Date(revision.createdAt).toLocaleString('en-AU')}</p></div>) : <p className="text-sm font-medium text-text-muted">No saved revisions yet.</p>}
+          </div>
+        </section>
+      </section>
+    </div>
+  );
+}
+
+/* ── Code-gated workspace ─────────────────────────────────────────────────── */
+
+function EditorAccessGate({ onEntered }) {
+  const [code, setCode] = useState('');
+  const [entering, setEntering] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!code.trim()) return;
+    setEntering(true);
+    setError('');
+    try {
+      await api.editorEnter(code.trim());
+      onEntered();
+    } catch (caught) {
+      setError(caught.message || 'That workspace code was not recognised.');
+    } finally {
+      setEntering(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-surface-body px-6 py-28 selection:bg-accent selection:text-white">
+      <div className="mx-auto max-w-lg rounded-3xl bg-surface-raised p-8 shadow-[0_30px_70px_-42px_rgba(20,20,18,0.5)] md:p-10">
+        <p className="font-hand text-xl text-accent -rotate-2 inline-block">author workspace</p>
+        <h1 className="mt-3 text-4xl font-display font-extrabold tracking-tight text-text-primary">Enter the lesson editor.</h1>
+        <p className="mt-4 text-sm font-medium leading-relaxed text-text-muted">Use the private code provided for your curriculum workspace. Sessions stay on this device and expire automatically.</p>
+        <form onSubmit={submit} className="mt-8">
+          <label htmlFor="editor-code" className="text-sm font-bold text-text-primary">Workspace code</label>
+          <input
+            id="editor-code"
+            type="password"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 font-mono text-text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+          />
+          {error && <p role="alert" className="mt-4 rounded-2xl bg-surface-error px-4 py-3 text-sm font-bold text-text-error">{error}</p>}
+          <button type="submit" disabled={entering || !code.trim()} className="btn-primary mt-6 w-full justify-center disabled:opacity-50">
+            {entering ? 'Checking…' : 'Open workspace'}
+          </button>
+        </form>
+      </div>
+    </main>
+  );
+}
+
+export default function Editor({ demoAccess = false, initialLessonId = '' }) {
+  const [authorised, setAuthorised] = useState(() => (
+    demoAccess || (typeof sessionStorage !== 'undefined' && Boolean(sessionStorage.getItem('editorToken')))
+  ));
+  const revokeAccess = useCallback(() => {
+    if (demoAccess) return;
+    api.clearEditorToken();
+    setAuthorised(false);
+  }, [demoAccess]);
+
+  if (!authorised) return <EditorAccessGate onEntered={() => setAuthorised(true)} />;
+  return <EditorWorkspace onUnauthorized={revokeAccess} initialLessonId={initialLessonId} demoAccess={demoAccess} />;
+}
+
+function EditorWorkspace({ onUnauthorized, initialLessonId = '', demoAccess = false }) {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState('');
@@ -632,6 +856,12 @@ export default function Editor() {
   const [aiMessages, setAiMessages] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [panelWidth, setPanelWidth] = useState(420);
+  const [showQuality, setShowQuality] = useState(false);
+  const [curriculumOutcomes, setCurriculumOutcomes] = useState([]);
+  const [qualityValidation, setQualityValidation] = useState(null);
+  const [lessonHistory, setLessonHistory] = useState([]);
+  const [qualityBusy, setQualityBusy] = useState(false);
+  const initialSelectionDone = useRef(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -641,22 +871,32 @@ export default function Editor() {
       setCourses(data.courses || []);
       return data.courses || [];
     } catch (e) {
+      if (e.status === 401) onUnauthorized();
       setGlobalError(e.message || 'Failed to load workspace');
       return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [onUnauthorized]);
 
   useEffect(() => {
     reload();
   }, [reload]);
 
+  useEffect(() => {
+    let active = true;
+    api.editorCurriculumOutcomes('economics')
+      .then((data) => { if (active) setCurriculumOutcomes(data?.outcomes || []); })
+      .catch((error) => { if (error.status === 401) onUnauthorized(); });
+    return () => { active = false; };
+  }, [onUnauthorized]);
+
   const currentSig = useMemo(() => {
     if (!draft) return '';
-    return JSON.stringify({ title: draft.title, slides: strip(draft.slides) });
+    return lessonSignature(draft);
   }, [draft]);
   const dirty = !!draft && currentSig !== originalSig;
+  const contentLocked = ['published', 'superseded'].includes(draft?.lifecycleStatus);
 
   /* Derived breadcrumb values for Mode 2 header */
   const selectedCourse = courses.find((c) => c.id === selected?.courseId);
@@ -668,12 +908,41 @@ export default function Editor() {
     setPreviewOpen(false);
     setLastAddedId(null);
     setAiMessages([]);
+    setShowAI(false);
+    setShowQuality(false);
+    setQualityValidation(null);
+    setLessonHistory([]);
     const slides = Array.isArray(selection.lesson.slides) ? selection.lesson.slides : [];
     const decorated = slides.map(decorate);
-    const next = { title: selection.lesson.title || '', slides: decorated };
+    const next = {
+      title: selection.lesson.title || '',
+      slides: decorated,
+      syllabusVersion: selection.lesson.syllabusVersion || '',
+      difficulty: selection.lesson.difficulty || '',
+      estimatedMinutes: selection.lesson.estimatedMinutes || selection.lesson.duration || 5,
+      assessmentPurpose: selection.lesson.assessmentPurpose || '',
+      sourceInfo: selection.lesson.sourceInfo || {},
+      outcomeIds: selection.lesson.outcomeIds || selection.lesson.metadata?.outcomeIds || [],
+      metadata: selection.lesson.metadata || {},
+      lifecycleStatus: selection.lesson.lifecycleStatus || (selection.lesson.isPublished ? 'published' : 'draft'),
+      contentVersion: selection.lesson.contentVersion || 1,
+    };
     setDraft(next);
-    setOriginalSig(JSON.stringify({ title: next.title, slides: strip(next.slides) }));
+    setOriginalSig(lessonSignature(next));
   }, []);
+
+  useEffect(() => {
+    if (initialSelectionDone.current || !initialLessonId || !courses.length) return;
+    for (const course of courses) {
+      for (const module of course.modules || []) {
+        const lesson = (module.lessons || []).find((item) => String(item.id) === String(initialLessonId));
+        if (!lesson) continue;
+        initialSelectionDone.current = true;
+        openLesson({ lesson, courseId: course.id, moduleId: module.id });
+        return;
+      }
+    }
+  }, [courses, initialLessonId, openLesson]);
 
   const addSlideFromType = useCallback((paletteType) => {
     let next;
@@ -719,7 +988,11 @@ export default function Editor() {
       });
       if (res.action === 'generate' && res.slides?.length) {
         const newSlides = res.slides.map(decorate);
-        setDraft((d) => ({ ...d, slides: [...d.slides, ...newSlides] }));
+        setDraft((d) => ({
+          ...d,
+          slides: [...d.slides, ...newSlides],
+          metadata: { ...(d.metadata || {}), generatedByAI: true },
+        }));
         setLastAddedId(newSlides[newSlides.length - 1]?._id);
         setAiMessages((m) => [...m, {
           id: Date.now() + 1,
@@ -840,18 +1113,91 @@ export default function Editor() {
     setSaving(true);
     if (!allWarnings.length) setSaveMsg(null);
     try {
-      await api.editorUpdateLesson(selected.lesson.id, {
-        title: draft.title,
-        slides: strip(draft.slides),
-      });
+      await api.editorUpdateLesson(selected.lesson.id, lessonPayload(draft));
       if (!allWarnings.length) setSaveMsg({ tone: 'ok', text: 'Saved' });
       await reload();
-      setOriginalSig(JSON.stringify({ title: draft.title, slides: strip(draft.slides) }));
+      setOriginalSig(lessonSignature(draft));
+      return true;
     } catch (e) {
       const detail = e.details ? ` (${e.details.join('; ')})` : '';
       setSaveMsg({ tone: 'error', text: (e.message || 'Save failed') + detail });
+      return false;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openQualityPanel = async () => {
+    if (!selected?.lesson?.id) return;
+    setShowQuality(true);
+    setQualityValidation(null);
+    try {
+      const data = await api.editorLessonHistory(selected.lesson.id);
+      setLessonHistory(data?.revisions || []);
+    } catch (error) {
+      if (error.status === 401) onUnauthorized();
+    }
+  };
+
+  const validateQuality = async () => {
+    if (!selected?.lesson?.id || !draft) return;
+    setQualityBusy(true);
+    try {
+      const data = await api.editorValidateLesson(selected.lesson.id, lessonPayload(draft));
+      setQualityValidation(data.validation);
+    } catch (error) {
+      setQualityValidation(error.validation || { ok: false, errors: [{ code: 'request_failed', message: error.message }], warnings: [] });
+    } finally {
+      setQualityBusy(false);
+    }
+  };
+
+  const transitionLifecycle = async (status) => {
+    if (!selected?.lesson?.id || !draft) return;
+    if (['approved', 'published', 'superseded'].includes(status)
+      && !window.confirm(`Confirm this lesson is ready to move to ${LIFECYCLE_LABELS[status]}?`)) return;
+    setQualityBusy(true);
+    try {
+      if (dirty) {
+        const saved = await saveDraft();
+        if (!saved) return;
+      }
+      const data = await api.editorUpdateLessonLifecycle(selected.lesson.id, {
+        status,
+        humanReviewed: status === 'approved' ? draft.metadata?.humanReviewConfirmed === true : false,
+        reviewNotes: status === 'approved' ? 'Human review confirmed in the editor.' : undefined,
+      });
+      setDraft((current) => ({ ...current, lifecycleStatus: status, contentVersion: data.lesson?.contentVersion || current.contentVersion }));
+      setSelected((current) => ({ ...current, lesson: { ...current.lesson, ...data.lesson } }));
+      setQualityValidation(data.validation || null);
+      const historyData = await api.editorLessonHistory(selected.lesson.id);
+      setLessonHistory(historyData?.revisions || []);
+      await reload();
+    } catch (error) {
+      setQualityValidation(error.validation || { ok: false, errors: [{ code: 'transition_failed', message: error.message }], warnings: [] });
+    } finally {
+      setQualityBusy(false);
+    }
+  };
+
+  const createLessonVersion = async () => {
+    if (!selected?.lesson?.id || draft?.lifecycleStatus !== 'published') return;
+    if (!window.confirm('Create an editable draft from this published lesson? The published version will stay live until the successor is approved and published.')) return;
+    setQualityBusy(true);
+    try {
+      const data = await api.editorCreateLessonVersion(selected.lesson.id);
+      await reload();
+      setShowQuality(false);
+      openLesson({
+        lesson: { ...(data.lesson || {}), outcomeIds: data.lesson?.metadata?.outcomeIds || draft.outcomeIds || [] },
+        courseId: selected.courseId,
+        moduleId: selected.moduleId,
+      });
+      setSaveMsg({ tone: 'ok', text: 'New draft version created. The published version remains live.' });
+    } catch (error) {
+      setQualityValidation({ ok: false, errors: [{ code: 'new_version_failed', message: error.message }], warnings: [] });
+    } finally {
+      setQualityBusy(false);
     }
   };
 
@@ -921,8 +1267,9 @@ export default function Editor() {
                 <button
                   type="button"
                   onClick={() => setShowAI((v) => !v)}
+                  disabled={contentLocked}
                   title="AI assistant"
-                  className={`h-8 px-3 rounded-full border text-sm font-medium transition-colors duration-150 flex items-center gap-1.5 ${
+                  className={`h-8 px-3 rounded-full border text-sm font-medium transition-colors duration-150 flex items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-40 ${
                     showAI
                       ? 'border-accent/60 bg-accent/[0.08] text-accent'
                       : 'border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim'
@@ -942,8 +1289,15 @@ export default function Editor() {
                 </button>
                 <button
                   type="button"
+                  onClick={openQualityPanel}
+                  className="h-8 px-3 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim text-sm font-medium transition-colors duration-150"
+                >
+                  Quality
+                </button>
+                <button
+                  type="button"
                   onClick={saveDraft}
-                  disabled={saving || !dirty}
+                  disabled={saving || !dirty || contentLocked}
                   className="h-8 px-4 btn-primary text-sm font-medium disabled:opacity-40"
                 >
                   {saving ? 'Saving…' : dirty ? 'Save' : 'Saved'}
@@ -951,7 +1305,8 @@ export default function Editor() {
                 <button
                   type="button"
                   onClick={deleteLesson}
-                  className="h-8 w-8 rounded-full border border-line-soft text-text-dim hover:text-rose-500 hover:border-rose-400/60 flex items-center justify-center text-base transition-colors duration-150"
+                  disabled={draft?.lifecycleStatus === 'published'}
+                  className="h-8 w-8 rounded-full border border-line-soft text-text-dim hover:text-rose-500 hover:border-rose-400/60 flex items-center justify-center text-base transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-35"
                   title="Delete lesson"
                 >
                   ×
@@ -963,6 +1318,14 @@ export default function Editor() {
             <>
               <p className="font-mono text-[10px] font-medium text-accent/60 uppercase tracking-[0.18em]">Workspace</p>
               <div className="ml-auto flex items-center gap-2">
+                {!demoAccess && (
+                  <Link
+                    to="/editor/questions"
+                    className="h-7 px-3 inline-flex items-center rounded-md border border-line-soft text-[12px] font-medium text-text-dim hover:text-text-primary hover:border-text-dim/40 transition-colors duration-150"
+                  >
+                    Question bank
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={() => reload()}
@@ -970,6 +1333,15 @@ export default function Editor() {
                 >
                   Refresh
                 </button>
+                {!demoAccess && (
+                  <button
+                    type="button"
+                    onClick={onUnauthorized}
+                    className="h-7 px-3 rounded-md border border-line-soft text-[12px] font-medium text-text-dim hover:text-text-primary hover:border-text-dim/40 transition-colors duration-150"
+                  >
+                    Lock
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -984,14 +1356,16 @@ export default function Editor() {
       {inLessonMode ? (
         <>
           <div className="flex-1 min-h-0 flex overflow-hidden">
-            <LessonBuilder
-              lessonId={selected.lesson.id}
-              draft={draft}
-              setDraft={setDraft}
-              saveMsg={saveMsg}
-              onNewSlide={lastAddedId}
-              onAddSlide={addSlideFromType}
-            />
+            <fieldset disabled={contentLocked} className="contents">
+              <LessonBuilder
+                lessonId={selected.lesson.id}
+                draft={draft}
+                setDraft={setDraft}
+                saveMsg={contentLocked ? { tone: 'warn', text: 'Published versions are read-only. Create a new draft version from Quality.' } : saveMsg}
+                onNewSlide={lastAddedId}
+                onAddSlide={addSlideFromType}
+              />
+            </fieldset>
             {showAI && (
               <div
                 className="shrink-0 border-l border-line-soft flex flex-col relative"
@@ -1035,6 +1409,20 @@ export default function Editor() {
         title={draft?.title}
         slides={draft?.slides || []}
       />
+      {showQuality && draft && (
+        <ContentQualityDrawer
+          draft={draft}
+          setDraft={setDraft}
+          outcomes={curriculumOutcomes}
+          validation={qualityValidation}
+          history={lessonHistory}
+          busy={qualityBusy}
+          onValidate={validateQuality}
+          onTransition={transitionLifecycle}
+          onCreateVersion={createLessonVersion}
+          onClose={() => setShowQuality(false)}
+        />
+      )}
     </div>
   );
 }

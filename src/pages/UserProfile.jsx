@@ -98,13 +98,6 @@ const UserProfile = () => {
               </div>
             </div>
 
-            <button
-              type="button"
-              className="btn-primary w-full md:w-auto mb-12 hover:-translate-y-0.5 transition-transform"
-            >
-              Follow
-            </button>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {profile.bio && (
                 <div className="col-span-full block-cream rounded-2xl p-7">
@@ -115,42 +108,13 @@ const UserProfile = () => {
                 </div>
               )}
 
-              <div className="block-blue rounded-2xl p-7">
-                <span className="text-sm font-bold text-text-dim block mb-4">Status</span>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
-                    <span className="text-sm font-semibold text-text-primary">Active now</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-accent/40" />
-                    <span className="text-sm font-semibold text-text-muted">Two-factor enabled</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="block-green rounded-2xl p-7">
-                <span className="text-sm font-bold text-text-dim block mb-4">Achievements</span>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-display font-bold tracking-tight text-text-primary">Mastery Tier 1</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-accent cursor-pointer hover:-translate-y-0.5 transition-transform">View credentials →</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-12 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-text-dim mb-1">Last active</p>
-                <span className="text-sm font-semibold text-text-primary">Feb 18, 2026</span>
-              </div>
-              <div className="text-right">
-                <button className="text-sm font-bold text-text-dim hover:text-accent hover:-translate-y-0.5 transition-all">
-                  Export data
-                </button>
+              <div className="col-span-full block-blue rounded-2xl p-7">
+                <span className="text-sm font-bold text-text-dim block mb-2">Why you can see this profile</span>
+                <p className="text-sm font-semibold leading-relaxed text-text-primary">
+                  {profile.visibility === 'self' || profile.visibility === 'admin'
+                    ? 'This is an account you are allowed to manage.'
+                    : 'You currently share a Caplet class. Learner profile details are minimised for privacy.'}
+                </p>
               </div>
             </div>
           </div>

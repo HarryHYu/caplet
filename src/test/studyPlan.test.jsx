@@ -48,6 +48,7 @@ vi.mock('../services/api', () => ({
     generateStudyPlan: vi.fn(),
     regenerateStudyPlan: vi.fn(),
     updateStudyTask: vi.fn(),
+    getNextRecommendation: vi.fn(),
   },
 }));
 
@@ -60,6 +61,7 @@ describe('StudyPlan', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.getStudyPlan.mockResolvedValue({ studyPlan: null, options: OPTIONS });
+    api.getNextRecommendation.mockResolvedValue({ recommendation: null });
     api.generateStudyPlan.mockResolvedValue({ studyPlan: PLAN, options: OPTIONS });
     api.regenerateStudyPlan.mockResolvedValue({ studyPlan: PLAN, options: OPTIONS });
     api.updateStudyTask.mockResolvedValue({ studyPlan: { ...PLAN, tasks: [{ ...PLAN.tasks[0], completed: true }] } });

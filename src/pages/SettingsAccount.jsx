@@ -1,25 +1,8 @@
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const SettingsAccount = () => {
-  const { user, updateProfile } = useAuth();
-  const [updating, setUpdating] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
-
-  const handleSwitchRole = async () => {
-    if (user?.role === 'admin') return;
-    setUpdating(true);
-    setMessage({ type: '', text: '' });
-    try {
-      const nextRole = user?.role === 'instructor' ? 'student' : 'instructor';
-      await updateProfile({ role: nextRole });
-      setMessage({ type: 'success', text: 'Role updated. You are now a ' + (nextRole === 'instructor' ? 'teacher' : 'student') + '.' });
-    } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'Failed to update role.' });
-    } finally {
-      setUpdating(false);
-    }
-  };
+  const { user } = useAuth();
 
   return (
     <div>
@@ -31,16 +14,6 @@ const SettingsAccount = () => {
         </p>
       </div>
       <div className="space-y-12">
-        {message.text && (
-          <div
-            className={`px-6 py-4 rounded-2xl font-medium text-sm ${message.type === 'success'
-              ? 'block-blue text-blue'
-              : 'bg-red-50 text-error'
-              }`}
-          >
-            {message.type === 'success' ? 'Success: ' : 'Error: '}{message.text}
-          </div>
-        )}
         <div>
           <h3 className="text-sm font-display font-bold tracking-tight text-text-primary mb-6">Access Level</h3>
           <div className="p-10 bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
@@ -52,18 +25,15 @@ const SettingsAccount = () => {
             </p>
             {user?.role !== 'admin' && (
               <p className="text-sm font-medium text-text-dim leading-relaxed mb-10 max-w-sm">
-                You can switch between teacher and student roles to access different features.
+                {user?.role === 'instructor'
+                  ? 'Teacher access is tied to a reviewed school affiliation. You can update those details at any time.'
+                  : 'Teacher tools protect student evidence. Request access with a school affiliation for review.'}
               </p>
             )}
             {user?.role !== 'admin' && (
-              <button
-                type="button"
-                onClick={handleSwitchRole}
-                disabled={updating}
-                className="btn-primary py-3 px-8 hover:-translate-y-0.5 transition-transform disabled:opacity-30"
-              >
-                {updating ? 'Updating...' : user?.role === 'instructor' ? 'Switch to Student' : 'Switch to Teacher'}
-              </button>
+              <Link to="/teacher/onboarding" className="btn-primary py-3 px-8 hover:-translate-y-0.5 transition-transform">
+                {user?.role === 'instructor' ? 'Manage teacher affiliation' : 'Request teacher access'}
+              </Link>
             )}
           </div>
         </div>

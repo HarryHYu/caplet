@@ -34,6 +34,7 @@ const Comment = sequelize.define(
     content: {
       type: DataTypes.TEXT,
       allowNull: false,
+      validate: { len: [1, 2000] },
     },
     isPrivate: {
       type: DataTypes.BOOLEAN,

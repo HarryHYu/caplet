@@ -7,9 +7,18 @@ const { requireAuth } = require('../middleware/auth');
 const { categorizeSlides, slideToText } = require('../services/slideCategorizer');
 const { summarizeSlides } = require('../services/slideSummarizer');
 const { generateRecallQuestion } = require('../services/recallQuestion');
+const { requireAIConsent } = require('../services/privacyConsent');
+const { recordAIInteractionSafely } = require('../services/aiHistory');
+const { reserveAIQuota } = require('../middleware/aiQuota');
 
 const router = express.Router();
 router.use(requireAuth);
+
+const recallQuota = reserveAIQuota({ scope: 'saved-slide-recall', units: 1 });
+const categorizeQuota = reserveAIQuota({ scope: 'saved-slide-categorize', units: 4 });
+const summarizeQuota = reserveAIQuota({ scope: 'saved-slide-summary', units: 3 });
+const MAX_CATEGORIZE_SLIDES = 60;
+const MAX_SUMMARY_SLIDES = 30;
 
 function parseSlides(raw) {
   if (Array.isArray(raw)) return raw;
@@ -79,7 +88,7 @@ router.get('/due', async (req, res) => {
 // Generate one active-recall question for a saved slide (AI). The actual recall
 // grade is submitted through the shared scheduler (POST /api/review/submit with
 // itemType 'savedSlide'), so this endpoint only produces the prompt + answer.
-router.post('/:id/recall-question', async (req, res) => {
+router.post('/:id/recall-question', requireAIConsent, recallQuota, async (req, res) => {
   try {
     const saved = await SavedSlide.findOne({
       where: { id: req.params.id, userId: req.user.id },
@@ -92,6 +101,15 @@ router.post('/:id/recall-question', async (req, res) => {
     const text = slideToText(slide) || saved.lesson?.title || '';
 
     const recall = await generateRecallQuestion(text);
+    await recordAIInteractionSafely({
+      userId: req.user.id,
+      feature: 'saved_slide_recall',
+      modelVersion: 'gpt-5.4-mini',
+      status: 'completed',
+      inputSummary: saved.lesson?.title || 'Saved slide',
+      outputSummary: recall.question || 'Recall question generated',
+      metadata: { savedSlideId: saved.id },
+    });
     res.json({ ...recall, savedSlideId: saved.id });
   } catch (e) {
     const status = e.status || 500;
@@ -120,7 +138,7 @@ router.post('/', async (req, res) => {
 // Organize the user's flagged slides into AI-generated revision categories.
 // Categorizes ALL of the user's saved slides together so groupings stay
 // coherent, then persists the category onto each row.
-router.post('/categorize', async (req, res) => {
+router.post('/categorize', requireAIConsent, categorizeQuota, async (req, res) => {
   try {
     const slides = await SavedSlide.findAll({
       where: { userId: req.user.id },
@@ -128,10 +146,16 @@ router.post('/categorize', async (req, res) => {
         { model: Lesson, as: 'lesson', attributes: ['id', 'title', 'slides'] },
         { model: Course, as: 'course', attributes: ['id', 'title'] },
       ],
+      limit: MAX_CATEGORIZE_SLIDES + 1,
     });
 
     if (slides.length === 0) {
       return res.json({ savedSlides: [], categorized: 0 });
+    }
+    if (slides.length > MAX_CATEGORIZE_SLIDES) {
+      return res.status(413).json({
+        message: `Organise up to ${MAX_CATEGORIZE_SLIDES} saved slides at a time. Remove or review older slides first.`,
+      });
     }
 
     const items = slides.map((s) => {
@@ -159,6 +183,16 @@ router.post('/categorize', async (req, res) => {
       })
     );
 
+    await recordAIInteractionSafely({
+      userId: req.user.id,
+      feature: 'saved_slide_categorisation',
+      modelVersion: 'gpt-5.4-mini',
+      status: 'completed',
+      inputSummary: `${slides.length} saved slides`,
+      outputSummary: `${assignments.size} slides categorised`,
+      metadata: { slideCount: slides.length, categorisedCount: assignments.size },
+    });
+
     res.json({ categorized: assignments.size });
   } catch (e) {
     const status = e.status || 500;
@@ -172,7 +206,7 @@ router.post('/categorize', async (req, res) => {
 // Condense the flagged slides in one category into a short AI summary
 // slideshow. Stateless — nothing is saved; the slides are returned for the
 // client to display. Body: { category }  ("Uncategorized" => uncategorized).
-router.post('/summarize', async (req, res) => {
+router.post('/summarize', requireAIConsent, summarizeQuota, async (req, res) => {
   try {
     const category = (req.body?.category ?? '').toString();
     const where = { userId: req.user.id };
@@ -186,10 +220,16 @@ router.post('/summarize', async (req, res) => {
       where,
       include: [{ model: Lesson, as: 'lesson', attributes: ['id', 'title', 'slides'] }],
       order: [['createdAt', 'ASC']],
+      limit: MAX_SUMMARY_SLIDES + 1,
     });
 
     if (slides.length === 0) {
       return res.status(400).json({ message: 'No flagged slides in this category to summarize.' });
+    }
+    if (slides.length > MAX_SUMMARY_SLIDES) {
+      return res.status(413).json({
+        message: `Summaries support up to ${MAX_SUMMARY_SLIDES} saved slides in one category. Split this category first.`,
+      });
     }
 
     const items = slides.map((s) => {
@@ -199,6 +239,15 @@ router.post('/summarize', async (req, res) => {
     });
 
     const summarySlides = await summarizeSlides(items, { topic: category });
+    await recordAIInteractionSafely({
+      userId: req.user.id,
+      feature: 'saved_slide_summary',
+      modelVersion: 'gpt-5.4-mini',
+      status: 'completed',
+      inputSummary: `${items.length} slides in ${category || 'Uncategorized'}`,
+      outputSummary: `${summarySlides.length} summary slides generated`,
+      metadata: { sourceSlideCount: items.length, summarySlideCount: summarySlides.length },
+    });
     res.json({ slides: summarySlides, category });
   } catch (e) {
     const status = e.status || 500;

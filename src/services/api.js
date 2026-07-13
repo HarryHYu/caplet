@@ -7,6 +7,14 @@ const DEV_API_BASE_URLS = [
 const ENV_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_BASE_URL = ENV_API_BASE_URL || (import.meta.env.DEV ? DEV_API_BASE_URLS[0] : PROD_API_BASE_URL);
 
+// `/demo` is a hard-isolated application entry: its internal MemoryRouter never
+// changes the browser pathname, and exiting it performs a full page load. Using
+// that immutable boundary avoids a mutable singleton flag being toggled by
+// React Strict Mode effect replay.
+const isDemoSandboxRequest = () => (
+  typeof window !== 'undefined' && window.location.pathname === '/demo'
+);
+
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
@@ -14,9 +22,6 @@ class ApiService {
       ? [ENV_API_BASE_URL]
       : (import.meta.env.DEV ? DEV_API_BASE_URLS : [PROD_API_BASE_URL]);
     this.token = localStorage.getItem('token');
-    // When true, request() serves fixtures from the demo resolver instead of
-    // hitting the network. Toggled on only inside the /demo sandbox.
-    this.demoMode = false;
   }
 
   setToken(token) {
@@ -40,9 +45,9 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
-    // Demo sandbox: short-circuit to fixtures. Covers every method (incl. AI,
-    // since _aiRequest funnels through request()), so no backend is touched.
-    if (this.demoMode) {
+    // The demo is resolved before any network configuration is constructed, so
+    // no localhost, production, upload, or AI request can escape the sandbox.
+    if (isDemoSandboxRequest()) {
       const { resolveDemo } = await import('../demo/demoResolver.js');
       return resolveDemo((options.method || 'GET').toUpperCase(), endpoint, options);
     }
@@ -61,6 +66,7 @@ class ApiService {
       if (et) {
         config.headers.Authorization = `Bearer ${et}`;
       }
+      if (this.token) config.headers['X-Caplet-User-Token'] = `Bearer ${this.token}`;
     } else if (this.token) {
       config.headers.Authorization = `Bearer ${this.token}`;
     }
@@ -91,8 +97,12 @@ class ApiService {
         const errorMsg = data.message || data.errors?.[0]?.msg || data.errors?.[0]?.message || `Error ${response.status}: ${response.statusText}`;
         const error = new Error(errorMsg);
         error.status = response.status;
+        error.data = data;
+        error.details = data.errors;
+        error.validation = data.validation;
         if (response.status === 401) {
-          this.clearToken();
+          if (auth === 'editor') this.clearEditorToken();
+          else this.clearToken();
         }
         throw error;
       }
@@ -166,6 +176,13 @@ class ApiService {
     return this.request('/uploads/presign', {
       method: 'POST',
       body: JSON.stringify(body),
+      ...(useEditorToken ? { auth: 'editor' } : {}),
+    });
+  }
+
+  async completeUpload(assetId, { useEditorToken = false } = {}) {
+    return this.request(`/uploads/${assetId}/complete`, {
+      method: 'POST',
       ...(useEditorToken ? { auth: 'editor' } : {}),
     });
   }
@@ -246,11 +263,45 @@ class ApiService {
     });
   }
 
+  async editorCreateLessonVersion(lessonId) {
+    return this.request(`/editor/lessons/${lessonId}/new-version`, {
+      method: 'POST',
+      auth: 'editor',
+    });
+  }
+
   async editorDeleteLesson(lessonId) {
     return this.request(`/editor/lessons/${lessonId}`, {
       method: 'DELETE',
       auth: 'editor',
     });
+  }
+
+  async editorCurriculumOutcomes(subject = 'economics', syllabusVersion = '') {
+    const query = new URLSearchParams();
+    if (subject) query.set('subject', subject);
+    if (syllabusVersion) query.set('syllabusVersion', syllabusVersion);
+    return this.request(`/editor/curriculum-outcomes?${query.toString()}`, { auth: 'editor' });
+  }
+
+  async editorValidateLesson(lessonId, payload = {}) {
+    return this.request(`/editor/lessons/${lessonId}/validate`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
+  async editorUpdateLessonLifecycle(lessonId, payload) {
+    return this.request(`/editor/lessons/${lessonId}/lifecycle`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      auth: 'editor',
+    });
+  }
+
+  async editorLessonHistory(lessonId) {
+    return this.request(`/editor/lessons/${lessonId}/history`, { auth: 'editor' });
   }
 
   /**
@@ -298,6 +349,10 @@ class ApiService {
    * S3 enforces ContentLengthRange server-side; we also check client-side for a fast error.
    */
   async postToPresignedUrl(presign, file) {
+    // Demo uploads are deliberately local-only. The resolver supplies a stable
+    // placeholder asset, and this guard prevents the direct S3 fetch from
+    // bypassing ApiService.request().
+    if (isDemoSandboxRequest()) return;
     if (presign.maxBytes && file.size > presign.maxBytes) {
       const mb = (presign.maxBytes / 1024 / 1024).toFixed(0);
       throw new Error(`File is too large. Maximum size is ${mb} MB.`);
@@ -324,7 +379,8 @@ class ApiService {
       { useEditorToken: true },
     );
     await this.postToPresignedUrl(presign, file);
-    return presign.publicUrl;
+    const completed = await this.completeUpload(presign.assetId, { useEditorToken: true });
+    return completed.publicUrl;
   }
 
   // Courses
@@ -504,6 +560,28 @@ class ApiService {
   async deleteAssignmentComment(classId, assignmentId, commentId) {
     return this.request(`/classes/${classId}/assignments/${assignmentId}/comments/${commentId}`, {
       method: 'DELETE',
+    });
+  }
+
+  async reportClassComment(classId, commentId, { reason, details }) {
+    return this.request(`/classes/${classId}/comments/${commentId}/reports`, {
+      method: 'POST',
+      body: JSON.stringify({ reason, details: details || undefined }),
+    });
+  }
+
+  async getClassModerationReports(classId, status = 'pending') {
+    return this.request(`/classes/${classId}/moderation/reports?status=${encodeURIComponent(status)}`);
+  }
+
+  async getAdminModerationReports(status = 'pending') {
+    return this.request(`/classes/moderation/admin/reports?status=${encodeURIComponent(status)}`);
+  }
+
+  async updateClassModerationReport(classId, reportId, { status, note }) {
+    return this.request(`/classes/${classId}/moderation/reports/${reportId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, note: note || undefined }),
     });
   }
 
@@ -750,6 +828,54 @@ class ApiService {
     return this.request(`/study-plan/tasks/${encodeURIComponent(taskId)}`, {
       method: 'PATCH',
       body: JSON.stringify({ completed }),
+    });
+  }
+
+  // Unified learning loop — outcome mastery, next-best action, and practice.
+  async getMastery(subject = 'economics') {
+    const query = new URLSearchParams();
+    if (subject) query.set('subject', subject);
+    return this.request(`/mastery?${query.toString()}`);
+  }
+
+  async getNextRecommendation(subject = 'economics') {
+    const query = new URLSearchParams();
+    if (subject) query.set('subject', subject);
+    return this.request(`/recommendations/next?${query.toString()}`);
+  }
+
+  async createPracticeSession({ mode, subject = 'economics', outcomeId, assignmentId } = {}) {
+    return this.request('/practice/sessions', {
+      method: 'POST',
+      body: JSON.stringify({
+        mode,
+        subject,
+        ...(outcomeId ? { outcomeId } : {}),
+        ...(assignmentId ? { assignmentId } : {}),
+      }),
+    });
+  }
+
+  async getNextAssignedPractice(assignmentId = '') {
+    const query = new URLSearchParams();
+    if (assignmentId) query.set('assignmentId', assignmentId);
+    return this.request(`/teacher-learning/assignments/next${query.toString() ? `?${query.toString()}` : ''}`);
+  }
+
+  async getPracticeSession(sessionId) {
+    return this.request(`/practice/sessions/${encodeURIComponent(sessionId)}`);
+  }
+
+  async submitPracticeAnswer(sessionId, { questionId, answer, timeTakenSeconds, idempotencyKey, retry = false }) {
+    return this.request(`/practice/sessions/${encodeURIComponent(sessionId)}/answers`, {
+      method: 'POST',
+      body: JSON.stringify({ questionId, answer, timeTakenSeconds, idempotencyKey, ...(retry ? { retry: true } : {}) }),
+    });
+  }
+
+  async completePracticeSession(sessionId) {
+    return this.request(`/practice/sessions/${encodeURIComponent(sessionId)}/complete`, {
+      method: 'POST',
     });
   }
 

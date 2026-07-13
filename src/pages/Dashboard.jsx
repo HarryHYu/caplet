@@ -17,6 +17,7 @@ import {
     CalendarDaysIcon,
     ClipboardDocumentCheckIcon,
     ClockIcon,
+    SparklesIcon,
 } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
@@ -29,6 +30,10 @@ export default function Dashboard() {
     const [dueCount, setDueCount] = useState(0);
     const [studyPlan, setStudyPlan] = useState(null);
     const [examSessions, setExamSessions] = useState([]);
+    const [nextRecommendation, setNextRecommendation] = useState(null);
+    const [loadError, setLoadError] = useState('');
+    const [retryKey, setRetryKey] = useState(0);
+    const [availability, setAvailability] = useState({ progress: true, classes: true });
 
     useReveal(undefined, [loading, coursesLoading]);
 
@@ -42,15 +47,27 @@ export default function Dashboard() {
 
     useEffect(() => {
         const fetchData = async () => {
-            try {
-                const [progressData, classesData, savedSlidesData, dueData, studyPlanData, examSessionsData] = await Promise.all([
+            setLoading(true);
+            setLoadError('');
+            const results = await Promise.allSettled([
                     api.getUserProgress(),
                     api.getClasses(),
-                    api.getSavedSlides().catch(() => null),
-                    api.getDueReviewItems().catch(() => null),
-                    api.getStudyPlan().catch(() => null),
-                    api.getEconomicsExamSessions().catch(() => null),
+                    api.getSavedSlides(),
+                    api.getDueReviewItems(),
+                    api.getStudyPlan(),
+                    api.getEconomicsExamSessions(),
+                    api.getNextRecommendation('economics'),
                 ]);
+            const valueAt = (index) => results[index].status === 'fulfilled' ? results[index].value : null;
+            const progressData = valueAt(0);
+            const classesData = valueAt(1);
+            const savedSlidesData = valueAt(2);
+            const dueData = valueAt(3);
+            const studyPlanData = valueAt(4);
+            const examSessionsData = valueAt(5);
+            const recommendationData = valueAt(6);
+
+            try {
                 setUserProgress(progressData?.progress || []);
                 const allClasses = [
                     ...(classesData?.teaching || []),
@@ -61,20 +78,35 @@ export default function Dashboard() {
                 setDueCount(dueData?.items?.length || 0);
                 setStudyPlan(studyPlanData?.studyPlan || null);
                 setExamSessions(examSessionsData?.sessions || []);
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
+                setNextRecommendation(recommendationData?.recommendation || null);
+                const nextAvailability = { progress: Boolean(progressData), classes: Boolean(classesData) };
+                setAvailability(nextAvailability);
+                if (!nextAvailability.progress || !nextAvailability.classes) {
+                    setLoadError('Some dashboard information could not be loaded. Available sections are shown below.');
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, []);
+    }, [retryKey]);
 
     if (loading || coursesLoading) {
         return (
-            <div className="min-h-screen bg-surface-body flex items-center justify-center">
-                <CapletLoader message="Loading your dashboard…" />
+            <div className="min-h-screen bg-surface-body py-32" role="status" aria-live="polite">
+                <div className="container-custom">
+                    <CapletLoader message="Loading your dashboard…" />
+                    <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-4" aria-hidden="true">
+                        {[0, 1, 2, 3].map((item) => (
+                            <div key={item} className="h-40 animate-pulse rounded-3xl bg-surface-soft" />
+                        ))}
+                    </div>
+                    <div className="mt-12 grid gap-6 lg:grid-cols-3" aria-hidden="true">
+                        <div className="h-72 animate-pulse rounded-3xl bg-surface-soft lg:col-span-2" />
+                        <div className="h-72 animate-pulse rounded-3xl bg-surface-soft" />
+                    </div>
+                </div>
             </div>
         );
     }
@@ -99,6 +131,11 @@ export default function Dashboard() {
     const activeExam = examSessions.find((session) => session.status === 'in_progress') || null;
     const recentExam = examSessions.find((session) => session.status === 'submitted') || null;
     const examPath = (session) => `/library/economics/exam-practice/${session.packId}/session?session=${session.id}`;
+    const recommendationPath = nextRecommendation?.resourcePath || `/practice?${new URLSearchParams({
+        subject: nextRecommendation?.subject || 'economics',
+        mode: nextRecommendation?.mode || 'diagnostic',
+        ...(nextRecommendation?.outcome?.id ? { outcomeId: nextRecommendation.outcome.id } : {}),
+    }).toString()}`;
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -119,11 +156,53 @@ export default function Dashboard() {
                             {getGreeting()}, {user?.firstName || 'Student'}.
                         </h1>
                         <p className="mt-7 text-xl text-text-muted font-medium max-w-xl">
-                            Great to see you again. You have {inProgressCourses.length} active {inProgressCourses.length === 1 ? 'course' : 'courses'} in progress.
+                            {availability.progress
+                                ? `Great to see you again. You have ${inProgressCourses.length} active ${inProgressCourses.length === 1 ? 'course' : 'courses'} in progress.`
+                                : 'Great to see you again. Course progress is temporarily unavailable.'}
                         </p>
                     </div>
 
                 </header>
+
+                {loadError && (
+                    <div role="alert" className="mb-8 flex flex-col gap-4 rounded-2xl bg-surface-error p-5 text-text-error sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm font-bold">{loadError}</p>
+                        <button type="button" onClick={() => setRetryKey((value) => value + 1)} className="min-h-11 rounded-xl border border-[color:var(--border-error)] px-4 text-sm font-bold">
+                            Retry dashboard
+                        </button>
+                    </div>
+                )}
+
+                {nextRecommendation && (
+                    <Link
+                        to={recommendationPath}
+                        onClick={() => api.logEvent({
+                            type: 'recommendation_accepted',
+                            entityType: 'curriculum_outcome',
+                            entityId: nextRecommendation.outcome?.id,
+                            outcomeId: nextRecommendation.outcome?.id,
+                            feature: 'dashboard_next_action',
+                            metadata: { reasonCode: nextRecommendation.reasonCode, mode: nextRecommendation.mode },
+                        })}
+                        className="reveal group mb-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] transition-transform hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div className="flex items-start gap-5">
+                            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/10">
+                                <SparklesIcon className="h-7 w-7" aria-hidden="true" />
+                            </span>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">Your next best action</p>
+                                <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-white">
+                                    {nextRecommendation.outcome?.title ? `Strengthen ${nextRecommendation.outcome.title}` : 'Build your first mastery signal'}
+                                </h2>
+                                <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-white/80">{nextRecommendation.reason}</p>
+                            </div>
+                        </div>
+                        <span className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent">
+                            Start now <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                        </span>
+                    </Link>
+                )}
 
                 {nextStudyTask ? (
                     <Link
@@ -205,9 +284,9 @@ export default function Dashboard() {
                 {/* Stats Matrix */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-20 reveal-stagger">
                     {[
-                        { label: 'Modules Active', value: inProgressCourses.length, icon: BookOpenIcon, block: 'block-blue' },
-                        { label: 'Completed', value: completedCourses.length, icon: CheckCircleIcon, block: 'block-green' },
-                        { label: 'Classes', value: classes.length, icon: AcademicCapIcon, block: 'block-amber' },
+                        { label: 'Modules Active', value: availability.progress ? inProgressCourses.length : null, icon: BookOpenIcon, block: 'block-blue' },
+                        { label: 'Completed', value: availability.progress ? completedCourses.length : null, icon: CheckCircleIcon, block: 'block-green' },
+                        { label: 'Classes', value: availability.classes ? classes.length : null, icon: AcademicCapIcon, block: 'block-amber' },
                         { label: 'Saved Slides', value: savedSlides.length, icon: BookmarkIcon, block: 'block-cream' }
                     ].map((stat) => (
                         <div key={stat.label} className={`${stat.block} rounded-3xl p-8 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200`}>
@@ -216,7 +295,7 @@ export default function Dashboard() {
                                 <stat.icon className="w-5 h-5 text-accent opacity-70" />
                             </p>
                             <p className="font-display font-extrabold tracking-tight text-5xl text-text-primary">
-                                {stat.value}
+                                {stat.value ?? '—'}
                             </p>
                         </div>
                     ))}

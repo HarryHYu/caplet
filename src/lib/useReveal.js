@@ -17,15 +17,17 @@ import gsap from 'gsap';
  * one on cleanup.
  */
 export function revealOnScroll(trigger, targets, fromVars, toVars, rootMargin, observers) {
+  const animationTargets = targets instanceof Element ? targets : Array.from(targets || []);
+  if (!animationTargets.length) return;
   if (trigger.getBoundingClientRect().top < window.innerHeight) {
-    gsap.set(targets, toVars);
+    gsap.set(animationTargets, toVars);
     return;
   }
-  gsap.set(targets, fromVars);
+  gsap.set(animationTargets, fromVars);
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        gsap.to(targets, toVars);
+        gsap.to(animationTargets, toVars);
         io.unobserve(entry.target);
       }
     });

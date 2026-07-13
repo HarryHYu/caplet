@@ -248,89 +248,32 @@ router.get('/courses', requireAdmin, async (req, res) => {
 
 // Admin: create course
 router.post('/courses', requireAdmin, async (req, res) => {
-  try {
-    const course = await Course.create(req.body);
-    res.status(201).json({ course });
-  } catch (e) {
-    console.error('Admin create course error:', e);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  res.status(410).json({ message: 'This legacy writer is retired. Use the versioned editor workflow.' });
 });
 
 // Admin: update course
 router.put('/courses/:id', requireAdmin, async (req, res) => {
-  try {
-    const course = await Course.findByPk(req.params.id);
-    if (!course) return res.status(404).json({ message: 'Course not found' });
-    await course.update(req.body);
-    res.json({ course });
-  } catch (e) {
-    console.error('Admin update course error:', e);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  res.status(410).json({ message: 'This legacy writer is retired. Use the versioned editor workflow.' });
 });
 
 // Admin: delete course
 router.delete('/courses/:id', requireAdmin, async (req, res) => {
-  try {
-    const course = await Course.findByPk(req.params.id);
-    if (!course) return res.status(404).json({ message: 'Course not found' });
-    await course.destroy();
-    res.json({ message: 'Course deleted' });
-  } catch (e) {
-    console.error('Admin delete course error:', e);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  res.status(410).json({ message: 'This legacy writer is retired. Published content is retained through the editor lifecycle.' });
 });
 
 // Admin: create lesson (uses default module "Content" for the course)
 router.post('/courses/:courseId/lessons', requireAdmin, async (req, res) => {
-  try {
-    const course = await Course.findByPk(req.params.courseId);
-    if (!course) return res.status(404).json({ message: 'Course not found' });
-    let mod = await Module.findOne({ where: { courseId: course.id, title: 'Content' } });
-    if (!mod) {
-      mod = await Module.create({
-        courseId: course.id,
-        title: 'Content',
-        description: null,
-        order: 0,
-        isPublished: true
-      });
-    }
-    const { courseId: _drop, ...body } = req.body;
-    const lesson = await Lesson.create({ ...body, moduleId: mod.id });
-    res.status(201).json({ lesson });
-  } catch (e) {
-    console.error('Admin create lesson error:', e);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  res.status(410).json({ message: 'This legacy writer is retired. Use the versioned editor workflow.' });
 });
 
 // Admin: update lesson
 router.put('/lessons/:lessonId', requireAdmin, async (req, res) => {
-  try {
-    const lesson = await Lesson.findByPk(req.params.lessonId);
-    if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
-    await lesson.update(req.body);
-    res.json({ lesson });
-  } catch (e) {
-    console.error('Admin update lesson error:', e);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  res.status(410).json({ message: 'This legacy writer is retired. Use the versioned editor workflow.' });
 });
 
 // Admin: delete lesson
 router.delete('/lessons/:lessonId', requireAdmin, async (req, res) => {
-  try {
-    const lesson = await Lesson.findByPk(req.params.lessonId);
-    if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
-    await lesson.destroy();
-    res.json({ message: 'Lesson deleted' });
-  } catch (e) {
-    console.error('Admin delete lesson error:', e);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  res.status(410).json({ message: 'This legacy writer is retired. Published content is retained through the editor lifecycle.' });
 });
 
 // Admin: create lesson editor workspace (returns plaintext code once; store securely)

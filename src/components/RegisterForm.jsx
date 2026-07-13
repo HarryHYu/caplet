@@ -10,7 +10,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    role: 'student',
+    dateOfBirth: '',
   });
   const [googleLoading, setGoogleLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -58,7 +58,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
         password: formData.password,
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        role: formData.role,
+        dateOfBirth: formData.dateOfBirth,
       });
       onSuccess?.();
     } catch (err) {
@@ -164,17 +164,19 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
           />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="reg-role" className="block text-sm font-medium text-text-muted">I am a</label>
-          <select
-            id="reg-role"
-            name="role"
-            value={formData.role}
+          <label htmlFor="reg-date-of-birth" className="block text-sm font-medium text-text-muted">Date of birth</label>
+          <input
+            type="date"
+            id="reg-date-of-birth"
+            name="dateOfBirth"
+            value={formData.dateOfBirth}
             onChange={handleChange}
+            required
+            max={new Date().toISOString().slice(0, 10)}
+            autoComplete="bday"
             className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm"
-          >
-            <option value="student">Student / learner</option>
-            <option value="instructor">Instructor / teacher</option>
-          </select>
+          />
+          <p className="text-xs font-medium leading-relaxed text-text-dim">Used to apply age-appropriate privacy controls. It is not shown publicly.</p>
         </div>
         <div className="space-y-1.5">
           <label htmlFor="reg-password" className="block text-sm font-medium text-text-muted">Password (min 6 characters)</label>

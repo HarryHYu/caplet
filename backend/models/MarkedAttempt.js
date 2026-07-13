@@ -90,7 +90,18 @@ const MarkedAttempt = sequelize.define('MarkedAttempt', {
   nextRecommendation: {
     type: DataTypes.TEXT,
     allowNull: true
-  }
+  },
+  promptVersion: { type: DataTypes.STRING, allowNull: true },
+  modelVersion: { type: DataTypes.STRING, allowNull: true },
+  markingConfidence: { type: DataTypes.STRING, allowNull: false, defaultValue: 'low' },
+  confidenceReasons: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
+  rawResult: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+  evaluationMetadata: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+  humanOverrideMark: { type: DataTypes.INTEGER, allowNull: true },
+  humanOverrideFeedback: { type: DataTypes.TEXT, allowNull: true },
+  humanOverrideReason: { type: DataTypes.TEXT, allowNull: true },
+  humanOverrideBy: { type: DataTypes.UUID, allowNull: true },
+  overriddenAt: { type: DataTypes.DATE, allowNull: true }
 }, {
   tableName: 'marked_attempts',
   timestamps: true

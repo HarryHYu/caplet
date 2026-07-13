@@ -225,6 +225,7 @@ const LessonPlayer = () => {
   const [savingSlide, setSavingSlide] = useState(false);
   const autoCategorizeTimer = useRef(null);
   const [startingLive, setStartingLive] = useState(false);
+  const analyticsJourney = useRef({ lessonId: null, journeyId: null, startedAt: 0, viewed: new Set() });
 
 
   /* ---------- Data loading ---------- */
@@ -320,6 +321,29 @@ const LessonPlayer = () => {
 
   const coursePct = Math.round(progress?.courseProgress?.progressPercentage || 0);
 
+  useEffect(() => {
+    if (!isAuthenticated || !lesson?.id || !course?.id || !hasSlides) return;
+    if (analyticsJourney.current.lessonId !== String(lesson.id)) {
+      analyticsJourney.current = {
+        lessonId: String(lesson.id),
+        journeyId: globalThis.crypto?.randomUUID?.() || String(Date.now()),
+        startedAt: Date.now(),
+        viewed: new Set(),
+      };
+    }
+    if (analyticsJourney.current.viewed.has(currentSlideIndex)) return;
+    analyticsJourney.current.viewed.add(currentSlideIndex);
+    const normalized = normalizeSlide(slides[currentSlideIndex]);
+    api.logEvent?.({
+      type: 'slide_viewed',
+      idempotencyKey: `slide:${analyticsJourney.current.journeyId}:${currentSlideIndex}`,
+      feature: 'lesson_player',
+      entityType: 'lesson',
+      entityId: lesson.id,
+      metadata: { slideIndex: currentSlideIndex, slideType: normalized?.type || 'unknown' },
+    });
+  }, [course?.id, currentSlideIndex, hasSlides, isAuthenticated, lesson?.id, slides]);
+
   /* ---------- Actions ---------- */
   const goToSlide = useCallback(
     (newIndex) => {
@@ -346,7 +370,10 @@ const LessonPlayer = () => {
     }
     try {
       setSaving(true);
-      await api.updateLessonProgress(lesson.id, { status: 'completed' });
+      const timeSpent = analyticsJourney.current.startedAt
+        ? Math.max(0, Math.round((Date.now() - analyticsJourney.current.startedAt) / 1000))
+        : 0;
+      await api.updateLessonProgress(lesson.id, { status: 'completed', timeSpent });
       try {
         await api.completeLessonAssignments(lesson.id);
       } catch (e) {

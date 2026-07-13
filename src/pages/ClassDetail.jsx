@@ -5,7 +5,7 @@ import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 
-const ClassDetail = () => {
+const ClassDetail = ({ initialTab = 'stream' }) => {
   const { classId } = useParams();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ const ClassDetail = () => {
     content: '',
     attachmentUrl: '',
   });
-  const [activeTab, setActiveTab] = useState('stream'); // 'stream' | 'classwork' | 'people'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'stream' | 'classwork' | 'people' | 'moderation'
   const [announcementComments, setAnnouncementComments] = useState({});
   const [assignmentComments, setAssignmentComments] = useState({});
   const [openCommentSections, setOpenCommentSections] = useState({ announcement: new Set(), assignment: new Set() });
@@ -37,6 +37,13 @@ const ClassDetail = () => {
   const [loadingComments, setLoadingComments] = useState({ announcement: null, assignment: null });
   const [postingComment, setPostingComment] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState(null);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [reportForm, setReportForm] = useState({ reason: 'inappropriate', details: '' });
+  const [reportingComment, setReportingComment] = useState(false);
+  const [reportNotice, setReportNotice] = useState('');
+  const [moderationReports, setModerationReports] = useState([]);
+  const [moderationGuidance, setModerationGuidance] = useState(null);
+  const [loadingModeration, setLoadingModeration] = useState(false);
   const [showAddTeacher, setShowAddTeacher] = useState(false);
   const [addTeacherEmail, setAddTeacherEmail] = useState('');
   const [addingTeacher, setAddingTeacher] = useState(false);
@@ -47,6 +54,18 @@ const ClassDetail = () => {
       setLoading(true);
       const res = await api.getClassDetail(classId);
       setData(res);
+      if (res?.membership?.isOwner || res?.membership?.role === 'admin') {
+        setLoadingModeration(true);
+        try {
+          const moderation = await api.getClassModerationReports(classId, 'pending');
+          setModerationReports(moderation.reports || []);
+          setModerationGuidance(moderation.guidance || null);
+        } catch (moderationError) {
+          console.warn('Failed to load moderation queue:', moderationError?.message || moderationError);
+        } finally {
+          setLoadingModeration(false);
+        }
+      }
       // Load all published courses/lessons once for teachers to link assignments
       if (res?.membership?.role === 'teacher') {
         try {
@@ -181,9 +200,18 @@ const ClassDetail = () => {
 
   if (!data) return null;
 
-  const { classroom, membership, members, assignments, announcements = [], leaderboard = [] } = data;
-  const isTeacher = membership?.role === 'teacher';
+  const {
+    classroom,
+    membership,
+    members,
+    assignments,
+    announcements = [],
+    leaderboard = [],
+    leaderboardSummary = null,
+  } = data;
+  const isTeacher = membership?.role === 'teacher' || membership?.role === 'admin';
   const isOwner = !!membership?.isOwner;
+  const canModerate = isOwner || membership?.role === 'admin';
 
   const teachers = members.filter((m) => m.role === 'teacher');
   const students = members.filter((m) => m.role === 'student');
@@ -483,6 +511,36 @@ const ClassDetail = () => {
     }
   };
 
+  const openCommentReport = (comment) => {
+    setReportNotice('');
+    setReportForm({ reason: 'inappropriate', details: '' });
+    setReportTarget({ id: comment.id, author: comment.author });
+  };
+
+  const handleReportComment = async (event) => {
+    event.preventDefault();
+    if (!reportTarget) return;
+    setReportingComment(true);
+    try {
+      await api.reportClassComment(classroom.id, reportTarget.id, reportForm);
+      setReportTarget(null);
+      setReportNotice('Report received. The class owner should review it within 24 hours.');
+    } catch (reportError) {
+      setError(reportError.message || 'Failed to report comment');
+    } finally {
+      setReportingComment(false);
+    }
+  };
+
+  const handleModerationAction = async (reportId, status) => {
+    try {
+      await api.updateClassModerationReport(classroom.id, reportId, { status });
+      setModerationReports((current) => current.filter((report) => report.id !== reportId));
+    } catch (moderationError) {
+      setError(moderationError.message || 'Failed to update report');
+    }
+  };
+
   const getAvatarColor = (name) => {
     if (!name) return 'bg-gradient-to-br from-gray-400 to-gray-600';
     const colors = [
@@ -536,12 +594,19 @@ const ClassDetail = () => {
                     {user?.firstName} {user?.lastName}
                   </p>
                   <span className="text-xs text-accent font-medium mt-1 block">
-                    {membership?.role === 'teacher' ? 'Teacher' : 'Student'}
+                    {membership?.role === 'admin'
+                      ? 'Administrator'
+                      : membership?.role === 'teacher' ? 'Teacher' : 'Student'}
                   </span>
                 </div>
               </div>
               <div className="flex gap-4">
-                {!isOwner && (
+                {isTeacher && (
+                  <Link to={`/classes/${classroom.id}/learning`} className="btn-primary">
+                    Learning insights
+                  </Link>
+                )}
+                {!isOwner && membership?.role !== 'admin' && (
                   <button
                     type="button"
                     onClick={handleLeaveClass}
@@ -567,6 +632,11 @@ const ClassDetail = () => {
         {error && (
           <div className="p-6 rounded-2xl text-red-600 text-sm font-medium bg-red-50 dark:bg-red-900/20 animate-fade-in">
             Error: {error}
+          </div>
+        )}
+        {reportNotice && (
+          <div role="status" className="rounded-2xl border border-line-soft bg-accent-soft p-5 text-sm font-medium text-text-primary">
+            {reportNotice}
           </div>
         )}
 
@@ -602,6 +672,18 @@ const ClassDetail = () => {
           >
             People
           </button>
+          {canModerate && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('moderation')}
+              className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${activeTab === 'moderation'
+                ? 'bg-accent text-white shadow-sm'
+                : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'
+                }`}
+            >
+              Safety {moderationReports.length > 0 ? `(${moderationReports.length})` : ''}
+            </button>
+          )}
         </nav>
         {/* Page content: only the active tab is rendered — screen changes, no route change */}
         {activeTab === 'stream' && (
@@ -798,24 +880,33 @@ const ClassDetail = () => {
                                         <span className="text-gray-700 dark:text-gray-300"> {c.content}</span>
                                         <span className="text-xs text-gray-400 shrink-0 ml-1">{formatRelativeTime(c.createdAt)}</span>
                                       </div>
-                                      {isTeacher && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDeleteAnnouncementComment(a.id, c.id)}
-                                          disabled={deletingCommentId === c.id}
-                                          className="shrink-0 p-1 text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                                          title="Delete comment"
-                                        >
-                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                          </svg>
-                                        </button>
-                                      )}
+                                      <div className="flex shrink-0 items-center gap-2">
+                                        {c.author?.id !== user?.id && (
+                                          <button type="button" onClick={() => openCommentReport(c)} className="text-xs font-bold text-text-dim hover:text-accent">
+                                            Report
+                                          </button>
+                                        )}
+                                        {(isTeacher || c.author?.id === user?.id) && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteAnnouncementComment(a.id, c.id)}
+                                            disabled={deletingCommentId === c.id}
+                                            className="p-1 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                                            title="Delete comment"
+                                          >
+                                            <span className="sr-only">Delete your comment</span>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                          </button>
+                                        )}
+                                      </div>
                                     </div>
                                   ))}
                                   <div className="flex gap-2 mt-2">
                                     <input
                                       type="text"
+                                      maxLength={2000}
                                       value={commentDrafts.announcement[a.id] || ''}
                                       onChange={(e) =>
                                         setCommentDrafts((prev) => ({
@@ -1010,24 +1101,31 @@ const ClassDetail = () => {
                                         </div>
                                         <span className="text-text-muted font-medium leading-relaxed">{c.content}</span>
                                       </div>
-                                      {isTeacher && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDeleteAssignmentComment(a.id, c.id)}
-                                          disabled={deletingCommentId === c.id}
-                                          className="shrink-0 p-1 text-text-dim hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                                          title="Delete comment"
-                                        >
-                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                          </svg>
-                                        </button>
-                                      )}
+                                      <div className="flex shrink-0 items-center gap-2">
+                                        {c.author?.id !== user?.id && (
+                                          <button type="button" onClick={() => openCommentReport(c)} className="text-xs font-bold text-text-dim hover:text-accent">Report</button>
+                                        )}
+                                        {(isTeacher || c.author?.id === user?.id) && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteAssignmentComment(a.id, c.id)}
+                                            disabled={deletingCommentId === c.id}
+                                            className="p-1 text-text-dim hover:text-red-500 transition-colors disabled:opacity-50"
+                                            title="Delete comment"
+                                          >
+                                            <span className="sr-only">Delete your comment</span>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                          </button>
+                                        )}
+                                      </div>
                                     </div>
                                   ))}
                                   <div className="flex gap-2 mt-4">
                                     <input
                                       type="text"
+                                      maxLength={2000}
                                       value={commentDrafts.assignmentClass[a.id] || ''}
                                       onChange={(e) =>
                                         setCommentDrafts((prev) => ({
@@ -1085,19 +1183,25 @@ const ClassDetail = () => {
                                         </div>
                                         <span className="text-text-muted font-medium leading-relaxed">{c.content}</span>
                                       </div>
-                                      {isTeacher && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDeleteAssignmentComment(a.id, c.id)}
-                                          disabled={deletingCommentId === c.id}
-                                          className="shrink-0 p-1 text-text-dim hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                                          title="Delete comment"
-                                        >
-                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                          </svg>
-                                        </button>
-                                      )}
+                                      <div className="flex shrink-0 items-center gap-2">
+                                        {c.author?.id !== user?.id && (
+                                          <button type="button" onClick={() => openCommentReport(c)} className="text-xs font-bold text-text-dim hover:text-accent">Report</button>
+                                        )}
+                                        {(isTeacher || c.author?.id === user?.id) && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteAssignmentComment(a.id, c.id)}
+                                            disabled={deletingCommentId === c.id}
+                                            className="p-1 text-text-dim hover:text-red-500 transition-colors disabled:opacity-50"
+                                            title="Delete comment"
+                                          >
+                                            <span className="sr-only">Delete your comment</span>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                          </button>
+                                        )}
+                                      </div>
                                     </div>
                                   ))}
                                   {isTeacher ? (
@@ -1122,6 +1226,7 @@ const ClassDetail = () => {
                                       <div className="flex gap-2">
                                         <input
                                           type="text"
+                                          maxLength={2000}
                                           value={commentDrafts.assignmentPrivate[a.id] || ''}
                                           onChange={(e) =>
                                             setCommentDrafts((prev) => ({
@@ -1164,6 +1269,7 @@ const ClassDetail = () => {
                                     <div className="flex gap-2 mt-4">
                                       <input
                                         type="text"
+                                        maxLength={2000}
                                         value={commentDrafts.assignmentPrivate[a.id] || ''}
                                         onChange={(e) =>
                                           setCommentDrafts((prev) => ({
@@ -1226,6 +1332,17 @@ const ClassDetail = () => {
             </div>
 
             {/* Leaderboard: most assignments completed */}
+            {!isTeacher && leaderboardSummary && (
+              <div className="mb-12 rounded-3xl bg-surface-raised p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                <p className="section-kicker mb-3">Your progress</p>
+                <h3 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">
+                  Position {leaderboardSummary.position} of {leaderboardSummary.totalStudents}
+                </h3>
+                <p className="mt-3 text-sm font-medium text-text-muted">
+                  You have completed {leaderboardSummary.completedCount} assignment{leaderboardSummary.completedCount === 1 ? '' : 's'}. Other learners’ results stay private.
+                </p>
+              </div>
+            )}
             {Array.isArray(leaderboard) && leaderboard.length > 0 && (
               <div className="mb-12 p-8 bg-block-blue rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                 <h3 className="font-display text-base font-extrabold tracking-tight text-blue mb-8">
@@ -1290,7 +1407,7 @@ const ClassDetail = () => {
                             <span className="text-sm font-semibold text-text-primary block group-hover:text-accent transition-colors">
                               {t.firstName} {t.lastName}
                             </span>
-                            <span className="text-xs font-medium text-text-dim">{t.email}</span>
+                            {t.email && <span className="text-xs font-medium text-text-dim">{t.email}</span>}
                           </div>
                         </Link>
                         {isOwner && t.id !== user?.id && (
@@ -1329,7 +1446,7 @@ const ClassDetail = () => {
                             <span className="text-sm font-semibold text-text-primary block group-hover:text-accent transition-colors">
                               {s.firstName} {s.lastName}
                             </span>
-                            <span className="text-xs font-medium text-text-dim">{s.email}</span>
+                            {s.email && <span className="text-xs font-medium text-text-dim">{s.email}</span>}
                           </div>
                         </Link>
                         {isOwner && (
@@ -1346,6 +1463,100 @@ const ClassDetail = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {canModerate && activeTab === 'moderation' && (
+          <section className="min-h-[50vh] pt-6 animate-slide-up" aria-labelledby="moderation-heading">
+            <div className="rounded-3xl bg-surface-raised p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <span className="section-kicker mb-3">Class safety</span>
+              <h2 id="moderation-heading" className="font-display text-3xl font-extrabold tracking-tight text-text-primary">
+                Moderation queue
+              </h2>
+              <div className="mt-6 rounded-2xl border border-line-soft bg-surface-soft p-5 text-sm leading-relaxed text-text-muted">
+                <p className="font-bold text-text-primary">{moderationGuidance?.serviceLevel || 'Review new reports within 24 hours.'}</p>
+                <p className="mt-2">{moderationGuidance?.emergency || 'If anyone is in immediate danger, contact Triple Zero (000) or a trusted adult now. Do not wait for an in-app review.'}</p>
+              </div>
+              {loadingModeration ? (
+                <p className="mt-8 text-sm font-medium text-text-dim">Loading reports…</p>
+              ) : moderationReports.length === 0 ? (
+                <p className="mt-8 rounded-2xl bg-surface-soft p-8 text-sm font-medium text-text-muted">No pending reports.</p>
+              ) : (
+                <div className="mt-8 space-y-5">
+                  {moderationReports.map((report) => (
+                    <article key={report.id} className="rounded-2xl border border-line-soft p-6">
+                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs font-bold uppercase tracking-wider text-accent">{report.reason}</p>
+                            {report.priority === 'high' && <span className="rounded-full bg-accent-soft px-2 py-1 text-xs font-bold text-accent">Independent review</span>}
+                            {report.overdue && <span className="rounded-full bg-surface-soft px-2 py-1 text-xs font-bold text-text-primary">Overdue · 24h SLA</span>}
+                          </div>
+                          <p className="mt-3 whitespace-pre-wrap text-sm font-medium leading-relaxed text-text-primary">{report.contentSnapshot}</p>
+                          {report.details && <p className="mt-3 text-sm text-text-muted">Reporter note: {report.details}</p>}
+                          <p className="mt-3 text-xs text-text-dim">
+                            Reported by {report.reporter ? `${report.reporter.firstName} ${report.reporter.lastName}` : 'a former member'} · author {report.commentAuthor ? `${report.commentAuthor.firstName} ${report.commentAuthor.lastName}` : 'unknown'}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => handleModerationAction(report.id, 'reviewed')} className="btn-secondary">Mark reviewed</button>
+                          <button type="button" onClick={() => handleModerationAction(report.id, 'dismissed')} className="btn-secondary">Dismiss</button>
+                          <button type="button" onClick={() => handleModerationAction(report.id, 'actioned')} className="btn-primary">Action taken</button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {reportTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-raised/80 p-6 backdrop-blur-md">
+            <div role="dialog" aria-modal="true" aria-labelledby="report-comment-heading" className="w-full max-w-lg rounded-3xl bg-surface-raised p-8 shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)]">
+              <h2 id="report-comment-heading" className="font-display text-2xl font-extrabold text-text-primary">Report comment</h2>
+              <p className="mt-2 text-sm text-text-muted">
+                Tell the class owner what needs attention. The target review time is within 24 hours.
+              </p>
+              <p className="mt-4 rounded-2xl bg-surface-soft p-4 text-sm font-bold leading-relaxed text-text-primary">
+                If anyone is in immediate danger, contact Triple Zero (000) or a trusted adult now. Do not wait for an in-app review.
+              </p>
+              <form onSubmit={handleReportComment} className="mt-6 space-y-5">
+                <div>
+                  <label htmlFor="comment-report-reason" className="text-sm font-bold text-text-primary">Reason</label>
+                  <select
+                    id="comment-report-reason"
+                    value={reportForm.reason}
+                    onChange={(event) => setReportForm((current) => ({ ...current, reason: event.target.value }))}
+                    className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-4 py-3 text-sm text-text-primary"
+                  >
+                    <option value="bullying">Bullying</option>
+                    <option value="harassment">Harassment</option>
+                    <option value="inappropriate">Inappropriate content</option>
+                    <option value="privacy">Privacy concern</option>
+                    <option value="spam">Spam</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="comment-report-details" className="text-sm font-bold text-text-primary">Details (optional)</label>
+                  <textarea
+                    id="comment-report-details"
+                    value={reportForm.details}
+                    maxLength={1000}
+                    rows={4}
+                    onChange={(event) => setReportForm((current) => ({ ...current, details: event.target.value }))}
+                    className="mt-2 w-full resize-none rounded-xl border border-line-soft bg-surface-soft px-4 py-3 text-sm text-text-primary"
+                    placeholder="Share only what the reviewer needs to understand the concern."
+                  />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button type="button" onClick={() => setReportTarget(null)} className="btn-secondary" disabled={reportingComment}>Cancel</button>
+                  <button type="submit" className="btn-primary" disabled={reportingComment}>{reportingComment ? 'Sending…' : 'Send report'}</button>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -1528,4 +1739,3 @@ const ClassDetail = () => {
 };
 
 export default ClassDetail;
-

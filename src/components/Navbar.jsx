@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLayout } from '../contexts/LayoutContext';
+import ProductModeSwitch from './ProductModeSwitch';
+import { isProductNavItemActive, moneyNavigation } from '../config/productNavigation';
 
 // `mobileOnly` is set when the vertical rail owns navigation on large screens —
 // the top bar then only appears on mobile, so the two never overlap.
@@ -15,10 +17,14 @@ const Navbar = ({ mobileOnly = false }) => {
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
-  const { toggleNavMode } = useLayout();
+  const { toggleNavMode, productMode = 'study' } = useLayout();
+  const effectiveProductMode = productMode;
   const menuRef = useRef(null);
   const navMenuRef = useRef(null);
   const tryMenuRef = useRef(null);
+  const userButtonRef = useRef(null);
+  const navButtonRef = useRef(null);
+  const tryButtonRef = useRef(null);
 
   useEffect(() => {
     setIsOpen(false);
@@ -49,13 +55,32 @@ const Navbar = ({ mobileOnly = false }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const allNavItems = [
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key !== 'Escape') return;
+      if (showUserMenu) userButtonRef.current?.focus();
+      else if (showNavMenu) navButtonRef.current?.focus();
+      else if (showTryMenu) tryButtonRef.current?.focus();
+      setShowUserMenu(false);
+      setShowNavMenu(false);
+      setShowTryMenu(false);
+      setIsOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showNavMenu, showTryMenu, showUserMenu]);
+
+  const studyCoreItems = [
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
-    { path: '/study-plan', label: 'Study Plan', privateOnly: true },
     { path: '/library', label: 'Library' },
+  ];
+
+  const studyMoreItems = [
+    { path: '/study-plan', label: 'Study Plan', privateOnly: true },
+    { path: '/practice', label: 'Practice', privateOnly: true },
+    { path: '/mastery', label: 'Mastery', privateOnly: true },
     { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
     { path: '/classes', label: 'Classes', tourId: 'nav-academy' },
-    { path: '/fintools', label: 'Financial Tools', tourId: 'nav-instruments' },
     { path: '/edutools', label: 'Education Tools', tourId: 'nav-edutools' },
   ];
 
@@ -66,25 +91,27 @@ const Navbar = ({ mobileOnly = false }) => {
     { path: '/play', label: 'Caplet Live' },
   ];
 
-  const navItems = allNavItems.filter((item) => {
+  const visibleItems = (items) => items.filter((item) => {
     if (isAuthenticated) return !item.publicOnly;
     return !item.privateOnly;
   });
+  const visibleCoreItems = effectiveProductMode === 'money' ? visibleItems(moneyNavigation) : visibleItems(studyCoreItems);
+  const visibleMoreItems = effectiveProductMode === 'money' ? [] : visibleItems(studyMoreItems);
+  const navItems = [...visibleCoreItems, ...visibleMoreItems];
 
-  const homePath = isAuthenticated ? '/dashboard' : '/';
+  const homePath = effectiveProductMode === 'money' ? '/money' : isAuthenticated ? '/dashboard' : '/';
   const isHome = location.pathname === '/';
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
-
-  // The folded toggle reads "Menu" by default, then takes on the current
-  // section's name once you're inside one.
-  const activeNavItem = navItems.find((item) => isActive(item.path));
-  const navLabel = activeNavItem ? activeNavItem.label : 'Menu';
+  const isItemActive = (item) => effectiveProductMode === 'money'
+    ? isProductNavItemActive(item, location)
+    : isActive(item.path);
 
   const hidePaths = ['/login', '/register', '/play'];
   if (hidePaths.includes(location.pathname)) return null;
+  if (location.pathname.startsWith('/guardian-consent/')) return null;
   if (location.pathname.startsWith('/live/host')) return null;
 
   const initials = user
@@ -102,47 +129,66 @@ const Navbar = ({ mobileOnly = false }) => {
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         <div className="h-14 md:h-16 flex items-center justify-between gap-4">
 
-          {/* Logo */}
-          <Link to={homePath} className="flex items-center gap-2 group relative z-10 shrink-0">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden ring-1 ring-line-soft group-hover:ring-accent transition-all duration-300">
-              <img
-                src="/logo.png"
-                alt="Caplet logo"
-                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-              />
-            </div>
-            <span className="text-lg md:text-xl font-bricolage font-extrabold tracking-[-0.02em] text-text-primary group-hover:text-accent transition-colors duration-300">
-              Caplet.
-            </span>
-          </Link>
+          <div className="flex min-w-0 items-center gap-2 md:gap-4">
+            {/* Logo */}
+            <Link to={homePath} className="flex items-center gap-2 group relative z-10 shrink-0">
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden ring-1 ring-line-soft group-hover:ring-accent transition-all duration-300">
+                <img
+                  src="/logo.png"
+                  alt="Caplet logo"
+                  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                />
+              </div>
+              <span className="hidden text-lg font-bricolage font-extrabold tracking-[-0.02em] text-text-primary transition-colors duration-300 group-hover:text-accent sm:inline md:text-xl">
+                Caplet.
+              </span>
+            </Link>
+            <ProductModeSwitch className="shrink-0" />
+          </div>
 
           {/* Right cluster — folded nav toggles pinned to the far right, then actions */}
           <div className="flex items-center gap-2 md:gap-3">
 
-          {/* Desktop nav — folded into two toggles */}
+          {/* Desktop nav — core destinations stay visible; secondary areas use disclosures. */}
           <nav className="hidden lg:flex items-center gap-1.5">
-            {/* Sections menu */}
-            <div className="relative" ref={navMenuRef}>
+            {visibleCoreItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
+                aria-current={isItemActive(item) ? 'page' : undefined}
+                className={`min-h-11 inline-flex items-center px-3 rounded-lg text-sm font-bold tracking-[0.04em] transition-colors ${
+                  isItemActive(item) ? 'text-accent bg-accent-soft' : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+
+            {/* More menu */}
+            {visibleMoreItems.length > 0 && <div className="relative" ref={navMenuRef}>
               <button
+                ref={navButtonRef}
                 type="button"
                 onClick={() => { setShowNavMenu((v) => !v); setShowTryMenu(false); }}
                 aria-expanded={showNavMenu}
                 aria-haspopup="true"
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold tracking-[0.06em] whitespace-nowrap transition-all duration-200 ${
-                  showNavMenu || navItems.some((i) => isActive(i.path))
+                aria-controls="more-navigation"
+                className={`min-h-11 flex items-center gap-2 px-3 rounded-lg text-sm font-bold tracking-[0.06em] whitespace-nowrap transition-all duration-200 ${
+                  showNavMenu || visibleMoreItems.some((i) => isActive(i.path))
                     ? 'text-accent bg-accent-soft'
                     : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
                 }`}
               >
-                {navLabel}
+                More
                 <svg className={`w-3 h-3 shrink-0 transition-transform duration-200 ${showNavMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {showNavMenu && (
-                <div className="absolute top-full left-0 mt-2 w-56 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                  {navItems.map((item) => {
+                <div id="more-navigation" className="absolute top-full left-0 mt-2 w-56 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                  {visibleMoreItems.map((item) => {
                     const active = isActive(item.path);
                     return (
                       <Link
@@ -159,16 +205,18 @@ const Navbar = ({ mobileOnly = false }) => {
                   })}
                 </div>
               )}
-            </div>
+            </div>}
 
             {/* Try menu — demo & live, no account needed */}
-            <div className="relative" ref={tryMenuRef}>
+            {effectiveProductMode === 'study' && <div className="relative" ref={tryMenuRef}>
               <button
+                ref={tryButtonRef}
                 type="button"
                 onClick={() => { setShowTryMenu((v) => !v); setShowNavMenu(false); }}
                 aria-expanded={showTryMenu}
                 aria-haspopup="true"
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
+                aria-controls="try-navigation"
+                className={`min-h-11 flex items-center gap-2 px-3 rounded-lg text-sm font-bold tracking-[0.06em] transition-all duration-200 ${
                   showTryMenu || tryItems.some((i) => isActive(i.path))
                     ? 'text-accent bg-accent-soft'
                     : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
@@ -181,7 +229,7 @@ const Navbar = ({ mobileOnly = false }) => {
               </button>
 
               {showTryMenu && (
-                <div className="absolute top-full left-0 mt-2 w-52 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div id="try-navigation" className="absolute top-full left-0 mt-2 w-52 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
                   {tryItems.map((item) => {
                     const active = isActive(item.path);
                     return (
@@ -198,7 +246,7 @@ const Navbar = ({ mobileOnly = false }) => {
                   })}
                 </div>
               )}
-            </div>
+            </div>}
           </nav>
 
           {/* Actions */}
@@ -208,7 +256,7 @@ const Navbar = ({ mobileOnly = false }) => {
               <button
                 type="button"
                 onClick={toggleNavMode}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
+                className="w-11 h-11 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
                 aria-label="Switch to side bar navigation"
                 title="Use side bar"
               >
@@ -224,8 +272,8 @@ const Navbar = ({ mobileOnly = false }) => {
             <button
               type="button"
               onClick={toggleTheme}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
-              aria-label="toggle dark mode"
+              className="w-11 h-11 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200"
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,9 +290,13 @@ const Navbar = ({ mobileOnly = false }) => {
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
                 <button
+                  ref={userButtonRef}
                   type="button"
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all duration-200 ${
+                  aria-expanded={showUserMenu}
+                  aria-haspopup="true"
+                  aria-controls="account-navigation"
+                  className={`min-h-11 flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full border transition-all duration-200 ${
                     showUserMenu
                       ? 'border-accent bg-accent-soft'
                       : 'border-line-soft hover:border-text-dim hover:bg-surface-soft'
@@ -254,11 +306,11 @@ const Navbar = ({ mobileOnly = false }) => {
                   <div className="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold font-mono leading-none flex-shrink-0">
                     {initials}
                   </div>
-                  <span className="text-sm font-medium text-text-primary leading-none">
+                  <span className="hidden text-sm font-medium text-text-primary leading-none sm:inline">
                     {user?.firstName || 'Account'}
                   </span>
                   <svg
-                    className={`w-3 h-3 text-text-dim transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`}
+                    className={`hidden w-3 h-3 text-text-dim transition-transform duration-200 sm:block ${showUserMenu ? 'rotate-180' : ''}`}
                     fill="none" stroke="currentColor" viewBox="0 0 24 24"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
@@ -266,7 +318,7 @@ const Navbar = ({ mobileOnly = false }) => {
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute top-full right-0 mt-2 w-48 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div id="account-navigation" className="absolute top-full right-0 mt-2 w-48 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
                     <div className="px-3 py-2 mb-1 border-b border-line-soft">
                       <p className="text-xs font-medium text-text-dim truncate">{user?.email || ''}</p>
                     </div>
@@ -305,11 +357,13 @@ const Navbar = ({ mobileOnly = false }) => {
             )}
 
             {/* Mobile hamburger */}
-            <button
+            {effectiveProductMode === 'study' && <button
               type="button"
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all"
+              className="lg:hidden w-11 h-11 flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? 'close menu' : 'open menu'}
+              aria-expanded={isOpen}
+              aria-controls="mobile-navigation"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isOpen ? (
@@ -318,23 +372,24 @@ const Navbar = ({ mobileOnly = false }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
                 )}
               </svg>
-            </button>
+            </button>}
           </div>
           </div>
         </div>
 
         {/* Mobile menu */}
-        {isOpen && (
-          <div className="lg:hidden border-t border-line-soft py-3 flex flex-col gap-0.5">
+        {effectiveProductMode === 'study' && isOpen && (
+          <div id="mobile-navigation" className="lg:hidden border-t border-line-soft py-3 flex flex-col gap-0.5">
             {navItems.map((item) => {
-              const active = isActive(item.path);
+              const active = isItemActive(item);
               return (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
                   {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                  className={`px-3 py-2.5 text-xs font-bold tracking-[0.1em] transition-colors ${
+                  aria-current={active ? 'page' : undefined}
+                  className={`min-h-11 flex items-center px-3 text-xs font-bold tracking-[0.1em] transition-colors ${
                     active
                       ? 'text-accent bg-accent-soft rounded-none'
                       : 'text-text-primary hover:bg-surface-soft rounded-none'
@@ -347,14 +402,14 @@ const Navbar = ({ mobileOnly = false }) => {
             <Link
               to="/demo"
               onClick={() => setIsOpen(false)}
-              className="px-3 py-2.5 text-xs font-bold tracking-[0.1em] text-text-primary hover:bg-surface-soft transition-colors"
+              className="min-h-11 flex items-center px-3 text-xs font-bold tracking-[0.1em] text-text-primary hover:bg-surface-soft transition-colors"
             >
               Demo
             </Link>
             <Link
               to="/play"
               onClick={() => setIsOpen(false)}
-              className="px-3 py-2.5 text-xs font-bold tracking-[0.1em] text-text-primary hover:bg-surface-soft transition-colors"
+              className="min-h-11 flex items-center px-3 text-xs font-bold tracking-[0.1em] text-text-primary hover:bg-surface-soft transition-colors"
             >
               Caplet Live
             </Link>

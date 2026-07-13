@@ -18,6 +18,7 @@ const Settings = () => {
     { path: '/settings/appearance', label: 'Appearance', description: 'Theme and background colour' },
     { path: '/settings/financial', label: 'Financial', description: 'Income, savings, debts, and goals' },
     { path: '/settings/account', label: 'Account', description: 'Role, preferences' },
+    { path: '/settings/privacy', label: 'Privacy & data', description: 'Consent, AI history, export, deletion' },
   ];
 
   return (

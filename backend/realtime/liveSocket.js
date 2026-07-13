@@ -24,6 +24,8 @@ const { isGradable, prepareQuestion, gradeResponse, computePoints, computeStreak
 const DEFAULT_QUESTION_MS = 20000;
 const MAX_RESPONSE_ARRAY_LEN = 64;
 const MAX_RESPONSE_STRING_LEN = 300;
+const MAX_SECURITY_ENTRIES = 200;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // JSONB is transparently stored as TEXT on the SQLite dev fallback (see
 // backend/routes/savedSlides.js parseSlides for the same pattern) — Postgres
@@ -36,16 +38,117 @@ function parseLessonSlides(raw) {
   return [];
 }
 
+function parseSessionSettings(raw) {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch { return {}; }
+  }
+  return {};
+}
+
+function normalizeLiveSecurity(settings) {
+  const raw = settings?.liveSecurity;
+  const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const strings = (value) => (Array.isArray(value) ? value.filter((item) => typeof item === 'string').slice(-MAX_SECURITY_ENTRIES) : []);
+  const participantFingerprints = source.participantFingerprints && typeof source.participantFingerprints === 'object'
+    ? Object.fromEntries(Object.entries(source.participantFingerprints).filter(([id, value]) => typeof id === 'string' && typeof value === 'string').slice(-MAX_SECURITY_ENTRIES))
+    : {};
+  return {
+    blockedParticipantIds: strings(source.blockedParticipantIds),
+    blockedUserIds: strings(source.blockedUserIds),
+    blockedFingerprints: strings(source.blockedFingerprints),
+    blockedNicknames: strings(source.blockedNicknames).map((value) => value.toLocaleLowerCase('en-AU')),
+    participantFingerprints,
+  };
+}
+
+function isParticipantBlocked(settings, participant, joinFingerprint) {
+  const security = normalizeLiveSecurity(parseSessionSettings(settings));
+  return security.blockedParticipantIds.includes(participant.id)
+    || (participant.userId && security.blockedUserIds.includes(participant.userId))
+    || security.blockedNicknames.includes(String(participant.nickname || '').toLocaleLowerCase('en-AU'))
+    || (joinFingerprint && security.blockedFingerprints.includes(joinFingerprint));
+}
+
+function appendUnique(values, value) {
+  if (!value) return values.slice(-MAX_SECURITY_ENTRIES);
+  return [...values.filter((item) => item !== value), value].slice(-MAX_SECURITY_ENTRIES);
+}
+
+function blockParticipantInSettings(rawSettings, participant, joinFingerprint) {
+  const settings = parseSessionSettings(rawSettings);
+  const security = normalizeLiveSecurity(settings);
+  const storedFingerprint = joinFingerprint || security.participantFingerprints[participant.id] || null;
+  return {
+    ...settings,
+    liveSecurity: {
+      ...security,
+      blockedParticipantIds: appendUnique(security.blockedParticipantIds, participant.id),
+      blockedUserIds: appendUnique(security.blockedUserIds, participant.userId),
+      blockedFingerprints: appendUnique(security.blockedFingerprints, storedFingerprint),
+      blockedNicknames: appendUnique(
+        security.blockedNicknames,
+        String(participant.nickname || '').toLocaleLowerCase('en-AU'),
+      ),
+    },
+  };
+}
+
+async function kickParticipantFromRoom({ actorRole, sessionId, participantId, room, live }) {
+  if (actorRole !== 'host') return { ok: false, error: 'Host access required' };
+  if (!UUID_RE.test(String(participantId || ''))) {
+    return { ok: false, error: 'Choose a valid participant' };
+  }
+  const [session, participant] = await Promise.all([
+    LiveSession.findByPk(sessionId),
+    LiveParticipant.findOne({ where: { id: participantId, sessionId } }),
+  ]);
+  if (!session || !participant) return { ok: false, error: 'Participant not found' };
+
+  const participantSocketId = room.participantSockets.get(participantId);
+  const participantSocket = participantSocketId ? live.sockets.get(participantSocketId) : null;
+  const currentSecurity = normalizeLiveSecurity(parseSessionSettings(session.settings));
+  const fingerprint = participantSocket?.data?.joinFingerprint
+    || currentSecurity.participantFingerprints[participantId]
+    || null;
+
+  await session.update({
+    settings: blockParticipantInSettings(session.settings, participant, fingerprint),
+  });
+  room.blockedParticipantIds.add(participantId);
+  room.participantSockets.delete(participantId);
+  room.round?.responses?.delete(participantId);
+  room.streaks?.delete(participantId);
+  await participant.update({ connected: false });
+
+  if (participantSocket) {
+    participantSocket.emit('session:kicked', { message: 'The host removed you from this session' });
+    participantSocket.disconnect(true);
+  }
+  return { ok: true, participantId };
+}
+
 // sessionId -> { hostSocketId, participantSockets: Map(participantId -> socketId),
 //                slides: normalizedSlide[], round: activeRound | null,
 //                streaks: Map(participantId -> { current, best }),
+//                blockedParticipantIds: Set(participantId),
 //                lastReveal: { slideIndex, revealPayload, youResultByParticipant } | undefined }
 const rooms = new Map();
 
 function getRoom(sessionId) {
   let room = rooms.get(sessionId);
   if (!room) {
-    room = { hostSocketId: null, participantSockets: new Map(), slides: null, round: null, streaks: new Map() };
+    room = {
+      hostSocketId: null,
+      participantSockets: new Map(),
+      blockedParticipantIds: new Set(),
+      slides: null,
+      round: null,
+      streaks: new Map(),
+    };
     rooms.set(sessionId, room);
   }
   return room;
@@ -112,9 +215,21 @@ function attachLiveSocket(httpServer) {
         if (!participant || participant.sessionId !== decoded.sessionId) {
           return next(new Error('unauthorized'));
         }
+        const session = await LiveSession.findByPk(decoded.sessionId);
+        if (!session) return next(new Error('unauthorized'));
+        const security = normalizeLiveSecurity(parseSessionSettings(session.settings));
+        const storedFingerprint = security.participantFingerprints[participant.id];
+        if (storedFingerprint && decoded.joinFingerprint && storedFingerprint !== decoded.joinFingerprint) {
+          return next(new Error('unauthorized'));
+        }
+        const fingerprint = decoded.joinFingerprint || storedFingerprint || null;
+        if (isParticipantBlocked(session.settings, participant, fingerprint)) {
+          return next(new Error('blocked'));
+        }
         socket.data.role = 'participant';
         socket.data.sessionId = decoded.sessionId;
         socket.data.participantId = decoded.participantId;
+        socket.data.joinFingerprint = fingerprint;
         return next();
       }
 
@@ -143,12 +258,22 @@ function attachLiveSocket(httpServer) {
   }
 
   async function broadcastRoster(sessionId) {
-    const participants = await LiveParticipant.findAll({
-      where: { sessionId },
-      order: [['createdAt', 'ASC']],
-    });
+    const [participants, session] = await Promise.all([
+      LiveParticipant.findAll({
+        where: { sessionId },
+        order: [['createdAt', 'ASC']],
+      }),
+      LiveSession.findByPk(sessionId),
+    ]);
+    const blockedIds = new Set(normalizeLiveSecurity(parseSessionSettings(session?.settings)).blockedParticipantIds);
     live.to(sessionId).emit('lobby:roster', {
-      players: participants.map((p) => ({ id: p.id, nickname: p.nickname, connected: p.connected })),
+      players: participants
+        .filter((participant) => !blockedIds.has(participant.id))
+        .map((participant) => ({
+          id: participant.id,
+          nickname: participant.nickname,
+          connected: participant.connected,
+        })),
     });
   }
 
@@ -160,12 +285,19 @@ function attachLiveSocket(httpServer) {
    * request sees, since `room.streaks` no longer exists at that point.
    */
   async function currentLeaderboard(sessionId, limit, room) {
-    const participants = await LiveParticipant.findAll({
-      where: { sessionId },
-      order: [['totalScore', 'DESC']],
-      ...(limit ? { limit } : {}),
-    });
-    return participants.map((p, i) => {
+    const [participants, session] = await Promise.all([
+      LiveParticipant.findAll({
+        where: { sessionId },
+        order: [['totalScore', 'DESC']],
+      }),
+      LiveSession.findByPk(sessionId),
+    ]);
+    const persistedBlocked = normalizeLiveSecurity(parseSessionSettings(session?.settings)).blockedParticipantIds;
+    const blockedIds = new Set([...persistedBlocked, ...(room?.blockedParticipantIds || [])]);
+    const eligibleParticipants = participants
+      .filter((participant) => !blockedIds.has(participant.id))
+      .slice(0, limit || participants.length);
+    return eligibleParticipants.map((p, i) => {
       const s = room?.streaks?.get(p.id);
       return {
         id: p.id,
@@ -242,8 +374,14 @@ function attachLiveSocket(httpServer) {
     const session = await LiveSession.findByPk(sessionId);
     if (!session) return;
 
-    // Anyone connected who never answered gets an explicit zero-point record.
-    const allParticipants = await LiveParticipant.findAll({ where: { sessionId } });
+    // Anyone eligible who never answered gets an explicit zero-point record.
+    // Removed participants keep their audit rows but are no longer counted in
+    // gameplay results or leaderboards.
+    const persistedBlocked = normalizeLiveSecurity(parseSessionSettings(session.settings)).blockedParticipantIds;
+    const blockedIds = new Set([...persistedBlocked, ...room.blockedParticipantIds]);
+    for (const participantId of blockedIds) round.responses.delete(participantId);
+    const allParticipants = (await LiveParticipant.findAll({ where: { sessionId } }))
+      .filter((participant) => !blockedIds.has(participant.id));
     await Promise.all(
       allParticipants
         .filter((p) => !round.responses.has(p.id))
@@ -322,7 +460,12 @@ function attachLiveSocket(httpServer) {
     const room = getRoom(sessionId);
 
     if (role === 'host') {
+      const previousHostSocket = room.hostSocketId && live.sockets.get(room.hostSocketId);
       room.hostSocketId = socket.id;
+      if (previousHostSocket && previousHostSocket.id !== socket.id) {
+        previousHostSocket.emit('session:replaced', { reason: 'This host session was opened elsewhere' });
+        previousHostSocket.disconnect(true);
+      }
       broadcastRoster(sessionId).catch((e) => console.error('Live roster broadcast failed:', e));
 
       // Reconnect mid-game (e.g. the host refreshed the page): catch them up
@@ -429,12 +572,42 @@ function attachLiveSocket(httpServer) {
         }
       });
 
+      // Host-only by construction: participant sockets never register this
+      // handler. Blocks are persisted in private session settings so the
+      // participant token, account, nickname, and join fingerprint cannot be
+      // used to re-enter this session after a kick.
+      socket.on('host:kick', async (payload, ack) => {
+        try {
+          const result = await kickParticipantFromRoom({
+            actorRole: role,
+            sessionId,
+            participantId: String(payload?.participantId || ''),
+            room,
+            live,
+          });
+          if (!result.ok) return ack?.(result);
+          await broadcastRoster(sessionId);
+          return ack?.(result);
+        } catch (e) {
+          console.error('Live host:kick failed:', e);
+          return ack?.({ ok: false, error: 'Could not remove that participant' });
+        }
+      });
+
       socket.on('disconnect', () => {
         if (room.hostSocketId === socket.id) room.hostSocketId = null;
       });
     } else {
       const { participantId } = socket.data;
+      const previousParticipantSocketId = room.participantSockets.get(participantId);
       room.participantSockets.set(participantId, socket.id);
+      if (previousParticipantSocketId && previousParticipantSocketId !== socket.id) {
+        const previousParticipantSocket = live.sockets.get(previousParticipantSocketId);
+        if (previousParticipantSocket) {
+          previousParticipantSocket.emit('session:replaced', { reason: 'This player session was opened elsewhere' });
+          previousParticipantSocket.disconnect(true);
+        }
+      }
 
       (async () => {
         try {
@@ -570,9 +743,11 @@ function attachLiveSocket(httpServer) {
 
       socket.on('disconnect', async () => {
         try {
-          if (room.participantSockets.get(participantId) === socket.id) {
-            room.participantSockets.delete(participantId);
-          }
+          // A refreshed player replaces their previous socket. The old
+          // socket's later disconnect must not mark the new connection as
+          // offline or erase it from the room map.
+          if (room.participantSockets.get(participantId) !== socket.id) return;
+          room.participantSockets.delete(participantId);
           const participant = await LiveParticipant.findByPk(participantId);
           if (participant) {
             participant.connected = false;
@@ -589,4 +764,13 @@ function attachLiveSocket(httpServer) {
   return io;
 }
 
-module.exports = { attachLiveSocket };
+module.exports = {
+  attachLiveSocket,
+  _liveSocketSecurity: {
+    blockParticipantInSettings,
+    isParticipantBlocked,
+    kickParticipantFromRoom,
+    normalizeLiveSecurity,
+    parseSessionSettings,
+  },
+};

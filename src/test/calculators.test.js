@@ -5,48 +5,28 @@ import { calculateTax } from '../pages/tools/TaxCalculator';
 
 // Tax Calculation Tests
 describe('TaxCalculator', () => {
-  // Test 1: Zero income returns zero tax
-  it('should return 0 tax for income of 0', () => {
+  it('returns zero for non-positive and tax-free incomes', () => {
     expect(calculateTax(0)).toBe(0);
-  });
-
-  // Test 2: Negative income returns zero tax
-  it('should return 0 tax for negative income', () => {
     expect(calculateTax(-100)).toBe(0);
+    expect(calculateTax(18200)).toBe(0);
   });
 
-  // Test 3: Income below tax-free threshold (18200) returns zero tax
-  it('should return 0 tax for income below $18,200 threshold', () => {
-    expect(calculateTax(15000)).toBe(0);
-    expect(calculateTax(18199)).toBe(0);
+  it.each([
+    ['2025-26', 45000, 4288],
+    ['2025-26', 135000, 31288],
+    ['2025-26', 190000, 51638],
+    ['2025-26', 250000, 78638],
+    ['2026-27', 45000, 4020],
+    ['2026-27', 135000, 31020],
+    ['2026-27', 190000, 51370],
+    ['2026-27', 250000, 78370],
+  ])('calculates %s resident tax at $%i', (year, income, expected) => {
+    expect(calculateTax(income, year)).toBe(expected);
   });
 
-  // Test 4: Income in first bracket (18200-45000)
-  it('should correctly calculate tax for income in first bracket (19% rate)', () => {
-    // Income: $30,000 - Tax-free threshold: $18,200 = Taxable: $11,800
-    // Tax: $11,800 * 0.19 = $2,242
-    expect(calculateTax(30000)).toBe(2242);
-  });
-
-  // Test 5: Income in second bracket (45000-120000)
-  it('should correctly calculate tax for income in second bracket (32.5% rate)', () => {
-    // Income: $60,000 - Base: $5,092 + ($60,000 - $45,000) * 0.325
-    // = $5,092 + $15,000 * 0.325 = $5,092 + $4,875 = $9,967
-    expect(calculateTax(60000)).toBe(9967);
-  });
-
-  // Test 6: Income in third bracket (120000-180000)
-  it('should correctly calculate tax for income in third bracket (37% rate)', () => {
-    // Income: $150,000 - Base: $29,467 + ($150,000 - $120,000) * 0.37
-    // = $29,467 + $30,000 * 0.37 = $29,467 + $11,100 = $40,567
-    expect(calculateTax(150000)).toBe(40567);
-  });
-
-  // Test 7: Income in highest bracket (180000+)
-  it('should correctly calculate tax for income in highest bracket (45% rate)', () => {
-    // Income: $250,000 - Base: $51,667 + ($250,000 - $180,000) * 0.45
-    // = $51,667 + $70,000 * 0.45 = $51,667 + $31,500 = $83,167
-    expect(calculateTax(250000)).toBe(83167);
+  it('defaults to the latest supported financial year', () => {
+    expect(calculateTax(30000)).toBe(1770);
+    expect(calculateTax(60000)).toBe(8520);
   });
 });
 

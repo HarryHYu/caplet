@@ -20,6 +20,8 @@ vi.mock('../services/api', () => ({
     getDueReviewItems: vi.fn(),
     getStudyPlan: vi.fn(),
     getEconomicsExamSessions: vi.fn(),
+    getNextRecommendation: vi.fn(),
+    logEvent: vi.fn(),
   },
 }));
 
@@ -34,6 +36,7 @@ describe('Dashboard study plan handoff', () => {
     api.getSavedSlides.mockResolvedValue({ savedSlides: [] });
     api.getDueReviewItems.mockResolvedValue({ items: [] });
     api.getEconomicsExamSessions.mockResolvedValue({ sessions: [] });
+    api.getNextRecommendation.mockResolvedValue({ recommendation: null });
   });
 
   it('surfaces today’s next planned task', async () => {

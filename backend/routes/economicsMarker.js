@@ -12,9 +12,12 @@ const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const MarkedAttempt = require('../models/MarkedAttempt');
 const { markEconomicsAnswer } = require('../services/economicsMarker');
+const { requireAIConsent } = require('../services/privacyConsent');
+const { reserveAIQuota } = require('../middleware/aiQuota');
 
 const router = express.Router();
 router.use(requireAuth);
+const markingQuota = reserveAIQuota({ scope: 'economics-marker', units: 2 });
 
 const sourceText = (value, limit = 200) => String(value || '').trim().slice(0, limit) || null;
 
@@ -38,7 +41,7 @@ function throttle(req, res, next) {
 }
 
 // POST /api/economics-marker — mark and persist one attempt
-router.post('/', throttle, async (req, res) => {
+router.post('/', requireAIConsent, throttle, markingQuota, async (req, res) => {
   try {
     const sourceResourceId = sourceText(req.body?.sourceResourceId);
     const sourcePromptId = sourceText(req.body?.sourcePromptId);
@@ -64,6 +67,31 @@ router.post('/', throttle, async (req, res) => {
       sourcePromptId,
       sourceFocusId,
     });
+    try {
+      const { recordAIInteraction } = require('../services/aiHistory');
+      await recordAIInteraction({
+        userId: req.user.id,
+        feature: 'economics_marker',
+        modelVersion: result.modelVersion,
+        promptVersion: result.promptVersion,
+        status: 'completed',
+        confidence: result.markingConfidence,
+        inputSummary: result.question,
+        outputSummary: `${result.estimatedMark}/${result.markValue}: ${result.nextRecommendation || result.band}`,
+        metadata: { attemptId: attempt.id, practiceOnly: true, humanReviewRequired: result.markingConfidence === 'low' },
+      });
+    } catch (historyError) {
+      console.error('AI history record error:', historyError.message);
+    }
+
+    try {
+      const { recordMarkedAttemptEvidence } = require('../services/learningEvidenceService');
+      const sourceId = sourcePromptId || sourceResourceId;
+      const key = sourceId ? `economics:${sourceId.replace(/^exam:/, '')}` : null;
+      if (key) await recordMarkedAttemptEvidence({ attempt, sourceKey: key });
+    } catch (evidenceError) {
+      console.error('Marked attempt evidence error:', evidenceError.message);
+    }
 
     const previousMark = Number(previous?.estimatedMark);
     const currentMark = Number(attempt?.estimatedMark ?? result.estimatedMark);
@@ -92,7 +120,7 @@ router.get('/', async (req, res) => {
   try {
     const attempts = await MarkedAttempt.findAll({
       where: { userId: req.user.id },
-      attributes: ['id', 'question', 'markValue', 'estimatedMark', 'band', 'responseType', 'focusArea', 'createdAt'],
+      attributes: ['id', 'question', 'markValue', 'estimatedMark', 'band', 'responseType', 'focusArea', 'markingConfidence', 'createdAt'],
       order: [['createdAt', 'DESC']],
       limit: 100,
     });

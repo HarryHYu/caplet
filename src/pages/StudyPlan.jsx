@@ -41,16 +41,21 @@ export default function StudyPlan() {
   const [editing, setEditing] = useState(false);
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
+  const [recommendation, setRecommendation] = useState(null);
 
   useReveal(undefined, [loading, plan, editing, step]);
 
   useEffect(() => {
     let cancelled = false;
-    api.getStudyPlan()
-      .then((data) => {
+    Promise.all([
+      api.getStudyPlan(),
+      api.getNextRecommendation('economics').catch(() => null),
+    ])
+      .then(([data, recommendationData]) => {
         if (cancelled) return;
         setPlan(data?.studyPlan || null);
         setOptions(data?.options || { yearLevels: [], subjects: [] });
+        setRecommendation(recommendationData?.recommendation || null);
       })
       .catch((err) => setError(err.message || 'Could not load your study plan.'))
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -191,6 +196,21 @@ export default function StudyPlan() {
         </header>
 
         {error && <div role="alert" className="mb-8 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{error}</div>}
+
+        {recommendation && plan.subjects.includes(recommendation.subject || 'economics') && (
+          <section className="reveal mb-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--block-green)] p-7 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--mark-green)]">Live evidence update</p>
+              <h2 className="mt-2 text-2xl font-display font-extrabold text-text-primary">
+                {recommendation.outcome?.title ? `Prioritise ${recommendation.outcome.title}` : 'Add a diagnostic signal'}
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">{recommendation.reason}</p>
+            </div>
+            <Link to={recommendationHref(recommendation)} className="btn-primary shrink-0">
+              Start recommended task <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </section>
+        )}
 
         <div className="reveal-stagger mb-14 grid gap-4 sm:grid-cols-3">
           <Stat label="Weekly progress" value={`${completion}%`} detail={`${completed} of ${plan.tasks.length} tasks`} />
@@ -411,4 +431,14 @@ function todayIso() {
 
 function formatDate(date) {
   return new Intl.DateTimeFormat('en-AU', { weekday: 'long', day: 'numeric', month: 'short' }).format(new Date(`${date}T12:00:00`));
+}
+
+function recommendationHref(recommendation) {
+  if (recommendation?.type !== 'practice' && recommendation?.resourcePath) return recommendation.resourcePath;
+  const query = new URLSearchParams({
+    subject: recommendation?.subject || 'economics',
+    mode: recommendation?.mode || 'diagnostic',
+  });
+  if (recommendation?.outcome?.id) query.set('outcomeId', recommendation.outcome.id);
+  return `/practice?${query.toString()}`;
 }

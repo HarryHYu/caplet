@@ -96,18 +96,18 @@ const newFeatures = [
 ];
 
 const principles = [
-  { k: 'free', title: 'Free, always', body: 'Build courses, tools, and workspaces for any subject. No tiers, no paywalls, no per-seat pricing.', note: 'yes, actually free' },
-  { k: 'open', title: 'Open source', body: 'The whole codebase is yours to read, fork, and self-host. Own your classroom and its data.' },
+  { k: 'free', title: 'Free today', body: 'Core learning, classroom and financial-education tools are currently available without subscription or per-seat pricing.', note: 'current product access' },
+  { k: 'open', title: 'Built transparently', body: 'Privacy choices, AI limits, curriculum status and operational safeguards are visible instead of hidden behind vague claims.' },
   { k: 'hands', title: 'Hands-on', body: 'Fifteen and more block types, from rich text and quizzes to live IDEs and graphing calculators.' },
 ];
 
 const faqItems = [
-  { question: 'Is Caplet really free?', answer: 'Yes, genuinely. Caplet is an open learning playground with no subscription tiers, no per-seat pricing, and no user limits. Teachers and students build and complete whole courses without ever hitting a paywall, and there are no ads and nothing sold on the side. The finance tools, the lesson builder, the AI tutor, and classrooms are all included.' },
-  { question: 'How do I publish my own curriculum?', answer: 'Sign up, open your dashboard, and create a course. Add modules and lessons, then drag in blocks: rich text, images, video, live code, graphing panels, and quizzes. Rearrange anything, preview it the way a student would see it, and share the link the moment it is ready. You can keep editing after publishing, and every change goes live instantly.' },
-  { question: 'Can I host Caplet on my own servers?', answer: 'Yes. Caplet is fully open-source. Pull the code from the repository and deploy it on your own servers or a private cloud. It runs a React frontend and a Node and Express backend, using Postgres in production and SQLite for local development, so a single laptop is enough to get started.' },
-  { question: 'Does it support grading and tests?', answer: 'It does. Embed live coding playgrounds with test runners, quiz blocks, and grading workflows that track every learner automatically. Group students into classrooms, set assignments with due dates, and watch submissions arrive in real time, with spaced repetition to help the material actually stick.' },
+  { question: 'Is Caplet free?', answer: 'Caplet’s current core learning, classroom and financial-education tools are available without subscription or per-seat pricing. Clearly labelled affiliate listings may earn Caplet a commission, but they are optional and do not unlock learning features. If access or pricing changes, the product will state that before it applies.' },
+  { question: 'How do I publish my own curriculum?', answer: 'Enter a curriculum workspace, create a course, add modules and lessons, then assemble slides and questions. Preview the learner experience and move content through review before publishing. Published lessons are versioned so later edits do not silently replace reviewed history.' },
+  { question: 'How is Caplet deployed?', answer: 'Caplet uses a React frontend and a Node and Express backend, with PostgreSQL in production and SQLite for local development. Schools that need procurement, hosting-region or subprocessor details can request the current deployment register.' },
+  { question: 'Does it support grading and tests?', answer: 'Caplet supports quizzes, written practice feedback, timed practice, classroom assignments and evidence-based mastery views. AI feedback is labelled as practice guidance and does not replace an official mark or teacher judgment.' },
   { question: 'Are the financial calculators specific to Australia?', answer: 'Yes. Every calculator is built around Australian rules, including income tax brackets, the Medicare levy, superannuation, GST, and HECS and HELP. The new Debt Sequencer models HECS the way it actually works, indexed once a year rather than charged monthly interest, so the guidance stays correct instead of copying a generic overseas template. These are educational tools, not personal financial advice.' },
-  { question: 'Is my financial data private?', answer: 'Your figures never leave your account. Your financial profile is stored against your login and used only to pre-fill the tools you choose to open. We do not sell data, we do not show ads, and nothing you enter is shared with third parties.' },
+  { question: 'Is my financial data private?', answer: 'Financial profile and Financial Twin data are kept separate from classroom learning views and used for the feature you request. Caplet does not sell personal information or use student data for targeted advertising. Hosting providers process data to operate the service; the Trust Centre lists provider categories and your export, consent and deletion controls.' },
   { question: 'Do I need to know how to code to build a lesson?', answer: 'Not at all. Building a lesson is drag-and-drop, and you can assemble a full lesson in minutes without writing a single line of code. If you do want code, the live IDE runs Python, JavaScript, and HTML right in the browser, so you can add runnable examples whenever they help.' },
   { question: 'Can I use AI to help build a course?', answer: 'Yes. Describe a topic and Caplet drafts structured slides, quizzes, and a lesson plan for you to edit, so a blank page is never the starting point. An in-slide AI tutor also gives students hints and worked examples without leaving the lesson. The AI helps you create; it never touches the deterministic finance calculators.' },
 ];
@@ -408,7 +408,7 @@ const Home = () => {
               Caplet began as a free financial-literacy platform for Australians, and that is still its
               backbone. Learn tax, super, mortgages, and investing by running the numbers yourself, not
               by reading another explainer. Every calculator is built around Australian rules, and your
-              figures never leave your account.
+              figures stay private from teachers and other learners.
             </p>
           </div>
 
@@ -423,7 +423,7 @@ const Home = () => {
             </div>
             <div className="rounded-3xl bg-white/[0.05] border border-white/10 p-7">
               <div className="font-bricolage font-extrabold text-4xl md:text-5xl text-amber-300">$0</div>
-              <p className="!text-[1rem] !leading-[1.55] mt-2 text-white/65">free forever, with no ads and no selling your data</p>
+              <p className="!text-[1rem] !leading-[1.55] mt-2 text-white/65">core access is free today, with no sale of personal data</p>
             </div>
           </div>
 

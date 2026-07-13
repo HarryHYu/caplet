@@ -79,7 +79,32 @@ const Lesson = sequelize.define('Lesson', {
   slides: {
     type: DataTypes.JSONB,
     allowNull: true,
-  }
+  },
+  lifecycleStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'draft' },
+  syllabusVersion: { type: DataTypes.STRING, allowNull: true },
+  curriculumEditionId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: { model: 'curriculum_editions', key: 'id' },
+    onUpdate: 'CASCADE',
+    onDelete: 'SET NULL',
+  },
+  difficulty: { type: DataTypes.STRING, allowNull: true },
+  estimatedMinutes: { type: DataTypes.INTEGER, allowNull: true },
+  assessmentPurpose: { type: DataTypes.STRING, allowNull: true },
+  sourceInfo: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+  contentVersion: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
+  reviewedBy: { type: DataTypes.UUID, allowNull: true },
+  reviewedAt: { type: DataTypes.DATE, allowNull: true },
+  reviewNotes: { type: DataTypes.TEXT, allowNull: true },
+  supersededBy: { type: DataTypes.UUID, allowNull: true },
+  previousVersionId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: { model: 'lessons', key: 'id' },
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+  },
 }, {
   tableName: 'lessons',
   timestamps: true

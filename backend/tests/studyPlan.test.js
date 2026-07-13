@@ -1,5 +1,7 @@
 jest.mock('../models/StudyPlan');
 jest.mock('../models/MarkedAttempt');
+jest.mock('../services/questionBankService', () => ({ ensureEconomicsQuestionBank: jest.fn().mockResolvedValue({}) }));
+jest.mock('../services/recommendationEngine', () => ({ getNextRecommendation: jest.fn().mockResolvedValue(null) }));
 jest.mock('../middleware/auth', () => ({
   requireAuth: (req, _res, next) => {
     req.user = { id: 'student-1' };
@@ -11,6 +13,7 @@ const request = require('supertest');
 const express = require('express');
 const StudyPlan = require('../models/StudyPlan');
 const MarkedAttempt = require('../models/MarkedAttempt');
+const { getNextRecommendation } = require('../services/recommendationEngine');
 const router = require('../routes/studyPlan');
 
 const config = {
@@ -41,6 +44,7 @@ describe('/api/study-plan', () => {
     jest.clearAllMocks();
     StudyPlan.findOne = jest.fn().mockResolvedValue(null);
     MarkedAttempt.findOne = jest.fn().mockResolvedValue(null);
+    getNextRecommendation.mockResolvedValue(null);
   });
 
   test('returns onboarding options when no plan exists', async () => {
@@ -86,6 +90,35 @@ describe('/api/study-plan', () => {
     const response = await request(app()).get('/api/study-plan');
     expect(response.status).toBe(200);
     expect(response.body.studyPlan.weakTopics[0].topic).toBe('Monetary policy transmission');
+    expect(plan.update).toHaveBeenCalled();
+  });
+
+  test('refreshes an Economics plan from live mastery evidence', async () => {
+    const plan = row({
+      ...config,
+      weakTopics: [],
+      tasks: [],
+      sourceFingerprint: 'diagnostic:old',
+      signalSummary: '',
+      generatedAt: new Date('2026-07-01'),
+    });
+    StudyPlan.findOne.mockResolvedValue(plan);
+    getNextRecommendation.mockResolvedValue({
+      subject: 'economics',
+      reasonCode: 'review_due',
+      reason: 'This outcome is due for retrieval practice.',
+      score: 72.5,
+      outcome: { id: 'outcome-1', code: 'ECO-12-06', title: 'Evaluates economic policy effectiveness' },
+      resourcePath: '/practice?mode=due-review&outcomeId=outcome-1',
+    });
+
+    const response = await request(app()).get('/api/study-plan');
+    expect(response.status).toBe(200);
+    expect(response.body.studyPlan.weakTopics[0]).toMatchObject({
+      topic: 'Evaluates economic policy effectiveness',
+      source: 'mastery',
+    });
+    expect(response.body.studyPlan.tasks[0].resourcePath).toContain('mode=due-review');
     expect(plan.update).toHaveBeenCalled();
   });
 

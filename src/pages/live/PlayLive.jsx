@@ -596,6 +596,8 @@ export default function PlayLive() {
   const [finalLeaderboard, setFinalLeaderboard] = useState(null);
   const [connError, setConnError] = useState(null);
   const [answerError, setAnswerError] = useState(null);
+  const participantToken = participant?.token;
+  const participantCode = participant?.code;
 
   const socketRef = useRef(null);
 
@@ -615,8 +617,8 @@ export default function PlayLive() {
   };
 
   useEffect(() => {
-    if (!participant?.token) return;
-    const socket = connectParticipantSocket(participant.token);
+    if (!participantToken) return;
+    const socket = connectParticipantSocket(participantToken);
     socketRef.current = socket;
 
     socket.on('connect_error', (e) => {
@@ -625,7 +627,7 @@ export default function PlayLive() {
       // etc) — drop it so the user gets a fresh join screen instead of
       // silently retrying against a dead session forever.
       if (e.message === 'unauthorized') {
-        clearStoredParticipant(participant.code);
+        clearStoredParticipant(participantCode);
         setParticipant(null);
       }
     });
@@ -653,7 +655,7 @@ export default function PlayLive() {
     socket.on('session:ended', (d) => setFinalLeaderboard(d.leaderboard || []));
 
     return () => socket.disconnect();
-  }, [participant?.token]);
+  }, [participantCode, participantToken]);
 
   const submitAnswer = (response) => {
     if (!current || myAnswer) return;

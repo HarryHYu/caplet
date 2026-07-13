@@ -2,22 +2,22 @@ const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const { resolveEditorWorkspaceId } = require('../middleware/editorAuth');
 const { generateLessonSlides, getClient } = require('../services/lessonAI');
+const { requireAIConsent } = require('../services/privacyConsent');
+const { recordAIInteractionSafely } = require('../services/aiHistory');
+const { reserveAIQuota } = require('../middleware/aiQuota');
 
 const router = express.Router();
+const lessonGenerationQuota = reserveAIQuota({ scope: 'lesson-generation', units: 12 });
+const lessonChatQuota = reserveAIQuota({ scope: 'lesson-chat', units: 8 });
+const tutorQuota = reserveAIQuota({ scope: 'lesson-tutor', units: 1 });
 
-/**
- * The AI endpoints reuse the editor workspace concept purely for rate
- * limiting — /editor itself is public, so this no longer requires a code,
- * just resolves everyone to the shared default workspace bucket.
- */
 async function requireEditor(req, res, next) {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     req.workspaceId = await resolveEditorWorkspaceId(token);
     next();
-  } catch (e) {
-    console.error('Editor workspace resolution failed:', e);
-    res.status(500).json({ message: 'Internal server error' });
+  } catch (error) {
+    res.status(error.status || 401).json({ message: error.message || 'Editor access code required' });
   }
 }
 
@@ -40,7 +40,7 @@ function throttle(req, res, next) {
   next();
 }
 
-router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
+router.post('/generate-lesson', requireEditor, throttle, lessonGenerationQuota, async (req, res) => {
   const ALLOWED_MODELS    = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
   const FORMATTER_MODELS  = ['gpt-5.4-nano', 'gpt-5.4-mini'];
 
@@ -72,6 +72,15 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
       model,
       formatterModel,
     });
+    await recordAIInteractionSafely({
+      workspaceId: req.workspaceId,
+      feature: 'lesson_generation',
+      modelVersion: `${model} + ${formatterModel}`,
+      status: 'completed',
+      inputSummary: `${title || 'Untitled lesson'} · ${slideCount} requested slides`,
+      outputSummary: `${out.slides?.length || 0} slides generated`,
+      metadata: { slideCount: out.slides?.length || 0 },
+    });
     res.json(out);
   } catch (e) {
     const status = e.status || 502;
@@ -85,7 +94,7 @@ router.post('/generate-lesson', requireEditor, throttle, async (req, res) => {
 
 // Conversational chat: interprets a natural-language message and either
 // generates slides (action="generate") or answers the question (action="message").
-router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
+router.post('/lesson-chat', requireEditor, throttle, lessonChatQuota, async (req, res) => {
   const ALLOWED_MODELS   = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
   const FORMATTER_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini'];
   const message          = (req.body?.message ?? '').toString().trim().slice(0, 2000);
@@ -140,9 +149,26 @@ router.post('/lesson-chat', requireEditor, throttle, async (req, res) => {
       const countLine = `Required slide count: ${resolvedSlideCount} (this overrides any quantity mentioned below).`;
       const generationContent = [countLine, notes, intent_parsed.notes || message].filter(Boolean).join('\n\n');
       const out = await generateLessonSlides(generationContent, { title: lessonTitle, slideCount: resolvedSlideCount, model, formatterModel });
+      await recordAIInteractionSafely({
+        workspaceId: req.workspaceId,
+        feature: 'lesson_chat_generation',
+        modelVersion: `${model} + ${formatterModel}`,
+        status: 'completed',
+        inputSummary: message,
+        outputSummary: `${out.slides?.length || 0} slides generated`,
+        metadata: { slideCount: out.slides?.length || 0 },
+      });
       return res.json({ action: 'generate', slides: out.slides, warnings: out.warnings || [] });
     }
 
+    await recordAIInteractionSafely({
+      workspaceId: req.workspaceId,
+      feature: 'lesson_chat',
+      modelVersion: 'gpt-5.4-mini',
+      status: 'completed',
+      inputSummary: message,
+      outputSummary: intent_parsed.text || '',
+    });
     return res.json({ action: 'message', text: intent_parsed.text || '' });
   } catch (e) {
     const status = e.status || 502;
@@ -174,7 +200,7 @@ function throttleTutor(req, res, next) {
 
 // POST /api/ai/tutor  { lessonId, slide, question }
 // Returns { answer } — a concise, educational AI explanation scoped to the slide.
-router.post('/tutor', requireAuth, throttleTutor, async (req, res) => {
+router.post('/tutor', requireAuth, requireAIConsent, throttleTutor, tutorQuota, async (req, res) => {
   const question = (req.body?.question ?? '').toString().trim().slice(0, 600);
   const slide = req.body?.slide; // slide object for context
 
@@ -211,6 +237,15 @@ router.post('/tutor', requireAuth, throttleTutor, async (req, res) => {
     });
 
     const answer = completion.choices[0]?.message?.content?.trim() || '';
+    await recordAIInteractionSafely({
+      userId: req.user.id,
+      feature: 'lesson_tutor',
+      modelVersion: 'gpt-5.4-mini',
+      status: 'completed',
+      inputSummary: question,
+      outputSummary: answer,
+      metadata: { lessonId: req.body?.lessonId || null },
+    });
     res.json({ answer });
   } catch (e) {
     const status = e.status || 502;

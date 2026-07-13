@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLayout } from '../contexts/LayoutContext';
 import api from '../services/api';
+import ProductModeSwitch from './ProductModeSwitch';
+import { isProductNavItemActive, moneyNavigation } from '../config/productNavigation';
 import {
     Squares2X2Icon,
     BookOpenIcon,
@@ -19,6 +21,8 @@ import {
     SunIcon,
     MoonIcon,
     ArrowRightOnRectangleIcon,
+    ChartBarSquareIcon,
+    LockClosedIcon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -33,7 +37,7 @@ export default function Sidebar() {
     const location = useLocation();
     const { user, logout } = useAuth();
     const { isDark, toggleTheme } = useTheme();
-    const { sidebarCollapsed: collapsed, toggleSidebar, toggleNavMode } = useLayout();
+    const { sidebarCollapsed: collapsed, toggleSidebar, toggleNavMode, productMode = 'study' } = useLayout();
 
     // Badge counts are fetched here so the rail stays accurate on every page,
     // not just the dashboard. Best-effort — the rail renders fine without them.
@@ -60,16 +64,20 @@ export default function Sidebar() {
         return location.pathname === path || location.pathname.startsWith(`${path}/`);
     };
 
-    const items = [
+    const studyItems = [
         { path: '/dashboard', label: 'Dashboard', icon: Squares2X2Icon },
         { path: '/study-plan', label: 'Study Plan', icon: CalendarDaysIcon },
         { path: '/library', label: 'Library', icon: BuildingLibraryIcon },
         { path: '/courses', label: 'Curriculum', icon: BookOpenIcon },
         { path: '/classes', label: 'Classes', icon: AcademicCapIcon },
-        { path: '/fintools', label: 'Financial Tools', icon: WrenchScrewdriverIcon },
         { path: '/revision', label: 'Revision', icon: ArrowPathIcon, badge: dueCount },
         { path: '/essays', label: 'Essays', icon: DocumentTextIcon, badge: savedCount },
     ];
+
+    const moneyIcons = [Squares2X2Icon, BookOpenIcon, ChartBarSquareIcon, WrenchScrewdriverIcon, LockClosedIcon];
+    const items = productMode === 'money'
+        ? moneyNavigation.map((item, index) => ({ ...item, icon: moneyIcons[index] }))
+        : studyItems;
 
     const initials = user
         ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || user.firstName?.[0]?.toUpperCase() || 'U'
@@ -94,7 +102,7 @@ export default function Sidebar() {
             <div className="flex h-full w-full flex-col rounded-3xl bg-surface-raised p-3 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                 {/* Brand */}
                 <Link
-                    to="/dashboard"
+                    to={productMode === 'money' ? '/money' : '/dashboard'}
                     className={`flex items-center gap-3 rounded-2xl px-2 py-2 ${collapsed ? 'justify-center' : ''}`}
                 >
                     <img
@@ -109,13 +117,17 @@ export default function Sidebar() {
                     )}
                 </Link>
 
+                <ProductModeSwitch collapsed={collapsed} className="mt-3 w-full" />
+
                 <div className="my-3 border-t border-line-soft" />
 
                 {/* Primary nav */}
                 <nav className="flex flex-1 flex-col gap-1.5 overflow-y-auto">
                     {items.map((item) => {
                         const { path, label, badge } = item;
-                        const active = isActive(path);
+                        const active = productMode === 'money'
+                            ? isProductNavItemActive(item, location)
+                            : isActive(path);
                         return (
                             <Link
                                 key={path}

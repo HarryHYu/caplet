@@ -74,6 +74,16 @@ function FeedbackResult({ attempt, onNew, returnTo }) {
         </span>
       </div>
 
+      <div className={`mb-8 rounded-2xl p-5 ${attempt.markingConfidence === 'low' ? 'bg-[color:var(--block-amber)]' : 'bg-surface-soft'}`}>
+        <p className="text-xs font-bold uppercase tracking-wide text-text-dim">AI marking confidence · {attempt.markingConfidence || 'medium'}</p>
+        <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">
+          {attempt.markingConfidence === 'low'
+            ? 'Treat this estimate cautiously. It is down-weighted in mastery and a teacher can replace it with an audited human judgement.'
+            : 'This remains practice guidance rather than an official result. Your teacher can review and replace the evidence when needed.'}
+        </p>
+        {attempt.confidenceReasons?.length > 0 && <p className="mt-2 text-xs font-medium text-text-dim">{attempt.confidenceReasons.join(' ')}</p>}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div>
           <h3 className="flex items-center gap-2 text-sm font-bold text-text-primary mb-3">
@@ -322,6 +332,18 @@ export default function EconomicsMarker() {
       if (mountedRef.current) setLoading(false);
     })();
   }, [loadAttempts]);
+
+  useEffect(() => {
+    if (!active?.id) return;
+    api.logEvent?.({
+      type: 'feedback_viewed',
+      idempotencyKey: `economics-feedback:${active.id}`,
+      feature: 'economics_marker',
+      entityType: 'marked_attempt',
+      entityId: active.id,
+      metadata: { mode: active.responseType || 'written', markingMethod: 'ai_practice' },
+    });
+  }, [active?.id, active?.responseType]);
 
   const handleMarked = (attempt, improvement) => {
     setActive({ ...attempt, improvement });

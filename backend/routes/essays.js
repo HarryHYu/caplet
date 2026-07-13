@@ -18,12 +18,20 @@ const Essay = require('../models/Essay');
 const ReviewItem = require('../models/ReviewItem');
 const { requireAuth } = require('../middleware/auth');
 const { parseEssay } = require('../services/essayParser');
+const { requireAIConsent } = require('../services/privacyConsent');
+const { recordAIInteractionSafely } = require('../services/aiHistory');
+const { reserveAIQuota } = require('../middleware/aiQuota');
 
 const router = express.Router();
 router.use(requireAuth);
 
 const MAX_TITLE = 200;
 const MAX_TEXT = 100000; // generous cap for a long essay
+const MAX_AI_TEXT = 24000;
+const essayParseQuota = reserveAIQuota({
+  scope: 'essay-structure',
+  units: 6,
+});
 
 // GET /api/essays — list (omit the heavy originalText; flag whether parsed)
 router.get('/', async (req, res) => {
@@ -87,15 +95,30 @@ router.post('/', async (req, res) => {
 });
 
 // POST /api/essays/:id/parse — AI segmentation (segment & annotate only)
-router.post('/:id/parse', async (req, res) => {
+router.post('/:id/parse', requireAIConsent, essayParseQuota, async (req, res) => {
   try {
     const essay = await Essay.findOne({
       where: { id: req.params.id, userId: req.user.id },
     });
     if (!essay) return res.status(404).json({ message: 'Essay not found' });
+    if (essay.parsedStructure) return res.json({ essay, cached: true });
+    if (String(essay.originalText || '').length > MAX_AI_TEXT) {
+      return res.status(413).json({
+        message: `AI structuring supports essays up to ${MAX_AI_TEXT.toLocaleString()} characters. Shorten this copy before parsing.`,
+      });
+    }
 
     const structure = await parseEssay(essay.originalText);
     await essay.update({ parsedStructure: structure });
+    await recordAIInteractionSafely({
+      userId: req.user.id,
+      feature: 'essay_structure',
+      modelVersion: 'gpt-5.4-mini',
+      status: 'completed',
+      inputSummary: `${essay.title} · ${String(essay.originalText || '').length} characters`,
+      outputSummary: `${structure?.bodyParagraphs?.length || 0} body paragraphs structured`,
+      metadata: { essayId: essay.id },
+    });
     res.json({ essay });
   } catch (e) {
     const status = e.status || 500;

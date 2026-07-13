@@ -95,7 +95,9 @@ router.post('/register', [
   }),
   body('password').isLength({ min: 6 }),
   body('firstName').trim().isLength({ min: 1, max: 50 }),
-  body('lastName').trim().isLength({ min: 1, max: 50 })
+  body('lastName').trim().isLength({ min: 1, max: 50 }),
+  body('dateOfBirth').optional({ values: 'falsy' }).isISO8601().withMessage('Enter a valid date of birth')
+    .custom((value) => new Date(`${value}T00:00:00Z`) <= new Date()).withMessage('Date of birth cannot be in the future')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

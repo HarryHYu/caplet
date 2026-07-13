@@ -259,7 +259,7 @@ function TopicDrillResource({ resource, area }) {
         </div>
       </div>
 
-      {!reviewing ? <div className="mt-4 flex flex-wrap items-center gap-3"><button type="button" disabled={!selected || !answer.trim()} onClick={() => setReviewing(true)} className="rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review answers</button><MarkWithCapletLink draft={markerDraft({ area, resource, question: resource.practicePrompt, markValue: resource.marks, responseType: 'short_answer', studentAnswer: answer })} /></div> : <div className="mt-4 rounded-lg bg-surface-soft p-4"><ul className="grid gap-2">{resource.markingGuide.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" /><span>{item}</span></li>)}</ul><p className="mt-4 text-sm leading-relaxed text-text-muted">{resource.sampleAnswer}</p><p className="mt-3 text-sm font-semibold leading-relaxed text-text-primary">{resource.teacherMove}</p></div>}
+      {!reviewing ? <div className="mt-4 flex flex-wrap items-center gap-3"><button type="button" disabled={!selected || !answer.trim()} onClick={() => setReviewing(true)} className="rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">Review answers</button><MarkWithCapletLink draft={markerDraft({ area, resource, question: resource.practicePrompt, markValue: resource.marks, responseType: 'short_answer', studentAnswer: answer, suffix: ':practice' })} /></div> : <div className="mt-4 rounded-lg bg-surface-soft p-4"><ul className="grid gap-2">{resource.markingGuide.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-text-muted"><CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" /><span>{item}</span></li>)}</ul><p className="mt-4 text-sm leading-relaxed text-text-muted">{resource.sampleAnswer}</p><p className="mt-3 text-sm font-semibold leading-relaxed text-text-primary">{resource.teacherMove}</p></div>}
     </QuestionShell>
   );
 }
@@ -586,7 +586,7 @@ function BackLink({ to, children }) {
 
 function EconomicsHub() {
   return (
-    <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
       <div className="container-custom">
         <section className="mb-10 max-w-3xl">
           <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Caplet learning library</p>
@@ -610,7 +610,7 @@ function EconomicsHub() {
           ))}
         </section>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -622,7 +622,7 @@ const assessmentPages = [
 
 function AssessmentPage() {
   return (
-    <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
       <div className="container-custom">
         <BackLink to="/library/economics">Economics</BackLink>
         <section className="mb-8 max-w-3xl">
@@ -632,7 +632,7 @@ function AssessmentPage() {
         </section>
         <section className="grid gap-4 md:grid-cols-3">{assessmentPages.map((page) => <Link key={page.id} to={`/library/economics/assessment/${page.id}`} className="group rounded-2xl border border-line-soft bg-surface-raised p-6 transition-all hover:-translate-y-0.5 hover:border-accent"><p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">{page.eyebrow}</p><h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight group-hover:text-accent">{page.title}</h2><p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{page.body}</p><span className="mt-6 inline-flex items-center gap-1 text-sm font-extrabold text-accent">Open <ArrowRightIcon className="h-4 w-4" /></span></Link>)}</section>
       </div>
-    </main>
+    </div>
   );
 }
 

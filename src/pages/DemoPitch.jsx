@@ -1,240 +1,182 @@
-/**
- * DemoPitch — the CapletMark investor pitch + roadmap, kept as a separate,
- * scrollable section of the /demo sandbox (reachable from the demo chrome).
- * This content is bespoke to the demo (it has no real page on the site).
- */
+import { ArrowRightIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
 
-const MARK_BG = 'linear-gradient(140deg,#0b0b18 0%,#130d2e 55%,#0d1224 100%)';
-
-function Kicker({ label }) {
+function Kicker({ children }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-      <div style={{ width: 28, height: 2, background: '#6366f1', borderRadius: 2 }} />
-      <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#818cf8' }}>{label}</span>
+    <div className="mb-7 flex items-center gap-3">
+      <span className="h-0.5 w-7 rounded-full bg-accent" aria-hidden="true" />
+      <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-accent">{children}</span>
     </div>
   );
 }
 
-function Section({ children }) {
+function PitchSection({ children, className = '' }) {
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '96px 40px' }}>
-      <div style={{ maxWidth: 960, width: '100%' }}>{children}</div>
+    <section className={`flex min-h-[calc(100dvh-4rem)] items-center px-5 py-20 sm:px-8 lg:px-12 lg:py-28 ${className}`}>
+      <div className="mx-auto w-full max-w-6xl">{children}</div>
     </section>
   );
 }
 
-function Problem() {
-  const pains = [
-    { n: '01', title: 'Manual & slow', body: 'Marking is done by hand, inconsistently, across thousands of scripts every exam season.' },
-    { n: '02', title: 'AI gets it wrong', body: 'Generic models invent plausible-sounding marks with no rubric — inconsistent and untrustworthy.' },
-    { n: '03', title: 'No scalable fix', body: "The industry's answer is hiring more markers. That isn't a solution, it's a band-aid." },
-  ];
-  return (
-    <Section>
-      <Kicker label="The Problem" />
-      <div style={{ marginBottom: 48 }}>
-        <div style={{ fontSize: 100, fontWeight: 900, color: 'white', lineHeight: 1, fontFamily: 'Georgia,serif', letterSpacing: '-2px' }}>$500M</div>
-        <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.52)', marginTop: 10, maxWidth: 460, lineHeight: 1.55 }}>
-          spent on marking in <strong style={{ color: 'rgba(255,255,255,0.8)' }}>NSW alone</strong>, every single year. Teachers spend up to <strong style={{ color: 'rgba(255,255,255,0.8)' }}>40% of their working hours</strong> on assessment — not teaching.
-        </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18 }}>
-        {pains.map((p) => (
-          <div key={p.n} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '22px 22px 24px' }}>
-            <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(99,102,241,0.7)', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 14 }}>{p.n}</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'white', marginBottom: 8 }}>{p.title}</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.65 }}>{p.body}</div>
-          </div>
-        ))}
-      </div>
-    </Section>
-  );
-}
-
-function Solution() {
-  const items = ['Marking rubrics by question and year', 'Band exemplar responses (A–E)', 'Syllabus dot points mapped to criteria', 'Assessment criteria fully structured'];
-  const rubric = [
-    { band: 'Band 6', pts: '9–10', desc: 'Explains two distinct factors with precise data linkage and correct direction of effect.' },
-    { band: 'Band 5', pts: '7–8', desc: 'Explains two factors clearly with supporting reasoning, minor gaps in data use.' },
-    { band: 'Band 4', pts: '5–6', desc: 'Identifies two factors with some explanation, limited analytical depth.' },
-    { band: 'Band 3', pts: '3–4', desc: 'Identifies one factor with explanation, or two factors without clear explanation.' },
-  ];
-  return (
-    <Section>
-      <div style={{ display: 'flex', gap: 56, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 300 }}>
-          <Kicker label="The Solution" />
-          <h2 style={{ fontSize: 54, fontWeight: 900, color: 'white', lineHeight: 1.08, marginBottom: 18, fontFamily: 'Georgia,serif' }}>
-            Caplet<span style={{ color: '#818cf8' }}>Mark</span>
-          </h2>
-          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', lineHeight: 1.72, marginBottom: 32 }}>
-            A structured library of marking rubrics, exemplar responses, and syllabus dot points — the data layer AI needs to grade student work <em style={{ color: 'rgba(255,255,255,0.8)', fontStyle: 'normal', fontWeight: 600 }}>accurately, not plausibly</em>.
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
-            {items.map((item) => (
-              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-                <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(99,102,241,0.18)', border: '1.5px solid rgba(99,102,241,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#818cf8' }} />
-                </div>
-                <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ width: 330, flexShrink: 0 }}>
-          <div style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 20, padding: 24 }}>
-            <div style={{ fontSize: 10, fontFamily: 'monospace', color: 'rgba(99,102,241,0.75)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>HSC Economics — Q28b</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', marginBottom: 18, lineHeight: 1.5 }}>
-              "Explain two factors that affect Australia's current account balance." (10 marks)
-            </div>
-            <div style={{ fontSize: 10, fontFamily: 'monospace', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Marking Rubric</div>
-            {rubric.map((r, i) => (
-              <div key={r.band} style={{ display: 'flex', gap: 10, padding: '9px 0', borderBottom: i < rubric.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', alignItems: 'flex-start' }}>
-                <div style={{ background: 'rgba(99,102,241,0.2)', borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: '#a5b4fc', flexShrink: 0, whiteSpace: 'nowrap' }}>{r.band}</div>
-                <div>
-                  <div style={{ fontSize: 10, color: 'rgba(99,102,241,0.6)', fontWeight: 600, marginBottom: 3 }}>{r.pts} pts</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55 }}>{r.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-function Flow() {
-  const steps = [
-    { n: '01', label: 'Student submits', sub: 'Written response to exam question' },
-    { n: '02', label: 'Library lookup', sub: 'CapletMark retrieves rubric + exemplars' },
-    { n: '03', label: 'AI grades', sub: 'Model marks against real criteria only' },
-    { n: '04', label: 'Structured feedback', sub: 'Band, score, targeted improvement notes' },
-  ];
-  return (
-    <Section>
-      <Kicker label="How It Works" />
-      <h2 style={{ fontSize: 50, fontWeight: 900, color: 'white', lineHeight: 1.12, marginBottom: 48, fontFamily: 'Georgia,serif' }}>
-        From submission<br />to feedback in seconds
-      </h2>
-      <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, marginBottom: 36, flexWrap: 'wrap' }}>
-        {steps.flatMap((s, i) => {
-          const card = (
-            <div key={s.n} style={{ flex: 1, minWidth: 160, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '28px 20px 26px', textAlign: 'center' }}>
-              <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'rgba(99,102,241,0.7)', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 16 }}>{s.n}</div>
-              <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(99,102,241,0.16)', border: '1.5px solid rgba(99,102,241,0.35)', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#6366f1' }} />
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'white', marginBottom: 8 }}>{s.label}</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.42)', lineHeight: 1.6 }}>{s.sub}</div>
-            </div>
-          );
-          if (i < steps.length - 1) {
-            return [card, <div key={`arr-${i}`} style={{ width: 44, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(99,102,241,0.5)', fontSize: 26 }}>→</div>];
-          }
-          return [card];
-        })}
-      </div>
-      <div style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 14, padding: '18px 26px', display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#818cf8', flexShrink: 0, marginTop: 6 }} />
-        <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.68 }}>
-          <strong style={{ color: 'white' }}>The key insight:</strong> generic AI invents plausible-sounding marks because it has no rubric to work from. CapletMark ensures the model only grades against the actual marking criteria — the same document a human marker uses. That's what makes it trustworthy.
-        </p>
-      </div>
-    </Section>
-  );
-}
-
-function Market() {
-  const tiers = [
-    { label: 'NSW alone', value: '$500M', sub: 'annual marking spend, public + private' },
-    { label: 'Australia-wide', value: '$3B+', sub: 'estimated total addressable market' },
-    { label: 'Our target', value: '1%', sub: 'is already a significant, fundable business' },
-  ];
-  const moats = [
-    'Already inside schools — students and teachers use Caplet today',
-    'Data flywheel: every lesson and assessment generates richer training data',
-    'First mover: no one has built a structured marking library at this scale',
-  ];
-  return (
-    <Section>
-      <div style={{ display: 'flex', gap: 60, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 300 }}>
-          <Kicker label="The Opportunity" />
-          <h2 style={{ fontSize: 46, fontWeight: 900, color: 'white', lineHeight: 1.12, marginBottom: 36, fontFamily: 'Georgia,serif' }}>
-            A massive market<br />nobody has solved
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {tiers.map((t) => (
-              <div key={t.label} style={{ display: 'flex', alignItems: 'baseline', gap: 22 }}>
-                <div style={{ fontSize: 52, fontWeight: 900, color: '#a5b4fc', minWidth: 120, fontFamily: 'Georgia,serif', letterSpacing: '-1px' }}>{t.value}</div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>{t.label}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{t.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ width: 300, flexShrink: 0 }}>
-          <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.22)', borderRadius: 22, padding: '28px 24px' }}>
-            <div style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color: '#818cf8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 22 }}>Why Caplet wins</div>
-            {moats.map((m, i) => (
-              <div key={i} style={{ display: 'flex', gap: 14, marginBottom: 20, alignItems: 'flex-start' }}>
-                <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(99,102,241,0.22)', border: '1.5px solid rgba(99,102,241,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#a5b4fc' }}>{i + 1}</span>
-                </div>
-                <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65 }}>{m}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-const FUTURE_ITEMS = [
-  { label: 'AI Essay Marking', desc: 'Students write long-form answers; a model trained against real marking rubrics grades and returns targeted, specific feedback.' },
-  { label: 'Adaptive Practice Paths', desc: 'Difficulty adjusts per student based on their quiz history. Everyone works at the level that pushes them exactly enough.' },
-  { label: 'Shared Currency, Platform-wide', desc: 'One economy that works across every lesson, game, and activity on Caplet — earn it anywhere, spend it anywhere.' },
-  { label: 'Assessment & Certification', desc: 'Formal assessments with custom rubrics, auto-generated certificates, and per-school progress reporting dashboards.' },
-  { label: 'Open Platform & API', desc: 'Caplet becomes infrastructure — publishers, developers, and institutions build on top of it for any subject, any audience, anywhere.' },
+const pains = [
+  ['01', 'Manual & slow', 'Marking is done by hand, inconsistently, across thousands of scripts every exam season.'],
+  ['02', 'AI gets it wrong', 'Generic models invent plausible-sounding marks with no rubric — inconsistent and untrustworthy.'],
+  ['03', 'No scalable fix', "The industry's answer is hiring more markers. That isn't a solution, it's a band-aid."],
 ];
 
-function Roadmap() {
-  return (
-    <Section>
-      <Kicker label="Roadmap" />
-      <h2 style={{ fontSize: 48, fontWeight: 900, color: 'white', lineHeight: 1.12, marginBottom: 14, fontFamily: 'Georgia,serif' }}>
-        The infrastructure<br />for how people learn
-      </h2>
-      <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, maxWidth: 520, marginBottom: 40 }}>
-        Caplet v1 is live. Here's what's being built next — a platform open enough for anyone to build on, powerful enough to replace every tool a school currently uses.
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {FUTURE_ITEMS.map((p) => (
-          <div key={p.label} style={{ display: 'flex', gap: 20, alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 20 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#818cf8', flexShrink: 0, marginTop: 8 }} />
-            <div>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'white' }}>{p.label}</p>
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>{p.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Section>
-  );
-}
+const rubric = [
+  ['Band 6', '9–10', 'Explains two distinct factors with precise data linkage and correct direction of effect.'],
+  ['Band 5', '7–8', 'Explains two factors clearly with supporting reasoning, minor gaps in data use.'],
+  ['Band 4', '5–6', 'Identifies two factors with some explanation, limited analytical depth.'],
+  ['Band 3', '3–4', 'Identifies one factor with explanation, or two factors without clear explanation.'],
+];
+
+const flow = [
+  ['01', 'Student submits', 'Written response to exam question'],
+  ['02', 'Library lookup', 'CapletMark retrieves rubric + exemplars'],
+  ['03', 'AI grades', 'Model marks against real criteria only'],
+  ['04', 'Structured feedback', 'Band, score, targeted improvement notes'],
+];
+
+const futureItems = [
+  ['AI Essay Marking', 'Students write long-form answers; a model trained against real marking rubrics grades and returns targeted, specific feedback.'],
+  ['Adaptive Practice Paths', 'Difficulty adjusts per student based on their quiz history. Everyone works at the level that pushes them exactly enough.'],
+  ['Shared Currency, Platform-wide', 'One economy that works across every lesson, game, and activity on Caplet — earn it anywhere, spend it anywhere.'],
+  ['Assessment & Certification', 'Formal assessments with custom rubrics, auto-generated certificates, and per-school progress reporting dashboards.'],
+  ['Open Platform & API', 'Caplet becomes infrastructure — publishers, developers, and institutions build on top of it for any subject, any audience, anywhere.'],
+];
 
 export default function DemoPitch() {
   return (
-    <div style={{ background: MARK_BG, color: 'white' }}>
-      <Problem />
-      <Solution />
-      <Flow />
-      <Market />
-      <Roadmap />
-    </div>
+    <main className="overflow-x-hidden bg-text-primary pt-14 text-surface-body md:pt-16">
+      <PitchSection>
+        <Kicker>The Problem</Kicker>
+        <div className="max-w-3xl">
+          <h1 className="font-serif text-[clamp(5rem,18vw,9rem)] font-bold leading-[0.8] tracking-[-0.06em]">$500M</h1>
+          <p className="mt-8 max-w-xl text-lg font-medium leading-relaxed text-surface-body/60 md:text-xl">
+            spent on marking in <strong className="text-surface-body/90">NSW alone</strong>, every single year. Teachers spend up to <strong className="text-surface-body/90">40% of their working hours</strong> on assessment — not teaching.
+          </p>
+        </div>
+        <div className="mt-14 grid gap-4 md:grid-cols-3">
+          {pains.map(([number, title, description]) => (
+            <article key={number} className="rounded-3xl border border-line-soft/20 bg-surface-raised/5 p-6 md:p-7">
+              <p className="font-mono text-xs font-bold tracking-widest text-accent">{number}</p>
+              <h2 className="mt-7 text-lg font-extrabold text-surface-body">{title}</h2>
+              <p className="mt-3 text-sm font-medium leading-relaxed text-surface-body/50">{description}</p>
+            </article>
+          ))}
+        </div>
+      </PitchSection>
+
+      <PitchSection className="border-t border-line-soft/10">
+        <div className="grid items-center gap-14 lg:grid-cols-[1fr_25rem]">
+          <div>
+            <Kicker>The Solution</Kicker>
+            <h2 className="font-serif text-5xl font-bold leading-none tracking-tight sm:text-7xl">Caplet<span className="text-accent">Mark</span></h2>
+            <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-surface-body/60">
+              A structured library of marking rubrics, exemplar responses, and syllabus dot points — the data layer AI needs to grade student work <strong className="text-surface-body/90">accurately, not plausibly</strong>.
+            </p>
+            <ul className="mt-9 space-y-4">
+              {['Marking rubrics by question and year', 'Band exemplar responses (A–E)', 'Syllabus dot points mapped to criteria', 'Assessment criteria fully structured'].map((item) => (
+                <li key={item} className="flex items-center gap-3 text-sm font-bold text-surface-body/70">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-accent/50 bg-accent/15 text-accent"><CheckIcon className="h-3.5 w-3.5" /></span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <aside className="min-w-0 rounded-3xl border border-accent/25 bg-accent/10 p-5 sm:p-7">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-accent">HSC Economics — Q28b</p>
+            <p className="mt-3 text-sm font-bold leading-relaxed text-surface-body/85">“Explain two factors that affect Australia&apos;s current account balance.” (10 marks)</p>
+            <p className="mt-7 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-surface-body/40">Marking rubric</p>
+            <div className="mt-2 divide-y divide-line-soft/10">
+              {rubric.map(([band, points, description]) => (
+                <div key={band} className="grid grid-cols-[4.5rem_1fr] gap-3 py-4">
+                  <div><span className="rounded-lg bg-accent/20 px-2 py-1 text-[10px] font-extrabold text-accent">{band}</span><p className="mt-2 text-[10px] font-bold text-accent/70">{points} pts</p></div>
+                  <p className="text-xs font-medium leading-relaxed text-surface-body/55">{description}</p>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+      </PitchSection>
+
+      <PitchSection className="border-t border-line-soft/10">
+        <Kicker>How It Works</Kicker>
+        <h2 className="max-w-3xl font-serif text-5xl font-bold leading-[1.02] tracking-tight sm:text-7xl">From submission to feedback in seconds</h2>
+        <ol className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {flow.map(([number, title, description]) => (
+            <li key={number} className="rounded-3xl border border-line-soft/20 bg-surface-raised/5 p-6 text-left">
+              <p className="font-mono text-xs font-bold tracking-widest text-accent">{number}</p>
+              <span className="mt-7 block h-10 w-10 rounded-full border border-accent/40 bg-accent/20" aria-hidden="true" />
+              <h3 className="mt-6 text-base font-extrabold">{title}</h3>
+              <p className="mt-2 text-sm font-medium leading-relaxed text-surface-body/50">{description}</p>
+            </li>
+          ))}
+        </ol>
+        <div className="mt-8 rounded-2xl border border-accent/25 bg-accent/10 p-5 text-sm font-medium leading-relaxed text-surface-body/70 sm:p-6">
+          <strong className="text-surface-body">The key insight:</strong> generic AI invents plausible-sounding marks because it has no rubric to work from. CapletMark ensures the model only grades against the actual marking criteria — the same document a human marker uses. That&apos;s what makes it trustworthy.
+        </div>
+      </PitchSection>
+
+      <PitchSection className="border-t border-line-soft/10">
+        <div className="grid items-start gap-14 lg:grid-cols-[1fr_23rem]">
+          <div>
+            <Kicker>The Opportunity</Kicker>
+            <h2 className="max-w-3xl font-serif text-5xl font-bold leading-[1.02] tracking-tight sm:text-7xl">A massive market nobody has solved</h2>
+            <div className="mt-10 space-y-7">
+              {[
+                ['$500M', 'NSW alone', 'annual marking spend, public + private'],
+                ['$3B+', 'Australia-wide', 'estimated total addressable market'],
+                ['1%', 'Our target', 'is already a significant, fundable business'],
+              ].map(([value, label, detail]) => (
+                <div key={label} className="grid gap-2 sm:grid-cols-[9rem_1fr] sm:items-baseline sm:gap-6">
+                  <p className="font-serif text-5xl font-bold tracking-tight text-accent">{value}</p>
+                  <div><h3 className="font-extrabold">{label}</h3><p className="mt-1 text-sm font-medium text-surface-body/45">{detail}</p></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <aside className="rounded-3xl border border-accent/25 bg-accent/10 p-7">
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-accent">Why Caplet wins</p>
+            <ol className="mt-7 space-y-6">
+              {[
+                'Already inside schools — students and teachers use Caplet today',
+                'Data flywheel: every lesson and assessment generates richer training data',
+                'First mover: no one has built a structured marking library at this scale',
+              ].map((item, index) => (
+                <li key={item} className="flex gap-4 text-sm font-medium leading-relaxed text-surface-body/60"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent/25 text-xs font-extrabold text-accent">{index + 1}</span>{item}</li>
+              ))}
+            </ol>
+          </aside>
+        </div>
+      </PitchSection>
+
+      <PitchSection className="border-t border-line-soft/10">
+        <div className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <Kicker>Roadmap</Kicker>
+            <h2 className="font-serif text-5xl font-bold leading-[1.02] tracking-tight sm:text-7xl">The infrastructure for how people learn</h2>
+            <p className="mt-6 text-base font-medium leading-relaxed text-surface-body/50">Caplet v1 is live. Here&apos;s what&apos;s being built next — a platform open enough for anyone to build on, powerful enough to replace every tool a school currently uses.</p>
+          </div>
+          <div className="divide-y divide-line-soft/15">
+            {futureItems.map(([title, description]) => (
+              <article key={title} className="grid gap-2 py-5 first:pt-0 sm:grid-cols-[12rem_1fr] sm:gap-6">
+                <h3 className="font-extrabold text-surface-body">{title}</h3>
+                <p className="text-sm font-medium leading-relaxed text-surface-body/50">{description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-20 rounded-[2rem] border border-accent/30 bg-accent/10 p-7 sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
+          <div><p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-accent">See the product</p><h2 className="mt-3 font-serif text-3xl font-bold sm:text-5xl">Follow the complete school workflow.</h2></div>
+          <div className="mt-7 flex flex-wrap gap-3 lg:mt-0 lg:shrink-0">
+            <Link to="/demo" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-extrabold text-white">Open Demo <ArrowRightIcon className="h-4 w-4" /></Link>
+            <Link to="/contact" className="inline-flex min-h-11 items-center rounded-xl border border-line-soft/30 px-5 text-sm font-extrabold text-surface-body">Contact us</Link>
+          </div>
+        </div>
+      </PitchSection>
+    </main>
   );
 }

@@ -6,7 +6,7 @@ jest.mock('../services/essayParser');
 // Bypass real JWT auth: inject a fixed user.
 jest.mock('../middleware/auth', () => ({
   requireAuth: (req, _res, next) => {
-    req.user = { id: 'test-user-1' };
+    req.user = { id: 'test-user-1', dateOfBirth: '1990-01-01' };
     next();
   },
 }));

@@ -14,6 +14,9 @@ export const useLayout = () => {
 
 const NAV_MODE_KEY = 'caplet:nav-mode';
 const COLLAPSED_KEY = 'caplet:dashboard-sidebar-collapsed';
+const PRODUCT_MODE_KEY = 'caplet:product-mode';
+const LAST_STUDY_ROUTE_KEY = 'caplet:last-study-route';
+const LAST_MONEY_ROUTE_KEY = 'caplet:last-money-route';
 
 /**
  * Owns the app's navigation chrome preference: a single global choice between
@@ -39,6 +42,30 @@ export const LayoutProvider = ({ children }) => {
     }
   });
 
+  const [productMode, setProductMode] = useState(() => {
+    try {
+      return localStorage.getItem(PRODUCT_MODE_KEY) === 'money' ? 'money' : 'study';
+    } catch {
+      return 'study';
+    }
+  });
+
+  const [lastStudyRoute, setLastStudyRoute] = useState(() => {
+    try {
+      return localStorage.getItem(LAST_STUDY_ROUTE_KEY) || '/dashboard';
+    } catch {
+      return '/dashboard';
+    }
+  });
+
+  const [lastMoneyRoute, setLastMoneyRoute] = useState(() => {
+    try {
+      return localStorage.getItem(LAST_MONEY_ROUTE_KEY) || '/money';
+    } catch {
+      return '/money';
+    }
+  });
+
   useEffect(() => {
     try {
       localStorage.setItem(NAV_MODE_KEY, navMode);
@@ -55,6 +82,30 @@ export const LayoutProvider = ({ children }) => {
     }
   }, [sidebarCollapsed]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(PRODUCT_MODE_KEY, productMode);
+    } catch {
+      // Non-fatal: the current route still determines the active mode.
+    }
+  }, [productMode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LAST_STUDY_ROUTE_KEY, lastStudyRoute);
+    } catch {
+      // Non-fatal: fall back to the Study overview.
+    }
+  }, [lastStudyRoute]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LAST_MONEY_ROUTE_KEY, lastMoneyRoute);
+    } catch {
+      // Non-fatal: fall back to the Money overview.
+    }
+  }, [lastMoneyRoute]);
+
   const toggleNavMode = useCallback(
     () => setNavMode((m) => (m === 'vertical' ? 'horizontal' : 'vertical')),
     []
@@ -62,9 +113,25 @@ export const LayoutProvider = ({ children }) => {
 
   const toggleSidebar = useCallback(() => setSidebarCollapsed((c) => !c), []);
 
+  const rememberProductRoute = useCallback((mode, route) => {
+    if (!route || typeof route !== 'string') return;
+    if (mode === 'money') setLastMoneyRoute(route);
+    if (mode === 'study') setLastStudyRoute(route);
+  }, []);
+
   return (
     <LayoutContext.Provider
-      value={{ navMode, toggleNavMode, sidebarCollapsed, toggleSidebar }}
+      value={{
+        navMode,
+        toggleNavMode,
+        sidebarCollapsed,
+        toggleSidebar,
+        productMode,
+        setProductMode,
+        lastStudyRoute,
+        lastMoneyRoute,
+        rememberProductRoute,
+      }}
     >
       {children}
     </LayoutContext.Provider>

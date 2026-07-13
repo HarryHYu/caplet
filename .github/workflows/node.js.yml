@@ -26,6 +26,64 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+    - name: Install frontend dependencies
+      run: npm ci
+    - name: Lint the whole repository
+      run: npm run lint
+    - name: Test frontend
+      run: npm test
+    - name: Build frontend
+      run: npm run build
+    - name: Install backend dependencies
+      working-directory: backend
+      run: npm ci
+    - name: Test backend
+      working-directory: backend
+      run: npm test -- --runInBand
+    - name: Rehearse every migration up and down
+      working-directory: backend
+      run: npm run migrations:check
+    - name: Run live AI marker quality evaluation when configured
+      if: matrix.node-version == '22.x'
+      working-directory: backend
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: |
+        if [ -n "$OPENAI_API_KEY" ]; then
+          npm run evaluate:marker
+        else
+          echo "OPENAI_API_KEY not configured; deterministic marker-evaluation tests already ran in Jest."
+        fi
+
+  postgres-migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: caplet_migration_check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d caplet_migration_check"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+      - name: Rehearse every migration on PostgreSQL
+        working-directory: backend
+        env:
+          MIGRATION_CHECK_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/caplet_migration_check
+        run: npm run migrations:check

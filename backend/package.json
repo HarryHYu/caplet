@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'No build step required for Node.js'",
-    "test": "jest"
+    "test": "jest",
+    "migrations:check": "node scripts/check-migrations.js",
+    "evaluate:marker": "node scripts/evaluate-economics-marker.js"
   },
   "jest": {
     "testEnvironment": "node",
@@ -34,6 +36,7 @@
     "morgan": "^1.10.1",
     "openai": "^6.9.1",
     "pg": "^8.16.3",
+    "redis": "^5.12.1",
     "sequelize": "^6.37.7",
     "socket.io": "^4.8.3",
     "sqlite3": "^5.1.7",

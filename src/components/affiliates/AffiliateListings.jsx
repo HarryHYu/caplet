@@ -57,7 +57,7 @@ function ListingCard({ listing, type }) {
     api.logEvent({
       type: 'listing_clicked',
       entityType: 'affiliate',
-      entityId: listing.id ?? url,
+      entityId: listing.id ?? `${source || 'listing'}:${type}`,
       metadata: { listingType: type, source, price: priceNum },
     });
   };

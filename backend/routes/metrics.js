@@ -1,6 +1,7 @@
 const express = require('express');
 const { Op } = require('sequelize');
 const { requireAdmin } = require('../middleware/auth');
+const { buildLearningAnalytics } = require('../services/learningAnalytics');
 const {
   sequelize,
   User,
@@ -15,6 +16,10 @@ const {
   AssignmentSubmission,
   SavedSlide,
   ChatMessage,
+  ProductEvent,
+  MasteryState,
+  PracticeSession,
+  UserPrivacyPreference,
 } = require('../models');
 
 const router = express.Router();
@@ -136,6 +141,15 @@ router.get('/', requireAdmin, async (req, res) => {
       title: coursesById[c.courseId] || 'Unknown',
       completions: c.completions,
     }));
+    const learning = await buildLearningAnalytics({
+      now,
+      sequelize,
+      ProductEvent,
+      MasteryState,
+      PracticeSession,
+      User,
+      UserPrivacyPreference,
+    });
 
     res.json({
       generatedAt: now.toISOString(),
@@ -177,6 +191,7 @@ router.get('/', requireAdmin, async (req, res) => {
         totalResponses: surveyTotal,
         averageConfidence: parseFloat(surveyConfidence),
       },
+      learning,
       topCourses,
     });
   } catch (error) {

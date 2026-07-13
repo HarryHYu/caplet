@@ -7,10 +7,18 @@
     {
       "source": "/index.html",
       "headers": [{"key": "Cache-Control", "value": "no-cache, no-store, must-revalidate"}]
+    },
+    {
+      "source": "/guardian-consent/(.*)",
+      "headers": [
+        {"key": "Cache-Control", "value": "no-cache, no-store, must-revalidate"},
+        {"key": "Referrer-Policy", "value": "no-referrer"},
+        {"key": "X-Robots-Tag", "value": "noindex, nofollow"}
+      ]
     }
   ],
   "env": {
-    "VITE_API_URL": "https://caplet-production.up.railway.app",
+    "VITE_API_BASE_URL": "https://caplet-production.up.railway.app/api",
     "VITE_GOOGLE_CLIENT_ID": "392719147746-htpi2dg4gr5sn76sef30objnc7svj7he.apps.googleusercontent.com"
   }
 }

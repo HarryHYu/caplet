@@ -19,7 +19,7 @@ router.use(requireAuth);
 
 // Kinds of reviewable items the scheduler currently accepts. Extending this set
 // is the only change needed to schedule a new kind of item.
-const ALLOWED_ITEM_TYPES = new Set(['savedSlide', 'essayParagraph', 'quote']);
+const ALLOWED_ITEM_TYPES = new Set(['savedSlide', 'essayParagraph', 'quote', 'outcome']);
 
 // GET /api/review/due[?itemType=savedSlide]
 // Returns the user's review items that are due now, soonest first.
@@ -84,7 +84,29 @@ router.post('/submit', async (req, res) => {
       lastRecall: normalizeRecall(normalized),
     });
 
-    res.status(created ? 201 : 200).json({ reviewItem: item });
+    let mastery = null;
+    if (itemType === 'outcome') {
+      try {
+        const { recordEvidenceForOutcomes } = require('../services/learningEvidenceService');
+        const [result] = await recordEvidenceForOutcomes({
+          idempotencyKey: `review:${item.id}:${now.toISOString()}`,
+          userId: req.user.id,
+          outcomeIds: [itemId],
+          sourceType: 'spaced_review',
+          sourceId: item.id,
+          score: normalized === 'pass' ? 1 : 0,
+          maxScore: 1,
+          assessmentType: 'due-review',
+          markingMethod: 'deterministic',
+          occurredAt: now,
+        });
+        mastery = result?.mastery || null;
+      } catch (evidenceError) {
+        console.error('Review mastery evidence error:', evidenceError.message);
+      }
+    }
+
+    res.status(created ? 201 : 200).json({ reviewItem: item, mastery });
   } catch (e) {
     console.error('Submit review error:', e);
     res.status(500).json({ message: 'Internal server error' });

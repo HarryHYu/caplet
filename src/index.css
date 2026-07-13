@@ -38,7 +38,7 @@
 
   --text-primary: #1C1A16;
   --text-muted: #756F63;
-  --text-dim: #ABA391;
+  --text-dim: #6F685C;
   --text-contrast: #F8F5EF;
 
   /* Lines — warm and soft, so outlines recede */
@@ -153,13 +153,13 @@
 
   --text-primary: #F2EEE4;
   --text-muted: #B4AD9E;
-  --text-dim: #7C766A;
+  --text-dim: #AAA294;
   --text-contrast: #141413;
 
   --line-soft: #322F2A;
   --line-strong: #F2EEE4;
 
-  --accent: #2b76e2;
+  --accent: #5B9BF0;
   --accent-strong: #498ff5;
   --accent-soft: rgba(43, 118, 226, 0.15);
 
@@ -288,6 +288,11 @@
     overflow-x: hidden;
   }
 
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--accent) 72%, white);
+    outline-offset: 3px;
+  }
+
   h1,
   h2,
   h3,
@@ -311,6 +316,14 @@
 }
 
 @layer components {
+  .skip-link {
+    @apply fixed left-4 top-3 z-[100] -translate-y-24 rounded-xl bg-surface-inverse px-4 py-3 text-sm font-bold text-text-contrast shadow-xl transition-transform;
+  }
+
+  .skip-link:focus {
+    @apply translate-y-0;
+  }
+
   .container-custom {
     @apply max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20;
   }
@@ -702,4 +715,3 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
   .animate-bounce { animation: none !important; }
   html { scroll-behavior: auto !important; }
 }
-

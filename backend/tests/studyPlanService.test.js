@@ -3,6 +3,7 @@ const {
   normalizeConfig,
   validateConfig,
   markerSignal,
+  recommendationSignal,
   generatePlan
 } = require('../services/studyPlanService');
 
@@ -88,5 +89,24 @@ describe('studyPlanService', () => {
       resourceLabel: 'Retry the linked Economics activity',
       resourcePath: '/library/economics/focus/year-12-economic-management?resource=eco12-management-sa-1',
     });
+  });
+
+  test('prioritizes a live mastery recommendation in the weekly plan', () => {
+    const recommendation = {
+      subject: 'economics',
+      reasonCode: 'weak_outcome',
+      reason: 'Recent evidence shows this outcome needs reinforcement.',
+      score: 64.25,
+      outcome: { id: 'outcome-12-08', code: 'ECO-12-08', title: 'Economic data analysis' },
+      resourcePath: '/practice?mode=weak-topic&outcomeId=outcome-12-08',
+    };
+    const plan = generatePlan(validConfig, { recommendation, now: new Date('2026-07-10T03:00:00Z') });
+    expect(recommendationSignal(recommendation).fingerprint).toContain('outcome-12-08');
+    expect(plan.weakTopics[0]).toMatchObject({ topic: 'Economic data analysis', source: 'mastery' });
+    expect(plan.tasks[0]).toMatchObject({
+      resourceLabel: 'Start adaptive practice',
+      resourcePath: '/practice?mode=weak-topic&outcomeId=outcome-12-08',
+    });
+    expect(plan.signalSummary).toContain('live Economics mastery evidence');
   });
 });
