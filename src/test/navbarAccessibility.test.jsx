@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../contexts/AuthContext', () => ({
@@ -26,26 +25,16 @@ import Navbar from '../components/Navbar';
 afterEach(() => cleanup());
 
 describe('Navbar accessibility', () => {
-  it('keeps core destinations visible and exposes secondary navigation', async () => {
-    const user = userEvent.setup();
+  it('keeps the primary study navigation intentionally small', () => {
     render(<MemoryRouter initialEntries={['/dashboard']}><Navbar /></MemoryRouter>);
 
     expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Library' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Practice' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Classes' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Try' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Practice' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Classes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'More' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Study' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Money' })).toHaveAttribute('aria-pressed', 'false');
-
-    const more = screen.getByRole('button', { name: 'More' });
-    await user.click(more);
-    expect(more).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('link', { name: 'Study Plan' })).toBeInTheDocument();
-
-    await user.keyboard('{Escape}');
-    expect(more).toHaveAttribute('aria-expanded', 'false');
-    expect(more).toHaveFocus();
   });
 
   it('uses accessible labels and expanded state for icon controls', () => {

@@ -18,6 +18,7 @@ import {
     ClipboardDocumentCheckIcon,
     ClockIcon,
     SparklesIcon,
+    WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
@@ -136,6 +137,12 @@ export default function Dashboard() {
         mode: nextRecommendation?.mode || 'diagnostic',
         ...(nextRecommendation?.outcome?.id ? { outcomeId: nextRecommendation.outcome.id } : {}),
     }).toString()}`;
+    const quickActions = [
+        { path: '/practice', label: 'Practice', description: 'Work through a focused question set.', icon: ArrowPathIcon, block: 'block-blue' },
+        { path: '/mastery', label: 'Mastery', description: 'See what to strengthen next.', icon: CheckCircleIcon, block: 'block-green' },
+        { path: '/courses', label: 'Curriculum', description: 'Browse courses and lessons.', icon: BookOpenIcon, block: 'block-cream' },
+        { path: '/edutools', label: 'Education tools', description: 'Open revision, essays, and more.', icon: WrenchScrewdriverIcon, block: 'block-amber' },
+    ];
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -300,6 +307,36 @@ export default function Dashboard() {
                         </div>
                     ))}
                 </div>
+
+                <section aria-labelledby="dashboard-quick-actions" className="mb-20 reveal">
+                    <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <span className="font-hand text-lg text-blue -rotate-2 inline-block">your workspace</span>
+                            <h2 id="dashboard-quick-actions" className="mt-1 font-display text-3xl font-extrabold tracking-tight text-text-primary md:text-4xl">Jump back in.</h2>
+                        </div>
+                        <p className="max-w-md text-sm font-medium leading-relaxed text-text-muted">Your focused study tools live here, so the main navigation can stay calm.</p>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        {quickActions.map((action) => (
+                            <Link
+                                key={action.path}
+                                to={action.path}
+                                className={`group rounded-2xl ${action.block} p-5 transition-transform duration-200 hover:-translate-y-1`}
+                            >
+                                <span className="grid h-10 w-10 place-items-center rounded-xl bg-surface-raised text-accent">
+                                    <action.icon className="h-5 w-5" aria-hidden="true" />
+                                </span>
+                                <div className="mt-5 flex items-end justify-between gap-3">
+                                    <div>
+                                        <h3 className="text-sm font-extrabold text-text-primary group-hover:text-accent">{action.label}</h3>
+                                        <p className="mt-1 text-xs font-medium leading-relaxed text-text-muted">{action.description}</p>
+                                    </div>
+                                    <ArrowRightIcon className="h-4 w-4 shrink-0 text-text-muted transition-transform group-hover:translate-x-1 group-hover:text-accent" aria-hidden="true" />
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
                     {/* Main Feed */}

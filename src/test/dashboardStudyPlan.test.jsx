@@ -59,4 +59,16 @@ describe('Dashboard study plan handoff', () => {
     expect(screen.getByText('Learn: Macroeconomic management')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Open plan/i })).toHaveAttribute('href', '/study-plan');
   });
+
+  it('keeps secondary study tools accessible from the dashboard', async () => {
+    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+
+    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+
+    expect(await screen.findByRole('heading', { name: 'Jump back in.' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Practice.*focused question set/i })).toHaveAttribute('href', '/practice');
+    expect(screen.getByRole('link', { name: /Mastery.*strengthen next/i })).toHaveAttribute('href', '/mastery');
+    expect(screen.getByRole('link', { name: /Curriculum.*courses and lessons/i })).toHaveAttribute('href', '/courses');
+    expect(screen.getByRole('link', { name: /Education tools.*revision, essays/i })).toHaveAttribute('href', '/edutools');
+  });
 });

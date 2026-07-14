@@ -12,7 +12,6 @@ import { isProductNavItemActive, moneyNavigation } from '../config/productNaviga
 const Navbar = ({ mobileOnly = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showNavMenu, setShowNavMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
@@ -21,15 +20,12 @@ const Navbar = ({ mobileOnly = false }) => {
   const { toggleNavMode, productMode = 'study' } = useLayout();
   const effectiveProductMode = productMode;
   const menuRef = useRef(null);
-  const navMenuRef = useRef(null);
   const userButtonRef = useRef(null);
-  const navButtonRef = useRef(null);
   const mobileButtonRef = useRef(null);
 
   useEffect(() => {
     setIsOpen(false);
     setShowUserMenu(false);
-    setShowNavMenu(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -43,9 +39,6 @@ const Navbar = ({ mobileOnly = false }) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowUserMenu(false);
       }
-      if (navMenuRef.current && !navMenuRef.current.contains(e.target)) {
-        setShowNavMenu(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -56,14 +49,12 @@ const Navbar = ({ mobileOnly = false }) => {
       if (event.key !== 'Escape') return;
       if (isOpen) mobileButtonRef.current?.focus();
       else if (showUserMenu) userButtonRef.current?.focus();
-      else if (showNavMenu) navButtonRef.current?.focus();
       setShowUserMenu(false);
-      setShowNavMenu(false);
       setIsOpen(false);
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, showNavMenu, showUserMenu]);
+  }, [isOpen, showUserMenu]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -75,24 +66,6 @@ const Navbar = ({ mobileOnly = false }) => {
   const studyCoreItems = [
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
     { path: '/library', label: 'Library' },
-    { path: '/practice', label: 'Practice', privateOnly: true },
-    { path: '/classes', label: 'Classes', privateOnly: true, tourId: 'nav-academy' },
-  ];
-
-  const studyMoreItems = [
-    { path: '/study-plan', label: 'Study Plan', privateOnly: true },
-    { path: '/revision', label: 'Revision', privateOnly: true },
-    { path: '/essays', label: 'Essays', privateOnly: true },
-    { path: '/mastery', label: 'Mastery', privateOnly: true },
-    { path: '/courses', label: 'Curriculum', tourId: 'nav-curriculum' },
-    { path: '/edutools', label: 'Education Tools', tourId: 'nav-edutools' },
-  ];
-
-  // Things a visitor can "try" without picking a section — grouped into their own
-  // toggle so the top bar stays uncluttered.
-  const tryItems = [
-    { path: '/demo', label: 'Demo' },
-    { path: '/play', label: 'Caplet Live' },
   ];
 
   const visibleItems = (items) => items.filter((item) => {
@@ -101,13 +74,6 @@ const Navbar = ({ mobileOnly = false }) => {
     return !item.privateOnly;
   });
   const visibleCoreItems = effectiveProductMode === 'money' ? visibleItems(moneyNavigation) : visibleItems(studyCoreItems);
-  const visibleMoreItems = effectiveProductMode === 'money' ? [] : visibleItems(studyMoreItems);
-  const visibleTryItems = effectiveProductMode === 'study' ? visibleItems(tryItems) : [];
-  const moreGroups = [
-    { label: 'Study tools', items: visibleMoreItems },
-    { label: 'Explore', items: visibleTryItems },
-  ].filter((group) => group.items.length > 0);
-  const moreItems = moreGroups.flatMap((group) => group.items);
 
   const homePath = effectiveProductMode === 'money' ? '/money' : isAuthenticated ? '/dashboard' : '/';
   const isHome = location.pathname === '/';
@@ -118,7 +84,6 @@ const Navbar = ({ mobileOnly = false }) => {
   const isItemActive = (item) => effectiveProductMode === 'money'
     ? isProductNavItemActive(item, location)
     : isActive(item.path);
-  const hasMoreActiveItem = moreItems.some((item) => isItemActive(item));
 
   const hidePaths = ['/login', '/register', '/play'];
   if (hidePaths.includes(location.pathname)) return null;
@@ -160,7 +125,7 @@ const Navbar = ({ mobileOnly = false }) => {
           {/* Right cluster — folded nav toggles pinned to the far right, then actions */}
           <div className="flex items-center gap-2 md:gap-3">
 
-          {/* Desktop nav — four anchors stay visible; secondary areas use one disclosure. */}
+          {/* Desktop nav — keep the global study chrome intentionally small. */}
           <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-1">
             {visibleCoreItems.map((item) => (
               <Link
@@ -176,51 +141,6 @@ const Navbar = ({ mobileOnly = false }) => {
               </Link>
             ))}
 
-            {/* More menu keeps planning, review, curriculum, and public extras together. */}
-            {moreItems.length > 0 && <div className="relative" ref={navMenuRef}>
-              <button
-                ref={navButtonRef}
-                type="button"
-                onClick={() => setShowNavMenu((v) => !v)}
-                aria-expanded={showNavMenu}
-                aria-haspopup="true"
-                aria-controls="more-navigation"
-                className={`min-h-11 flex items-center gap-2 px-3 rounded-lg text-sm font-bold tracking-[0.06em] whitespace-nowrap transition-all duration-200 ${
-                  showNavMenu || hasMoreActiveItem
-                    ? 'text-accent bg-accent-soft'
-                    : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
-                }`}
-              >
-                More
-                <span className={`text-base leading-none transition-transform duration-200 ${showNavMenu ? 'rotate-90' : ''}`} aria-hidden="true">›</span>
-              </button>
-
-              {showNavMenu && (
-                <div id="more-navigation" className="absolute top-full left-0 mt-2 w-60 overflow-hidden rounded-2xl border border-line-soft bg-surface-raised p-2 shadow-[0_18px_42px_-20px_rgba(20,20,18,0.35)] animate-in fade-in slide-in-from-top-1 duration-150">
-                  {moreGroups.map((group, groupIndex) => (
-                    <div key={group.label} className={groupIndex > 0 ? 'mt-2 border-t border-line-soft pt-2' : ''}>
-                      <p className="px-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-text-dim">{group.label}</p>
-                      {group.items.map((item) => {
-                        const active = isItemActive(item);
-                        return (
-                          <Link
-                            key={item.path}
-                            to={item.path}
-                            {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                            className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold tracking-[0.02em] transition-colors ${
-                              active ? 'bg-accent-soft text-accent' : 'text-text-primary hover:bg-surface-soft'
-                            }`}
-                          >
-                            {item.label}
-                            {active && <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>}
           </nav>
 
           {/* Actions */}
@@ -371,33 +291,10 @@ const Navbar = ({ mobileOnly = false }) => {
                   }`}
                 >
                   <span>{item.label}</span>
-                  {active && <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_0_4px_var(--accent-soft)]" aria-hidden="true" />}
+                  {active && <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />}
                 </Link>
               );
             })}
-            {moreGroups.map((group) => (
-              <div key={group.label} className="mt-3 border-t border-line-soft pt-3">
-                <p className="mb-1 px-4 text-[10px] font-extrabold uppercase tracking-[0.16em] text-text-dim">{group.label}</p>
-                {group.items.map((item) => {
-                  const active = isItemActive(item);
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setIsOpen(false)}
-                      {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
-                      aria-current={active ? 'page' : undefined}
-                      className={`mobile-nav-item mb-1 flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm font-bold tracking-[0.04em] transition-[color,background-color,transform] active:scale-[0.98] ${
-                        active ? 'bg-accent-soft text-accent' : 'text-text-primary hover:bg-surface-soft'
-                      }`}
-                    >
-                      <span>{item.label}</span>
-                      {active && <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_0_4px_var(--accent-soft)]" aria-hidden="true" />}
-                    </Link>
-                  );
-                })}
-              </div>
-            ))}
             {!isAuthenticated && (
               <Link
                 to="/register"

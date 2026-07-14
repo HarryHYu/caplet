@@ -1,25 +1,17 @@
-import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLayout } from '../contexts/LayoutContext';
-import api from '../services/api';
 import ProductModeSwitch from './ProductModeSwitch';
 import { availableMoneyNavigation, isProductNavItemActive } from '../config/productNavigation';
 import {
     Squares2X2Icon,
     BookOpenIcon,
     BuildingLibraryIcon,
-    AcademicCapIcon,
     WrenchScrewdriverIcon,
-    ArrowPathIcon,
-    DocumentTextIcon,
-    CalendarDaysIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
-    ChevronDownIcon,
-    EllipsisHorizontalIcon,
     ViewColumnsIcon,
     SunIcon,
     MoonIcon,
@@ -42,27 +34,6 @@ export default function Sidebar() {
     const { isDark, toggleTheme } = useTheme();
     const { sidebarCollapsed: collapsed, toggleSidebar, toggleNavMode, productMode = 'study' } = useLayout();
 
-    // Badge counts are fetched here so the rail stays accurate on every page,
-    // not just the dashboard. Best-effort — the rail renders fine without them.
-    const [dueCount, setDueCount] = useState(0);
-    const [savedCount, setSavedCount] = useState(0);
-    const [moreOpen, setMoreOpen] = useState(false);
-
-    useEffect(() => {
-        let cancelled = false;
-        Promise.all([
-            api.getDueReviewItems().catch(() => null),
-            api.getSavedSlides().catch(() => null),
-        ]).then(([dueData, savedData]) => {
-            if (cancelled) return;
-            setDueCount(dueData?.items?.length || 0);
-            setSavedCount(savedData?.savedSlides?.length || 0);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
     const isActive = (path) => {
         if (path === '/dashboard') return location.pathname === '/dashboard';
         return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -71,17 +42,6 @@ export default function Sidebar() {
     const studyPrimaryItems = [
         { path: '/dashboard', label: 'Dashboard', icon: Squares2X2Icon },
         { path: '/library', label: 'Library', icon: BuildingLibraryIcon },
-        { path: '/practice', label: 'Practice', icon: ArrowPathIcon },
-        { path: '/classes', label: 'Classes', icon: AcademicCapIcon },
-    ];
-
-    const studySecondaryItems = [
-        { path: '/study-plan', label: 'Study plan', icon: CalendarDaysIcon },
-        { path: '/revision', label: 'Revision', icon: ArrowPathIcon, badge: dueCount },
-        { path: '/essays', label: 'Essays', icon: DocumentTextIcon, badge: savedCount },
-        { path: '/mastery', label: 'Mastery', icon: ChartBarSquareIcon },
-        { path: '/courses', label: 'Curriculum', icon: BookOpenIcon },
-        { path: '/edutools', label: 'Education tools', icon: WrenchScrewdriverIcon },
     ];
 
     const moneyIcons = {
@@ -95,11 +55,6 @@ export default function Sidebar() {
         ? availableMoneyNavigation({ isAuthenticated, featureFlagsLoading, isFeatureEnabled: isEnabled })
             .map((item) => ({ ...item, icon: moneyIcons[item.label] }))
         : studyPrimaryItems;
-    const secondaryActive = productMode === 'study' && studySecondaryItems.some((item) => isActive(item.path));
-
-    useEffect(() => {
-        if (secondaryActive) setMoreOpen(true);
-    }, [secondaryActive]);
 
     const initials = user
         ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || user.firstName?.[0]?.toUpperCase() || 'U'
@@ -108,10 +63,10 @@ export default function Sidebar() {
     // Shared row shape so nav links, footer actions and the account row line up.
     const row = (active) =>
         `group relative flex min-h-11 items-center gap-3.5 transition-[color,background-color,transform,box-shadow] duration-200 ease-out ${
-            collapsed ? 'mx-auto h-11 w-11 justify-center rounded-full p-0 active:scale-95' : 'rounded-2xl px-3 py-2.5 active:scale-[0.99]'
+            collapsed ? 'mx-auto aspect-square h-11 min-h-0 w-11 shrink-0 justify-center rounded-full p-0 active:scale-95' : 'rounded-2xl px-3 py-2.5 active:scale-[0.99]'
         } ${
             active
-                ? 'bg-accent-soft text-accent shadow-[0_10px_24px_-18px_rgba(19,81,170,0.8)] ring-1 ring-accent/10'
+                ? 'bg-accent-soft text-accent'
                 : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'
         }`;
 
@@ -126,7 +81,7 @@ export default function Sidebar() {
                 {/* Brand */}
                 <Link
                     to={productMode === 'money' ? '/money' : '/dashboard'}
-                    className={`flex min-h-11 items-center gap-3 transition-[background-color,transform] duration-200 hover:bg-surface-soft hover:scale-[1.01] ${collapsed ? 'mx-auto h-11 w-11 justify-center rounded-full p-0' : 'rounded-2xl px-2 py-2'}`}
+                    className={`flex min-h-11 items-center gap-3 transition-[background-color,transform] duration-200 hover:bg-surface-soft hover:scale-[1.01] ${collapsed ? 'mx-auto aspect-square h-11 min-h-0 w-11 shrink-0 justify-center rounded-full p-0' : 'rounded-2xl px-2 py-2'}`}
                 >
                     <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft">
                         <img src="/logo.png" alt="Caplet" className="h-full w-full scale-105 rounded-full object-cover" />
@@ -186,60 +141,6 @@ export default function Sidebar() {
                         );
                     })}
 
-                    {productMode === 'study' && (
-                        <div className="mt-2">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (collapsed) {
-                                        toggleSidebar();
-                                        setMoreOpen(true);
-                                    } else {
-                                        setMoreOpen((open) => !open);
-                                    }
-                                }}
-                                aria-expanded={collapsed ? false : moreOpen}
-                                aria-controls="sidebar-more-navigation"
-                                title={collapsed ? 'More' : undefined}
-                                className={row((!collapsed && moreOpen) || (collapsed && secondaryActive))}
-                            >
-                                <EllipsisHorizontalIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                                {!collapsed && (
-                                    <>
-                                        <span className="min-w-0 flex-1 truncate text-sm font-bold tracking-[0.02em]">More</span>
-                                        <ChevronDownIcon className={`h-4 w-4 shrink-0 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
-                                    </>
-                                )}
-                            </button>
-
-                            {moreOpen && !collapsed && (
-                                <div id="sidebar-more-navigation" className="ml-4 mt-1 space-y-1 border-l border-line-soft pl-3">
-                                    {studySecondaryItems.map((item) => {
-                                        const active = isActive(item.path);
-                                        return (
-                                            <Link
-                                                key={item.path}
-                                                to={item.path}
-                                                title={item.label}
-                                                aria-current={active ? 'page' : undefined}
-                                                className={`${row(active)} min-h-10 rounded-xl px-2.5 py-2`}
-                                            >
-                                                <span className="relative grid h-4 w-4 shrink-0 place-items-center">
-                                                    <item.icon className={`h-4 w-4 ${active ? 'text-accent' : ''}`} aria-hidden="true" />
-                                                </span>
-                                                <span className="min-w-0 flex-1 truncate text-[13px] font-bold">{item.label}</span>
-                                                {item.badge > 0 && (
-                                                    <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold leading-none text-white">
-                                                        {item.badge > 99 ? '99+' : item.badge}
-                                                    </span>
-                                                )}
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </nav>
 
                 <div className="my-3 border-t border-line-soft" />

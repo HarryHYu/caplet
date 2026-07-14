@@ -55,7 +55,7 @@ export default function ProductModeSwitch({ collapsed = false, className = '' })
               selected
                 ? 'bg-surface-raised text-accent shadow-[0_8px_20px_-16px_rgba(20,20,18,0.45)]'
                 : 'text-text-muted hover:bg-surface-raised/60 hover:text-text-primary'
-            } ${collapsed ? 'h-11 w-11 rounded-full p-0 text-[11px] active:scale-95' : 'rounded-xl px-3'}`}
+            } ${collapsed ? 'aspect-square h-11 min-h-0 w-11 rounded-full p-0 text-[11px] active:scale-95' : 'rounded-xl px-3'}`}
           >
             {collapsed ? <ModeIcon className="mx-auto h-5 w-5" aria-hidden="true" /> : mode.label}
           </button>
