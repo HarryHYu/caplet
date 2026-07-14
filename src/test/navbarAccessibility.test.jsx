@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../contexts/AuthContext', () => ({
@@ -42,5 +42,12 @@ describe('Navbar accessibility', () => {
     expect(screen.queryByRole('button', { name: 'Switch to dark mode' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Switch to side bar navigation' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'open menu' })).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps the account email out of the compact navigation', () => {
+    render(<MemoryRouter initialEntries={['/dashboard']}><Navbar /></MemoryRouter>);
+
+    fireEvent.click(screen.getByRole('button', { name: /Ray/ }));
+    expect(screen.queryByText('ray@example.com')).not.toBeInTheDocument();
   });
 });

@@ -39,5 +39,6 @@ describe('Study sidebar navigation', () => {
     expect(screen.getByRole('link', { name: 'Revision' })).toHaveAttribute('href', '/revision');
     expect(screen.getByRole('link', { name: 'Essays' })).toHaveAttribute('href', '/essays');
     expect(screen.getByRole('link', { name: 'Library' })).toHaveAttribute('href', '/library');
+    expect(screen.queryByText('ada@example.com')).not.toBeInTheDocument();
   });
 });

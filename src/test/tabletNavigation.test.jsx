@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const mockAuth = vi.hoisted(() => ({
@@ -54,5 +54,8 @@ describe('tablet navigation variants', () => {
         expect(screen.getByRole('navigation', { name: 'Dashboard navigation' })).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
         expect(screen.getByRole('group', { name: 'Product mode' })).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Ray menu' }));
+        expect(screen.queryByText('ray@example.com')).not.toBeInTheDocument();
     });
 });

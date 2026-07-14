@@ -76,8 +76,8 @@ export default function Sidebar() {
 
     // Shared row shape so nav links, footer actions and the account row line up.
     const row = (active) =>
-        `group relative flex min-h-14 items-center gap-4 transition-[color,background-color,transform,box-shadow] duration-200 ease-out ${
-            collapsed ? 'mx-auto aspect-square h-10 min-h-0 w-10 shrink-0 justify-center rounded-full p-0 active:scale-95' : 'rounded-2xl px-4 py-3 active:scale-[0.99]'
+        `group relative flex min-h-11 items-center gap-3 transition-[color,background-color,transform,box-shadow] duration-200 ease-out ${
+            collapsed ? 'mx-auto aspect-square h-9 min-h-0 w-9 shrink-0 justify-center rounded-full p-0 active:scale-95' : 'rounded-xl px-3 py-2 active:scale-[0.99]'
         } ${
             active
                 ? 'bg-accent-soft text-accent'
@@ -127,33 +127,33 @@ export default function Sidebar() {
         <aside
             ref={sidebarRef}
             aria-label="Sidebar navigation"
-            className={`relative hidden lg:flex shrink-0 sticky top-0 h-screen p-4 ${isResizing ? 'select-none' : 'transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]'}`}
+            className={`relative sticky top-0 hidden h-screen shrink-0 p-3 lg:flex ${isResizing ? 'select-none' : 'transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]'}`}
             style={{ width: collapsed ? 96 : sidebarWidth }}
         >
-            <div className={`flex h-full w-full flex-col border border-line-soft bg-surface-raised shadow-[0_28px_64px_-38px_rgba(20,20,18,0.32)] transition-[padding,border-radius] duration-300 ${collapsed ? 'rounded-[28px] p-2' : 'rounded-[32px] p-4'}`}>
+            <div className={`flex h-full w-full flex-col border border-line-soft bg-surface-raised shadow-[0_28px_64px_-38px_rgba(20,20,18,0.32)] transition-[padding,border-radius] duration-300 ${collapsed ? 'rounded-3xl p-2' : 'rounded-3xl p-3'}`}>
                 {/* Brand */}
                 <Link
                     to={productMode === 'money' ? '/money' : '/dashboard'}
-                    className={`flex min-h-14 items-center gap-3 transition-[background-color,transform] duration-200 hover:bg-surface-soft hover:scale-[1.01] ${collapsed ? 'mx-auto aspect-square h-12 min-h-0 w-12 shrink-0 justify-center rounded-full p-0' : 'rounded-2xl px-2 py-2'}`}
+                    className={`flex min-h-12 items-center gap-2 transition-[background-color,transform] duration-200 hover:bg-surface-soft hover:scale-[1.01] ${collapsed ? 'mx-auto aspect-square h-10 min-h-0 w-10 shrink-0 justify-center rounded-full p-0' : 'rounded-xl px-1.5 py-1.5'}`}
                 >
-                    <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft">
                         <img src="/logo.png" alt="Caplet" className="h-full w-full scale-105 rounded-full object-cover" />
                     </span>
                     {!collapsed && (
-                        <span className="font-bricolage text-2xl font-extrabold tracking-[-0.03em] text-text-primary">
+                        <span className="font-bricolage text-xl font-extrabold tracking-[-0.03em] text-text-primary">
                             Caplet.
                         </span>
                     )}
                 </Link>
 
-                <ProductModeSwitch collapsed={collapsed} className="mt-3 w-full" />
+                <ProductModeSwitch collapsed={collapsed} className="mt-2 w-full" />
 
-                <div className="my-4 border-t border-line-soft" />
+                <div className="my-3 border-t border-line-soft" />
 
                 {/* Primary nav */}
-                <nav aria-label="Primary navigation" className="flex flex-1 flex-col gap-2 overflow-x-clip overflow-y-auto">
+                <nav aria-label="Primary navigation" className="flex flex-1 flex-col gap-1 overflow-x-clip overflow-y-auto">
                     {!collapsed && (
-                        <p className="px-4 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-text-dim">
+                        <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-text-dim">
                             {productMode === 'money' ? 'Money' : 'Workspace'}
                         </p>
                     )}
@@ -170,8 +170,8 @@ export default function Sidebar() {
                                 aria-current={active ? 'page' : undefined}
                                 className={row(active)}
                             >
-                                <span className="relative grid h-6 w-6 shrink-0 place-items-center">
-                                    <item.icon className={`h-6 w-6 ${active ? 'text-accent' : ''}`} aria-hidden="true" />
+                                <span className="relative grid h-5 w-5 shrink-0 place-items-center">
+                                    <item.icon className={`h-5 w-5 ${active ? 'text-accent' : ''}`} aria-hidden="true" />
                                     {badge > 0 && collapsed && (
                                         <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-accent px-1 text-[10px] font-bold leading-none text-white">
                                             {badge > 9 ? '9+' : badge}
@@ -180,7 +180,7 @@ export default function Sidebar() {
                                 </span>
                                 {!collapsed && (
                                     <>
-                                        <span className="min-w-0 flex-1 truncate text-base font-bold tracking-[0.01em]">
+                                        <span className="min-w-0 flex-1 truncate text-sm font-bold tracking-[0.01em]">
                                             {label}
                                         </span>
                                         {badge > 0 && (
@@ -196,11 +196,11 @@ export default function Sidebar() {
 
                 </nav>
 
-                <div className="my-4 border-t border-line-soft" />
+                <div className="my-3 border-t border-line-soft" />
 
                 {/* Account and rail controls stay quiet; theme and navigation
                     choices live in Settings → Appearance. */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1">
                     {/* Account → settings, mirrors the navbar's account menu */}
                     <Link
                         to="/settings"
@@ -208,15 +208,10 @@ export default function Sidebar() {
                         aria-label={collapsed ? 'Settings' : undefined}
                         className={row(isActive('/settings'))}
                     >
-                        <UserAvatar user={user} size="md" showStatus={false} />
+                        <UserAvatar user={user} size="sm" showStatus={false} />
                         {!collapsed && (
-                            <span className="min-w-0 flex-1">
-                                <span className="block truncate text-sm font-bold text-text-primary">
+                            <span className="min-w-0 flex-1 truncate text-xs font-bold text-text-primary">
                                     {user?.firstName || 'Account'}
-                                </span>
-                                <span className="block truncate text-xs font-medium text-text-dim">
-                                    {user?.email || 'Settings'}
-                                </span>
                             </span>
                         )}
                     </Link>
@@ -231,12 +226,12 @@ export default function Sidebar() {
                         className={row(false)}
                     >
                         {collapsed ? (
-                            <ChevronDoubleRightIcon className="w-5 h-5 shrink-0" />
+                            <ChevronDoubleRightIcon className="h-4 w-4 shrink-0" />
                         ) : (
-                            <ChevronDoubleLeftIcon className="w-5 h-5 shrink-0" />
+                            <ChevronDoubleLeftIcon className="h-4 w-4 shrink-0" />
                         )}
                         {!collapsed && (
-                            <span className="text-sm font-bold tracking-[0.02em]">Collapse</span>
+                            <span className="text-xs font-bold tracking-[0.02em]">Collapse</span>
                         )}
                     </button>
                 </div>

@@ -98,20 +98,20 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
         scrolled ? 'shadow-[0_6px_24px_-16px_rgba(0,0,0,0.4)]' : ''
       }`}
     >
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
-        <div className="h-14 md:h-16 flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-[1400px] px-3 md:px-6 lg:px-8">
+        <div className="flex h-[52px] items-center justify-between gap-2 md:h-14 md:gap-3">
 
-          <div className="flex min-w-0 items-center gap-2 md:gap-4">
+          <div className="flex min-w-0 items-center gap-1.5 md:gap-3">
             {/* Logo */}
             <Link to={homePath} className="flex items-center gap-2 group relative z-10 shrink-0">
-              <div className="grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft transition-all duration-300 group-hover:scale-105 group-hover:ring-accent">
+              <div className="grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft transition-all duration-300 group-hover:scale-105 group-hover:ring-accent">
                 <img
                   src="/logo.png"
                   alt="Caplet logo"
                   className="h-full w-full scale-105 rounded-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </div>
-              <span className="hidden text-lg font-bricolage font-extrabold tracking-[-0.02em] text-text-primary transition-colors duration-300 group-hover:text-accent sm:inline md:text-xl">
+              <span className="hidden text-base font-bricolage font-extrabold tracking-[-0.02em] text-text-primary transition-colors duration-300 group-hover:text-accent sm:inline md:text-lg">
                 Caplet.
               </span>
             </Link>
@@ -119,7 +119,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
           </div>
 
           {/* Right cluster — folded nav toggles pinned to the far right, then actions */}
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1.5 md:gap-2">
 
           {/* Desktop nav — keep the global study chrome intentionally small. */}
           <nav aria-label="Primary navigation" className="hidden lg:flex items-center gap-1">
@@ -129,7 +129,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                 to={item.path}
                 {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
                 aria-current={isItemActive(item) ? 'page' : undefined}
-                className={`min-h-11 inline-flex items-center px-3 rounded-lg text-sm font-bold tracking-[0.04em] transition-colors ${
+                className={`inline-flex min-h-9 items-center rounded-lg px-2 text-xs font-bold tracking-[0.02em] transition-colors ${
                   isItemActive(item) ? 'text-accent bg-accent-soft' : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
                 }`}
               >
@@ -140,7 +140,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-1.5 md:gap-2 relative z-10 shrink-0">
+          <div className="relative z-10 flex shrink-0 items-center gap-1 md:gap-1.5">
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
                 <button
@@ -150,18 +150,18 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                   aria-expanded={showUserMenu}
                   aria-haspopup="true"
                   aria-controls="account-navigation"
-                  className={`flex h-11 w-11 items-center justify-center gap-2 rounded-full border p-1.5 transition-all duration-200 active:scale-95 sm:w-auto sm:justify-start sm:pr-3 ${
+                  className={`flex h-9 w-9 items-center justify-center gap-1.5 rounded-full border p-1 transition-all duration-200 active:scale-95 sm:w-auto sm:justify-start sm:pr-2.5 ${
                     showUserMenu
                       ? 'border-accent bg-accent-soft'
                       : 'border-line-soft hover:border-text-dim hover:bg-surface-soft'
                   }`}
                 >
                   <UserAvatar user={user} size="sm" showStatus={false} />
-                  <span className="hidden text-sm font-medium text-text-primary leading-none sm:inline">
+                  <span className="hidden text-xs font-medium leading-none text-text-primary sm:inline">
                     {user?.firstName || 'Account'}
                   </span>
                   <svg
-                    className={`hidden w-3 h-3 text-text-dim transition-transform duration-200 sm:block ${showUserMenu ? 'rotate-180' : ''}`}
+                    className={`hidden h-2.5 w-2.5 text-text-dim transition-transform duration-200 sm:block ${showUserMenu ? 'rotate-180' : ''}`}
                     fill="none" stroke="currentColor" viewBox="0 0 24 24"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
@@ -169,16 +169,13 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                 </button>
 
                 {showUserMenu && (
-                  <div id="account-navigation" className="absolute top-full right-0 mt-2 w-48 bg-surface-raised border border-line-soft rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <div className="px-3 py-2 mb-1 border-b border-line-soft">
-                      <p className="text-xs font-medium text-text-dim truncate">{user?.email || ''}</p>
-                    </div>
+                  <div id="account-navigation" className="absolute right-0 top-full mt-2 w-44 overflow-hidden rounded-xl border border-line-soft bg-surface-raised py-1 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-in fade-in slide-in-from-top-1 duration-150">
                     <Link
                       to="/settings"
                       onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-text-primary hover:bg-surface-soft transition-colors"
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-text-primary transition-colors hover:bg-surface-soft"
                     >
-                      <svg className="w-3.5 h-3.5 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-3 w-3 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -188,9 +185,9 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                     <button
                       type="button"
                       onClick={logout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
                       Sign out
@@ -201,7 +198,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
             ) : (
               <Link
                 to="/register"
-                className="hidden md:inline-flex items-center justify-center bg-accent hover:bg-accent-strong text-white font-bold text-xs tracking-[0.1em] px-4 py-2 rounded-lg transition-all duration-300"
+                className="hidden items-center justify-center rounded-lg bg-accent px-3 py-1.5 text-[11px] font-bold tracking-[0.08em] text-white transition-all duration-300 hover:bg-accent-strong md:inline-flex"
               >
                 Get started
               </Link>
@@ -211,15 +208,15 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
             {effectiveProductMode === 'study' && <button
               ref={mobileButtonRef}
               type="button"
-              className={`relative lg:hidden h-11 w-11 rounded-full text-text-muted transition-[color,background-color,transform] duration-200 hover:bg-surface-soft hover:text-text-primary active:scale-95 ${isOpen ? 'bg-surface-soft text-text-primary' : ''}`}
+              className={`relative h-9 w-9 rounded-full text-text-muted transition-[color,background-color,transform] duration-200 hover:bg-surface-soft hover:text-text-primary active:scale-95 lg:hidden ${isOpen ? 'bg-surface-soft text-text-primary' : ''}`}
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? 'close menu' : 'open menu'}
               aria-expanded={isOpen}
               aria-controls="mobile-navigation"
             >
-              <span className={`absolute left-1/2 top-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-current transition-transform duration-300 ${isOpen ? '-translate-y-1/2 rotate-45' : '-translate-y-[7px]'}`} />
-              <span className={`absolute left-1/2 top-1/2 h-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current transition-[width,opacity] duration-200 ${isOpen ? 'w-0 opacity-0' : 'w-5 opacity-100'}`} />
-              <span className={`absolute left-1/2 top-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-current transition-transform duration-300 ${isOpen ? '-translate-y-1/2 -rotate-45' : 'translate-y-[5px]'}`} />
+              <span className={`absolute left-1/2 top-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-current transition-transform duration-300 ${isOpen ? '-translate-y-1/2 rotate-45' : '-translate-y-[6px]'}`} />
+              <span className={`absolute left-1/2 top-1/2 h-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current transition-[width,opacity] duration-200 ${isOpen ? 'w-0 opacity-0' : 'w-4 opacity-100'}`} />
+              <span className={`absolute left-1/2 top-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-current transition-transform duration-300 ${isOpen ? '-translate-y-1/2 -rotate-45' : 'translate-y-[4px]'}`} />
             </button>}
           </div>
           </div>
@@ -227,7 +224,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
 
         {/* Mobile menu */}
         {effectiveProductMode === 'study' && isOpen && (
-          <div id="mobile-navigation" className="mobile-nav-panel lg:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain border-t border-line-soft px-2 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+          <div id="mobile-navigation" className="mobile-nav-panel max-h-[calc(100dvh-3.25rem)] overflow-y-auto overscroll-contain border-t border-line-soft px-1.5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
             <div className="mb-2 flex items-center justify-between px-3 py-1">
               <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-text-dim">Navigate</span>
               <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-bold text-accent">Study</span>
@@ -241,7 +238,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                   onClick={() => setIsOpen(false)}
                   {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
                   aria-current={active ? 'page' : undefined}
-                  className={`mobile-nav-item mb-1 flex min-h-12 items-center justify-between rounded-2xl px-4 text-sm font-bold tracking-[0.04em] transition-[color,background-color,transform] active:scale-[0.98] ${
+                  className={`mobile-nav-item mb-1 flex min-h-10 items-center justify-between rounded-xl px-3 text-xs font-bold tracking-[0.02em] transition-[color,background-color,transform] active:scale-[0.98] ${
                     active
                       ? 'bg-accent-soft text-accent'
                       : 'text-text-primary hover:bg-surface-soft'
@@ -256,7 +253,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
               <Link
                 to="/register"
                 onClick={() => setIsOpen(false)}
-                className="mt-3 btn-primary min-h-12 text-sm"
+                className="btn-primary mt-3 min-h-10 text-xs"
               >
                 Get started
               </Link>
