@@ -2,22 +2,21 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useLayout } from '../contexts/LayoutContext';
 import ProductModeSwitch from './ProductModeSwitch';
+import UserAvatar from './UserAvatar';
 import { isProductNavItemActive, moneyNavigation } from '../config/productNavigation';
 
 // `mobileOnly` is set when the vertical rail owns navigation on large screens —
 // the top bar then only appears on mobile, so the two never overlap.
-const Navbar = ({ mobileOnly = false }) => {
+const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
-  const { isDark, toggleTheme } = useTheme();
-  const { toggleNavMode, productMode = 'study' } = useLayout();
+  const { productMode = 'study' } = useLayout();
   const effectiveProductMode = productMode;
   const menuRef = useRef(null);
   const userButtonRef = useRef(null);
@@ -76,7 +75,6 @@ const Navbar = ({ mobileOnly = false }) => {
   const visibleCoreItems = effectiveProductMode === 'money' ? visibleItems(moneyNavigation) : visibleItems(studyCoreItems);
 
   const homePath = effectiveProductMode === 'money' ? '/money' : isAuthenticated ? '/dashboard' : '/';
-  const isHome = location.pathname === '/';
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -90,14 +88,12 @@ const Navbar = ({ mobileOnly = false }) => {
   if (location.pathname.startsWith('/guardian-consent/')) return null;
   if (location.pathname.startsWith('/live/host')) return null;
 
-  const initials = user
-    ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || user.firstName?.[0]?.toUpperCase() || 'U'
-    : 'U';
-
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-shadow duration-300 bg-surface-body text-text-primary ${
         mobileOnly ? 'lg:hidden' : ''
+      } ${
+        hideOnTablet ? 'md:max-lg:hidden' : ''
       } ${
         scrolled ? 'shadow-[0_6px_24px_-16px_rgba(0,0,0,0.4)]' : ''
       }`}
@@ -145,42 +141,6 @@ const Navbar = ({ mobileOnly = false }) => {
 
           {/* Actions */}
           <div className="flex items-center gap-1.5 md:gap-2 relative z-10 shrink-0">
-            {/* Switch the whole app to the vertical side rail (signed-in only) */}
-            {isAuthenticated && (
-              <button
-                type="button"
-                onClick={toggleNavMode}
-                className="hidden h-11 w-11 items-center justify-center rounded-full text-text-muted transition-all duration-200 hover:bg-surface-soft hover:text-text-primary active:scale-95 lg:flex"
-                aria-label="Switch to side bar navigation"
-                title="Use side bar"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <rect x="3" y="4" width="18" height="16" rx="2" strokeWidth={2} />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 4v16" />
-                </svg>
-              </button>
-            )}
-
-            {/* Theme toggle — hidden on the single-colour welcome page */}
-            {!isHome && (
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="w-11 h-11 flex items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-soft transition-all duration-200 active:scale-95"
-              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDark ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </button>
-            )}
-
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
                 <button
@@ -196,10 +156,7 @@ const Navbar = ({ mobileOnly = false }) => {
                       : 'border-line-soft hover:border-text-dim hover:bg-surface-soft'
                   }`}
                 >
-                  {/* Avatar circle */}
-                  <div className="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-[10px] font-bold font-mono leading-none flex-shrink-0">
-                    {initials}
-                  </div>
+                  <UserAvatar user={user} size="sm" showStatus={false} />
                   <span className="hidden text-sm font-medium text-text-primary leading-none sm:inline">
                     {user?.firstName || 'Account'}
                   </span>

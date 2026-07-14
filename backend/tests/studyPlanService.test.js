@@ -20,9 +20,24 @@ const validConfig = {
 describe('studyPlanService', () => {
   test('publishes safe diagnostic options without answer keys', () => {
     const options = publicOptions();
-    expect(options.subjects.length).toBeGreaterThanOrEqual(5);
+    expect(options.subjects.length).toBeGreaterThanOrEqual(16);
     expect(options.subjects[0].diagnostic.answer).toBeUndefined();
     expect(options.subjects.every((subject) => subject.diagnostic.options.length === 4)).toBe(true);
+  });
+
+  test('accepts every catalogue subject without truncating the selection', () => {
+    const subjects = publicOptions().subjects.map((subject) => subject.value);
+    const config = normalizeConfig({
+      yearLevel: '12',
+      subjects,
+      goal: 'Keep every subject moving forward',
+      examDates: Object.fromEntries(subjects.map((subject) => [subject, '2026-09-01'])),
+      availableDays: [1, 3, 5],
+      diagnosticAnswers: Object.fromEntries(subjects.map((subject) => [subject, 0]))
+    });
+
+    expect(config.subjects).toEqual(subjects);
+    expect(validateConfig(config)).toEqual([]);
   });
 
   test('normalizes and validates onboarding configuration', () => {

@@ -13,6 +13,15 @@ const OPTIONS = {
       question: 'Which measure tracks the general price level?',
       options: ['Consumer Price Index', 'Unemployment rate', 'Terms of trade', 'Cash balance'],
     },
+  }, {
+    value: 'physics',
+    label: 'Physics',
+    topics: ['Forces'],
+    diagnostic: {
+      topic: 'Forces',
+      question: 'What is the net force on an object moving at constant velocity?',
+      options: ['Zero', 'Equal to its mass', 'Always increasing', 'Equal to its speed'],
+    },
   }],
 };
 
@@ -72,17 +81,20 @@ describe('StudyPlan', () => {
     expect(await screen.findByText(/ready in under five minutes/i)).toBeInTheDocument();
     expect(screen.getByText(/concrete seven-day plan/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Economics' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Physics' }));
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
     fireEvent.change(screen.getByLabelText(/Economics exam date/i), { target: { value: '2026-09-01' } });
+    fireEvent.change(screen.getByLabelText(/Physics exam date/i), { target: { value: '2026-09-01' } });
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Consumer Price Index' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Zero' }));
     fireEvent.click(screen.getByRole('button', { name: /Build my plan/i }));
 
     expect(await screen.findByRole('heading', { name: /My study plan/i })).toBeInTheDocument();
     expect(api.generateStudyPlan).toHaveBeenCalledWith(expect.objectContaining({
-      subjects: ['economics'],
-      examDates: { economics: '2026-09-01' },
-      diagnosticAnswers: { economics: 0 },
+      subjects: ['economics', 'physics'],
+      examDates: { economics: '2026-09-01', physics: '2026-09-01' },
+      diagnosticAnswers: { economics: 0, physics: 0 },
     }));
   });
 

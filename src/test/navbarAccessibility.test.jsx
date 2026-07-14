@@ -37,9 +37,10 @@ describe('Navbar accessibility', () => {
     expect(screen.getByRole('button', { name: 'Money' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('uses accessible labels and expanded state for icon controls', () => {
+  it('keeps theme and navigation layout controls in settings', () => {
     render(<MemoryRouter initialEntries={['/library']}><Navbar /></MemoryRouter>);
-    expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Switch to dark mode' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Switch to side bar navigation' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'open menu' })).toHaveAttribute('aria-expanded', 'false');
   });
 });

@@ -12,6 +12,7 @@ const PUBLIC_META = [
   { match: /^\/fintools\/tax-calculator$/, title: 'Australian Income Tax Calculator — Caplet', description: 'Estimate Australian resident income tax and a simplified Medicare levy for supported financial years.' },
   { match: /^\/fintools(?:\/|$)/, title: 'Financial Calculators — Caplet', description: 'Free educational calculators for Australian tax, budgeting, loans, super, savings, and investing.' },
   { match: /^\/money\/economy\/inflation$/, title: 'Inflation and Everyday Prices — Caplet', description: 'Understand a dated, provenance-labelled Australian CPI observation and try a clearly labelled hypothetical inflation scenario.' },
+  { match: /^\/money\/resources$/, title: 'Money Resource Hub — Caplet', description: 'Browse a categorized library of Australian and global data, market research, investing, work and everyday money websites.' },
   { match: /^\/money\/tools(?:\/|$)/, title: 'Money Tools — Caplet', description: 'Explore educational Australian calculators for pay, saving, borrowing, tax and everyday money questions.' },
   { match: /^\/money\/my-money$/, title: 'My Money — Caplet', description: 'A private place to try and save personal money scenarios on Caplet.' },
   { match: /^\/money(?:\/|$)/, title: 'Money — Caplet', description: 'Understand Australian money and economic data, learn useful ideas and try educational scenarios.' },

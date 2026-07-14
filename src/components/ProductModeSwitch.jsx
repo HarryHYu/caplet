@@ -35,7 +35,9 @@ export default function ProductModeSwitch({ collapsed = false, className = '' })
     <div
       role="group"
       aria-label="Product mode"
-      className={`${collapsed ? 'flex flex-col items-center gap-1 bg-transparent p-0' : 'inline-flex rounded-2xl bg-surface-soft p-1'} ${className}`}
+      className={`${collapsed
+        ? 'flex flex-col items-center gap-1 rounded-2xl border border-line-soft bg-surface-soft p-1'
+        : 'grid w-full grid-cols-2 gap-1 rounded-2xl border border-line-soft bg-surface-soft p-1.5 shadow-[0_8px_24px_-20px_rgba(20,20,18,0.45)]'} ${className}`}
     >
       {[
         { value: 'study', label: 'Study', icon: BookOpenIcon },
@@ -51,13 +53,14 @@ export default function ProductModeSwitch({ collapsed = false, className = '' })
             aria-label={collapsed ? `${mode.label} mode` : undefined}
             title={collapsed ? `${mode.label} mode` : undefined}
             onClick={() => selectMode(mode.value)}
-            className={`min-h-11 text-xs font-extrabold tracking-[0.04em] transition-[color,background-color,transform,box-shadow] duration-200 ${
+            className={`inline-flex items-center justify-center gap-2 text-xs font-extrabold tracking-[0.04em] transition-[color,background-color,transform,box-shadow] duration-200 ${
               selected
-                ? 'bg-surface-raised text-accent shadow-[0_8px_20px_-16px_rgba(20,20,18,0.45)]'
+                ? 'bg-surface-raised text-accent shadow-[0_6px_16px_-12px_rgba(20,20,18,0.4)]'
                 : 'text-text-muted hover:bg-surface-raised/60 hover:text-text-primary'
-            } ${collapsed ? 'aspect-square h-11 min-h-0 w-11 rounded-full p-0 text-[11px] active:scale-95' : 'rounded-xl px-3'}`}
+            } ${collapsed ? 'h-10 w-10 rounded-full p-0 text-[11px] active:scale-95' : 'h-10 min-w-0 rounded-xl px-2.5 active:scale-[0.99]'}`}
           >
-            {collapsed ? <ModeIcon className="mx-auto h-5 w-5" aria-hidden="true" /> : mode.label}
+            <ModeIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className={collapsed ? 'sr-only' : undefined}>{mode.label}</span>
           </button>
         );
       })}

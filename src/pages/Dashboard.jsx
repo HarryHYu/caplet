@@ -316,25 +316,30 @@ export default function Dashboard() {
                         </div>
                         <p className="max-w-md text-sm font-medium leading-relaxed text-text-muted">Your focused study tools live here, so the main navigation can stay calm.</p>
                     </div>
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        {quickActions.map((action) => (
-                            <Link
-                                key={action.path}
-                                to={action.path}
-                                className={`group rounded-2xl ${action.block} p-5 transition-transform duration-200 hover:-translate-y-1`}
-                            >
-                                <span className="grid h-10 w-10 place-items-center rounded-xl bg-surface-raised text-accent">
-                                    <action.icon className="h-5 w-5" aria-hidden="true" />
-                                </span>
-                                <div className="mt-5 flex items-end justify-between gap-3">
-                                    <div>
-                                        <h3 className="text-sm font-extrabold text-text-primary group-hover:text-accent">{action.label}</h3>
-                                        <p className="mt-1 text-xs font-medium leading-relaxed text-text-muted">{action.description}</p>
+                    <div
+                        data-testid="dashboard-quick-actions-scroll"
+                        className="-mx-1 overflow-x-auto px-1 pb-5 [scrollbar-color:var(--accent-soft)_transparent] [scrollbar-width:thin]"
+                    >
+                        <div className="flex min-w-max snap-x snap-mandatory gap-4">
+                            {quickActions.map((action) => (
+                                <Link
+                                    key={action.path}
+                                    to={action.path}
+                                    className={`group flex min-h-56 w-[19rem] shrink-0 snap-start flex-col justify-between rounded-3xl ${action.block} p-6 shadow-[0_22px_44px_-26px_rgba(20,20,18,0.38)] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_28px_52px_-24px_rgba(20,20,18,0.42)] sm:w-[20rem]`}
+                                >
+                                    <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-raised text-accent shadow-[0_12px_24px_-18px_rgba(20,20,18,0.35)]">
+                                        <action.icon className="h-6 w-6" aria-hidden="true" />
+                                    </span>
+                                    <div className="mt-8 flex items-end justify-between gap-4">
+                                        <div className="min-w-0">
+                                            <h3 className="text-base font-extrabold leading-tight text-text-primary group-hover:text-accent">{action.label}</h3>
+                                            <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{action.description}</p>
+                                        </div>
+                                        <ArrowRightIcon className="h-5 w-5 shrink-0 text-text-muted transition-transform group-hover:translate-x-1 group-hover:text-accent" aria-hidden="true" />
                                     </div>
-                                    <ArrowRightIcon className="h-4 w-4 shrink-0 text-text-muted transition-transform group-hover:translate-x-1 group-hover:text-accent" aria-hidden="true" />
-                                </div>
-                            </Link>
-                        ))}
+                                </Link>
+                            ))}
+                        </div>
                     </div>
                 </section>
 

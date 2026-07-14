@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { calculateTax } from './TaxCalculator';
 import { useReveal } from '../../lib/useReveal';
+import { calculateSalaryBreakdown, DEFAULT_SUPER_RATE } from '../../lib/salaryCalculations';
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
@@ -9,38 +9,12 @@ const formatCurrency = (value) =>
 const SalaryCalculator = () => {
   const [grossSalary, setGrossSalary] = useState('');
   const [includeMedicare, setIncludeMedicare] = useState(true);
-  const [superRate, setSuperRate] = useState('11');
+  const [superRate, setSuperRate] = useState(String(DEFAULT_SUPER_RATE));
   const [result, setResult] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const gross = parseFloat(grossSalary) || 0;
-
-    if (gross <= 0) {
-      setResult({ error: 'Please enter a valid gross salary.' });
-      return;
-    }
-
-    const superAmount = gross * (parseFloat(superRate) / 100);
-    const taxableIncome = gross;
-
-    const incomeTax = calculateTax(taxableIncome);
-    const medicare = includeMedicare ? taxableIncome * 0.02 : 0;
-    const totalTax = incomeTax + medicare;
-
-    const netPay = gross - totalTax;
-    const takeHomeWithSuper = netPay + superAmount;
-
-    setResult({
-      gross,
-      superAmount,
-      incomeTax,
-      medicare,
-      totalTax,
-      netPay,
-      takeHomeWithSuper,
-      superRate: parseFloat(superRate),
-    });
+    setResult(calculateSalaryBreakdown({ grossSalary, superRate, includeMedicare }));
   };
 
   useReveal();
@@ -70,12 +44,13 @@ const SalaryCalculator = () => {
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Compensation Inputs</h2>
             <form onSubmit={handleSubmit} className="space-y-12">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-4 block">
+                <label htmlFor="gross-salary" className="text-sm font-semibold text-text-dim mb-4 block">
                   Gross Annual Salary (AUD)
                 </label>
                 <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
                   <input
+                    id="gross-salary"
                     type="number"
                     min="0"
                     step="1000"
@@ -89,11 +64,12 @@ const SalaryCalculator = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">
+                  <label htmlFor="super-rate" className="text-sm font-semibold text-text-dim mb-4 block">
                     Superannuation Rate (%)
                   </label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                     <input
+                      id="super-rate"
                       type="number"
                       min="0"
                       max="20"
@@ -104,13 +80,15 @@ const SalaryCalculator = () => {
                     />
                     <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
                   </div>
-                  <p className="text-xs font-semibold text-text-dim mt-4">Statutory default: 11% (23/24)</p>
+                  <p className="text-xs font-semibold text-text-dim mt-4">Current SG baseline: 12% (from 1 July 2025)</p>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
                     onClick={() => setIncludeMedicare(!includeMedicare)}
+                    aria-pressed={includeMedicare}
+                    aria-label={`Include simplified Medicare levy estimate: ${includeMedicare ? 'on' : 'off'}`}
                     className={`w-12 h-6 rounded-full transition-all relative ${includeMedicare ? 'bg-accent' : 'bg-surface-soft'}`}
                   >
                     <div className={`absolute top-1 bottom-1 w-4 rounded-full transition-all ${includeMedicare ? 'right-1 bg-white' : 'left-1 bg-text-dim'}`} />
@@ -128,6 +106,7 @@ const SalaryCalculator = () => {
           <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Net Projection</h2>
 
+            <div aria-live="polite" aria-atomic="true" className="flex-1">
             {result ? (
               result.error ? (
                 <p className="text-sm font-semibold text-accent">{result.error}</p>
@@ -163,8 +142,9 @@ const SalaryCalculator = () => {
                     </div>
 
                     <div className="bg-surface-raised rounded-2xl p-6">
-                      <p className="text-xs font-bold text-text-muted mb-2">Total Package Value</p>
-                      <p className="text-3xl font-black tracking-tight">{formatCurrency(result.takeHomeWithSuper)}</p>
+                      <p className="text-xs font-bold text-text-muted mb-2">Estimated total package</p>
+                      <p className="text-3xl font-black tracking-tight">{formatCurrency(result.totalPackage)}</p>
+                      <p className="mt-2 text-xs font-medium leading-relaxed text-text-dim">Salary plus super. Tax and Medicare affect take-home pay, not the package amount.</p>
                     </div>
                   </div>
                 </div>
@@ -175,6 +155,7 @@ const SalaryCalculator = () => {
                 <p className="text-sm font-semibold text-text-muted">Enter your salary to see results</p>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
@@ -183,4 +164,3 @@ const SalaryCalculator = () => {
 };
 
 export default SalaryCalculator;
-

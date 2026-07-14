@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext();
 const palettes = ['paper', 'white', 'sky', 'sage', 'rose'];
+const DEFAULT_THEME = 'system';
 
 /* eslint-disable-next-line react-refresh/only-export-components */
 export const useTheme = () => {
@@ -16,7 +17,7 @@ export const ThemeProvider = ({ children }) => {
   const getSystemPreference = () => window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
   const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem('theme');
-    return ['light', 'dark', 'system'].includes(stored) ? stored : 'system';
+    return ['light', 'dark', 'system'].includes(stored) ? stored : DEFAULT_THEME;
   });
   const [systemIsDark, setSystemIsDark] = useState(getSystemPreference);
   const [palette, setPalette] = useState(() => {

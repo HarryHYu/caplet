@@ -7,6 +7,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { LayoutProvider, useLayout } from './contexts/LayoutContext';
 import { FeatureFlagProvider } from './contexts/FeatureFlagContext';
 import Navbar from './components/Navbar';
+import TabletPublicNavbar from './components/TabletPublicNavbar';
+import TabletDashboardNavbar from './components/TabletDashboardNavbar';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
 import CapletLoader from './components/CapletLoader';
@@ -50,6 +52,7 @@ const RuleOf72 = lazy(() => import('./pages/tools/RuleOf72'));
 const CapitalGains = lazy(() => import('./pages/tools/CapitalGains'));
 const FinancialTwin = lazy(() => import('./pages/tools/FinancialTwin'));
 const MoneyOverview = lazy(() => import('./pages/MoneyOverview'));
+const MoneyResources = lazy(() => import('./pages/MoneyResources'));
 const MoneyInflation = lazy(() => import('./pages/MoneyInflation'));
 const MyMoney = lazy(() => import('./pages/MyMoney'));
 const Courses = lazy(() => import('./pages/Courses'));
@@ -253,6 +256,7 @@ function AppRoutes() {
           <Route path="/money" element={<MoneyRouteGate><MoneyOverview /></MoneyRouteGate>} />
           <Route path="/money/economy" element={<MoneyRouteGate><Navigate to="/money/economy/inflation" replace /></MoneyRouteGate>} />
           <Route path="/money/economy/inflation" element={<MoneyRouteGate><MoneyInflation /></MoneyRouteGate>} />
+          <Route path="/money/resources" element={<MoneyRouteGate><MoneyResources /></MoneyRouteGate>} />
           <Route path="/money/my-money" element={<MoneyPilot><MoneyRouteGate flagKey="money.private.persistence" fallbackPath="/money" unavailableMessage="My Money is not available for this account yet. You can still use Money learning and calculators without saving private figures."><RequireAuth><MyMoney /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
           <Route path="/money/tools" element={<MoneyRouteGate><FinancialTools /></MoneyRouteGate>} />
           <Route path="/fintools" element={<LegacyMoneyRedirect prefix="/fintools" />} />
@@ -373,10 +377,12 @@ function AppShell() {
       <div className="min-h-screen bg-surface-body lg:flex">
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <RouteMetadata />
-        <MarkerCursor />
+        {!isAuthenticated && <MarkerCursor />}
         <Sidebar />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-          <Navbar mobileOnly />
+          <Navbar mobileOnly hideOnTablet />
+          <TabletPublicNavbar />
+          <TabletDashboardNavbar />
           <ContentLandmark id="main-content" tabIndex="-1" className="flex-grow">
             <Suspense fallback={<FullPageSpinner />}>
               <AppRoutes />
@@ -394,8 +400,10 @@ function AppShell() {
     <div className="min-h-screen flex flex-col">
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <RouteMetadata />
-      <MarkerCursor />
-      <Navbar />
+      {!isAuthenticated && <MarkerCursor />}
+      <Navbar hideOnTablet />
+      <TabletPublicNavbar />
+      <TabletDashboardNavbar />
       <ContentLandmark id="main-content" tabIndex="-1" className="flex-grow">
         <Suspense fallback={<FullPageSpinner />}>
           <AppRoutes />

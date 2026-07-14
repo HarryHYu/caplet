@@ -313,6 +313,8 @@ export default function StudyPlan() {
 }
 
 function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, setStep, error, saving, next, generate, cancel }) {
+  const [subjectQuery, setSubjectQuery] = useState('');
+  const visibleSubjects = options.subjects.filter((subject) => subject.label.toLowerCase().includes(subjectQuery.trim().toLowerCase()));
   const toggleSubject = (subject) => setForm((current) => ({
     ...current,
     subjects: current.subjects.includes(subject)
@@ -356,13 +358,16 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
                 {options.yearLevels.map((level) => <option key={level.value} value={level.value}>{level.label}</option>)}
               </select>
               <fieldset className="mt-8">
-                <legend className="text-sm font-bold text-text-muted">Subjects</legend>
+                <legend className="text-sm font-bold text-text-muted">Subjects <span className="font-medium text-text-dim">({form.subjects.length} selected)</span></legend>
+                <label htmlFor="study-subject-search" className="sr-only">Search subjects</label>
+                <input id="study-subject-search" type="search" value={subjectQuery} onChange={(event) => setSubjectQuery(event.target.value)} placeholder="Search all subjects" className="mt-3 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-sm font-medium text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 placeholder:text-text-dim focus:border-accent focus:ring-4 focus:ring-accent-soft" />
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {options.subjects.map((subject) => {
+                  {visibleSubjects.map((subject) => {
                     const selected = form.subjects.includes(subject.value);
                     return <button key={subject.value} type="button" aria-pressed={selected} onClick={() => toggleSubject(subject.value)} className={`rounded-2xl p-4 text-left text-sm font-bold transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 ${selected ? 'bg-accent text-white shadow-[0_16px_32px_-24px_rgba(19,81,170,0.75)]' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{subject.label}</button>;
                   })}
                 </div>
+                {!visibleSubjects.length && <p className="mt-3 rounded-2xl bg-surface-soft px-4 py-3 text-sm font-medium text-text-muted">No subjects match “{subjectQuery}”. Try a different search.</p>}
               </fieldset>
             </div>
           )}

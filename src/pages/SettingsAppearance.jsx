@@ -1,10 +1,16 @@
-import { CheckIcon, ComputerDesktopIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ComputerDesktopIcon, MoonIcon, RectangleStackIcon, SunIcon, ViewColumnsIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLayout } from '../contexts/LayoutContext';
 
 const appearanceOptions = [
+  { value: 'system', label: 'System', description: 'Match this device', icon: ComputerDesktopIcon },
   { value: 'light', label: 'Light', description: 'Use your chosen background', icon: SunIcon },
   { value: 'dark', label: 'Dark', description: 'Use its darker counterpart', icon: MoonIcon },
-  { value: 'system', label: 'System', description: 'Match this device', icon: ComputerDesktopIcon },
+];
+
+const navigationOptions = [
+  { value: 'vertical', label: 'Vertical bar', description: 'A roomy side rail for your workspace', icon: RectangleStackIcon },
+  { value: 'horizontal', label: 'Top bar', description: 'A compact navigation bar across the page', icon: ViewColumnsIcon },
 ];
 
 const paletteOptions = [
@@ -17,6 +23,7 @@ const paletteOptions = [
 
 export default function SettingsAppearance() {
   const { theme, setTheme, palette, setPalette, isDark } = useTheme();
+  const { navMode, setNavMode } = useLayout();
 
   const choosePalette = (value) => {
     setPalette(value);
@@ -59,6 +66,38 @@ export default function SettingsAppearance() {
                 </span>
                 <span className="mt-4 block font-display text-base font-bold text-text-primary">{label}</span>
                 <span className="mt-1 block text-xs font-medium text-text-dim">{description}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mt-12 border-t border-line-soft pt-10" aria-labelledby="navigation-mode-heading">
+        <div className="mb-4">
+          <h3 id="navigation-mode-heading" className="font-display text-lg font-bold tracking-tight text-text-primary">Navigation layout</h3>
+          <p className="mt-1 text-sm font-medium text-text-dim">Choose where your main workspace navigation lives.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Navigation layout">
+          {navigationOptions.map((option) => {
+            const NavigationIcon = option.icon;
+            const selected = navMode === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => setNavMode(option.value)}
+                className={`rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 ${selected ? 'border-accent bg-accent-soft shadow-sm' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
+              >
+                <span className="flex items-center justify-between gap-3">
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${selected ? 'bg-accent text-text-contrast' : 'bg-surface-raised text-text-muted'}`}>
+                    <NavigationIcon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  {selected && <CheckIcon className="h-5 w-5 text-accent" aria-hidden="true" />}
+                </span>
+                <span className="mt-4 block font-display text-base font-bold text-text-primary">{option.label}</span>
+                <span className="mt-1 block text-xs font-medium text-text-dim">{option.description}</span>
               </button>
             );
           })}

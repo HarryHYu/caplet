@@ -5,6 +5,7 @@ import {
   LockClosedIcon,
   WrenchScrewdriverIcon,
   BookOpenIcon,
+  BookmarkSquareIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
@@ -15,6 +16,7 @@ const icons = {
   Learn: BookOpenIcon,
   Economy: ChartBarSquareIcon,
   Tools: WrenchScrewdriverIcon,
+  Resources: BookmarkSquareIcon,
   'My Money': LockClosedIcon,
 };
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calculateBasketInflation, calculateSalaryEstimate, estimateIncomeTax } from '../lib/moneyCalculations';
+import { DEFAULT_SUPER_RATE, calculateSalaryBreakdown } from '../lib/salaryCalculations';
 
 describe('Money pilot calculations', () => {
   it('uses the 2026–27 resident tax schedule and keeps super outside take-home pay', () => {
@@ -15,6 +16,14 @@ describe('Money pilot calculations', () => {
   it('returns zero tax below the tax-free threshold', () => {
     expect(estimateIncomeTax(18_200)).toBe(0);
     expect(estimateIncomeTax(45_000)).toBeCloseTo(4_020, 5);
+  });
+
+  it('keeps tax out of the quoted salary package and defaults super to the current SG baseline', () => {
+    const result = calculateSalaryBreakdown({ grossSalary: 95_000 });
+
+    expect(DEFAULT_SUPER_RATE).toBe(12);
+    expect(result.netPay).toBeLessThan(result.gross);
+    expect(result.totalPackage).toBe(106_400);
   });
 
   it('weights a synthetic basket rather than applying one rate to every item', () => {

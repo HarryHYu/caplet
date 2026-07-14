@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRightIcon, BanknotesIcon, ChartBarSquareIcon, LockClosedIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, BanknotesIcon, BookmarkSquareIcon, ChartBarSquareIcon, LockClosedIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import api from '../services/api';
@@ -158,6 +158,17 @@ export default function MoneyOverview() {
             )}
           </section>
         </div>
+        <section className="reveal mt-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--block-cream)] p-7 md:flex-row md:items-center md:justify-between md:p-9" aria-labelledby="money-resources-preview-title">
+          <div className="flex items-start gap-4">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent"><BookmarkSquareIcon className="h-6 w-6" aria-hidden="true" /></span>
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Resource hub</p>
+              <h2 id="money-resources-preview-title" className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">A better starting point for research.</h2>
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">Browse trusted websites for data, markets, investing, tax, work and everyday money — all sorted into one growing library.</p>
+            </div>
+          </div>
+          <Link to="/money/resources" className="btn-primary inline-flex w-fit shrink-0">Browse resources <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
+        </section>
         <p className="reveal mt-8 text-center text-xs font-medium text-text-dim">General education and scenario estimates only, not personal financial advice.</p>
       </div>
     </div>

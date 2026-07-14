@@ -45,6 +45,12 @@
   --line-soft: #DCD4C2;
   --line-strong: #1C1A16;
 
+  /* Form controls — a lifted writing surface, lighter than the surrounding
+     soft blocks so fields feel inviting rather than inset. */
+  --surface-input: #FFFEFB;
+  --input-line: #D7CEBD;
+  --input-shadow: rgba(20, 20, 18, 0.05);
+
   /* Accent */
   --accent: #1351AA;
   --accent-strong: #0E3D82;
@@ -92,6 +98,9 @@
   --surface-soft: #F0F2F5;
   --surface-raised: #FBFCFE;
   --line-soft: #DDE1E7;
+  --surface-input: #FFFFFF;
+  --input-line: #D5DBE3;
+  --input-shadow: rgba(25, 35, 50, 0.06);
   --accent: #2856A3;
   --accent-strong: #1D417D;
   --accent-soft: rgba(40, 86, 163, 0.1);
@@ -105,6 +114,9 @@
   --surface-soft: #DFEAF5;
   --surface-raised: #FAFCFF;
   --line-soft: #C9D9E8;
+  --surface-input: #FFFFFF;
+  --input-line: #C5D7E7;
+  --input-shadow: rgba(20, 60, 90, 0.06);
   --accent: #1B5A91;
   --accent-strong: #14466F;
   --accent-soft: rgba(27, 90, 145, 0.11);
@@ -119,6 +131,9 @@
   --surface-soft: #E2EDDC;
   --surface-raised: #FBFDF9;
   --line-soft: #CDDCC5;
+  --surface-input: #FFFFFF;
+  --input-line: #C8D9C1;
+  --input-shadow: rgba(30, 75, 45, 0.06);
   --accent: #2E6B4A;
   --accent-strong: #23543A;
   --accent-soft: rgba(46, 107, 74, 0.11);
@@ -134,6 +149,9 @@
   --surface-soft: #F2E1E7;
   --surface-raised: #FFF9FB;
   --line-soft: #E4CBD4;
+  --surface-input: #FFFDFE;
+  --input-line: #E2C9D3;
+  --input-shadow: rgba(100, 35, 60, 0.06);
   --accent: #9A3D62;
   --accent-strong: #79304D;
   --accent-soft: rgba(154, 61, 98, 0.1);
@@ -158,6 +176,9 @@
 
   --line-soft: #322F2A;
   --line-strong: #F2EEE4;
+  --surface-input: #272522;
+  --input-line: #454038;
+  --input-shadow: rgba(0, 0, 0, 0.28);
 
   --accent: #5B9BF0;
   --accent-strong: #498ff5;
@@ -199,6 +220,9 @@
   --text-dim: #909BA7;
   --line-soft: #303841;
   --line-strong: #F1F4F7;
+  --surface-input: #20252B;
+  --input-line: #3A424C;
+  --input-shadow: rgba(0, 0, 0, 0.3);
   --accent: #7DA8F0;
   --accent-strong: #A5C4F5;
   --accent-soft: rgba(125, 168, 240, 0.16);
@@ -219,6 +243,9 @@
   --text-dim: #859EAE;
   --line-soft: #294258;
   --line-strong: #EFF6FA;
+  --surface-input: #182F41;
+  --input-line: #36566D;
+  --input-shadow: rgba(0, 0, 0, 0.3);
   --accent: #78B9E8;
   --accent-strong: #A7D4F2;
   --accent-soft: rgba(120, 185, 232, 0.16);
@@ -239,6 +266,9 @@
   --text-dim: #8FA793;
   --line-soft: #2D4735;
   --line-strong: #F0F6ED;
+  --surface-input: #203429;
+  --input-line: #3B5B45;
+  --input-shadow: rgba(0, 0, 0, 0.3);
   --accent: #7CC69A;
   --accent-strong: #A4DCB9;
   --accent-soft: rgba(124, 198, 154, 0.16);
@@ -262,6 +292,9 @@
   --text-dim: #B18796;
   --line-soft: #4A2D37;
   --line-strong: #FAF0F3;
+  --surface-input: #38212A;
+  --input-line: #5B3845;
+  --input-shadow: rgba(0, 0, 0, 0.3);
   --accent: #DE87A8;
   --accent-strong: #F1A9C2;
   --accent-soft: rgba(222, 135, 168, 0.16);
@@ -709,9 +742,9 @@
   stroke-dashoffset: 1;
 }
 
-/* Marker cursor — an ink-blue nib with a soft trailing ring, used site-wide
-   (mounted once in App.jsx). Text inputs keep a native text-beam cursor so
-   typing still feels normal on forms, the editor, and the essay memoriser. */
+/* Marker cursor — an ink-blue nib with a soft trailing ring, used on public
+   pages while signed out (mounted once in App.jsx). Text inputs keep a native
+   text-beam cursor so typing still feels normal on forms and the editor. */
 html.cursor-on,
 html.cursor-on * { cursor: none !important; }
 html.cursor-on input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='button']):not([type='submit']),
@@ -782,3 +815,108 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
   .animate-bounce { animation: none !important; }
   html { scroll-behavior: auto !important; }
 }
+
+/*
+ * Writing surfaces
+ * ----------------
+ * Keep editable controls visually separate from decorative soft blocks. This
+ * intentionally sits outside Tailwind's layers so an old `bg-surface-soft`
+ * utility cannot bring back the darker, inset treatment on a text field.
+ * Choice controls are excluded because they have a different interaction
+ * language and should retain their compact native/utility styling.
+ */
+:is(
+  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select,
+  textarea
+):not([data-control-unstyled]) {
+  color: var(--text-primary);
+  background-color: var(--surface-input);
+  border: 1px solid var(--input-line);
+  box-shadow: 0 1px 0 var(--input-shadow), 0 12px 26px -24px var(--input-shadow);
+  caret-color: var(--accent);
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+:is(
+  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select,
+  textarea
+):not([data-control-unstyled]):focus {
+  background-color: color-mix(in srgb, var(--surface-input) 94%, var(--accent) 6%);
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 12px 26px -22px var(--accent) !important;
+  outline: none;
+}
+
+:is(
+  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select,
+  textarea
+):not([data-control-unstyled])::placeholder {
+  color: var(--text-dim);
+  opacity: 0.72;
+}
+
+:is(
+  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select,
+  textarea
+):not([data-control-unstyled]):disabled {
+  background-color: color-mix(in srgb, var(--surface-input) 72%, var(--surface-body));
+  box-shadow: none;
+}
+
+:is(
+  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select,
+  textarea
+):not([data-control-unstyled])[aria-invalid='true'] {
+  border-color: var(--text-error);
+  box-shadow: 0 0 0 4px var(--surface-error);
+}
+
+/* Compound controls use a transparent inner field inside a shell. Lift the
+   shell itself when it was previously using a darker surface utility. */
+:is(
+  div.bg-surface-body:has(> input.bg-transparent),
+  div.bg-surface-soft:has(> input.bg-transparent),
+  div.bg-surface-body:has(> select.bg-transparent),
+  div.bg-surface-soft:has(> select.bg-transparent),
+  div.bg-surface-body:has(> textarea.bg-transparent),
+  div.bg-surface-soft:has(> textarea.bg-transparent)
+):not([data-control-unstyled]) {
+  background-color: var(--surface-input);
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+:is(
+  div.bg-surface-body:has(> input.bg-transparent),
+  div.bg-surface-soft:has(> input.bg-transparent),
+  div.bg-surface-body:has(> select.bg-transparent),
+  div.bg-surface-soft:has(> select.bg-transparent),
+  div.bg-surface-body:has(> textarea.bg-transparent),
+  div.bg-surface-soft:has(> textarea.bg-transparent)
+):not([data-control-unstyled]):focus-within {
+  background-color: color-mix(in srgb, var(--surface-input) 94%, var(--accent) 6%);
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 12px 26px -22px var(--accent) !important;
+}
+
+/* Keep the focus treatment deterministic for older selector engines that
+   flatten the compound :is() list differently. */
+div.bg-surface-body:has(> input.bg-transparent):focus-within,
+div.bg-surface-soft:has(> input.bg-transparent):focus-within,
+div.bg-surface-body:has(> select.bg-transparent):focus-within,
+div.bg-surface-soft:has(> select.bg-transparent):focus-within,
+div.bg-surface-body:has(> textarea.bg-transparent):focus-within,
+div.bg-surface-soft:has(> textarea.bg-transparent):focus-within {
+  background-color: color-mix(in srgb, var(--surface-input) 94%, var(--accent) 6%) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 12px 26px -22px var(--accent) !important;
+  outline: 3px solid color-mix(in srgb, var(--accent) 62%, transparent) !important;
+  outline-offset: 2px;
+}
+
+html:not(.dark) { color-scheme: light; }
+html.dark { color-scheme: dark; }

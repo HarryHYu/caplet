@@ -1,20 +1,24 @@
+import { useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useLayout } from '../contexts/LayoutContext';
 import ProductModeSwitch from './ProductModeSwitch';
+import UserAvatar from './UserAvatar';
 import { availableMoneyNavigation, isProductNavItemActive } from '../config/productNavigation';
 import {
     Squares2X2Icon,
     BookOpenIcon,
     BuildingLibraryIcon,
+    CalendarDaysIcon,
+    ArrowPathIcon,
+    ChartBarIcon,
+    BookmarkIcon,
+    DocumentTextIcon,
     WrenchScrewdriverIcon,
+    BookmarkSquareIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
-    ViewColumnsIcon,
-    SunIcon,
-    MoonIcon,
     ChartBarSquareIcon,
     LockClosedIcon,
 } from '@heroicons/react/24/outline';
@@ -22,17 +26,25 @@ import {
 /**
  * The app's vertical navigation island — the "vertical bar" mode. When active
  * it fully replaces the top navbar on large screens, so it carries the brand,
- * primary nav, theme toggle, the switch back to the top bar, and account
- * controls. Shown on every page (desktop only; mobile still uses the top bar),
- * so it stays consistent across the app. Collapse and nav-mode state are owned
- * by LayoutContext so they survive navigation.
+ * primary nav, account controls, and rail collapse action. Theme and navigation
+ * layout choices live in Settings → Appearance. Shown on every page (desktop
+ * only; mobile still uses the top bar), so it stays consistent across the app.
+ * Collapse and nav-mode state are owned by LayoutContext so they survive navigation.
  */
 export default function Sidebar() {
     const location = useLocation();
     const { user, isAuthenticated } = useAuth();
     const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
-    const { isDark, toggleTheme } = useTheme();
-    const { sidebarCollapsed: collapsed, toggleSidebar, toggleNavMode, productMode = 'study' } = useLayout();
+    const {
+        sidebarCollapsed: collapsed,
+        toggleSidebar,
+        sidebarWidth,
+        resizeSidebar,
+        sidebarWidthBounds,
+        productMode = 'study',
+    } = useLayout();
+    const sidebarRef = useRef(null);
+    const [isResizing, setIsResizing] = useState(false);
 
     const isActive = (path) => {
         if (path === '/dashboard') return location.pathname === '/dashboard';
@@ -41,6 +53,11 @@ export default function Sidebar() {
 
     const studyPrimaryItems = [
         { path: '/dashboard', label: 'Dashboard', icon: Squares2X2Icon },
+        { path: '/study-plan', label: 'Study plan', icon: CalendarDaysIcon },
+        { path: '/practice', label: 'Practice', icon: ArrowPathIcon },
+        { path: '/mastery', label: 'Mastery', icon: ChartBarIcon },
+        { path: '/revision', label: 'Revision', icon: BookmarkIcon },
+        { path: '/essays', label: 'Essays', icon: DocumentTextIcon },
         { path: '/library', label: 'Library', icon: BuildingLibraryIcon },
     ];
 
@@ -49,6 +66,7 @@ export default function Sidebar() {
         Learn: BookOpenIcon,
         Economy: ChartBarSquareIcon,
         Tools: WrenchScrewdriverIcon,
+        Resources: BookmarkSquareIcon,
         'My Money': LockClosedIcon,
     };
     const items = productMode === 'money'
@@ -56,38 +74,73 @@ export default function Sidebar() {
             .map((item) => ({ ...item, icon: moneyIcons[item.label] }))
         : studyPrimaryItems;
 
-    const initials = user
-        ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || user.firstName?.[0]?.toUpperCase() || 'U'
-        : 'U';
-
     // Shared row shape so nav links, footer actions and the account row line up.
     const row = (active) =>
-        `group relative flex min-h-11 items-center gap-3.5 transition-[color,background-color,transform,box-shadow] duration-200 ease-out ${
-            collapsed ? 'mx-auto aspect-square h-11 min-h-0 w-11 shrink-0 justify-center rounded-full p-0 active:scale-95' : 'rounded-2xl px-3 py-2.5 active:scale-[0.99]'
+        `group relative flex min-h-14 items-center gap-4 transition-[color,background-color,transform,box-shadow] duration-200 ease-out ${
+            collapsed ? 'mx-auto aspect-square h-10 min-h-0 w-10 shrink-0 justify-center rounded-full p-0 active:scale-95' : 'rounded-2xl px-4 py-3 active:scale-[0.99]'
         } ${
             active
                 ? 'bg-accent-soft text-accent'
                 : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'
         }`;
 
+    const updateWidthFromPointer = (event) => {
+        const rect = sidebarRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        resizeSidebar(event.clientX - rect.left);
+    };
+
+    const handleResizeStart = (event) => {
+        if (collapsed) return;
+        event.currentTarget.setPointerCapture(event.pointerId);
+        setIsResizing(true);
+        updateWidthFromPointer(event);
+    };
+
+    const handleResizeEnd = (event) => {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        setIsResizing(false);
+    };
+
+    const handleResizeKeyDown = (event) => {
+        if (collapsed) return;
+        const { min, max } = sidebarWidthBounds;
+        const step = event.shiftKey ? 32 : 12;
+        if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            resizeSidebar(Math.min(max, sidebarWidth + step));
+        } else if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            resizeSidebar(Math.max(min, sidebarWidth - step));
+        } else if (event.key === 'Home') {
+            event.preventDefault();
+            resizeSidebar(min);
+        } else if (event.key === 'End') {
+            event.preventDefault();
+            resizeSidebar(max);
+        }
+    };
+
     return (
         <aside
+            ref={sidebarRef}
             aria-label="Sidebar navigation"
-            className={`hidden lg:flex shrink-0 sticky top-0 h-screen p-3 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                collapsed ? 'w-[84px]' : 'w-[272px]'
-            }`}
+            className={`relative hidden lg:flex shrink-0 sticky top-0 h-screen p-4 ${isResizing ? 'select-none' : 'transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]'}`}
+            style={{ width: collapsed ? 96 : sidebarWidth }}
         >
-            <div className={`flex h-full w-full flex-col border border-line-soft bg-surface-raised shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] transition-[padding,border-radius] duration-300 ${collapsed ? 'rounded-[26px] p-2' : 'rounded-[28px] p-3.5'}`}>
+            <div className={`flex h-full w-full flex-col border border-line-soft bg-surface-raised shadow-[0_28px_64px_-38px_rgba(20,20,18,0.32)] transition-[padding,border-radius] duration-300 ${collapsed ? 'rounded-[28px] p-2' : 'rounded-[32px] p-4'}`}>
                 {/* Brand */}
                 <Link
                     to={productMode === 'money' ? '/money' : '/dashboard'}
-                    className={`flex min-h-11 items-center gap-3 transition-[background-color,transform] duration-200 hover:bg-surface-soft hover:scale-[1.01] ${collapsed ? 'mx-auto aspect-square h-11 min-h-0 w-11 shrink-0 justify-center rounded-full p-0' : 'rounded-2xl px-2 py-2'}`}
+                    className={`flex min-h-14 items-center gap-3 transition-[background-color,transform] duration-200 hover:bg-surface-soft hover:scale-[1.01] ${collapsed ? 'mx-auto aspect-square h-12 min-h-0 w-12 shrink-0 justify-center rounded-full p-0' : 'rounded-2xl px-2 py-2'}`}
                 >
-                    <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft">
                         <img src="/logo.png" alt="Caplet" className="h-full w-full scale-105 rounded-full object-cover" />
                     </span>
                     {!collapsed && (
-                        <span className="font-bricolage text-xl font-extrabold tracking-[-0.02em] text-text-primary">
+                        <span className="font-bricolage text-2xl font-extrabold tracking-[-0.03em] text-text-primary">
                             Caplet.
                         </span>
                     )}
@@ -95,12 +148,12 @@ export default function Sidebar() {
 
                 <ProductModeSwitch collapsed={collapsed} className="mt-3 w-full" />
 
-                <div className="my-3 border-t border-line-soft" />
+                <div className="my-4 border-t border-line-soft" />
 
                 {/* Primary nav */}
-                <nav aria-label="Primary navigation" className="flex flex-1 flex-col gap-1.5 overflow-y-auto">
+                <nav aria-label="Primary navigation" className="flex flex-1 flex-col gap-2 overflow-x-clip overflow-y-auto">
                     {!collapsed && (
-                        <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-text-dim">
+                        <p className="px-4 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-text-dim">
                             {productMode === 'money' ? 'Money' : 'Workspace'}
                         </p>
                     )}
@@ -117,8 +170,8 @@ export default function Sidebar() {
                                 aria-current={active ? 'page' : undefined}
                                 className={row(active)}
                             >
-                                <span className="relative grid h-5 w-5 shrink-0 place-items-center">
-                                    <item.icon className={`h-5 w-5 ${active ? 'text-accent' : ''}`} aria-hidden="true" />
+                                <span className="relative grid h-6 w-6 shrink-0 place-items-center">
+                                    <item.icon className={`h-6 w-6 ${active ? 'text-accent' : ''}`} aria-hidden="true" />
                                     {badge > 0 && collapsed && (
                                         <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-accent px-1 text-[10px] font-bold leading-none text-white">
                                             {badge > 9 ? '9+' : badge}
@@ -127,7 +180,7 @@ export default function Sidebar() {
                                 </span>
                                 {!collapsed && (
                                     <>
-                                        <span className="min-w-0 flex-1 truncate text-sm font-bold tracking-[0.02em]">
+                                        <span className="min-w-0 flex-1 truncate text-base font-bold tracking-[0.01em]">
                                             {label}
                                         </span>
                                         {badge > 0 && (
@@ -143,52 +196,19 @@ export default function Sidebar() {
 
                 </nav>
 
-                <div className="my-3 border-t border-line-soft" />
+                <div className="my-4 border-t border-line-soft" />
 
-                {/* Footer: controls the navbar used to hold */}
-                <div className="flex flex-col gap-1.5">
-                    <button
-                        type="button"
-                        onClick={toggleTheme}
-                        title={collapsed ? (isDark ? 'Light mode' : 'Dark mode') : undefined}
-                        aria-label="Toggle dark mode"
-                        className={row(false)}
-                    >
-                        {isDark ? (
-                            <SunIcon className="w-5 h-5 shrink-0" />
-                        ) : (
-                            <MoonIcon className="w-5 h-5 shrink-0" />
-                        )}
-                        {!collapsed && (
-                            <span className="text-sm font-bold tracking-[0.02em]">
-                                {isDark ? 'Light mode' : 'Dark mode'}
-                            </span>
-                        )}
-                    </button>
-
-                    {/* Switch the whole app back to the horizontal top bar */}
-                    <button
-                        type="button"
-                        onClick={toggleNavMode}
-                        title={collapsed ? 'Use top bar' : undefined}
-                        aria-label="Switch to top bar navigation"
-                        className={row(false)}
-                    >
-                        <ViewColumnsIcon className="w-5 h-5 shrink-0 rotate-90" />
-                        {!collapsed && (
-                            <span className="text-sm font-bold tracking-[0.02em]">Use top bar</span>
-                        )}
-                    </button>
-
+                {/* Account and rail controls stay quiet; theme and navigation
+                    choices live in Settings → Appearance. */}
+                <div className="flex flex-col gap-2">
                     {/* Account → settings, mirrors the navbar's account menu */}
                     <Link
                         to="/settings"
                         title={collapsed ? (user?.firstName || 'Account') : undefined}
+                        aria-label={collapsed ? 'Settings' : undefined}
                         className={row(isActive('/settings'))}
                     >
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold font-mono leading-none text-white">
-                            {initials}
-                        </span>
+                        <UserAvatar user={user} size="md" showStatus={false} />
                         {!collapsed && (
                             <span className="min-w-0 flex-1">
                                 <span className="block truncate text-sm font-bold text-text-primary">
@@ -201,7 +221,7 @@ export default function Sidebar() {
                         )}
                     </Link>
 
-                    <div className="my-1 border-t border-line-soft" />
+                    <div className="my-2 border-t border-line-soft" />
 
                     <button
                         type="button"
@@ -221,6 +241,27 @@ export default function Sidebar() {
                     </button>
                 </div>
             </div>
+            {!collapsed && (
+                <div
+                    role="separator"
+                    aria-label="Resize sidebar"
+                    aria-orientation="vertical"
+                    aria-valuemin={sidebarWidthBounds.min}
+                    aria-valuemax={sidebarWidthBounds.max}
+                    aria-valuenow={sidebarWidth}
+                    aria-valuetext={`${sidebarWidth} pixels wide`}
+                    tabIndex={0}
+                    onKeyDown={handleResizeKeyDown}
+                    onPointerDown={handleResizeStart}
+                    onPointerMove={(event) => isResizing && updateWidthFromPointer(event)}
+                    onPointerUp={handleResizeEnd}
+                    onPointerCancel={handleResizeEnd}
+                    className="group absolute right-0 top-1/2 z-30 hidden h-28 w-5 -translate-y-1/2 cursor-col-resize items-center justify-center lg:flex"
+                    title="Drag to resize sidebar"
+                >
+                    <span className="h-12 w-1 rounded-full bg-line-soft transition-[height,background-color,box-shadow] duration-200 group-hover:h-20 group-hover:bg-accent/70 group-focus-visible:h-20 group-focus-visible:bg-accent group-focus-visible:shadow-[0_0_0_4px_var(--accent-soft)]" />
+                </div>
+            )}
         </aside>
     );
 }

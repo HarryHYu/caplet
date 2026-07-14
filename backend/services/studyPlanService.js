@@ -74,6 +74,174 @@ const SUBJECTS = {
       { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
       { label: 'Review archived slides', path: '/revision', kind: 'Review' }
     ]
+  },
+  'modern-history': {
+    label: 'Modern History',
+    topics: ['Historical investigations', 'Source analysis', 'Cause and effect', 'Perspectives'],
+    diagnostic: {
+      topic: 'Source analysis',
+      question: 'What is the most useful first step when analysing a historical source?',
+      options: ['Identify its origin and purpose', 'Memorise every date mentioned', 'Rewrite it in modern language', 'Ignore the context'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse History courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  'ancient-history': {
+    label: 'Ancient History',
+    topics: ['Archaeology', 'Evidence and sources', 'Historical interpretations', 'Ancient societies'],
+    diagnostic: {
+      topic: 'Evidence and sources',
+      question: 'Why do historians compare different types of ancient evidence?',
+      options: ['To test interpretations against multiple perspectives', 'To avoid using primary sources', 'To replace historical argument with opinion', 'To make every source say the same thing'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse History courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  geography: {
+    label: 'Geography',
+    topics: ['Geographical inquiry', 'Population and place', 'Environmental change', 'Fieldwork'],
+    diagnostic: {
+      topic: 'Geographical inquiry',
+      question: 'What does a geographical inquiry use evidence to explain?',
+      options: ['Patterns, processes and connections between places', 'Only the names of locations', 'A single person’s opinion', 'The order of textbook chapters'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Geography courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  'society-and-culture': {
+    label: 'Society & Culture',
+    topics: ['Social and cultural research', 'Persons and society', 'Social change', 'Cross-cultural comparison'],
+    diagnostic: {
+      topic: 'Social and cultural research',
+      question: 'What makes a social and cultural investigation reliable?',
+      options: ['A clear method supported by relevant evidence', 'Only a large number of opinions', 'A conclusion written before research', 'Avoiding different perspectives'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Society & Culture courses', path: '/courses', kind: 'Learn' },
+      { label: 'Practise a written response', path: '/essays', kind: 'Practise' }
+    ]
+  },
+  'mathematics-advanced': {
+    label: 'Mathematics Advanced',
+    topics: ['Functions', 'Calculus', 'Financial mathematics', 'Statistics'],
+    diagnostic: {
+      topic: 'Functions',
+      question: 'What does the domain of a function describe?',
+      options: ['The allowed input values', 'The output values only', 'The gradient at one point', 'The area under a curve'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  'extension-1': {
+    label: 'Extension 1',
+    topics: ['Proof and reasoning', 'Functions', 'Calculus', 'Combinatorics'],
+    diagnostic: {
+      topic: 'Proof and reasoning',
+      question: 'What is the purpose of a mathematical proof?',
+      options: ['To justify that a result follows from accepted assumptions', 'To show only one numerical example', 'To replace definitions with a diagram', 'To estimate without explaining'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  'extension-2': {
+    label: 'Extension 2',
+    topics: ['Complex numbers', 'Vectors', 'Mechanics', 'Advanced calculus'],
+    diagnostic: {
+      topic: 'Advanced calculus',
+      question: 'Why is a substitution useful when integrating?',
+      options: ['It can transform a difficult integral into a simpler equivalent form', 'It removes the need for a constant', 'It always turns an integral into a derivative', 'It changes the value of the area'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  'mathematics-standard': {
+    label: 'Mathematics Standard',
+    topics: ['Data analysis', 'Finance', 'Measurement', 'Networks'],
+    diagnostic: {
+      topic: 'Data analysis',
+      question: 'What does the median represent in an ordered data set?',
+      options: ['The middle value', 'The most frequent value', 'The difference between extremes', 'The average of the extremes only'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  physics: {
+    label: 'Physics',
+    topics: ['Motion', 'Forces', 'Energy', 'Electricity'],
+    diagnostic: {
+      topic: 'Forces',
+      question: 'What is the net force on an object moving at constant velocity?',
+      options: ['Zero', 'Equal to its mass', 'Always increasing', 'Equal to its speed'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Physics courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  chemistry: {
+    label: 'Chemistry',
+    topics: ['Atomic structure', 'Chemical reactions', 'Equilibrium', 'Organic chemistry'],
+    diagnostic: {
+      topic: 'Chemical reactions',
+      question: 'What does a balanced chemical equation show?',
+      options: ['Conservation of atoms in the reaction', 'The reaction speed only', 'The colour of every substance', 'The temperature of the room'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Chemistry courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  biology: {
+    label: 'Biology',
+    topics: ['Cells', 'Genetics', 'Evolution', 'Ecosystems'],
+    diagnostic: {
+      topic: 'Cells',
+      question: 'What is the main role of the cell membrane?',
+      options: ['Controlling movement into and out of the cell', 'Producing all the cell’s energy', 'Storing the organism’s bones', 'Making every protein directly'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Biology courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
+  },
+  'investigating-science': {
+    label: 'Investigating Science',
+    topics: ['Scientific inquiry', 'Data and evidence', 'Technology and society', 'Research design'],
+    diagnostic: {
+      topic: 'Scientific inquiry',
+      question: 'What makes a scientific investigation a fair test?',
+      options: ['Changing one key variable while controlling relevant conditions', 'Changing every variable at once', 'Choosing results before collecting data', 'Using no measurements'],
+      answer: 0
+    },
+    resources: [
+      { label: 'Browse Science courses', path: '/courses', kind: 'Learn' },
+      { label: 'Review saved work', path: '/revision', kind: 'Review' }
+    ]
   }
 };
 
@@ -104,8 +272,7 @@ function publicOptions() {
 
 function normalizeConfig(input = {}) {
   const subjects = [...new Set(Array.isArray(input.subjects) ? input.subjects : [])]
-    .filter((subject) => SUBJECTS[subject])
-    .slice(0, 5);
+    .filter((subject) => SUBJECTS[subject]);
   const hasAvailableDays = Array.isArray(input.availableDays);
   const availableDays = [...new Set(hasAvailableDays ? input.availableDays : DEFAULT_DAYS)]
     .map(Number)

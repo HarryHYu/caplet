@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * Site-wide marker cursor (mounted once in App.jsx).
+ * Public-site marker cursor (mounted once in App.jsx while signed out).
  *
  * An ink-blue nib tracks the pointer tightly while a soft ring trails behind
  * it with easing; over interactive elements the ring tightens around the
