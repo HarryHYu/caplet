@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
 import { useReveal } from '../lib/useReveal';
 import CapletLoader from '../components/CapletLoader';
@@ -250,7 +250,14 @@ function HintToggle({ options, value, onChange }) {
 function ProgressBar({ value, total }) {
     const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
     return (
-        <div className="h-1.5 w-full bg-line-soft rounded-full overflow-hidden mb-5">
+        <div
+            className="h-1.5 w-full bg-line-soft rounded-full overflow-hidden mb-5"
+            role="progressbar"
+            aria-label="Essay practice progress"
+            aria-valuemin="0"
+            aria-valuemax={total}
+            aria-valuenow={Math.min(value, total)}
+        >
             <div className="h-full bg-accent rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
         </div>
     );
@@ -270,7 +277,7 @@ function SessionDone({ onRestart, nextLabel, onNext }) {
             </div>
             <p className="font-display text-xl font-extrabold tracking-tight text-text-primary">Session complete</p>
             <p className="text-sm text-text-muted mt-2">Items rescheduled on the 1, 3, 7, 14 day ladder.</p>
-            <div className="flex items-center justify-center gap-3 mt-6">
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
                 <button type="button" onClick={onRestart}
                     className="btn-secondary inline-flex hover:-translate-y-0.5 transition-transform">
                     Restart
@@ -306,8 +313,10 @@ function SpotlightMode({ essay }) {
             <div className="flex items-center justify-between mb-6">
                 <span className="text-xs font-medium text-text-dim">{idx + 1} / {segments.length}</span>
                 <div className="flex gap-1.5">
-                    {segments.map((_, i) => (
-                        <button key={i} onClick={() => setIdx(i)}
+                    {segments.map((segment, i) => (
+                        <button key={i} type="button" onClick={() => setIdx(i)}
+                            aria-label={`Read ${segment.label}`}
+                            aria-current={i === idx ? 'step' : undefined}
                             className={`w-2 h-2 rounded-full transition-colors ${i === idx ? 'bg-accent' : 'bg-line-soft hover:bg-text-dim'}`} />
                     ))}
                 </div>
@@ -556,7 +565,7 @@ function RecallChunks({ essay, onScheduled, onNext, nextLabel }) {
             <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
             </div>
-            <ProgressBar value={pIndex} total={paras.length} />
+            <ProgressBar value={pIndex + 1} total={paras.length} />
             <p className="text-sm text-text-muted italic mb-6 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
 
             {cloze ? (
@@ -652,7 +661,7 @@ function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
                 <span className="text-xs font-medium text-text-dim tabular-nums">{correct}/{history.length} correct</span>
             </div>
-            <ProgressBar value={pIndex} total={paras.length} />
+            <ProgressBar value={pIndex + 1} total={paras.length} />
             <p className="text-xs font-medium text-text-dim mb-4">Type each word. The next word's first letter appears as you go.</p>
 
             <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
@@ -793,7 +802,7 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
                 <span className="text-xs font-medium text-text-dim">Para {pIndex + 1}/{paras.length} · Sentence {sIndex + 1}/{total}</span>
                 <HintToggle options={SENTENCE_HINTS} value={hintStyle} onChange={setHintStyle} />
             </div>
-            <ProgressBar value={pIndex} total={paras.length} />
+            <ProgressBar value={pIndex + 1} total={paras.length} />
 
             {phase === 'read' ? (
                 <div>
@@ -927,7 +936,7 @@ function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
                 <HintToggle options={TYPE_HINTS} value={hint} onChange={setHint} />
             </div>
-            <ProgressBar value={pIndex} total={paras.length} />
+            <ProgressBar value={pIndex + 1} total={paras.length} />
             <p className="text-sm text-text-muted italic mb-5 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
 
             <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
@@ -1051,7 +1060,7 @@ function NewEssayForm({ onCreated }) {
                 <button type="button" onClick={submit} disabled={submitting || pdfBusy}
                     className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
                     <PlusIcon className="w-4 h-4" />
-                    {submitting ? 'Saving…' : 'Save and parse'}
+                    {submitting ? 'Preparing…' : 'Parse with AI'}
                 </button>
             </div>
         </div>
@@ -1094,11 +1103,12 @@ const MODE_GROUPS = [
 ];
 const ALL_MODES = MODE_GROUPS.flatMap((g) => g.modes);
 
-function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
+function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialParseError }) {
     const [parsing, setParsing] = useState(false);
-    const [parseError, setParseError] = useState(null);
+    const [parseError, setParseError] = useState(initialParseError || null);
     const [mode, setMode] = useState('read');
     const [dueCount, setDueCount] = useState(0);
+    const modeTabRefs = useRef({});
 
     const structure = essay.parsedStructure;
 
@@ -1110,6 +1120,14 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
     }, [essay.id]);
 
     useEffect(() => { if (structure) loadDue(); }, [structure, loadDue]);
+
+    useEffect(() => {
+        if (initialParseError) setParseError(initialParseError);
+    }, [initialParseError]);
+
+    useEffect(() => {
+        modeTabRefs.current[mode]?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }, [mode]);
 
     const parse = async () => {
         setParsing(true);
@@ -1131,7 +1149,7 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
                 <ArrowLeftIcon className="w-4 h-4" /> All essays
             </button>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
                 <div className="min-w-0">
                     <span className="font-hand text-lg text-accent -rotate-2 inline-block mb-1">essay</span>
                     <h1 className="text-4xl md:text-6xl break-words">{essay.title}</h1>
@@ -1155,26 +1173,31 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
                         <>
                             <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-5" />
                             <p className="font-display text-lg font-extrabold tracking-tight text-text-primary mb-2">
-                                Parsing your essay
+                                Preparing your essay
                             </p>
                             <p className="text-sm text-text-muted">
-                                <CyclingMessage messages={PARSE_MESSAGES} />
+                                Saving the original, then asking AI to map its structure. <CyclingMessage messages={PARSE_MESSAGES} />
                             </p>
                         </>
                     ) : (
                         <>
                             <SparklesIcon className="w-8 h-8 text-accent mx-auto mb-5" />
                             <p className="text-base text-text-primary font-medium mb-2">
-                                Segment this essay into its thesis, body paragraphs, quotes and techniques so you can drill it.
+                                Use AI to map this essay into its thesis, body paragraphs, quotes and techniques before you practise it.
                             </p>
                             <p className="font-hand text-base text-accent mb-6">
-                                Caplet only segments and annotates. It never rewrites your words.
+                                Your original wording stays exactly as you wrote it.
                             </p>
-                            {parseError && <p className="text-sm text-rose-400 mb-5 font-medium">{parseError}</p>}
+                            {parseError && (
+                                <div role="alert" className="text-sm text-rose-400 mb-5 font-medium">
+                                    <p className="mb-1">Your essay is saved, but AI parsing did not finish.</p>
+                                    <p>{parseError}</p>
+                                </div>
+                            )}
                             <button type="button" onClick={parse} disabled={parsing}
                                 className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
                                 <SparklesIcon className="w-4 h-4" />
-                                Parse with AI
+                                {parseError ? 'Retry AI parsing' : 'Parse with AI'}
                             </button>
                         </>
                     )}
@@ -1182,25 +1205,39 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing }) {
             ) : (
                 <div>
                     {/* ── Mode tab bar, grouped by stage of learning ── */}
-                    <div className="flex items-stretch gap-1 mb-4 overflow-x-auto pb-px border-b border-line-soft">
+                    <div className="relative mb-4">
+                        <div
+                            role="tablist"
+                            aria-label="Essay modes"
+                            className="flex items-stretch gap-1 overflow-x-auto pb-px pr-8 border-b border-line-soft [scrollbar-width:thin]"
+                        >
                         {MODE_GROUPS.map((g, gi) => (
                             <div key={g.group} className={`flex items-center gap-1 shrink-0 ${gi > 0 ? 'pl-2 ml-1 border-l border-line-soft' : ''}`}>
                                 <span className="hidden lg:inline text-[10px] font-bold uppercase tracking-widest text-text-dim mr-1 whitespace-nowrap">
                                     {g.group}
                                 </span>
                                 {g.modes.map((t) => (
-                                    <button key={t.key} type="button" onClick={() => setMode(t.key)}
-                                        className={`shrink-0 flex items-center gap-1.5 px-4 py-3 text-sm font-medium -mb-px border-b-2 transition-colors whitespace-nowrap ${
+                                    <button
+                                        key={t.key}
+                                        ref={(node) => { modeTabRefs.current[t.key] = node; }}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={mode === t.key}
+                                        onClick={() => setMode(t.key)}
+                                        className={`shrink-0 flex items-center gap-1.5 px-4 py-3 text-sm font-medium -mb-px border-b-2 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
                                             mode === t.key
                                                 ? 'border-accent text-accent'
                                                 : 'border-transparent text-text-dim hover:text-text-primary'
-                                        }`}>
+                                        }`}
+                                    >
                                         {t.icon && <t.icon className="w-4 h-4" />}
                                         {t.label}
                                     </button>
                                 ))}
                             </div>
                         ))}
+                        </div>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-surface-body to-transparent md:hidden" aria-hidden="true" />
                     </div>
 
                     {/* ── Active mode context ── */}
@@ -1252,6 +1289,7 @@ export default function EssayMemoriser() {
     const [essay, setEssay] = useState(null);
     const [opening, setOpening] = useState(false);
     const [isParsing, setIsParsing] = useState(false);
+    const [parseFailure, setParseFailure] = useState(null);
     const [dueByEssay, setDueByEssay] = useState({}); // essayId -> due count
     const mountedRef = useRef(true);
 
@@ -1284,15 +1322,29 @@ export default function EssayMemoriser() {
         })();
     }, [loadEssays]);
 
+    // Opening an essay is an in-page state change, so the app-level route
+    // scroll reset does not run. Reset before the new detail layout paints;
+    // otherwise opening a card near the bottom of the list hides the title
+    // behind the fixed navbar.
+    useLayoutEffect(() => {
+        if (typeof window !== 'undefined' && window.scrollY > 0) {
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        }
+    }, [essay?.id]);
+
     const openEssay = async (id) => {
         setOpening(true);
+        setParseFailure(null);
         try { const res = await api.getEssay(id); setEssay(res.essay); }
         catch (e) { console.warn('Open essay failed:', e?.message || e); }
         finally { setOpening(false); }
     };
 
     const handleCreate = async (title, text) => {
-        // Step 1: save quickly (≈1s) — NewEssayForm shows "Saving…" during this
+        setParseFailure(null);
+
+        // Step 1: persist the original so the AI result can be attached to a
+        // private essay record and retried without losing the student's text.
         const res = await api.createEssay(title, text);
         const created = res.essay;
 
@@ -1304,7 +1356,11 @@ export default function EssayMemoriser() {
         // Step 3: parse in background — does NOT block the form cleanup
         api.parseEssay(created.id)
             .then((parsed) => { if (mountedRef.current) setEssay(parsed.essay); })
-            .catch(() => { /* essay stays un-parsed; manual retry button appears */ })
+            .catch((e) => {
+                if (mountedRef.current) {
+                    setParseFailure(e?.message || 'AI parsing failed. Your essay is saved; please retry.');
+                }
+            })
             .finally(() => {
                 if (mountedRef.current) {
                     setIsParsing(false);
@@ -1313,10 +1369,11 @@ export default function EssayMemoriser() {
             });
     };
 
-    const handleParsed = (updated) => { setEssay(updated); loadEssays(); };
+    const handleParsed = (updated) => { setParseFailure(null); setEssay(updated); loadEssays(); };
 
     const handleDelete = async (id) => {
         try { await api.deleteEssay(id); } catch (e) { console.warn('Delete essay failed:', e?.message || e); }
+        setParseFailure(null);
         setEssay(null);
         setEssays((prev) => prev.filter((e) => e.id !== id));
     };
@@ -1335,10 +1392,11 @@ export default function EssayMemoriser() {
                 {essay ? (
                     <EssayDetail
                         essay={essay}
-                        onBack={() => { setEssay(null); setIsParsing(false); loadEssays(); }}
+                        onBack={() => { setParseFailure(null); setEssay(null); setIsParsing(false); loadEssays(); }}
                         onParsed={handleParsed}
                         onDeleted={handleDelete}
                         isParsing={isParsing}
+                        initialParseError={parseFailure}
                     />
                 ) : (
                     <>
@@ -1380,7 +1438,7 @@ export default function EssayMemoriser() {
                                                         <div className="min-w-0">
                                                             <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">{e.title}</p>
                                                             <p className="text-xs font-medium text-text-dim mt-1">
-                                                                {e.parsed ? `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}` : 'Needs parsing — click to finish setting it up'}
+                                                                {e.parsed ? `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}` : 'AI parsing needed — click to continue'}
                                                             </p>
                                                         </div>
                                                     </div>

@@ -18,6 +18,7 @@ describe('EssayMemoriser', () => {
     render(<EssayMemoriser />);
     expect(await screen.findByText(/Learn it by heart/i)).toBeInTheDocument();
     expect(screen.getByText(/New essay/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Parse with AI/i })).toBeInTheDocument();
     expect(await screen.findByText(/No essays yet/i)).toBeInTheDocument();
     // PDF upload affordance is present (reuses the existing extractor)
     expect(screen.getByText(/Upload PDF/i)).toBeInTheDocument();
