@@ -162,7 +162,7 @@ export default function MoneyResources() {
           </div>
         </section> : null}
 
-        <section className="sticky top-14 z-20 mt-10 rounded-3xl border border-line-soft bg-surface-body/95 p-4 shadow-[0_24px_54px_-44px_rgba(20,20,18,0.55)] backdrop-blur md:top-16 md:p-5" aria-label="Search and filter resource websites">
+        <section className="mt-10 rounded-3xl border border-line-soft bg-surface-body p-4 md:p-5" aria-label="Search and filter resource websites">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)] lg:items-end">
             <div className="min-w-0">
               <label htmlFor="money-resource-search" className="mb-2 block text-xs font-extrabold uppercase tracking-[0.14em] text-text-dim">Search the library</label>

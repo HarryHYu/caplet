@@ -23,6 +23,7 @@ describe('Money resource hub', () => {
     expect(screen.getByText(`${MONEY_RESOURCES.length} bookmarks · ${MONEY_RESOURCE_CATEGORIES.length} categories`)).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /Morningstar Australia/ })).toHaveLength(1);
     expect(screen.getAllByRole('link', { name: /FRED Economic Data/ })).toHaveLength(1);
+    expect(screen.getByRole('region', { name: 'Search and filter resource websites' })).not.toHaveClass('sticky');
   });
 
   it('combines topic search with category filters', async () => {
