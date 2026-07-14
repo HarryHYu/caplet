@@ -28,38 +28,66 @@ const DEMO_STEPS = [
   {
     id: 'build',
     label: 'Build',
+    navLabel: 'Lesson',
     path: '/build',
     role: 'Curriculum author',
     eyebrow: '1 · Build',
-    title: 'Turn curriculum into a lesson.',
-    description: 'Open a seeded lesson, edit a slide, preview it, or ask the AI assistant to add a learning activity.',
+    title: 'Make a lesson.',
+    description: 'Turn one curriculum topic into a short, editable lesson.',
+    guide: {
+      title: 'First, make the lesson.',
+      message: 'A lesson is made from small pieces. Open this Reading slide to see the part a teacher can change.',
+      action: 'Show me the slide editor',
+      result: 'This is the lesson editor. A teacher can change the wording, then add more learning moments when they are ready.',
+    },
   },
   {
     id: 'teach',
     label: 'Teach',
+    navLabel: 'Class',
     path: '/teach/cls-commerce',
     role: 'Teacher',
     eyebrow: '2 · Teach',
-    title: 'Give the work to a real class.',
-    description: 'The class opens on Classwork so you can inspect assignments, submissions, and linked curriculum.',
+    title: 'Share it with a class.',
+    description: 'Turn that lesson into an activity for a real class.',
+    guide: {
+      title: 'Now share it with a class.',
+      message: 'This is where a teacher gives the lesson to learners. Open the form and you will see the few details they need to set.',
+      action: 'Open the assignment form',
+      result: 'This form turns the lesson into classwork. A teacher names it, adds a due date, and chooses the work students will receive.',
+    },
   },
   {
     id: 'experience',
     label: 'Experience',
+    navLabel: 'Student',
     path: '/experience/money-basics/lesson-income-tax',
     role: 'Student',
     eyebrow: '3 · Experience',
-    title: 'See what the learner sees.',
-    description: 'Move through the interactive tax lesson as Mia. Answers, saved slides, and progress remain local to this Demo.',
+    title: 'See the student view.',
+    description: 'See the lesson exactly as a learner sees it, including help when they get stuck.',
+    guide: {
+      title: 'Then see the student view.',
+      message: 'Students get one focused lesson, not a teacher dashboard. When something is unclear, they can ask for help right beside the slide.',
+      action: 'Open the student helper',
+      result: 'This helper stays with the current lesson. It can explain the idea more simply or give the learner a concrete example.',
+    },
   },
   {
     id: 'act',
     label: 'Act',
+    navLabel: 'Support',
     path: '/act/cls-commerce',
     role: 'Teacher',
     eyebrow: '4 · Act',
-    title: 'Turn evidence into the next action.',
-    description: 'Inspect outcome mastery, open a student profile, and create a targeted remediation assignment.',
+    title: 'Help the students who need it.',
+    description: 'Use class evidence to offer the right help to the students who need it.',
+    guide: {
+      title: 'Finally, offer the right help.',
+      message: 'Caplet finds the students who need support and suggests the next activity, so a teacher does not have to decode every number first.',
+      action: 'Open the suggested assignment',
+      result: 'The suggested group and the learning goal are already filled in. A teacher only needs to review it before creating the activity.',
+    },
   },
 ];
 
@@ -98,10 +126,10 @@ function DemoExperienceProvider({ children }) {
     setFreeExplore,
     version,
     announcement,
-    reset() {
+    reset({ silent = false } = {}) {
       resetDemo();
       setVersion((current) => current + 1);
-      setAnnouncement('The sample workspace has been reset.');
+      setAnnouncement(silent ? '' : 'The sample workspace has been reset.');
     },
     clearAnnouncement() {
       setAnnouncement('');
@@ -141,62 +169,171 @@ function DemoOverview() {
             {location.state.demoNotice}
           </div>
         )}
-        <section className="grid items-end gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+        <section className="grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr]">
           <div>
-            <span className="font-hand text-2xl text-accent -rotate-2 inline-block">a five-minute school walkthrough</span>
-            <h1 className="mt-4 max-w-4xl font-display text-5xl font-extrabold leading-[0.94] tracking-[-0.05em] text-text-primary sm:text-7xl lg:text-[6.5rem]">
-              From curriculum to the next teaching move.
+            <span className="font-hand text-2xl text-accent -rotate-2 inline-block">a simple, guided Caplet walkthrough</span>
+            <h1 className="mt-4 max-w-4xl font-display text-5xl font-extrabold leading-[0.94] tracking-[-0.05em] text-text-primary sm:text-7xl lg:text-[5.8rem]">
+              See how Caplet<br />helps a teacher.
             </h1>
             <p className="mt-7 max-w-2xl text-lg font-medium leading-relaxed text-text-muted md:text-xl">
-              Follow one connected workflow across lesson creation, classroom delivery, the student experience, and evidence-led intervention.
+              In four short scenes, you will make a lesson, share it with a class, see the student view, then offer help where it is needed.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
               <Link to="/build" className="btn-primary px-6 py-3">
-                Start the guided tour <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+                Show me how it works <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
               </Link>
-              <a href="/contact" className="btn-secondary px-6 py-3">Contact about a pilot</a>
             </div>
+            <p className="mt-5 text-sm font-bold text-text-dim">About 2 minutes · sample workspace · no sign-in needed</p>
           </div>
-          <aside className="rounded-[2rem] border border-line-soft bg-surface-raised p-7 shadow-[0_30px_70px_-48px_rgba(20,20,18,0.5)] md:p-9">
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-accent">Sample workspace</p>
-            <h2 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-text-primary">Year 11 Commerce A</h2>
-            <dl className="mt-7 grid grid-cols-2 gap-4">
-              {[
-                ['4', 'students'],
-                ['3', 'curriculum outcomes'],
-                ['31', 'evidence records'],
-                ['2', 'students to support'],
-              ].map(([value, label]) => (
-                <div key={label} className="rounded-2xl bg-surface-soft p-4">
-                  <dt className="text-xs font-bold text-text-muted">{label}</dt>
-                  <dd className="mt-1 font-display text-3xl font-extrabold text-text-primary">{value}</dd>
-                </div>
-              ))}
-            </dl>
+          <aside className="rounded-[2rem] border border-line-soft bg-surface-raised p-7 shadow-[0_30px_70px_-48px_rgba(20,20,18,0.5)] md:p-9" aria-label="How the guided tour works">
+            <div className="flex items-center gap-4">
+              <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-3xl border border-line-soft bg-surface-body p-2">
+                <img src="/logo.png" alt="Caplet guide" className="h-full w-full object-contain" />
+              </span>
+              <div>
+                <p className="font-hand text-xl text-accent -rotate-2 inline-block">I&apos;ll show you, not tell you.</p>
+                <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-text-primary">What you&apos;ll see</h2>
+              </div>
+            </div>
             <p className="mt-6 text-sm font-medium leading-relaxed text-text-muted">
-              Everything is sample data. Changes work locally and can be reset at any time.
+              You do not need to know the product first. Each step opens one example and explains why it matters.
             </p>
+            <ol className="mt-7 divide-y divide-line-soft border-y border-line-soft">
+              {DEMO_STEPS.map((step, index) => (
+                <li key={step.id} className="flex items-center gap-3 py-4">
+                  <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold ${index === 0 ? 'bg-accent text-white' : 'bg-surface-soft text-text-muted'}`}>{index + 1}</span>
+                  <div>
+                    <p className="text-sm font-extrabold text-text-primary">{step.title}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-text-muted">{step.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </aside>
-        </section>
-
-        <section className="mt-20" aria-labelledby="tour-steps-heading">
-          <p className="section-kicker">The connected story</p>
-          <h2 id="tour-steps-heading" className="mt-2 font-display text-4xl font-extrabold tracking-tight text-text-primary md:text-5xl">Build. Teach. Experience. Act.</h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {DEMO_STEPS.map((step, index) => (
-              <Link key={step.id} to={step.path} className="group rounded-3xl border border-line-soft bg-surface-raised p-6 transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-2xl bg-accent-soft font-display font-extrabold text-accent">{index + 1}</span>
-                  <ArrowRightIcon className="h-5 w-5 text-text-dim transition-transform group-hover:translate-x-1" aria-hidden="true" />
-                </div>
-                <h3 className="mt-8 font-display text-2xl font-extrabold text-text-primary">{step.label}</h3>
-                <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{step.description}</p>
-              </Link>
-            ))}
-          </div>
         </section>
       </div>
     </main>
+  );
+}
+
+function findDemoFocusTarget(stepId) {
+  const buttons = Array.from(document.querySelectorAll('button'));
+  const buttonWithText = (text) => buttons.find((button) => button.textContent?.trim().includes(text));
+
+  if (stepId === 'build') {
+    const readingCard = buttonWithText('Reading')?.closest('.group');
+    return {
+      target: readingCard,
+      activate: () => readingCard?.querySelector('button[aria-label="Expand"]')?.click(),
+      afterActivate: () => Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim().includes('Reading'))?.closest('.group'),
+    };
+  }
+  if (stepId === 'teach') {
+    const assignmentButton = buttonWithText('Create Assignment');
+    return {
+      target: assignmentButton,
+      activate: () => assignmentButton?.click(),
+      afterActivate: () => Array.from(document.querySelectorAll('h2')).find((heading) => heading.textContent?.trim() === 'New Assignment')?.closest('.fixed')?.firstElementChild,
+    };
+  }
+  if (stepId === 'experience') {
+    const tutor = buttonWithText('Ask the AI tutor about this slide');
+    return {
+      target: tutor?.parentElement,
+      activate: () => tutor?.click(),
+      afterActivate: () => Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim().includes('Ask the AI tutor about this slide'))?.parentElement,
+    };
+  }
+  if (stepId === 'act') {
+    const assignmentButton = buttonWithText('Create remediation assignment');
+    return {
+      target: assignmentButton?.closest('li'),
+      activate: () => assignmentButton?.click(),
+      afterActivate: () => document.getElementById('adaptive-assignment'),
+    };
+  }
+  return null;
+}
+
+function clearDemoFocus() {
+  document.querySelectorAll('.demo-focus-target').forEach((element) => element.classList.remove('demo-focus-target'));
+}
+
+function DemoGuide({ step }) {
+  const [actionComplete, setActionComplete] = useState(false);
+  const [focusMessage, setFocusMessage] = useState('');
+  const navigate = useNavigate();
+  const currentIndex = DEMO_STEPS.findIndex((candidate) => candidate.id === step.id);
+  const nextStep = DEMO_STEPS[currentIndex + 1];
+
+  useEffect(() => {
+    clearDemoFocus();
+    setActionComplete(false);
+    setFocusMessage('');
+    return clearDemoFocus;
+  }, [step.id]);
+
+  const showNextAction = () => {
+    clearDemoFocus();
+    const interaction = findDemoFocusTarget(step.id);
+    if (!interaction?.target) {
+      setFocusMessage('This part is still loading. Try again in a moment.');
+      return;
+    }
+    interaction.activate?.();
+    window.setTimeout(() => {
+      const target = interaction.afterActivate?.() || interaction.target;
+      target?.classList.add('demo-focus-target');
+      target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    }, 0);
+    setActionComplete(true);
+    setFocusMessage('');
+  };
+
+  if (actionComplete && step.id === 'teach') {
+    return <p role="status" aria-live="polite" className="sr-only">{step.guide.result}</p>;
+  }
+
+  return (
+    <aside className="fixed bottom-4 right-4 z-[90] max-h-[calc(100vh-5rem)] w-[min(21rem,calc(100vw-2rem))] overflow-y-auto rounded-3xl border border-line-soft bg-surface-raised p-4 shadow-[0_26px_70px_-35px_rgba(20,20,18,0.55)] md:bottom-6 md:right-6 md:p-5" aria-label={`Caplet guide: ${step.label}`}>
+      <div className="flex items-start gap-3">
+        <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-line-soft bg-surface-body p-1.5">
+          <img src="/logo.png" alt="Caplet guide" className="h-full w-full object-contain" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            <span>Viewing as {step.role}</span><span aria-hidden="true"> · Step {currentIndex + 1} of {DEMO_STEPS.length}</span>
+          </p>
+          <h2 className="mt-1 font-display text-xl font-extrabold tracking-tight text-text-primary">{step.guide.title}</h2>
+        </div>
+      </div>
+      {!actionComplete ? (
+        <>
+          <p className="mt-4 text-sm font-medium leading-relaxed text-text-muted">{step.guide.message}</p>
+          <button type="button" onClick={showNextAction} className="btn-primary mt-5 w-full justify-center px-4 py-3 text-sm">
+            {step.guide.action} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <p className="mt-3 text-xs font-bold text-text-dim">This is a safe sample. You can explore without changing anything real.</p>
+        </>
+      ) : (
+        <>
+          <div className="mt-4 rounded-2xl bg-accent-soft p-3.5">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.15em] text-accent">You are looking at it</p>
+            <p className="mt-1.5 text-sm font-bold leading-relaxed text-text-primary">{step.guide.result}</p>
+          </div>
+          {nextStep ? (
+            <button type="button" onClick={() => navigate(nextStep.path)} className="btn-primary mt-4 w-full justify-center px-4 py-3 text-sm">
+              Continue: {nextStep.title} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+            </button>
+          ) : (
+            <button type="button" onClick={() => navigate('/overview')} className="btn-primary mt-4 w-full justify-center px-4 py-3 text-sm">
+              Start the story again <ArrowPathIcon className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+        </>
+      )}
+      {focusMessage && <p role="status" aria-live="polite" className="mt-3 text-xs font-bold text-accent">{focusMessage}</p>}
+    </aside>
   );
 }
 
@@ -211,6 +348,7 @@ function DemoShell() {
   const nextPath = currentIndex >= 0 && currentIndex < DEMO_STEPS.length - 1 ? DEMO_STEPS[currentIndex + 1].path : null;
 
   const restart = () => {
+    reset({ silent: true });
     setFreeExplore(false);
     setMenuOpen(false);
     navigate('/overview');
@@ -231,7 +369,7 @@ function DemoShell() {
               <img src="/logo.png" alt="" className="h-full w-full object-contain" />
             </span>
             <span className="hidden font-display text-lg font-extrabold sm:inline">Caplet.</span>
-            <span className="rounded-full bg-accent-soft px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-accent">Demo</span>
+            <span className="hidden rounded-full bg-accent-soft px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-accent md:inline">Guided tour</span>
           </button>
 
           <nav className="ml-2 hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex" aria-label="Demo steps">
@@ -240,18 +378,13 @@ function DemoShell() {
               return (
                 <button key={step.id} type="button" onClick={() => go(step.path)} aria-current={active ? 'step' : undefined} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-xs font-extrabold transition-colors ${active ? 'bg-accent text-white' : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'}`}>
                   <span className={`grid h-5 w-5 place-items-center rounded-full text-[10px] ${active ? 'bg-white/20' : 'bg-surface-soft'}`}>{index + 1}</span>
-                  {step.label}
+                  {step.navLabel}
                 </button>
               );
             })}
           </nav>
 
           <div className="ml-auto flex min-w-0 items-center gap-1.5 md:gap-2">
-            {currentStep && (
-              <span className="hidden max-w-40 truncate rounded-full border border-line-soft bg-surface-raised px-3 py-1.5 text-xs font-bold text-text-muted md:inline-flex">
-                Viewing as {currentStep.role}
-              </span>
-            )}
             {currentStep && (
               <div className="flex items-center gap-1" aria-label="Tour navigation">
                 <button type="button" onClick={() => go(previousPath)} className="grid h-10 w-10 place-items-center rounded-xl border border-line-soft text-text-muted hover:text-text-primary" aria-label="Previous Demo step">
@@ -262,7 +395,7 @@ function DemoShell() {
                     <span className="hidden sm:inline">Next</span><ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
                   </button>
                 ) : (
-                  <a href="/contact" className="inline-flex h-10 items-center rounded-xl bg-accent px-3 text-xs font-extrabold text-white md:px-4">Pilot</a>
+                  <button type="button" onClick={restart} className="inline-flex h-10 items-center rounded-xl bg-accent px-3 text-xs font-extrabold text-white md:px-4">Finish</button>
                 )}
               </div>
             )}
@@ -278,7 +411,7 @@ function DemoShell() {
             {DEMO_STEPS.map((step, index) => (
               <button key={step.id} type="button" onClick={() => go(step.path)} className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold ${currentStep?.id === step.id ? 'bg-accent-soft text-accent' : 'text-text-primary hover:bg-surface-soft'}`}>
                 <span className="grid h-6 w-6 place-items-center rounded-full bg-surface-soft text-xs">{index + 1}</span>
-                <span className="flex-1">{step.label}</span>
+                <span className="flex-1">{step.title}</span>
                 {currentStep?.id === step.id && <CheckIcon className="h-4 w-4" aria-hidden="true" />}
               </button>
             ))}
@@ -331,6 +464,7 @@ function DemoShell() {
           <Route path="*" element={<Navigate to="/overview" replace state={{ demoNotice: 'That area is outside this focused Demo. Choose one of the four connected steps below.' }} />} />
         </Routes>
       </div>
+      {currentStep && <DemoGuide key={currentStep.id} step={currentStep} />}
     </div>
   );
 }

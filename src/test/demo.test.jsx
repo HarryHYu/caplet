@@ -57,11 +57,16 @@ describe('school-buyer Demo tour', () => {
   it('moves from the overview into the curated author and teacher steps', async () => {
     render(<StrictMode><DemoApp /></StrictMode>);
 
-    expect(screen.getByRole('heading', { name: /From curriculum to the next teaching move/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('link', { name: /Start the guided tour/i }));
+    expect(screen.getByRole('heading', { name: /See how Caplet.*teacher/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Show me how it works/i }));
 
     expect(await screen.findByText('Viewing as Curriculum author')).toBeInTheDocument();
     expect(await screen.findByDisplayValue('What is a budget?')).toBeInTheDocument();
+
+    expect(screen.getByRole('complementary', { name: 'Caplet guide: Build' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show me the slide editor' }));
+    expect(await screen.findByText(/This is the lesson editor/i)).toBeInTheDocument();
+    await waitFor(() => expect(document.querySelector('.demo-focus-target')).toHaveTextContent('Reading'));
 
     fireEvent.click(screen.getByRole('button', { name: /Next/i }));
     expect(await screen.findByRole('heading', { name: 'Year 11 Commerce A' })).toBeInTheDocument();
@@ -72,14 +77,14 @@ describe('school-buyer Demo tour', () => {
   it('exposes the student and evidence steps without changing the browser entry URL', async () => {
     render(<DemoApp />);
     fireEvent.click(screen.getByRole('button', { name: 'Open Demo menu' }));
-    fireEvent.click(screen.getAllByRole('button', { name: /Experience$/i }).at(-1));
+    fireEvent.click(screen.getAllByRole('button', { name: /student view/i }).at(-1));
 
     expect(await screen.findByText('Viewing as Student')).toBeInTheDocument();
     expect((await screen.findAllByText('How Income Tax Works')).length).toBeGreaterThan(0);
     expect(window.location.pathname).toBe('/demo');
 
     fireEvent.click(screen.getByRole('button', { name: 'Open Demo menu' }));
-    fireEvent.click(screen.getAllByRole('button', { name: /Act$/i }).at(-1));
+    fireEvent.click(screen.getAllByRole('button', { name: /Help the students/i }).at(-1));
     expect(await screen.findByRole('heading', { name: 'Class learning.' })).toBeInTheDocument();
     expect(screen.getByRole('table', { name: /Mastery probability/i })).toBeInTheDocument();
   });

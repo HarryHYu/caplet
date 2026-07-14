@@ -90,6 +90,28 @@
   --block-green: rgba(63, 157, 107, 0.09);
 }
 
+/* Guided Demo — the coach calls attention to exactly one product action at a
+   time, so the real workspace remains explorable without asking first-time
+   visitors to parse the whole screen at once. */
+.demo-focus-target {
+  position: relative;
+  z-index: 85;
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 5px;
+  border-radius: 14px;
+  box-shadow: 0 0 0 8px var(--accent-soft), 0 20px 42px -26px rgba(19, 81, 170, 0.55);
+  animation: demoFocusPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes demoFocusPulse {
+  0%, 100% { box-shadow: 0 0 0 8px var(--accent-soft), 0 20px 42px -26px rgba(19, 81, 170, 0.55); }
+  50% { box-shadow: 0 0 0 13px var(--accent-soft), 0 24px 48px -26px rgba(19, 81, 170, 0.62); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-focus-target { animation: none; }
+}
+
 /* User-selected light palettes. Each option changes the full surface system,
    not only the body, so cards and controls remain clearly layered. */
 :root:not(.dark)[data-palette='white'] {
