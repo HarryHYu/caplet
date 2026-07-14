@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext();
 const palettes = ['paper', 'white', 'sky', 'sage', 'rose'];
+// Respect the device first; an explicit saved choice still wins.
 const DEFAULT_THEME = 'system';
 
 /* eslint-disable-next-line react-refresh/only-export-components */

@@ -675,6 +675,18 @@
   background: var(--accent);
 }
 
+/* Navigation should scroll when it needs to, without adding visual noise. */
+.nav-scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav-scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    HOMEPAGE — handmade-modern "living annotations"  (homepage-scoped)
    Bold sans, warm color blocks instead of outlines, hand-drawn marks &

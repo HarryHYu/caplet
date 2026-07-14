@@ -13,6 +13,7 @@ export const useLayout = () => {
 };
 
 const NAV_MODE_KEY = 'caplet:nav-mode';
+// The rail is the calm default; an explicit saved choice still wins.
 const DEFAULT_NAV_MODE = 'vertical';
 const COLLAPSED_KEY = 'caplet:dashboard-sidebar-collapsed';
 const SIDEBAR_WIDTH_KEY = 'caplet:dashboard-sidebar-width';

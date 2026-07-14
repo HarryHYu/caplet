@@ -224,7 +224,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
 
         {/* Mobile menu */}
         {effectiveProductMode === 'study' && isOpen && (
-          <div id="mobile-navigation" className="mobile-nav-panel max-h-[calc(100dvh-3.25rem)] overflow-y-auto overscroll-contain border-t border-line-soft px-1.5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
+          <div id="mobile-navigation" className="mobile-nav-panel nav-scrollbar-hidden max-h-[calc(100dvh-3.25rem)] overflow-y-auto overscroll-contain border-t border-line-soft px-1.5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
             <div className="mb-2 flex items-center justify-between px-3 py-1">
               <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-text-dim">Navigate</span>
               <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-bold text-accent">Study</span>

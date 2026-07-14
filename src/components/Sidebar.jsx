@@ -151,12 +151,7 @@ export default function Sidebar() {
                 <div className="my-3 border-t border-line-soft" />
 
                 {/* Primary nav */}
-                <nav aria-label="Primary navigation" className="flex flex-1 flex-col gap-1 overflow-x-clip overflow-y-auto">
-                    {!collapsed && (
-                        <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-text-dim">
-                            {productMode === 'money' ? 'Money' : 'Workspace'}
-                        </p>
-                    )}
+                <nav aria-label="Primary navigation" className="nav-scrollbar-hidden flex flex-1 flex-col gap-1 overflow-x-clip overflow-y-auto pt-1">
                     {items.map((item) => {
                         const { path, label, badge } = item;
                         const active = productMode === 'money'
@@ -211,7 +206,7 @@ export default function Sidebar() {
                         <UserAvatar user={user} size="sm" showStatus={false} />
                         {!collapsed && (
                             <span className="min-w-0 flex-1 truncate text-xs font-bold text-text-primary">
-                                    {user?.firstName || 'Account'}
+                                {user?.firstName || 'Account'}
                             </span>
                         )}
                     </Link>

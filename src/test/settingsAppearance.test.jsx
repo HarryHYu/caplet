@@ -12,6 +12,13 @@ describe('SettingsAppearance', () => {
     delete document.documentElement.dataset.palette;
   });
 
+  it('starts new devices with system appearance and the vertical navigation rail', () => {
+    render(<ThemeProvider><LayoutProvider><SettingsAppearance /></LayoutProvider></ThemeProvider>);
+
+    expect(screen.getByRole('radio', { name: /System/ })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: /Vertical bar/ })).toHaveAttribute('aria-checked', 'true');
+  });
+
   it('offers global palettes and keeps a chosen palette in dark mode', () => {
     localStorage.setItem('theme', 'dark');
     render(<ThemeProvider><LayoutProvider><SettingsAppearance /></LayoutProvider></ThemeProvider>);
