@@ -180,7 +180,7 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {nextRecommendation && (
+                {studyPlan && nextRecommendation?.outcome?.id && (
                     <Link
                         to={recommendationPath}
                         onClick={() => api.logEvent({
@@ -233,9 +233,20 @@ export default function Dashboard() {
                         </span>
                     </Link>
                 ) : (
-                    <Link to="/study-plan" className="reveal mb-8 flex items-center justify-between gap-5 rounded-3xl block-blue p-7 text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">
-                        Build a personal weekly study plan
-                        <ArrowRightIcon className="h-4 w-4" />
+                    <Link to="/study-plan" className="reveal group mb-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] transition-transform hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-5">
+                            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/10">
+                                <CalendarDaysIcon className="h-7 w-7" aria-hidden="true" />
+                            </span>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">Your first step</p>
+                                <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-white">Build your weekly study plan</h2>
+                                <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-white/80">Choose your subjects, study days and exam dates so Caplet can give you one useful next task.</p>
+                            </div>
+                        </div>
+                        <span className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent">
+                            Set up my plan <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                        </span>
                     </Link>
                 )}
 

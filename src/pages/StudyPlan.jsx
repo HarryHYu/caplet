@@ -216,7 +216,7 @@ export default function StudyPlan() {
         {error && <div role="alert" className="animate-slide-up mb-8 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{error}</div>}
         {taskNotice && <div role="status" className="animate-slide-up mb-8 flex items-center gap-2 rounded-2xl bg-[color:var(--block-green)] px-5 py-4 text-sm font-bold text-text-primary"><CheckCircleIcon className="h-5 w-5 text-[color:var(--mark-green)]" aria-hidden="true" />{taskNotice}</div>}
 
-        {recommendation && Array.isArray(plan.subjects) && plan.subjects.includes(recommendation.subject || 'economics') && (
+        {recommendation?.outcome?.id && Array.isArray(plan.subjects) && plan.subjects.includes(recommendation.subject || 'economics') && (
           <section className="reveal mb-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--block-green)] p-7 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--mark-green)]">Live evidence update</p>

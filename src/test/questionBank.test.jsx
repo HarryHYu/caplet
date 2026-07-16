@@ -109,7 +109,7 @@ describe('QuestionBank', () => {
 
     expect(await screen.findByRole('heading', { name: 'Question bank.' })).toBeInTheDocument();
     expect(api.editorEnter).toHaveBeenCalledWith('private-code');
-    expect(api.request).toHaveBeenCalledWith('/editor/curriculum-outcomes', { auth: 'editor' });
+    await waitFor(() => expect(api.request).toHaveBeenCalledWith('/editor/curriculum-outcomes', { auth: 'editor' }));
     expect(await screen.findByText(QUESTION.prompt)).toBeInTheDocument();
   });
 

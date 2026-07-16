@@ -25,6 +25,20 @@ function reasonFor(state, now = new Date()) {
   return { reasonCode: 'retain_mastery', reason: 'A short practice set will help make this learning durable.' };
 }
 
+function diagnosticRecommendation(subject) {
+  return {
+    type: 'practice',
+    mode: 'diagnostic',
+    reasonCode: 'diagnostic_needed',
+    reason: 'Complete a short diagnostic so Caplet can personalise your learning.',
+    subject,
+    outcome: null,
+    resourcePath: `/practice?subject=${encodeURIComponent(subject)}&mode=diagnostic`,
+    estimatedMinutes: 10,
+    score: 100,
+  };
+}
+
 async function getNextRecommendation(userId, subject = 'economics', options = {}) {
   const { CurriculumOutcome, MasteryState, QuestionOutcome, Question } = require('../models');
   const outcomes = await CurriculumOutcome.findAll({
@@ -35,18 +49,17 @@ async function getNextRecommendation(userId, subject = 'economics', options = {}
 
   const outcomeIds = outcomes.map((outcome) => outcome.id);
   const states = await MasteryState.findAll({ where: { userId, outcomeId: { [Op.in]: outcomeIds } } });
+  if (!states.length) return diagnosticRecommendation(subject);
+
   const stateByOutcome = new Map(states.map((state) => [String(state.outcomeId), state]));
   const now = options.now || new Date();
-  const candidates = outcomes.map((outcome) => {
-    const state = stateByOutcome.get(String(outcome.id)) || {
-      outcomeId: outcome.id,
-      probability: 0.2,
-      retentionStrength: 0,
-      confidence: 'low',
-      nextReviewAt: now,
-    };
-    return { outcome, state, score: scoreCandidate(state, now) };
-  }).sort((a, b) => b.score - a.score || String(a.outcome.code).localeCompare(String(b.outcome.code)));
+  const candidates = outcomes
+    .filter((outcome) => stateByOutcome.has(String(outcome.id)))
+    .map((outcome) => {
+      const state = stateByOutcome.get(String(outcome.id));
+      return { outcome, state, score: scoreCandidate(state, now) };
+    })
+    .sort((a, b) => b.score - a.score || String(a.outcome.code).localeCompare(String(b.outcome.code)));
 
   for (const candidate of candidates) {
     const mapped = await QuestionOutcome.findAll({ where: { outcomeId: candidate.outcome.id }, attributes: ['questionId'] });
@@ -76,17 +89,7 @@ async function getNextRecommendation(userId, subject = 'economics', options = {}
     };
   }
 
-  return {
-    type: 'practice',
-    mode: 'diagnostic',
-    reasonCode: 'diagnostic_needed',
-    reason: 'Complete a short diagnostic so Caplet can personalise your learning.',
-    subject,
-    outcome: null,
-    resourcePath: '/practice?mode=diagnostic',
-    estimatedMinutes: 10,
-    score: 100,
-  };
+  return diagnosticRecommendation(subject);
 }
 
-module.exports = { getNextRecommendation, reasonFor, scoreCandidate };
+module.exports = { diagnosticRecommendation, getNextRecommendation, reasonFor, scoreCandidate };

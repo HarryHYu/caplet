@@ -7,7 +7,7 @@ const MODES = new Set(['diagnostic', 'daily', 'weak-topic', 'timed-exam', 'due-r
 const PRACTICE_AI_WINDOW_MS = 15 * 60 * 1000;
 const PRACTICE_AI_LIMIT = 20;
 const practiceAIUsage = new Map();
-const MODE_LIMITS = { diagnostic: 10, daily: 5, 'weak-topic': 5, 'timed-exam': 10, 'due-review': 5, assigned: 10 };
+const MODE_LIMITS = { diagnostic: 5, daily: 5, 'weak-topic': 5, 'timed-exam': 10, 'due-review': 5, assigned: 10 };
 
 const asPlain = (value) => value?.toJSON ? value.toJSON() : value;
 
@@ -164,6 +164,9 @@ async function selectQuestions({ userId, subject = 'economics', mode = 'daily', 
     lifecycleStatus: 'published',
   };
   if (mappedIds.length) where.id = { [Op.in]: mappedIds };
+  // Activation diagnostics must be genuinely quick. Extended and short-answer
+  // questions belong in focused practice once Caplet has a starting signal.
+  if (mode === 'diagnostic') where.responseType = 'multiple_choice';
   if (mode === 'timed-exam') where.difficulty = { [Op.in]: ['exam', 'hsc style', 'exam practice', 'external sector'] };
 
   const pool = await Question.findAll({ where, order: [['sourceKey', 'ASC']], limit: Math.max(limit * 8, 40) });

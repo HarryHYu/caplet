@@ -221,11 +221,12 @@ function findDemoFocusTarget(stepId) {
   const buttonWithText = (text) => buttons.find((button) => button.textContent?.trim().includes(text));
 
   if (stepId === 'build') {
-    const readingCard = buttonWithText('Reading')?.closest('.group');
+    const readingCard = document.querySelector('[data-tour-id="editor-reading-slide"]')
+      || buttonWithText('Reading')?.closest('.group');
     return {
       target: readingCard,
       activate: () => readingCard?.querySelector('button[aria-label="Expand"]')?.click(),
-      afterActivate: () => Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim().includes('Reading'))?.closest('.group'),
+      afterActivate: () => document.querySelector('[data-tour-id="editor-reading-slide"]') || readingCard,
     };
   }
   if (stepId === 'teach') {
@@ -273,11 +274,15 @@ function DemoGuide({ step }) {
     return clearDemoFocus;
   }, [step.id]);
 
-  const showNextAction = () => {
-    clearDemoFocus();
+  const focusNextAction = (attempt = 0) => {
     const interaction = findDemoFocusTarget(step.id);
     if (!interaction?.target) {
-      setFocusMessage('This part is still loading. Try again in a moment.');
+      if (attempt < 20) {
+        setFocusMessage('Opening this part of the sample…');
+        window.setTimeout(() => focusNextAction(attempt + 1), 100);
+        return;
+      }
+      setFocusMessage('This part could not be opened. Move to the next step and try again.');
       return;
     }
     interaction.activate?.();
@@ -288,6 +293,11 @@ function DemoGuide({ step }) {
     }, 0);
     setActionComplete(true);
     setFocusMessage('');
+  };
+
+  const showNextAction = () => {
+    clearDemoFocus();
+    focusNextAction();
   };
 
   if (actionComplete && step.id === 'teach') {

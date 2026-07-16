@@ -53,11 +53,18 @@ describe('Dashboard study plan handoff', () => {
         }],
       },
     });
+    api.getNextRecommendation.mockResolvedValue({
+      recommendation: {
+        mode: 'diagnostic',
+        reason: 'Complete a short diagnostic so Caplet can personalise your learning.',
+      },
+    });
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
     expect(await screen.findByText(/Today’s next task/i)).toBeInTheDocument();
     expect(screen.getByText('Learn: Macroeconomic management')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Open plan/i })).toHaveAttribute('href', '/study-plan');
+    expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
   });
 
   it('keeps secondary study tools accessible from the dashboard', async () => {
@@ -70,5 +77,20 @@ describe('Dashboard study plan handoff', () => {
     expect(screen.getByRole('link', { name: /Mastery.*strengthen next/i })).toHaveAttribute('href', '/mastery');
     expect(screen.getByRole('link', { name: /Curriculum.*courses and lessons/i })).toHaveAttribute('href', '/courses');
     expect(screen.getByRole('link', { name: /Education tools.*revision, essays/i })).toHaveAttribute('href', '/edutools');
+  });
+
+  it('makes study-plan setup the primary action before showing practice recommendations', async () => {
+    api.getStudyPlan.mockResolvedValue({ studyPlan: null });
+    api.getNextRecommendation.mockResolvedValue({
+      recommendation: {
+        mode: 'diagnostic',
+        reason: 'Complete a short diagnostic so Caplet can personalise your learning.',
+      },
+    });
+
+    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+
+    expect(await screen.findByRole('link', { name: /Build your weekly study plan.*Set up my plan/i })).toHaveAttribute('href', '/study-plan');
+    expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
   });
 });

@@ -348,6 +348,7 @@ function SlideCard({
 
   return (
     <div
+      data-tour-id={slideKindLabel(slide) === 'Reading' ? 'editor-reading-slide' : undefined}
       className={`group rounded-xl border bg-surface-raised transition-colors duration-150 ${
         expanded
           ? 'border-accent/40'

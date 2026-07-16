@@ -66,7 +66,7 @@ describe('school-buyer Demo tour', () => {
     expect(screen.getByRole('complementary', { name: 'Caplet guide: Build' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Show me the slide editor' }));
     expect(await screen.findByText(/This is the lesson editor/i)).toBeInTheDocument();
-    await waitFor(() => expect(document.querySelector('.demo-focus-target')).toHaveTextContent('Reading'));
+    await waitFor(() => expect(document.querySelector('[data-tour-id="editor-reading-slide"]')).toHaveClass('demo-focus-target'));
 
     fireEvent.click(screen.getByRole('button', { name: /Next/i }));
     expect(await screen.findByRole('heading', { name: 'Year 11 Commerce A' })).toBeInTheDocument();
