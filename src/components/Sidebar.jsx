@@ -60,6 +60,7 @@ export default function Sidebar() {
         { path: '/revision', label: 'Revision', icon: BookmarkIcon },
         { path: '/essays', label: 'Essays', icon: DocumentTextIcon },
         { path: '/library', label: 'Library', icon: BuildingLibraryIcon },
+        { path: '/courses', label: 'Courses', icon: BookOpenIcon },
         { path: '/classes', label: 'Classes', icon: UserGroupIcon },
     ];
 

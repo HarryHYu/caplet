@@ -6,6 +6,7 @@ import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import ClassIcon from '../components/ClassIcon';
+import CourseIcon from '../components/CourseIcon';
 import {
     BookOpenIcon,
     AcademicCapIcon,
@@ -428,11 +429,11 @@ export default function Dashboard() {
                                 <div className="mt-6 group relative overflow-hidden block-blue rounded-3xl p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200">
                                     <div className="flex flex-col md:flex-row gap-10 items-center">
                                         <div className="w-40 h-40 shrink-0 rounded-2xl overflow-hidden bg-surface-raised shadow-[0_16px_36px_-24px_rgba(20,20,18,0.4)]">
-                                            <img
-                                                src={lastAccessedCourse.thumbnail || 'https://placehold.co/400x400'}
-                                                alt=""
-                                                className="w-full h-full object-cover"
-                                            />
+                                            {lastAccessedCourse.thumbnail ? (
+                                                <img src={lastAccessedCourse.thumbnail} alt="" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <CourseIcon course={lastAccessedCourse} size="hero" />
+                                            )}
                                         </div>
                                         <div className="flex-1 w-full">
                                             <h3 className="font-display font-bold tracking-tight text-3xl md:text-4xl text-text-primary mb-6">{lastAccessedCourse.title}</h3>
@@ -498,9 +499,12 @@ export default function Dashboard() {
                                         to={`/courses/${course.id}`}
                                         className="group flex w-full items-center justify-between gap-4 rounded-2xl bg-surface-raised px-5 py-4 shadow-[0_16px_36px_-30px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform duration-200"
                                     >
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-bold text-text-primary truncate group-hover:text-accent transition-colors">{course.title}</p>
-                                            <p className="text-xs font-bold text-text-muted mt-1">{course.duration}m</p>
+                                        <div className="min-w-0 flex items-center gap-3">
+                                            <CourseIcon course={course} size="sm" />
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-bold text-text-primary truncate group-hover:text-accent transition-colors">{course.title}</p>
+                                                <p className="text-xs font-bold text-text-muted mt-1">{course.duration}m</p>
+                                            </div>
                                         </div>
                                         <ArrowRightIcon className="w-4 h-4 shrink-0 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-all" />
                                     </Link>
