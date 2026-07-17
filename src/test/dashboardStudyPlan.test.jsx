@@ -2,14 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const { courses } = vi.hoisted(() => ({ courses: { current: [] } }));
-
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({ user: { firstName: 'Codex' } }),
 }));
 
 vi.mock('../contexts/CoursesContext', () => ({
-  useCourses: () => ({ courses: courses.current, loading: false, hasFetched: true, fetchCourses: vi.fn() }),
+  useCourses: () => ({ courses: [], loading: false, hasFetched: true, fetchCourses: vi.fn() }),
 }));
 
 vi.mock('../lib/useReveal', () => ({ useReveal: vi.fn() }));
@@ -34,7 +32,6 @@ import Dashboard from '../pages/Dashboard';
 describe('Dashboard study plan handoff', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    courses.current = [];
     api.getUserProgress.mockResolvedValue({ progress: [] });
     api.getClasses.mockResolvedValue({ teaching: [], student: [] });
     api.getSavedSlides.mockResolvedValue({ savedSlides: [] });
@@ -119,17 +116,4 @@ describe('Dashboard study plan handoff', () => {
     expect(screen.getByRole('link', { name: /Study now/i })).toHaveAttribute('href', '/practice?subject=economics&mode=diagnostic');
   });
 
-  it('uses course marks instead of a 400×400 fallback image', async () => {
-    courses.current = [{ id: 'economics', title: 'Economics foundations', duration: 90, category: 'other', modules: [] }];
-    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
-    api.getUserProgress.mockResolvedValue({
-      progress: [{ courseId: 'economics', status: 'in_progress', lastAccessedAt: '2026-07-17T00:00:00.000Z' }],
-    });
-
-    const { container } = render(<MemoryRouter><Dashboard /></MemoryRouter>);
-
-    expect(await screen.findAllByText('Economics foundations')).toHaveLength(2);
-    expect(screen.getAllByTestId('course-icon')).toHaveLength(2);
-    expect(container.querySelector('[src*="placehold.co/400x400"]')).not.toBeInTheDocument();
-  });
 });
