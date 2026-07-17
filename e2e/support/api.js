@@ -51,6 +51,25 @@ function commonResponse({ method, pathname, endpoint, user }) {
   if (method === 'GET' && pathname === '/study-plan') return { json: { studyPlan: null } };
   if (method === 'GET' && pathname === '/economics-exams') return { json: { sessions: [] } };
   if (method === 'GET' && pathname === '/recommendations/next') return { json: { recommendation: null } };
+  if (method === 'GET' && pathname === '/streaks') {
+    return {
+      json: {
+        momentum: {
+          currentStreak: 0,
+          bestStreak: 0,
+          todayComplete: false,
+          todayCount: 0,
+          weekActiveDays: 0,
+          weeklyGoal: 3,
+          weeklyGoalMet: false,
+          activityDays: [],
+        },
+      },
+    };
+  }
+  if (method === 'GET' && pathname === '/money/indicators') {
+    return { json: { schemaVersion: 1, generatedAt: '2026-07-17T00:00:00.000Z', indicators: [] } };
+  }
   return { status: 501, json: { message: `No E2E mock for ${method} ${endpoint}` } };
 }
 

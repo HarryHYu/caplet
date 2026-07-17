@@ -2,6 +2,9 @@ jest.mock('../models/StudyPlan');
 jest.mock('../models/MarkedAttempt');
 jest.mock('../services/questionBankService', () => ({ ensureEconomicsQuestionBank: jest.fn().mockResolvedValue({}) }));
 jest.mock('../services/recommendationEngine', () => ({ getNextRecommendation: jest.fn().mockResolvedValue(null) }));
+jest.mock('../services/studyMomentumService', () => ({
+  getStudyMomentum: jest.fn().mockResolvedValue({ currentStreak: 1, todayComplete: true }),
+}));
 jest.mock('../middleware/auth', () => ({
   requireAuth: (req, _res, next) => {
     req.user = { id: 'student-1' };
@@ -130,5 +133,19 @@ describe('/api/study-plan', () => {
       .send({ completed: true });
     expect(response.status).toBe(200);
     expect(response.body.studyPlan.tasks[0].completed).toBe(true);
+    expect(response.body.momentum).toMatchObject({ currentStreak: 1, todayComplete: true });
+  });
+
+  test('does not move a task completion timestamp when a completed request is retried', async () => {
+    const completedAt = '2026-07-10T04:00:00.000Z';
+    const plan = row({ ...config, tasks: [{ id: 'task-1', completed: true, completedAt }] });
+    StudyPlan.findOne.mockResolvedValue(plan);
+
+    const response = await request(app())
+      .patch('/api/study-plan/tasks/task-1')
+      .send({ completed: true });
+
+    expect(response.status).toBe(200);
+    expect(response.body.studyPlan.tasks[0].completedAt).toBe(completedAt);
   });
 });

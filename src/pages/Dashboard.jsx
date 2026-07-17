@@ -21,6 +21,57 @@ import {
     WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 
+function StudyMomentumPanel({ momentum, actionPath, actionLabel }) {
+    const recentDays = Array.isArray(momentum.activityDays) ? momentum.activityDays.slice(-14) : [];
+    const status = momentum.todayComplete
+        ? `${momentum.todayCount} meaningful ${momentum.todayCount === 1 ? 'action' : 'actions'} completed today.`
+        : momentum.currentStreak > 0
+            ? 'One meaningful study action today keeps it alive.'
+            : 'Complete one useful study action to begin.';
+
+    return (
+        <section aria-labelledby="study-momentum-heading" className="reveal mb-14 overflow-hidden rounded-3xl block-amber p-7 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] md:p-8">
+            <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center gap-5">
+                    <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl ${momentum.todayComplete ? 'bg-accent text-white' : 'bg-surface-raised text-accent'}`}>
+                        {momentum.todayComplete
+                            ? <CheckCircleIcon className="h-7 w-7" aria-hidden="true" />
+                            : <FireIcon className="h-7 w-7" aria-hidden="true" />}
+                    </span>
+                    <div>
+                        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Meaningful study streak</p>
+                        <h2 id="study-momentum-heading" className="mt-1 font-display text-3xl font-extrabold tracking-tight text-text-primary">
+                            {momentum.currentStreak} {momentum.currentStreak === 1 ? 'day' : 'days'}
+                        </h2>
+                        <p className="mt-1 text-sm font-bold text-text-muted">{status}</p>
+                    </div>
+                </div>
+
+                <div className="min-w-0 flex-1 lg:max-w-md">
+                    <div className="flex items-center justify-between gap-4">
+                        <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-text-dim">Last 14 days</p>
+                        <p className="text-xs font-bold text-text-muted">{momentum.weekActiveDays}/{momentum.weeklyGoal} days this week</p>
+                    </div>
+                    <div className="mt-3 flex gap-1.5" aria-label={`${momentum.weekActiveDays} active study days this week`}>
+                        {recentDays.map((day) => (
+                            <span
+                                key={day.date}
+                                title={`${day.date}: ${day.count} meaningful ${day.count === 1 ? 'action' : 'actions'}`}
+                                className={`h-4 min-w-3 flex-1 rounded-[5px] ${day.count ? 'bg-accent' : 'bg-surface-raised'}`}
+                                aria-hidden="true"
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                <Link to={actionPath || '/study-plan'} className="btn-primary shrink-0">
+                    {actionLabel || (momentum.todayComplete ? 'View my plan' : 'Study now')} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+                </Link>
+            </div>
+        </section>
+    );
+}
+
 export default function Dashboard() {
     const { user } = useAuth();
     const { courses, loading: coursesLoading, hasFetched, fetchCourses } = useCourses();
@@ -32,6 +83,7 @@ export default function Dashboard() {
     const [studyPlan, setStudyPlan] = useState(null);
     const [examSessions, setExamSessions] = useState([]);
     const [nextRecommendation, setNextRecommendation] = useState(null);
+    const [studyMomentum, setStudyMomentum] = useState(null);
     const [loadError, setLoadError] = useState('');
     const [retryKey, setRetryKey] = useState(0);
     const [availability, setAvailability] = useState({ progress: true, classes: true });
@@ -58,6 +110,7 @@ export default function Dashboard() {
                     api.getStudyPlan(),
                     api.getEconomicsExamSessions(),
                     api.getNextRecommendation('economics'),
+                    api.getStudyStreak(),
                 ]);
             const valueAt = (index) => results[index].status === 'fulfilled' ? results[index].value : null;
             const progressData = valueAt(0);
@@ -67,6 +120,7 @@ export default function Dashboard() {
             const studyPlanData = valueAt(4);
             const examSessionsData = valueAt(5);
             const recommendationData = valueAt(6);
+            const momentumData = valueAt(7);
 
             try {
                 setUserProgress(progressData?.progress || []);
@@ -80,6 +134,7 @@ export default function Dashboard() {
                 setStudyPlan(studyPlanData?.studyPlan || null);
                 setExamSessions(examSessionsData?.sessions || []);
                 setNextRecommendation(recommendationData?.recommendation || null);
+                setStudyMomentum(momentumData?.momentum || null);
                 const nextAvailability = { progress: Boolean(progressData), classes: Boolean(classesData) };
                 setAvailability(nextAvailability);
                 if (!nextAvailability.progress || !nextAvailability.classes) {
@@ -114,7 +169,7 @@ export default function Dashboard() {
 
     const inProgressCourses = userProgress?.filter(p => p.status === 'in_progress') || [];
     const completedCourses = userProgress?.filter(p => p.status === 'completed') || [];
-    const lastAccessed = userProgress?.sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt))[0];
+    const lastAccessed = [...(userProgress || [])].sort((a, b) => new Date(b.lastAccessedAt) - new Date(a.lastAccessedAt))[0];
     const lastAccessedCourse = lastAccessed ? courses.find(c => c.id === lastAccessed.courseId) : null;
 
     // Compute real course progress percentage from local lesson data (no extra API call needed).
@@ -156,7 +211,7 @@ export default function Dashboard() {
         <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
             <div className="container-custom">
                 {/* Header Section */}
-                <header className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal">
+                <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal">
                     <div>
                         <span className="font-hand text-2xl text-blue -rotate-2 inline-block mb-2">welcome back</span>
                         <h1 className="font-display font-extrabold tracking-tight text-text-primary text-5xl md:text-7xl leading-[0.96]">
@@ -170,6 +225,14 @@ export default function Dashboard() {
                     </div>
 
                 </header>
+
+                {studyMomentum && (
+                    <StudyMomentumPanel
+                        momentum={studyMomentum}
+                        actionPath={!studyPlan || nextStudyTask ? '/study-plan' : recommendationPath}
+                        actionLabel={!studyPlan ? 'Set up my plan' : null}
+                    />
+                )}
 
                 {loadError && (
                     <div role="alert" className="mb-8 flex flex-col gap-4 rounded-2xl bg-surface-error p-5 text-text-error sm:flex-row sm:items-center sm:justify-between">

@@ -136,7 +136,11 @@ export default function StudyPlan() {
     try {
       const data = await api.updateStudyTask(task.id, completed);
       setPlan(data.studyPlan);
-      setTaskNotice(completed ? 'Nice work — task marked complete.' : 'Task reopened for this week.');
+      setTaskNotice(completed
+        ? data.momentum?.currentStreak
+          ? `Nice work — today counts. Your meaningful study streak is ${data.momentum.currentStreak} ${data.momentum.currentStreak === 1 ? 'day' : 'days'}.`
+          : 'Nice work — task marked complete.'
+        : 'Task reopened for this week.');
     } catch (err) {
       setPlan((current) => ({
         ...current,

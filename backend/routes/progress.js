@@ -82,8 +82,10 @@ router.put('/lesson/:lessonId', requireAuth, [
       updateData.quizScores = merged;
     }
 
-    if (status === 'completed') {
+    if (status === 'completed' && (previousStatus !== 'completed' || !progress.completedAt)) {
       updateData.completedAt = new Date();
+    } else if (status && status !== 'completed' && previousStatus === 'completed') {
+      updateData.completedAt = null;
     }
     
     updateData.lastAccessedAt = new Date();

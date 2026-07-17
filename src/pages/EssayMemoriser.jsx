@@ -623,7 +623,11 @@ function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
     // Keep the word you're on visible inside its own scroll area, so a long
     // paragraph never pushes it (or the input) out of view.
-    useEffect(() => { currentRef.current?.scrollIntoView({ block: 'nearest' }); }, [wordIdx, paraDone]);
+    useEffect(() => {
+        if (typeof currentRef.current?.scrollIntoView === 'function') {
+            currentRef.current.scrollIntoView({ block: 'nearest' });
+        }
+    }, [wordIdx, paraDone]);
 
     if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
@@ -1034,8 +1038,7 @@ function NewEssayForm({ onCreated }) {
     };
 
     return (
-        <div className="bg-surface-raised rounded-3xl p-6 md:p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-            <h2 className="font-display text-lg font-extrabold tracking-tight text-text-primary mb-4">New essay</h2>
+        <div className="pt-5">
             <input
                 type="text"
                 value={title}
@@ -1067,48 +1070,171 @@ function NewEssayForm({ onCreated }) {
     );
 }
 
+/**
+ * Keep the library calm on first arrival. Creating an essay is always one tap
+ * away, but it no longer competes with the saved work the learner came back to
+ * practise.
+ */
+function NewEssayComposer({ onCreated }) {
+    const [open, setOpen] = useState(false);
+
+    if (open) {
+        return (
+            <section className="bg-surface-raised rounded-3xl p-6 md:p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                <div className="flex items-start justify-between gap-4 mb-1">
+                    <div>
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim mb-2">New material</p>
+                        <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Add an essay</h2>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setOpen(false)}
+                        className="text-sm font-semibold text-text-dim hover:text-text-primary transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+                <NewEssayForm onCreated={onCreated} />
+            </section>
+        );
+    }
+
+    return (
+        <section className="block-blue rounded-3xl p-6 md:p-7 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="w-10 h-10 rounded-2xl bg-surface-raised flex items-center justify-center mb-5">
+                <PlusIcon className="w-5 h-5 text-accent" />
+            </div>
+            <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Start a new essay</h2>
+            <p className="text-sm leading-relaxed text-text-muted mt-2 mb-5">Paste your draft or bring in a PDF. We’ll map the structure before you practise.</p>
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform"
+            >
+                <PlusIcon className="w-4 h-4" /> Add essay
+            </button>
+        </section>
+    );
+}
+
 // ── Essay detail ────────────────────────────────────────────────────────────
 
-// Grouped so the tab bar reads as a progression — understand it, practise
-// recalling it (three flavours), keep it long-term, then optional drills —
-// instead of a flat wall of a dozen equally-weighted buttons.
-const MODE_GROUPS = [
-    {
-        group: 'Understand',
-        modes: [
-            { key: 'read', label: 'Read', icon: BookOpenIcon, desc: 'Skim it block-by-block, see its structure colour-coded, or read exactly what you saved.' },
-        ],
-    },
-    {
-        group: 'Practice',
-        modes: [
-            { key: 'wordbyword', label: 'Word by word', icon: PencilIcon, next: 'sentence', desc: 'Type one word at a time — a hint for the next word appears once you confirm.' },
-            { key: 'sentence', label: 'Sentence by sentence', icon: ChatBubbleBottomCenterTextIcon, next: 'typeit', desc: 'Rebuild the essay one sentence at a time, from a full read or just the first word.' },
-            { key: 'typeit', label: 'Type it', icon: DocumentTextIcon, next: 'recall', desc: 'Type a whole paragraph from memory. Choose no hint, first letters, or just an acronym.' },
-        ],
-    },
-    {
-        group: 'Long-term',
-        modes: [
-            { key: 'recall', label: 'Recall', icon: ClockIcon, next: 'quotes', desc: 'Spaced-repetition cloze — the same 1/3/7/14-day ladder that keeps this essay in memory for exam day.' },
-        ],
-    },
-    {
-        group: 'Drills',
-        modes: [
-            { key: 'quotes', label: 'Quotes', icon: RectangleStackIcon, desc: 'Flashcards on every quote in the essay and the technique it demonstrates.' },
-            { key: 'order', label: 'Order', icon: ArrowsUpDownIcon, desc: 'Drag your body paragraphs back into their original order.' },
-        ],
-    },
+// The primary route is deliberately short. Less-common drills remain nearby,
+// but do not compete with the learner's next study action.
+const CORE_MODES = [
+    { key: 'read', step: '1', label: 'Understand it', icon: BookOpenIcon, desc: 'See the structure and key ideas.' },
+    { key: 'wordbyword', step: '2', label: 'Rebuild it', icon: PencilIcon, desc: 'Recall with a cue for each word.' },
+    { key: 'typeit', step: '3', label: 'Write it', icon: DocumentTextIcon, desc: 'Draft a whole paragraph from memory.' },
+    { key: 'recall', step: '4', label: 'Keep it fresh', icon: ClockIcon, desc: 'Return when it is due for review.' },
 ];
-const ALL_MODES = MODE_GROUPS.flatMap((g) => g.modes);
+
+const EXTRA_MODES = [
+    { key: 'sentence', label: 'Sentence practice', icon: ChatBubbleBottomCenterTextIcon },
+    { key: 'quotes', label: 'Quote cards', icon: RectangleStackIcon },
+    { key: 'order', label: 'Paragraph order', icon: ArrowsUpDownIcon },
+];
+
+function LearningPath({ mode, onChange, dueCount, compact = false }) {
+    const activeCoreMode = CORE_MODES.find((item) => item.key === mode);
+    const activeExtraMode = EXTRA_MODES.find((item) => item.key === mode);
+    const activeMode = activeCoreMode || activeExtraMode;
+
+    if (compact) {
+        return (
+            <section aria-label="Current essay practice" className="mb-6 rounded-2xl border border-line-soft bg-surface-raised px-4 py-3 shadow-[0_18px_40px_-34px_rgba(20,20,18,0.45)]">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">
+                            {activeCoreMode ? `Step ${activeCoreMode.step} of ${CORE_MODES.length}` : 'Extra drill'}
+                        </p>
+                        <p className="font-display text-base font-extrabold tracking-tight text-text-primary truncate mt-0.5">{activeMode?.label}</p>
+                    </div>
+                    <details className="relative shrink-0">
+                        <summary className="cursor-pointer list-none rounded-xl border border-line-soft px-3 py-2 text-xs font-bold text-text-dim hover:text-text-primary hover:border-text-dim transition-colors">
+                            Change activity
+                        </summary>
+                        <div className="absolute z-20 right-0 top-full mt-2 w-64 rounded-2xl border border-line-soft bg-surface-raised p-2 shadow-xl">
+                            {[...CORE_MODES, ...EXTRA_MODES].map((item) => {
+                                const Icon = item.icon;
+                                const active = mode === item.key;
+                                return (
+                                    <button key={item.key} type="button" aria-pressed={active} onClick={() => onChange(item.key)}
+                                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold transition-colors ${active ? 'bg-accent text-white' : 'text-text-dim hover:bg-surface-body hover:text-text-primary'}`}>
+                                        <Icon className="w-4 h-4 shrink-0" /> {item.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </details>
+                </div>
+            </section>
+        );
+    }
+
+    return (
+        <section aria-label="Essay learning path" className="mb-6 rounded-3xl border border-line-soft bg-surface-raised p-3 md:p-4 shadow-[0_18px_40px_-34px_rgba(20,20,18,0.45)]">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-2 mb-3">
+                <div>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Your learning path</p>
+                    <p className="text-sm text-text-muted mt-1">Move from understanding to independent recall.</p>
+                </div>
+                {dueCount > 0 && (
+                    <button type="button" onClick={() => onChange('recall')} className="text-xs font-bold text-accent hover:opacity-75 transition-opacity">
+                        {dueCount} due now →
+                    </button>
+                )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+                {CORE_MODES.map((item) => {
+                    const Icon = item.icon;
+                    const active = mode === item.key;
+                    return (
+                        <button
+                            key={item.key}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => onChange(item.key)}
+                            className={`text-left rounded-2xl px-4 py-3.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+                                active
+                                    ? 'bg-accent text-white shadow-[0_12px_24px_-18px_rgba(19,81,170,0.95)]'
+                                    : 'bg-surface-body text-text-primary hover:bg-accent-soft'
+                            }`}
+                        >
+                            <span className={`flex items-center justify-between text-[11px] font-bold uppercase tracking-widest ${active ? 'text-white/70' : 'text-text-dim'}`}>
+                                Step {item.step}<Icon className="w-4 h-4" />
+                            </span>
+                            <span className="block font-display font-extrabold text-sm mt-3">{item.label}</span>
+                            <span className={`block text-xs leading-relaxed mt-1.5 ${active ? 'text-white/80' : 'text-text-muted'}`}>{item.desc}</span>
+                        </button>
+                    );
+                })}
+            </div>
+            <details className="group mt-3 px-2">
+                <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-xs font-bold text-text-dim hover:text-text-primary transition-colors">
+                    <span className="inline-block transition-transform group-open:rotate-90">›</span> Extra drills
+                </summary>
+                <div className="flex flex-wrap gap-2 pt-3">
+                    {EXTRA_MODES.map((item) => {
+                        const Icon = item.icon;
+                        const active = mode === item.key;
+                        return (
+                            <button key={item.key} type="button" aria-pressed={active} onClick={() => onChange(item.key)}
+                                className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-colors ${active ? 'bg-accent text-white' : 'bg-surface-body text-text-dim hover:text-text-primary'}`}>
+                                <Icon className="w-3.5 h-3.5" /> {item.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </details>
+        </section>
+    );
+}
 
 function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialParseError }) {
     const [parsing, setParsing] = useState(false);
     const [parseError, setParseError] = useState(initialParseError || null);
     const [mode, setMode] = useState('read');
     const [dueCount, setDueCount] = useState(0);
-    const modeTabRefs = useRef({});
 
     const structure = essay.parsedStructure;
 
@@ -1125,10 +1251,6 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialPar
         if (initialParseError) setParseError(initialParseError);
     }, [initialParseError]);
 
-    useEffect(() => {
-        modeTabRefs.current[mode]?.scrollIntoView({ block: 'nearest', inline: 'center' });
-    }, [mode]);
-
     const parse = async () => {
         setParsing(true);
         setParseError(null);
@@ -1139,8 +1261,6 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialPar
 
     const quoteCards = structure ? buildQuoteCards(structure) : null;
     const paragraphOrder = structure ? buildParagraphOrder(structure) : null;
-    const activeMode = ALL_MODES.find((m) => m.key === mode);
-    const activeGroup = MODE_GROUPS.find((g) => g.modes.some((m) => m.key === mode));
 
     return (
         <div>
@@ -1204,47 +1324,7 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialPar
                 </div>
             ) : (
                 <div>
-                    {/* ── Mode tab bar, grouped by stage of learning ── */}
-                    <div className="relative mb-4">
-                        <div
-                            role="tablist"
-                            aria-label="Essay modes"
-                            className="flex items-stretch gap-1 overflow-x-auto pb-px pr-8 border-b border-line-soft [scrollbar-width:thin]"
-                        >
-                        {MODE_GROUPS.map((g, gi) => (
-                            <div key={g.group} className={`flex items-center gap-1 shrink-0 ${gi > 0 ? 'pl-2 ml-1 border-l border-line-soft' : ''}`}>
-                                <span className="hidden lg:inline text-[10px] font-bold uppercase tracking-widest text-text-dim mr-1 whitespace-nowrap">
-                                    {g.group}
-                                </span>
-                                {g.modes.map((t) => (
-                                    <button
-                                        key={t.key}
-                                        ref={(node) => { modeTabRefs.current[t.key] = node; }}
-                                        type="button"
-                                        role="tab"
-                                        aria-selected={mode === t.key}
-                                        onClick={() => setMode(t.key)}
-                                        className={`shrink-0 flex items-center gap-1.5 px-4 py-3 text-sm font-medium -mb-px border-b-2 transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-                                            mode === t.key
-                                                ? 'border-accent text-accent'
-                                                : 'border-transparent text-text-dim hover:text-text-primary'
-                                        }`}
-                                    >
-                                        {t.icon && <t.icon className="w-4 h-4" />}
-                                        {t.label}
-                                    </button>
-                                ))}
-                            </div>
-                        ))}
-                        </div>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-surface-body to-transparent md:hidden" aria-hidden="true" />
-                    </div>
-
-                    {/* ── Active mode context ── */}
-                    <p className="text-xs font-medium text-text-dim mb-6">
-                        <span className="text-text-dim uppercase tracking-wide mr-1.5">{activeGroup?.group}</span>
-                        {activeMode?.desc}
-                    </p>
+                    <LearningPath mode={mode} onChange={setMode} dueCount={dueCount} compact={mode !== 'read'} />
 
                     <div className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                         {mode === 'read' && <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />}
@@ -1400,25 +1480,30 @@ export default function EssayMemoriser() {
                     />
                 ) : (
                     <>
-                        <header className="mb-12 reveal">
+                        <header className="mb-10 reveal">
                             <span className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">essay memoriser</span>
                             <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl">Learn it by heart.</h1>
-                            <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
+                            <p className="mt-6 text-xl text-text-muted font-medium max-w-xl">
                                 Caplet breaks your essay into its real structure, then walks you from a first read to
                                 word-perfect, exam-ready recall.
                             </p>
                         </header>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 reveal-stagger">
-                            <NewEssayForm onCreated={handleCreate} />
-
-                            <div>
-                                <h2 className="font-display text-lg font-extrabold tracking-tight text-text-primary mb-4">Your essays</h2>
+                        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-8 reveal-stagger">
+                            <section>
+                                <div className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
+                                    <div>
+                                        <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim mb-1">Your library</p>
+                                        <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Your essays</h2>
+                                    </div>
+                                    {essays.length > 0 && <span className="text-xs font-bold text-text-dim">{essays.length} saved</span>}
+                                </div>
                                 {opening && <p className="text-sm text-text-dim mb-3">Opening…</p>}
                                 {essays.length === 0 ? (
                                     <div className="block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                                         <DocumentTextIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
-                                        <p className="text-text-dim text-sm font-medium">No essays yet.</p>
+                                        <p className="text-text-primary text-sm font-bold">No essays yet.</p>
+                                        <p className="text-text-dim text-sm mt-1">Add one when you’re ready to start practising.</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-3">
@@ -1455,7 +1540,11 @@ export default function EssayMemoriser() {
                                         })}
                                     </div>
                                 )}
-                            </div>
+                            </section>
+
+                            <aside className="lg:pt-8">
+                                <NewEssayComposer onCreated={handleCreate} />
+                            </aside>
                         </div>
                     </>
                 )}

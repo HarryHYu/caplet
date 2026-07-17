@@ -843,8 +843,13 @@ class ApiService {
   async updateStudyTask(taskId, completed) {
     return this.request(`/study-plan/tasks/${encodeURIComponent(taskId)}`, {
       method: 'PATCH',
-      body: JSON.stringify({ completed }),
+      body: JSON.stringify({ completed, timezoneOffset: new Date().getTimezoneOffset() }),
     });
+  }
+
+  async getStudyStreak() {
+    const query = new URLSearchParams({ timezoneOffset: String(new Date().getTimezoneOffset()) });
+    return this.request(`/streaks?${query.toString()}`);
   }
 
   // Unified learning loop — outcome mastery, next-best action, and practice.

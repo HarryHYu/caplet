@@ -11,6 +11,7 @@ const {
   generatePlan
 } = require('../services/studyPlanService');
 const { getNextRecommendation } = require('../services/recommendationEngine');
+const { getStudyMomentum } = require('../services/studyMomentumService');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -163,20 +164,25 @@ router.patch('/tasks/:taskId', async (req, res) => {
   try {
     const plan = await StudyPlan.findOne({ where: { userId: req.user.id } });
     if (!plan) return res.status(404).json({ message: 'Study plan not found' });
+    const completed = req.body?.completed !== false;
     const tasks = plan.tasks.map((task) => task.id === req.params.taskId
       ? {
           ...task,
-          completed: req.body?.completed !== false,
-          completedAt: req.body?.completed === false ? null : new Date().toISOString()
+          completed,
+          completedAt: completed ? (task.completedAt || new Date().toISOString()) : null
         }
       : task);
     if (!tasks.some((task) => task.id === req.params.taskId)) {
       return res.status(404).json({ message: 'Study task not found' });
     }
     await plan.update({ tasks });
-    res.json({ studyPlan: serialize(plan) });
+    const momentum = await getStudyMomentum(req.user.id, {
+      timezoneOffset: req.body?.timezoneOffset ?? 0,
+    });
+    res.json({ studyPlan: serialize(plan), momentum });
   } catch (error) {
     console.error('Update study task error:', error);
+    if (error.status === 400) return res.status(400).json({ message: error.message });
     res.status(500).json({ message: 'Could not update the study task' });
   }
 });

@@ -21,6 +21,7 @@ vi.mock('../services/api', () => ({
     getStudyPlan: vi.fn(),
     getEconomicsExamSessions: vi.fn(),
     getNextRecommendation: vi.fn(),
+    getStudyStreak: vi.fn(),
     logEvent: vi.fn(),
   },
 }));
@@ -37,6 +38,16 @@ describe('Dashboard study plan handoff', () => {
     api.getDueReviewItems.mockResolvedValue({ items: [] });
     api.getEconomicsExamSessions.mockResolvedValue({ sessions: [] });
     api.getNextRecommendation.mockResolvedValue({ recommendation: null });
+    api.getStudyStreak.mockResolvedValue({
+      momentum: {
+        currentStreak: 2,
+        todayComplete: false,
+        todayCount: 0,
+        weekActiveDays: 2,
+        weeklyGoal: 3,
+        activityDays: [],
+      },
+    });
   });
 
   it('surfaces today’s next planned task', async () => {
@@ -91,6 +102,17 @@ describe('Dashboard study plan handoff', () => {
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
     expect(await screen.findByRole('link', { name: /Build your weekly study plan.*Set up my plan/i })).toHaveAttribute('href', '/study-plan');
+    expect(screen.getAllByRole('link', { name: /Set up my plan/i })).toHaveLength(2);
     expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
+  });
+
+  it('shows a meaningful study streak with a useful next action', async () => {
+    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+
+    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+
+    expect(await screen.findByRole('heading', { name: '2 days' })).toBeInTheDocument();
+    expect(screen.getByText('One meaningful study action today keeps it alive.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Study now/i })).toHaveAttribute('href', '/practice?subject=economics&mode=diagnostic');
   });
 });
