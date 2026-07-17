@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import ClassIcon from '../components/ClassIcon';
 import { useReveal } from '../lib/useReveal';
 
 const Classes = () => {
@@ -158,7 +159,10 @@ const Classes = () => {
                   <Link key={cls.id} to={`/classes/${cls.id}`} className="block-blue rounded-3xl p-10 group flex flex-col justify-between shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
                     <div>
                       <div className="flex justify-between items-start mb-12 gap-4">
-                        <h3 className="font-display font-bold tracking-tight text-3xl">{cls.name}</h3>
+                        <div className="flex min-w-0 items-start gap-4">
+                          <ClassIcon name={cls.name} size="lg" />
+                          <h3 className="min-w-0 font-display font-bold tracking-tight text-3xl">{cls.name}</h3>
+                        </div>
                         <span className="text-xs font-bold px-3 py-1 rounded-xl bg-accent text-white shrink-0">Owner</span>
                       </div>
                     </div>
@@ -190,9 +194,12 @@ const Classes = () => {
               {classes.student.map((cls) => (
                 <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-raised rounded-3xl p-10 group flex flex-col justify-between shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
                   <div>
-                    <div className="flex justify-between items-start mb-12 gap-4">
-                      <h3 className="font-display font-bold tracking-tight text-3xl">{cls.name}</h3>
-                      <span className="text-xs font-bold px-3 py-1 rounded-xl bg-surface-soft text-text-dim shrink-0">Member</span>
+                      <div className="flex justify-between items-start mb-12 gap-4">
+                        <div className="flex min-w-0 items-start gap-4">
+                          <ClassIcon name={cls.name} size="lg" />
+                          <h3 className="min-w-0 font-display font-bold tracking-tight text-3xl">{cls.name}</h3>
+                        </div>
+                        <span className="text-xs font-bold px-3 py-1 rounded-xl bg-surface-soft text-text-dim shrink-0">Member</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-8">

@@ -5,6 +5,7 @@ import { useCourses } from '../contexts/CoursesContext';
 import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import ClassIcon from '../components/ClassIcon';
 import {
     BookOpenIcon,
     AcademicCapIcon,
@@ -466,9 +467,12 @@ export default function Dashboard() {
                                 {classes.length > 0 ? (
                                     classes.slice(0, 3).map(cls => (
                                         <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-raised rounded-2xl p-7 flex justify-between items-center group shadow-[0_18px_40px_-32px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200">
-                                            <div>
+                                            <div className="flex min-w-0 items-center gap-4">
+                                                <ClassIcon name={cls.name} size="md" />
+                                                <div className="min-w-0">
                                                 <p className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors">{cls.name}</p>
                                                 <p className="text-xs font-bold text-text-muted mt-1">{cls.code}</p>
+                                                </div>
                                             </div>
                                             <ArrowRightIcon className="w-5 h-5 text-text-muted group-hover:text-accent group-hover:translate-x-1 transition-all" />
                                         </Link>
