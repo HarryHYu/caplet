@@ -22,6 +22,7 @@ vi.mock('../services/api', () => ({
     getEconomicsExamSessions: vi.fn(),
     getNextRecommendation: vi.fn(),
     getStudyStreak: vi.fn(),
+    getLearningToday: vi.fn(),
     logEvent: vi.fn(),
   },
 }));
@@ -38,6 +39,7 @@ describe('Dashboard study plan handoff', () => {
     api.getDueReviewItems.mockResolvedValue({ items: [] });
     api.getEconomicsExamSessions.mockResolvedValue({ sessions: [] });
     api.getNextRecommendation.mockResolvedValue({ recommendation: null });
+    api.getLearningToday.mockResolvedValue({ actions: [] });
     api.getStudyStreak.mockResolvedValue({
       momentum: {
         currentStreak: 2,
@@ -51,30 +53,12 @@ describe('Dashboard study plan handoff', () => {
   });
 
   it('surfaces today’s next planned task', async () => {
-    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-    api.getStudyPlan.mockResolvedValue({
-      studyPlan: {
-        tasks: [{
-          id: 'task-1',
-          dueDate: today,
-          title: 'Learn: Macroeconomic management',
-          subjectLabel: 'Economics',
-          estimatedMinutes: 45,
-          completed: false,
-        }],
-      },
-    });
-    api.getNextRecommendation.mockResolvedValue({
-      recommendation: {
-        mode: 'diagnostic',
-        reason: 'Complete a short diagnostic so Caplet can personalise your learning.',
-      },
-    });
+    api.getLearningToday.mockResolvedValue({ actions: [{ id: 'study-task:task-1', type: 'study_task', position: 1, eyebrow: 'Today’s study plan', title: 'Learn: Macroeconomic management', detail: 'Economics · 45 minutes', href: '/study-plan', estimatedMinutes: 45 }] });
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
-    expect(await screen.findByText(/Today’s next task/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Today’s study plan/i)).toBeInTheDocument();
     expect(screen.getByText('Learn: Macroeconomic management')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Today’s next task.*Learn: Macroeconomic management.*Start now/i })).toHaveAttribute('href', '/study-plan');
+    expect(screen.getByRole('link', { name: /Start next/i })).toHaveAttribute('href', '/study-plan');
     expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
   });
 
@@ -91,29 +75,24 @@ describe('Dashboard study plan handoff', () => {
   });
 
   it('makes study-plan setup the primary action before showing practice recommendations', async () => {
-    api.getStudyPlan.mockResolvedValue({ studyPlan: null });
-    api.getNextRecommendation.mockResolvedValue({
-      recommendation: {
-        mode: 'diagnostic',
-        reason: 'Complete a short diagnostic so Caplet can personalise your learning.',
-      },
-    });
+    api.getLearningToday.mockResolvedValue({ actions: [] });
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
-    expect(await screen.findByRole('link', { name: /Build your weekly study plan.*Start now/i })).toHaveAttribute('href', '/study-plan');
-    expect(screen.getByRole('link', { name: /Set up my plan/i })).toHaveAttribute('href', '/study-plan');
+    const setupLinks = await screen.findAllByRole('link', { name: /Set up my plan/i });
+    expect(setupLinks).toHaveLength(2);
+    setupLinks.forEach((link) => expect(link).toHaveAttribute('href', '/study-plan'));
     expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
   });
 
   it('shows a meaningful study streak with a useful next action', async () => {
-    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+    api.getLearningToday.mockResolvedValue({ actions: [{ id: 'recommendation:diagnostic', type: 'recommendation', position: 1, eyebrow: 'Best place to start', title: 'Take the quick Economics diagnostic', detail: 'Five questions.', href: '/practice?subject=economics&mode=diagnostic&source=today' }] });
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
     expect(await screen.findByRole('heading', { name: '2 days' })).toBeInTheDocument();
     expect(screen.getByText('One meaningful study action today keeps it alive.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Study now/i })).toHaveAttribute('href', '/practice?subject=economics&mode=diagnostic');
+    expect(screen.getByRole('link', { name: /Study now/i })).toHaveAttribute('href', '/practice?subject=economics&mode=diagnostic&source=today');
   });
 
 });

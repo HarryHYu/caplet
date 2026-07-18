@@ -8,7 +8,7 @@ function coursePath(course, progress) {
  * Build the frontend-only view model for the unified Learn hub.
  * All fields are present even when one upstream request fails.
  */
-export function createLearningHubData({ faculties = [], courses = [], courseProgress = [], examSessions = [], studyPlan = null, recommendation = null, activePractice = null, partialErrors = [] } = {}) {
+export function createLearningHubData({ faculties = [], courses = [], courseProgress = [], examSessions = [], studyPlan = null, recommendation = null, activePractice = null, todayActions = [], partialErrors = [] } = {}) {
   const subjects = faculties.flatMap((faculty) => faculty.subjects.map((subject) => ({ ...subject, faculty: faculty.name, block: faculty.block, text: faculty.text })));
   const progressByCourse = Object.fromEntries(courseProgress.map((item) => [String(item.courseId), item]));
   const learningPaths = courses.map((course) => {
@@ -38,6 +38,7 @@ export function createLearningHubData({ faculties = [], courses = [], courseProg
   const nextTask = (studyPlan?.tasks || []).filter((task) => !task.completed).sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)))[0];
 
   return {
+    todayActions,
     nextAction: {
       resume: activePractice?.href ? activePractice : null,
       studyTask: nextTask?.resourcePath ? { href: nextTask.resourcePath, title: nextTask.title, detail: nextTask.reason, eyebrow: 'Your next study task' } : null,

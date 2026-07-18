@@ -857,6 +857,10 @@ class ApiService {
   }
 
   // Unified learning loop — outcome mastery, next-best action, and practice.
+  async getLearningToday() {
+    return this.request('/learning/today');
+  }
+
   async getMastery(subject = 'economics') {
     const query = new URLSearchParams();
     if (subject) query.set('subject', subject);
