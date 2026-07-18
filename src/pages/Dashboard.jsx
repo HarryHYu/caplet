@@ -6,6 +6,7 @@ import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import ClassIcon from '../components/ClassIcon';
+import LearningNextAction from '../components/learning/LearningNextAction';
 import {
     BookOpenIcon,
     AcademicCapIcon,
@@ -15,12 +16,18 @@ import {
     CheckCircleIcon,
     BookmarkIcon,
     DocumentTextIcon,
-    CalendarDaysIcon,
     ClipboardDocumentCheckIcon,
     ClockIcon,
-    SparklesIcon,
     WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
+
+function activePracticeId() {
+    try {
+        return JSON.parse(window.localStorage.getItem('caplet.practice.active.economics') || 'null')?.id || '';
+    } catch {
+        return '';
+    }
+}
 
 function StudyMomentumPanel({ momentum, actionPath, actionLabel }) {
     const recentDays = Array.isArray(momentum.activityDays) ? momentum.activityDays.slice(-14) : [];
@@ -85,6 +92,7 @@ export default function Dashboard() {
     const [examSessions, setExamSessions] = useState([]);
     const [nextRecommendation, setNextRecommendation] = useState(null);
     const [studyMomentum, setStudyMomentum] = useState(null);
+    const [activePractice, setActivePractice] = useState(null);
     const [loadError, setLoadError] = useState('');
     const [retryKey, setRetryKey] = useState(0);
     const [availability, setAvailability] = useState({ progress: true, classes: true });
@@ -103,6 +111,7 @@ export default function Dashboard() {
         const fetchData = async () => {
             setLoading(true);
             setLoadError('');
+            const practiceSessionId = activePracticeId();
             const results = await Promise.allSettled([
                     api.getUserProgress(),
                     api.getClasses(),
@@ -112,6 +121,7 @@ export default function Dashboard() {
                     api.getEconomicsExamSessions(),
                     api.getNextRecommendation('economics'),
                     api.getStudyStreak(),
+                    practiceSessionId ? api.getPracticeSession(practiceSessionId) : Promise.resolve(null),
                 ]);
             const valueAt = (index) => results[index].status === 'fulfilled' ? results[index].value : null;
             const progressData = valueAt(0);
@@ -122,6 +132,7 @@ export default function Dashboard() {
             const examSessionsData = valueAt(5);
             const recommendationData = valueAt(6);
             const momentumData = valueAt(7);
+            const practiceData = valueAt(8);
 
             try {
                 setUserProgress(progressData?.progress || []);
@@ -136,6 +147,8 @@ export default function Dashboard() {
                 setExamSessions(examSessionsData?.sessions || []);
                 setNextRecommendation(recommendationData?.recommendation || null);
                 setStudyMomentum(momentumData?.momentum || null);
+                const practiceSession = practiceData?.session || practiceData;
+                setActivePractice(practiceSession?.id && practiceSession.status === 'in_progress' ? practiceSession : null);
                 const nextAvailability = { progress: Boolean(progressData), classes: Boolean(classesData) };
                 setAvailability(nextAvailability);
                 if (!nextAvailability.progress || !nextAvailability.classes) {
@@ -181,6 +194,9 @@ export default function Dashboard() {
     const lastCoursePct = lastCourseAllLessons.length > 0
         ? Math.round((lastCourseCompleted / lastCourseAllLessons.length) * 100)
         : 0;
+    const lastCourseResumePath = lastAccessedCourse && lastAccessed?.lessonId
+        ? `/courses/${lastAccessedCourse.id}/lessons/${lastAccessed.lessonId}${Number(lastAccessed.lastSlideIndex) > 0 ? `?slide=${lastAccessed.lastSlideIndex}` : ''}`
+        : lastAccessedCourse ? `/courses/${lastAccessedCourse.id}` : '/courses';
     const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
     const nextStudyTask = [...(studyPlan?.tasks || [])]
         .filter(task => !task.completed)
@@ -196,7 +212,7 @@ export default function Dashboard() {
     const quickActions = [
         { path: '/practice', label: 'Practice', description: 'Work through a focused question set.', icon: ArrowPathIcon, block: 'block-blue' },
         { path: '/mastery', label: 'Mastery', description: 'See what to strengthen next.', icon: CheckCircleIcon, block: 'block-green' },
-        { path: '/courses', label: 'Curriculum', description: 'Browse courses and lessons.', icon: BookOpenIcon, block: 'block-cream' },
+        { path: '/courses', label: 'Learning paths', description: 'Follow structured courses and lessons.', icon: BookOpenIcon, block: 'block-cream' },
         { path: '/edutools', label: 'Education tools', description: 'Open revision, essays, and more.', icon: WrenchScrewdriverIcon, block: 'block-amber' },
     ];
 
@@ -244,75 +260,28 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {studyPlan && nextRecommendation?.outcome?.id && (
-                    <Link
-                        to={recommendationPath}
-                        onClick={() => api.logEvent({
-                            type: 'recommendation_accepted',
-                            entityType: 'curriculum_outcome',
-                            entityId: nextRecommendation.outcome?.id,
-                            outcomeId: nextRecommendation.outcome?.id,
-                            feature: 'dashboard_next_action',
-                            metadata: { reasonCode: nextRecommendation.reasonCode, mode: nextRecommendation.mode },
-                        })}
-                        className="reveal group mb-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] transition-transform hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                        <div className="flex items-start gap-5">
-                            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/10">
-                                <SparklesIcon className="h-7 w-7" aria-hidden="true" />
-                            </span>
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">Your next best action</p>
-                                <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-white">
-                                    {nextRecommendation.outcome?.title ? `Strengthen ${nextRecommendation.outcome.title}` : 'Build your first mastery signal'}
-                                </h2>
-                                <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-white/80">{nextRecommendation.reason}</p>
-                            </div>
-                        </div>
-                        <span className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent">
-                            Start now <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-                        </span>
-                    </Link>
-                )}
-
-                {nextStudyTask ? (
-                    <Link
-                        to="/study-plan"
-                        className="reveal group mb-8 flex flex-col gap-6 rounded-3xl block-blue p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] transition-transform duration-200 hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                        <div className="flex items-center gap-5">
-                            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-surface-raised shadow-[0_16px_36px_-30px_rgba(20,20,18,0.3)]">
-                                <CalendarDaysIcon className="h-7 w-7 text-accent" />
-                            </span>
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
-                                    {nextStudyTask.dueDate === today ? 'Today’s next task' : 'Next study task'}
-                                </p>
-                                <p className="mt-1 font-display text-2xl font-extrabold tracking-tight text-text-primary">{nextStudyTask.title}</p>
-                                <p className="mt-1 text-sm font-bold text-text-muted">{nextStudyTask.subjectLabel} · {nextStudyTask.estimatedMinutes} minutes</p>
-                            </div>
-                        </div>
-                        <span className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-accent px-6 py-3 text-sm font-bold text-white">
-                            Open plan <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </span>
-                    </Link>
-                ) : (
-                    <Link to="/study-plan" className="reveal group mb-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] transition-transform hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-start gap-5">
-                            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/10">
-                                <CalendarDaysIcon className="h-7 w-7" aria-hidden="true" />
-                            </span>
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">Your first step</p>
-                                <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-white">Build your weekly study plan</h2>
-                                <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-white/80">Choose your subjects, study days and exam dates so Caplet can give you one useful next task.</p>
-                            </div>
-                        </div>
-                        <span className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent">
-                            Set up my plan <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-                        </span>
-                    </Link>
-                )}
+                <LearningNextAction
+                    source="dashboard"
+                    resume={activePractice ? {
+                        href: `/practice?subject=economics&session=${activePractice.id}&source=dashboard`,
+                        title: 'Resume your Economics practice',
+                        detail: `Continue from question ${Math.min(Number(activePractice.currentIndex || 0) + 1, Number(activePractice.totalQuestions || 1))} of ${activePractice.totalQuestions || 1}.`,
+                        mode: activePractice.mode,
+                    } : null}
+                    recommendation={nextStudyTask ? null : nextRecommendation}
+                    studyTask={nextStudyTask ? {
+                        href: nextStudyTask.resourcePath || '/study-plan',
+                        eyebrow: nextStudyTask.dueDate === today ? 'Today’s next task' : 'Next study task',
+                        title: nextStudyTask.title,
+                        detail: `${nextStudyTask.subjectLabel} · ${nextStudyTask.estimatedMinutes} minutes`,
+                    } : !studyPlan ? {
+                        href: '/study-plan',
+                        eyebrow: 'Your first step',
+                        title: 'Build your weekly study plan',
+                        detail: 'Choose your subjects, study days and exam dates so Caplet can give you one useful next task.',
+                    } : null}
+                    className="reveal mb-8"
+                />
 
                 {(activeExam || recentExam) && (
                     <section className="reveal mb-8 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
@@ -437,8 +406,8 @@ export default function Dashboard() {
                                             </div>
                                             <div className="flex flex-wrap gap-4 justify-between items-center">
                                                 <span className="text-sm font-bold text-text-muted">Progress: {lastCoursePct}%</span>
-                                                <Link to={`/courses/${lastAccessedCourse.id}`} className="btn-primary py-3 px-8 text-[15px]">
-                                                    Continue Course
+                                                <Link to={lastCourseResumePath} className="btn-primary py-3 px-8 text-[15px]">
+                                                    Continue learning
                                                 </Link>
                                             </div>
                                         </div>

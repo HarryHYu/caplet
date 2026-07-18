@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "build": "echo 'No build step required for Node.js'",
     "test": "jest",
+    "generate:economics-question-bank": "node scripts/generate-economics-question-bank.mjs",
     "migrations:check": "node scripts/check-migrations.js",
     "evaluate:marker": "node scripts/evaluate-economics-marker.js"
   },

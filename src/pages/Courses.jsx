@@ -1,51 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useCourses } from '../contexts/CoursesContext';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, AcademicCapIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
 import CapletLoader from '../components/CapletLoader';
+import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
 import { useReveal } from '../lib/useReveal';
-
-const CourseCover = ({ title }) => {
-  // Generate a semi-stable pseudo-random gradient based on title
-  const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const hue1 = hash % 360;
-  const hue2 = (hue1 + 40) % 360;
-  const hue3 = (hue1 + 180) % 360;
-  
-  return (
-    <div className="relative w-full h-full overflow-hidden group-hover:scale-105 transition-transform duration-700">
-      <div 
-        className="absolute inset-0 opacity-80"
-        style={{
-          background: `linear-gradient(${hue1}deg, hsl(${hue1}, 70%, 85%) 0%, hsl(${hue2}, 70%, 90%) 50%, hsl(${hue3}, 70%, 95%) 100%)`
-        }}
-      />
-      
-      {/* Abstract shapes */}
-      <div 
-        className="absolute top-[-20%] left-[-20%] w-[100%] h-[100%] rounded-full blur-[80px] mix-blend-multiply opacity-60"
-        style={{ background: `hsl(${hue2}, 80%, 75%)` }}
-      />
-      <div 
-        className="absolute bottom-[-30%] right-[-10%] w-[120%] h-[120%] rounded-full blur-[100px] mix-blend-screen opacity-40 animate-float"
-        style={{ background: `hsl(${hue3}, 60%, 85%)` }}
-      />
-      
-      {/* Decorative center element */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-10">
-        <span className="text-[12rem] font-serif italic select-none">{title.charAt(0)}</span>
-      </div>
-      
-    </div>
-  );
-};
 
 const Courses = () => {
   const { courses, loading, error, fetchCourses } = useCourses();
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     level: '',
     search: '',
@@ -62,20 +27,8 @@ const Courses = () => {
     if (isAuthenticated && courses.length > 0) {
       const fetchProgress = async () => {
         try {
-          const progressMap = {};
-          const courseIds = [...new Set(courses.map(c => c.id))];
-          await Promise.all(
-            courseIds.map(async (courseId) => {
-              try {
-                const progress = await api.getCourseProgress(courseId);
-                if (progress.courseProgress) {
-                  progressMap[courseId] = progress.courseProgress.progressPercentage || 0;
-                }
-              } catch {
-                progressMap[courseId] = 0;
-              }
-            })
-          );
+          const response = await api.getCourseProgressSummaries();
+          const progressMap = Object.fromEntries((response?.courses || []).map((item) => [String(item.courseId), item]));
           setCourseProgress(progressMap);
         } catch (error) {
           console.error('Error fetching progress:', error);
@@ -92,9 +45,34 @@ const Courses = () => {
     }));
   };
 
-  const handleCourseClick = (courseId) => {
-    navigate(`/courses/${courseId}`);
+  const courseHref = (course) => {
+    const progress = courseProgress[String(course.id)];
+    if (!progress?.nextLesson?.id) return `/courses/${course.id}`;
+    const params = progress.nextLesson.lastSlideIndex > 0 ? `?slide=${progress.nextLesson.lastSlideIndex}` : '';
+    return `/courses/${course.id}/lessons/${progress.nextLesson.id}${params}`;
   };
+
+  const inProgressCourses = courses.filter((course) => courseProgress[String(course.id)]?.status === 'in_progress');
+  const groupedCourses = courses.reduce((groups, course) => {
+    const metadata = course.metadata || {};
+    const subject = metadata.subject || (course.tags || []).find((tag) => String(tag).toLowerCase() === 'economics') || course.category || 'Learning paths';
+    const year = metadata.yearLevel ? ` · Year ${metadata.yearLevel}` : '';
+    const label = `${String(subject).replaceAll('-', ' ')}${year}`;
+    groups[label] = [...(groups[label] || []), course];
+    return groups;
+  }, {});
+
+  const renderCourseCard = (course) => {
+    const progress = courseProgress[String(course.id)];
+    const percentage = Number(progress?.progressPercentage || 0);
+    const hasProgress = progress?.status === 'in_progress';
+    const lessonCount = (course.modules || []).reduce((sum, module) => sum + (module.lessons || []).length, 0);
+    return <LearningCard key={course.id} title={course.title} description={course.shortDescription} href={courseHref(course)} kind={course.metadata?.subject || course.category || 'Learning path'} metadata={[`${course.duration || 0} min`, `${lessonCount} lessons`, course.level]} status={hasProgress ? 'In progress' : progress?.status === 'completed' ? 'Complete' : undefined} progress={hasProgress || progress?.status === 'completed' ? percentage : undefined} icon={AcademicCapIcon} actionLabel={hasProgress ? `Continue ${progress.nextLesson?.title || 'learning'}` : 'Open learning path'} />;
+  };
+
+  const hasActiveFilters = Boolean(filters.level || filters.search.trim());
+  const showNoMatches = courses.length === 0 && !loading && !error && hasActiveFilters;
+  const showCatalogEmpty = courses.length === 0 && !loading && !error && !hasActiveFilters;
 
   if (loading) {
     return (
@@ -105,30 +83,23 @@ const Courses = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
       <div className="container-custom">
         {error && (
-          <div className="reveal mb-16 p-6 rounded-2xl bg-red-50 text-red-800 text-sm font-semibold flex items-center gap-4 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-            {error}
+          <div role="alert" className="reveal mb-10 rounded-2xl bg-surface-error p-5 text-sm font-semibold text-text-error">
+            Learning paths could not be loaded. Economics study and diagnostic practice are still available below.
           </div>
         )}
 
-        {/* Header */}
-        <header className="reveal mb-20">
-          <p className="font-hand text-2xl text-accent mb-3 -rotate-2">Pick something to learn</p>
-          <h1 className="font-display font-extrabold tracking-tight text-text-primary text-6xl md:text-8xl mb-8">
-            Curriculum
-          </h1>
-          <p className="text-xl md:text-2xl text-text-muted max-w-xl leading-relaxed">
-            Browse the full course library and start wherever you like.
-          </p>
-        </header>
+        <Link to="/library" className="mb-7 inline-flex min-h-11 items-center text-sm font-bold text-text-muted transition-colors hover:text-accent">← Learn</Link>
+        <LearningPageHeader eyebrow="Structured study" title="Learning paths" description="Follow lessons in order, resume exactly where you stopped, or begin with a quick Economics diagnostic." className="reveal mb-12" />
 
         {/* Filters */}
-        <div className="reveal mb-16 flex flex-col sm:flex-row gap-6">
+        <div className="reveal mb-12 flex flex-col gap-5 rounded-3xl bg-surface-soft p-5 sm:flex-row sm:p-6">
           <div className="sm:w-48">
-            <label className="text-sm font-semibold text-text-dim mb-3 block">Level</label>
+            <label htmlFor="learning-path-level" className="text-sm font-semibold text-text-dim mb-3 block">Level</label>
             <select
+              id="learning-path-level"
               value={filters.level}
               onChange={(e) => handleFilterChange('level', e.target.value)}
               className="w-full bg-surface-raised border border-line-soft px-5 py-4 rounded-xl text-sm font-semibold outline-none focus:border-accent transition-colors"
@@ -140,8 +111,9 @@ const Courses = () => {
             </select>
           </div>
           <div className="flex-1">
-            <label className="text-sm font-semibold text-text-dim mb-3 block">Search</label>
+            <label htmlFor="learning-path-search" className="text-sm font-semibold text-text-dim mb-3 block">Search</label>
             <input
+              id="learning-path-search"
               type="text"
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
@@ -151,86 +123,26 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* Course grid */}
-        <div data-tour-id="courses-grid" className="reveal-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => {
-            const progress = courseProgress[course.id] || 0;
-            const hasProgress = progress > 0;
+        {inProgressCourses.length > 0 && <LearningSection eyebrow="Saved progress" title="Continue learning" description="Pick up at the exact lesson and slide you last reached." className="reveal mb-16"><div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{inProgressCourses.map(renderCourseCard)}</div></LearningSection>}
 
-            return (
-              <div
-                key={course.id}
-                onClick={() => handleCourseClick(course.id)}
-                className="group cursor-pointer flex flex-col bg-surface-raised rounded-3xl p-7 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200"
-              >
-                <div className="flex justify-between items-start mb-6">
-                  <span className="text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full bg-accent text-white">
-                    {course.level || 'Beginner'}
-                  </span>
-                  {hasProgress && (
-                    <span className="text-xs font-bold px-3 py-1.5 rounded-full block-green text-green">
-                      In progress
-                    </span>
-                  )}
-                </div>
-
-                <div className="aspect-[16/9] w-full mb-7 overflow-hidden bg-surface-soft rounded-2xl">
-                  <CourseCover title={course.title} id={course.id} />
-                </div>
-
-                <h3 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-3 group-hover:text-accent transition-colors duration-300">
-                  {course.title}
-                </h3>
-
-                <p className="text-sm font-medium text-text-muted leading-relaxed mb-7 line-clamp-3">
-                  {course.shortDescription}
-                </p>
-
-                <div className="mt-auto">
-                  <div className="flex items-center gap-3 text-sm font-semibold text-text-dim mb-6">
-                    <span>{course.duration}m</span>
-                    <span className="w-1 h-1 rounded-full bg-text-dim" />
-                    <span>{(course.modules || []).reduce((sum, m) => sum + (m.lessons || []).length, 0)} lessons</span>
-                  </div>
-
-                  {isAuthenticated && hasProgress && (
-                    <div className="mb-6">
-                      <div className="flex justify-between text-sm font-semibold text-text-dim mb-2">
-                        <span>Progress</span>
-                        <span className="text-accent">{Math.round(progress)}%</span>
-                      </div>
-                      <div className="w-full bg-surface-soft h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-accent h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-accent">
-                      {hasProgress ? 'Continue module' : 'Open lesson'}
-                    </span>
-                    <ArrowRightIcon className="w-4 h-4 text-accent group-hover:translate-x-1.5 transition-transform duration-300" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div data-tour-id="courses-grid" className="space-y-14">
+          {Object.entries(groupedCourses).map(([label, group]) => <LearningSection key={label} title={label} className="capitalize"><div className="reveal-stagger grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">{group.map(renderCourseCard)}</div></LearningSection>)}
         </div>
 
-        {courses.length === 0 && !loading && (
-          <div className="reveal py-24 px-8 text-center block-cream rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-            <h3 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-3">
-              No courses match those filters
-            </h3>
-            <p className="text-text-muted font-medium text-sm mb-8 max-w-md mx-auto">
-              Try a different level or search term, or clear everything to see the full library.
-            </p>
-            <button
-              onClick={() => setFilters({ level: '', search: '' })}
-              className="btn-primary"
-            >
-              Clear filters
-            </button>
+        {showNoMatches && (
+          <div className="reveal rounded-3xl border border-dashed border-line-soft bg-surface-soft px-8 py-12 text-center">
+            <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">No learning paths match those filters.</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm font-medium text-text-muted">Clear the level or search filters to see every published path.</p>
+            <button type="button" onClick={() => setFilters({ level: '', search: '' })} className="btn-primary mx-auto mt-6">Clear filters</button>
+          </div>
+        )}
+
+        {(showCatalogEmpty || error) && (
+          <div className="reveal rounded-3xl block-blue px-8 py-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] md:px-12">
+            <AcademicCapIcon className="h-10 w-10 text-accent" />
+            <h3 className="mt-6 font-display text-3xl font-bold tracking-tight text-text-primary">Start with Economics while new paths are being prepared.</h3>
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">The Economics library already includes Year 11 and Year 12 topics, saved adaptive practice, feedback, and a mastery map.</p>
+            <div className="mt-8 flex flex-wrap gap-3"><Link to="/library/economics" className="btn-primary">Open Economics <ArrowRightIcon className="h-4 w-4" /></Link><Link to="/practice?subject=economics&mode=diagnostic&source=course" className="btn-secondary"><ClipboardDocumentCheckIcon className="h-4 w-4" /> Take the diagnostic</Link></div>
           </div>
         )}
       </div>

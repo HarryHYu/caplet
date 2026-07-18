@@ -31,8 +31,7 @@ export default function TabletPublicNavbar() {
                 </Link>
 
                 <nav aria-label="Public navigation" className="ml-auto flex items-center gap-1">
-                    <Link to="/courses" className={linkClass}>Courses</Link>
-                    <Link to="/library" className={linkClass}>Library</Link>
+                    <Link to="/library" className={linkClass}>Learn</Link>
                     <Link to="/money" className={linkClass}>Tools</Link>
                 </nav>
 

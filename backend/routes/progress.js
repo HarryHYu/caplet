@@ -5,22 +5,9 @@ const Course = require('../models/Course');
 const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
 const { requireAuth } = require('../middleware/auth');
+const { lessonHasContent, summarizeCourseProgress } = require('../services/courseProgressService');
 
 const router = express.Router();
-
-// Helper: lesson has actual content (slides, text, or video)
-function lessonHasContent(lesson) {
-  const raw = lesson.get ? lesson.get('slides') : lesson.slides;
-  if (raw) {
-    const slides = typeof raw === 'string' ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : raw;
-    if (Array.isArray(slides) && slides.length > 0) return true;
-  }
-  const content = lesson.get ? lesson.get('content') : lesson.content;
-  if (content && String(content).trim()) return true;
-  const video = lesson.get ? lesson.get('videoUrl') : lesson.videoUrl;
-  if (video && String(video).trim()) return true;
-  return false;
-}
 
 // Update lesson progress
 router.put('/lesson/:lessonId', requireAuth, [
@@ -109,6 +96,27 @@ router.put('/lesson/:lessonId', requireAuth, [
           timeSpentSeconds: Number(timeSpent || progress.timeSpent || 0),
         },
       });
+      await recordProductEvent({
+        idempotencyKey: `${status === 'completed' ? 'activity-completed' : 'learning-action-started'}:lesson:${req.user.id}:${lessonId}:${day}`,
+        type: status === 'completed' ? 'activity_completed' : 'learning_action_started',
+        userId: req.user.id,
+        feature: 'learning_loop:course',
+        entityType: 'lesson',
+        entityId: lessonId,
+        metadata: { source: 'course', courseId, moduleId: lesson.moduleId },
+      });
+    }
+
+    if (status === 'completed' && previousStatus !== 'completed') {
+      const { completeMatchingStudyTask } = require('../services/studyTaskCompletionService');
+      await completeMatchingStudyTask({
+        userId: req.user.id,
+        resourcePaths: [
+          `/courses/${courseId}/lessons/${lessonId}`,
+          `/courses/${courseId}/modules/${lesson.moduleId}`,
+          `/courses/${courseId}`,
+        ],
+      });
     }
 
     res.json({
@@ -118,6 +126,35 @@ router.put('/lesson/:lessonId', requireAuth, [
   } catch (error) {
     console.error('Update progress error:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Read-only batch summary used by the learning-path catalogue. Unlike the
+// single-course endpoint this never creates placeholder progress records.
+router.get('/courses', requireAuth, async (req, res) => {
+  try {
+    const courses = await Course.findAll({
+      where: { isPublished: true },
+      include: [{
+        model: Module,
+        as: 'modules',
+        required: false,
+        include: [{ model: Lesson, as: 'lessons', required: false }],
+      }],
+      order: [['createdAt', 'DESC']],
+    });
+    const rows = await UserProgress.findAll({ where: { userId: req.user.id } });
+    const rowsByCourse = new Map();
+    rows.forEach((row) => {
+      const key = String(row.courseId);
+      rowsByCourse.set(key, [...(rowsByCourse.get(key) || []), row]);
+    });
+    res.json({
+      courses: courses.map((course) => summarizeCourseProgress(course, rowsByCourse.get(String(course.id)) || [])),
+    });
+  } catch (error) {
+    console.error('Get course progress summaries error:', error);
+    res.status(500).json({ message: 'Could not load course progress' });
   }
 });
 
@@ -218,8 +255,16 @@ router.get('/course/:courseId', requireAuth, async (req, res) => {
         lessonId: String(p.lessonId),
         status: p.status,
         lastSlideIndex: p.lastSlideIndex,
-        quizScores: p.quizScores || {}
+        quizScores: p.quizScores || {},
+        lastAccessedAt: p.lastAccessedAt,
       }));
+
+    const summary = summarizeCourseProgress({ id: course.id, modules: modules.map((module) => ({
+      ...module.toJSON(),
+      lessons: allLessonsFull
+        .filter((lesson) => String(lessonsByModule.find((item) => String(item.id) === String(lesson.id))?.moduleId) === String(module.id))
+        .map((lesson) => ({ ...lesson.toJSON(), moduleId: module.id })),
+    })) }, progress);
 
     res.json({
       courseProgress: {
@@ -227,7 +272,9 @@ router.get('/course/:courseId', requireAuth, async (req, res) => {
         completedLessons,
         progressPercentage: Math.round(progressPercentage * 100) / 100,
         status: progressPercentage === 100 ? 'completed' : 
-                progressPercentage > 0 ? 'in_progress' : 'not_started'
+                progressPercentage > 0 ? 'in_progress' : 'not_started',
+        nextLesson: summary.nextLesson,
+        lastActivityAt: summary.lastActivityAt,
       },
       moduleProgress,
       lessonProgress

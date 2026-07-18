@@ -1,4 +1,4 @@
-import { createElement, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   AcademicCapIcon,
@@ -14,6 +14,8 @@ import {
   economicsResourceLibrary,
   getEconomicsAreaResources,
 } from '../data/economicsResourceLibrary';
+import EconomicsNextAction from '../components/learning/EconomicsNextAction';
+import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
 
 const typeLabels = {
   all: 'All resources',
@@ -581,34 +583,23 @@ const economicsPages = [
 ];
 
 function BackLink({ to, children }) {
-  return <Link to={to} className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-text-muted transition-colors hover:text-accent"><span aria-hidden="true">←</span>{children}</Link>;
+  return <Link to={to} className="mb-7 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-text-muted transition-colors hover:text-accent"><span aria-hidden="true">←</span>{children}</Link>;
 }
 
 function EconomicsHub() {
   return (
-    <div className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body pb-28 pt-24 text-text-primary selection:bg-accent selection:text-white md:pt-28">
       <div className="container-custom">
-        <section className="mb-10 max-w-3xl">
-          <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Caplet learning library</p>
-          <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Economics</h1>
-          <p className="mt-4 max-w-2xl text-base font-medium leading-relaxed text-text-muted md:text-lg">
-            Choose your year level, work through a complete exam pack, or check how the course is assessed. Each space stays focused so you can start studying without wading through the whole library.
-          </p>
-        </section>
+        <BackLink to="/library">Learn</BackLink>
+        <LearningPageHeader eyebrow="Available subject" title="Economics" description="Choose a year level, follow your recommended practice, work through an exam pack, or check how the HSC course is assessed." className="mb-10" />
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {economicsPages.map((page) => (
-            <Link key={page.to} to={page.to} className="group rounded-xl border border-line-soft bg-surface-raised p-5 transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_18px_40px_-30px_rgba(20,20,18,0.55)]">
-              <span className="grid h-11 w-11 place-items-center rounded-lg bg-accent-soft text-accent">
-                {createElement(page.icon, { className: 'h-5 w-5' })}
-              </span>
-              <p className="mt-5 text-xs font-extrabold uppercase tracking-wide text-text-dim">{page.eyebrow}</p>
-              <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-text-primary group-hover:text-accent">{page.title}</h2>
-              <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{page.body}</p>
-              <span className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-accent">Open <ArrowTopRightOnSquareIcon className="h-4 w-4" /></span>
-            </Link>
-          ))}
-        </section>
+        <EconomicsNextAction source="library_hub" className="mb-10" />
+
+        <LearningSection eyebrow="Explore the subject" title="Choose your route" description="Year content, timed practice, and assessment guidance use one consistent learning hierarchy.">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {economicsPages.map((page) => <LearningCard key={page.to} title={page.title} description={page.body} href={page.to} kind={page.eyebrow} icon={page.icon} actionLabel="Open" />)}
+          </div>
+        </LearningSection>
       </div>
     </div>
   );
@@ -650,80 +641,39 @@ function OfficialSources() {
 function YearPage({ year }) {
   const areas = economicsResourceLibrary.focusAreas.filter((area) => area.year === year);
   return (
-    <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary">
+    <main className="min-h-screen bg-surface-body pb-28 pt-24 text-text-primary md:pt-28">
       <div className="container-custom max-w-6xl">
         <BackLink to="/library/economics">Economics</BackLink>
-        <section className="mb-10 max-w-3xl">
-          <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Year {year}</p>
-          <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">{year === 11 ? 'Build the economic toolkit.' : 'Practise the HSC course.'}</h1>
-          <p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Choose a topic. You will work through one activity at a time and review each response before moving on.</p>
-        </section>
-        <section className="grid gap-4 md:grid-cols-2">
-          {areas.map((area) => {
+        <LearningPageHeader eyebrow={`Year ${year}`} title={year === 11 ? 'Build the economic toolkit.' : 'Practise the HSC course.'} description="Use the recommended next action or choose a topic. Each topic shows its complete activity set before you begin." className="mb-10" />
+        <EconomicsNextAction source={`library_year_${year}`} className="mb-10" />
+        <LearningSection eyebrow="Syllabus topics" title="Choose a topic" description={`${areas.length} focused topic areas are available for Year ${year}.`}>
+          <div className="grid gap-4 md:grid-cols-2">
+            {areas.map((area) => {
             const resourceCount = getEconomicsAreaResources(area).length;
-            return (
-              <Link key={area.id} to={`/library/economics/focus/${area.id}`} className="group rounded-xl border border-line-soft bg-surface-raised p-6 transition-colors hover:border-accent">
-                <p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">{area.focus}</p>
-                <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight group-hover:text-accent">{area.title}</h2>
-                <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{area.description}</p>
-                <p className="mt-5 text-sm font-extrabold text-accent">Start {resourceCount} activities <span aria-hidden="true">→</span></p>
-              </Link>
-            );
-          })}
-        </section>
+            return <LearningCard key={area.id} title={area.title} description={area.description} href={`/library/economics/focus/${area.id}`} kind={area.focus} metadata={[`${resourceCount} activities`, ...(area.outcomes || []).slice(0, 2)]} icon={BookOpenIcon} actionLabel={`Open ${resourceCount} activities`} />;
+            })}
+          </div>
+        </LearningSection>
       </div>
     </main>
   );
 }
 
 function PracticePlayer({ area }) {
-  const [type, setType] = useState('all');
-  const [index, setIndex] = useState(0);
   const [searchParams] = useSearchParams();
-  const resources = getEconomicsAreaResources(area).filter((resource) => type === 'all' || resource.type === type);
-  const resource = resources[index];
   const requestedResourceId = searchParams.get('resource');
-
-  useEffect(() => {
-    const filteredResources = getEconomicsAreaResources(area).filter((item) => type === 'all' || item.type === type);
-    const requestedIndex = filteredResources.findIndex((item) => item.id === requestedResourceId);
-    setIndex(requestedIndex >= 0 ? requestedIndex : 0);
-  }, [type, area, requestedResourceId]);
-
-  const move = (nextIndex) => {
-    setIndex(nextIndex);
-    if (import.meta.env.MODE !== 'test') window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const resources = getEconomicsAreaResources(area);
+  const counts = resources.reduce((result, resource) => ({ ...result, [resource.type]: (result[resource.type] || 0) + 1 }), {});
 
   return (
     <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary">
       <div className="mx-auto max-w-4xl px-6 md:px-10">
         <BackLink to={`/library/economics/year-${area.year}`}>Year {area.year} topics</BackLink>
-        <header className="mb-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-extrabold uppercase tracking-wide text-accent">{area.focus}</p>
-              <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight md:text-4xl">{area.title}</h1>
-            </div>
-            <label className="block">
-              <span className="sr-only">Activity type</span>
-              <select value={type} onChange={(event) => setType(event.target.value)} className="rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm font-bold text-text-primary outline-none focus:border-accent">
-                {Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-            </label>
-          </div>
-          <div className="mt-6 flex items-center gap-3">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-soft"><div className="h-full rounded-full bg-accent transition-all" style={{ width: `${((index + 1) / resources.length) * 100}%` }} /></div>
-            <span className="text-xs font-extrabold text-text-dim">{index + 1} / {resources.length}</span>
-          </div>
-        </header>
+        <LearningPageHeader eyebrow={area.focus} title={area.title} description={area.description} className="mb-8" />
 
-        {resource ? <ResourceRenderer key={resource.id} resource={resource} area={area} /> : <p className="rounded-xl bg-surface-raised p-8 text-center text-text-muted">No activities in this category.</p>}
+        <EconomicsNextAction source="library" focusId={area.id} resourceId={requestedResourceId || ''} mode="daily" />
 
-        <div className="mt-6 flex items-center justify-between gap-4">
-          <button type="button" disabled={index === 0} onClick={() => move(index - 1)} className="rounded-xl border border-line-soft bg-surface-raised px-5 py-3 text-sm font-extrabold text-text-primary disabled:opacity-30">Previous</button>
-          <button type="button" disabled={index >= resources.length - 1} onClick={() => move(index + 1)} className="rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white disabled:opacity-30">Next activity</button>
-        </div>
+        <section className="mt-8 rounded-3xl border border-line-soft bg-surface-raised p-6 md:p-8" aria-labelledby="practice-coverage-heading"><p className="section-kicker">Saved and evidence-backed</p><h2 id="practice-coverage-heading" className="font-display text-2xl font-extrabold tracking-tight">What this practice set covers</h2><p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">Answers now run through the same saved practice session, feedback, and mastery profile as diagnostics and revision.</p><div className="mt-6 grid gap-3 sm:grid-cols-2">{Object.entries(counts).map(([type, count]) => <div key={type} className="flex items-center justify-between rounded-xl bg-surface-soft px-4 py-3"><span className="text-sm font-bold text-text-primary">{typeLabels[type] || type}</span><span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-extrabold text-accent">{count}</span></div>)}</div><div className="mt-6 flex flex-wrap gap-2">{area.outcomes.map((code) => <OutcomeChip key={code} code={code} />)}</div></section>
       </div>
     </main>
   );

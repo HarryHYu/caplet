@@ -3,9 +3,11 @@ const { Op } = require('sequelize');
 const { requireAuth } = require('../middleware/auth');
 const { getNextRecommendation } = require('../services/recommendationEngine');
 const {
+  acknowledgePracticeFeedback,
   answerPracticeQuestion,
   completePracticeSession,
   createPracticeSession,
+  savePracticeDraft,
   serialiseSession,
 } = require('../services/practiceEngine');
 
@@ -103,6 +105,24 @@ router.get('/practice/sessions/:id', async (req, res) => {
     res.json({ session: await serialiseSession(session) });
   } catch {
     res.status(500).json({ message: 'Could not load practice.' });
+  }
+});
+
+router.patch('/practice/sessions/:id/draft', async (req, res) => {
+  try {
+    const session = await savePracticeDraft(req.user.id, req.params.id, req.body || {});
+    res.json({ session });
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message || 'Could not save this draft.' });
+  }
+});
+
+router.patch('/practice/sessions/:id/feedback', async (req, res) => {
+  try {
+    const session = await acknowledgePracticeFeedback(req.user.id, req.params.id);
+    res.json({ session });
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message || 'Could not continue this session.' });
   }
 });
 

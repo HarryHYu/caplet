@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   AcademicCapIcon,
@@ -20,6 +20,7 @@ import {
 import PracticeQuestion, { FeedbackPanel } from '../components/learning/PracticeQuestion';
 import { LearningEmpty, LearningError, LearningLoader } from '../components/learning/LearningStates';
 import api from '../services/api';
+import LearningNextAction from '../components/learning/LearningNextAction';
 
 const PRACTICE_MODES = [
   {
@@ -341,13 +342,7 @@ function CompletionSummary({ data, session, onRestart }) {
         </section>
       )}
 
-      {recommendation && (
-        <section className="mt-6 rounded-3xl bg-[color:var(--block-green)] p-6 md:p-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-[color:var(--mark-green)]">Recommended next</p>
-          <h2 className="mt-2 text-2xl font-display font-extrabold text-text-primary">{recommendation.outcome?.title ? `Continue with ${recommendation.outcome.title}` : 'Keep the learning loop moving'}</h2>
-          <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{recommendation.reason || 'Your latest evidence has unlocked a useful next practice set.'}</p>
-        </section>
-      )}
+      <LearningNextAction recommendation={recommendation} source="practice_completion" className="mt-6" />
 
       <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <button type="button" onClick={onRestart} className="btn-secondary"><ArrowPathIcon className="h-4 w-4" aria-hidden="true" /> Choose another mode</button>
@@ -373,6 +368,10 @@ export default function Practice() {
   const requestedOutcomeId = searchParams.get('outcomeId') || '';
   const requestedAssignmentId = searchParams.get('assignmentId') || '';
   const requestedSessionId = searchParams.get('session') || '';
+  const requestedFocusId = searchParams.get('focusId') || '';
+  const requestedResourceId = searchParams.get('resourceId') || '';
+  const requestedSource = searchParams.get('source') || 'practice';
+  const requestedReturnTo = searchParams.get('returnTo') || '';
   const [phase, setPhase] = useState('landing');
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -388,6 +387,8 @@ export default function Practice() {
   const [completing, setCompleting] = useState(false);
   const [retryingPrevious, setRetryingPrevious] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(null);
+  const draftTimer = useRef(null);
+  const autoStartRef = useRef(false);
 
   const loadLanding = useCallback(async () => {
     setInitialLoading(true);
@@ -417,8 +418,11 @@ export default function Practice() {
           saveSession(subject, restored);
           if (requestedSessionId) {
             setSession(restored);
-            setCurrentQuestion(restored.currentQuestion);
+            const pending = restored.config?.feedbackPending;
+            setCurrentQuestion(pending?.questionId ? restored.questions?.find((question) => question.id === pending.questionId) || restored.currentQuestion : restored.currentQuestion);
+            setAnswerResult(pending?.result ? { ...pending.result, session: restored } : null);
             setPhase('session');
+            api.logEvent?.({ type: 'activity_resumed', idempotencyKey: `activity-resumed:${restored.id}:${Date.now()}`, feature: `learning_loop:${requestedSource}`, entityType: 'practice_session', entityId: restored.id, metadata: { source: requestedSource, mode: restored.mode, currentIndex: restored.currentIndex } });
           } else {
             setResumableSession(restored);
           }
@@ -429,7 +433,7 @@ export default function Practice() {
     } finally {
       setInitialLoading(false);
     }
-  }, [requestedSessionId, subject]);
+  }, [requestedSessionId, requestedSource, subject]);
 
   useEffect(() => {
     loadLanding();
@@ -469,7 +473,7 @@ export default function Practice() {
     return () => window.clearInterval(timer);
   }, [phase, session?.id, session?.mode, session?.startedAt, session?.remainingSeconds, session?.timeRemainingSeconds, session?.config?.durationSeconds, session?.config?.timeLimitMinutes, session?.metadata?.durationSeconds, session?.metadata?.timeLimitMinutes]);
 
-  const startSession = async (mode, outcomeId = '') => {
+  const startSession = useCallback(async (mode, outcomeId = '') => {
     setStartingMode(mode);
     setActionError('');
     try {
@@ -478,6 +482,10 @@ export default function Practice() {
         subject,
         ...(outcomeId ? { outcomeId } : {}),
         ...(mode === 'assigned' && requestedAssignmentId ? { assignmentId: requestedAssignmentId } : {}),
+        ...(requestedFocusId ? { focusId: requestedFocusId } : {}),
+        ...(requestedResourceId ? { resourceId: requestedResourceId } : {}),
+        source: requestedSource,
+        ...(requestedReturnTo ? { returnTo: requestedReturnTo } : {}),
       });
       const created = normalizePracticeSession(data, { mode, subject });
       if (!created.id) throw new Error('The server did not return a practice session.');
@@ -500,7 +508,13 @@ export default function Practice() {
     } finally {
       setStartingMode('');
     }
-  };
+  }, [requestedAssignmentId, requestedFocusId, requestedResourceId, requestedReturnTo, requestedSource, subject]);
+
+  useEffect(() => {
+    if (initialLoading || phase !== 'landing' || !requestedMode || requestedSessionId || resumableSession || autoStartRef.current) return;
+    autoStartRef.current = true;
+    startSession(requestedMode, requestedOutcomeId);
+  }, [initialLoading, phase, requestedMode, requestedOutcomeId, requestedSessionId, resumableSession, startSession]);
 
   const resumeSession = () => {
     if (!resumableSession) return;
@@ -510,13 +524,23 @@ export default function Practice() {
     setRetryingPrevious(false);
     setActionError('');
     setPhase('session');
+    api.logEvent?.({ type: 'activity_resumed', idempotencyKey: `activity-resumed:${resumableSession.id}:${Date.now()}`, feature: `learning_loop:${requestedSource}`, entityType: 'practice_session', entityId: resumableSession.id, metadata: { source: requestedSource, mode: resumableSession.mode, currentIndex: resumableSession.currentIndex } });
   };
+
+  const saveDraft = useCallback((answer, elapsedSeconds = 0) => {
+    if (!session?.id || !currentQuestion?.id) return;
+    if (draftTimer.current) window.clearTimeout(draftTimer.current);
+    draftTimer.current = window.setTimeout(() => {
+      api.savePracticeDraft(session.id, { questionId: currentQuestion.id, answer, elapsedSeconds }).catch(() => {});
+    }, 500);
+  }, [currentQuestion?.id, session?.id]);
 
   const submitAnswer = async ({ answer, timeTakenSeconds }) => {
     if (!session?.id || !currentQuestion?.id) return;
     setSubmitting(true);
     setActionError('');
     try {
+      if (draftTimer.current) window.clearTimeout(draftTimer.current);
       const result = await api.submitPracticeAnswer(session.id, {
         questionId: currentQuestion.id,
         answer,
@@ -563,6 +587,7 @@ export default function Practice() {
   }, [completeSession, initialLoading, phase, secondsRemaining, session?.id, session?.mode]);
 
   const moveNext = () => {
+    if (session?.id) api.acknowledgePracticeFeedback(session.id).catch(() => {});
     const nextFromResponse = answerResult?.nextQuestion;
     const updatedSession = answerResult?.session
       ? normalizePracticeSession({ session: { ...session, ...answerResult.session } }, session)
@@ -646,7 +671,7 @@ export default function Practice() {
           ) : answerResult ? (
             <FeedbackPanel result={answerResult} question={currentQuestion} onRetry={retryQuestion} onNext={moveNext} nextLabel={nextLabel} completing={completing} />
           ) : (
-            <PracticeQuestion key={currentQuestion?.id} question={currentQuestion} submitting={submitting} onSubmit={submitAnswer} />
+            <PracticeQuestion key={currentQuestion?.id} question={currentQuestion} submitting={submitting} onSubmit={submitAnswer} initialAnswer={session?.config?.draft?.questionId === currentQuestion?.id ? session.config.draft.answer : ''} initialElapsedSeconds={session?.config?.draft?.questionId === currentQuestion?.id ? session.config.draft.elapsedSeconds : 0} onAnswerChange={saveDraft} />
           )}
         </div>
       </main>

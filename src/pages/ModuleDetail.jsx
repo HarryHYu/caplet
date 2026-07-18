@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import { useReveal } from '../lib/useReveal';
+import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
+import LearningProgressSummary from '../components/learning/LearningProgressSummary';
+import { BookOpenIcon } from '@heroicons/react/24/outline';
 
 const ModuleDetail = () => {
   const { courseId, moduleId } = useParams();
-  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   useReveal();
   const [course, setCourse] = useState(null);
@@ -98,87 +100,24 @@ const ModuleDetail = () => {
 
   const completedInModule = lessons.filter(isLessonComplete).length;
   const totalInModule = lessons.length;
-  const progressWidth = totalInModule > 0 ? (completedInModule / totalInModule) * 100 : 0;
-
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
       <div className="container-custom">
-        {/* Back link */}
-        <button
-          onClick={() => navigate(`/courses/${courseId}`)}
-          className="mb-8 inline-flex items-center gap-2 text-sm text-text-muted hover:text-accent transition-colors"
-        >
-          &larr; Course Overview
-        </button>
+        <nav aria-label="Breadcrumb" className="mb-7 flex flex-wrap items-center gap-2 text-sm font-bold text-text-muted">
+          <Link to="/library" className="min-h-11 content-center transition-colors hover:text-accent">Learn</Link><span aria-hidden="true">/</span><Link to="/courses" className="min-h-11 content-center transition-colors hover:text-accent">Learning paths</Link><span aria-hidden="true">/</span><Link to={`/courses/${courseId}`} className="min-h-11 content-center transition-colors hover:text-accent">{course.title}</Link>
+        </nav>
 
-        {/* Module header */}
-        <div className="reveal flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12">
-          <div className="flex-1">
-            <p className="font-hand text-lg text-accent mb-2">Module</p>
-            <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tight mb-3">
-              {module_.title}
-            </h1>
-            {module_.description && (
-              <p className="text-lg text-text-muted leading-relaxed max-w-2xl">
-                {module_.description}
-              </p>
-            )}
-          </div>
-
-          {/* Progress summary */}
-          <div className="flex flex-col gap-3 min-w-[260px] p-6 block-blue rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-text-muted">Progress</span>
-              <span className="font-bold text-accent">{completedInModule} of {totalInModule} completed</span>
-            </div>
-            <div className="h-2 w-full bg-surface-raised rounded-full overflow-hidden">
-              <div
-                className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${progressWidth}%` }}
-              />
-            </div>
-          </div>
+        <div className="reveal mb-12 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-end">
+          <LearningPageHeader eyebrow="Course module" title={module_.title} description={module_.description} />
+          <LearningProgressSummary label="Module progress" completed={completedInModule} total={totalInModule} detail={completedInModule === totalInModule && totalInModule > 0 ? 'Ready to review.' : 'Your completed lessons are saved.'} />
         </div>
 
-        {/* Lessons list */}
-        <div>
-          <div className="flex items-end justify-between mb-6">
-            <h2 className="font-display text-2xl font-extrabold tracking-tight">Lessons</h2>
-            <p className="text-sm text-text-muted">{lessons.length} lessons</p>
-          </div>
-
-          <div className="reveal-stagger space-y-3">
-            {lessons.map((lesson, idx) => (
-              <Link
-                key={lesson.id}
-                to={`/courses/${courseId}/lessons/${lesson.id}`}
-                className="group bg-surface-raised rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform duration-200 block"
-              >
-                <div className="flex items-center gap-5 min-w-0 mb-4 md:mb-0">
-                  <span className="font-display text-2xl font-extrabold text-blue w-8 text-right shrink-0">
-                    {lesson.order || idx + 1}
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="font-display text-lg font-bold tracking-tight text-text-primary mb-1 truncate group-hover:text-accent transition-colors">
-                      {lesson.title}
-                    </h3>
-                    <div className="flex items-center gap-3 text-sm text-text-muted">
-                      {lesson.description && <span>{lesson.description}</span>}
-                      {isLessonComplete(lesson) && (
-                        <span className="text-xs font-bold text-green block-green px-2.5 py-0.5 rounded-full">
-                          Completed
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-bold text-text-muted group-hover:text-accent transition-colors">
-                    {isLessonComplete(lesson) ? 'Review' : 'Start Lesson'} &rarr;
-                  </span>
-                </div>
-              </Link>
-            ))}
+        <LearningSection eyebrow="Ordered steps" title="Lessons" description={`${lessons.length} lessons in this module. Work through them in order or reopen completed material.`}>
+          <div className="reveal-stagger grid gap-4 md:grid-cols-2">
+            {lessons.map((lesson, idx) => {
+              const complete = isLessonComplete(lesson);
+              return <LearningCard key={lesson.id} title={`${lesson.order || idx + 1}. ${lesson.title}`} description={lesson.description} href={`/courses/${courseId}/lessons/${lesson.id}`} kind="Lesson" status={complete ? 'Complete' : 'Not started'} icon={BookOpenIcon} actionLabel={complete ? 'Review lesson' : 'Start lesson'} />;
+            })}
           </div>
 
           {lessons.length === 0 && (
@@ -188,7 +127,7 @@ const ModuleDetail = () => {
               </p>
             </div>
           )}
-        </div>
+        </LearningSection>
       </div>
     </div>
   );

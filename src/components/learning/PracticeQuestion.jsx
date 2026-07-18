@@ -122,17 +122,23 @@ function FeedbackItem(props) {
   );
 }
 
-export default function PracticeQuestion({ question, submitting, onSubmit }) {
+export default function PracticeQuestion({ question, submitting, onSubmit, initialAnswer = '', initialElapsedSeconds = 0, onAnswerChange }) {
   const kind = responseKind(question?.responseType || question?.type);
   const options = useMemo(() => (question?.options || []).map(optionParts), [question?.options]);
-  const [answer, setAnswer] = useState('');
+  const [answer, setAnswer] = useState(initialAnswer);
   const startedAt = useRef(Date.now());
   const inputRef = useRef(null);
 
   useEffect(() => {
-    startedAt.current = Date.now();
+    setAnswer(initialAnswer);
+    startedAt.current = Date.now() - (Math.max(0, Number(initialElapsedSeconds || 0)) * 1000);
     window.setTimeout(() => inputRef.current?.focus(), 0);
-  }, [question?.id]);
+  }, [initialAnswer, initialElapsedSeconds, question?.id]);
+
+  const updateAnswer = (value) => {
+    setAnswer(value);
+    onAnswerChange?.(value, Math.max(0, Math.round((Date.now() - startedAt.current) / 1000)));
+  };
 
   const submit = (event) => {
     event.preventDefault();
@@ -176,7 +182,7 @@ export default function PracticeQuestion({ question, submitting, onSubmit }) {
                     name={questionId}
                     value={option.value}
                     checked={answer === option.value}
-                    onChange={(event) => setAnswer(event.target.value)}
+                    onChange={(event) => updateAnswer(event.target.value)}
                     className="mt-1 h-4 w-4 shrink-0 accent-[color:var(--accent)]"
                   />
                   <span className="text-sm font-semibold leading-relaxed text-text-primary">{option.label}</span>
@@ -193,7 +199,7 @@ export default function PracticeQuestion({ question, submitting, onSubmit }) {
               type="number"
               inputMode="decimal"
               value={answer}
-              onChange={(event) => setAnswer(event.target.value)}
+              onChange={(event) => updateAnswer(event.target.value)}
               className="w-full rounded-2xl border border-line-soft bg-surface-soft px-5 py-4 font-mono text-lg text-text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
             />
           </div>
@@ -207,7 +213,7 @@ export default function PracticeQuestion({ question, submitting, onSubmit }) {
               id={questionId}
               rows={kind === 'extended-response' ? 9 : 5}
               value={answer}
-              onChange={(event) => setAnswer(event.target.value)}
+              onChange={(event) => updateAnswer(event.target.value)}
               onKeyDown={handleKeyboardSubmit}
               placeholder={kind === 'extended-response' ? 'Build your response with clear economic reasoning and relevant evidence…' : 'Explain your thinking…'}
               className="w-full resize-y rounded-2xl border border-line-soft bg-surface-soft px-5 py-4 text-base font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-dim focus:border-accent focus:ring-2 focus:ring-accent-soft"

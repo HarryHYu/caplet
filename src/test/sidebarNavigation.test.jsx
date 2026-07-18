@@ -38,8 +38,8 @@ describe('Study sidebar navigation', () => {
     expect(screen.getByRole('link', { name: 'Mastery' })).toHaveAttribute('href', '/mastery');
     expect(screen.getByRole('link', { name: 'Revision' })).toHaveAttribute('href', '/revision');
     expect(screen.getByRole('link', { name: 'Essays' })).toHaveAttribute('href', '/essays');
-    expect(screen.getByRole('link', { name: 'Library' })).toHaveAttribute('href', '/library');
-    expect(screen.getByRole('link', { name: 'Courses' })).toHaveAttribute('href', '/courses');
+    expect(screen.getByRole('link', { name: 'Learn' })).toHaveAttribute('href', '/library');
+    expect(screen.queryByRole('link', { name: 'Courses' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Classes' })).toHaveAttribute('href', '/classes');
     expect(screen.queryByText('ada@example.com')).not.toBeInTheDocument();
     expect(screen.queryByText('Workspace')).not.toBeInTheDocument();

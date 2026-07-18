@@ -8,7 +8,7 @@ const hiddenPaths = ['/login', '/register', '/play'];
 
 const navItems = [
     { path: '/dashboard', label: 'Dashboard' },
-    { path: '/library', label: 'Library' },
+    { path: '/library', label: 'Learn' },
 ];
 
 const isActivePath = (pathname, path) => path === '/dashboard'

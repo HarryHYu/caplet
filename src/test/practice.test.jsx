@@ -7,8 +7,11 @@ vi.mock('../services/api', () => ({
     getNextRecommendation: vi.fn(),
     createPracticeSession: vi.fn(),
     getPracticeSession: vi.fn(),
+    savePracticeDraft: vi.fn(),
+    acknowledgePracticeFeedback: vi.fn(),
     submitPracticeAnswer: vi.fn(),
     completePracticeSession: vi.fn(),
+    logEvent: vi.fn(),
   },
 }));
 
@@ -86,6 +89,8 @@ describe('Practice', () => {
     api.getNextRecommendation.mockResolvedValue({ recommendation: null });
     api.createPracticeSession.mockResolvedValue({ session: SESSION });
     api.getPracticeSession.mockResolvedValue({ session: SESSION });
+    api.savePracticeDraft.mockResolvedValue({ session: SESSION });
+    api.acknowledgePracticeFeedback.mockResolvedValue({ session: SESSION });
     api.submitPracticeAnswer.mockResolvedValue(FIRST_RESULT);
     api.completePracticeSession.mockResolvedValue(COMPLETE_RESULT);
   });
@@ -98,9 +103,8 @@ describe('Practice', () => {
       expect(screen.getByRole('button', { name: `Start ${mode}` })).toBeInTheDocument();
     }
 
-    fireEvent.click(screen.getByRole('button', { name: 'Start Weak-topic practice' }));
     expect(await screen.findByText(QUESTION_ONE.prompt)).toBeInTheDocument();
-    expect(api.createPracticeSession).toHaveBeenCalledWith({ mode: 'weak-topic', subject: 'economics', outcomeId: 'outcome-1' });
+    expect(api.createPracticeSession).toHaveBeenCalledWith({ mode: 'weak-topic', subject: 'economics', outcomeId: 'outcome-1', source: 'practice' });
 
     fireEvent.click(screen.getByRole('radio', { name: 'Unemployment rate' }));
     await waitFor(() => expect(screen.getByRole('button', { name: /Check answer/i })).toBeEnabled());

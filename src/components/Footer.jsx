@@ -5,9 +5,9 @@ const columns = [
   {
     heading: 'Learn',
     links: [
-      { label: 'Courses', path: '/courses' },
+      { label: 'Learning paths', path: '/courses' },
       { label: 'Classes', path: '/classes' },
-      { label: 'Resource library', path: '/library' },
+      { label: 'Learn', path: '/library' },
     ],
   },
   {

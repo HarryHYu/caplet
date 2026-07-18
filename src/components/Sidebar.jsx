@@ -9,7 +9,6 @@ import { availableMoneyNavigation, isProductNavItemActive } from '../config/prod
 import {
     Squares2X2Icon,
     BookOpenIcon,
-    BuildingLibraryIcon,
     CalendarDaysIcon,
     ArrowPathIcon,
     ChartBarIcon,
@@ -59,8 +58,7 @@ export default function Sidebar() {
         { path: '/mastery', label: 'Mastery', icon: ChartBarIcon },
         { path: '/revision', label: 'Revision', icon: BookmarkIcon },
         { path: '/essays', label: 'Essays', icon: DocumentTextIcon },
-        { path: '/library', label: 'Library', icon: BuildingLibraryIcon },
-        { path: '/courses', label: 'Courses', icon: BookOpenIcon },
+        { path: '/library', label: 'Learn', icon: BookOpenIcon },
         { path: '/classes', label: 'Classes', icon: UserGroupIcon },
     ];
 

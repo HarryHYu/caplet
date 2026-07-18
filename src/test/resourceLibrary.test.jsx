@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -35,25 +35,19 @@ describe('ResourceLibrary page', () => {
     expect(screen.queryByRole('navigation', { name: 'Economics library' })).not.toBeInTheDocument();
   });
 
-  it('lets a student answer one activity at a time and then move on', () => {
+  it('routes a topic into the persisted practice and mastery loop', () => {
     renderEconomics('/library/economics/focus/year-11-introduction-to-economics');
 
-    expect(screen.getByText('1 / 11')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Next activity' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Check answer' })).toBeDisabled();
-
-    fireEvent.click(screen.getByRole('button', { name: /The wage and alternative use of time forgone/i }));
-    fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Correct');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Next activity' }));
-    expect(screen.getByText('2 / 11')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Introduction to economics' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Take the quick Economics diagnostic/i })).toHaveAttribute('href', expect.stringContaining('focusId=year-11-introduction-to-economics'));
+    expect(screen.getByText(/Answers now run through the same saved practice session/i)).toBeInTheDocument();
   });
 
   it('keeps the overview free of duplicate navigation and count blocks', () => {
     renderEconomics('/library/economics');
     expect(screen.queryByRole('navigation', { name: 'Economics library' })).not.toBeInTheDocument();
     expect(screen.queryByText('Focus areas')).not.toBeInTheDocument();
-    expect(screen.getAllByRole('link')).toHaveLength(4);
+    expect(screen.getByRole('link', { name: 'Learn' })).toHaveAttribute('href', '/library');
+    expect(screen.getAllByRole('link')).toHaveLength(6);
   });
 });

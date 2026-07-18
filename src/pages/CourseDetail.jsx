@@ -4,6 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import { useReveal } from '../lib/useReveal';
+import EconomicsNextAction from '../components/learning/EconomicsNextAction';
+import LearningProgressSummary from '../components/learning/LearningProgressSummary';
+import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
+import { BookOpenIcon } from '@heroicons/react/24/outline';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -65,37 +69,32 @@ const CourseDetail = () => {
 
   const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const totalLessonCount = sortedModules.reduce((sum, m) => sum + (m.lessons || []).length, 0);
+  const isEconomicsPath = String(course.metadata?.subject || '').toLowerCase() === 'economics'
+    || (course.tags || []).some((tag) => String(tag).toLowerCase() === 'economics');
 
   const startCourse = () => {
+    const resume = progress?.courseProgress?.nextLesson;
+    if (resume?.id) {
+      const suffix = Number(resume.lastSlideIndex) > 0 ? `?slide=${resume.lastSlideIndex}` : '';
+      navigate(`/courses/${course.id}/lessons/${resume.id}${suffix}`);
+      return;
+    }
     const firstModule = sortedModules[0];
     if (firstModule) navigate(`/courses/${course.id}/modules/${firstModule.id}`);
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
       <div className="container-custom">
-        {/* Back link */}
-        <button
-          onClick={() => navigate('/courses')}
-          className="mb-8 inline-flex items-center gap-2 text-sm text-text-muted hover:text-accent transition-colors"
-        >
-          &larr; All Courses
-        </button>
+        <nav aria-label="Breadcrumb" className="mb-7 flex flex-wrap items-center gap-2 text-sm font-bold text-text-muted">
+          <Link to="/library" className="min-h-11 content-center transition-colors hover:text-accent">Learn</Link><span aria-hidden="true">/</span><Link to="/courses" className="min-h-11 content-center transition-colors hover:text-accent">Learning paths</Link>
+        </nav>
 
-        {/* Course header */}
         <div className="mb-12 reveal">
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
-            <div className="flex-1">
-              <p className="font-hand text-2xl text-blue mb-3 -rotate-1">Let's dig in</p>
-              <h1 className="font-display text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-                {course.title}
-              </h1>
-              <p className="text-lg text-text-muted leading-relaxed max-w-2xl">
-                {course.description || course.shortDescription}
-              </p>
-            </div>
+          <LearningPageHeader eyebrow="Learning path" title={course.title} description={course.description || course.shortDescription} />
+          <div className="mt-8">
             {course.thumbnail && (
-              <div className="w-full md:w-72 aspect-video rounded-2xl overflow-hidden shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] shrink-0">
+              <div className="aspect-[21/8] w-full max-w-4xl overflow-hidden rounded-3xl bg-surface-soft shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                 <img
                   src={course.thumbnail}
                   alt={course.title}
@@ -125,26 +124,13 @@ const CourseDetail = () => {
                 </div>
               </div>
 
-              {progress?.courseProgress && (
-                <div className="mb-8">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-text-muted">Your progress</span>
-                    <span className="font-bold text-accent">{Math.round(progress.courseProgress.progressPercentage)}%</span>
-                  </div>
-                  <div className="h-3 w-full bg-surface-soft rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${progress.courseProgress.progressPercentage}%` }}
-                    />
-                  </div>
-                </div>
-              )}
+              {progress?.courseProgress && <LearningProgressSummary className="mb-8 bg-surface-soft shadow-none" label="Your learning-path progress" completed={progress.courseProgress.completedLessons} total={progress.courseProgress.totalLessons} detail={progress.courseProgress.nextLesson?.title ? `Next: ${progress.courseProgress.nextLesson.title}` : 'Every completed lesson is saved.'} />}
 
               <button
                 onClick={startCourse}
                 className="btn-primary py-3 px-10 hover:-translate-y-0.5 transition-transform"
               >
-                {progress?.courseProgress ? 'Continue Learning' : 'Start Course'}
+                {progress?.courseProgress?.status === 'in_progress' ? `Continue ${progress.courseProgress.nextLesson?.title || 'learning'}` : 'Start learning path'}
               </button>
             </div>
           </div>
@@ -172,14 +158,10 @@ const CourseDetail = () => {
           )}
         </div>
 
-        {/* Modules list */}
-        <div className="reveal">
-          <div className="flex items-end justify-between mb-6">
-            <h2 className="font-display text-3xl font-extrabold tracking-tight">Modules</h2>
-            <p className="text-sm text-text-muted">{sortedModules.length} modules</p>
-          </div>
+        {isEconomicsPath && <EconomicsNextAction source="course" className="mb-16" />}
 
-          <div className="space-y-3 reveal-stagger">
+        <LearningSection eyebrow="Your route" title="Modules" description={`${sortedModules.length} ordered modules. Completed work stays available for review.`} className="reveal">
+          <div className="grid gap-4 md:grid-cols-2 reveal-stagger">
             {sortedModules.map((mod, index) => {
               const moduleLessons = (mod.lessons || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
               const lessonCount = moduleLessons.length;
@@ -188,44 +170,7 @@ const CourseDetail = () => {
               const totalInModule = mp ? mp.totalLessons : lessonCount;
               const percentage = totalInModule > 0 ? Math.round((completedInModule / totalInModule) * 100) : 0;
 
-              return (
-                <Link
-                  key={mod.id}
-                  to={`/courses/${course.id}/modules/${mod.id}`}
-                  className="group bg-surface-raised rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform duration-200 block"
-                >
-                  <div className="flex items-center gap-5 min-w-0 mb-4 md:mb-0">
-                    <span className="font-display text-2xl font-extrabold tracking-tight text-blue w-8 text-right shrink-0">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <h3 className="font-display text-lg font-bold tracking-tight text-text-primary mb-1 truncate group-hover:text-accent transition-colors">
-                        {mod.title}
-                      </h3>
-                      <div className="flex items-center gap-3 text-sm text-text-muted">
-                        <span>{lessonCount} lessons</span>
-                        {percentage > 0 && (
-                          <>
-                            <span className="w-1 h-1 bg-text-dim rounded-full" />
-                            <span className={percentage === 100 ? 'text-green-600 dark:text-green-400 font-medium' : ''}>{percentage}% complete</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {percentage === 100 && (
-                      <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full">
-                        Complete
-                      </span>
-                    )}
-                    <span className="text-sm text-text-muted group-hover:text-accent transition-colors">
-                      View Module &rarr;
-                    </span>
-                  </div>
-                </Link>
-              );
+              return <LearningCard key={mod.id} title={`${index + 1}. ${mod.title}`} description={mod.description} href={`/courses/${course.id}/modules/${mod.id}`} kind="Course module" metadata={[`${lessonCount} lessons`]} status={percentage === 100 ? 'Complete' : percentage > 0 ? 'In progress' : 'Not started'} progress={percentage > 0 ? percentage : undefined} icon={BookOpenIcon} actionLabel={percentage > 0 && percentage < 100 ? 'Continue module' : percentage === 100 ? 'Review module' : 'Open module'} />;
             })}
           </div>
 
@@ -236,7 +181,7 @@ const CourseDetail = () => {
               </p>
             </div>
           )}
-        </div>
+        </LearningSection>
       </div>
     </div>
   );

@@ -394,6 +394,10 @@ class ApiService {
     return res.course || res;
   }
 
+  async getCourseProgressSummaries() {
+    return this.request('/progress/courses');
+  }
+
   async getLesson(courseId, lessonId) {
     const res = await this.request(`/courses/${courseId}/lessons/${lessonId}`);
     return res.lesson || res;
@@ -865,7 +869,7 @@ class ApiService {
     return this.request(`/recommendations/next?${query.toString()}`);
   }
 
-  async createPracticeSession({ mode, subject = 'economics', outcomeId, assignmentId } = {}) {
+  async createPracticeSession({ mode, subject = 'economics', outcomeId, assignmentId, focusId, resourceId, source, returnTo } = {}) {
     return this.request('/practice/sessions', {
       method: 'POST',
       body: JSON.stringify({
@@ -873,6 +877,10 @@ class ApiService {
         subject,
         ...(outcomeId ? { outcomeId } : {}),
         ...(assignmentId ? { assignmentId } : {}),
+        ...(focusId ? { focusId } : {}),
+        ...(resourceId ? { resourceId } : {}),
+        ...(source ? { source } : {}),
+        ...(returnTo ? { returnTo } : {}),
       }),
     });
   }
@@ -885,6 +893,20 @@ class ApiService {
 
   async getPracticeSession(sessionId) {
     return this.request(`/practice/sessions/${encodeURIComponent(sessionId)}`);
+  }
+
+  async savePracticeDraft(sessionId, { questionId, answer, elapsedSeconds }) {
+    return this.request(`/practice/sessions/${encodeURIComponent(sessionId)}/draft`, {
+      method: 'PATCH',
+      body: JSON.stringify({ questionId, answer, elapsedSeconds }),
+    });
+  }
+
+  async acknowledgePracticeFeedback(sessionId) {
+    return this.request(`/practice/sessions/${encodeURIComponent(sessionId)}/feedback`, {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    });
   }
 
   async submitPracticeAnswer(sessionId, { questionId, answer, timeTakenSeconds, idempotencyKey, retry = false }) {

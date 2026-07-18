@@ -29,7 +29,7 @@ describe('Navbar accessibility', () => {
     render(<MemoryRouter initialEntries={['/dashboard']}><Navbar /></MemoryRouter>);
 
     expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Library' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Learn' })).toHaveAttribute('href', '/library');
     expect(screen.queryByRole('link', { name: 'Practice' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Classes' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More' })).not.toBeInTheDocument();

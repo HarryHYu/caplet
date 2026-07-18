@@ -8,6 +8,7 @@ const PRACTICE_AI_WINDOW_MS = 15 * 60 * 1000;
 const PRACTICE_AI_LIMIT = 20;
 const practiceAIUsage = new Map();
 const MODE_LIMITS = { diagnostic: 5, daily: 5, 'weak-topic': 5, 'timed-exam': 10, 'due-review': 5, assigned: 10 };
+const PRACTICE_SOURCES = new Set(['library', 'course', 'dashboard', 'study_plan', 'practice']);
 
 const asPlain = (value) => value?.toJSON ? value.toJSON() : value;
 
@@ -125,7 +126,18 @@ async function questionOutcomeMap(questionIds) {
   return map;
 }
 
-async function selectQuestions({ userId, subject = 'economics', mode = 'daily', outcomeId, questionIds = [] }) {
+function filterQuestionsByContext(questions, { focusId, resourceId } = {}) {
+  if (!focusId && !resourceId) return questions;
+  return questions.filter((question) => {
+    const plain = asPlain(question);
+    const source = plain.source || {};
+    if (resourceId && String(source.externalId || '') !== String(resourceId)) return false;
+    if (focusId && String(source.focusId || '') !== String(focusId)) return false;
+    return true;
+  });
+}
+
+async function selectQuestions({ userId, subject = 'economics', mode = 'daily', outcomeId, questionIds = [], focusId, resourceId }) {
   const { MasteryState, Question, QuestionOutcome } = require('../models');
   if (subject === 'economics') await ensureEconomicsQuestionBank();
   const limit = MODE_LIMITS[mode] || 5;
@@ -169,7 +181,8 @@ async function selectQuestions({ userId, subject = 'economics', mode = 'daily', 
   if (mode === 'diagnostic') where.responseType = 'multiple_choice';
   if (mode === 'timed-exam') where.difficulty = { [Op.in]: ['exam', 'hsc style', 'exam practice', 'external sector'] };
 
-  const pool = await Question.findAll({ where, order: [['sourceKey', 'ASC']], limit: Math.max(limit * 8, 40) });
+  let pool = await Question.findAll({ where, order: [['sourceKey', 'ASC']], limit: Math.max(limit * 12, 120) });
+  pool = filterQuestionsByContext(pool, { focusId, resourceId });
   if (mode !== 'diagnostic') return pool.slice(0, limit);
 
   // A diagnostic covers distinct outcomes before repeating any one outcome.
@@ -227,6 +240,12 @@ async function serialiseSession(session, options = {}) {
       recommendationReason: plain.config?.recommendationReason || null,
       assignmentTitle: plain.config?.assignmentTitle || null,
       assignmentMode: plain.config?.assignmentMode || null,
+      focusId: plain.config?.focusId || null,
+      resourceId: plain.config?.resourceId || null,
+      source: plain.config?.source || 'practice',
+      returnTo: plain.config?.returnTo || null,
+      draft: plain.config?.draft || null,
+      feedbackPending: plain.config?.feedbackPending || null,
     },
   };
 }
@@ -239,12 +258,18 @@ async function createPracticeSession(userId, input = {}) {
     ? await resolveAssignedPractice(userId, input.assignmentId || null)
     : null;
   const outcomeId = assigned?.outcomeIds?.[0] || input.outcomeId || null;
+  const source = PRACTICE_SOURCES.has(input.source) ? input.source : 'practice';
+  const focusId = input.focusId ? String(input.focusId).slice(0, 160) : null;
+  const resourceId = input.resourceId ? String(input.resourceId).slice(0, 160) : null;
+  const returnTo = input.returnTo && String(input.returnTo).startsWith('/') ? String(input.returnTo).slice(0, 500) : null;
   const questions = await selectQuestions({
     userId,
     subject,
     mode,
     outcomeId,
     questionIds: assigned?.questionIds || [],
+    focusId,
+    resourceId,
   });
   if (!questions.length) {
     const error = new Error('No published questions are available for this practice mode.');
@@ -267,6 +292,12 @@ async function createPracticeSession(userId, input = {}) {
       recommendationReason: input.recommendationReason || null,
       assignmentTitle: assigned?.assignment?.title || null,
       assignmentMode: assigned?.config?.mode || null,
+      focusId,
+      resourceId,
+      source,
+      returnTo,
+      draft: null,
+      feedbackPending: null,
     },
     primaryOutcomeId: outcomeId,
     classroomId: assigned?.classroomId || null,
@@ -285,7 +316,44 @@ async function createPracticeSession(userId, input = {}) {
     feature: `practice:${mode}`,
     entityType: 'practice_session',
     entityId: session.id,
-    metadata: { mode, subject, questionCount: questions.length, assignmentId: session.assignmentId || null },
+    metadata: { mode, subject, source, focusId, resourceId, questionCount: questions.length, assignmentId: session.assignmentId || null },
+  });
+  await recordProductEvent({
+    idempotencyKey: `learning-action-started:${session.id}`,
+    type: 'learning_action_started',
+    userId,
+    practiceSessionId: session.id,
+    outcomeId,
+    feature: `learning_loop:${source}`,
+    entityType: 'practice_session',
+    entityId: session.id,
+    metadata: { mode, subject, source, focusId, resourceId },
+  });
+  return serialiseSession(session);
+}
+
+async function savePracticeDraft(userId, sessionId, input = {}) {
+  const { PracticeSession } = require('../models');
+  const session = await PracticeSession.findOne({ where: { id: sessionId, userId } });
+  if (!session) { const error = new Error('Practice session not found.'); error.status = 404; throw error; }
+  if (session.status !== 'in_progress') { const error = new Error('This practice session is already complete.'); error.status = 409; throw error; }
+  const questionIds = asArray(session.questionIds);
+  const currentQuestionId = questionIds[Number(session.currentIndex || 0)];
+  if (!currentQuestionId || String(input.questionId || '') !== String(currentQuestionId)) {
+    const error = new Error('Only the current question draft can be saved.'); error.status = 409; throw error;
+  }
+  const config = session.config || {};
+  await session.update({
+    config: {
+      ...config,
+      draft: {
+        questionId: currentQuestionId,
+        answer: typeof input.answer === 'string' ? input.answer.slice(0, 20000) : input.answer,
+        elapsedSeconds: Math.max(0, Math.min(86400, Number(input.elapsedSeconds || 0))),
+        savedAt: new Date().toISOString(),
+      },
+    },
+    lastActivityAt: new Date(),
   });
   return serialiseSession(session);
 }
@@ -499,7 +567,7 @@ async function answerPracticeQuestion(userId, sessionId, input = {}, { allowAI =
     await session.update({
       currentIndex: nextIndex,
       score: Math.min(Number(session.maxScore || 0), Number(session.score || 0) + scoreIncrease),
-      config: { ...config, answers: [...answers, answerRecord] },
+      config: { ...config, answers: [...answers, answerRecord], draft: null, feedbackPending: { questionId, result, nextIndex } },
       lastActivityAt: new Date(),
     }, { transaction });
   });
@@ -525,6 +593,15 @@ async function answerPracticeQuestion(userId, sessionId, input = {}, { allowAI =
     nextQuestion: serialized.currentQuestion,
     session: serialized,
   };
+}
+
+async function acknowledgePracticeFeedback(userId, sessionId) {
+  const { PracticeSession } = require('../models');
+  const session = await PracticeSession.findOne({ where: { id: sessionId, userId } });
+  if (!session) { const error = new Error('Practice session not found.'); error.status = 404; throw error; }
+  const config = session.config || {};
+  if (config.feedbackPending) await session.update({ config: { ...config, feedbackPending: null }, lastActivityAt: new Date() });
+  return serialiseSession(session);
 }
 
 async function completePracticeSession(userId, sessionId) {
@@ -595,6 +672,25 @@ async function completePracticeSession(userId, sessionId) {
     entityId: session.id,
     metadata: { mode: session.mode, score: session.score, maxScore: session.maxScore, evidenceCount: evidence.length, assignmentId: session.assignmentId || null },
   });
+  const config = session.config || {};
+  const { completeMatchingStudyTask } = require('./studyTaskCompletionService');
+  const resourcePaths = [
+    config.returnTo,
+    config.focusId ? `/library/economics/focus/${config.focusId}` : null,
+    '/practice',
+  ].filter(Boolean);
+  await completeMatchingStudyTask({ userId, resourcePaths });
+  await recordProductEvent({
+    idempotencyKey: `activity-completed:${session.id}`,
+    type: 'activity_completed',
+    userId,
+    practiceSessionId: session.id,
+    outcomeId: session.primaryOutcomeId,
+    feature: `learning_loop:${config.source || 'practice'}`,
+    entityType: 'practice_session',
+    entityId: session.id,
+    metadata: { mode: session.mode, subject: session.subject, source: config.source || 'practice' },
+  });
   const serialized = await serialiseSession(session);
   return {
     session: serialized,
@@ -610,16 +706,18 @@ async function completePracticeSession(userId, sessionId) {
 }
 
 module.exports = {
+  acknowledgePracticeFeedback,
   MODES,
   answerPracticeQuestion,
   completePracticeSession,
   createPracticeSession,
   evaluateQuestion,
-  evaluateQuestion,
+  filterQuestionsByContext,
   multipleChoiceResult,
   practiceAIQuotaAllows,
   publicQuestion,
   resolveAssignedPractice,
+  savePracticeDraft,
   selectQuestions,
   serialiseSession,
   writtenFallback,

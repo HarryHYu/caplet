@@ -1,0 +1,7 @@
+import { Link } from 'react-router-dom';
+import { ArrowRightIcon, PlayIcon } from '@heroicons/react/24/outline';
+
+export default function ResumeLearningCard({ href, title, detail, progress, className = '' }) {
+  if (!href) return null;
+  return <Link to={href} className={`group flex flex-col gap-5 rounded-3xl bg-surface-raised p-6 shadow-[0_20px_48px_-38px_rgba(20,20,18,0.45)] transition-transform hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between ${className}`}><div className="flex items-start gap-4"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent"><PlayIcon className="h-6 w-6" aria-hidden="true" /></span><div><p className="text-[11px] font-bold uppercase tracking-[0.13em] text-text-dim">Ready to resume</p><h2 className="mt-1 font-display text-xl font-extrabold text-text-primary">{title}</h2>{detail && <p className="mt-1 text-sm font-medium text-text-muted">{detail}</p>}{Number.isFinite(progress) && <div className="mt-3 h-1.5 w-48 overflow-hidden rounded-full bg-surface-soft" role="progressbar" aria-label={`${title} progress`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(progress)}><div className="h-full rounded-full bg-accent" style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} /></div>}</div></div><span className="inline-flex items-center gap-2 text-sm font-bold text-accent">Continue <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span></Link>;
+}

@@ -64,7 +64,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
 
   const studyCoreItems = [
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
-    { path: '/library', label: 'Library' },
+    { path: '/library', label: 'Learn' },
   ];
 
   const visibleItems = (items) => items.filter((item) => {

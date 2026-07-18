@@ -74,7 +74,7 @@ describe('Dashboard study plan handoff', () => {
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
     expect(await screen.findByText(/Today’s next task/i)).toBeInTheDocument();
     expect(screen.getByText('Learn: Macroeconomic management')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Open plan/i })).toHaveAttribute('href', '/study-plan');
+    expect(screen.getByRole('link', { name: /Today’s next task.*Learn: Macroeconomic management.*Start now/i })).toHaveAttribute('href', '/study-plan');
     expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe('Dashboard study plan handoff', () => {
     expect(await screen.findByRole('heading', { name: 'Jump back in.' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Practice.*focused question set/i })).toHaveAttribute('href', '/practice');
     expect(screen.getByRole('link', { name: /Mastery.*strengthen next/i })).toHaveAttribute('href', '/mastery');
-    expect(screen.getByRole('link', { name: /Curriculum.*courses and lessons/i })).toHaveAttribute('href', '/courses');
+    expect(screen.getByRole('link', { name: /Learning paths.*structured courses and lessons/i })).toHaveAttribute('href', '/courses');
     expect(screen.getByRole('link', { name: /Education tools.*revision, essays/i })).toHaveAttribute('href', '/edutools');
   });
 
@@ -101,8 +101,8 @@ describe('Dashboard study plan handoff', () => {
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
-    expect(await screen.findByRole('link', { name: /Build your weekly study plan.*Set up my plan/i })).toHaveAttribute('href', '/study-plan');
-    expect(screen.getAllByRole('link', { name: /Set up my plan/i })).toHaveLength(2);
+    expect(await screen.findByRole('link', { name: /Build your weekly study plan.*Start now/i })).toHaveAttribute('href', '/study-plan');
+    expect(screen.getByRole('link', { name: /Set up my plan/i })).toHaveAttribute('href', '/study-plan');
     expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
   });
 

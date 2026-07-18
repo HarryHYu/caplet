@@ -13,6 +13,12 @@ const FUNNEL_EVENTS = Object.freeze({
   recommendation_displayed: 'recommendationDisplayedLearners',
   recommendation_accepted: 'recommendationAcceptedLearners',
   question_attempted: 'questionAttemptLearners',
+  learning_action_viewed: 'learningActionViewedLearners',
+  learning_action_started: 'learningActionStartedLearners',
+  activity_resumed: 'activityResumedLearners',
+  feedback_viewed: 'feedbackViewedLearners',
+  activity_completed: 'activityCompletedLearners',
+  next_action_started: 'nextActionStartedLearners',
 });
 
 const TREND_EVENTS = Object.freeze([
@@ -22,6 +28,8 @@ const TREND_EVENTS = Object.freeze([
   'practice_completed',
   'question_attempted',
   'recommendation_accepted',
+  'learning_action_started',
+  'activity_completed',
 ]);
 
 function orderedJourney(rows, startType, completionType) {
@@ -221,6 +229,7 @@ async function buildLearningAnalytics({
   const practiceJourney = orderedJourney(activityRows, 'practice_started', 'practice_completed');
   const recommendationJourney = orderedJourney(activityRows, 'recommendation_displayed', 'recommendation_accepted');
   const lessonJourney = orderedJourney(activityRows, 'lesson_started', 'lesson_completed');
+  const learningLoopJourney = orderedJourney(activityRows, 'learning_action_started', 'activity_completed');
   const hasOrderedRows = Array.isArray(activityRows) && activityRows.length > 0;
   funnel.practiceCompletionRate = hasOrderedRows
     ? practiceJourney.rate
@@ -231,6 +240,9 @@ async function buildLearningAnalytics({
   funnel.lessonCompletionRate = hasOrderedRows
     ? lessonJourney.rate
     : percentage(funnel.lessonCompletedLearners, funnel.lessonStartedLearners);
+  funnel.learningLoopCompletionRate = hasOrderedRows
+    ? learningLoopJourney.rate
+    : percentage(funnel.activityCompletedLearners, funnel.learningActionStartedLearners);
 
   const trendByDate = new Map();
   trendRows.forEach((row) => {
@@ -249,6 +261,8 @@ async function buildLearningAnalytics({
       lessonCompletedLearners: values.lesson_completed || 0,
       questionAttemptLearners: values.question_attempted || 0,
       recommendationAcceptedLearners: values.recommendation_accepted || 0,
+      learningActionStartedLearners: values.learning_action_started || 0,
+      activityCompletedLearners: values.activity_completed || 0,
     };
   });
 
@@ -277,6 +291,7 @@ async function buildLearningAnalytics({
       practice: practiceJourney,
       recommendations: recommendationJourney,
       lessons: lessonJourney,
+      learningLoop: learningLoopJourney,
       weeklyRetention: weeklyRetention(activityRows, now),
     },
     funnel,

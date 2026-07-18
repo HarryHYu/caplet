@@ -1,6 +1,5 @@
-const path = require('path');
-const { pathToFileURL } = require('url');
 const { ECONOMICS_OUTCOMES } = require('../data/economicsCurriculum');
+const ECONOMICS_QUESTION_BANK = require('../data/economicsQuestionBank.json');
 const { validateQuestion } = require('./questionValidation');
 
 let seedPromise = null;
@@ -153,9 +152,35 @@ function normaliseResource(resource, area, suffix = '') {
   return [];
 }
 
-async function importLibraryModule() {
-  const modulePath = path.resolve(__dirname, '../../src/data/economicsResourceLibrary.js');
-  return import(pathToFileURL(modulePath).href);
+function buildEconomicsQuestionBank(libraryModule) {
+  const library = libraryModule.economicsResourceLibrary;
+  const normalized = [];
+  for (const area of library.focusAreas || []) {
+    const resources = libraryModule.getEconomicsAreaResources(area);
+    for (const resource of resources) normalized.push(...normaliseResource(resource, area));
+  }
+  for (const pack of library.examPracticePacks || []) {
+    const area = { id: pack.id, title: pack.title, outcomes: [], sourceUrl: pack.sourceUrl };
+    for (const markable of libraryModule.getExamPackMarkableQuestions(pack)) {
+      normalized.push({
+        sourceKey: `economics:${markable.id}`,
+        subject: 'economics',
+        syllabusVersion: syllabusVersionFor(pack),
+        prompt: [markable.stimulus, markable.prompt].filter(Boolean).join('\n\n'),
+        responseType: markable.responseType,
+        difficulty: 'exam',
+        marks: Number(markable.markValue || 4),
+        expectedMinutes: Math.max(3, Number(markable.markValue || 4) * 2),
+        commandVerb: String(markable.prompt || '').trim().split(/\s+/)[0]?.toLowerCase(),
+        options: [], answerKey: null, explanation: '', rubric: [], modelAnswer: '', misconceptions: [],
+        source: { externalId: markable.id, focusId: area.id, focusTitle: area.title, provenance: pack.sourceNote || 'Caplet original exam practice' },
+        lifecycleStatus: syllabusVersionFor(pack) === 'NSW-2009' ? 'in_review' : 'published', version: 1, reviewedAt: new Date(),
+        metadata: { resourceType: 'exam', section: markable.section, focusArea: markable.focusArea, transfer: true, curriculumEditionKey: `NSW-ECO-${syllabusVersionFor(pack).slice(-4)}`, requiresEditionReview: syllabusVersionFor(pack) === 'NSW-2009' },
+        outcomes: pack.outcomes || [],
+      });
+    }
+  }
+  return normalized;
 }
 
 async function ensureEconomicsQuestionBank() {
@@ -204,34 +229,10 @@ async function ensureEconomicsQuestionBank() {
       sortOrder += 1;
     }
 
-    const libraryModule = await importLibraryModule();
-    const library = libraryModule.economicsResourceLibrary;
-    const normalized = [];
-    for (const area of library.focusAreas || []) {
-      const resources = libraryModule.getEconomicsAreaResources(area);
-      for (const resource of resources) normalized.push(...normaliseResource(resource, area));
-    }
-    for (const pack of library.examPracticePacks || []) {
-      const area = { id: pack.id, title: pack.title, outcomes: [], sourceUrl: pack.sourceUrl };
-      for (const markable of libraryModule.getExamPackMarkableQuestions(pack)) {
-        normalized.push({
-          sourceKey: `economics:${markable.id}`,
-          subject: 'economics',
-          syllabusVersion: syllabusVersionFor(pack),
-          prompt: [markable.stimulus, markable.prompt].filter(Boolean).join('\n\n'),
-          responseType: markable.responseType,
-          difficulty: 'exam',
-          marks: Number(markable.markValue || 4),
-          expectedMinutes: Math.max(3, Number(markable.markValue || 4) * 2),
-          commandVerb: String(markable.prompt || '').trim().split(/\s+/)[0]?.toLowerCase(),
-          options: [], answerKey: null, explanation: '', rubric: [], modelAnswer: '', misconceptions: [],
-          source: { externalId: markable.id, focusId: area.id, focusTitle: area.title, provenance: pack.sourceNote || 'Caplet original exam practice' },
-          lifecycleStatus: syllabusVersionFor(pack) === 'NSW-2009' ? 'in_review' : 'published', version: 1, reviewedAt: new Date(),
-          metadata: { resourceType: 'exam', section: markable.section, focusArea: markable.focusArea, transfer: true, curriculumEditionKey: `NSW-ECO-${syllabusVersionFor(pack).slice(-4)}`, requiresEditionReview: syllabusVersionFor(pack) === 'NSW-2009' },
-          outcomes: pack.outcomes || [],
-        });
-      }
-    }
+    const normalized = ECONOMICS_QUESTION_BANK.map((question) => ({
+      ...question,
+      reviewedAt: question.reviewedAt ? new Date(question.reviewedAt) : new Date(),
+    }));
 
     let created = 0;
     for (const item of normalized.filter((question) => question.prompt)) {
@@ -273,4 +274,9 @@ async function ensureEconomicsQuestionBank() {
   return seedPromise;
 }
 
-module.exports = { answerFromLetter, ensureEconomicsQuestionBank, normaliseResource };
+module.exports = {
+  answerFromLetter,
+  buildEconomicsQuestionBank,
+  ensureEconomicsQuestionBank,
+  normaliseResource,
+};
