@@ -1,18 +1,47 @@
 # Content Pipeline
 
-This document covers how course content is created, formatted, and imported into Caplet.
+This document covers how curriculum-aligned subject packs and slide-based course content are created, reviewed, versioned, and published in Caplet.
 
 ---
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Lesson JSON Format](#lesson-json-format)
-3. [Field Reference](#field-reference)
-4. [Slide Types](#slide-types)
-5. [Import Workflow](#import-workflow)
-6. [Course Seeding Scripts](#course-seeding-scripts)
-7. [Media Guidelines](#media-guidelines)
+1. [Curriculum Studio](#curriculum-studio)
+2. [Overview](#overview)
+3. [Lesson JSON Format](#lesson-json-format)
+4. [Field Reference](#field-reference)
+5. [Slide Types](#slide-types)
+6. [Import Workflow](#import-workflow)
+7. [Course Seeding Scripts](#course-seeding-scripts)
+8. [Media Guidelines](#media-guidelines)
+
+---
+
+## Curriculum Studio
+
+Curriculum Studio is the production workflow for syllabus-aligned adaptive practice. Teachers and admins can open `/curriculum-studio` to:
+
+1. Create the verified Business Studies pack or import a text-based PDF, DOCX, or TXT syllabus.
+2. Correct the extracted outcome structure and mark which outcomes are assessable.
+3. Author questions, map them to outcomes, and move each question through draft, human review, and approval.
+4. Resolve source and interpretation decisions, then publish only when every readiness gate passes.
+5. Start the student diagnostic, inspect mastery evidence, create a new locked version, or archive a published pack.
+
+Publication is atomic: all approved questions in the curriculum edition become published with the pack. Published and archived versions are read-only. Future edits happen in a cloned next version so historical practice evidence keeps its original curriculum and question references.
+
+### Readiness gates
+
+A pack cannot publish until all of these conditions are true:
+
+- Every active assessable outcome has at least one approved, valid question.
+- At least five valid approved multiple-choice questions are available for the diagnostic.
+- Extended-response questions include marking guidance and model answers.
+- Question prompts, options, answer keys, feedback, sources, mappings, and accessibility checks pass validation.
+- Every source document is explicitly verified.
+- Every teacher decision is resolved with a choice that allows publication.
+- Duplicate approved prompts are removed.
+
+The backend records pack imports, human question-review decisions, publishes, version creation, and archival as privacy-aware product events under the `curriculum_studio` feature.
 
 ---
 

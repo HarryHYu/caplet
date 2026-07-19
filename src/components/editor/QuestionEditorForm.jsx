@@ -117,13 +117,14 @@ function OutcomeMapping({ outcomes, selectedIds, subject, onChange }) {
       <div className="mt-3 max-h-80 space-y-2 overflow-y-auto rounded-2xl bg-surface-soft p-3" role="group" aria-label="Available syllabus outcomes">
         {matching.length ? matching.map((outcome) => {
           const checked = selectedIds.some((id) => String(id) === String(outcome.id));
+          const yearLabel = /^year\s/i.test(String(outcome.yearLevel || '')) ? outcome.yearLevel : `Year ${outcome.yearLevel}`;
           return (
             <label key={outcome.id} className={`flex cursor-pointer items-start gap-3 rounded-xl p-3 transition-colors ${checked ? 'bg-accent-soft' : 'bg-surface-raised hover:bg-accent-soft'}`}>
               <input type="checkbox" checked={checked} onChange={(event) => toggle(outcome.id, event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[color:var(--accent)]" />
               <span>
                 <span className="font-mono text-xs font-bold text-accent">{outcome.code}</span>
                 <span className="ml-2 text-sm font-bold text-text-primary">{outcome.title}</span>
-                {outcome.yearLevel && <span className="mt-1 block text-xs font-medium text-text-muted">Year {outcome.yearLevel} · {outcome.syllabusVersion}</span>}
+                {outcome.yearLevel && <span className="mt-1 block text-xs font-medium text-text-muted">{yearLabel} · {outcome.syllabusVersion}</span>}
               </span>
             </label>
           );
@@ -134,7 +135,7 @@ function OutcomeMapping({ outcomes, selectedIds, subject, onChange }) {
   );
 }
 
-function LifecyclePanel({ draft, humanReviewed, setHumanReviewed, busy, onTransition, readOnly }) {
+function LifecyclePanel({ draft, humanReviewed, setHumanReviewed, busy, onTransition, readOnly, publishManagedByPack }) {
   const readiness = reviewReadiness(draft);
   const ready = readiness.every((check) => check.ok);
   const status = draft.lifecycleStatus || 'draft';
@@ -173,7 +174,9 @@ function LifecyclePanel({ draft, humanReviewed, setHumanReviewed, busy, onTransi
             <button type="button" onClick={() => onTransition('approved')} disabled={busy || !humanReviewed || !ready} className="btn-primary"><CheckCircleIcon className="h-4 w-4" aria-hidden="true" /> Approve</button>
           </>
         )}
-        {status === 'approved' && !readOnly && <button type="button" onClick={() => onTransition('published')} disabled={busy} className="btn-primary"><SparklesIcon className="h-4 w-4" aria-hidden="true" /> Publish question</button>}
+        {status === 'approved' && !readOnly && (publishManagedByPack
+          ? <p className="rounded-xl bg-[color:var(--block-green)] px-4 py-3 text-sm font-bold text-[color:var(--mark-green)]">Approved for this subject pack. It will go live when the complete pack is published.</p>
+          : <button type="button" onClick={() => onTransition('published')} disabled={busy} className="btn-primary"><SparklesIcon className="h-4 w-4" aria-hidden="true" /> Publish question</button>)}
         {status === 'published' && !readOnly && <button type="button" onClick={() => onTransition('superseded')} disabled={busy} className="btn-secondary">Supersede version</button>}
         {(readOnly || ['superseded', 'archived'].includes(status)) && <p className="text-sm font-medium text-text-muted">This shared or historical version is read-only. Create a workspace draft to make changes.</p>}
       </div>
@@ -222,8 +225,10 @@ export default function QuestionEditorForm({
   historyLoading,
   onSave,
   onCancel,
+  onArchive,
   onTransition,
   onRefreshHistory,
+  publishManagedByPack = false,
 }) {
   const dirty = questionSignature(draft) !== originalSignature;
   const readOnly = Boolean(draft.readOnly) || ['superseded', 'archived'].includes(draft.lifecycleStatus);
@@ -238,6 +243,7 @@ export default function QuestionEditorForm({
           <p className="mt-1 text-xs font-medium text-text-muted">{draft.id ? `${draft.questionKey || 'Question'} · Version ${draft.version}` : 'Build a syllabus-mapped assessment item.'}{dirty ? ' · Unsaved changes' : ''}</p>
         </div>
         <div className="flex shrink-0 gap-3">
+          {draft.id && onArchive && !readOnly && <button type="button" onClick={onArchive} disabled={lifecycleBusy} className="btn-secondary text-text-error"><TrashIcon className="h-4 w-4" aria-hidden="true" /> Archive</button>}
           <button type="button" onClick={onCancel} className="btn-secondary">Cancel</button>
           <button type="submit" disabled={saving || readOnly || !dirty} className="btn-primary min-w-28">{saving ? 'Saving…' : dirty ? 'Save draft' : 'Saved'}</button>
         </div>
@@ -339,7 +345,7 @@ export default function QuestionEditorForm({
       </fieldset>
 
       <div className="mt-5 space-y-5">
-        <LifecyclePanel draft={draft} humanReviewed={humanReviewed} setHumanReviewed={setHumanReviewed} busy={lifecycleBusy} onTransition={onTransition} readOnly={readOnly} />
+        <LifecyclePanel draft={draft} humanReviewed={humanReviewed} setHumanReviewed={setHumanReviewed} busy={lifecycleBusy} onTransition={onTransition} readOnly={readOnly} publishManagedByPack={publishManagedByPack} />
         {draft.id && <VersionHistory history={history} loading={historyLoading} onRefresh={onRefreshHistory} />}
       </div>
 

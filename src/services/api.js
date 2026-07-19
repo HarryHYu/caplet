@@ -942,6 +942,41 @@ class ApiService {
     return this.request('/subject-packs/templates/business-studies-2010', { method: 'POST' });
   }
 
+  async createSubjectPackOutcome(packId, payload) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/outcomes`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateSubjectPackOutcome(packId, outcomeId, payload) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/outcomes/${encodeURIComponent(outcomeId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async createSubjectPackQuestion(packId, payload) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/questions`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateSubjectPackQuestion(packId, questionId, payload) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/questions/${encodeURIComponent(questionId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async transitionSubjectPackQuestion(packId, questionId, status, humanReviewed = false) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/questions/${encodeURIComponent(questionId)}/lifecycle`, {
+      method: 'POST',
+      body: JSON.stringify({ status, humanReviewed }),
+    });
+  }
+
   async resolveSubjectPackReviewItem(packId, itemId, optionId, note = '') {
     return this.request(`/subject-packs/${encodeURIComponent(packId)}/review-items/${encodeURIComponent(itemId)}/resolve`, {
       method: 'POST',
@@ -957,6 +992,14 @@ class ApiService {
 
   async publishSubjectPack(packId) {
     return this.request(`/subject-packs/${encodeURIComponent(packId)}/publish`, { method: 'POST' });
+  }
+
+  async createSubjectPackVersion(packId) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/versions`, { method: 'POST' });
+  }
+
+  async archiveSubjectPack(packId) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/archive`, { method: 'POST' });
   }
 
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)

@@ -19,6 +19,16 @@ function validateQuestion(input = {}) {
   if (responseType === 'multiple_choice') {
     if (options.length < 2) errors.push({ code: 'missing_options', message: 'Multiple-choice questions need at least two options.' });
     if (input.answerKey == null || input.answerKey === '') errors.push({ code: 'missing_answer', message: 'Choose the correct multiple-choice answer.' });
+    const normalizedOptions = options.map((option) => String(option).trim().toLowerCase());
+    if (new Set(normalizedOptions).size !== normalizedOptions.length) qualityIssue({ code: 'duplicate_options', message: 'Every multiple-choice option must be distinct.' });
+    if (input.answerKey && typeof input.answerKey === 'object') {
+      const index = Number(input.answerKey.index);
+      const value = input.answerKey.value;
+      const validIndex = Number.isInteger(index) && index >= 0 && index < options.length;
+      const validValue = value != null && normalizedOptions.includes(String(value).trim().toLowerCase());
+      if (!validIndex && !validValue) qualityIssue({ code: 'invalid_answer_key', message: 'The correct answer must match one of the available options.' });
+      if (validIndex && value != null && String(options[index]).trim() !== String(value).trim()) qualityIssue({ code: 'answer_key_mismatch', message: 'The correct answer index and value do not match.' });
+    }
     if (!String(input.explanation || '').trim()) qualityIssue({ code: 'missing_explanation', message: 'Add an explanation so learners understand the answer.' });
   } else {
     if (!String(input.modelAnswer || '').trim()) qualityIssue({ code: 'missing_model_answer', message: 'Add a model answer for consistent feedback.' });

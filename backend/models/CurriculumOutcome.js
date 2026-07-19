@@ -88,9 +88,9 @@ const CurriculumOutcome = sequelize.define('CurriculumOutcome', {
   timestamps: true,
   indexes: [
     {
-      name: 'curriculum_outcomes_syllabus_code_unique',
+      name: 'curriculum_outcomes_edition_code_unique',
       unique: true,
-      fields: ['jurisdiction', 'subject', 'syllabusVersion', 'code'],
+      fields: ['curriculumEditionId', 'code'],
     },
     {
       name: 'curriculum_outcomes_hierarchy_idx',

@@ -1,7 +1,11 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const {
+  archiveSubjectPack,
+  createPackOutcome,
+  createPackQuestion,
   createBusinessStudiesPack,
+  createSubjectPackVersion,
   findAccessiblePack,
   importSubjectPack,
   listSubjectPacks,
@@ -9,6 +13,10 @@ const {
   reopenReviewItem,
   resolveReviewItem,
   serializePack,
+  syncBusinessStudiesTemplate,
+  transitionPackQuestion,
+  updatePackOutcome,
+  updatePackQuestion,
 } = require('../services/subjectPackService');
 
 const router = express.Router();
@@ -50,7 +58,51 @@ router.post('/templates/business-studies-2010', requireSubjectAuthor, async (req
 router.get('/:packId', async (req, res, next) => {
   try {
     const pack = await findAccessiblePack(req.params.packId, req.user);
-    res.json({ subjectPack: await serializePack(pack) });
+    const canManage = req.user.role === 'admin' || String(pack.createdBy) === String(req.user.id);
+    const subjectPack = pack.key === 'NSW-BUSINESS-STUDIES-2010-V1' && canManage
+      ? await syncBusinessStudiesTemplate(pack, req.user.id)
+      : await serializePack(pack);
+    res.json({ subjectPack });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:packId/outcomes', requireSubjectAuthor, async (req, res, next) => {
+  try {
+    res.status(201).json(await createPackOutcome(req.params.packId, req.user, req.body || {}));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/:packId/outcomes/:outcomeId', requireSubjectAuthor, async (req, res, next) => {
+  try {
+    res.json(await updatePackOutcome(req.params.packId, req.params.outcomeId, req.user, req.body || {}));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:packId/questions', requireSubjectAuthor, async (req, res, next) => {
+  try {
+    res.status(201).json(await createPackQuestion(req.params.packId, req.user, req.body || {}));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/:packId/questions/:questionId', requireSubjectAuthor, async (req, res, next) => {
+  try {
+    res.json(await updatePackQuestion(req.params.packId, req.params.questionId, req.user, req.body || {}));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:packId/questions/:questionId/lifecycle', requireSubjectAuthor, async (req, res, next) => {
+  try {
+    res.json(await transitionPackQuestion(req.params.packId, req.params.questionId, req.user, req.body || {}));
   } catch (error) {
     next(error);
   }
@@ -83,12 +135,29 @@ router.post('/:packId/publish', async (req, res, next) => {
   }
 });
 
+router.post('/:packId/versions', requireSubjectAuthor, async (req, res, next) => {
+  try {
+    res.status(201).json({ subjectPack: await createSubjectPackVersion(req.params.packId, req.user) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:packId/archive', requireSubjectAuthor, async (req, res, next) => {
+  try {
+    res.json({ subjectPack: await archiveSubjectPack(req.params.packId, req.user) });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.use((error, _req, res, next) => {
   if (res.headersSent) return next(error);
   if ((error.status || 500) >= 500) console.error('Subject pack error:', error);
   res.status(error.status || 500).json({
     message: error.status ? error.message : 'Could not complete the subject-pack request.',
     ...(error.readiness ? { readiness: error.readiness } : {}),
+    ...(error.validation ? { validation: error.validation } : {}),
   });
 });
 
