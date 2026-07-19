@@ -14,6 +14,7 @@ import Footer from './components/Footer';
 import CapletLoader from './components/CapletLoader';
 import MarkerCursor from './components/MarkerCursor';
 import MoneyMobileNav from './components/MoneyMobileNav';
+import StudyCoachHighlight from './components/StudyCoachHighlight';
 import MoneyRouteGate from './components/MoneyRouteGate';
 import ProductModeRouteSync from './components/ProductModeRouteSync';
 import LegacyMoneyRedirect from './components/LegacyMoneyRedirect';
@@ -391,6 +392,7 @@ function AppShell() {
           </ContentLandmark>
           <Footer />
           {moneyModeRoute && <MoneyMobileNav />}
+          {isAuthenticated && !bareChrome && <StudyCoachHighlight />}
         </div>
       </div>
     );
@@ -412,6 +414,7 @@ function AppShell() {
       </ContentLandmark>
       <Footer />
       {moneyModeRoute && <MoneyMobileNav />}
+      {isAuthenticated && !bareChrome && <StudyCoachHighlight />}
     </div>
   );
 }
