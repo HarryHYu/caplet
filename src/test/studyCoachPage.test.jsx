@@ -17,6 +17,9 @@ vi.mock('../services/api', () => ({
     getStudyPlan: vi.fn(),
     askTutor: vi.fn(),
     logEvent: vi.fn(),
+    getRecommendations: vi.fn(),
+    getSyllabusProgress: vi.fn(),
+    logRecEvents: vi.fn(),
   },
 }));
 
@@ -38,6 +41,9 @@ describe('StudyCoach page', () => {
     ] });
     api.getDueReviewItems.mockResolvedValue({ items: [{ id: 1 }, { id: 2 }] });
     api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+    api.getRecommendations.mockResolvedValue({ recommendations: [] });
+    api.getSyllabusProgress.mockResolvedValue({ subject: 'Economics', modules: [], overallHscReadiness: 0, year11Readiness: 0 });
+    api.logRecEvents.mockResolvedValue(null);
   });
   afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 

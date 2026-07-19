@@ -53,6 +53,13 @@ const EconomicSeries = require('./EconomicSeries');
 const EconomicObservation = require('./EconomicObservation');
 const EconomicIngestionRun = require('./EconomicIngestionRun');
 const CurriculumEdition = require('./CurriculumEdition');
+// Study coach — recommendation engine + HSC syllabus-point tracking (ported).
+const SyllabusPoint = require('./SyllabusPoint');
+const UserSyllabusProgress = require('./UserSyllabusProgress');
+const StudySession = require('./StudySession');
+const SchoolAssessment = require('./SchoolAssessment');
+const KnowledgeAtom = require('./KnowledgeAtom');
+const RecommendationEvent = require('./RecommendationEvent');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -712,6 +719,9 @@ CurriculumOutcome.belongsTo(CurriculumEdition, {
   foreignKey: 'curriculumEditionId',
   as: 'edition',
 });
+// A logged focus session may be attributed to a course (optional).
+StudySession.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+
 CurriculumEdition.hasMany(Lesson, {
   foreignKey: 'curriculumEditionId',
   as: 'lessons',
@@ -787,4 +797,10 @@ module.exports = {
   EconomicObservation,
   EconomicIngestionRun,
   CurriculumEdition,
+  SyllabusPoint,
+  UserSyllabusProgress,
+  StudySession,
+  SchoolAssessment,
+  KnowledgeAtom,
+  RecommendationEvent,
 };

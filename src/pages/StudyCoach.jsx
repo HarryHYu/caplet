@@ -8,6 +8,8 @@ import { useReveal } from '../lib/useReveal';
 import { probabilityPercent } from '../lib/learning';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
+import RecommendedLessons from '../components/study/RecommendedLessons';
+import SyllabusProgress from '../components/study/SyllabusProgress';
 import {
   SparklesIcon,
   FireIcon,
@@ -395,6 +397,9 @@ export default function StudyCoach() {
           </Link>
         )}
 
+        {/* Ported recommendation engine — content-matched lesson feed. */}
+        <RecommendedLessons />
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <div className="lg:col-span-7">
             <CoachChat />
@@ -431,6 +436,11 @@ export default function StudyCoach() {
               />
             )}
           </div>
+        </div>
+
+        {/* Ported HSC syllabus-point coverage across all subjects. */}
+        <div className="mt-16">
+          <SyllabusProgress />
         </div>
       </div>
     </div>
