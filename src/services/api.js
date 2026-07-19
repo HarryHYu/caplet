@@ -723,6 +723,20 @@ class ApiService {
       return { unavailable: false, answer: data?.answer || '' };
     } catch (error) {
       console.warn('askTutor failed; returning fallback', error);
+      const data = error?.data || {};
+      // Actionable gating errors (missing DOB / AI-processing consent) carry a
+      // specific message + code — surface those so the UI can point the student
+      // to the right setting. Everything else stays a generic "try again".
+      if (data.consentRequired) {
+        return {
+          unavailable: true,
+          answer: '',
+          message: data.message || 'AI-assisted learning needs to be enabled first.',
+          code: data.code || null,
+          consentRequired: true,
+          status: error?.status || null,
+        };
+      }
       return {
         unavailable: true,
         answer: '',

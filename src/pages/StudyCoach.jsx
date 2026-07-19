@@ -87,10 +87,20 @@ function CoachChat() {
     setMessages((m) => [...m, { role: 'user', content: question }]);
     try {
       const res = await api.askTutor({ question, slide: conversationContext(prior) });
-      const content = res && !res.unavailable && res.answer
-        ? res.answer
-        : (res?.message || 'The coach is unavailable right now. Please try again in a moment.');
-      setMessages((m) => [...m, { role: 'coach', content, error: !res || res.unavailable || !res.answer }]);
+      if (res && !res.unavailable && res.answer) {
+        setMessages((m) => [...m, { role: 'coach', content: res.answer }]);
+      } else {
+        // Consent/age gating is actionable — point the student to the right setting.
+        const settingsPath = res?.consentRequired
+          ? (res.code === 'age_confirmation_required' ? '/settings/profile' : '/settings/privacy')
+          : null;
+        setMessages((m) => [...m, {
+          role: 'coach',
+          content: res?.message || 'The coach is unavailable right now. Please try again in a moment.',
+          error: true,
+          settingsPath,
+        }]);
+      }
     } catch {
       setMessages((m) => [...m, { role: 'coach', content: 'The coach is unavailable right now. Please try again in a moment.', error: true }]);
     } finally {
@@ -145,6 +155,11 @@ function CoachChat() {
               ) : (
                 <div className="prose-coach text-sm leading-relaxed">
                   <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{m.content}</ReactMarkdown>
+                  {m.settingsPath && (
+                    <Link to={m.settingsPath} className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-accent underline underline-offset-2">
+                      Open settings <ArrowRightIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                  )}
                 </div>
               )}
             </div>

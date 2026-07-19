@@ -101,4 +101,23 @@ describe('StudyCoach page', () => {
 
     expect(await screen.findByText(/unavailable/i)).toBeInTheDocument();
   });
+
+  it('shows the real reason and a settings link when AI consent is required', async () => {
+    api.askTutor.mockResolvedValue({
+      unavailable: true,
+      answer: '',
+      message: 'Add your date of birth in Settings → Profile before enabling optional AI-assisted learning.',
+      code: 'age_confirmation_required',
+      consentRequired: true,
+    });
+    renderPage();
+
+    const box = await screen.findByPlaceholderText(/ask your study coach/i);
+    fireEvent.change(box, { target: { value: 'help' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+
+    expect(await screen.findByText(/date of birth/i)).toBeInTheDocument();
+    const link = await screen.findByRole('link', { name: /open settings/i });
+    expect(link.getAttribute('href')).toBe('/settings/profile');
+  });
 });

@@ -44,6 +44,26 @@ describe('api.askTutor graceful degradation', () => {
     expect(res.message).toMatch(/unavailable/i);
   });
 
+  it('surfaces the actionable reason (and code) on a consent-gated 403', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      headers: { get: () => 'application/json' },
+      json: async () => ({
+        message: 'Add your date of birth in Settings → Profile before enabling optional AI-assisted learning.',
+        code: 'age_confirmation_required',
+        consentRequired: true,
+      }),
+    });
+
+    const res = await api.askTutor({ slide: {}, question: 'help' });
+    expect(res.unavailable).toBe(true);
+    expect(res.consentRequired).toBe(true);
+    expect(res.code).toBe('age_confirmation_required');
+    expect(res.message).toMatch(/date of birth/i);
+  });
+
   it('resolves to a friendly fallback on a network error instead of throwing', async () => {
     // A TypeError simulates a network failure (fetch rejects).
     globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
