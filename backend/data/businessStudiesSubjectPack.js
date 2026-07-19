@@ -1,0 +1,180 @@
+const SOURCE_URL = 'https://www.nsw.gov.au/education-and-training/nesa/curriculum/hsie/business-studies-stage-6-2010';
+const SOURCE_DOCUMENT_URL = 'https://www.nsw.gov.au/sites/default/files/noindex/2025-04/business-studies-st6-syl.docx';
+
+const outcomes = [
+  { code: 'P1', yearLevel: 'Year 11', title: 'Nature, role and structures of business', description: 'Discusses how businesses operate in society and compares common business structures.' },
+  { code: 'P2', yearLevel: 'Year 11', title: 'Influences on business', description: 'Explains internal and external influences that shape business decisions.' },
+  { code: 'P3', yearLevel: 'Year 11', title: 'SME success and failure', description: 'Describes factors that contribute to the success or failure of small and medium enterprises.' },
+  { code: 'P4', yearLevel: 'Year 11', title: 'Business functions and processes', description: 'Assesses the processes and interdependence of key business functions.' },
+  { code: 'P5', yearLevel: 'Year 11', title: 'Management theories and strategies', description: 'Examines how management theories and strategies are applied in practice.' },
+  { code: 'P6', yearLevel: 'Year 11', title: 'Responsibilities to stakeholders', description: 'Analyses business responsibilities to internal and external stakeholders.' },
+  { code: 'P7', yearLevel: 'Year 11', title: 'Investigating contemporary issues', description: 'Plans and conducts investigations into contemporary business issues.' },
+  { code: 'P8', yearLevel: 'Year 11', title: 'Evaluating business information', description: 'Evaluates information for actual and hypothetical business situations.' },
+  { code: 'P9', yearLevel: 'Year 11', title: 'Communicating business information', description: 'Communicates business information and issues in appropriate formats.' },
+  { code: 'P10', yearLevel: 'Year 11', title: 'Business mathematics', description: 'Applies mathematical concepts appropriately in business situations.' },
+  { code: 'H1', yearLevel: 'Year 12', title: 'Business in Australia and globally', description: 'Critically analyses the role of business in Australian and global contexts.' },
+  { code: 'H2', yearLevel: 'Year 12', title: 'Management responses to change', description: 'Evaluates management strategies used in response to internal and external change.' },
+  { code: 'H3', yearLevel: 'Year 12', title: 'Social and ethical responsibilities', description: 'Discusses the social and ethical responsibilities of management.' },
+  { code: 'H4', yearLevel: 'Year 12', title: 'Functions in large and global businesses', description: 'Analyses business functions and processes in large and global businesses.' },
+  { code: 'H5', yearLevel: 'Year 12', title: 'Impact of management strategies', description: 'Explains management strategies and their impact on businesses.' },
+  { code: 'H6', yearLevel: 'Year 12', title: 'Management effectiveness', description: 'Evaluates how effectively management contributes to business performance.' },
+  { code: 'H7', yearLevel: 'Year 12', title: 'Investigating contemporary issues', description: 'Plans and conducts investigations into contemporary business issues.' },
+  { code: 'H8', yearLevel: 'Year 12', title: 'Organising and evaluating information', description: 'Organises and evaluates information for actual and hypothetical business situations.' },
+  { code: 'H9', yearLevel: 'Year 12', title: 'Communicating business concepts', description: 'Communicates business information, issues and concepts in appropriate formats.' },
+  { code: 'H10', yearLevel: 'Year 12', title: 'Business mathematics', description: 'Applies mathematical concepts appropriately in business situations.' },
+];
+
+const questions = [
+  {
+    key: 'role-business', outcome: 'P1', difficulty: 'foundation',
+    prompt: 'Which example best demonstrates the role of business in improving consumer choice?',
+    options: ['A firm introduces a new service for an unmet need', 'A firm delays paying every supplier', 'A regulator increases a licence fee', 'A household reduces discretionary spending'],
+    answerIndex: 0,
+    explanation: 'Innovation can expand the range of goods and services available to consumers.',
+  },
+  {
+    key: 'external-influence', outcome: 'P2', difficulty: 'foundation',
+    prompt: 'A rapid increase in interest rates is best classified as which influence on a business?',
+    options: ['Internal cultural influence', 'External financial influence', 'Internal product influence', 'External geographic influence'],
+    answerIndex: 1,
+    explanation: 'Interest rates are an external financial influence affecting borrowing costs and demand.',
+  },
+  {
+    key: 'sme-advantage', outcome: 'P3', difficulty: 'core concept',
+    prompt: 'Which capability is most likely to help a small business respond faster than a large competitor?',
+    options: ['A longer chain of command', 'Greater access to global capital markets', 'Direct contact with customers', 'More formal approval procedures'],
+    answerIndex: 2,
+    explanation: 'Direct customer contact can help a small business detect and respond to changes quickly.',
+  },
+  {
+    key: 'function-interdependence', outcome: 'P4', difficulty: 'core concept',
+    prompt: 'Marketing forecasts demand for a new product. Which response best shows interdependence with operations?',
+    options: ['Operations adjusts capacity to meet the forecast', 'Finance stops recording transactions', 'Human resources removes all training', 'Marketing sets workplace safety rules'],
+    answerIndex: 0,
+    explanation: 'Operations uses demand information from marketing when planning capacity and production.',
+  },
+  {
+    key: 'stakeholder-conflict', outcome: 'P6', difficulty: 'core concept',
+    prompt: 'Which decision most clearly balances the interests of employees and owners?',
+    options: ['Removing all safety training to reduce costs', 'Funding productivity training linked to fair progression', 'Paying dividends while wages remain unpaid', 'Closing consultation channels during change'],
+    answerIndex: 1,
+    explanation: 'Training can improve productivity for owners while supporting employee capability and progression.',
+  },
+  {
+    key: 'operations-objective', outcome: 'H4', difficulty: 'hsc style',
+    prompt: 'A manufacturer reduces delivery variation so customers receive orders on the promised date. Which performance objective improved?',
+    options: ['Customisation', 'Dependability', 'Cost leadership', 'Visibility'],
+    answerIndex: 1,
+    explanation: 'Dependability concerns delivering the promised output at the promised time.',
+  },
+  {
+    key: 'global-sourcing', outcome: 'H2', difficulty: 'hsc style',
+    prompt: 'What is the most direct operational risk of relying on a single overseas supplier?',
+    options: ['Lower product variety by definition', 'Greater exposure to supply disruption', 'Automatic breach of consumer law', 'Elimination of economies of scale'],
+    answerIndex: 1,
+    explanation: 'Concentrated sourcing increases exposure when transport, geopolitical or supplier disruptions occur.',
+  },
+  {
+    key: 'marketing-process', outcome: 'H5', difficulty: 'hsc style',
+    prompt: 'Which action should occur before a business identifies its target market?',
+    options: ['Situational analysis', 'Global standardisation', 'Sales promotion', 'Physical distribution'],
+    answerIndex: 0,
+    explanation: 'Situational analysis establishes the market context before objectives and target markets are selected.',
+  },
+  {
+    key: 'current-ratio', outcome: 'H10', difficulty: 'hsc style',
+    prompt: 'A business has current assets of $240,000 and current liabilities of $160,000. What is its current ratio?',
+    options: ['0.67:1', '1.5:1', '2.4:1', '4:1'],
+    answerIndex: 1,
+    explanation: 'Current ratio equals current assets divided by current liabilities: 240,000 ÷ 160,000 = 1.5.',
+  },
+  {
+    key: 'financial-objective', outcome: 'H6', difficulty: 'hsc style',
+    prompt: 'Which measure is most directly used to assess a business’s ability to meet short-term debts?',
+    options: ['Liquidity', 'Market share', 'Staff turnover', 'Capacity utilisation'],
+    answerIndex: 0,
+    explanation: 'Liquidity measures the ability to meet short-term financial obligations.',
+  },
+  {
+    key: 'hr-process', outcome: 'H5', difficulty: 'hsc style',
+    prompt: 'Which human resource process focuses on improving employees’ current and future capabilities?',
+    options: ['Acquisition', 'Development', 'Maintenance', 'Separation'],
+    answerIndex: 1,
+    explanation: 'Development includes training and other activities that build employee capability.',
+  },
+  {
+    key: 'csr-decision', outcome: 'H3', difficulty: 'hsc style',
+    prompt: 'Which action goes furthest beyond legal compliance toward corporate social responsibility?',
+    options: ['Paying the statutory minimum wage', 'Submitting required tax records', 'Publishing independently verified supply-chain labour standards', 'Displaying mandatory safety signage'],
+    answerIndex: 2,
+    explanation: 'Independent verification of voluntary standards demonstrates accountability beyond minimum compliance.',
+  },
+  {
+    key: 'extended-operations', outcome: 'H6', difficulty: 'extended response', responseType: 'extended_response', marks: 8,
+    prompt: 'Evaluate how two operations strategies could improve the performance of a growing Australian business.',
+    rubric: ['Makes a supported judgement about effectiveness', 'Explains two relevant operations strategies', 'Links each strategy to measurable business performance'],
+    modelAnswer: 'A strong response makes a clear judgement, applies two suitable strategies to the business context and explains their effects on performance objectives.',
+  },
+  {
+    key: 'extended-marketing', outcome: 'H5', difficulty: 'extended response', responseType: 'extended_response', marks: 8,
+    prompt: 'Assess how a coordinated marketing mix could help a business enter a new market segment.',
+    rubric: ['Makes a supported judgement', 'Integrates multiple elements of the marketing mix', 'Applies the analysis to the new segment'],
+    modelAnswer: 'A strong response judges how coordinated product, price, promotion and distribution choices create value for a defined target segment.',
+  },
+];
+
+const reviewItems = [
+  {
+    reviewKey: 'outcome-boundary-h1', itemType: 'outcome_boundary', entityType: 'curriculum_outcome', entityCode: 'H1',
+    title: 'Ambiguous outcome boundary', summary: 'Clarify whether global business analysis belongs inside H1 or should be represented as aligned content.',
+    decisionOptions: [
+      { id: 'retain', label: 'Retain one H1 outcome', description: 'Keep Australian and global contexts together, matching the official outcome structure.' },
+      { id: 'split', label: 'Split into two outcomes', description: 'Track Australian and global analysis separately in Caplet.' },
+    ],
+    sourceCitation: { label: 'NESA Business Studies Stage 6 Syllabus (2010)', section: '7.1 Objectives and outcomes', url: SOURCE_DOCUMENT_URL },
+  },
+  {
+    reviewKey: 'outcome-boundary-h4', itemType: 'outcome_boundary', entityType: 'curriculum_outcome', entityCode: 'H4',
+    title: 'Ambiguous outcome boundary', summary: 'Choose whether business processes should remain combined with the four key functions.',
+    decisionOptions: [
+      { id: 'combined', label: 'Keep functions and processes together', description: 'Preserve the single assessable outcome and map topic content beneath it.' },
+      { id: 'separate', label: 'Create process sub-outcomes', description: 'Add non-assessable sub-outcomes for operations, marketing, finance and human resources.' },
+    ],
+    sourceCitation: { label: 'NESA Business Studies Stage 6 Syllabus (2010)', section: '7.1 Objectives and outcomes', url: SOURCE_DOCUMENT_URL },
+  },
+  {
+    reviewKey: 'duplicate-investigation-skill', itemType: 'duplicate_statement', entityType: 'curriculum_outcome', entityCode: 'H7',
+    title: 'Duplicated syllabus statement', summary: 'P7 and H7 use the same investigation wording but apply at different course stages.',
+    decisionOptions: [
+      { id: 'stage-specific', label: 'Keep stage-specific outcomes', description: 'Retain separate Year 11 and Year 12 mastery evidence.' },
+      { id: 'shared-skill', label: 'Use one shared skill', description: 'Combine evidence into a single cross-stage investigation skill.' },
+    ],
+    sourceCitation: { label: 'NESA Business Studies Stage 6 Syllabus (2010)', section: '7.1 Objectives and outcomes', url: SOURCE_DOCUMENT_URL },
+  },
+  {
+    reviewKey: 'weak-source-question', itemType: 'source_evidence', entityType: 'question', entityCode: 'global-sourcing',
+    title: 'Question with weak source evidence', summary: 'Confirm that the supply disruption scenario is a fair application of the global sourcing content.',
+    decisionOptions: [
+      { id: 'approve', label: 'Approve the alignment', description: 'The scenario validly applies global sourcing risks from Operations.' },
+      { id: 'revise', label: 'Send back for revision', description: 'The question needs a more direct syllabus link.' },
+    ],
+    sourceCitation: { label: 'NESA Business Studies Stage 6 Syllabus (2010)', section: '10.1 Operations — global sourcing', url: SOURCE_DOCUMENT_URL },
+  },
+  {
+    reviewKey: 'rubric-review-operations', itemType: 'rubric_review', entityType: 'question', entityCode: 'extended-operations',
+    title: 'Rubric needs teacher review', summary: 'Check that the extended-response criteria reward judgement, application and causal reasoning.',
+    decisionOptions: [
+      { id: 'approve', label: 'Approve the rubric', description: 'The criteria reflect the command verb and eight-mark response.' },
+      { id: 'edit', label: 'Edit before publishing', description: 'Hold publication while the criteria are refined.' },
+    ],
+    sourceCitation: { label: 'NESA Business Studies Stage 6 Syllabus (2010)', section: '10.1 Operations', url: SOURCE_DOCUMENT_URL },
+  },
+];
+
+module.exports = {
+  SOURCE_DOCUMENT_URL,
+  SOURCE_URL,
+  outcomes,
+  questions,
+  reviewItems,
+};

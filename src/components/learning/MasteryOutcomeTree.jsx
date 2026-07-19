@@ -69,6 +69,18 @@ function OutcomeContent({ outcome }) {
   const due = Number(outcome.evidenceCount) > 0 ? reviewLabel(outcome.nextReviewAt) : 'No evidence yet';
   const practiceHref = `/practice?subject=${encodeURIComponent(outcome.subject || 'economics')}&mode=weak-topic&outcomeId=${encodeURIComponent(outcome.id)}`;
 
+  if (outcome.isAssessable === false) {
+    return (
+      <>
+        {outcome.description && <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-text-muted">{outcome.description}</p>}
+        <div className="mt-5 rounded-2xl bg-surface-soft p-4">
+          <MasteryBar value={outcome.probability} label="Aggregate mastery" />
+          <p className="mt-3 text-xs font-semibold text-text-muted">Calculated from the assessable outcomes in this course section.</p>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {outcome.description && (

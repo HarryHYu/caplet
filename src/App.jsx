@@ -85,6 +85,7 @@ const TrustCenter = lazy(() => import('./pages/TrustCenter'));
 const StudyPlan = lazy(() => import('./pages/StudyPlan'));
 const Practice = lazy(() => import('./pages/Practice'));
 const Mastery = lazy(() => import('./pages/Mastery'));
+const CurriculumStudio = lazy(() => import('./pages/CurriculumStudio'));
 const TeacherOnboarding = lazy(() => import('./pages/TeacherOnboarding'));
 const TeacherClassLearning = lazy(() => import('./pages/TeacherClassLearning'));
 const TeacherEvidenceOverride = lazy(() => import('./pages/TeacherEvidenceOverride'));
@@ -246,6 +247,8 @@ function AppRoutes() {
           <Route path="/study-plan" element={<RequireAuth><StudyPlan /></RequireAuth>} />
           <Route path="/practice" element={<RequireAuth><Practice /></RequireAuth>} />
           <Route path="/mastery" element={<RequireAuth><Mastery /></RequireAuth>} />
+          <Route path="/curriculum-studio" element={<RequireAuth><CurriculumStudio /></RequireAuth>} />
+          <Route path="/curriculum-studio/:packId" element={<RequireAuth><CurriculumStudio /></RequireAuth>} />
           <Route path="/teacher/onboarding" element={<RequireAuth><TeacherOnboarding /></RequireAuth>} />
           <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />

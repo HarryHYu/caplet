@@ -66,4 +66,30 @@ describe('practice question selection', () => {
     expect(selected).toHaveLength(5);
     expect(selected.every((question) => question.source.focusId === 'late-focus')).toBe(true);
   });
+
+  test('selects a published diagnostic from a non-Economics subject pack', async () => {
+    const questions = Array.from({ length: 5 }, (_, index) => ({
+      id: `business-question-${index + 1}`,
+      responseType: 'multiple_choice',
+      sourceKey: `business-source-${index + 1}`,
+    }));
+    models.Question.findAll.mockResolvedValue(questions);
+    models.QuestionOutcome.findAll.mockResolvedValue(questions.map((question, index) => ({
+      questionId: question.id,
+      outcomeId: `business-outcome-${index + 1}`,
+    })));
+    models.CurriculumOutcome.findAll.mockResolvedValue(questions.map((question, index) => ({
+      id: `business-outcome-${index + 1}`,
+      code: `P${index + 1}`,
+      title: `Business outcome ${index + 1}`,
+    })));
+
+    const selected = await selectQuestions({ userId: 'learner', subject: 'business-studies', mode: 'diagnostic' });
+
+    expect(selected).toHaveLength(5);
+    expect(models.Question.findAll).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ subject: 'business-studies', lifecycleStatus: 'published' }),
+    }));
+    expect(require('../services/questionBankService').ensureEconomicsQuestionBank).not.toHaveBeenCalled();
+  });
 });

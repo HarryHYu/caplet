@@ -113,6 +113,14 @@ const Classes = () => {
           </div>
           <div data-tour-id="academy-actions" className="flex items-center gap-3">
             {isTeacher && (
+              <Link
+                to="/curriculum-studio"
+                className="btn-secondary px-6 py-2.5 text-sm"
+              >
+                Curriculum Studio
+              </Link>
+            )}
+            {isTeacher && (
               <button
                 onClick={() => setShowCreate(true)}
                 className="btn-secondary px-6 py-2.5 text-sm"

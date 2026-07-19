@@ -922,6 +922,43 @@ class ApiService {
     });
   }
 
+  // Curriculum Studio — teacher-reviewed, versioned subject packs.
+  async getSubjectPacks() {
+    return this.request('/subject-packs');
+  }
+
+  async getSubjectPack(packId) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}`);
+  }
+
+  async importSubjectPack(payload) {
+    return this.request('/subject-packs/import', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async createBusinessStudiesSubjectPack() {
+    return this.request('/subject-packs/templates/business-studies-2010', { method: 'POST' });
+  }
+
+  async resolveSubjectPackReviewItem(packId, itemId, optionId, note = '') {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/review-items/${encodeURIComponent(itemId)}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ optionId, note }),
+    });
+  }
+
+  async reopenSubjectPackReviewItem(packId, itemId) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/review-items/${encodeURIComponent(itemId)}/reopen`, {
+      method: 'POST',
+    });
+  }
+
+  async publishSubjectPack(packId) {
+    return this.request(`/subject-packs/${encodeURIComponent(packId)}/publish`, { method: 'POST' });
+  }
+
   // Chat History (AI assistant; backend has /api/chat/* endpoints, no UI wired yet)
   async getChatHistory() {
     return this.request('/chat/history');

@@ -83,7 +83,7 @@ async function getNextRecommendation(userId, subject = 'economics', options = {}
         code: candidate.outcome.code,
         title: candidate.outcome.title,
       },
-      resourcePath: `/practice?mode=${mode}&outcomeId=${encodeURIComponent(candidate.outcome.id)}`,
+      resourcePath: `/practice?subject=${encodeURIComponent(subject)}&mode=${mode}&outcomeId=${encodeURIComponent(candidate.outcome.id)}`,
       estimatedMinutes: 10,
       score: candidate.score,
     };

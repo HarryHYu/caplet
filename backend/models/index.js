@@ -53,6 +53,8 @@ const EconomicSeries = require('./EconomicSeries');
 const EconomicObservation = require('./EconomicObservation');
 const EconomicIngestionRun = require('./EconomicIngestionRun');
 const CurriculumEdition = require('./CurriculumEdition');
+const SubjectPack = require('./SubjectPack');
+const SubjectPackReviewItem = require('./SubjectPackReviewItem');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -731,6 +733,38 @@ Question.belongsTo(CurriculumEdition, {
   as: 'curriculumEdition',
 });
 
+CurriculumEdition.hasMany(SubjectPack, {
+  foreignKey: 'curriculumEditionId',
+  as: 'subjectPacks',
+  onDelete: 'RESTRICT',
+});
+SubjectPack.belongsTo(CurriculumEdition, {
+  foreignKey: 'curriculumEditionId',
+  as: 'curriculumEdition',
+});
+User.hasMany(SubjectPack, {
+  foreignKey: 'createdBy',
+  as: 'subjectPacksCreated',
+  onDelete: 'SET NULL',
+});
+SubjectPack.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator',
+});
+SubjectPack.hasMany(SubjectPackReviewItem, {
+  foreignKey: 'subjectPackId',
+  as: 'reviewItems',
+  onDelete: 'CASCADE',
+});
+SubjectPackReviewItem.belongsTo(SubjectPack, {
+  foreignKey: 'subjectPackId',
+  as: 'subjectPack',
+});
+SubjectPackReviewItem.belongsTo(User, {
+  foreignKey: 'resolvedBy',
+  as: 'resolver',
+});
+
 module.exports = {
   sequelize,
   User,
@@ -787,4 +821,6 @@ module.exports = {
   EconomicObservation,
   EconomicIngestionRun,
   CurriculumEdition,
+  SubjectPack,
+  SubjectPackReviewItem,
 };

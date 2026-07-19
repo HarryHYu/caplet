@@ -321,7 +321,6 @@ async function loadClassLearningSnapshot(classroomId, { subject, outcomeIds } = 
   const students = memberships.map((membership) => asPlain(membership.user || membership.User))
     .filter(Boolean);
   const studentIds = students.map((student) => student.id);
-  if (!studentIds.length) return { students, outcomes: [], states: [], evidence: [] };
 
   const [states, evidence] = await Promise.all([
     MasteryState.findAll({ where: { userId: { [Op.in]: studentIds } } }),
@@ -331,7 +330,7 @@ async function loadClassLearningSnapshot(classroomId, { subject, outcomeIds } = 
   const requestedIds = uniqueStrings(outcomeIds || []);
   const outcomeWhere = requestedIds.length
     ? { id: { [Op.in]: requestedIds } }
-    : { subject: subject || 'economics' };
+    : { subject: subject || 'economics', isAssessable: true };
   const outcomes = await CurriculumOutcome.findAll({
     where: outcomeWhere,
     order: [['sortOrder', 'ASC'], ['code', 'ASC']],

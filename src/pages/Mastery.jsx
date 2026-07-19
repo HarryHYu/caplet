@@ -15,6 +15,7 @@ import api from '../services/api';
 
 const SUBJECT_LABELS = {
   economics: 'Economics',
+  'business-studies': 'Business Studies',
 };
 
 function normalizeOutcome(outcome, subject) {

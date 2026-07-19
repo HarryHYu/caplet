@@ -35,6 +35,7 @@ const PRIVATE_PATHS = [
   /^\/study-plan(?:\/|$)/,
   /^\/practice(?:\/|$)/,
   /^\/mastery(?:\/|$)/,
+  /^\/curriculum-studio(?:\/|$)/,
   /^\/revision(?:\/|$)/,
   /^\/essays(?:\/|$)/,
   /^\/classes(?:\/|$)/,

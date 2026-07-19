@@ -46,9 +46,10 @@ describe('recommendationEngine', () => {
     models.QuestionOutcome.findAll.mockResolvedValue([{ questionId: 'question-1' }]);
     models.Question.count.mockResolvedValue(1);
 
-    const recommendation = await getNextRecommendation('returning-user', 'economics');
+    const recommendation = await getNextRecommendation('returning-user', 'business-studies');
 
     expect(recommendation.outcome).toEqual(demonstratedOutcome);
+    expect(recommendation.resourcePath).toBe('/practice?subject=business-studies&mode=weak-topic&outcomeId=outcome-1');
     expect(models.QuestionOutcome.findAll).toHaveBeenCalledTimes(1);
   });
 });

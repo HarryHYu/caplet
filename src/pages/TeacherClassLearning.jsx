@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -36,6 +36,8 @@ function SummaryCard(props) {
 
 export default function TeacherClassLearning() {
   const { classId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const subject = searchParams.get('subject') || 'economics';
   const [threshold, setThreshold] = useState('0.6');
   const [state, setState] = useState({ loading: true, error: '', data: null });
   const [selectedStudentId, setSelectedStudentId] = useState(null);
@@ -45,23 +47,23 @@ export default function TeacherClassLearning() {
   const load = useCallback(async () => {
     setState((current) => ({ ...current, loading: true, error: '' }));
     try {
-      const data = await api.request(`/teacher-learning/classes/${classId}/analytics?subject=economics&threshold=${threshold}`);
+      const data = await api.request(`/teacher-learning/classes/${classId}/analytics?subject=${encodeURIComponent(subject)}&threshold=${threshold}`);
       setState({ loading: false, error: '', data });
     } catch (error) {
       setState({ loading: false, error: error.message || 'Could not load class learning data.', data: null });
     }
-  }, [classId, threshold]);
+  }, [classId, subject, threshold]);
 
   useEffect(() => {
     let active = true;
     setState((current) => ({ ...current, loading: true, error: '' }));
-    api.request(`/teacher-learning/classes/${classId}/analytics?subject=economics&threshold=${threshold}`).then((data) => {
+    api.request(`/teacher-learning/classes/${classId}/analytics?subject=${encodeURIComponent(subject)}&threshold=${threshold}`).then((data) => {
       if (active) setState({ loading: false, error: '', data });
     }).catch((error) => {
       if (active) setState({ loading: false, error: error.message || 'Could not load class learning data.', data: null });
     });
     return () => { active = false; };
-  }, [classId, threshold]);
+  }, [classId, subject, threshold]);
 
   const analytics = state.data?.analytics;
   const outcomes = analytics?.heatmap?.outcomes || [];
@@ -110,6 +112,13 @@ export default function TeacherClassLearning() {
             <p className="mt-4 text-lg font-medium text-text-muted">{state.data?.classroom?.name || 'Economics class'} · Outcome-level signals and next actions</p>
           </div>
           <div className="flex flex-wrap items-end gap-3">
+            <label htmlFor="learning-subject" className="text-xs font-bold text-text-muted">
+              Subject
+              <select id="learning-subject" value={subject} onChange={(event) => setSearchParams({ subject: event.target.value })} className="mt-2 block min-h-11 rounded-xl border border-line-soft bg-surface-raised px-3 py-2.5 text-sm text-text-primary outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">
+                <option value="economics">Economics</option>
+                <option value="business-studies">Business Studies</option>
+              </select>
+            </label>
             <label htmlFor="intervention-threshold" className="text-xs font-bold text-text-muted">
               Intervention threshold
               <select id="intervention-threshold" value={threshold} onChange={(event) => setThreshold(event.target.value)} className="mt-2 block min-h-11 rounded-xl border border-line-soft bg-surface-raised px-3 py-2.5 text-sm text-text-primary outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2">

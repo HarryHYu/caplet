@@ -39,6 +39,7 @@ router.get('/mastery', async (req, res) => {
         title: plain.title,
         description: plain.description,
         parentId: plain.parentId,
+        isAssessable: plain.isAssessable !== false,
         probability: Number(state.probability || 0.2),
         confidence: state.confidence || 'low',
         evidenceCount: Number(state.evidenceCount || 0),
@@ -49,13 +50,24 @@ router.get('/mastery', async (req, res) => {
         mastered: Boolean(state.metadata?.mastered),
       };
     });
-    const mastered = rows.filter((row) => row.mastered).length;
-    const dueForReview = rows.filter((row) => row.evidenceCount && new Date(row.nextReviewAt) <= now).length;
-    const averageProbability = rows.length ? rows.reduce((sum, row) => sum + row.probability, 0) / rows.length : 0;
+    rows.filter((row) => !row.isAssessable).forEach((parent) => {
+      const children = rows.filter((row) => String(row.parentId || '') === String(parent.id));
+      if (!children.length) return;
+      parent.probability = children.reduce((sum, row) => sum + row.probability, 0) / children.length;
+      parent.evidenceCount = children.reduce((sum, row) => sum + row.evidenceCount, 0);
+      parent.retentionStrength = children.reduce((sum, row) => sum + row.retentionStrength, 0) / children.length;
+      parent.mastered = children.every((row) => row.mastered);
+      const reviewDates = children.filter((row) => row.evidenceCount && row.nextReviewAt).map((row) => new Date(row.nextReviewAt));
+      parent.nextReviewAt = reviewDates.length ? new Date(Math.min(...reviewDates)) : null;
+    });
+    const assessableRows = rows.filter((row) => row.isAssessable);
+    const mastered = assessableRows.filter((row) => row.mastered).length;
+    const dueForReview = assessableRows.filter((row) => row.evidenceCount && new Date(row.nextReviewAt) <= now).length;
+    const averageProbability = assessableRows.length ? assessableRows.reduce((sum, row) => sum + row.probability, 0) / assessableRows.length : 0;
     res.json({
       subject,
       syllabusVersion,
-      summary: { totalOutcomes: rows.length, mastered, dueForReview, averageProbability: Number(averageProbability.toFixed(4)) },
+      summary: { totalOutcomes: assessableRows.length, mastered, dueForReview, averageProbability: Number(averageProbability.toFixed(4)) },
       outcomes: rows,
       generatedAt: now.toISOString(),
     });

@@ -130,6 +130,7 @@ app.use('/api/events', require('./routes/events'));
 app.use('/api/live', require('./routes/live'));
 app.use('/api/privacy', require('./routes/privacy'));
 app.use('/api/teacher-learning', require('./routes/teacherLearning'));
+app.use('/api/subject-packs', require('./routes/subjectPacks'));
 app.use('/api/feature-flags', require('./routes/featureFlags'));
 app.use('/api/ops', require('./routes/operational'));
 app.use('/api', require('./routes/learning'));
