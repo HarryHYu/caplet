@@ -14,6 +14,8 @@ import Footer from './components/Footer';
 import CapletLoader from './components/CapletLoader';
 import MarkerCursor from './components/MarkerCursor';
 import MoneyMobileNav from './components/MoneyMobileNav';
+import StudyCoachHighlight from './components/StudyCoachHighlight';
+import StudyCoachButton from './components/StudyCoachButton';
 import MoneyRouteGate from './components/MoneyRouteGate';
 import ProductModeRouteSync from './components/ProductModeRouteSync';
 import LegacyMoneyRedirect from './components/LegacyMoneyRedirect';
@@ -85,6 +87,7 @@ const TrustCenter = lazy(() => import('./pages/TrustCenter'));
 const StudyPlan = lazy(() => import('./pages/StudyPlan'));
 const Practice = lazy(() => import('./pages/Practice'));
 const Mastery = lazy(() => import('./pages/Mastery'));
+const StudyCoach = lazy(() => import('./pages/StudyCoach'));
 const TeacherOnboarding = lazy(() => import('./pages/TeacherOnboarding'));
 const TeacherClassLearning = lazy(() => import('./pages/TeacherClassLearning'));
 const TeacherEvidenceOverride = lazy(() => import('./pages/TeacherEvidenceOverride'));
@@ -246,6 +249,7 @@ function AppRoutes() {
           <Route path="/study-plan" element={<RequireAuth><StudyPlan /></RequireAuth>} />
           <Route path="/practice" element={<RequireAuth><Practice /></RequireAuth>} />
           <Route path="/mastery" element={<RequireAuth><Mastery /></RequireAuth>} />
+          <Route path="/study" element={<RequireAuth><StudyCoach /></RequireAuth>} />
           <Route path="/teacher/onboarding" element={<RequireAuth><TeacherOnboarding /></RequireAuth>} />
           <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
@@ -391,6 +395,8 @@ function AppShell() {
           </ContentLandmark>
           <Footer />
           {moneyModeRoute && <MoneyMobileNav />}
+          {isAuthenticated && !bareChrome && <StudyCoachHighlight />}
+          {isAuthenticated && !bareChrome && <StudyCoachButton />}
         </div>
       </div>
     );
@@ -412,6 +418,8 @@ function AppShell() {
       </ContentLandmark>
       <Footer />
       {moneyModeRoute && <MoneyMobileNav />}
+      {isAuthenticated && !bareChrome && <StudyCoachHighlight />}
+      {isAuthenticated && !bareChrome && <StudyCoachButton />}
     </div>
   );
 }

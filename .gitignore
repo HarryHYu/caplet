@@ -42,6 +42,10 @@ backend/caplet.db.bak
 coverage
 backend/coverage
 
+# Generated AI caches (rebuilt at runtime; large, not source)
+backend/data/embeddings-cache.json
+**/embeddings-cache.json
+
 # Playwright MCP session artifacts
 .playwright-mcp/
 

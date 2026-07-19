@@ -125,6 +125,7 @@ app.use('/api/essays', require('./routes/essays'));
 app.use('/api/economics-marker', require('./routes/economicsMarker'));
 app.use('/api/economics-exams', require('./routes/economicsExams'));
 app.use('/api/study-plan', require('./routes/studyPlan'));
+app.use('/api/study-coach', require('./routes/studyCoach'));
 app.use('/api/streaks', require('./routes/streaks'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/live', require('./routes/live'));

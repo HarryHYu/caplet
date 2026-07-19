@@ -723,6 +723,20 @@ class ApiService {
       return { unavailable: false, answer: data?.answer || '' };
     } catch (error) {
       console.warn('askTutor failed; returning fallback', error);
+      const data = error?.data || {};
+      // Actionable gating errors (missing DOB / AI-processing consent) carry a
+      // specific message + code — surface those so the UI can point the student
+      // to the right setting. Everything else stays a generic "try again".
+      if (data.consentRequired) {
+        return {
+          unavailable: true,
+          answer: '',
+          message: data.message || 'AI-assisted learning needs to be enabled first.',
+          code: data.code || null,
+          consentRequired: true,
+          status: error?.status || null,
+        };
+      }
       return {
         unavailable: true,
         answer: '',
@@ -863,6 +877,33 @@ class ApiService {
     const query = new URLSearchParams();
     if (subject) query.set('subject', subject);
     return this.request(`/recommendations/next?${query.toString()}`);
+  }
+
+  // Study coach — ported lesson-recommendation engine + HSC syllabus tracking.
+  // Degrades gracefully so the coach UI never crashes if the engine errors.
+  async getRecommendations(limit = 6) {
+    try {
+      return await this.request(`/study-coach/recommendations?limit=${limit}`);
+    } catch (error) {
+      console.warn('getRecommendations failed; returning empty feed', error);
+      return { recommendations: [] };
+    }
+  }
+
+  /** Fire-and-forget feedback events for the recommendation engine. */
+  logRecEvents(events) {
+    if (!events?.length) return Promise.resolve(null);
+    return this.request('/study-coach/rec-events', {
+      method: 'POST',
+      body: JSON.stringify({ events }),
+    }).catch((error) => {
+      console.warn('logRecEvents failed; ignoring', error);
+      return null;
+    });
+  }
+
+  async getSyllabusProgress(subject = 'Economics') {
+    return this.request(`/study-coach/syllabus?subject=${encodeURIComponent(subject)}`);
   }
 
   async createPracticeSession({ mode, subject = 'economics', outcomeId, assignmentId } = {}) {
