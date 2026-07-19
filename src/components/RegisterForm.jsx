@@ -74,16 +74,16 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
       {/* Heading */}
       <div className="mb-8">
         <p className="font-hand text-accent text-lg mb-1">Welcome aboard</p>
-        <h2 className="text-4xl font-display font-extrabold text-text-primary tracking-tight mb-2">
-          Create Your Account
-        </h2>
-        <p className="text-sm text-text-muted">
-          Already registered?{' '}
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-text-primary mb-2">
+          Create your account
+        </h1>
+        <p className="flex flex-wrap items-center gap-x-1 text-sm text-text-muted">
+          <span>Already registered?</span>
           {onSwitchToLogin ? (
             <button
               type="button"
               onClick={onSwitchToLogin}
-              className="text-accent font-semibold hover:underline"
+              className="inline-flex min-h-11 items-center font-semibold text-accent hover:underline"
             >
               Sign in
             </button>
@@ -93,13 +93,13 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 rounded-2xl">
-          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+        <div role="alert" className="mb-6 rounded-2xl bg-surface-error p-4 shadow-[0_16px_36px_-28px_rgba(20,20,18,0.3)]">
+          <p className="text-sm font-medium text-text-error">{error}</p>
         </div>
       )}
 
       <div className={`w-full ${submitLoading || googleLoading ? 'opacity-80' : ''}`}>
-        <div className={`w-full [&>div]:w-full [&>div>div]:w-full ${googleLoading ? 'pointer-events-none opacity-60' : ''}`}>
+        <div className={`google-auth-button w-full ${googleLoading ? 'pointer-events-none opacity-60' : ''}`}>
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => setError('Google sign-up was cancelled or failed.')}
@@ -125,7 +125,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <label htmlFor="reg-firstName" className="block text-sm font-medium text-text-muted">First name</label>
             <input
@@ -210,10 +210,14 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
         <button
           type="submit"
           disabled={submitLoading || googleLoading}
+          aria-busy={submitLoading}
           className="w-full btn-primary py-4 flex items-center justify-center gap-2 rounded-2xl hover:-translate-y-0.5 transition-transform disabled:opacity-50"
         >
           {submitLoading ? (
-            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <>
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-text-contrast/30 border-t-text-contrast" aria-hidden="true" />
+              <span>Creating account…</span>
+            </>
           ) : (
             <span className="font-semibold">Create account</span>
           )}

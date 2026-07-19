@@ -22,4 +22,16 @@ describe('LearningNextAction', () => {
     render(<MemoryRouter><LearningNextAction source="library" /></MemoryRouter>);
     expect(screen.getByRole('link', { name: /Take the quick Economics diagnostic/i })).toHaveAttribute('href', expect.stringContaining('mode=diagnostic'));
   });
+
+  it('labels a focused daily fallback as topic practice', () => {
+    render(<MemoryRouter><LearningNextAction
+      source="library"
+      fallbackHref="/practice?mode=daily&focusId=management"
+      fallbackMode="daily"
+      fallbackTitle="Practice this Economics topic"
+      fallbackDetail="Work through five saved questions from this topic."
+    /></MemoryRouter>);
+    expect(screen.getByRole('link', { name: /Practice this Economics topic/i })).toHaveAttribute('href', expect.stringContaining('mode=daily'));
+    expect(screen.queryByText(/quick Economics diagnostic/i)).not.toBeInTheDocument();
+  });
 });

@@ -400,6 +400,16 @@
     @apply max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20;
   }
 
+  /* Google renders its sign-in control with an inline pixel width. Keep the
+     official control fluid inside our auth panels so narrow screens never crop. */
+  .google-auth-button > div,
+  .google-auth-button > div > div,
+  .google-auth-button [role='button'] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
   /* Subtle grid texture for the lesson builder canvas */
   .lesson-grid-bg {
     background-image:

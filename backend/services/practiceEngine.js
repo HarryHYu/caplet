@@ -181,7 +181,12 @@ async function selectQuestions({ userId, subject = 'economics', mode = 'daily', 
   if (mode === 'diagnostic') where.responseType = 'multiple_choice';
   if (mode === 'timed-exam') where.difficulty = { [Op.in]: ['exam', 'hsc style', 'exam practice', 'external sector'] };
 
-  let pool = await Question.findAll({ where, order: [['sourceKey', 'ASC']], limit: Math.max(limit * 12, 120) });
+  const query = { where, order: [['sourceKey', 'ASC']] };
+  // Context is stored inside the question source JSON. Fetch the complete
+  // published subject pool before applying that filter; otherwise a valid
+  // focus/resource beyond the generic sampling window is reported as empty.
+  if (!focusId && !resourceId) query.limit = Math.max(limit * 12, 120);
+  let pool = await Question.findAll(query);
   pool = filterQuestionsByContext(pool, { focusId, resourceId });
   if (mode !== 'diagnostic') return pool.slice(0, limit);
 
@@ -604,6 +609,17 @@ async function acknowledgePracticeFeedback(userId, sessionId) {
   return serialiseSession(session);
 }
 
+function validatePracticeCompletion(session) {
+  const questionCount = asArray(session.questionIds).length;
+  const answeredCount = Number(session.currentIndex || 0);
+  if (session.mode === 'timed-exam' || answeredCount >= questionCount) return;
+  const error = new Error(session.assignmentId
+    ? 'Answer every assigned question before submitting this work.'
+    : 'Answer every question before completing this practice session.');
+  error.status = 409;
+  throw error;
+}
+
 async function completePracticeSession(userId, sessionId) {
   const {
     AssignmentSubmission,
@@ -615,12 +631,7 @@ async function completePracticeSession(userId, sessionId) {
   } = require('../models');
   const session = await PracticeSession.findOne({ where: { id: sessionId, userId } });
   if (!session) { const error = new Error('Practice session not found.'); error.status = 404; throw error; }
-  const questionCount = asArray(session.questionIds).length;
-  if (session.assignmentId && Number(session.currentIndex || 0) < questionCount) {
-    const error = new Error('Answer every assigned question before submitting this work.');
-    error.status = 409;
-    throw error;
-  }
+  validatePracticeCompletion(session);
   if (session.status === 'in_progress') {
     await sequelize.transaction(async (transaction) => {
       await session.update({
@@ -642,6 +653,7 @@ async function completePracticeSession(userId, sessionId) {
     });
   }
   const evidence = await LearningEvidence.findAll({ where: { practiceSessionId: session.id } });
+  const meaningfulCompletion = evidence.length > 0;
   const outcomeIds = [...new Set(evidence.map((item) => String(item.outcomeId)))];
   const [outcomes, states] = await Promise.all([
     outcomeIds.length ? CurriculumOutcome.findAll({ where: { id: { [Op.in]: outcomeIds } } }) : [],
@@ -673,24 +685,26 @@ async function completePracticeSession(userId, sessionId) {
     metadata: { mode: session.mode, score: session.score, maxScore: session.maxScore, evidenceCount: evidence.length, assignmentId: session.assignmentId || null },
   });
   const config = session.config || {};
-  const { completeMatchingStudyTask } = require('./studyTaskCompletionService');
-  const resourcePaths = [
-    config.returnTo,
-    config.focusId ? `/library/economics/focus/${config.focusId}` : null,
-    '/practice',
-  ].filter(Boolean);
-  await completeMatchingStudyTask({ userId, resourcePaths });
-  await recordProductEvent({
-    idempotencyKey: `activity-completed:${session.id}`,
-    type: 'activity_completed',
-    userId,
-    practiceSessionId: session.id,
-    outcomeId: session.primaryOutcomeId,
-    feature: `learning_loop:${config.source || 'practice'}`,
-    entityType: 'practice_session',
-    entityId: session.id,
-    metadata: { mode: session.mode, subject: session.subject, source: config.source || 'practice' },
-  });
+  if (meaningfulCompletion) {
+    const { completeMatchingStudyTask } = require('./studyTaskCompletionService');
+    const resourcePaths = [
+      config.returnTo,
+      config.focusId ? `/library/economics/focus/${config.focusId}` : null,
+      '/practice',
+    ].filter(Boolean);
+    await completeMatchingStudyTask({ userId, resourcePaths });
+    await recordProductEvent({
+      idempotencyKey: `activity-completed:${session.id}`,
+      type: 'activity_completed',
+      userId,
+      practiceSessionId: session.id,
+      outcomeId: session.primaryOutcomeId,
+      feature: `learning_loop:${config.source || 'practice'}`,
+      entityType: 'practice_session',
+      entityId: session.id,
+      metadata: { mode: session.mode, subject: session.subject, source: config.source || 'practice' },
+    });
+  }
   const serialized = await serialiseSession(session);
   return {
     session: serialized,
@@ -720,5 +734,6 @@ module.exports = {
   savePracticeDraft,
   selectQuestions,
   serialiseSession,
+  validatePracticeCompletion,
   writtenFallback,
 };

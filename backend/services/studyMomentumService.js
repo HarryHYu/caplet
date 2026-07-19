@@ -69,7 +69,9 @@ function buildStudyMomentum({ plan, progress = [], practiceSessions = [], marked
     if (rowValue(item, 'status') === 'completed') add(rowValue(item, 'completedAt'), 'lesson', rowValue(item, 'id'));
   }
   for (const session of practiceSessions) {
-    if (rowValue(session, 'status') === 'completed') add(rowValue(session, 'completedAt'), 'practice', rowValue(session, 'id'));
+    if (rowValue(session, 'status') === 'completed' && Number(rowValue(session, 'currentIndex') || 0) > 0) {
+      add(rowValue(session, 'completedAt'), 'practice', rowValue(session, 'id'));
+    }
   }
   for (const attempt of markedAttempts) {
     add(rowValue(attempt, 'createdAt'), 'marked_practice', rowValue(attempt, 'id'));
@@ -139,7 +141,7 @@ async function getStudyMomentum(userId, options = {}) {
     }),
     PracticeSession.findAll({
       where: { userId, status: 'completed', completedAt: { [Op.gte]: since } },
-      attributes: ['id', 'status', 'completedAt'],
+      attributes: ['id', 'status', 'currentIndex', 'completedAt'],
     }),
     MarkedAttempt.findAll({
       where: { userId, createdAt: { [Op.gte]: since } },

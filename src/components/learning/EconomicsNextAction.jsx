@@ -41,5 +41,15 @@ export default function EconomicsNextAction({ source, focusId = '', resourceId =
   if (focusId) params.set('focusId', focusId);
   if (resourceId) params.set('resourceId', resourceId);
   params.set('returnTo', focusId ? `/library/economics/focus/${focusId}` : '/library/economics');
-  return <LearningNextAction {...state} source={source} fallbackHref={`/practice?${params.toString()}`} className={className} trackingEnabled={isAuthenticated} />;
+  const focusedPractice = mode !== 'diagnostic';
+  return <LearningNextAction
+    {...state}
+    source={source}
+    fallbackHref={`/practice?${params.toString()}`}
+    fallbackMode={mode}
+    fallbackTitle={focusedPractice ? 'Practice this Economics topic' : undefined}
+    fallbackDetail={focusedPractice ? 'Work through five saved questions from this topic and get feedback after each response.' : undefined}
+    className={className}
+    trackingEnabled={isAuthenticated}
+  />;
 }

@@ -42,4 +42,28 @@ describe('practice question selection', () => {
     expect(selected).toHaveLength(5);
     expect(new Set(selected.map((question) => question.id)).size).toBe(5);
   });
+
+  test('does not truncate the pool before applying library context', async () => {
+    const questions = Array.from({ length: 140 }, (_, index) => ({
+      id: `question-${index + 1}`,
+      responseType: 'short_answer',
+      sourceKey: `source-${String(index + 1).padStart(3, '0')}`,
+      source: {
+        focusId: index >= 130 ? 'late-focus' : 'early-focus',
+        externalId: `resource-${index + 1}`,
+      },
+    }));
+    models.Question.findAll.mockResolvedValue(questions);
+
+    const selected = await selectQuestions({
+      userId: 'learner',
+      subject: 'economics',
+      mode: 'daily',
+      focusId: 'late-focus',
+    });
+
+    expect(models.Question.findAll).toHaveBeenCalledWith(expect.not.objectContaining({ limit: expect.anything() }));
+    expect(selected).toHaveLength(5);
+    expect(selected.every((question) => question.source.focusId === 'late-focus')).toBe(true);
+  });
 });

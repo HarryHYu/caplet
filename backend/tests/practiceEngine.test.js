@@ -1,5 +1,6 @@
 const {
   multipleChoiceResult,
+  validatePracticeCompletion,
   writtenFallback,
 } = require('../services/practiceEngine');
 
@@ -24,5 +25,24 @@ describe('practice evaluation', () => {
     expect(result.confidence).toBe('low');
     expect(result.markingMethod).toBe('heuristic');
     expect(result.score).toBeGreaterThan(0);
+  });
+
+  test('rejects premature ordinary and assigned completion but permits timed submission', () => {
+    expect(() => validatePracticeCompletion({
+      mode: 'daily',
+      questionIds: ['one', 'two'],
+      currentIndex: 1,
+    })).toThrow(/every question/);
+    expect(() => validatePracticeCompletion({
+      mode: 'assigned',
+      assignmentId: 'assignment-1',
+      questionIds: ['one', 'two'],
+      currentIndex: 1,
+    })).toThrow(/assigned question/);
+    expect(() => validatePracticeCompletion({
+      mode: 'timed-exam',
+      questionIds: ['one', 'two'],
+      currentIndex: 0,
+    })).not.toThrow();
   });
 });

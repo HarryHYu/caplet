@@ -1,8 +1,10 @@
 const {
   buildStudyMomentum,
+  getStudyMomentum,
   localDayKey,
   parseTimezoneOffset,
 } = require('../services/studyMomentumService');
+const models = require('../models');
 
 describe('studyMomentumService', () => {
   test('counts consecutive meaningful study days and deduplicates source records', () => {
@@ -19,7 +21,7 @@ describe('studyMomentumService', () => {
         { id: 'lesson-1', status: 'completed', completedAt: '2026-07-15T04:00:00.000Z' },
       ],
       practiceSessions: [
-        { id: 'practice-1', status: 'completed', completedAt: '2026-07-17T05:00:00.000Z' },
+        { id: 'practice-1', status: 'completed', currentIndex: 2, completedAt: '2026-07-17T05:00:00.000Z' },
       ],
     }, { now: new Date('2026-07-17T12:00:00.000Z'), timezoneOffset: 0 });
 
@@ -47,5 +49,32 @@ describe('studyMomentumService', () => {
   test('groups completions using the learner timezone offset', () => {
     expect(localDayKey('2026-07-16T16:30:00.000Z', -480)).toBe('2026-07-17');
     expect(() => parseTimezoneOffset('900')).toThrow(/between -840 and 840/);
+  });
+
+  test('does not award momentum for an empty timed practice completion', () => {
+    const momentum = buildStudyMomentum({
+      practiceSessions: [
+        { id: 'empty-practice', status: 'completed', currentIndex: 0, completedAt: '2026-07-17T05:00:00.000Z' },
+        { id: 'attempted-practice', status: 'completed', currentIndex: 1, completedAt: '2026-07-16T05:00:00.000Z' },
+      ],
+    }, { now: new Date('2026-07-17T12:00:00.000Z'), timezoneOffset: 0 });
+
+    expect(momentum.todayComplete).toBe(false);
+    expect(momentum.currentStreak).toBe(1);
+  });
+
+  test('loads the practice attempt count used to qualify meaningful completion', async () => {
+    jest.spyOn(models.StudyPlan, 'findOne').mockResolvedValue(null);
+    jest.spyOn(models.UserProgress, 'findAll').mockResolvedValue([]);
+    jest.spyOn(models.PracticeSession, 'findAll').mockResolvedValue([]);
+    jest.spyOn(models.MarkedAttempt, 'findAll').mockResolvedValue([]);
+    jest.spyOn(models.EconomicsExamSession, 'findAll').mockResolvedValue([]);
+
+    await getStudyMomentum('learner', { now: new Date('2026-07-17T12:00:00.000Z') });
+
+    expect(models.PracticeSession.findAll).toHaveBeenCalledWith(expect.objectContaining({
+      attributes: ['id', 'status', 'currentIndex', 'completedAt'],
+    }));
+    jest.restoreAllMocks();
   });
 });

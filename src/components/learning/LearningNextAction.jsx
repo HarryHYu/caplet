@@ -4,8 +4,8 @@ import { ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { actionDetails } from './learningNextActionUtils';
 
-export default function LearningNextAction({ resume, studyTask, recommendation, fallbackHref, fallbackTitle, source = 'learning', className = '', trackingEnabled = true }) {
-  const action = actionDetails({ resume, studyTask, recommendation, fallbackHref, fallbackTitle, source });
+export default function LearningNextAction({ resume, studyTask, recommendation, fallbackHref, fallbackTitle, fallbackDetail, fallbackMode, source = 'learning', className = '', trackingEnabled = true }) {
+  const action = actionDetails({ resume, studyTask, recommendation, fallbackHref, fallbackTitle, fallbackDetail, fallbackMode, source });
 
   useEffect(() => {
     if (!trackingEnabled) return;
