@@ -116,8 +116,6 @@ export default function RecommendedLessons() {
     return () => { cancelled = true; };
   }, []);
 
-  if (!loading && recs.length === 0) return null; // nothing to recommend yet — stay quiet
-
   return (
     <section className="reveal mb-8">
       <div className="mb-5 flex items-end justify-between gap-4">
@@ -132,6 +130,21 @@ export default function RecommendedLessons() {
       {loading ? (
         <div className="flex gap-4 overflow-hidden">
           {[0, 1, 2, 3].map((i) => <div key={i} className="h-52 w-[19rem] shrink-0 animate-pulse rounded-3xl bg-surface-soft" />)}
+        </div>
+      ) : recs.length === 0 ? (
+        <div className="flex flex-col items-start gap-4 rounded-3xl border border-line-soft bg-surface-raised p-8">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-accent-soft text-accent">
+            <SparklesIcon className="h-6 w-6" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="font-display text-lg font-extrabold tracking-tight text-text-primary">No recommendations yet</p>
+            <p className="mt-1 max-w-md text-sm font-medium leading-relaxed text-text-muted">
+              Try a little practice or open a lesson, and the coach will start matching lessons to your weakest syllabus points right here.
+            </p>
+          </div>
+          <Link to="/practice" className="btn-primary">
+            Start practising <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
       ) : (
         <div className="-mx-1 overflow-x-auto px-1 pb-4 [scrollbar-color:var(--accent-soft)_transparent] [scrollbar-width:thin]">

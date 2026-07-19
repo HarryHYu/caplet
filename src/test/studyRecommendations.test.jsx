@@ -51,11 +51,13 @@ describe('RecommendedLessons (ported engine feed)', () => {
     expect(api.logRecEvents.mock.calls.some((c) => c[0][0]?.action === 'clicked')).toBe(true);
   });
 
-  it('renders nothing when there are no recommendations', async () => {
+  it('shows a friendly empty state (not a blank gap) when there are no recommendations', async () => {
     api.getRecommendations.mockResolvedValue({ recommendations: [] });
-    const { container } = wrap(<RecommendedLessons />);
-    await waitFor(() => expect(api.getRecommendations).toHaveBeenCalled());
-    await waitFor(() => expect(container.querySelector('section')).toBeNull());
+    wrap(<RecommendedLessons />);
+    // The heading always renders, and an explanatory empty state replaces the cards.
+    expect(await screen.findByText('No recommendations yet')).toBeInTheDocument();
+    expect(screen.getByText('Recommended lessons')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /start practising/i })).toBeInTheDocument();
   });
 });
 
