@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { buildLearningAnalytics, percentage } = require('../services/learningAnalytics');
+const { buildLearningAnalytics, percentage, productLoopMetrics } = require('../services/learningAnalytics');
 
 const NOW = new Date('2026-07-13T12:00:00.000Z');
 
@@ -37,6 +37,23 @@ function dependencies({
 }
 
 describe('learning analytics', () => {
+  test('measures the intended student loop and published-pack evidence', () => {
+    const rows = [
+      { userId: 'fast', type: 'learning_action_viewed', entityId: 'next-1', occurredAt: '2026-07-13T10:00:00Z' },
+      { userId: 'fast', type: 'next_action_started', entityId: 'next-1', occurredAt: '2026-07-13T10:00:40Z' },
+      { userId: 'fast', type: 'study_plan_generated', occurredAt: '2026-07-10T10:00:00Z' },
+      { userId: 'fast', type: 'practice_completed', occurredAt: '2026-07-10T10:10:00Z' },
+      { userId: 'fast', type: 'activity_completed', metadata: { subject: 'business-studies' }, occurredAt: '2026-07-11T10:10:00Z' },
+      { userId: 'fast', type: 'activity_completed', occurredAt: '2026-07-12T10:10:00Z' },
+      { userId: 'teacher', type: 'subject_pack_published', entityId: 'pack-1', metadata: { subject: 'business-studies' }, occurredAt: '2026-07-09T10:00:00Z' },
+    ];
+    const result = productLoopMetrics(rows, NOW);
+    expect(result.usefulActionWithin60Seconds).toEqual({ eligibleLearners: 1, learners: 1, rate: 100 });
+    expect(result.activatedAfterPlan).toEqual({ eligibleLearners: 1, learners: 1, rate: 100 });
+    expect(result.threeActiveDaysInSeven).toEqual({ activeLearners: 1, learners: 1, rate: 100 });
+    expect(result.publishedPackToEvidence).toEqual({ publishedPacks: 1, packsWithEvidence: 1, rate: 100 });
+  });
+
   test('returns a bounded, consented learning funnel and quality snapshot', async () => {
     const deps = dependencies({
       eventTotals: [

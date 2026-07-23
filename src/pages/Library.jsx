@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AcademicCapIcon, ArrowRightIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 import { useReveal } from '../lib/useReveal';
@@ -11,6 +11,7 @@ import LearningToday from '../components/learning/LearningToday';
 import ResumeLearningCard from '../components/learning/ResumeLearningCard';
 import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
 import { faculties } from '../data/hscSubjects';
+import api from '../services/api';
 
 /**
  * Resource Library — an HSC subject browser. Mostly a placeholder for now: the
@@ -43,21 +44,33 @@ const Library = () => {
   const { data: hubData, loading: hubLoading } = useLearningHubData(isAuthenticated);
   const [filterActive, setFilterActive] = useState(() => mySubjects.length > 0);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [publishedSubjects, setPublishedSubjects] = useState(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve(api.getPublishedSubjectPacks?.() || { subjectPacks: [] })
+      .then((data) => {
+        if (!cancelled) setPublishedSubjects(new Set((data?.subjectPacks || []).map((pack) => pack.subject)));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const { availableFaculties, comingFaculties, availableCount } = useMemo(() => {
+    const isAvailable = (subject) => subject.available || publishedSubjects.has(subject.slug);
     const filterSubjects = (subjects) => filterActive ? subjects.filter((subject) => mySubjects.includes(subject.name)) : subjects;
     const available = faculties
-      .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects.filter((subject) => subject.available)) }))
+      .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects.filter(isAvailable)) }))
       .filter((faculty) => faculty.subjects.length > 0);
     const coming = faculties
-      .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects.filter((subject) => !subject.available)) }))
+      .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects.filter((subject) => !isAvailable(subject))) }))
       .filter((faculty) => faculty.subjects.length > 0);
     return {
       availableFaculties: available,
       comingFaculties: coming,
-      availableCount: faculties.flatMap((faculty) => faculty.subjects).filter((subject) => subject.available).length,
+      availableCount: faculties.flatMap((faculty) => faculty.subjects).filter(isAvailable).length,
     };
-  }, [filterActive, mySubjects]);
+  }, [filterActive, mySubjects, publishedSubjects]);
 
   return (
     <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
@@ -92,7 +105,7 @@ const Library = () => {
         <LearningSection
           eyebrow="Ready now"
           title="Available subjects"
-          description={`${availableCount} complete subject library is available today. Keep your shortlist focused on what you actually study.`}
+          description={`${availableCount} complete subject ${availableCount === 1 ? 'library is' : 'libraries are'} available today. Keep your shortlist focused on what you actually study.`}
           className="reveal mb-16"
           action={<Link to="/library/economics" className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">Open Economics <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>}
         >

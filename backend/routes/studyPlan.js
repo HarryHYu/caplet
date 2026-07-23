@@ -124,6 +124,16 @@ router.post('/generate', async (req, res) => {
       generatedAt: generated.generatedAt
     };
     const plan = existing ? await existing.update(values) : await StudyPlan.create(values);
+    const { recordProductEvent } = require('../services/productEvents');
+    await recordProductEvent({
+      idempotencyKey: `study-plan-generated:${plan.id}:${generated.generatedAt}`,
+      type: 'study_plan_generated',
+      userId: req.user.id,
+      feature: 'study_plan',
+      entityType: 'study_plan',
+      entityId: plan.id,
+      metadata: { subjectCount: config.subjects.length, hasExamDate: Object.keys(config.examDates).length > 0 },
+    });
     res.status(existing ? 200 : 201).json({ studyPlan: serialize(plan), options: publicOptions() });
   } catch (error) {
     console.error('Generate study plan error:', error);

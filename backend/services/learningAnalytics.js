@@ -19,6 +19,8 @@ const FUNNEL_EVENTS = Object.freeze({
   feedback_viewed: 'feedbackViewedLearners',
   activity_completed: 'activityCompletedLearners',
   next_action_started: 'nextActionStartedLearners',
+  study_plan_generated: 'studyPlanGeneratedLearners',
+  subject_pack_published: 'subjectPackPublishedAuthors',
 });
 
 const TREND_EVENTS = Object.freeze([
@@ -68,6 +70,81 @@ function weeklyRetention(rows, now) {
     currentWeekActiveLearners: current.size,
     retainedLearners: retained,
     retentionRate: percentage(retained, previous.size),
+  };
+}
+
+function productLoopMetrics(rows, now) {
+  const ordered = [...(rows || [])].sort((left, right) => new Date(left.occurredAt) - new Date(right.occurredAt));
+  const viewed = ordered.filter((row) => row.type === 'learning_action_viewed' && row.userId);
+  const fastStarts = new Set();
+  viewed.forEach((view) => {
+    const viewAt = new Date(view.occurredAt).getTime();
+    const match = ordered.find((row) => row.type === 'next_action_started'
+      && String(row.userId) === String(view.userId)
+      && (!view.entityId || !row.entityId || String(row.entityId) === String(view.entityId))
+      && new Date(row.occurredAt).getTime() >= viewAt
+      && new Date(row.occurredAt).getTime() - viewAt <= 60_000);
+    if (match) fastStarts.add(String(view.userId));
+  });
+  const viewedLearners = new Set(viewed.map((row) => String(row.userId)));
+
+  const plans = ordered.filter((row) => row.type === 'study_plan_generated' && row.userId);
+  const activated = new Set();
+  plans.forEach((plan) => {
+    const planAt = new Date(plan.occurredAt).getTime();
+    const match = ordered.find((row) => ['practice_completed', 'diagnostic_completed'].includes(row.type)
+      && String(row.userId) === String(plan.userId)
+      && new Date(row.occurredAt).getTime() >= planAt
+      && new Date(row.occurredAt).getTime() - planAt <= 7 * DAY_MS);
+    if (match) activated.add(String(plan.userId));
+  });
+  const planLearners = new Set(plans.map((row) => String(row.userId)));
+
+  const weekStart = now.getTime() - 7 * DAY_MS;
+  const activeDays = new Map();
+  ordered.filter((row) => row.userId
+    && new Date(row.occurredAt).getTime() >= weekStart
+    && ['activity_completed', 'practice_completed', 'diagnostic_completed', 'lesson_completed'].includes(row.type))
+    .forEach((row) => {
+      const key = String(row.userId);
+      if (!activeDays.has(key)) activeDays.set(key, new Set());
+      activeDays.get(key).add(dateKey(row.occurredAt));
+    });
+  const threeDayLearners = [...activeDays.values()].filter((days) => days.size >= 3).length;
+
+  const published = ordered.filter((row) => row.type === 'subject_pack_published');
+  const evidencedPacks = new Set();
+  published.forEach((pack) => {
+    const subject = pack.metadata?.subject;
+    if (!subject) return;
+    const publishedAt = new Date(pack.occurredAt).getTime();
+    const match = ordered.find((row) => row.type === 'activity_completed'
+      && row.metadata?.subject === subject
+      && new Date(row.occurredAt).getTime() >= publishedAt);
+    if (match) evidencedPacks.add(String(pack.entityId || subject));
+  });
+
+  return {
+    usefulActionWithin60Seconds: {
+      eligibleLearners: viewedLearners.size,
+      learners: fastStarts.size,
+      rate: percentage(fastStarts.size, viewedLearners.size),
+    },
+    activatedAfterPlan: {
+      eligibleLearners: planLearners.size,
+      learners: activated.size,
+      rate: percentage(activated.size, planLearners.size),
+    },
+    threeActiveDaysInSeven: {
+      activeLearners: activeDays.size,
+      learners: threeDayLearners,
+      rate: percentage(threeDayLearners, activeDays.size),
+    },
+    publishedPackToEvidence: {
+      publishedPacks: published.length,
+      packsWithEvidence: evidencedPacks.size,
+      rate: percentage(evidencedPacks.size, published.length),
+    },
   };
 }
 
@@ -149,7 +226,7 @@ async function buildLearningAnalytics({
       raw: true,
     }),
     ProductEvent.findAll({
-      attributes: ['userId', 'type', 'occurredAt'],
+      attributes: ['userId', 'type', 'entityId', 'metadata', 'occurredAt'],
       where: {
         type: { [Op.in]: Object.keys(FUNNEL_EVENTS) },
         userId: { [Op.ne]: null },
@@ -293,6 +370,7 @@ async function buildLearningAnalytics({
       lessons: lessonJourney,
       learningLoop: learningLoopJourney,
       weeklyRetention: weeklyRetention(activityRows, now),
+      productLoop: productLoopMetrics(activityRows, now),
     },
     funnel,
     practiceSessions: {
@@ -317,4 +395,5 @@ module.exports = {
   percentage,
   TREND_DAYS,
   WINDOW_DAYS,
+  productLoopMetrics,
 };

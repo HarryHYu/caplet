@@ -24,7 +24,7 @@ describe('learningTodayService ranking', () => {
   });
 
   test('keeps recommendation context and adds the today source', () => {
-    const action = recommendationAction({ mode: 'weak-topic', reason: 'Needs work', outcome: { id: 'o1', title: 'Inflation' }, resourcePath: '/practice?mode=weak-topic' });
-    expect(action).toMatchObject({ id: 'recommendation:o1', title: 'Strengthen Inflation', href: '/practice?mode=weak-topic&source=today' });
+    const action = recommendationAction({ mode: 'weak-topic', reason: 'Needs work', studentTitle: 'Practise explaining inflation', outcome: { id: 'o1', title: 'Inflation' }, resourcePath: '/practice?mode=weak-topic' });
+    expect(action).toMatchObject({ id: 'recommendation:o1', title: 'Practise explaining inflation', href: '/practice?mode=weak-topic&source=today' });
   });
 });

@@ -57,7 +57,7 @@ function recommendationAction(recommendation) {
     id: `recommendation:${recommendation.outcome?.id || recommendation.mode || 'diagnostic'}`,
     type: 'recommendation',
     eyebrow: 'Recommended for you',
-    title: recommendation.outcome?.title ? `Strengthen ${recommendation.outcome.title}` : 'Build your first mastery signal',
+    title: recommendation.studentTitle || 'Build your first mastery signal',
     detail: recommendation.reason || 'A short practice set will help Caplet choose your next useful activity.',
     href: withSource(recommendation.resourcePath || `/practice?subject=${recommendation.subject || 'economics'}&mode=${recommendation.mode || 'diagnostic'}`),
     mode: recommendation.mode || 'diagnostic',
@@ -102,15 +102,19 @@ async function loadAssignedActions(userId, now) {
 }
 
 async function getLearningToday(userId, { now = new Date() } = {}) {
-  const [assignedActions, practice, exam, plan, dueReviewItems, progress, recommendation] = await Promise.all([
+  const [assignedActions, practice, exam, plan, dueReviewItems, progress] = await Promise.all([
     loadAssignedActions(userId, now),
     PracticeSession.findOne({ where: { userId, status: 'in_progress' }, order: [['lastActivityAt', 'DESC']] }),
     EconomicsExamSession.findOne({ where: { userId, status: 'in_progress' }, order: [['startedAt', 'DESC']] }),
     StudyPlan.findOne({ where: { userId } }),
     ReviewItem.findAll({ where: { userId, nextDueAt: { [Op.lte]: now } }, order: [['nextDueAt', 'ASC']] }),
     UserProgress.findOne({ where: { userId, status: 'in_progress', lessonId: { [Op.ne]: null } }, order: [['lastAccessedAt', 'DESC']] }),
-    getNextRecommendation(userId, 'economics'),
   ]);
+  const planSubjects = (plain(plan)?.subjects || []).map((subject) => (
+    subject === 'business' ? 'business-studies' : subject
+  ));
+  const recommendationSubject = planSubjects[0] || plain(practice)?.subject || 'economics';
+  const recommendation = await getNextRecommendation(userId, recommendationSubject);
 
   const actions = [...assignedActions];
   const practiceData = plain(practice);
@@ -124,7 +128,7 @@ async function getLearningToday(userId, { now = new Date() } = {}) {
       id: `practice:${practiceData.id}`,
       type: 'resume_practice',
       eyebrow: 'Continue learning',
-      title: practiceData.assignmentId ? 'Resume your assigned practice' : 'Resume your Economics practice',
+      title: practiceData.assignmentId ? 'Resume your assigned practice' : `Resume your ${practiceData.subject === 'business-studies' ? 'Business Studies' : 'Economics'} practice`,
       detail: total ? `Continue from question ${Math.min(Number(practiceData.currentIndex || 0) + 1, total)} of ${total}.` : 'Your latest answer and position are saved.',
       href: `/practice?subject=${encodeURIComponent(practiceData.subject)}&session=${practiceData.id}&source=today`,
       mode: practiceData.mode,
@@ -197,9 +201,9 @@ async function getLearningToday(userId, { now = new Date() } = {}) {
     id: 'recommendation:diagnostic',
     type: 'recommendation',
     eyebrow: 'Best place to start',
-    title: 'Take the quick Economics diagnostic',
+    title: `Take the quick ${recommendationSubject === 'business-studies' ? 'Business Studies' : 'Economics'} diagnostic`,
     detail: 'Five questions give Caplet the evidence it needs to choose your next useful activity.',
-    href: '/practice?subject=economics&mode=diagnostic&source=today',
+    href: `/practice?subject=${encodeURIComponent(recommendationSubject)}&mode=diagnostic&source=today`,
     mode: 'diagnostic',
     estimatedMinutes: 10,
     priority: 60,

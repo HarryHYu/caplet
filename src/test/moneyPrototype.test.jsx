@@ -78,7 +78,7 @@ beforeEach(() => {
   authState.isAuthenticated = true;
   authState.loading = false;
   featureFlagState.loading = false;
-  featureFlagState.enabled = {};
+  featureFlagState.enabled = { 'money.mode.pilot': true };
 });
 
 afterEach(() => cleanup());
@@ -86,7 +86,7 @@ afterEach(() => cleanup());
 describe('Money overview and indicator interactions', () => {
   it('turns a first-visit intent into one returning-student next action', async () => {
     const user = userEvent.setup();
-    featureFlagState.enabled = { 'money.private.persistence': true };
+    featureFlagState.enabled = { 'money.mode.pilot': true, 'money.private.persistence': true };
     render(<MemoryRouter initialEntries={['/money']}><MoneyOverview /></MemoryRouter>);
 
     expect(screen.getByRole('heading', { name: 'Money, made understandable.' })).toBeInTheDocument();
@@ -232,6 +232,7 @@ describe('Money tool availability', () => {
 
   it('shows gated tools when their flags and authentication allow access', () => {
     featureFlagState.enabled = {
+      'money.mode.pilot': true,
       'money.private.persistence': true,
       'money.financial_twin.enabled': true,
     };
@@ -347,14 +348,33 @@ describe('Money routing and mode persistence', () => {
   });
 
   it('only exposes Money navigation that the current user can open', () => {
-    const disabled = () => false;
-    const privateEnabled = (key) => key === 'money.private.persistence';
+    const pilotOnly = (key) => key === 'money.mode.pilot';
+    const privateEnabled = (key) => ['money.mode.pilot', 'money.private.persistence'].includes(key);
 
-    expect(availableMoneyNavigation({ isAuthenticated: true, isFeatureEnabled: disabled }).map((item) => item.label)).not.toContain('My Money');
+    expect(availableMoneyNavigation({ isAuthenticated: true, isFeatureEnabled: pilotOnly }).map((item) => item.label)).not.toContain('My Money');
     expect(availableMoneyNavigation({ isAuthenticated: true, isFeatureEnabled: privateEnabled }).map((item) => item.label)).toContain('My Money');
     expect(canAccessMoneyRoute('/money/my-money', { isAuthenticated: true, featureFlagsLoading: true, isFeatureEnabled: privateEnabled })).toBe(false);
     expect(canAccessMoneyRoute('/money/my-money', { isAuthenticated: false, isFeatureEnabled: privateEnabled })).toBe(false);
-    expect(canAccessMoneyRoute('/money/tools/savings-goal', { isAuthenticated: false, isFeatureEnabled: disabled })).toBe(true);
+    expect(canAccessMoneyRoute('/money/tools/savings-goal', { isAuthenticated: false, isFeatureEnabled: pilotOnly })).toBe(true);
+  });
+
+  it('hides Money and redirects direct visits when the pilot is disabled', async () => {
+    featureFlagState.enabled = {};
+    render(
+      <MemoryRouter initialEntries={['/money']}>
+        <LayoutProvider>
+          <ProductModeSwitch />
+          <Routes>
+            <Route path="/money" element={<MoneyRouteGate><div>Money pilot</div></MoneyRouteGate>} />
+            <Route path="/dashboard" element={<><div>Study dashboard</div><LocationView /></>} />
+          </Routes>
+        </LayoutProvider>
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Money' })).not.toBeInTheDocument();
+    expect(await screen.findByText('Study dashboard')).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('/dashboard');
   });
 
   it('preserves old tool bookmarks, query strings and hashes', async () => {

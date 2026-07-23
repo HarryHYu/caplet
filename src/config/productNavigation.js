@@ -48,6 +48,7 @@ export function canAccessMoneyRoute(
 ) {
   const pathname = route.split(/[?#]/, 1)[0];
   if (!isMoneyPath(pathname)) return false;
+  if (featureFlagsLoading || !isFeatureEnabled('money.mode.pilot')) return false;
   const requirement = MONEY_ROUTE_REQUIREMENTS.find(
     ({ prefix }) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );

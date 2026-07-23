@@ -37,7 +37,6 @@ describe('Dashboard study plan handoff', () => {
     api.getClasses.mockResolvedValue({ teaching: [], student: [] });
     api.getSavedSlides.mockResolvedValue({ savedSlides: [] });
     api.getDueReviewItems.mockResolvedValue({ items: [] });
-    api.getEconomicsExamSessions.mockResolvedValue({ sessions: [] });
     api.getNextRecommendation.mockResolvedValue({ recommendation: null });
     api.getLearningToday.mockResolvedValue({ actions: [] });
     api.getStudyStreak.mockResolvedValue({
@@ -79,9 +78,8 @@ describe('Dashboard study plan handoff', () => {
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
-    const setupLinks = await screen.findAllByRole('link', { name: /Set up my plan/i });
-    expect(setupLinks).toHaveLength(2);
-    setupLinks.forEach((link) => expect(link).toHaveAttribute('href', '/study-plan'));
+    const setupLink = await screen.findByRole('link', { name: /Set up my plan/i });
+    expect(setupLink).toHaveAttribute('href', '/study-plan');
     expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
   });
 
@@ -91,8 +89,8 @@ describe('Dashboard study plan handoff', () => {
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
     expect(await screen.findByRole('heading', { name: '2 days' })).toBeInTheDocument();
-    expect(screen.getByText('One meaningful study action today keeps it alive.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Study now/i })).toHaveAttribute('href', '/practice?subject=economics&mode=diagnostic&source=today');
+    expect(screen.getByText('One useful action today keeps it alive.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Start next/i })).toHaveAttribute('href', '/practice?subject=economics&mode=diagnostic&source=today');
   });
 
 });

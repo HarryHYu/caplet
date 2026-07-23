@@ -13,7 +13,7 @@ vi.mock('../contexts/AuthContext', () => ({
 }));
 
 vi.mock('../contexts/FeatureFlagContext', () => ({
-  useFeatureFlags: () => ({ loading: false, isEnabled: () => false }),
+  useFeatureFlags: () => ({ loading: false, isEnabled: (key) => key === 'money.mode.pilot' }),
 }));
 
 afterEach(() => cleanup());

@@ -1,5 +1,34 @@
 const { Op } = require('sequelize');
 
+const SUBJECT_LABELS = {
+  economics: 'Economics',
+  'business-studies': 'Business Studies',
+  business: 'Business Studies',
+};
+
+function studentPracticeTitle(title, subject = 'economics') {
+  const value = String(title || '').trim();
+  if (!value) return `Take a five-question ${SUBJECT_LABELS[subject] || 'subject'} diagnostic`;
+  const rewrites = [
+    [/^Uses?\s+/i, 'using '],
+    [/^Explains?\s+/i, 'explaining '],
+    [/^Analyses?\s+/i, 'analysing '],
+    [/^Examines?\s+/i, 'examining '],
+    [/^Evaluates?\s+/i, 'evaluating '],
+    [/^Applies?\s+/i, 'applying '],
+    [/^Apply\s+/i, 'applying '],
+    [/^Demonstrates?\s+/i, 'demonstrating '],
+    [/^Describes?\s+/i, 'describing '],
+    [/^Assesses?\s+/i, 'assessing '],
+    [/^Investigates?\s+/i, 'investigating '],
+  ];
+  const match = rewrites.find(([pattern]) => pattern.test(value));
+  const task = match
+    ? value.replace(match[0], match[1])
+    : `${value.charAt(0).toLowerCase()}${value.slice(1)}`;
+  return `Practise ${task}`;
+}
+
 function scoreCandidate(state, now = new Date()) {
   const probability = Number(state.probability || 0.2);
   const retention = Number(state.retentionStrength || 0);
@@ -33,6 +62,7 @@ function diagnosticRecommendation(subject) {
     reason: 'Complete a short diagnostic so Caplet can personalise your learning.',
     subject,
     outcome: null,
+    studentTitle: `Take a five-question ${SUBJECT_LABELS[subject] || 'subject'} diagnostic`,
     resourcePath: `/practice?subject=${encodeURIComponent(subject)}&mode=diagnostic`,
     estimatedMinutes: 10,
     score: 100,
@@ -83,6 +113,7 @@ async function getNextRecommendation(userId, subject = 'economics', options = {}
         code: candidate.outcome.code,
         title: candidate.outcome.title,
       },
+      studentTitle: studentPracticeTitle(candidate.outcome.title, subject),
       resourcePath: `/practice?subject=${encodeURIComponent(subject)}&mode=${mode}&outcomeId=${encodeURIComponent(candidate.outcome.id)}`,
       estimatedMinutes: 10,
       score: candidate.score,
@@ -92,4 +123,10 @@ async function getNextRecommendation(userId, subject = 'economics', options = {}
   return diagnosticRecommendation(subject);
 }
 
-module.exports = { diagnosticRecommendation, getNextRecommendation, reasonFor, scoreCandidate };
+module.exports = {
+  diagnosticRecommendation,
+  getNextRecommendation,
+  reasonFor,
+  scoreCandidate,
+  studentPracticeTitle,
+};

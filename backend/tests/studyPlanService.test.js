@@ -47,12 +47,11 @@ describe('studyPlanService', () => {
     expect(validateConfig(config)).toEqual([]);
   });
 
-  test('rejects incomplete diagnostics and dates', () => {
+  test('rejects incomplete diagnostics while allowing unknown exam dates', () => {
     const config = normalizeConfig({ yearLevel: '12', subjects: ['economics'], goal: 'Improve' });
-    expect(validateConfig(config)).toEqual(expect.arrayContaining([
-      expect.stringContaining('exam date'),
+    expect(validateConfig(config)).toEqual([
       expect.stringContaining('diagnostic')
-    ]));
+    ]);
   });
 
   test('builds the next seven calendar days using only real routes and requested minutes', () => {

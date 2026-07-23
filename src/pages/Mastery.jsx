@@ -104,7 +104,7 @@ function NextAction({ recommendation, subject }) {
             {recommendation.estimatedMinutes && <span>· {recommendation.estimatedMinutes} min</span>}
           </div>
           <h2 className="mt-3 text-3xl font-display font-extrabold tracking-tight text-white">
-            {recommendation.outcome?.title ? `Strengthen ${recommendation.outcome.title}` : 'Continue your recommended practice'}
+            {recommendation.studentTitle || 'Continue your recommended practice'}
           </h2>
           <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/80">
             {recommendation.reason || 'This activity is the strongest next step from your recent learning evidence.'}

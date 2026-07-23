@@ -9,6 +9,7 @@ const {
   findAccessiblePack,
   importSubjectPack,
   listSubjectPacks,
+  listPublishedSubjectPacks,
   publishSubjectPack,
   reopenReviewItem,
   resolveReviewItem,
@@ -20,6 +21,15 @@ const {
 } = require('../services/subjectPackService');
 
 const router = express.Router();
+
+router.get('/published', async (req, res, next) => {
+  try {
+    res.json({ subjectPacks: await listPublishedSubjectPacks(req.query.subject) });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.use(requireAuth);
 
 function requireSubjectAuthor(req, res, next) {

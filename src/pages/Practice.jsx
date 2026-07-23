@@ -177,7 +177,7 @@ function RecommendationCard({ recommendation, starting, onStart }) {
             <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Recommended for you
           </p>
           <h2 className="mt-3 text-3xl font-display font-extrabold tracking-tight text-white">
-            {recommendation.outcome?.title ? `Strengthen ${recommendation.outcome.title}` : 'Take your next best step'}
+            {recommendation.studentTitle || 'Take your next best step'}
           </h2>
           <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/80">
             {recommendation.reason || 'Chosen from your latest mastery evidence and review schedule.'}

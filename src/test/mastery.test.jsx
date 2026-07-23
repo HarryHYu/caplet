@@ -56,6 +56,7 @@ const RECOMMENDATION = {
     mode: 'weak-topic',
     subject: 'economics',
     reason: 'Your recent evidence shows this outcome needs reinforcement.',
+    studentTitle: 'Practise explaining monetary policy',
     outcome: { id: 'child-1', code: 'E12.3', title: 'Monetary policy' },
     estimatedMinutes: 10,
   },
@@ -84,7 +85,7 @@ describe('Mastery', () => {
     expect(screen.getByText('3 attempts')).toBeInTheDocument();
     expect(screen.getAllByText('Due for review')).toHaveLength(2);
     expect(screen.getByText('cash-rate-is-inflation')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Strengthen Monetary policy' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Practise explaining monetary policy' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Start now/i })).toHaveAttribute(
       'href',
       '/practice?subject=economics&mode=weak-topic&outcomeId=child-1',

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowPathIcon,
@@ -46,6 +46,7 @@ export default function StudyPlan() {
   const [recommendation, setRecommendation] = useState(null);
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
   const [taskNotice, setTaskNotice] = useState('');
+  const onboardingErrorRef = useRef(null);
 
   useReveal(undefined, [loading, plan, editing, step, recommendation]);
 
@@ -91,7 +92,6 @@ export default function StudyPlan() {
     if (step === 1) {
       if (!form.goal.trim()) return 'Add a study goal.';
       if (!form.availableDays.length) return 'Choose at least one study day.';
-      if (selectedSubjects.some((subject) => !form.examDates[subject.value])) return 'Add an exam date for every subject.';
     }
     if (step === 2 && selectedSubjects.some((subject) => !Number.isInteger(form.diagnosticAnswers[subject.value]))) {
       return 'Answer each quick diagnostic question.';
@@ -101,14 +101,22 @@ export default function StudyPlan() {
 
   const next = () => {
     const message = validateStep();
-    if (message) return setError(message);
+    if (message) {
+      setError(message);
+      requestAnimationFrame(() => onboardingErrorRef.current?.focus());
+      return;
+    }
     setError('');
     setStep((value) => Math.min(2, value + 1));
   };
 
   const generate = async () => {
     const message = validateStep();
-    if (message) return setError(message);
+    if (message) {
+      setError(message);
+      requestAnimationFrame(() => onboardingErrorRef.current?.focus());
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -182,6 +190,7 @@ export default function StudyPlan() {
         step={step}
         setStep={setStep}
         error={error}
+        errorRef={onboardingErrorRef}
         saving={saving}
         next={next}
         generate={generate}
@@ -225,7 +234,7 @@ export default function StudyPlan() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--mark-green)]">Live evidence update</p>
               <h2 className="mt-2 text-2xl font-display font-extrabold text-text-primary">
-                {recommendation.outcome?.title || 'Add a diagnostic signal'}
+                {recommendation.studentTitle || recommendation.outcome?.title || 'Add a diagnostic signal'}
               </h2>
               <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">{recommendation.reason}</p>
             </div>
@@ -316,7 +325,7 @@ export default function StudyPlan() {
   );
 }
 
-function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, setStep, error, saving, next, generate, cancel }) {
+function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, setStep, error, errorRef, saving, next, generate, cancel }) {
   const [subjectQuery, setSubjectQuery] = useState('');
   const visibleSubjects = options.subjects.filter((subject) => subject.label.toLowerCase().includes(subjectQuery.trim().toLowerCase()));
   const toggleSubject = (subject) => setForm((current) => ({
@@ -391,9 +400,10 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
               <input id="minutes-per-study-day" type="range" min="15" max="120" step="5" value={form.minutesPerDay} aria-valuetext={`${form.minutesPerDay} minutes per study day`} onChange={(event) => setForm((current) => ({ ...current, minutesPerDay: Number(event.target.value) }))} className="mt-4 w-full accent-[var(--accent)]" />
               <p className="mt-2 text-sm font-bold text-accent">{form.minutesPerDay} minutes</p>
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                <p className="sm:col-span-2 text-sm font-medium text-text-muted">Exam dates are optional. Add one if you know it; your plan will still work if you do not.</p>
                 {selectedSubjects.map((subject) => (
                   <label key={subject.value} htmlFor={`exam-date-${subject.value}`} className="text-sm font-bold text-text-muted">
-                    {subject.label} exam date
+                    {subject.label} exam date <span className="font-medium text-text-dim">(optional)</span>
                     <input id={`exam-date-${subject.value}`} type="date" value={form.examDates[subject.value] || ''} onChange={(event) => setForm((current) => ({ ...current, examDates: { ...current.examDates, [subject.value]: event.target.value } }))} className="mt-2 block w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft" />
                   </label>
                 ))}
@@ -421,7 +431,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
           )}
           </div>
 
-          {error && <div role="alert" className="animate-slide-up mt-7 flex items-center gap-3 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error"><ExclamationTriangleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />{error}</div>}
+          {error && <div ref={errorRef} tabIndex="-1" role="alert" className="animate-slide-up mt-7 flex items-center gap-3 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error outline-none focus:ring-4 focus:ring-[color:var(--border-error)]"><ExclamationTriangleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />{error}</div>}
 
           <div className="mt-9 flex items-center justify-between gap-3 border-t border-line-soft pt-6">
             <div>

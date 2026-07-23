@@ -15,6 +15,7 @@ export default function ProductModeSwitch({ collapsed = false, className = '' })
     lastStudyRoute = '/dashboard',
     lastMoneyRoute = '/money',
   } = useLayout();
+  const moneyPilotEnabled = !featureFlagsLoading && isEnabled('money.mode.pilot');
   const selectMode = (mode) => {
     if (mode === productMode) return;
     setProductMode?.(mode);
@@ -41,7 +42,7 @@ export default function ProductModeSwitch({ collapsed = false, className = '' })
     >
       {[
         { value: 'study', label: 'Study', icon: BookOpenIcon },
-        { value: 'money', label: 'Money', icon: BanknotesIcon },
+        ...(moneyPilotEnabled ? [{ value: 'money', label: 'Money', icon: BanknotesIcon }] : []),
       ].map((mode) => {
         const selected = productMode === mode.value;
         const ModeIcon = mode.icon;

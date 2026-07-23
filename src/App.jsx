@@ -233,10 +233,17 @@ function RequireAdmin({ children }) {
   return children;
 }
 
-// The approved prototype routes stay directly accessible. Higher-risk future
-// surfaces, such as Financial Twin, retain their own explicit feature gate.
+// The entire Money surface is a deliberate pilot. Higher-risk private tools
+// retain their own additional gates inside this boundary.
 function MoneyPilot({ children }) {
-  return children;
+  return (
+    <MoneyRouteGate
+      fallbackPath="/dashboard"
+      unavailableMessage="Money is currently available to a small pilot group."
+    >
+      {children}
+    </MoneyRouteGate>
+  );
 }
 
 function AppRoutes() {

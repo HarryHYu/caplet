@@ -145,6 +145,7 @@ export default function Metrics() {
   const learningFunnel = learning?.funnel || {};
   const learningMastery = learning?.mastery || {};
   const practiceSessions = learning?.practiceSessions;
+  const productLoop = learning?.measurement?.productLoop || {};
   const dailyTrend = learning?.dailyTrend || [];
   const learningWindow = Number(learning?.windowDays) || 30;
   const trendDays = Number(learning?.trendDays) || dailyTrend.length;
@@ -259,6 +260,33 @@ export default function Metrics() {
                 detail={`${fmtNum(learning?.measurement?.weeklyRetention?.retainedLearners ?? 0)} returned from the prior week`}
               />
             </dl>
+
+            <div className="mt-10">
+              <h3 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Product outcomes</h3>
+              <p className="mt-2 text-sm text-text-dim">The behaviours Caplet is designed to create, with denominators shown instead of vanity totals.</p>
+              <dl className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <LearningKpi
+                  label="Useful action in 60 seconds"
+                  value={fmtRate(productLoop.usefulActionWithin60Seconds?.rate ?? 0)}
+                  detail={`${fmtNum(productLoop.usefulActionWithin60Seconds?.learners ?? 0)} of ${fmtNum(productLoop.usefulActionWithin60Seconds?.eligibleLearners ?? 0)} learners`}
+                />
+                <LearningKpi
+                  label="Plan to first practice"
+                  value={fmtRate(productLoop.activatedAfterPlan?.rate ?? 0)}
+                  detail={`${fmtNum(productLoop.activatedAfterPlan?.learners ?? 0)} of ${fmtNum(productLoop.activatedAfterPlan?.eligibleLearners ?? 0)} activated`}
+                />
+                <LearningKpi
+                  label="Three active days"
+                  value={fmtRate(productLoop.threeActiveDaysInSeven?.rate ?? 0)}
+                  detail={`${fmtNum(productLoop.threeActiveDaysInSeven?.learners ?? 0)} of ${fmtNum(productLoop.threeActiveDaysInSeven?.activeLearners ?? 0)} active learners`}
+                />
+                <LearningKpi
+                  label="Published pack to evidence"
+                  value={fmtRate(productLoop.publishedPackToEvidence?.rate ?? 0)}
+                  detail={`${fmtNum(productLoop.publishedPackToEvidence?.packsWithEvidence ?? 0)} of ${fmtNum(productLoop.publishedPackToEvidence?.publishedPacks ?? 0)} packs`}
+                />
+              </dl>
+            </div>
 
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
               <article className="rounded-3xl bg-surface-raised p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">

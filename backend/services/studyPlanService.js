@@ -29,8 +29,8 @@ const SUBJECTS = {
       answer: 0
     },
     resources: [
-      { label: 'Browse Business courses', path: '/courses', kind: 'Learn' },
-      { label: 'Practise an extended response', path: '/essays', kind: 'Practise' }
+      { label: 'Business Studies library', path: '/library/business-studies', kind: 'Learn' },
+      { label: 'Business Studies practice', path: '/practice?subject=business-studies&mode=daily&source=study_plan', kind: 'Practise' }
     ]
   },
   legal: {
@@ -303,7 +303,6 @@ function validateConfig(config) {
   if (!config.goal) errors.push('Add a study goal');
   if (!config.availableDays.length) errors.push('Choose at least one study day');
   config.subjects.forEach((subject) => {
-    if (!config.examDates[subject]) errors.push(`Add an exam date for ${SUBJECTS[subject].label}`);
     if (!Number.isInteger(config.diagnosticAnswers[subject])) {
       errors.push(`Complete the ${SUBJECTS[subject].label} diagnostic`);
     }
@@ -423,7 +422,7 @@ function generatePlan(configInput, { marker = null, recommendation = null, exist
     weakTopics,
     tasks,
     sourceFingerprint: [markerData?.fingerprint, masteryData?.fingerprint].filter(Boolean).join('|') || diagnosticFingerprint(config),
-    signalSummary: [masteryData?.summary, markerData?.summary].filter(Boolean).join(' ') || 'Built from your quick subject diagnostic and exam deadlines.',
+    signalSummary: [masteryData?.summary, markerData?.summary].filter(Boolean).join(' ') || 'Built from your quick subject diagnostic, weekly availability, and any exam dates you know.',
     generatedAt: new Date(now).toISOString()
   };
 }

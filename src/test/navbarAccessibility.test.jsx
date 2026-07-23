@@ -34,7 +34,7 @@ describe('Navbar accessibility', () => {
     expect(screen.queryByRole('link', { name: 'Classes' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Study' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Money' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByRole('button', { name: 'Money' })).not.toBeInTheDocument();
   });
 
   it('keeps theme and navigation layout controls in settings', () => {

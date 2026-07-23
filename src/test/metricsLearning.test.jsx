@@ -67,6 +67,12 @@ const METRICS = {
       recommendations: { started: 8, completedAfterStart: 2, rate: 25 },
       lessons: { started: 6, completedAfterStart: 4, rate: 66.7 },
       weeklyRetention: { previousWeekActiveLearners: 5, currentWeekActiveLearners: 6, retainedLearners: 3, retentionRate: 60 },
+      productLoop: {
+        usefulActionWithin60Seconds: { eligibleLearners: 10, learners: 7, rate: 70 },
+        activatedAfterPlan: { eligibleLearners: 5, learners: 3, rate: 60 },
+        threeActiveDaysInSeven: { activeLearners: 8, learners: 4, rate: 50 },
+        publishedPackToEvidence: { publishedPacks: 2, packsWithEvidence: 1, rate: 50 },
+      },
     },
     mastery: {
       totalStates: 10,
@@ -103,9 +109,12 @@ describe('Metrics learning impact', () => {
     expect(within(section).getByText('9 ordered completions')).toBeInTheDocument();
     expect(within(section).getByText('25.0%')).toBeInTheDocument();
     expect(within(section).getByText('2 accepted after display')).toBeInTheDocument();
-    expect(within(section).getByText('60.0%')).toBeInTheDocument();
+    expect(within(section).getAllByText('60.0%')).not.toHaveLength(0);
     expect(within(section).getByText('3 returned from the prior week')).toBeInTheDocument();
     expect(within(section).getByText(/3 of 4 sessions completed/)).toBeInTheDocument();
+    expect(within(section).getByText('Useful action in 60 seconds')).toBeInTheDocument();
+    expect(within(section).getByText('7 of 10 learners')).toBeInTheDocument();
+    expect(within(section).getByText('1 of 2 packs')).toBeInTheDocument();
     expect(within(section).getByRole('progressbar', { name: 'Mastered: 40%' })).toHaveAttribute('aria-valuenow', '40');
     expect(within(section).getByRole('progressbar', { name: 'Needs support: 30%' })).toHaveAttribute('aria-valuenow', '30');
   });

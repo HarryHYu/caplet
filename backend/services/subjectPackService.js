@@ -620,6 +620,43 @@ async function listSubjectPacks(user) {
   return Promise.all(packs.map((pack) => serializePack(pack, { includeContent: false, includeReviewItems: false })));
 }
 
+async function listPublishedSubjectPacks(subject = null) {
+  const { CurriculumOutcome, SubjectPack } = require('../models');
+  const where = {
+    lifecycleStatus: 'published',
+    ...(subject ? { subject: String(subject).trim().toLowerCase() } : {}),
+  };
+  const packs = await SubjectPack.findAll({ where, order: [['publishedAt', 'DESC'], ['updatedAt', 'DESC']] });
+  return Promise.all(packs.map(async (pack) => {
+    const outcomes = await CurriculumOutcome.findAll({
+      where: { curriculumEditionId: pack.curriculumEditionId, isActive: true },
+      attributes: ['id', 'code', 'title', 'description', 'yearLevel', 'sortOrder'],
+      order: [['sortOrder', 'ASC'], ['code', 'ASC']],
+    });
+    const row = plain(pack);
+    return {
+      id: row.id,
+      key: row.key,
+      title: row.title,
+      description: row.description,
+      subject: row.subject,
+      jurisdiction: row.jurisdiction,
+      syllabusName: row.title,
+      syllabusVersion: row.syllabusVersion,
+      sourceDocuments: (row.sourceDocuments || []).map(({ title, url, publisher, effectiveFrom, effectiveTo }) => ({
+        title, url, publisher, effectiveFrom, effectiveTo,
+      })),
+      publishedAt: row.publishedAt,
+      outcomes: outcomes.map(plain),
+      studentLinks: {
+        diagnostic: `/practice?subject=${encodeURIComponent(row.subject)}&mode=diagnostic&source=subject-library`,
+        practice: `/practice?subject=${encodeURIComponent(row.subject)}&mode=daily&source=subject-library`,
+        mastery: `/mastery?subject=${encodeURIComponent(row.subject)}`,
+      },
+    };
+  }));
+}
+
 async function findAccessiblePack(packId, user, options = {}) {
   const { SubjectPack } = require('../models');
   const pack = await SubjectPack.findByPk(packId);
@@ -1164,6 +1201,7 @@ module.exports = {
   createSubjectPackVersion,
   importSubjectPack,
   listSubjectPacks,
+  listPublishedSubjectPacks,
   parseOutcomesFromText,
   publishSubjectPack,
   reopenReviewItem,

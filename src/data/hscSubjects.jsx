@@ -166,7 +166,7 @@ export const faculties = [
     text: 'text-coral',
     subjects: [
       { name: 'Economics', tag: 'Year 11–12', glyph: glyphs.economics, slug: 'economics', available: true },
-      { name: 'Business Studies', tag: 'Year 11–12', glyph: glyphs.business },
+      { name: 'Business Studies', tag: 'Year 11–12', glyph: glyphs.business, slug: 'business-studies' },
     ],
   },
 ];

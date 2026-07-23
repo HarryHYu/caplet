@@ -931,6 +931,11 @@ class ApiService {
     return this.request('/subject-packs');
   }
 
+  async getPublishedSubjectPacks(subject) {
+    const query = subject ? `?subject=${encodeURIComponent(subject)}` : '';
+    return this.request(`/subject-packs/published${query}`);
+  }
+
   async getSubjectPack(packId) {
     return this.request(`/subject-packs/${encodeURIComponent(packId)}`);
   }

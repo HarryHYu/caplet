@@ -6,9 +6,14 @@ jest.mock('../models', () => ({
 }));
 
 const models = require('../models');
-const { getNextRecommendation } = require('../services/recommendationEngine');
+const { getNextRecommendation, studentPracticeTitle } = require('../services/recommendationEngine');
 
 describe('recommendationEngine', () => {
+  test('turns syllabus wording into a student action', () => {
+    expect(studentPracticeTitle('Uses economic terms and concepts')).toBe('Practise using economic terms and concepts');
+    expect(studentPracticeTitle('Analyse policy')).toBe('Practise analysing policy');
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     models.CurriculumOutcome.findAll.mockResolvedValue([
