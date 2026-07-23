@@ -7,6 +7,7 @@ import { useLearningHubData } from '../lib/useLearningHubData';
 import { useAuth } from '../contexts/AuthContext';
 import Glyph from '../components/SubjectGlyph';
 import LearningNextAction from '../components/learning/LearningNextAction';
+import LearningToday from '../components/learning/LearningToday';
 import ResumeLearningCard from '../components/learning/ResumeLearningCard';
 import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
 import { faculties } from '../data/hscSubjects';
@@ -68,12 +69,11 @@ const Library = () => {
           className="reveal mb-10"
         />
 
-        <LearningNextAction
-          {...hubData.nextAction}
-          source="learn_hub"
-          trackingEnabled={isAuthenticated}
-          className="reveal mb-12"
-        />
+        {isAuthenticated && hubData.todayActions.length > 0 ? (
+          <LearningToday actions={hubData.todayActions} source="learn_hub" className="reveal mb-12" />
+        ) : (
+          <LearningNextAction {...hubData.nextAction} source="learn_hub" trackingEnabled={isAuthenticated} className="reveal mb-12" />
+        )}
 
         {hubData.partialErrors.length > 0 && (
           <div role="status" className="mb-10 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">

@@ -6,7 +6,7 @@ import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import ClassIcon from '../components/ClassIcon';
-import LearningNextAction from '../components/learning/LearningNextAction';
+import LearningToday from '../components/learning/LearningToday';
 import {
     BookOpenIcon,
     AcademicCapIcon,
@@ -20,14 +20,6 @@ import {
     ClockIcon,
     WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
-
-function activePracticeId() {
-    try {
-        return JSON.parse(window.localStorage.getItem('caplet.practice.active.economics') || 'null')?.id || '';
-    } catch {
-        return '';
-    }
-}
 
 function StudyMomentumPanel({ momentum, actionPath, actionLabel }) {
     const recentDays = Array.isArray(momentum.activityDays) ? momentum.activityDays.slice(-14) : [];
@@ -87,12 +79,9 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
     const [savedSlides, setSavedSlides] = useState([]);
-    const [dueCount, setDueCount] = useState(0);
-    const [studyPlan, setStudyPlan] = useState(null);
     const [examSessions, setExamSessions] = useState([]);
-    const [nextRecommendation, setNextRecommendation] = useState(null);
     const [studyMomentum, setStudyMomentum] = useState(null);
-    const [activePractice, setActivePractice] = useState(null);
+    const [todayActions, setTodayActions] = useState([]);
     const [loadError, setLoadError] = useState('');
     const [retryKey, setRetryKey] = useState(0);
     const [availability, setAvailability] = useState({ progress: true, classes: true });
@@ -111,28 +100,21 @@ export default function Dashboard() {
         const fetchData = async () => {
             setLoading(true);
             setLoadError('');
-            const practiceSessionId = activePracticeId();
             const results = await Promise.allSettled([
                     api.getUserProgress(),
                     api.getClasses(),
                     api.getSavedSlides(),
-                    api.getDueReviewItems(),
-                    api.getStudyPlan(),
                     api.getEconomicsExamSessions(),
-                    api.getNextRecommendation('economics'),
                     api.getStudyStreak(),
-                    practiceSessionId ? api.getPracticeSession(practiceSessionId) : Promise.resolve(null),
+                    api.getLearningToday(),
                 ]);
             const valueAt = (index) => results[index].status === 'fulfilled' ? results[index].value : null;
             const progressData = valueAt(0);
             const classesData = valueAt(1);
             const savedSlidesData = valueAt(2);
-            const dueData = valueAt(3);
-            const studyPlanData = valueAt(4);
-            const examSessionsData = valueAt(5);
-            const recommendationData = valueAt(6);
-            const momentumData = valueAt(7);
-            const practiceData = valueAt(8);
+            const examSessionsData = valueAt(3);
+            const momentumData = valueAt(4);
+            const todayData = valueAt(5);
 
             try {
                 setUserProgress(progressData?.progress || []);
@@ -142,13 +124,9 @@ export default function Dashboard() {
                 ];
                 setClasses(allClasses);
                 setSavedSlides(savedSlidesData?.savedSlides || []);
-                setDueCount(dueData?.items?.length || 0);
-                setStudyPlan(studyPlanData?.studyPlan || null);
                 setExamSessions(examSessionsData?.sessions || []);
-                setNextRecommendation(recommendationData?.recommendation || null);
                 setStudyMomentum(momentumData?.momentum || null);
-                const practiceSession = practiceData?.session || practiceData;
-                setActivePractice(practiceSession?.id && practiceSession.status === 'in_progress' ? practiceSession : null);
+                setTodayActions(todayData?.actions || []);
                 const nextAvailability = { progress: Boolean(progressData), classes: Boolean(classesData) };
                 setAvailability(nextAvailability);
                 if (!nextAvailability.progress || !nextAvailability.classes) {
@@ -197,18 +175,9 @@ export default function Dashboard() {
     const lastCourseResumePath = lastAccessedCourse && lastAccessed?.lessonId
         ? `/courses/${lastAccessedCourse.id}/lessons/${lastAccessed.lessonId}${Number(lastAccessed.lastSlideIndex) > 0 ? `?slide=${lastAccessed.lastSlideIndex}` : ''}`
         : lastAccessedCourse ? `/courses/${lastAccessedCourse.id}` : '/courses';
-    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-    const nextStudyTask = [...(studyPlan?.tasks || [])]
-        .filter(task => !task.completed)
-        .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] || null;
     const activeExam = examSessions.find((session) => session.status === 'in_progress') || null;
     const recentExam = examSessions.find((session) => session.status === 'submitted') || null;
     const examPath = (session) => `/library/economics/exam-practice/${session.packId}/session?session=${session.id}`;
-    const recommendationPath = nextRecommendation?.resourcePath || `/practice?${new URLSearchParams({
-        subject: nextRecommendation?.subject || 'economics',
-        mode: nextRecommendation?.mode || 'diagnostic',
-        ...(nextRecommendation?.outcome?.id ? { outcomeId: nextRecommendation.outcome.id } : {}),
-    }).toString()}`;
     const quickActions = [
         { path: '/practice', label: 'Practice', description: 'Work through a focused question set.', icon: ArrowPathIcon, block: 'block-blue' },
         { path: '/mastery', label: 'Mastery', description: 'See what to strengthen next.', icon: CheckCircleIcon, block: 'block-green' },
@@ -246,8 +215,8 @@ export default function Dashboard() {
                 {studyMomentum && (
                     <StudyMomentumPanel
                         momentum={studyMomentum}
-                        actionPath={!studyPlan || nextStudyTask ? '/study-plan' : recommendationPath}
-                        actionLabel={!studyPlan ? 'Set up my plan' : null}
+                        actionPath={todayActions[0]?.href || '/study-plan'}
+                        actionLabel={todayActions[0] ? 'Study now' : 'Set up my plan'}
                     />
                 )}
 
@@ -260,28 +229,16 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                <LearningNextAction
-                    source="dashboard"
-                    resume={activePractice ? {
-                        href: `/practice?subject=economics&session=${activePractice.id}&source=dashboard`,
-                        title: 'Resume your Economics practice',
-                        detail: `Continue from question ${Math.min(Number(activePractice.currentIndex || 0) + 1, Number(activePractice.totalQuestions || 1))} of ${activePractice.totalQuestions || 1}.`,
-                        mode: activePractice.mode,
-                    } : null}
-                    recommendation={nextStudyTask ? null : nextRecommendation}
-                    studyTask={nextStudyTask ? {
-                        href: nextStudyTask.resourcePath || '/study-plan',
-                        eyebrow: nextStudyTask.dueDate === today ? 'Today’s next task' : 'Next study task',
-                        title: nextStudyTask.title,
-                        detail: `${nextStudyTask.subjectLabel} · ${nextStudyTask.estimatedMinutes} minutes`,
-                    } : !studyPlan ? {
-                        href: '/study-plan',
-                        eyebrow: 'Your first step',
-                        title: 'Build your weekly study plan',
-                        detail: 'Choose your subjects, study days and exam dates so Caplet can give you one useful next task.',
-                    } : null}
-                    className="reveal mb-8"
-                />
+                {todayActions.length > 0 ? (
+                    <LearningToday actions={todayActions} source="dashboard" className="reveal mb-8" />
+                ) : (
+                    <section className="reveal mb-8 rounded-3xl block-blue p-7 md:p-9">
+                        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Caplet Today</p>
+                        <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">Build your weekly study plan</h2>
+                        <p className="mt-2 text-sm font-medium text-text-muted">Choose your subjects and available days so Caplet can line up one useful next step.</p>
+                        <Link to="/study-plan" className="btn-primary mt-6">Set up my plan <ArrowRightIcon className="h-4 w-4" /></Link>
+                    </section>
+                )}
 
                 {(activeExam || recentExam) && (
                     <section className="reveal mb-8 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
@@ -304,32 +261,6 @@ export default function Dashboard() {
                             <Link to={examPath(recentExam)} className="group rounded-3xl bg-block-cream p-7 transition-transform hover:-translate-y-1"><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-text-dim">Latest result</p><p className="mt-3 font-display text-4xl font-extrabold tracking-tight text-text-primary">{recentExam.estimatedMark}/{recentExam.availableMarks}</p><p className="mt-2 text-sm font-bold text-text-muted truncate">{recentExam.packTitle}</p><span className="mt-6 inline-flex items-center gap-2 text-sm font-extrabold text-accent">Review results <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span></Link>
                         ) : null}
                     </section>
-                )}
-
-                {/* Due for review — the day's spaced-repetition nudge; only shown when something is actually due */}
-                {dueCount > 0 && (
-                    <Link
-                        to="/revision"
-                        className="reveal group mb-20 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between block-amber rounded-3xl p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-1 transition-transform duration-200"
-                    >
-                        <div className="flex items-center gap-5">
-                            <span className="grid place-items-center w-14 h-14 shrink-0 rounded-2xl bg-surface-raised shadow-[0_16px_36px_-30px_rgba(20,20,18,0.3)]">
-                                <ArrowPathIcon className="w-7 h-7 text-accent" />
-                            </span>
-                            <div>
-                                <p className="font-display font-extrabold tracking-tight text-2xl md:text-3xl text-text-primary leading-tight">
-                                    {dueCount} {dueCount === 1 ? 'item' : 'items'} due for review today
-                                </p>
-                                <p className="text-sm font-bold text-text-muted mt-1.5">
-                                    A few minutes of spaced review keeps it from fading.
-                                </p>
-                            </div>
-                        </div>
-                        <span className="shrink-0 inline-flex items-center gap-2 rounded-2xl bg-accent px-6 py-3 text-sm font-bold text-white group-hover:bg-accent-strong transition-colors">
-                            Review now
-                            <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </span>
-                    </Link>
                 )}
 
                 {/* Stats Matrix */}

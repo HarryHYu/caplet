@@ -23,7 +23,8 @@ describe('learning hub view model', () => {
       courseProgress: [{ courseId: 'course-1', status: 'in_progress', progressPercentage: 50, nextLesson: { id: 'lesson-2', lastSlideIndex: 3 } }],
     });
 
-    expect(Object.keys(data)).toEqual(['nextAction', 'continueItems', 'availableSubjects', 'learningPaths', 'comingSubjects', 'partialErrors']);
+    expect(Object.keys(data)).toEqual(['todayActions', 'nextAction', 'continueItems', 'availableSubjects', 'learningPaths', 'comingSubjects', 'partialErrors']);
+    expect(data.todayActions).toEqual([]);
     expect(data.availableSubjects).toHaveLength(1);
     expect(data.comingSubjects).toHaveLength(1);
     expect(data.learningPaths[0].href).toBe('/courses/course-1/lessons/lesson-2?slide=3');

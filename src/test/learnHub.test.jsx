@@ -7,10 +7,7 @@ const { authState, api } = vi.hoisted(() => ({
   api: {
     getCourses: vi.fn(),
     getCourseProgressSummaries: vi.fn(),
-    getEconomicsExamSessions: vi.fn(),
-    getStudyPlan: vi.fn(),
-    getNextRecommendation: vi.fn(),
-    getPracticeSession: vi.fn(),
+    getLearningToday: vi.fn(),
     logEvent: vi.fn(),
   },
 }));
@@ -29,10 +26,7 @@ beforeEach(() => {
   window.localStorage.clear();
   api.getCourses.mockResolvedValue({ courses: [] });
   api.getCourseProgressSummaries.mockResolvedValue({ courses: [] });
-  api.getEconomicsExamSessions.mockResolvedValue({ sessions: [] });
-  api.getStudyPlan.mockResolvedValue({ studyPlan: null });
-  api.getNextRecommendation.mockResolvedValue({ recommendation: null });
-  api.getPracticeSession.mockResolvedValue(null);
+  api.getLearningToday.mockResolvedValue({ actions: [] });
 });
 
 afterEach(() => {
@@ -48,18 +42,19 @@ describe('Learn hub', () => {
     expect(screen.getByRole('link', { name: /Take the quick Economics diagnostic/i })).toHaveAttribute('href', expect.stringContaining('mode=diagnostic'));
     expect(screen.getByRole('link', { name: /Open Economics/i })).toHaveAttribute('href', '/library/economics');
     await waitFor(() => expect(api.getCourses).toHaveBeenCalledOnce());
-    expect(api.getStudyPlan).not.toHaveBeenCalled();
+    expect(api.getLearningToday).not.toHaveBeenCalled();
   });
 
   it('shows signed-in next tasks and resumable courses', async () => {
     authState.authenticated = true;
     api.getCourses.mockResolvedValue({ courses: [{ id: 'course-1', title: 'Economics foundations', shortDescription: 'A complete path.', duration: 60, level: 'beginner', modules: [{ lessons: [{ id: 'lesson-1' }] }] }] });
     api.getCourseProgressSummaries.mockResolvedValue({ courses: [{ courseId: 'course-1', status: 'in_progress', progressPercentage: 40, nextLesson: { id: 'lesson-1', title: 'Scarcity' } }] });
-    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [{ title: 'Review scarcity', reason: 'Due today', resourcePath: '/practice?mode=daily', completed: false, dueDate: '2026-07-18' }] } });
+    api.getLearningToday.mockResolvedValue({ actions: [{ id: 'study-task:1', type: 'study_task', position: 1, eyebrow: 'Today’s study plan', title: 'Review scarcity', detail: 'Economics · 20 minutes', href: '/practice?mode=daily' }] });
 
     renderHub();
 
-    expect(await screen.findByRole('link', { name: /Review scarcity/i })).toHaveAttribute('href', '/practice?mode=daily');
+    expect(await screen.findByRole('link', { name: /Start next/i })).toHaveAttribute('href', '/practice?mode=daily');
+    expect(screen.getByText('Review scarcity')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ready to resume Economics foundations/i })).toHaveAttribute('href', '/courses/course-1/lessons/lesson-1');
     const progressIndicators = screen.getAllByRole('progressbar', { name: /Economics foundations progress/i });
     expect(progressIndicators).toHaveLength(2);

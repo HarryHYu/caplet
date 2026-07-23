@@ -14,6 +14,16 @@ const {
 const router = express.Router();
 router.use(requireAuth);
 
+router.get('/learning/today', async (req, res) => {
+  try {
+    const today = await require('../services/learningTodayService').getLearningToday(req.user.id);
+    res.json(today);
+  } catch (error) {
+    console.error('Get learning today error:', error);
+    res.status(500).json({ message: 'Could not choose today’s learning actions.' });
+  }
+});
+
 router.get('/mastery', async (req, res) => {
   try {
     const { CurriculumOutcome, MasteryState } = require('../models');
