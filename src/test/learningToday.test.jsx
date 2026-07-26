@@ -9,7 +9,7 @@ import LearningToday from '../components/learning/LearningToday';
 
 const actions = [
   { id: 'assignment:1', type: 'assignment', position: 1, eyebrow: 'Teacher assigned', title: 'Inflation checkpoint', detail: 'Due within 24 hours', href: '/practice?mode=assigned' },
-  { id: 'review:due', type: 'review', position: 2, eyebrow: 'Due for review', title: '3 items are ready for retrieval', detail: 'Keep this learning available.', href: '/revision' },
+  { id: 'review:due', type: 'review', position: 2, eyebrow: 'Due for review', title: '3 items are ready for retrieval', detail: 'Keep this learning available.', href: '/review' },
 ];
 
 describe('LearningToday', () => {
@@ -23,6 +23,6 @@ describe('LearningToday', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Show me something else' }));
     expect(screen.getByRole('heading', { name: '3 items are ready for retrieval' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Start next/i })).toHaveAttribute('href', '/revision');
+    expect(screen.getByRole('link', { name: /Start next/i })).toHaveAttribute('href', '/review');
   });
 });

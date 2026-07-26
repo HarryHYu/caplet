@@ -3,6 +3,7 @@ const {
   AssignmentSubmission,
   ClassMembership,
   EconomicsExamSession,
+  MasteryState,
   OutcomeAssignmentConfig,
   PracticeSession,
   ReviewItem,
@@ -102,12 +103,26 @@ async function loadAssignedActions(userId, now) {
 }
 
 async function getLearningToday(userId, { now = new Date() } = {}) {
-  const [assignedActions, practice, exam, plan, dueReviewItems, progress] = await Promise.all([
+  const [assignedActions, practice, exam, plan, dueReviewItems, dueOutcomeCount, progress] = await Promise.all([
     loadAssignedActions(userId, now),
     PracticeSession.findOne({ where: { userId, status: 'in_progress' }, order: [['lastActivityAt', 'DESC']] }),
     EconomicsExamSession.findOne({ where: { userId, status: 'in_progress' }, order: [['startedAt', 'DESC']] }),
     StudyPlan.findOne({ where: { userId } }),
-    ReviewItem.findAll({ where: { userId, nextDueAt: { [Op.lte]: now } }, order: [['nextDueAt', 'ASC']] }),
+    ReviewItem.findAll({
+      where: {
+        userId,
+        itemType: { [Op.ne]: 'outcome' },
+        nextDueAt: { [Op.lte]: now },
+      },
+      order: [['nextDueAt', 'ASC']],
+    }),
+    MasteryState.count({
+      where: {
+        userId,
+        evidenceCount: { [Op.gt]: 0 },
+        nextReviewAt: { [Op.lte]: now },
+      },
+    }),
     UserProgress.findOne({ where: { userId, status: 'in_progress', lessonId: { [Op.ne]: null } }, order: [['lastAccessedAt', 'DESC']] }),
   ]);
   const planSubjects = (plain(plan)?.subjects || []).map((subject) => (
@@ -176,13 +191,14 @@ async function getLearningToday(userId, { now = new Date() } = {}) {
     priority: 55,
   });
 
-  if (dueReviewItems.length) actions.push({
+  const dueReviewCount = dueReviewItems.length + dueOutcomeCount;
+  if (dueReviewCount) actions.push({
     id: 'review:due',
     type: 'review',
     eyebrow: 'Due for review',
-    title: `${dueReviewItems.length} ${dueReviewItems.length === 1 ? 'item is' : 'items are'} ready for retrieval`,
+    title: `${dueReviewCount} ${dueReviewCount === 1 ? 'item is' : 'items are'} ready for retrieval`,
     detail: 'A few minutes of spaced review will help keep this learning available.',
-    href: '/revision?source=today',
+    href: '/review?source=today',
     priority: 40,
   });
 

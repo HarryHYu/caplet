@@ -1,6 +1,9 @@
 process.env.JWT_SECRET = 'test-jwt-secret-for-review-tests';
 
 jest.mock('../models/ReviewItem');
+jest.mock('../services/reviewQueueService', () => ({
+  getReviewQueue: jest.fn(),
+}));
 // Bypass real JWT auth: inject a fixed user.
 jest.mock('../middleware/auth', () => ({
   requireAuth: (req, _res, next) => {
@@ -12,6 +15,7 @@ jest.mock('../middleware/auth', () => ({
 const request = require('supertest');
 const express = require('express');
 const ReviewItem = require('../models/ReviewItem');
+const { getReviewQueue } = require('../services/reviewQueueService');
 const reviewRouter = require('../routes/review');
 
 const createTestApp = () => {
@@ -27,6 +31,23 @@ describe('Review routes (shared spaced-repetition scheduler)', () => {
   beforeEach(() => {
     app = createTestApp();
     jest.clearAllMocks();
+  });
+
+  describe('GET /api/review/queue', () => {
+    it('returns one hydrated mixed review queue for the signed-in user', async () => {
+      getReviewQueue.mockResolvedValue({
+        totalDue: 3,
+        estimatedMinutes: 5,
+        groups: [{ id: 'outcomes', count: 1 }],
+        items: [{ id: 'outcome:o1', itemType: 'outcome', itemId: 'o1' }],
+      });
+
+      const res = await request(app).get('/api/review/queue');
+
+      expect(res.status).toBe(200);
+      expect(getReviewQueue).toHaveBeenCalledWith('test-user-1');
+      expect(res.body.queue).toMatchObject({ totalDue: 3, estimatedMinutes: 5 });
+    });
   });
 
   describe('GET /api/review/due', () => {

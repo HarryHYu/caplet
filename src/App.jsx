@@ -62,6 +62,7 @@ const LessonPlayer = lazy(() => import('./pages/LessonPlayer'));
 const CourseComplete = lazy(() => import('./pages/CourseComplete'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Revision = lazy(() => import('./pages/Revision'));
+const Review = lazy(() => import('./pages/Review'));
 const EssayMemoriser = lazy(() => import('./pages/EssayMemoriser'));
 const EconomicsMarker = lazy(() => import('./pages/EconomicsMarker'));
 const EconomicsExam = lazy(() => import('./pages/EconomicsExam'));
@@ -254,10 +255,12 @@ function AppRoutes() {
           <Route path="/study-plan" element={<RequireAuth><StudyPlan /></RequireAuth>} />
           <Route path="/practice" element={<RequireAuth><Practice /></RequireAuth>} />
           <Route path="/mastery" element={<RequireAuth><Mastery /></RequireAuth>} />
+          <Route path="/review" element={<RequireAuth><Review /></RequireAuth>} />
           <Route path="/curriculum-studio" element={<RequireAuth><CurriculumStudio /></RequireAuth>} />
           <Route path="/curriculum-studio/:packId" element={<RequireAuth><CurriculumStudio /></RequireAuth>} />
           <Route path="/teacher/onboarding" element={<RequireAuth><TeacherOnboarding /></RequireAuth>} />
-          <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
+          <Route path="/revision" element={<RequireAuth><Navigate to="/review?source=legacy" replace /></RequireAuth>} />
+          <Route path="/saved-slides" element={<RequireAuth><Revision /></RequireAuth>} />
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
           <Route path="/edutools/economics-marker" element={<RequireAuth><EconomicsMarker /></RequireAuth>} />
           <Route path="/library/economics/exam-practice/:packId/session" element={<RequireAuth><EconomicsExam /></RequireAuth>} />

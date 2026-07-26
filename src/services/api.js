@@ -703,6 +703,10 @@ class ApiService {
   }
 
   // Spaced repetition (shared scheduler across saved slides, essays, quotes)
+  async getReviewQueue() {
+    return this.request('/review/queue');
+  }
+
   async getDueReviewItems(itemType) {
     const qs = itemType ? `?itemType=${encodeURIComponent(itemType)}` : '';
     return this.request(`/review/due${qs}`);

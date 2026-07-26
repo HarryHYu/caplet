@@ -56,7 +56,7 @@ export default function Sidebar() {
         { path: '/study-plan', label: 'Study plan', icon: CalendarDaysIcon },
         { path: '/practice', label: 'Practice', icon: ArrowPathIcon },
         { path: '/mastery', label: 'Mastery', icon: ChartBarIcon },
-        { path: '/revision', label: 'Revision', icon: BookmarkIcon },
+        { path: '/review', label: 'Review', icon: BookmarkIcon },
         { path: '/essays', label: 'Essays', icon: DocumentTextIcon },
         { path: '/library', label: 'Learn', icon: BookOpenIcon },
         { path: '/classes', label: 'Classes', icon: UserGroupIcon },

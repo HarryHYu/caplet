@@ -12,6 +12,7 @@ const express = require('express');
 const { Op } = require('sequelize');
 const ReviewItem = require('../models/ReviewItem');
 const { requireAuth } = require('../middleware/auth');
+const { getReviewQueue } = require('../services/reviewQueueService');
 const { nextReview, normalizeRecall } = require('../services/srsScheduler');
 
 const router = express.Router();
@@ -20,6 +21,17 @@ router.use(requireAuth);
 // Kinds of reviewable items the scheduler currently accepts. Extending this set
 // is the only change needed to schedule a new kind of item.
 const ALLOWED_ITEM_TYPES = new Set(['savedSlide', 'essayParagraph', 'quote', 'outcome']);
+
+// GET /api/review/queue
+// Hydrates every due review source into one bounded, mixed retrieval queue.
+router.get('/queue', async (req, res) => {
+  try {
+    res.json({ queue: await getReviewQueue(req.user.id) });
+  } catch (e) {
+    console.error('Get review queue error:', e);
+    res.status(500).json({ message: 'Could not build your review queue.' });
+  }
+});
 
 // GET /api/review/due[?itemType=savedSlide]
 // Returns the user's review items that are due now, soonest first.

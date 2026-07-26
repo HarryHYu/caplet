@@ -36,7 +36,7 @@ describe('Study sidebar navigation', () => {
     expect(screen.getByRole('link', { name: 'Study plan' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('href', '/practice');
     expect(screen.getByRole('link', { name: 'Mastery' })).toHaveAttribute('href', '/mastery');
-    expect(screen.getByRole('link', { name: 'Revision' })).toHaveAttribute('href', '/revision');
+    expect(screen.getByRole('link', { name: 'Review' })).toHaveAttribute('href', '/review');
     expect(screen.getByRole('link', { name: 'Essays' })).toHaveAttribute('href', '/essays');
     expect(screen.getByRole('link', { name: 'Learn' })).toHaveAttribute('href', '/library');
     expect(screen.queryByRole('link', { name: 'Courses' })).not.toBeInTheDocument();

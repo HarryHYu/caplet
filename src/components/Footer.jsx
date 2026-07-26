@@ -25,7 +25,7 @@ const columns = [
     links: [
       { label: 'Dashboard', path: '/dashboard' },
       { label: 'Personal study plan', path: '/study-plan' },
-      { label: 'Revision queue', path: '/revision' },
+      { label: 'Review queue', path: '/review' },
       { label: 'Essay memoriser', path: '/essays' },
       { label: 'Education tools', path: '/edutools' },
     ],
