@@ -3,6 +3,33 @@ const ECONOMICS_QUESTION_BANK = require('../data/economicsQuestionBank.json');
 const { validateQuestion } = require('./questionValidation');
 
 let seedPromise = null;
+const EXPECTED_OUTCOME_COUNT = Object.keys(ECONOMICS_OUTCOMES).length;
+const EXPECTED_QUESTION_COUNT = ECONOMICS_QUESTION_BANK.filter((question) => question.prompt).length;
+
+async function isEconomicsQuestionBankReady(models) {
+  const { CurriculumOutcome, Question } = models;
+  if (typeof CurriculumOutcome?.count !== 'function' || typeof Question?.count !== 'function') return false;
+
+  const [outcomeCount, questionCount] = await Promise.all([
+    CurriculumOutcome.count({
+      where: {
+        jurisdiction: 'NSW',
+        subject: 'economics',
+        syllabusVersion: 'NSW-2025',
+        isActive: true,
+      },
+    }),
+    Question.count({
+      where: {
+        subject: 'economics',
+        sourceKey: ECONOMICS_QUESTION_BANK.map((question) => question.sourceKey),
+      },
+    }),
+  ]);
+
+  // The two year-level parents sit above the assessable syllabus outcomes.
+  return outcomeCount >= EXPECTED_OUTCOME_COUNT + 2 && questionCount >= EXPECTED_QUESTION_COUNT;
+}
 
 function answerFromLetter(answer, options = []) {
   if (typeof answer !== 'string') return answer ?? null;
@@ -187,6 +214,15 @@ async function ensureEconomicsQuestionBank() {
   if (seedPromise) return seedPromise;
   seedPromise = (async () => {
     const { CurriculumOutcome, CurriculumEdition, Question, QuestionOutcome } = require('../models');
+    if (await isEconomicsQuestionBankReady({ CurriculumOutcome, Question })) {
+      return {
+        outcomes: EXPECTED_OUTCOME_COUNT,
+        questions: EXPECTED_QUESTION_COUNT,
+        created: 0,
+        ready: true,
+      };
+    }
+
     const currentEdition = CurriculumEdition?.findOne
       ? await CurriculumEdition.findOne({ where: { key: 'NSW-ECO-2025' } })
       : null;
@@ -278,5 +314,6 @@ module.exports = {
   answerFromLetter,
   buildEconomicsQuestionBank,
   ensureEconomicsQuestionBank,
+  isEconomicsQuestionBankReady,
   normaliseResource,
 };

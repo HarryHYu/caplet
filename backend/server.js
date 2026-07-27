@@ -211,6 +211,10 @@ const startServer = async () => {
     // Seed production database if in production
     if (process.env.NODE_ENV === 'production') {
       await seedProductionDatabase();
+      // Mastery and Practice share this packaged bank. Prepare it before the
+      // server accepts traffic so the first learner request never waits on a
+      // large set of database inserts after a deploy or cold restart.
+      await require('./services/questionBankService').ensureEconomicsQuestionBank();
     }
 
     // Enforce configured retention without delaying boot. Consent records and
