@@ -92,4 +92,30 @@ describe('getReviewQueue', () => {
       repairPrompt: 'Apply Markets and institutions to a different real-world example.',
     });
   });
+
+  test('returns the available queue when one legacy review source fails', async () => {
+    models.MasteryState.findAll.mockRejectedValue(new Error('legacy mastery row'));
+    models.SavedSlide.findAll.mockResolvedValue([{
+      id: 'slide-1',
+      slideIndex: 0,
+      createdAt: new Date('2026-07-21T00:00:00.000Z'),
+      lesson: {
+        title: 'Market failure',
+        slides: [{ type: 'content', title: 'Externalities', body: 'External costs affect third parties.' }],
+      },
+      course: { title: 'Economics' },
+    }]);
+    models.ReviewItem.findAll
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    const queue = await getReviewQueue('user-1', {
+      now: new Date('2026-07-26T00:00:00.000Z'),
+    });
+
+    expect(queue.totalDue).toBe(1);
+    expect(queue.items).toEqual([
+      expect.objectContaining({ itemType: 'savedSlide', itemId: 'slide-1' }),
+    ]);
+  });
 });

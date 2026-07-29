@@ -4,12 +4,16 @@ import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 
 export default function MoneyRouteGate({
   children,
-  flagKey = 'money.mode.pilot',
+  flagKey = null,
   fallbackPath = '/dashboard',
   unavailableMessage = '',
 }) {
   const location = useLocation();
   const { loading, isEnabled } = useFeatureFlags();
+
+  // Core Money learning, public data, and calculators are part of Caplet.
+  // Only higher-risk private/personalised surfaces pass an explicit flag.
+  if (!flagKey) return children;
 
   if (loading) {
     return (

@@ -358,23 +358,23 @@ describe('Money routing and mode persistence', () => {
     expect(canAccessMoneyRoute('/money/tools/savings-goal', { isAuthenticated: false, isFeatureEnabled: pilotOnly })).toBe(true);
   });
 
-  it('hides Money and redirects direct visits when the pilot is disabled', async () => {
+  it('keeps core Money available when optional financial flags are disabled', async () => {
     featureFlagState.enabled = {};
     render(
       <MemoryRouter initialEntries={['/money']}>
         <LayoutProvider>
           <ProductModeSwitch />
           <Routes>
-            <Route path="/money" element={<MoneyRouteGate><div>Money pilot</div></MoneyRouteGate>} />
+            <Route path="/money" element={<MoneyRouteGate><div>Money learning</div></MoneyRouteGate>} />
             <Route path="/dashboard" element={<><div>Study dashboard</div><LocationView /></>} />
           </Routes>
         </LayoutProvider>
       </MemoryRouter>,
     );
 
-    expect(screen.queryByRole('button', { name: 'Money' })).not.toBeInTheDocument();
-    expect(await screen.findByText('Study dashboard')).toBeInTheDocument();
-    expect(screen.getByTestId('location')).toHaveTextContent('/dashboard');
+    expect(screen.getByRole('button', { name: 'Money' })).toBeInTheDocument();
+    expect(await screen.findByText('Money learning')).toBeInTheDocument();
+    expect(screen.queryByText('Study dashboard')).not.toBeInTheDocument();
   });
 
   it('preserves old tool bookmarks, query strings and hashes', async () => {

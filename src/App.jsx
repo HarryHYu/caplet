@@ -239,17 +239,10 @@ function RequireAdmin({ children }) {
   return children;
 }
 
-// The entire Money surface is a deliberate pilot. Higher-risk private tools
-// retain their own additional gates inside this boundary.
+// Core Money learning and calculators are always available. Higher-risk
+// private and personalised tools retain their own explicit gates.
 function MoneyPilot({ children }) {
-  return (
-    <MoneyRouteGate
-      fallbackPath="/dashboard"
-      unavailableMessage="Money is currently available to a small pilot group."
-    >
-      {children}
-    </MoneyRouteGate>
-  );
+  return children;
 }
 
 function AppRoutes() {

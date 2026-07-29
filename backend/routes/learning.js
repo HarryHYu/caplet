@@ -28,13 +28,24 @@ router.get('/mastery', async (req, res) => {
   try {
     const { CurriculumOutcome, MasteryState } = require('../models');
     const subject = String(req.query.subject || 'economics').toLowerCase();
-    if (subject === 'economics') await require('../services/questionBankService').ensureEconomicsQuestionBank();
+    const bankWarmup = subject === 'economics'
+      ? require('../services/questionBankService').ensureEconomicsQuestionBank().catch((error) => {
+          console.error('Economics question bank warmup error:', error.message);
+          return null;
+        })
+      : null;
     const syllabusVersion = subject === 'economics'
       ? String(req.query.syllabusVersion || 'NSW-2009')
       : null;
     const where = { subject, isActive: true };
     if (syllabusVersion) where.syllabusVersion = syllabusVersion;
-    const outcomes = await CurriculumOutcome.findAll({ where, order: [['sortOrder', 'ASC'], ['code', 'ASC']] });
+    let outcomes = await CurriculumOutcome.findAll({ where, order: [['sortOrder', 'ASC'], ['code', 'ASC']] });
+    // A populated mastery map should never wait on a large reconciliation.
+    // A brand-new database still waits once so the first response is useful.
+    if (!outcomes.length && bankWarmup) {
+      await bankWarmup;
+      outcomes = await CurriculumOutcome.findAll({ where, order: [['sortOrder', 'ASC'], ['code', 'ASC']] });
+    }
     const states = outcomes.length
       ? await MasteryState.findAll({ where: { userId: req.user.id, outcomeId: { [Op.in]: outcomes.map((outcome) => outcome.id) } } })
       : [];

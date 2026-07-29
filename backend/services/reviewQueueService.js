@@ -225,6 +225,15 @@ function groupSummary(items) {
   });
 }
 
+async function availableRows(label, operation) {
+  try {
+    return await operation;
+  } catch (error) {
+    console.error(`Review queue ${label} source error:`, error.message);
+    return [];
+  }
+}
+
 async function getReviewQueue(userId, { now = new Date(), limit = REVIEW_LIMIT } = {}) {
   const {
     Course,
@@ -238,7 +247,7 @@ async function getReviewQueue(userId, { now = new Date(), limit = REVIEW_LIMIT }
   } = require('../models');
 
   const [states, slides, scheduledEssayItems] = await Promise.all([
-    MasteryState.findAll({
+    availableRows('mastery', MasteryState.findAll({
       where: {
         userId,
         evidenceCount: { [Op.gt]: 0 },
@@ -246,28 +255,28 @@ async function getReviewQueue(userId, { now = new Date(), limit = REVIEW_LIMIT }
       },
       include: [{ association: 'outcome', required: true }],
       order: [['nextReviewAt', 'ASC']],
-    }),
-    SavedSlide.findAll({
+    })),
+    availableRows('saved slides', SavedSlide.findAll({
       where: { userId },
       include: [
         { model: Lesson, as: 'lesson', attributes: ['id', 'title', 'slides'] },
         { model: Course, as: 'course', attributes: ['id', 'title'] },
       ],
       order: [['createdAt', 'ASC']],
-    }),
-    ReviewItem.findAll({
+    })),
+    availableRows('essay schedule', ReviewItem.findAll({
       where: {
         userId,
         itemType: { [Op.in]: ['essayParagraph', 'quote'] },
         nextDueAt: { [Op.lte]: now },
       },
       order: [['nextDueAt', 'ASC']],
-    }),
+    })),
   ]);
 
   const outcomeIds = states.map((state) => String(state.outcomeId));
   const mappings = outcomeIds.length
-    ? await QuestionOutcome.findAll({
+    ? await availableRows('outcome questions', QuestionOutcome.findAll({
       where: { outcomeId: { [Op.in]: outcomeIds } },
       include: [{
         model: Question,
@@ -276,7 +285,7 @@ async function getReviewQueue(userId, { now = new Date(), limit = REVIEW_LIMIT }
         where: { lifecycleStatus: { [Op.in]: QUESTION_STATUSES } },
       }],
       order: [['isPrimary', 'DESC'], ['createdAt', 'ASC']],
-    })
+    }))
     : [];
   const questionsByOutcome = new Map();
   mappings.forEach((mapping) => {
@@ -290,15 +299,17 @@ async function getReviewQueue(userId, { now = new Date(), limit = REVIEW_LIMIT }
 
   const slideIds = slides.map((slide) => String(slide.id));
   const slideReviews = slideIds.length
-    ? await ReviewItem.findAll({
+    ? await availableRows('saved slide schedule', ReviewItem.findAll({
       where: { userId, itemType: 'savedSlide', itemId: { [Op.in]: slideIds } },
-    })
+    }))
     : [];
   const slideReviewById = new Map(slideReviews.map((review) => [String(review.itemId), plain(review)]));
 
   const essayRefs = scheduledEssayItems.map((review) => parseEssayItemId(review.itemId)).filter(Boolean);
   const essayIds = [...new Set(essayRefs.map((ref) => ref.essayId))];
-  const essays = essayIds.length ? await Essay.findAll({ where: { userId, id: { [Op.in]: essayIds } } }) : [];
+  const essays = essayIds.length
+    ? await availableRows('essays', Essay.findAll({ where: { userId, id: { [Op.in]: essayIds } } }))
+    : [];
   const essayById = new Map(essays.map((essay) => [String(essay.id), essay]));
 
   const items = [
@@ -336,4 +347,5 @@ module.exports = {
   parseEssayItemId,
   questionAnswer,
   reviewSort,
+  availableRows,
 };
