@@ -15,6 +15,7 @@ import CapletLoader from './components/CapletLoader';
 import MarkerCursor from './components/MarkerCursor';
 import MoneyMobileNav from './components/MoneyMobileNav';
 import MoneyRouteGate from './components/MoneyRouteGate';
+import StudyCoachDrawer from './components/StudyCoachDrawer';
 import ProductModeRouteSync from './components/ProductModeRouteSync';
 import LegacyMoneyRedirect from './components/LegacyMoneyRedirect';
 import { FinancialAssumptions } from './components/AccessibleUI';
@@ -70,6 +71,8 @@ const Library = lazy(() => import('./pages/Library'));
 const LibrarySubject = lazy(() => import('./pages/LibrarySubject'));
 const ResourceLibrary = lazy(() => import('./pages/ResourceLibrary'));
 const Login = lazy(() => import('./pages/Login'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Register = lazy(() => import('./pages/Register'));
 const Classes = lazy(() => import('./pages/Classes'));
 const ClassDetail = lazy(() => import('./pages/ClassDetail'));
@@ -252,6 +255,8 @@ function AppRoutes() {
     <Routes>
           <Route path="/" element={<HomeOrRedirect />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/study-plan" element={<RequireAuth><StudyPlan /></RequireAuth>} />
           <Route path="/practice" element={<RequireAuth><Practice /></RequireAuth>} />
           <Route path="/mastery" element={<RequireAuth><Mastery /></RequireAuth>} />
@@ -358,7 +363,7 @@ function AppShell() {
 
   // Pages that suppress all chrome (their own full-bleed layouts).
   const bareChrome =
-    ['/login', '/register', '/play'].includes(pathname) ||
+    ['/login', '/register', '/forgot-password', '/reset-password', '/play'].includes(pathname) ||
     pathname.startsWith('/guardian-consent/') ||
     pathname.startsWith('/live/host');
 
@@ -404,6 +409,7 @@ function AppShell() {
           </ContentLandmark>
           <Footer />
           {moneyModeRoute && <MoneyMobileNav />}
+          {!moneyModeRoute && <StudyCoachDrawer />}
         </div>
       </div>
     );
@@ -414,17 +420,18 @@ function AppShell() {
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <RouteMetadata />
       {!isAuthenticated && <MarkerCursor />}
-      <Navbar hideOnTablet />
-      <TabletPublicNavbar />
-      <TabletDashboardNavbar />
+      {!bareChrome && <Navbar hideOnTablet />}
+      {!bareChrome && <TabletPublicNavbar />}
+      {!bareChrome && <TabletDashboardNavbar />}
       <ContentLandmark id="main-content" tabIndex="-1" className="flex-grow">
         <Suspense fallback={<FullPageSpinner />}>
           <AppRoutes />
         </Suspense>
         <FinancialRouteDisclosure />
       </ContentLandmark>
-      <Footer />
-      {moneyModeRoute && <MoneyMobileNav />}
+      {!bareChrome && <Footer />}
+      {!bareChrome && moneyModeRoute && <MoneyMobileNav />}
+      {!bareChrome && !moneyModeRoute && <StudyCoachDrawer />}
     </div>
   );
 }

@@ -10,7 +10,8 @@ import LearningNextAction from '../components/learning/LearningNextAction';
 import LearningToday from '../components/learning/LearningToday';
 import ResumeLearningCard from '../components/learning/ResumeLearningCard';
 import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
-import { faculties } from '../data/hscSubjects';
+import { facultiesForYear } from '../data/hscSubjects';
+import { stageForYear } from '../data/nswSubjectCatalog';
 import api from '../services/api';
 
 /**
@@ -40,7 +41,7 @@ const SubjectChip = ({ subject, faculty, picked, onToggle }) => (
 const Library = () => {
   useReveal();
   const { isAuthenticated } = useAuth();
-  const { mySubjects, toggleSubject } = useMySubjects();
+  const { mySubjects, toggleSubject, subjectYear, setSubjectYear, selectionNotice } = useMySubjects();
   const { data: hubData, loading: hubLoading } = useLearningHubData(isAuthenticated);
   const [filterActive, setFilterActive] = useState(() => mySubjects.length > 0);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -56,21 +57,23 @@ const Library = () => {
     return () => { cancelled = true; };
   }, []);
 
+  const selectedFaculties = useMemo(() => facultiesForYear(subjectYear), [subjectYear]);
+  const selectedStage = stageForYear(subjectYear);
   const { availableFaculties, comingFaculties, availableCount } = useMemo(() => {
     const isAvailable = (subject) => subject.available || publishedSubjects.has(subject.slug);
     const filterSubjects = (subjects) => filterActive ? subjects.filter((subject) => mySubjects.includes(subject.name)) : subjects;
-    const available = faculties
+    const available = selectedFaculties
       .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects.filter(isAvailable)) }))
       .filter((faculty) => faculty.subjects.length > 0);
-    const coming = faculties
+    const coming = selectedFaculties
       .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects.filter((subject) => !isAvailable(subject))) }))
       .filter((faculty) => faculty.subjects.length > 0);
     return {
       availableFaculties: available,
       comingFaculties: coming,
-      availableCount: faculties.flatMap((faculty) => faculty.subjects).filter(isAvailable).length,
+      availableCount: selectedFaculties.flatMap((faculty) => faculty.subjects).filter(isAvailable).length,
     };
-  }, [filterActive, mySubjects, publishedSubjects]);
+  }, [filterActive, mySubjects, publishedSubjects, selectedFaculties]);
 
   return (
     <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
@@ -107,9 +110,20 @@ const Library = () => {
           title="Available subjects"
           description={`${availableCount} complete subject ${availableCount === 1 ? 'library is' : 'libraries are'} available today. Keep your shortlist focused on what you actually study.`}
           className="reveal mb-16"
-          action={<Link to="/library/economics" className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">Open Economics <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>}
+          action={subjectYear >= 11 ? <Link to="/library/economics" className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">Open Economics <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link> : null}
         >
           <div className="mb-8 flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 rounded-full border border-line-soft bg-surface-raised px-4 py-2 text-sm font-bold text-text-muted">
+            Year
+            <select
+              aria-label="Year level"
+              value={subjectYear}
+              onChange={(event) => setSubjectYear(Number(event.target.value))}
+              className="bg-transparent font-bold text-text-primary outline-none"
+            >
+              {[7, 8, 9, 10, 11, 12].map((year) => <option key={year} value={year}>Year {year}</option>)}
+            </select>
+          </label>
           <div className="inline-flex rounded-full border border-line-soft bg-surface-raised p-1">
             <button
               type="button"
@@ -126,6 +140,7 @@ const Library = () => {
               My subjects{mySubjects.length > 0 ? ` (${mySubjects.length})` : ''}
             </button>
           </div>
+          {selectionNotice && <p role="status" className="mb-6 rounded-2xl bg-surface-soft px-4 py-3 text-sm font-medium text-text-muted">{selectionNotice}</p>}
           <button
             type="button"
             onClick={() => setPickerOpen((v) => !v)}
@@ -137,9 +152,11 @@ const Library = () => {
 
           {pickerOpen && (
           <div className="mb-8 rounded-2xl border border-line-soft bg-surface-soft p-6">
-            <p className="mb-5 text-sm text-text-muted">Tap every subject you study — this filters the shelves below down to just yours.</p>
+            <p className="mb-5 text-sm text-text-muted">
+              Choose the {selectedStage?.label || 'NSW'} subjects you study in Year {subjectYear}. Your choices are saved on this device.
+            </p>
             <div className="space-y-6">
-              {faculties.map((faculty) => (
+              {selectedFaculties.map((faculty) => (
                 <div key={faculty.name}>
                   <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-dim">{faculty.name}</h4>
                   <div className="flex flex-wrap gap-2">
@@ -176,7 +193,7 @@ const Library = () => {
               {availableFaculties.length ? <div className="space-y-10">{availableFaculties.map((faculty) => (
                 <div key={faculty.name}>
                   <div className="mb-5 flex items-center gap-4"><h3 className="font-display text-lg font-bold tracking-tight text-text-primary">{faculty.name}</h3><span className={`${faculty.block} ${faculty.text} rounded-full px-3 py-1 text-xs font-bold`}>{faculty.subjects.length}</span></div>
-                  <div className="reveal-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{faculty.subjects.map((subject) => <LearningCard key={subject.name} title={subject.name} description={subject.tag} href={`/library/${subject.slug}`} kind={`${faculty.name} subject`} metadata={['Year 11–12', 'Syllabus-mapped']} status="Available" icon={BookOpenIcon} actionLabel="Explore subject" />)}</div>
+                  <div className="reveal-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{faculty.subjects.map((subject) => <LearningCard key={subject.name} title={subject.name} description={subject.tag} href={`/library/${subject.slug}`} kind={`${faculty.name} subject`} metadata={[selectedStage?.label || `Year ${subjectYear}`, subject.tag]} status="Available" icon={BookOpenIcon} actionLabel="Explore subject" />)}</div>
                 </div>
               ))}</div> : <div className="rounded-2xl border border-dashed border-line-soft bg-surface-soft p-8"><p className="font-display text-xl font-bold text-text-primary">None of your selected subjects are available yet.</p><p className="mt-2 text-sm text-text-muted">Open all subjects to study Economics now, or keep your choices saved while the next libraries are prepared.</p><button type="button" onClick={() => setFilterActive(false)} className="btn-secondary mt-5">Show available subjects</button></div>}
           </div>

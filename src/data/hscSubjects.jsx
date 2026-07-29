@@ -3,6 +3,7 @@
  * page and its homepage showcase. Each subject carries a unique hand-drawn glyph
  * (the inner SVG paths); render them through the <Glyph> frame in SubjectGlyph.jsx.
  */
+import { subjectsForYear } from './nswSubjectCatalog';
 
 // One unique glyph per subject, drawn from that subject's own world.
 export const glyphs = {
@@ -144,8 +145,8 @@ export const faculties = [
     text: 'text-green',
     subjects: [
       { name: 'Mathematics Advanced', tag: 'Year 11–12', glyph: glyphs.mathAdvanced },
-      { name: 'Extension 1', tag: 'Year 11–12', glyph: glyphs.ext1 },
-      { name: 'Extension 2', tag: 'Year 12', glyph: glyphs.ext2 },
+      { name: 'Mathematics Extension 1', tag: 'Year 11–12', glyph: glyphs.ext1 },
+      { name: 'Mathematics Extension 2', tag: 'Year 12', glyph: glyphs.ext2 },
       { name: 'Mathematics Standard', tag: 'Year 11–12', glyph: glyphs.mathStandard },
     ],
   },
@@ -172,3 +173,58 @@ export const faculties = [
 ];
 
 export const subjectCount = faculties.reduce((n, f) => n + f.subjects.length, 0);
+
+const FACULTY_STYLE = {
+  English: { name: 'English', block: 'block-blue', text: 'text-blue' },
+  Mathematics: { name: 'Mathematics', block: 'block-green', text: 'text-green' },
+  Science: { name: 'Science', block: 'block-amber', text: 'text-amber' },
+  HSIE: { name: 'HSIE', block: 'block-coral', text: 'text-coral' },
+  PDHPE: { name: 'PDHPE', block: 'block-blue', text: 'text-blue' },
+  Technology: { name: 'Technology', block: 'block-green', text: 'text-green' },
+  'Creative Arts': { name: 'Creative Arts', block: 'block-amber', text: 'text-amber' },
+};
+
+const GLYPH_BY_SUBJECT = {
+  english: glyphs.english,
+  'english-standard': glyphs.english,
+  'english-advanced': glyphs.english,
+  'english-extension-1': glyphs.english,
+  'english-extension-2': glyphs.english,
+  mathematics: glyphs.mathStandard,
+  'mathematics-standard': glyphs.mathStandard,
+  'mathematics-advanced': glyphs.mathAdvanced,
+  'extension-1': glyphs.ext1,
+  'extension-2': glyphs.ext2,
+  science: glyphs.investigating,
+  physics: glyphs.physics,
+  chemistry: glyphs.chemistry,
+  biology: glyphs.biology,
+  'investigating-science': glyphs.investigating,
+  history: glyphs.modernHistory,
+  'modern-history': glyphs.modernHistory,
+  'ancient-history': glyphs.ancientHistory,
+  geography: glyphs.geography,
+  'geography-7-10': glyphs.geography,
+  legal: glyphs.legal,
+  'society-and-culture': glyphs.society,
+  economics: glyphs.economics,
+  business: glyphs.business,
+  commerce: glyphs.business,
+};
+
+export function facultiesForYear(year) {
+  const grouped = new Map();
+  subjectsForYear(year).forEach((subject) => {
+    const style = FACULTY_STYLE[subject.faculty] || FACULTY_STYLE.HSIE;
+    if (!grouped.has(subject.faculty)) grouped.set(subject.faculty, { ...style, subjects: [] });
+    grouped.get(subject.faculty).subjects.push({
+      id: subject.id,
+      name: subject.label,
+      tag: `Year ${subject.years.join('–')}`,
+      glyph: GLYPH_BY_SUBJECT[subject.id] || glyphs.english,
+      slug: subject.id === 'business' ? 'business-studies' : subject.id,
+      available: ['economics', 'business'].includes(subject.id),
+    });
+  });
+  return [...grouped.values()];
+}

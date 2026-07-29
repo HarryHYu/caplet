@@ -12,6 +12,7 @@ import {
 import {
   economicsOutcomes,
   economicsResourceLibrary,
+  getExamPackMarkableQuestions,
   getEconomicsAreaResources,
 } from '../data/economicsResourceLibrary';
 import EconomicsNextAction from '../components/learning/EconomicsNextAction';
@@ -437,6 +438,7 @@ function ExamConstructedItem({ item }) {
 }
 
 function ExamPracticePackCard({ pack, detail = false }) {
+  const startableQuestions = getExamPackMarkableQuestions(pack);
   return (
     <article className="rounded-lg border border-line-soft bg-surface-raised p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
@@ -465,9 +467,15 @@ function ExamPracticePackCard({ pack, detail = false }) {
         {pack.transitionNote}
       </p>
 
-      <Link to={`/library/economics/exam-practice/${pack.id}/session`} className="mb-5 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white hover:bg-accent-strong">
-        Start timed written session <ClipboardDocumentCheckIcon className="h-4 w-4" />
-      </Link>
+      {startableQuestions.length ? (
+        <Link to={`/library/economics/exam-practice/${pack.id}/session`} className="mb-5 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-extrabold text-white hover:bg-accent-strong">
+          Start {startableQuestions.length}-response practice <ClipboardDocumentCheckIcon className="h-4 w-4" />
+        </Link>
+      ) : (
+        <p className="mb-5 inline-flex rounded-xl bg-surface-soft px-4 py-3 text-sm font-bold text-text-muted">
+          Written session coming later — pack contents are available to browse.
+        </p>
+      )}
 
       {!detail ? <Link to={`/library/economics/exam-practice/${pack.id}`} className="mb-5 ml-3 inline-flex items-center gap-2 rounded-xl border border-line-soft bg-surface-raised px-5 py-3 text-sm font-extrabold text-text-primary hover:border-accent hover:text-accent">Browse pack contents <ArrowRightIcon className="h-4 w-4" /></Link> : null}
 

@@ -69,6 +69,9 @@ const CourseDetail = () => {
 
   const sortedModules = (course.modules || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const totalLessonCount = sortedModules.reduce((sum, m) => sum + (m.lessons || []).length, 0);
+  const yearLevel = Number(course.metadata?.yearLevel);
+  const curriculumStage = course.metadata?.stage
+    || (yearLevel >= 11 ? 'Stage 6' : yearLevel >= 9 ? 'Stage 5' : yearLevel >= 7 ? 'Stage 4' : 'General');
   const isEconomicsPath = String(course.metadata?.subject || '').toLowerCase() === 'economics'
     || (course.tags || []).some((tag) => String(tag).toLowerCase() === 'economics');
 
@@ -112,15 +115,15 @@ const CourseDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div className="rounded-2xl block-cream p-5">
                   <p className="text-xs font-bold text-text-muted mb-1">Duration</p>
-                  <p className="font-display text-xl font-bold tracking-tight">{course.duration} minutes</p>
+                  <p className="font-display text-xl font-bold tracking-tight">{course.duration > 0 ? `${course.duration} minutes` : 'Self-paced'}</p>
                 </div>
                 <div className="rounded-2xl block-cream p-5">
                   <p className="text-xs font-bold text-text-muted mb-1">Lessons</p>
-                  <p className="font-display text-xl font-bold tracking-tight">{totalLessonCount} lessons</p>
+                  <p className="font-display text-xl font-bold tracking-tight">{totalLessonCount} {totalLessonCount === 1 ? 'lesson' : 'lessons'}</p>
                 </div>
                 <div className="rounded-2xl block-cream p-5">
-                  <p className="text-xs font-bold text-text-muted mb-1">Level</p>
-                  <p className="font-display text-xl font-bold tracking-tight capitalize">{course.level}</p>
+                  <p className="text-xs font-bold text-text-muted mb-1">Curriculum stage</p>
+                  <p className="font-display text-xl font-bold tracking-tight">{curriculumStage}{yearLevel ? ` · Year ${yearLevel}` : ''}</p>
                 </div>
               </div>
 
@@ -170,7 +173,7 @@ const CourseDetail = () => {
               const totalInModule = mp ? mp.totalLessons : lessonCount;
               const percentage = totalInModule > 0 ? Math.round((completedInModule / totalInModule) * 100) : 0;
 
-              return <LearningCard key={mod.id} title={`${index + 1}. ${mod.title}`} description={mod.description} href={`/courses/${course.id}/modules/${mod.id}`} kind="Course module" metadata={[`${lessonCount} lessons`]} status={percentage === 100 ? 'Complete' : percentage > 0 ? 'In progress' : 'Not started'} progress={percentage > 0 ? percentage : undefined} icon={BookOpenIcon} actionLabel={percentage > 0 && percentage < 100 ? 'Continue module' : percentage === 100 ? 'Review module' : 'Open module'} />;
+              return <LearningCard key={mod.id} title={`${index + 1}. ${mod.title}`} description={mod.description} href={`/courses/${course.id}/modules/${mod.id}`} kind="Course module" metadata={[`${lessonCount} ${lessonCount === 1 ? 'lesson' : 'lessons'}`]} status={percentage === 100 ? 'Complete' : percentage > 0 ? 'In progress' : 'Not started'} progress={percentage > 0 ? percentage : undefined} icon={BookOpenIcon} actionLabel={percentage > 0 && percentage < 100 ? 'Continue module' : percentage === 100 ? 'Review module' : 'Open module'} />;
             })}
           </div>
 

@@ -55,6 +55,11 @@ const ReviewItem = sequelize.define('ReviewItem', {
   lastRecall: {
     type: DataTypes.STRING,
     allowNull: true
+  },
+  lastResultMetadata: {
+    type: DataTypes.JSON,
+    allowNull: false,
+    defaultValue: {}
   }
 }, {
   tableName: 'review_items',

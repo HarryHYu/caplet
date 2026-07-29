@@ -7,7 +7,10 @@ const { reserveAIQuota } = require('../middleware/aiQuota');
 
 const router = express.Router();
 router.use(requireAuth);
-const MAX_EXAM_QUESTIONS = 8;
+// The published Economics packs currently contain up to 16 constructed
+// responses. Keep the API bound explicit, but align it with the content the
+// discovery page promises instead of rejecting a valid visible pack.
+const MAX_EXAM_QUESTIONS = 20;
 const examMarkingQuota = reserveAIQuota({
   scope: 'economics-exam-marking',
   units: (req) => Math.max(2, Math.min(MAX_EXAM_QUESTIONS * 2, Number(req.body?.questionCount) || MAX_EXAM_QUESTIONS * 2)),
@@ -34,7 +37,12 @@ router.post('/', async (req, res) => {
     const questions = sanitizeQuestions(req.body?.questions);
     const durationMinutes = Math.max(10, Math.min(240, Number(req.body?.durationMinutes) || 45));
     const packId = text(req.body?.packId, 200); const packTitle = text(req.body?.packTitle, 300);
-    if (!packId || !packTitle || !questions.length) return res.status(400).json({ message: 'A valid exam pack and at least one written question are required.' });
+    if (!packId || !packTitle) {
+      return res.status(400).json({ message: 'This practice pack link is incomplete. Return to Economics practice and open the pack again.' });
+    }
+    if (!questions.length) {
+      return res.status(400).json({ message: 'This pack does not have a startable written question yet. Choose another pack while it is reviewed.' });
+    }
     const now = new Date();
     const session = await EconomicsExamSession.create({ userId: req.user.id, packId, packTitle, durationMinutes, status: 'in_progress', questions, answers: {}, results: [], startedAt: now, expiresAt: new Date(now.getTime() + durationMinutes * 60000) });
     res.status(201).json({ session: serialize(session) });

@@ -13,7 +13,7 @@ export function LearningLoader({ message = 'Loading your learning data…' }) {
   );
 }
 
-export function LearningError({ title = 'We could not load this yet.', message, onRetry }) {
+export function LearningError({ title = 'This could not load', message, onRetry }) {
   return (
     <div className="min-h-[55vh] grid place-items-center px-6">
       <div className="w-full max-w-lg rounded-3xl bg-surface-raised p-8 text-center shadow-[0_24px_60px_-42px_rgba(20,20,18,0.45)]">

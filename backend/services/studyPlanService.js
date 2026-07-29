@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const NSW_SUBJECT_CATALOGUE = require('../../shared/nswSubjectCatalog.json');
 
 /**
  * The MVP subject catalogue. Every resource points to a route that already
@@ -146,7 +147,7 @@ const SUBJECTS = {
     ]
   },
   'extension-1': {
-    label: 'Extension 1',
+    label: 'Mathematics Extension 1',
     topics: ['Proof and reasoning', 'Functions', 'Calculus', 'Combinatorics'],
     diagnostic: {
       topic: 'Proof and reasoning',
@@ -160,7 +161,7 @@ const SUBJECTS = {
     ]
   },
   'extension-2': {
-    label: 'Extension 2',
+    label: 'Mathematics Extension 2',
     topics: ['Complex numbers', 'Vectors', 'Mechanics', 'Advanced calculus'],
     diagnostic: {
       topic: 'Advanced calculus',
@@ -245,34 +246,146 @@ const SUBJECTS = {
   }
 };
 
+const makeGeneralSubject = (label, topic, question, options, resources = []) => ({
+  label,
+  topics: [topic, 'Knowledge and understanding', 'Applying skills', 'Communicating'],
+  diagnostic: { topic, question, options, answer: 0 },
+  resources: resources.length ? resources : [
+    { label: `Browse ${label} learning paths`, path: '/courses', kind: 'Learn' },
+    { label: 'Review saved work', path: '/revision', kind: 'Review' },
+  ],
+});
+
+Object.assign(SUBJECTS, {
+  science: makeGeneralSubject(
+    'Science',
+    'Scientific inquiry',
+    'Which approach best supports a scientific conclusion?',
+    ['Using relevant evidence collected through a clear method', 'Choosing the conclusion before collecting evidence', 'Changing every variable at once', 'Ignoring results that do not fit'],
+  ),
+  history: makeGeneralSubject(
+    'History',
+    'Sources and evidence',
+    'What is the best first step when using a historical source?',
+    ['Identify its origin, context and purpose', 'Assume it is completely objective', 'Ignore when it was created', 'Use it without comparing other evidence'],
+  ),
+  commerce: makeGeneralSubject(
+    'Commerce',
+    'Consumer and financial decisions',
+    'Which information is most useful when comparing two purchases?',
+    ['The total cost and relevant terms', 'The colour of the advertisement', 'Only the first price shown', 'Whether the product is popular'],
+  ),
+  pdhpe: makeGeneralSubject(
+    'PDHPE',
+    'Health information',
+    'Which source is most useful for making a health decision?',
+    ['A current source with clear evidence and qualified authors', 'An anonymous claim with no source', 'A single advertisement', 'A rumour repeated online'],
+  ),
+  'technology-mandatory': makeGeneralSubject(
+    'Technology Mandatory',
+    'Design process',
+    'Why are criteria used when evaluating a design?',
+    ['To judge how well it meets the identified need', 'To avoid testing it', 'To guarantee the first idea is best', 'To remove user needs from the process'],
+  ),
+  'visual-arts-7-10': makeGeneralSubject(
+    'Visual Arts',
+    'Artmaking and interpretation',
+    'What strengthens an interpretation of an artwork?',
+    ['Using visual evidence and relevant context', 'Only stating whether it is liked', 'Ignoring material choices', 'Describing size alone'],
+  ),
+  'music-7-10': makeGeneralSubject(
+    'Music',
+    'Listening and musical concepts',
+    'What makes a musical observation useful?',
+    ['Linking what is heard to a musical concept', 'Naming the song only', 'Guessing without listening', 'Describing the cover art'],
+  ),
+  'computing-technology': makeGeneralSubject(
+    'Computing Technology',
+    'Designing digital solutions',
+    'What should be defined before building a digital solution?',
+    ['The problem, users and success criteria', 'Only the final colour palette', 'A launch date without requirements', 'The answer before testing'],
+  ),
+  'design-and-technology': makeGeneralSubject(
+    'Design and Technology',
+    'Design process',
+    'Why should a prototype be tested with its intended users?',
+    ['To find whether it meets the need and improve it', 'To avoid making changes', 'To prove every assumption was correct', 'To replace design criteria'],
+  ),
+  'food-technology': makeGeneralSubject(
+    'Food Technology',
+    'Food selection and safety',
+    'Which practice most directly reduces cross-contamination?',
+    ['Keeping raw and ready-to-eat food separate', 'Using the same unwashed board', 'Leaving food at room temperature', 'Ignoring use-by dates'],
+  ),
+  'industrial-technology': makeGeneralSubject(
+    'Industrial Technology',
+    'Production and evaluation',
+    'Why should production processes be documented?',
+    ['To support safe, accurate work and later evaluation', 'To remove the need for measurements', 'To avoid quality checks', 'To guarantee materials never change'],
+  ),
+  'agricultural-technology': makeGeneralSubject(
+    'Agricultural Technology',
+    'Agricultural systems',
+    'Which evidence best helps evaluate an agricultural system?',
+    ['Measured production, resource and environmental data', 'One unsupported opinion', 'A product label alone', 'A prediction with no observations'],
+  ),
+  'geography-7-10': SUBJECTS.geography,
+  'english-standard': SUBJECTS.english,
+  'english-advanced': SUBJECTS.english,
+  'english-extension-1': SUBJECTS.english,
+  'english-extension-2': SUBJECTS.english,
+});
+
 const DEFAULT_DAYS = [1, 2, 3, 4, 5];
-const VALID_YEAR_LEVELS = new Set(['9', '10', '11', '12', 'other']);
+const VALID_YEAR_LEVELS = new Set(['7', '8', '9', '10', '11', '12', 'other']);
+const CATALOGUE_BY_ID = new Map(NSW_SUBJECT_CATALOGUE.subjects.map((subject) => [subject.id, subject]));
 
 function publicOptions() {
   return {
     yearLevels: [
-      { value: '9', label: 'Year 9' },
-      { value: '10', label: 'Year 10' },
-      { value: '11', label: 'Year 11' },
-      { value: '12', label: 'Year 12' },
+      ...[7, 8, 9, 10, 11, 12].map((year) => ({ value: String(year), label: `Year ${year}` })),
       { value: 'other', label: 'Other / independent study' }
     ],
-    subjects: Object.entries(SUBJECTS).map(([value, subject]) => ({
-      value,
-      label: subject.label,
-      topics: subject.topics,
+    subjects: NSW_SUBJECT_CATALOGUE.subjects.filter((item) => SUBJECTS[item.id]).map((item) => ({
+      value: item.id,
+      label: item.label,
+      years: item.years,
+      stage: NSW_SUBJECT_CATALOGUE.stages.find((stage) => stage.years.some((year) => item.years.includes(year)))?.label,
+      legacyAliases: item.aliases,
+      topics: SUBJECTS[item.id].topics,
       diagnostic: {
-        topic: subject.diagnostic.topic,
-        question: subject.diagnostic.question,
-        options: subject.diagnostic.options
+        topic: SUBJECTS[item.id].diagnostic.topic,
+        question: SUBJECTS[item.id].diagnostic.question,
+        options: SUBJECTS[item.id].diagnostic.options
       }
-    }))
+    })),
+    catalogueSource: NSW_SUBJECT_CATALOGUE.source
   };
 }
 
+function canonicalSubjectId(value, yearLevel) {
+  const candidate = String(value || '').trim().toLowerCase();
+  const matches = NSW_SUBJECT_CATALOGUE.subjects.filter((item) => (
+    item.id === candidate
+    || item.label.toLowerCase() === candidate
+    || item.aliases.some((alias) => alias.toLowerCase() === candidate)
+  ));
+  const year = Number(yearLevel);
+  const match = matches.find((item) => !Number.isInteger(year) || item.years.includes(year)) || matches[0];
+  return match?.id || null;
+}
+
+function validForYear(subjectId, yearLevel) {
+  if (yearLevel === 'other') return Boolean(SUBJECTS[subjectId]);
+  const definition = CATALOGUE_BY_ID.get(subjectId);
+  return Boolean(definition?.years.includes(Number(yearLevel)));
+}
+
 function normalizeConfig(input = {}) {
-  const subjects = [...new Set(Array.isArray(input.subjects) ? input.subjects : [])]
-    .filter((subject) => SUBJECTS[subject]);
+  const yearLevel = VALID_YEAR_LEVELS.has(String(input.yearLevel)) ? String(input.yearLevel) : '';
+  const subjects = [...new Set((Array.isArray(input.subjects) ? input.subjects : [])
+    .map((subject) => canonicalSubjectId(subject, yearLevel))
+    .filter((subject) => subject && SUBJECTS[subject] && validForYear(subject, yearLevel)))];
   const hasAvailableDays = Array.isArray(input.availableDays);
   const availableDays = [...new Set(hasAvailableDays ? input.availableDays : DEFAULT_DAYS)]
     .map(Number)
@@ -286,7 +399,7 @@ function normalizeConfig(input = {}) {
   });
 
   return {
-    yearLevel: VALID_YEAR_LEVELS.has(String(input.yearLevel)) ? String(input.yearLevel) : '',
+    yearLevel,
     subjects,
     goal: String(input.goal || '').trim().slice(0, 200),
     examDates,
@@ -295,6 +408,12 @@ function normalizeConfig(input = {}) {
     diagnosticAnswers: normalizeAnswers(input.diagnosticAnswers, subjects)
   };
 }
+
+/*
+ * The catalogue metadata above is intentionally kept out of each diagnostic
+ * definition. It is shared by onboarding, study planning and the library,
+ * while the subject-specific questions remain owned by this service.
+ */
 
 function validateConfig(config) {
   const errors = [];

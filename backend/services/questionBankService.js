@@ -1,6 +1,7 @@
 const { ECONOMICS_OUTCOMES } = require('../data/economicsCurriculum');
 const ECONOMICS_QUESTION_BANK = require('../data/economicsQuestionBank.json');
 const { validateQuestion } = require('./questionValidation');
+const { Op } = require('sequelize');
 
 let seedPromise = null;
 const EXPECTED_OUTCOME_COUNT = Object.keys(ECONOMICS_OUTCOMES).length;
@@ -15,7 +16,7 @@ async function isEconomicsQuestionBankReady(models) {
       where: {
         jurisdiction: 'NSW',
         subject: 'economics',
-        syllabusVersion: 'NSW-2025',
+        syllabusVersion: 'NSW-2009',
         isActive: true,
       },
     }),
@@ -37,9 +38,11 @@ function answerFromLetter(answer, options = []) {
   return index >= 0 && index < options.length ? { index, value: options[index], letter: answer.trim().toUpperCase() } : answer;
 }
 
-function syllabusVersionFor(resource = {}, fallback = 'NSW-2025') {
+function syllabusVersionFor(resource = {}, fallback = 'NSW-2009') {
   const explicit = resource.syllabusVersion || resource.syllabusCode || resource.syllabus;
-  return /2009/.test(String(explicit || '')) ? 'NSW-2009' : fallback;
+  if (/2009/.test(String(explicit || ''))) return 'NSW-2009';
+  if (/2025/.test(String(explicit || ''))) return 'NSW-2025';
+  return fallback;
 }
 
 function normaliseResource(resource, area, suffix = '') {
@@ -59,14 +62,14 @@ function normaliseResource(resource, area, suffix = '') {
       sourceUrl: area.sourceUrl || null,
       provenance: resource.sourceNote || 'Caplet syllabus-aligned resource library',
     },
-    lifecycleStatus: syllabusVersion === 'NSW-2009' ? 'in_review' : 'published',
+    lifecycleStatus: syllabusVersion === 'NSW-2009' ? 'published' : 'in_review',
     version: 1,
     reviewedAt: new Date(),
     metadata: {
       resourceType: resource.type,
       focusArea: area.title,
       curriculumEditionKey: `NSW-ECO-${syllabusVersion.slice(-4)}`,
-      requiresEditionReview: syllabusVersion === 'NSW-2009',
+      requiresEditionReview: syllabusVersion !== 'NSW-2009',
     },
   };
 
@@ -201,8 +204,8 @@ function buildEconomicsQuestionBank(libraryModule) {
         commandVerb: String(markable.prompt || '').trim().split(/\s+/)[0]?.toLowerCase(),
         options: [], answerKey: null, explanation: '', rubric: [], modelAnswer: '', misconceptions: [],
         source: { externalId: markable.id, focusId: area.id, focusTitle: area.title, provenance: pack.sourceNote || 'Caplet original exam practice' },
-        lifecycleStatus: syllabusVersionFor(pack) === 'NSW-2009' ? 'in_review' : 'published', version: 1, reviewedAt: new Date(),
-        metadata: { resourceType: 'exam', section: markable.section, focusArea: markable.focusArea, transfer: true, curriculumEditionKey: `NSW-ECO-${syllabusVersionFor(pack).slice(-4)}`, requiresEditionReview: syllabusVersionFor(pack) === 'NSW-2009' },
+        lifecycleStatus: syllabusVersionFor(pack) === 'NSW-2009' ? 'published' : 'in_review', version: 1, reviewedAt: new Date(),
+        metadata: { resourceType: 'exam', section: markable.section, focusArea: markable.focusArea, transfer: true, curriculumEditionKey: `NSW-ECO-${syllabusVersionFor(pack).slice(-4)}`, requiresEditionReview: syllabusVersionFor(pack) !== 'NSW-2009' },
         outcomes: pack.outcomes || [],
       });
     }
@@ -214,6 +217,21 @@ async function ensureEconomicsQuestionBank() {
   if (seedPromise) return seedPromise;
   seedPromise = (async () => {
     const { CurriculumOutcome, CurriculumEdition, Question, QuestionOutcome } = require('../models');
+    if (typeof Question?.update === 'function') {
+      await Question.update(
+        { lifecycleStatus: 'archived', publishedAt: null },
+        {
+          where: {
+            subject: 'economics',
+            sourceKey: {
+              [Op.like]: 'economics:%',
+              [Op.notIn]: ECONOMICS_QUESTION_BANK.map((question) => question.sourceKey),
+            },
+            lifecycleStatus: { [Op.ne]: 'archived' },
+          },
+        },
+      );
+    }
     if (await isEconomicsQuestionBankReady({ CurriculumOutcome, Question })) {
       return {
         outcomes: EXPECTED_OUTCOME_COUNT,
@@ -224,22 +242,38 @@ async function ensureEconomicsQuestionBank() {
     }
 
     const currentEdition = CurriculumEdition?.findOne
-      ? await CurriculumEdition.findOne({ where: { key: 'NSW-ECO-2025' } })
+      ? await CurriculumEdition.findOne({ where: { key: 'NSW-ECO-2009' } })
       : null;
+    const reconcileOutcome = async (record, values) => {
+      if (typeof record?.update === 'function') return record.update(values);
+      Object.assign(record, values);
+      return record;
+    };
     const parentByYear = {};
     for (const year of [11, 12]) {
       const [parent] = await CurriculumOutcome.findOrCreate({
-        where: { jurisdiction: 'NSW', subject: 'economics', syllabusVersion: 'NSW-2025', code: `ECO-${year}` },
+        where: { jurisdiction: 'NSW', subject: 'economics', syllabusVersion: 'NSW-2009', code: `ECON-${year}-2009` },
         defaults: {
           title: `Year ${year} Economics`,
-          description: `NSW Economics ${year}–12 syllabus outcomes`,
+          description: `Economics Stage 6 Syllabus (2009) ${year === 11 ? 'Preliminary' : 'HSC'} outcomes`,
           parentId: null,
           prerequisites: [],
           sortOrder: year === 11 ? 0 : 100,
+          isAssessable: false,
           isActive: true,
           metadata: { level: 'year', year },
           curriculumEditionId: currentEdition?.id || null,
         },
+      });
+      await reconcileOutcome(parent, {
+        title: `Year ${year} Economics`,
+        description: `Economics Stage 6 Syllabus (2009) ${year === 11 ? 'Preliminary' : 'HSC'} outcomes`,
+        parentId: null,
+        sortOrder: year === 11 ? 0 : 100,
+        isAssessable: false,
+        isActive: true,
+        metadata: { level: 'year', year },
+        curriculumEditionId: currentEdition?.id || null,
       });
       parentByYear[year] = parent;
     }
@@ -247,19 +281,30 @@ async function ensureEconomicsQuestionBank() {
     const outcomesByCode = new Map();
     let sortOrder = 1;
     for (const [code, title] of Object.entries(ECONOMICS_OUTCOMES)) {
-      const year = code.includes('-11-') ? 11 : 12;
+      const year = code.startsWith('P') ? 11 : 12;
       const [outcome] = await CurriculumOutcome.findOrCreate({
-        where: { jurisdiction: 'NSW', subject: 'economics', syllabusVersion: 'NSW-2025', code },
+        where: { jurisdiction: 'NSW', subject: 'economics', syllabusVersion: 'NSW-2009', code },
         defaults: {
           title,
           description: title,
           parentId: parentByYear[year].id,
           prerequisites: [],
           sortOrder: year === 11 ? sortOrder : 100 + sortOrder,
+          isAssessable: true,
           isActive: true,
           metadata: { level: 'outcome', year },
           curriculumEditionId: currentEdition?.id || null,
         },
+      });
+      await reconcileOutcome(outcome, {
+        title,
+        description: title,
+        parentId: parentByYear[year].id,
+        sortOrder: year === 11 ? sortOrder : 100 + sortOrder,
+        isAssessable: true,
+        isActive: true,
+        metadata: { level: 'outcome', year },
+        curriculumEditionId: currentEdition?.id || null,
       });
       outcomesByCode.set(code, outcome);
       sortOrder += 1;
@@ -273,7 +318,7 @@ async function ensureEconomicsQuestionBank() {
     let created = 0;
     for (const item of normalized.filter((question) => question.prompt)) {
       const { outcomes, ...values } = item;
-      const editionKey = `NSW-ECO-${String(values.syllabusVersion || 'NSW-2025').slice(-4)}`;
+      const editionKey = `NSW-ECO-${String(values.syllabusVersion || 'NSW-2009').slice(-4)}`;
       const edition = CurriculumEdition?.findOne ? await CurriculumEdition.findOne({ where: { key: editionKey } }) : null;
       values.curriculumEditionId = edition?.id || null;
       const mappedOutcomes = outcomes.map((code) => outcomesByCode.get(code)).filter(Boolean);
@@ -292,8 +337,16 @@ async function ensureEconomicsQuestionBank() {
           };
       const [question, wasCreated] = await Question.findOrCreate({ where: { sourceKey: item.sourceKey }, defaults: governedValues });
       if (wasCreated) created += 1;
-      if (!wasCreated && question.lifecycleStatus === 'published' && !validation.ok) {
-        await question.update({ lifecycleStatus: 'in_review', publishedAt: null, metadata: governedValues.metadata });
+      if (!wasCreated && typeof question.update === 'function') {
+        await question.update({
+          syllabusVersion: governedValues.syllabusVersion,
+          curriculumEditionId: governedValues.curriculumEditionId,
+          source: governedValues.source,
+          metadata: governedValues.metadata,
+          lifecycleStatus: governedValues.lifecycleStatus,
+          publishedAt: governedValues.lifecycleStatus === 'published' ? question.publishedAt : null,
+          reviewedAt: governedValues.reviewedAt,
+        });
       }
       for (const outcome of mappedOutcomes) {
         await QuestionOutcome.findOrCreate({

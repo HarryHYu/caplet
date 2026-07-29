@@ -297,15 +297,15 @@ const Home = () => {
 
         {/* centered content */}
         <div className="relative z-10 flex flex-col items-center text-center max-w-3xl px-5">
-          <p className="hero-kicker font-hand text-2xl md:text-[1.65rem] text-blue mb-5 -rotate-2">free, open, and a little playful</p>
+          <p className="hero-kicker font-hand text-2xl md:text-[1.65rem] text-blue mb-5 -rotate-2">a calmer way to keep learning</p>
 
           <h1 className="font-bricolage font-extrabold text-text-primary leading-[0.96] tracking-[-0.03em] text-[clamp(3rem,8.5vw,6.25rem)]">
-            <span className="hero-line block">Build,{' '}
-              <span className="hero-hl hero-mark hl-swipe">learn</span>,
+            <span className="hero-line block">Know what to{' '}
+              <span className="hero-hl hero-mark hl-swipe">study</span>,
             </span>
-            <span className="hero-line block">and ship{' '}
+            <span className="hero-line block">and keep{' '}
               <span className="relative inline-block">
-                anything
+                going
                 <Scribble pathClass="hero-circle hero-mark" />
               </span>
               .
@@ -313,13 +313,13 @@ const Home = () => {
           </h1>
 
           <p className="hero-sub body-text mt-8 max-w-xl mx-auto">
-            Caplet is a free, open platform for building interactive courses and learning from them.
-            Lessons, live code, graphing, quizzes. No subscriptions. No lock-in.
+            Caplet brings your subjects, practice, feedback, revision and study plan into one place.
+            Start with the next useful task, then return exactly where you left off.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3 relative">
             <Link to="/register" className="hero-cta inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-[color:var(--mark-blue)] text-white text-base font-bold shadow-[0_12px_30px_-10px_rgba(19,81,170,0.5)] hover:-translate-y-0.5 transition-transform duration-200">
-              Start building
+              Start learning
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </Link>
             <button onClick={() => goTo('#features')} className="hero-cta inline-flex items-center gap-2 px-6 py-4 rounded-2xl block-blue text-text-primary text-base font-bold hover:-translate-y-0.5 transition-transform duration-200">

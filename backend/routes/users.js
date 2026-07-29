@@ -21,13 +21,13 @@ router.get('/profile', requireAuth, async (req, res) => {
   }
 });
 
-// Update user profile (name, email, optional password, dateOfBirth, bio, preferences).
+// Update user profile. Password changes are handled by the dedicated auth flow,
+// which verifies the current password and revokes existing sessions.
 // `role` is ignored even if sent — role changes happen via /api/admin/promote.
 router.put('/profile', requireAuth, [
   body('firstName').optional().trim().isLength({ min: 1, max: 50 }),
   body('lastName').optional().trim().isLength({ min: 1, max: 50 }),
   body('email').optional().isEmail().normalizeEmail(),
-  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('dateOfBirth').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date (use YYYY-MM-DD)')
     .custom((value) => new Date(`${value}T00:00:00Z`) <= new Date()).withMessage('Date of birth cannot be in the future'),
   body('bio').optional().trim().isLength({ max: 1000 }),
@@ -39,7 +39,7 @@ router.put('/profile', requireAuth, [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, email, password, dateOfBirth, bio, preferences } = req.body;
+    const { firstName, lastName, email, dateOfBirth, bio, preferences } = req.body;
 
     if (dateOfBirth && req.user.dateOfBirth && String(dateOfBirth) !== String(req.user.dateOfBirth)) {
       return res.status(409).json({ message: 'Date of birth is locked after it is set. Contact support if it needs correcting.' });
@@ -64,8 +64,6 @@ router.put('/profile', requireAuth, [
     };
     if (email !== undefined) updates.email = email;
     if (dateOfBirth !== undefined) updates.dateOfBirth = dateOfBirth === '' ? null : dateOfBirth;
-    if (password && password.trim()) updates.password = password.trim();
-
     await req.user.update(updates);
 
     res.json({

@@ -146,7 +146,7 @@ export default function StudyPlan() {
       setPlan(data.studyPlan);
       setTaskNotice(completed
         ? data.momentum?.currentStreak
-          ? `Nice work — today counts. Your meaningful study streak is ${data.momentum.currentStreak} ${data.momentum.currentStreak === 1 ? 'day' : 'days'}.`
+          ? `Nice work — today counts. Your study streak is ${data.momentum.currentStreak} ${data.momentum.currentStreak === 1 ? 'day' : 'days'}.`
           : 'Nice work — task marked complete.'
         : 'Task reopened for this week.');
     } catch (err) {
@@ -327,7 +327,10 @@ export default function StudyPlan() {
 
 function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, setStep, error, errorRef, saving, next, generate, cancel }) {
   const [subjectQuery, setSubjectQuery] = useState('');
-  const visibleSubjects = options.subjects.filter((subject) => subject.label.toLowerCase().includes(subjectQuery.trim().toLowerCase()));
+  const subjectsForYear = options.subjects.filter((subject) => (
+    form.yearLevel === 'other' || !subject.years?.length || subject.years.includes(Number(form.yearLevel))
+  ));
+  const visibleSubjects = subjectsForYear.filter((subject) => subject.label.toLowerCase().includes(subjectQuery.trim().toLowerCase()));
   const toggleSubject = (subject) => setForm((current) => ({
     ...current,
     subjects: current.subjects.includes(subject)
@@ -367,9 +370,27 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
             <div>
               <h2 className="text-3xl font-display font-extrabold tracking-tight">What are you studying?</h2>
               <label htmlFor="study-year-level" className="mt-8 block text-sm font-bold text-text-muted">Year level</label>
-              <select id="study-year-level" value={form.yearLevel} onChange={(event) => setForm((current) => ({ ...current, yearLevel: event.target.value }))} className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft">
+              <select id="study-year-level" value={form.yearLevel} onChange={(event) => {
+                const yearLevel = event.target.value;
+                const validIds = new Set(options.subjects
+                  .filter((subject) => yearLevel === 'other' || subject.years?.includes(Number(yearLevel)))
+                  .map((subject) => subject.value));
+                setForm((current) => ({
+                  ...current,
+                  yearLevel,
+                  subjects: current.subjects.filter((subject) => validIds.has(subject)),
+                  diagnosticAnswers: Object.fromEntries(
+                    Object.entries(current.diagnosticAnswers).filter(([subject]) => validIds.has(subject)),
+                  ),
+                }));
+              }} className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft">
                 {options.yearLevels.map((level) => <option key={level.value} value={level.value}>{level.label}</option>)}
               </select>
+              {form.yearLevel !== 'other' && (
+                <p className="mt-2 text-xs font-medium text-text-dim">
+                  Showing {subjectsForYear[0]?.stage || 'NSW'} subjects available for Year {form.yearLevel}.
+                </p>
+              )}
               <fieldset className="mt-8">
                 <legend className="text-sm font-bold text-text-muted">Subjects <span className="font-medium text-text-dim">({form.subjects.length} selected)</span></legend>
                 <label htmlFor="study-subject-search" className="sr-only">Search subjects</label>

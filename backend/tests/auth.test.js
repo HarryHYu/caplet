@@ -1,7 +1,23 @@
 process.env.GOOGLE_CLIENT_ID = 'test-google-client-id';
 process.env.JWT_SECRET = 'test-jwt-secret-for-auth-tests';
 
+const mockPasswordResetToken = {
+  update: jest.fn(),
+  create: jest.fn(),
+  findOne: jest.fn(),
+};
+const mockSequelize = {
+  transaction: jest.fn(async (callback) => callback({ id: 'transaction' })),
+};
+
 jest.mock('../models/User');
+jest.mock('../models', () => ({
+  PasswordResetToken: mockPasswordResetToken,
+  sequelize: mockSequelize,
+}));
+jest.mock('../services/passwordResetDelivery', () => ({
+  sendPasswordResetEmail: jest.fn().mockResolvedValue({ delivery: 'development_capture' }),
+}));
 jest.mock('google-auth-library', () => ({
   OAuth2Client: jest.fn().mockImplementation(() => ({
     verifyIdToken: jest.fn().mockResolvedValue({
@@ -19,7 +35,9 @@ jest.mock('google-auth-library', () => ({
 
 const request = require('supertest');
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { sendPasswordResetEmail } = require('../services/passwordResetDelivery');
 const authRouter = require('../routes/auth');
 
 const createTestApp = () => {
@@ -35,6 +53,10 @@ describe('Auth Routes', () => {
   beforeEach(() => {
     app = createTestApp();
     jest.clearAllMocks();
+    mockPasswordResetToken.update.mockResolvedValue([1]);
+    mockPasswordResetToken.create.mockResolvedValue({ id: 'reset-1' });
+    mockSequelize.transaction.mockImplementation(async (callback) => callback({ id: 'transaction' }));
+    sendPasswordResetEmail.mockResolvedValue({ delivery: 'development_capture' });
   });
 
   describe('POST /api/auth/register', () => {
@@ -55,7 +77,7 @@ describe('Auth Routes', () => {
         .post('/api/auth/register')
         .send({
           email: 'new@example.com',
-          password: 'secret12',
+          password: 'secret123',
           firstName: 'A',
           lastName: 'B',
         });
@@ -72,7 +94,7 @@ describe('Auth Routes', () => {
         .post('/api/auth/register')
         .send({
           email: 'exists@example.com',
-          password: 'secret12',
+          password: 'secret123',
           firstName: 'A',
           lastName: 'B',
         });
@@ -205,6 +227,111 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message', 'Logout successful');
+    });
+  });
+
+  describe('password security', () => {
+    const authHeader = (tokenVersion = 0) => ({
+      Authorization: `Bearer ${jwt.sign({ userId: 'id-1', tokenVersion }, process.env.JWT_SECRET)}`,
+    });
+
+    it('requires and verifies the current password before changing it', async () => {
+      const user = {
+        id: 'id-1',
+        tokenVersion: 2,
+        passwordLoginEnabled: true,
+        validatePassword: jest.fn().mockResolvedValue(false),
+        update: jest.fn(),
+      };
+      User.findByPk = jest.fn().mockResolvedValue(user);
+
+      const response = await request(app)
+        .post('/api/auth/change-password')
+        .set(authHeader(2))
+        .send({ currentPassword: 'wrong password', newPassword: 'new-password-1', confirmPassword: 'new-password-1' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.validation.currentPassword).toMatch(/incorrect/i);
+      expect(user.update).not.toHaveBeenCalled();
+    });
+
+    it('changes a verified password and revokes existing sessions', async () => {
+      const user = {
+        id: 'id-1',
+        tokenVersion: 2,
+        passwordLoginEnabled: true,
+        validatePassword: jest.fn().mockResolvedValue(true),
+        update: jest.fn().mockResolvedValue(undefined),
+      };
+      User.findByPk = jest.fn().mockResolvedValue(user);
+
+      const response = await request(app)
+        .post('/api/auth/change-password')
+        .set(authHeader(2))
+        .send({ currentPassword: 'old-password', newPassword: 'new-password-1', confirmPassword: 'new-password-1' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.token).toEqual(expect.any(String));
+      expect(user.update).toHaveBeenCalledWith(expect.objectContaining({ password: 'new-password-1', tokenVersion: 3 }));
+      expect(mockPasswordResetToken.update).toHaveBeenCalled();
+    });
+
+    it('returns the same reset-request response for known and unknown emails', async () => {
+      const known = { id: 'id-1', email: 'known@example.com' };
+      User.findOne = jest.fn()
+        .mockResolvedValueOnce(known)
+        .mockResolvedValueOnce(null);
+
+      const knownResponse = await request(app).post('/api/auth/forgot-password').send({ email: 'known@example.com' });
+      const unknownResponse = await request(app).post('/api/auth/forgot-password').send({ email: 'unknown@example.com' });
+
+      expect(knownResponse.status).toBe(202);
+      expect(unknownResponse.status).toBe(202);
+      expect(unknownResponse.body).toEqual(knownResponse.body);
+      expect(mockPasswordResetToken.create).toHaveBeenCalledTimes(1);
+      expect(sendPasswordResetEmail).toHaveBeenCalledTimes(1);
+    });
+
+    it('accepts a valid single-use reset token and enables password login', async () => {
+      const user = {
+        id: 'id-1',
+        tokenVersion: 4,
+        update: jest.fn().mockResolvedValue(undefined),
+      };
+      mockPasswordResetToken.findOne.mockResolvedValue({ id: 'reset-1', userId: 'id-1' });
+      mockPasswordResetToken.update
+        .mockResolvedValueOnce([1])
+        .mockResolvedValueOnce([1]);
+      User.findByPk = jest.fn().mockResolvedValue(user);
+
+      const response = await request(app).post('/api/auth/reset-password').send({
+        token: 'a'.repeat(43),
+        newPassword: 'new-password-2',
+        confirmPassword: 'new-password-2',
+      });
+
+      expect(response.status).toBe(200);
+      expect(user.update).toHaveBeenCalledWith(
+        expect.objectContaining({ password: 'new-password-2', passwordLoginEnabled: true, tokenVersion: 5 }),
+        expect.objectContaining({ transaction: expect.anything() }),
+      );
+    });
+
+    it.each([
+      ['malformed', 'short'],
+      ['expired', 'b'.repeat(43)],
+      ['already used', 'c'.repeat(43)],
+    ])('rejects a %s reset token without revealing why', async (_label, token) => {
+      mockPasswordResetToken.findOne.mockResolvedValue(null);
+
+      const response = await request(app).post('/api/auth/reset-password').send({
+        token,
+        newPassword: 'new-password-3',
+        confirmPassword: 'new-password-3',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('This reset link is invalid or expired.');
     });
   });
 });

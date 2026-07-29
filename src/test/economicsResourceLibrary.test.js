@@ -8,40 +8,52 @@ import {
 } from '../data/economicsResourceLibrary';
 
 const allResources = economicsResourceLibrary.focusAreas.flatMap((area) => getEconomicsAreaResources(area));
-const requiredTypes = ['multipleChoice', 'shortAnswer', 'extendedResponse', 'topicDrill', 'stimulusSet'];
-
 describe('economicsResourceLibrary', () => {
-  it('tracks the full current syllabus coverage shape', () => {
+  it('tracks the current 2009 syllabus topic shape without presenting the future syllabus as current', () => {
     const stats = getEconomicsResourceStats();
 
-    expect(stats.focusAreas).toBe(9);
-    expect(stats.contentGroups).toBe(45);
-    expect(stats.outcomes).toBe(20);
-    expect(stats.questions).toBe(99);
+    expect(economicsResourceLibrary.focusAreas.map((area) => area.title)).toEqual([
+      'Introduction to Economics',
+      'Consumers and Business',
+      'Markets',
+      'Labour Markets',
+      'Financial Markets',
+      'Government in the Economy',
+      'The Global Economy',
+      'Australia’s Place in the Global Economy',
+      'Economic Issues',
+      'Economic Policies and Management',
+    ]);
+    expect(stats.focusAreas).toBe(10);
+    expect(stats.contentGroups).toBe(36);
+    expect(stats.outcomes).toBe(24);
+    expect(stats.questions).toBe(57);
     expect(stats.examPacks).toBe(2);
     expect(stats.examItems).toBe(56);
     expect(stats.byType).toEqual({
       extendedResponse: 9,
       multipleChoice: 18,
       shortAnswer: 18,
-      stimulusSet: 9,
-      topicDrill: 45,
+      stimulusSet: 3,
+      topicDrill: 9,
     });
   });
 
-  it('gives every focus area a complete resource mix', () => {
+  it('keeps every reused activity stable and makes partial mappings explicit', () => {
+    const ids = new Set();
     economicsResourceLibrary.focusAreas.forEach((area) => {
-      const types = getEconomicsAreaResources(area).map((resource) => resource.type);
-
-      requiredTypes.forEach((type) => {
-        expect(types, `${area.title} is missing ${type}`).toContain(type);
+      expect(['mapped', 'partially_mapped']).toContain(area.mappingStatus);
+      getEconomicsAreaResources(area).forEach((resource) => {
+        expect(ids.has(resource.id), `duplicate resource id ${resource.id}`).toBe(false);
+        ids.add(resource.id);
       });
+      if (area.reviewResources.length) expect(area.mappingNote).toMatch(/held for curriculum review/i);
     });
   });
 
-  it('creates one topic drill for every official content group', () => {
+  it('only retains a topic drill when its title matches a current content group', () => {
     economicsResourceLibrary.focusAreas.forEach((area) => {
-      expect(area.topicDrills.map((drill) => drill.title)).toEqual(area.contentGroups);
+      area.topicDrills.forEach((drill) => expect(area.contentGroups).toContain(drill.title));
     });
   });
 
@@ -68,7 +80,7 @@ describe('economicsResourceLibrary', () => {
   it('builds stimulus sets with data, marking guides and sample interpretation', () => {
     const stimulusSets = allResources.filter((resource) => resource.type === 'stimulusSet');
 
-    expect(stimulusSets).toHaveLength(economicsResourceLibrary.focusAreas.length);
+    expect(stimulusSets).toHaveLength(getEconomicsResourceStats().byType.stimulusSet);
     stimulusSets.forEach((resource) => {
       const questionMarks = resource.questions.reduce((sum, question) => sum + question.marks, 0);
 
@@ -106,7 +118,8 @@ describe('economicsResourceLibrary', () => {
 
   it('maps exam-pack items to known outcomes where item-level outcomes are present', () => {
     const validOutcomes = new Set(Object.keys(economicsOutcomes));
-    const examItems = economicsResourceLibrary.examPracticePacks.flatMap((pack) =>
+    const currentPack = economicsResourceLibrary.examPracticePacks.find((pack) => /2009/.test(pack.syllabus));
+    const examItems = [currentPack].flatMap((pack) =>
       pack.sections.flatMap((section) => [...(section.sampleItems || []), ...(section.items || [])])
     );
 

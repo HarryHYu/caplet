@@ -11,18 +11,18 @@ const SettingsAccount = () => {
         <p className="font-hand text-accent text-lg -rotate-2 inline-block mb-1">your account</p>
         <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Account Settings</h2>
         <p className="text-sm font-medium text-text-dim mt-2">
-          Manage your account role and preferences.
+          Manage your account type and sign-in session.
         </p>
       </div>
       <div className="space-y-12">
         <div>
-          <h3 className="text-sm font-display font-bold tracking-tight text-text-primary mb-6">Access Level</h3>
+          <h3 className="text-sm font-display font-bold tracking-tight text-text-primary mb-6">Account type</h3>
           <div className="rounded-3xl bg-surface-soft p-6 sm:p-8">
             <p className="text-sm font-medium text-text-dim mb-4">
               Current role
             </p>
             <p className="mb-6 text-3xl font-display font-extrabold tracking-tight text-accent">
-              {user?.role === 'admin' ? 'Strategic Admin' : user?.role === 'instructor' ? 'Lead Architect' : 'Scholar'}
+              {user?.role === 'admin' ? 'Administrator' : user?.role === 'instructor' ? 'Teacher' : 'Student'}
             </p>
             {user?.role !== 'admin' && (
               <p className="mb-7 max-w-lg text-sm font-medium leading-relaxed text-text-muted">

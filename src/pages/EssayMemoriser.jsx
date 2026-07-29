@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useReveal } from '../lib/useReveal';
 import CapletLoader from '../components/CapletLoader';
@@ -183,18 +184,23 @@ function GradeButtons({ busy, onPass, onFail, passLabel = 'Got it' }) {
 
 /**
  * A "sneak peek" button — tap to reveal `text` in a floating card for a few
- * seconds (or tap again to dismiss early). Costs nothing, isn't scored; it's
- * just a safety net so a stuck student can check without failing the card.
+ * seconds (or tap again to dismiss early). The caller decides how a reveal
+ * affects scoring so other practice modes can keep their existing behaviour.
  */
-function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500 }) {
+function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500, onReveal }) {
     const [peeking, setPeeking] = useState(false);
     const timerRef = useRef(null);
 
     useEffect(() => () => clearTimeout(timerRef.current), []);
+    useEffect(() => {
+        clearTimeout(timerRef.current);
+        setPeeking(false);
+    }, [text]);
 
     const toggle = () => {
         clearTimeout(timerRef.current);
         if (peeking) { setPeeking(false); return; }
+        onReveal?.();
         setPeeking(true);
         timerRef.current = setTimeout(() => setPeeking(false), autoHideMs);
     };
@@ -206,6 +212,8 @@ function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500 }) {
             <button
                 type="button"
                 onClick={toggle}
+                aria-expanded={peeking}
+                aria-label={`${label}${peeking ? `: ${text}` : ''}`}
                 className={`text-xs font-semibold rounded-full px-3 py-1.5 inline-flex items-center gap-1.5 border transition-colors ${
                     peeking
                         ? 'border-accent text-accent bg-accent-soft'
@@ -216,7 +224,7 @@ function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500 }) {
                 {label}
             </button>
             {peeking && (
-                <div className="absolute z-20 left-0 top-full mt-2 w-72 sm:w-96 p-4 rounded-2xl bg-text-primary text-surface-body shadow-2xl font-serif text-sm leading-relaxed animate-[peekIn_0.15s_ease-out]">
+                <div role="tooltip" className="absolute z-20 left-0 top-full mt-2 w-72 sm:w-96 p-4 rounded-2xl bg-text-primary text-surface-body shadow-2xl font-serif text-sm leading-relaxed animate-[peekIn_0.15s_ease-out]">
                     {text}
                     <div className="absolute -top-1.5 left-5 w-3 h-3 bg-text-primary rotate-45" />
                 </div>
@@ -605,20 +613,21 @@ function RecallChunks({ essay, onScheduled, onNext, nextLabel }) {
 
 // ── WORD BY WORD — type one word at a time; next letter revealed as you go ──
 
-function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
+export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
     const [pIndex, setPIndex] = useState(0);
     const [wordIdx, setWordIdx] = useState(0);
     const [current, setCurrent] = useState('');
     const [history, setHistory] = useState([]); // [{target, typed, correct}]
+    const [peekedWords, setPeekedWords] = useState(new Set());
     const [paraDone, setParaDone] = useState(false);
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(false);
     const inputRef = useRef(null);
     const currentRef = useRef(null);
 
-    const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setParaDone(false); setDone(false); };
+    const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false); setDone(false); };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
     // Keep the word you're on visible inside its own scroll area, so a long
@@ -649,15 +658,30 @@ function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
 
     const advance = async (recall) => {
         setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
+        const scoredRecall = accuracy >= 80 ? recall : 'fail';
+        try {
+            await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), scoredRecall, {
+                mode: 'word_by_word',
+                accuracy,
+                hintCount: peekedWords.size,
+            });
+            onScheduled?.();
+        } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
         setBusy(false);
         if (pIndex + 1 < paras.length) {
-            setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setHistory([]); setParaDone(false);
+            setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false);
         } else setDone(true);
     };
 
     const correct = history.filter((h) => h.correct).length;
-    const accuracy = history.length ? Math.round((correct / history.length) * 100) : 0;
+    const rawAccuracy = history.length ? Math.round((correct / history.length) * 100) : 0;
+    const accuracy = Math.max(0, Math.min(100, rawAccuracy - (peekedWords.size * 3)));
+    const revealCurrentWord = () => {
+        setPeekedWords((currentPeeked) => {
+            if (currentPeeked.has(wordIdx)) return currentPeeked;
+            return new Set([...currentPeeked, wordIdx]);
+        });
+    };
 
     return (
         <div>
@@ -674,7 +698,7 @@ function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
                     {words.map((w, i) => {
                         if (i < history.length) {
                             const h = history[i];
-                            if (h.correct) return <span key={i} className="text-emerald-600 dark:text-emerald-400">{w}</span>;
+                            if (h.correct) return <span key={i} aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined} title={peekedWords.has(i) ? 'Revealed with a hint' : undefined} className={peekedWords.has(i) ? 'rounded block-amber px-1 text-amber' : 'text-emerald-600 dark:text-emerald-400'}>{w}</span>;
                             return (
                                 <span key={i} className="rounded px-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
                                     {w}<span className="line-through opacity-50 ml-1">{h.typed}</span>
@@ -683,7 +707,7 @@ function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
                         }
                         if (i === wordIdx && !paraDone) {
                             return (
-                                <span key={i} ref={currentRef} className="font-bold text-accent border-b-2 border-accent">
+                                <span key={i} ref={currentRef} aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined} title={peekedWords.has(i) ? 'Revealed with a hint' : undefined} className={`font-bold border-b-2 ${peekedWords.has(i) ? 'rounded block-amber px-1 text-amber border-[color:var(--mark-amber)]' : 'text-accent border-accent'}`}>
                                     {w[0]}{'─'.repeat(Math.max(0, w.length - 1))}
                                 </span>
                             );
@@ -722,7 +746,8 @@ function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
                             </div>
                             <div className="flex items-center justify-between mt-3">
                                 <p className="text-[10px] text-text-dim">Space or Enter to confirm</p>
-                                <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} />
+                                <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} onReveal={revealCurrentWord} />
+                                {peekedWords.size > 0 && <span className="sr-only" role="status">{peekedWords.size} revealed {peekedWords.size === 1 ? 'word' : 'words'}; accuracy reduced by {peekedWords.size * 3} percentage points.</span>}
                             </div>
                         </div>
                     ) : (
@@ -1063,9 +1088,12 @@ function NewEssayForm({ onCreated }) {
                 <button type="button" onClick={submit} disabled={submitting || pdfBusy}
                     className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
                     <PlusIcon className="w-4 h-4" />
-                    {submitting ? 'Preparing…' : 'Parse with AI'}
+                    {submitting ? 'Preparing…' : 'Set up practice'}
                 </button>
             </div>
+            <p className="mt-3 text-xs font-medium leading-relaxed text-text-dim">
+                Caplet uses AI to identify the essay’s structure for practice. Your original wording is kept unchanged.
+            </p>
         </div>
     );
 }
@@ -1230,7 +1258,7 @@ function LearningPath({ mode, onChange, dueCount, compact = false }) {
     );
 }
 
-function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialParseError }) {
+function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialParseError, onConsentRequired }) {
     const [parsing, setParsing] = useState(false);
     const [parseError, setParseError] = useState(initialParseError || null);
     const [mode, setMode] = useState('read');
@@ -1255,7 +1283,10 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialPar
         setParsing(true);
         setParseError(null);
         try { const res = await api.parseEssay(essay.id); onParsed?.(res.essay); }
-        catch (e) { setParseError(e?.message || 'Could not parse this essay right now.'); }
+        catch (e) {
+            if (e?.data?.consentRequired) onConsentRequired?.(e, essay.id);
+            setParseError(e?.message || 'Could not parse this essay right now.');
+        }
         finally { setParsing(false); }
     };
 
@@ -1317,7 +1348,7 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialPar
                             <button type="button" onClick={parse} disabled={parsing}
                                 className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
                                 <SparklesIcon className="w-4 h-4" />
-                                {parseError ? 'Retry AI parsing' : 'Parse with AI'}
+                                {parseError ? 'Try setup again' : 'Set up practice'}
                             </button>
                         </>
                     )}
@@ -1370,6 +1401,8 @@ export default function EssayMemoriser() {
     const [opening, setOpening] = useState(false);
     const [isParsing, setIsParsing] = useState(false);
     const [parseFailure, setParseFailure] = useState(null);
+    const [consentIssue, setConsentIssue] = useState(null);
+    const [savingConsent, setSavingConsent] = useState(false);
     const [dueByEssay, setDueByEssay] = useState({}); // essayId -> due count
     const mountedRef = useRef(true);
 
@@ -1422,6 +1455,7 @@ export default function EssayMemoriser() {
 
     const handleCreate = async (title, text) => {
         setParseFailure(null);
+        setConsentIssue(null);
 
         // Step 1: persist the original so the AI result can be attached to a
         // private essay record and retried without losing the student's text.
@@ -1438,6 +1472,7 @@ export default function EssayMemoriser() {
             .then((parsed) => { if (mountedRef.current) setEssay(parsed.essay); })
             .catch((e) => {
                 if (mountedRef.current) {
+                    if (e?.data?.consentRequired) setConsentIssue({ code: e.data.code, message: e.message, essayId: created.id });
                     setParseFailure(e?.message || 'AI parsing failed. Your essay is saved; please retry.');
                 }
             })
@@ -1447,6 +1482,34 @@ export default function EssayMemoriser() {
                     loadEssays();
                 }
             });
+    };
+
+    const enableAIAndRetry = async () => {
+        if (!consentIssue?.essayId) return;
+        setSavingConsent(true);
+        try {
+            await api.request('/privacy/consents', {
+                method: 'POST',
+                body: JSON.stringify({
+                    type: 'ai_processing',
+                    policyVersion: 'privacy-controls-v2',
+                    metadata: { source: 'essay_setup_prompt' },
+                }),
+            });
+            setConsentIssue(null);
+            setParseFailure(null);
+            setIsParsing(true);
+            const parsed = await api.parseEssay(consentIssue.essayId);
+            if (mountedRef.current) setEssay(parsed.essay);
+        } catch (error) {
+            if (mountedRef.current) {
+                setConsentIssue({ code: error?.data?.code || consentIssue.code, message: error?.message || 'AI access could not be enabled.', essayId: consentIssue.essayId });
+                setParseFailure(error?.message || 'AI parsing did not finish. Your essay is still saved.');
+            }
+        } finally {
+            if (mountedRef.current) setIsParsing(false);
+            setSavingConsent(false);
+        }
     };
 
     const handleParsed = (updated) => { setParseFailure(null); setEssay(updated); loadEssays(); };
@@ -1477,6 +1540,7 @@ export default function EssayMemoriser() {
                         onDeleted={handleDelete}
                         isParsing={isParsing}
                         initialParseError={parseFailure}
+                        onConsentRequired={(error, essayId) => setConsentIssue({ code: error?.data?.code, message: error?.message, essayId })}
                     />
                 ) : (
                     <>
@@ -1549,6 +1613,33 @@ export default function EssayMemoriser() {
                     </>
                 )}
             </div>
+            {consentIssue && (
+                <div className="fixed inset-0 z-[90] grid place-items-end bg-black/45 p-4 sm:place-items-center" role="presentation">
+                    <section role="dialog" aria-modal="true" aria-labelledby="essay-ai-consent-title" className="w-full max-w-lg rounded-3xl bg-surface-raised p-7 shadow-2xl sm:p-8">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-accent">Optional AI feature</p>
+                        <h2 id="essay-ai-consent-title" className="mt-2 font-display text-2xl font-extrabold tracking-tight text-text-primary">
+                            {consentIssue.code === 'ai_consent_required' ? 'Choose before your essay is sent' : 'One privacy step is still needed'}
+                        </h2>
+                        <p className="mt-4 text-sm font-medium leading-relaxed text-text-muted">
+                            Caplet sends the essay text to OpenAI to identify its thesis, paragraphs, quotes and techniques. AI output can be wrong, so you should check the structure. Your essay has already been saved and will not be sent unless the required permission is recorded.
+                        </p>
+                        {consentIssue.code !== 'ai_consent_required' && (
+                            <p className="mt-4 rounded-2xl bg-surface-soft p-4 text-sm font-semibold text-text-primary">{consentIssue.message}</p>
+                        )}
+                        <div className="mt-6 flex flex-wrap gap-3">
+                            {consentIssue.code === 'ai_consent_required' && (
+                                <button type="button" onClick={enableAIAndRetry} disabled={savingConsent} className="btn-primary px-6 py-3 text-sm disabled:opacity-40">
+                                    {savingConsent ? 'Enabling…' : 'Enable AI and continue'}
+                                </button>
+                            )}
+                            <button type="button" onClick={() => setConsentIssue(null)} className="btn-secondary px-6 py-3 text-sm">Not now</button>
+                            <Link to={consentIssue.code === 'age_confirmation_required' ? '/settings/profile' : '/settings/privacy'} className="min-h-11 content-center px-2 text-sm font-bold text-accent hover:underline">
+                                {consentIssue.code === 'age_confirmation_required' ? 'Add date of birth' : 'Review privacy controls'}
+                            </Link>
+                        </div>
+                    </section>
+                </div>
+            )}
         </div>
     );
 }

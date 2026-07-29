@@ -23,6 +23,16 @@ const User = sequelize.define('User', {
       len: [6, 100]
     }
   },
+  passwordLoginEnabled: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true
+  },
+  tokenVersion: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
+  },
   firstName: {
     type: DataTypes.STRING,
     allowNull: false,

@@ -43,7 +43,7 @@ describe('packaged Economics question bank', () => {
 
   test('recognises a complete packaged bank without replaying the seed', async () => {
     const models = require('../models');
-    models.CurriculumOutcome.count = jest.fn().mockResolvedValue(22);
+    models.CurriculumOutcome.count = jest.fn().mockResolvedValue(26);
     models.Question.count = jest.fn().mockResolvedValue(packagedQuestions.length);
 
     await expect(isEconomicsQuestionBankReady(models)).resolves.toBe(true);
@@ -51,7 +51,7 @@ describe('packaged Economics question bank', () => {
       where: expect.objectContaining({
         jurisdiction: 'NSW',
         subject: 'economics',
-        syllabusVersion: 'NSW-2025',
+        syllabusVersion: 'NSW-2009',
       }),
     });
     expect(models.Question.count).toHaveBeenCalledWith({

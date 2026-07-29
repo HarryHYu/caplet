@@ -89,11 +89,20 @@ router.post('/submit', async (req, res) => {
       now.getTime(),
     );
 
+    const resultMetadata = req.body?.resultMetadata && typeof req.body.resultMetadata === 'object'
+      ? {
+        mode: String(req.body.resultMetadata.mode || '').slice(0, 40),
+        accuracy: Math.max(0, Math.min(100, Number(req.body.resultMetadata.accuracy) || 0)),
+        hintCount: Math.max(0, Math.min(1000, Number(req.body.resultMetadata.hintCount) || 0)),
+      }
+      : {};
+
     await item.update({
       stage,
       nextDueAt,
       lastReviewedAt: now,
       lastRecall: normalizeRecall(normalized),
+      lastResultMetadata: resultMetadata,
     });
 
     let mastery = null;

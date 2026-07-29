@@ -6,26 +6,44 @@ const hscExamPapersUrl = 'https://www.nsw.gov.au/education-and-training/nesa/cur
 const hscStandardsUrl = 'https://www.nsw.gov.au/education-and-training/nesa/curriculum/hsc-standards/economics';
 
 export const economicsOutcomes = {
-  'ECO-11-01': 'uses economic terms, concepts and principles in a range of contexts',
-  'ECO-11-02': 'explains the economic role of individuals, businesses, institutions and government',
-  'ECO-11-03': 'explains the role and operation of markets in the Australian and global economy',
-  'ECO-11-04': 'explains the causes of economic issues and their consequences for individuals, businesses, government and the economy',
-  'ECO-11-05': 'discusses the perspectives of individuals, businesses, institutions and government on a range of economic issues',
-  'ECO-11-06': 'explains how policies are used to manage the economy',
-  'ECO-11-07': 'discusses policy measures to address economic issues in actual or hypothetical contexts',
-  'ECO-11-08': 'analyses data for patterns and relationships to support economic arguments and decision-making',
-  'ECO-11-09': 'applies mathematical concepts, formulas and techniques in economic contexts',
-  'ECO-11-10': 'communicates economic ideas and information in a range of forms appropriate to purpose and audience',
-  'ECO-12-01': 'applies economic terms, concepts and principles in a range of contexts',
-  'ECO-12-02': 'analyses the economic role of individuals, businesses, institutions and government',
-  'ECO-12-03': 'explains the role and effects of markets in the Australian and global economy',
-  'ECO-12-04': 'analyses the causes of economic issues and their consequences for individuals, businesses, government and the economy',
-  'ECO-12-05': 'assesses the perspectives of individuals, businesses, institutions and government on a range of economic issues',
-  'ECO-12-06': 'evaluates the effectiveness of economic policies used to manage issues in the Australian and global economy',
-  'ECO-12-07': 'proposes and justifies policy measures to address economic issues in actual or hypothetical contexts',
-  'ECO-12-08': 'analyses data for patterns and relationships to make predictions and support economic arguments and decision-making',
-  'ECO-12-09': 'applies mathematical concepts, formulas and techniques in economic contexts',
-  'ECO-12-10': 'communicates economic ideas, perspectives and information in a range of forms appropriate to purpose and audience',
+  P1: 'demonstrates understanding of economic terms, concepts and relationships',
+  P2: 'explains the economic role of individuals, firms and government in an economy',
+  P3: 'describes, explains and evaluates the role and operation of markets',
+  P4: 'compares and contrasts aspects of different economies',
+  P5: 'analyses the relationship between individuals, firms, institutions and government in the Australian economy',
+  P6: 'explains the role of government in the Australian economy',
+  P7: 'identifies the nature and causes of economic problems and issues for individuals, firms and governments',
+  P8: 'applies appropriate terminology, concepts and theories in economic contexts',
+  P9: 'selects and organises information from a variety of sources for relevance and reliability',
+  P10: 'communicates economic information, ideas and issues in appropriate forms',
+  P11: 'applies mathematical concepts in economic contexts',
+  P12: 'works independently and in groups to achieve appropriate goals in set timelines',
+  H1: 'demonstrates understanding of economic terms, concepts and relationships',
+  H2: 'analyses the economic role of individuals, firms, institutions and governments',
+  H3: 'explains the role of markets within the global economy',
+  H4: 'analyses the impact of global markets on the Australian and global economies',
+  H5: 'discusses policy options for dealing with problems and issues in contemporary and hypothetical contexts',
+  H6: 'analyses the impact of economic policies in theoretical and contemporary Australian contexts',
+  H7: 'evaluates the consequences of contemporary economic problems and issues on individuals, firms and governments',
+  H8: 'applies appropriate terminology, concepts and theories in contemporary and hypothetical economic contexts',
+  H9: 'selects and organises information from a variety of sources for relevance and reliability',
+  H10: 'communicates economic information, ideas and issues in appropriate forms',
+  H11: 'applies mathematical concepts in economic contexts',
+  H12: 'works independently and in groups to achieve appropriate goals in set timelines',
+};
+
+const currentOutcomeCode = (code) => {
+  const match = /^ECO-(11|12)-(\d{2})$/.exec(String(code || ''));
+  if (!match) return code;
+  const preliminary = {
+    '01': 'P1', '02': 'P2', '03': 'P3', '04': 'P7', '05': 'P5',
+    '06': 'P6', '07': 'P8', '08': 'P9', '09': 'P11', '10': 'P10',
+  };
+  const hsc = {
+    '01': 'H1', '02': 'H2', '03': 'H3', '04': 'H7', '05': 'H8',
+    '06': 'H6', '07': 'H5', '08': 'H9', '09': 'H11', '10': 'H10',
+  };
+  return (match[1] === '11' ? preliminary : hsc)[match[2]] || code;
 };
 
 const bandRubric20 = [
@@ -1701,10 +1719,10 @@ export const economicsExamPracticePacks = [
 export const economicsResourceLibrary = {
   subject: 'Economics',
   stage: 'Stage 6',
-  syllabusName: 'Economics 11-12 Syllabus (2025)',
-  syllabusCode: 'economics_11_12_2025',
+  syllabusName: 'Economics Stage 6 Syllabus (2009)',
+  syllabusCode: 'economics_stage_6_2009',
   implementationNote:
-    'The official NSW Economics 11-12 (2025) syllabus is the new structure, implemented from 2027. During transition, Year 12 HSC students may still be examined under the 2009 Stage 6 syllabus.',
+    'Economics Stage 6 (2009) remains the taught NSW syllabus in 2026. Economics 11-12 (2025) is available for planning, starts with Year 11 in 2027, and has its first HSC examination in 2028.',
   officialSources: [
     {
       title: 'NESA NSW Curriculum - Economics 11-12 (2025) overview',
@@ -2541,10 +2559,169 @@ export const economicsResourceLibrary = {
   ],
 };
 
+const futureSyllabusAreas = economicsResourceLibrary.focusAreas;
+const sourceArea = (id) => futureSyllabusAreas.find((area) => area.id === id);
+const resourcesMatching = (area, pattern) => (area?.resources || []).filter((resource) => pattern.test(JSON.stringify(resource)));
+const mappedArea = ({ id, year, title, focus, description, contentGroups, sources, resources, reviewResources = [] }) => ({
+  id,
+  year,
+  title,
+  focus,
+  description,
+  contentGroups,
+  resources,
+  reviewResources,
+  mappingStatus: reviewResources.length ? 'partially_mapped' : 'mapped',
+  mappingNote: reviewResources.length
+    ? `${reviewResources.length} activit${reviewResources.length === 1 ? 'y is' : 'ies are'} held for curriculum review rather than assigned without clear content evidence.`
+    : 'Mapped from the activity content to this currently taught 2009 syllabus topic.',
+  legacyFocusIds: sources,
+  outcomes: [...new Set(resources.flatMap((resource) => resource.outcomes || []))],
+  sourceUrl: legacySyllabusUrl,
+});
+
+const household = sourceArea('year-11-household-business-sector');
+const international = sourceArea('year-11-international-sector');
+const globalArea = sourceArea('year-12-australia-global-economy');
+const labourResources = resourcesMatching(household, /labour|employment|wage|workforce/i);
+const consumerBusinessResources = (household?.resources || []).filter((resource) => !labourResources.includes(resource));
+const globalEconomyResources = resourcesMatching(globalArea, /globalis|trading partner|global economy|development|protection/i);
+const australiaGlobalResources = (globalArea?.resources || []).filter((resource) => !globalEconomyResources.includes(resource));
+
+economicsResourceLibrary.focusAreas = [
+  mappedArea({
+    id: 'year-11-introduction-to-economics',
+    year: 11,
+    title: 'Introduction to Economics',
+    focus: 'The nature of economics and the operation of an economy',
+    description: 'Scarcity, choice, opportunity cost, production possibilities, the circular flow and the business cycle.',
+    contentGroups: ['The economic problem', 'Economic systems', 'An economy at work'],
+    sources: ['year-11-introduction-to-economics'],
+    resources: sourceArea('year-11-introduction-to-economics')?.resources || [],
+  }),
+  mappedArea({
+    id: 'year-11-consumers-and-business',
+    year: 11,
+    title: 'Consumers and Business',
+    focus: 'The role of consumers and business in the economy',
+    description: 'Consumer choice, sources of income, business decisions, production and the interaction between households and firms.',
+    contentGroups: ['Consumers', 'Business', 'Consumers and business in the economy'],
+    sources: ['year-11-household-business-sector'],
+    resources: consumerBusinessResources,
+    reviewResources: (household?.resources || []).filter((resource) => !consumerBusinessResources.includes(resource) && !labourResources.includes(resource)),
+  }),
+  mappedArea({
+    id: 'year-11-markets',
+    year: 11,
+    title: 'Markets',
+    focus: 'The role of markets, demand, supply and competition',
+    description: 'How prices are determined, how markets allocate resources, and why market outcomes may require intervention.',
+    contentGroups: ['Demand and supply', 'Market outcomes', 'Competition and market failure'],
+    sources: ['year-11-markets'],
+    resources: sourceArea('year-11-markets')?.resources || [],
+  }),
+  mappedArea({
+    id: 'year-11-labour-markets',
+    year: 11,
+    title: 'Labour Markets',
+    focus: 'The workforce and the role of labour in the economy',
+    description: 'Demand for and supply of labour, wage outcomes, labour-market institutions and changing work patterns.',
+    contentGroups: ['Demand for and supply of labour', 'Labour market outcomes', 'Labour market institutions'],
+    sources: ['year-11-household-business-sector'],
+    resources: labourResources,
+  }),
+  mappedArea({
+    id: 'year-11-financial-markets',
+    year: 11,
+    title: 'Financial Markets',
+    focus: 'The financial market in Australia, including the share market',
+    description: 'Financial institutions, borrowing and lending, financial instruments, regulation and the share market.',
+    contentGroups: ['Financial institutions', 'Financial instruments and markets', 'The share market'],
+    sources: ['year-11-financial-sector'],
+    resources: sourceArea('year-11-financial-sector')?.resources || [],
+  }),
+  mappedArea({
+    id: 'year-11-government-in-the-economy',
+    year: 11,
+    title: 'Government in the Economy',
+    focus: 'The role of government in the Australian economy',
+    description: 'Government revenue, expenditure, redistribution, intervention and stabilisation.',
+    contentGroups: ['Reasons for government intervention', 'Government revenue and expenditure', 'Influence on economic activity'],
+    sources: ['year-11-government-sector'],
+    resources: sourceArea('year-11-government-sector')?.resources || [],
+    reviewResources: international?.resources || [],
+  }),
+  mappedArea({
+    id: 'year-12-the-global-economy',
+    year: 12,
+    title: 'The Global Economy',
+    focus: 'Features of the global economy and globalisation',
+    description: 'Globalisation, trade, financial flows, development, protection and international economic integration.',
+    contentGroups: ['Globalisation', 'Trade and financial flows', 'Economic development', 'Trade policy and protection'],
+    sources: ['year-12-australia-global-economy'],
+    resources: globalEconomyResources,
+  }),
+  mappedArea({
+    id: 'year-12-australias-place-in-the-global-economy',
+    year: 12,
+    title: 'Australia’s Place in the Global Economy',
+    focus: 'Australia’s trade and finance',
+    description: 'Australia’s trade composition and direction, balance of payments, exchange rates, foreign liabilities and external stability.',
+    contentGroups: ['Australia’s trade', 'Balance of payments', 'Exchange rates', 'Foreign investment and liabilities'],
+    sources: ['year-11-international-sector', 'year-12-australia-global-economy'],
+    resources: [...(international?.resources || []), ...australiaGlobalResources],
+  }),
+  mappedArea({
+    id: 'year-12-economic-issues',
+    year: 12,
+    title: 'Economic Issues',
+    focus: 'Growth, unemployment, inflation, distribution and sustainability',
+    description: 'The causes, consequences and relationships between major economic issues in Australia.',
+    contentGroups: ['Economic growth', 'Unemployment', 'Inflation', 'Distribution of income and wealth', 'Environmental sustainability'],
+    sources: ['year-12-economic-issues'],
+    resources: sourceArea('year-12-economic-issues')?.resources || [],
+  }),
+  mappedArea({
+    id: 'year-12-economic-policies-and-management',
+    year: 12,
+    title: 'Economic Policies and Management',
+    focus: 'The range of policies used to manage the Australian economy',
+    description: 'Economic objectives and the operation, effectiveness and limitations of fiscal, monetary and microeconomic policies.',
+    contentGroups: ['Economic objectives', 'Fiscal policy', 'Monetary policy', 'Microeconomic policies', 'Policy mix'],
+    sources: ['year-12-economic-management'],
+    resources: sourceArea('year-12-economic-management')?.resources || [],
+  }),
+];
+
+const mapCurrentOutcomeReferences = (value) => {
+  if (!value || typeof value !== 'object') return;
+  if (Array.isArray(value.outcomes)) {
+    value.outcomes = [...new Set(value.outcomes.map(currentOutcomeCode).filter((code) => economicsOutcomes[code]))];
+  }
+  Object.values(value).forEach((child) => {
+    if (child && typeof child === 'object') {
+      if (Array.isArray(child)) child.forEach(mapCurrentOutcomeReferences);
+      else mapCurrentOutcomeReferences(child);
+    }
+  });
+};
+
+economicsResourceLibrary.focusAreas.forEach((area) => {
+  area.resources.forEach(mapCurrentOutcomeReferences);
+  area.outcomes = [...new Set(area.resources.flatMap((resource) => resource.outcomes || []))];
+});
+mapCurrentOutcomeReferences(economicsResourceLibrary.examPracticePacks[0]);
+
 economicsResourceLibrary.focusAreas.forEach((area) => {
   area.topicDrills = area.contentGroups.map((group) => makeTopicDrill(area, group)).filter(Boolean);
   area.stimulusSets = (stimulusSetSpecs[area.id] || []).map((spec, index) => makeStimulusSet(area, spec, index));
+  [...area.topicDrills, ...area.stimulusSets].forEach(mapCurrentOutcomeReferences);
+  area.outcomes = [...new Set(getEconomicsAreaResourcesForMapping(area).flatMap((resource) => resource.outcomes || []))];
 });
+
+function getEconomicsAreaResourcesForMapping(area) {
+  return [...area.resources, ...(area.topicDrills || []), ...(area.stimulusSets || [])];
+}
 
 export const getEconomicsAreaResources = (area) => [
   ...area.resources,

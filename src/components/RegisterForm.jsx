@@ -179,7 +179,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
           <p className="text-xs font-medium leading-relaxed text-text-dim">Used to apply age-appropriate privacy controls. It is not shown publicly.</p>
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="reg-password" className="block text-sm font-medium text-text-muted">Password (min 6 characters)</label>
+          <label htmlFor="reg-password" className="block text-sm font-medium text-text-muted">Password (at least 8 characters)</label>
           <input
             type="password"
             id="reg-password"
@@ -187,7 +187,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
             value={formData.password}
             onChange={handleChange}
             required
-            minLength={6}
+            minLength={8}
             autoComplete="new-password"
             placeholder="••••••••"
             className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"

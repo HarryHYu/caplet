@@ -1,6 +1,6 @@
 const DEFAULT_META = {
-  title: 'Caplet — Build, learn, and ship anything.',
-  description: 'A free open platform for structured courses, interactive tools, and collaborative workspaces.',
+  title: 'Caplet — Study with a clear next step.',
+  description: 'A student learning space for subjects, practice, feedback, revision, and study planning.',
   canonicalPath: '/',
   noIndex: false,
 };
@@ -24,12 +24,16 @@ const PUBLIC_META = [
   { match: /^\/terms$/, title: 'Terms — Caplet', description: 'Terms for using Caplet.' },
   { match: /^\/login$/, title: 'Sign in — Caplet', description: 'Sign in to your Caplet account.' },
   { match: /^\/register$/, title: 'Create an account — Caplet', description: 'Create a free Caplet account.' },
+  { match: /^\/forgot-password$/, title: 'Reset your password — Caplet', description: 'Request a secure Caplet password reset link.' },
+  { match: /^\/reset-password$/, title: 'Choose a new password — Caplet', description: 'Choose a new password using a secure reset link.' },
   { match: /^\/play$/, title: 'Join Caplet Live', description: 'Join an interactive Caplet Live session.' },
 ];
 
 const PRIVATE_PATHS = [
   /^\/login$/,
   /^\/register$/,
+  /^\/forgot-password$/,
+  /^\/reset-password$/,
   /^\/dashboard(?:\/|$)/,
   /^\/money\/my-money$/,
   /^\/study-plan(?:\/|$)/,

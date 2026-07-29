@@ -163,6 +163,27 @@ class ApiService {
     return this.request('/auth/me');
   }
 
+  async changePassword(payload) {
+    return this.request('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async requestPasswordReset(email) {
+    return this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(payload) {
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
   async logout() {
     this.clearToken();
     return this.request('/auth/logout', { method: 'POST' });
@@ -713,10 +734,10 @@ class ApiService {
   }
 
   // Record a recall result for an item; advances/resets its review schedule.
-  async submitReview(itemType, itemId, recall) {
+  async submitReview(itemType, itemId, recall, resultMetadata) {
     return this.request('/review/submit', {
       method: 'POST',
-      body: JSON.stringify({ itemType, itemId, recall }),
+      body: JSON.stringify({ itemType, itemId, recall, resultMetadata }),
     });
   }
 

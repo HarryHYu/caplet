@@ -38,7 +38,7 @@ describe('ResourceLibrary page', () => {
   it('routes a topic into the persisted practice and mastery loop', () => {
     renderEconomics('/library/economics/focus/year-11-introduction-to-economics');
 
-    expect(screen.getByRole('heading', { name: 'Introduction to economics' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Introduction to Economics' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Practice this Economics topic/i })).toHaveAttribute('href', expect.stringContaining('focusId=year-11-introduction-to-economics'));
     expect(screen.getByText(/Answers now run through the same saved practice session/i)).toBeInTheDocument();
   });

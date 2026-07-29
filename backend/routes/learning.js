@@ -30,7 +30,7 @@ router.get('/mastery', async (req, res) => {
     const subject = String(req.query.subject || 'economics').toLowerCase();
     if (subject === 'economics') await require('../services/questionBankService').ensureEconomicsQuestionBank();
     const syllabusVersion = subject === 'economics'
-      ? String(req.query.syllabusVersion || 'NSW-2025')
+      ? String(req.query.syllabusVersion || 'NSW-2009')
       : null;
     const where = { subject, isActive: true };
     if (syllabusVersion) where.syllabusVersion = syllabusVersion;
@@ -83,7 +83,7 @@ router.get('/mastery', async (req, res) => {
     });
   } catch (error) {
     console.error('Get mastery error:', error);
-    res.status(500).json({ message: 'Could not load mastery.' });
+    res.status(500).json({ message: 'Mastery could not load. Try again in a moment.' });
   }
 });
 

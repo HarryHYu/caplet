@@ -44,6 +44,9 @@ const requireAuth = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ message: 'Invalid token' });
     }
+    if (Number(decoded.tokenVersion || 0) !== Number(user.tokenVersion || 0)) {
+      return res.status(401).json({ message: 'This session is no longer valid. Sign in again.' });
+    }
 
     req.user = user;
     next();

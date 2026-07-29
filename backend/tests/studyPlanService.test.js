@@ -25,8 +25,10 @@ describe('studyPlanService', () => {
     expect(options.subjects.every((subject) => subject.diagnostic.options.length === 4)).toBe(true);
   });
 
-  test('accepts every catalogue subject without truncating the selection', () => {
-    const subjects = publicOptions().subjects.map((subject) => subject.value);
+  test('accepts every Year 12 catalogue subject without truncating the selection', () => {
+    const subjects = publicOptions().subjects
+      .filter((subject) => subject.years.includes(12))
+      .map((subject) => subject.value);
     const config = normalizeConfig({
       yearLevel: '12',
       subjects,

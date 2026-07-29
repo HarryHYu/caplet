@@ -8,11 +8,12 @@ vi.mock('../services/api', () => ({
     getEssays: vi.fn().mockResolvedValue({ essays: [] }),
     getEssay: vi.fn(),
     getDueReviewItems: vi.fn().mockResolvedValue({ items: [] }),
+    submitReview: vi.fn().mockResolvedValue({ reviewItem: {} }),
     getProxiedImageSrc: (u) => u,
   },
 }));
 
-import EssayMemoriser from '../pages/EssayMemoriser';
+import EssayMemoriser, { GuidedTypeMode } from '../pages/EssayMemoriser';
 import api from '../services/api';
 
 describe('EssayMemoriser', () => {
@@ -24,7 +25,8 @@ describe('EssayMemoriser', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Add essay/i }));
     expect(screen.getByText(/Add an essay/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Parse with AI/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Set up practice/i })).toBeInTheDocument();
+    expect(screen.getByText(/uses AI to identify the essay’s structure/i)).toBeInTheDocument();
     // PDF upload affordance is present (reuses the existing extractor)
     expect(screen.getByText(/Upload PDF/i)).toBeInTheDocument();
   });
@@ -58,5 +60,46 @@ describe('EssayMemoriser', () => {
     fireEvent.click(screen.getByRole('button', { name: /Rebuild it/i }));
     expect(await screen.findByText(/Step 2 of 4/i)).toBeInTheDocument();
     expect(screen.getByText(/Change activity/i)).toBeInTheDocument();
+  });
+
+  it('penalises each uniquely revealed word once and persists hint-aware completion scoring', () => {
+    const essay = {
+      id: 'essay-hints',
+      parsedStructure: {
+        bodyParagraphs: [{ text: 'Alpha beta gamma delta', quotes: [], techniques: [] }],
+      },
+    };
+    render(<GuidedTypeMode essay={essay} />);
+
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'Alpha' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(screen.getByText('100%')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Peek word' }));
+    expect(screen.getByText('97%')).toBeInTheDocument();
+    expect(screen.getByLabelText(/beta, revealed with a hint/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Peek word: beta/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Peek word' }));
+    expect(screen.getByText('97%')).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: 'beta' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.click(screen.getByRole('button', { name: 'Peek word' }));
+    expect(screen.getByText('94%')).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: 'gamma' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.change(input, { target: { value: 'delta' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.click(screen.getByRole('button', { name: /Got it/i }));
+
+    expect(api.submitReview).toHaveBeenCalledWith(
+      'essayParagraph',
+      'essay-hints:0',
+      'pass',
+      { mode: 'word_by_word', accuracy: 94, hintCount: 2 },
+    );
   });
 });

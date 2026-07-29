@@ -14,13 +14,20 @@ export function createLearningHubData({ faculties = [], courses = [], courseProg
   const learningPaths = courses.map((course) => {
     const progress = progressByCourse[String(course.id)];
     const lessonCount = (course.modules || []).reduce((sum, module) => sum + (module.lessons || []).length, 0);
+    const yearLevel = Number(course.metadata?.yearLevel);
+    const stage = course.metadata?.stage
+      || (yearLevel >= 11 ? 'Stage 6' : yearLevel >= 9 ? 'Stage 5' : yearLevel >= 7 ? 'Stage 4' : 'General');
     return {
       id: course.id,
       title: course.title,
       description: course.shortDescription || course.description,
       href: coursePath(course, progress),
       kind: course.metadata?.subject || course.category || 'Learning path',
-      metadata: [`${course.duration || 0} min`, `${lessonCount} lessons`, course.level],
+      metadata: [
+        course.duration > 0 ? `${course.duration} min` : 'Self-paced',
+        `${lessonCount} ${lessonCount === 1 ? 'lesson' : 'lessons'}`,
+        stage,
+      ],
       status: progress?.status,
       progress: Number(progress?.progressPercentage || 0),
     };

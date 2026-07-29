@@ -55,6 +55,7 @@ const EconomicIngestionRun = require('./EconomicIngestionRun');
 const CurriculumEdition = require('./CurriculumEdition');
 const SubjectPack = require('./SubjectPack');
 const SubjectPackReviewItem = require('./SubjectPackReviewItem');
+const PasswordResetToken = require('./PasswordResetToken');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -764,6 +765,8 @@ SubjectPackReviewItem.belongsTo(User, {
   foreignKey: 'resolvedBy',
   as: 'resolver',
 });
+User.hasMany(PasswordResetToken, { foreignKey: 'userId', as: 'passwordResetTokens', onDelete: 'CASCADE' });
+PasswordResetToken.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 module.exports = {
   sequelize,
@@ -823,4 +826,5 @@ module.exports = {
   CurriculumEdition,
   SubjectPack,
   SubjectPackReviewItem,
+  PasswordResetToken,
 };

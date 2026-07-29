@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
@@ -130,9 +131,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
           />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="password" className="block text-sm font-medium text-text-muted">
-            Password
-          </label>
+          <div className="flex items-center justify-between gap-3"><label htmlFor="password" className="block text-sm font-medium text-text-muted">Password</label><Link to="/forgot-password" className="text-xs font-bold text-accent hover:underline">Forgot password?</Link></div>
           <input
             type="password"
             id="password"

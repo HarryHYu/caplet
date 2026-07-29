@@ -1,0 +1,50 @@
+{
+  "source": {
+    "authority": "NSW Education Standards Authority",
+    "stageUrl": "https://curriculum.nsw.edu.au/use-the-curriculum/learn-about-nsw-curriculum/curriculum-structure",
+    "catalogueUrl": "https://curriculum.nsw.edu.au/learning-areas",
+    "verifiedAt": "2026-07-28",
+    "note": "Stage 4 is Years 7-8, Stage 5 is Years 9-10, and Stage 6 is Years 11-12. Stage 6 entries use full course names; Years 7-10 entries use NESA syllabus or subject-area names."
+  },
+  "stages": [
+    { "id": "stage-4", "label": "Stage 4", "years": [7, 8] },
+    { "id": "stage-5", "label": "Stage 5", "years": [9, 10] },
+    { "id": "stage-6", "label": "Stage 6", "years": [11, 12] }
+  ],
+  "subjects": [
+    { "id": "english", "label": "English", "faculty": "English", "years": [7, 8, 9, 10], "aliases": [] },
+    { "id": "mathematics", "label": "Mathematics", "faculty": "Mathematics", "years": [7, 8, 9, 10], "aliases": [] },
+    { "id": "science", "label": "Science", "faculty": "Science", "years": [7, 8, 9, 10], "aliases": [] },
+    { "id": "history", "label": "History", "faculty": "HSIE", "years": [7, 8, 9, 10], "aliases": [] },
+    { "id": "geography-7-10", "label": "Geography", "faculty": "HSIE", "years": [7, 8, 9, 10], "aliases": ["geography"] },
+    { "id": "pdhpe", "label": "PDHPE", "faculty": "PDHPE", "years": [7, 8, 9, 10], "aliases": ["Personal Development, Health and Physical Education"] },
+    { "id": "technology-mandatory", "label": "Technology Mandatory", "faculty": "Technology", "years": [7, 8], "aliases": [] },
+    { "id": "visual-arts-7-10", "label": "Visual Arts", "faculty": "Creative Arts", "years": [7, 8, 9, 10], "aliases": [] },
+    { "id": "music-7-10", "label": "Music", "faculty": "Creative Arts", "years": [7, 8, 9, 10], "aliases": [] },
+    { "id": "commerce", "label": "Commerce", "faculty": "HSIE", "years": [9, 10], "aliases": [] },
+    { "id": "computing-technology", "label": "Computing Technology", "faculty": "Technology", "years": [9, 10], "aliases": [] },
+    { "id": "design-and-technology", "label": "Design and Technology", "faculty": "Technology", "years": [9, 10], "aliases": [] },
+    { "id": "food-technology", "label": "Food Technology", "faculty": "Technology", "years": [9, 10], "aliases": [] },
+    { "id": "industrial-technology", "label": "Industrial Technology", "faculty": "Technology", "years": [9, 10], "aliases": [] },
+    { "id": "agricultural-technology", "label": "Agricultural Technology", "faculty": "Technology", "years": [9, 10], "aliases": [] },
+    { "id": "english-standard", "label": "English Standard", "faculty": "English", "years": [11, 12], "aliases": ["English"] },
+    { "id": "english-advanced", "label": "English Advanced", "faculty": "English", "years": [11, 12], "aliases": [] },
+    { "id": "english-extension-1", "label": "English Extension 1", "faculty": "English", "years": [11, 12], "aliases": [] },
+    { "id": "english-extension-2", "label": "English Extension 2", "faculty": "English", "years": [12], "aliases": [] },
+    { "id": "mathematics-standard", "label": "Mathematics Standard", "faculty": "Mathematics", "years": [11, 12], "aliases": [] },
+    { "id": "mathematics-advanced", "label": "Mathematics Advanced", "faculty": "Mathematics", "years": [11, 12], "aliases": [] },
+    { "id": "extension-1", "label": "Mathematics Extension 1", "faculty": "Mathematics", "years": [11, 12], "aliases": ["Extension 1"] },
+    { "id": "extension-2", "label": "Mathematics Extension 2", "faculty": "Mathematics", "years": [12], "aliases": ["Extension 2"] },
+    { "id": "biology", "label": "Biology", "faculty": "Science", "years": [11, 12], "aliases": [] },
+    { "id": "chemistry", "label": "Chemistry", "faculty": "Science", "years": [11, 12], "aliases": [] },
+    { "id": "physics", "label": "Physics", "faculty": "Science", "years": [11, 12], "aliases": [] },
+    { "id": "investigating-science", "label": "Investigating Science", "faculty": "Science", "years": [11, 12], "aliases": [] },
+    { "id": "ancient-history", "label": "Ancient History", "faculty": "HSIE", "years": [11, 12], "aliases": [] },
+    { "id": "modern-history", "label": "Modern History", "faculty": "HSIE", "years": [11, 12], "aliases": [] },
+    { "id": "geography", "label": "Geography", "faculty": "HSIE", "years": [11, 12], "aliases": [] },
+    { "id": "legal", "label": "Legal Studies", "faculty": "HSIE", "years": [11, 12], "aliases": [] },
+    { "id": "society-and-culture", "label": "Society and Culture", "faculty": "HSIE", "years": [11, 12], "aliases": ["Society & Culture"] },
+    { "id": "business", "label": "Business Studies", "faculty": "HSIE", "years": [11, 12], "aliases": [] },
+    { "id": "economics", "label": "Economics", "faculty": "HSIE", "years": [11, 12], "aliases": [] }
+  ]
+}

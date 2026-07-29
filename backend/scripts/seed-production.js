@@ -126,7 +126,10 @@ const seedProductionDatabase = async () => {
     // Create courses
     const createdCourses = [];
     for (const courseData of courses) {
-      const course = await Course.create(courseData);
+      const course = await Course.create({
+        ...courseData,
+        metadata: courseData.metadata || { stage: 'General', subject: 'Money' }
+      });
       createdCourses.push(course);
       console.log(`✅ Created course: ${course.title}`);
     }
