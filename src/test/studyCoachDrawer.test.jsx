@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 const { api } = vi.hoisted(() => ({
   api: {
@@ -16,6 +17,10 @@ vi.mock('../services/api', () => ({ default: api }));
 
 import StudyCoachDrawer from '../components/StudyCoachDrawer';
 
+function renderDrawer() {
+  return render(<MemoryRouter><StudyCoachDrawer /></MemoryRouter>);
+}
+
 describe('StudyCoachDrawer', () => {
   beforeEach(() => {
     api.getChatHistory.mockResolvedValue({ messages: [] });
@@ -30,7 +35,7 @@ describe('StudyCoachDrawer', () => {
   });
 
   it('opens over the current page, traps the interaction in a labelled dialog, and restores focus', async () => {
-    render(<StudyCoachDrawer />);
+    renderDrawer();
     const launcher = screen.getByRole('button', { name: 'Study coach' });
     launcher.focus();
     fireEvent.click(launcher);
@@ -46,7 +51,7 @@ describe('StudyCoachDrawer', () => {
   });
 
   it('uses the existing tutor and chat-history services without navigating away', async () => {
-    render(<StudyCoachDrawer />);
+    renderDrawer();
     fireEvent.click(screen.getByRole('button', { name: 'Study coach' }));
     fireEvent.click(screen.getByRole('button', { name: 'How should I study today?' }));
 

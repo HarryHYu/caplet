@@ -941,7 +941,7 @@ async function buildCandidates(signals) {
 
   // Only include assessments ≤ 28 days away for dedicated cards
   for (const ctx of assessmentContexts.filter(c => c.days != null && c.days <= 28)) {
-    const { assessment: a, days, totalPressure, scopedSyllabus, uncoveredSyllabus, weakAtoms, readiness, velocityStatus } = ctx;
+    const { assessment: a, days, totalPressure, uncoveredSyllabus, weakAtoms, readiness, velocityStatus } = ctx;
 
     // Assessment overview card
     const readinessStr =
@@ -1461,7 +1461,11 @@ function rankAndSelect(candidates, assessmentContexts, limit) {
   }
 
   // Strip internal fields, return clean cards
-  return results.map(({ _assessmentId, ...card }) => card);
+  return results.map((result) => {
+    const card = { ...result };
+    delete card._assessmentId;
+    return card;
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
