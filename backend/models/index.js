@@ -56,6 +56,13 @@ const CurriculumEdition = require('./CurriculumEdition');
 const SubjectPack = require('./SubjectPack');
 const SubjectPackReviewItem = require('./SubjectPackReviewItem');
 const PasswordResetToken = require('./PasswordResetToken');
+// Study coach — recommendation engine + HSC syllabus-point tracking (ported).
+const SyllabusPoint = require('./SyllabusPoint');
+const UserSyllabusProgress = require('./UserSyllabusProgress');
+const StudySession = require('./StudySession');
+const SchoolAssessment = require('./SchoolAssessment');
+const KnowledgeAtom = require('./KnowledgeAtom');
+const RecommendationEvent = require('./RecommendationEvent');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -715,6 +722,9 @@ CurriculumOutcome.belongsTo(CurriculumEdition, {
   foreignKey: 'curriculumEditionId',
   as: 'edition',
 });
+// A logged focus session may be attributed to a course (optional).
+StudySession.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+
 CurriculumEdition.hasMany(Lesson, {
   foreignKey: 'curriculumEditionId',
   as: 'lessons',
@@ -827,4 +837,10 @@ module.exports = {
   SubjectPack,
   SubjectPackReviewItem,
   PasswordResetToken,
+  SyllabusPoint,
+  UserSyllabusProgress,
+  StudySession,
+  SchoolAssessment,
+  KnowledgeAtom,
+  RecommendationEvent,
 };

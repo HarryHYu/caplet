@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { PaperAirplaneIcon, SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
@@ -133,6 +134,9 @@ export default function StudyCoachDrawer() {
                 <p className="font-hand text-base text-accent">study coach</p>
                 <h2 id="study-coach-title" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">What are you working on?</h2>
                 <p id="study-coach-description" className="mt-1 text-xs font-medium leading-relaxed text-text-muted">Ask for an explanation, a quiz, or help planning your next study block.</p>
+                <Link to="/study" onClick={() => setOpen(false)} className="mt-3 inline-flex text-xs font-extrabold text-accent hover:text-accent-strong">
+                  Open full study view
+                </Link>
               </div>
               <button ref={closeRef} type="button" onClick={() => setOpen(false)} aria-label="Close study coach" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line-soft text-text-muted hover:bg-surface-soft hover:text-text-primary">
                 <XMarkIcon className="h-5 w-5" aria-hidden="true" />
