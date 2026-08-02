@@ -17,8 +17,8 @@ vi.mock('../services/api', () => ({ default: api }));
 
 import StudyCoachDrawer from '../components/StudyCoachDrawer';
 
-function renderDrawer() {
-  return render(<MemoryRouter><StudyCoachDrawer /></MemoryRouter>);
+function renderDrawer(route = '/') {
+  return render(<MemoryRouter initialEntries={[route]}><StudyCoachDrawer /></MemoryRouter>);
 }
 
 describe('StudyCoachDrawer', () => {
@@ -59,5 +59,11 @@ describe('StudyCoachDrawer', () => {
     expect(api.askTutor).toHaveBeenCalledWith({ question: 'How should I study today?', slide: undefined });
     expect(api.saveChatMessage).toHaveBeenCalledWith('user', 'How should I study today?');
     expect(api.saveChatMessage).toHaveBeenCalledWith('assistant', expect.stringContaining('Try one worked example'));
+  });
+
+  it('does not cover lesson navigation controls', () => {
+    renderDrawer('/courses/course-1/lessons/lesson-1');
+
+    expect(screen.queryByRole('button', { name: 'Study coach' })).not.toBeInTheDocument();
   });
 });

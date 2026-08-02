@@ -25,6 +25,23 @@ describe('studyPlanService', () => {
     expect(options.subjects.every((subject) => subject.diagnostic.options.length === 4)).toBe(true);
   });
 
+  test('keeps Stage 6 Mathematics and English courses distinct and fully named', () => {
+    const stageSixLabels = publicOptions().subjects
+      .filter((subject) => subject.years.includes(12))
+      .map((subject) => subject.label);
+
+    expect(stageSixLabels).toEqual(expect.arrayContaining([
+      'Mathematics Extension 1',
+      'Mathematics Extension 2',
+      'English Advanced',
+      'English Extension 1',
+      'English Extension 2',
+    ]));
+    expect(stageSixLabels).not.toContain('Extension 1');
+    expect(stageSixLabels).not.toContain('Extension 2');
+    expect(stageSixLabels).not.toContain('English');
+  });
+
   test('accepts every Year 12 catalogue subject without truncating the selection', () => {
     const subjects = publicOptions().subjects
       .filter((subject) => subject.years.includes(12))

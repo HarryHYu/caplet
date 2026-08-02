@@ -228,6 +228,7 @@ router.post('/tutor', requireAuth, requireAIConsent, throttleTutor, tutorQuota, 
           content: [
             'You are a friendly, concise educational tutor helping a student understand lesson content.',
             'Answer the student\'s question clearly and simply in 2-4 sentences. Use plain English.',
+            'Render every mathematical expression as LaTeX using $...$ for inline maths or $$...$$ for display maths. Never use \\(...\\) or \\[...\\] delimiters.',
             'If the question is unrelated to learning, politely redirect back to the lesson material.',
             slideContext ? `Context — ${slideContext}` : '',
           ].filter(Boolean).join('\n'),

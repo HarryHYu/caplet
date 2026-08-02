@@ -225,6 +225,8 @@ const LessonPlayer = () => {
   const [savingSlide, setSavingSlide] = useState(false);
   const autoCategorizeTimer = useRef(null);
   const [startingLive, setStartingLive] = useState(false);
+  const lessonRootRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const analyticsJourney = useRef({ lessonId: null, journeyId: null, startedAt: 0, viewed: new Set() });
 
 
@@ -320,6 +322,24 @@ const LessonPlayer = () => {
   }, [progress]);
 
   const coursePct = Math.round(progress?.courseProgress?.progressPercentage || 0);
+
+  useEffect(() => {
+    const syncFullscreen = () => setIsFullscreen(document.fullscreenElement === lessonRootRef.current);
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement === lessonRootRef.current) {
+        await document.exitFullscreen();
+      } else {
+        await lessonRootRef.current?.requestFullscreen();
+      }
+    } catch {
+      setSaveError('Fullscreen could not be opened in this browser.');
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated || !lesson?.id || !course?.id || !hasSlides) return;
@@ -529,7 +549,7 @@ const LessonPlayer = () => {
   return (
     // The whole lesson view is locked to viewport height — no outer page scroll.
     // The global Navbar (h-14/h-16) sits above; we offset for it with pt-14/md:pt-16.
-    <div className="h-[100dvh] pt-14 md:pt-16 bg-surface-body text-text-primary flex flex-col overflow-hidden">
+    <div ref={lessonRootRef} className={`h-[100dvh] bg-surface-body text-text-primary flex flex-col overflow-hidden ${isFullscreen ? 'pt-0' : 'pt-14 md:pt-16'}`}>
       {/* ─────── Save-error toast ─────── */}
       {saveError && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] bg-red-600 text-white text-sm px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 max-w-sm">
@@ -622,6 +642,25 @@ const LessonPlayer = () => {
                   <span className="hidden md:inline text-xs font-medium">{startingLive ? 'Starting…' : 'Host Live'}</span>
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                className="inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors"
+                aria-label={isFullscreen ? 'Exit lesson fullscreen' : 'Open lesson fullscreen'}
+                aria-pressed={isFullscreen}
+              >
+                {isFullscreen ? (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 4v5H4m11-5v5h5M9 20v-5H4m11 5v-5h5" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 9V4h5m11 5V4h-5M4 15v5h5m11-5v5h-5" />
+                  </svg>
+                )}
+                <span className="hidden md:inline text-xs font-medium">{isFullscreen ? 'Exit full screen' : 'Full screen'}</span>
+              </button>
 
               {/* Calculator toggle */}
               <button

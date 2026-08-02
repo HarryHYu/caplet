@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { PaperAirplaneIcon, SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
@@ -22,6 +22,7 @@ function conversationContext(messages) {
 
 export default function StudyCoachDrawer() {
   const { isAuthenticated } = useAuth();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -83,7 +84,10 @@ export default function StudyCoachDrawer() {
     threadRef.current?.scrollTo?.({ top: threadRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, open, sending]);
 
-  if (!isAuthenticated) return null;
+  // Lessons already have a slide-aware tutor. Removing the global launcher in
+  // this focused view keeps it from covering Previous/Next lesson controls.
+  const isLessonPlayer = /^\/courses\/[^/]+\/lessons\/[^/]+\/?$/.test(pathname);
+  if (!isAuthenticated || isLessonPlayer) return null;
 
   const send = async (raw) => {
     const question = String(raw || '').trim();

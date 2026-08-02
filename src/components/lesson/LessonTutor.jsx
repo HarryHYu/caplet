@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import api from '../../services/api';
+import { normalizeMarkdownMath } from '../../lib/markdownMath';
 
 /* ──────────────────────────────────────────────────────────────────────────
    LessonTutor — an in-lesson AI tutor scoped to the CURRENT slide.
@@ -161,7 +162,7 @@ export default function LessonTutor({ slide, lessonId }) {
                 )}
                 <div className="prose-lesson text-sm">
                   <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                    {answer}
+                    {normalizeMarkdownMath(answer)}
                   </ReactMarkdown>
                 </div>
               </div>
