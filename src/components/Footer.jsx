@@ -34,6 +34,7 @@ const columns = [
     heading: 'Company',
     links: [
       { label: 'Home', path: '/' },
+      { label: 'Who built Caplet', path: '/about' },
       { label: 'Contact', path: '/contact' },
       { label: 'Trust center', path: '/trust' },
       { label: 'Terms & privacy', path: '/terms' },

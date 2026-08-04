@@ -86,6 +86,24 @@ function appForPrivacy() {
 }
 
 describe('guardian privacy controls', () => {
+  test('reports guardian approval before offering a minor self-service AI consent', async () => {
+    const { requireAIConsent } = require('../services/privacyConsent');
+    const response = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+    };
+    const next = jest.fn();
+
+    await requireAIConsent({ user: currentUser }, response, next);
+
+    expect(response.status).toHaveBeenCalledWith(403);
+    expect(response.json).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'guardian_consent_required',
+      consentRequired: true,
+    }));
+    expect(next).not.toHaveBeenCalled();
+  });
+
   test('migration matches the guardian request model and indexes lookup paths', async () => {
     const columns = await queryInterface.describeTable('guardian_consent_requests');
     const modelColumns = Object.values(GuardianConsentRequest.rawAttributes).map((attribute) => attribute.field).sort();

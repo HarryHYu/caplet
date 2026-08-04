@@ -46,6 +46,7 @@ The frontend routes are defined in `src/App.jsx`.
 | `/edutools` | Index of education tools (revision and essay memoriser). |
 | `/demo` | Standalone product demo/tour, available whether signed in or not. |
 | `/play` | Join a live Kahoot-style quiz session (Caplet Live). |
+| `/about` | Meet the people who design and build Caplet. |
 | `/contact` | Contact page. |
 | `/terms` | Terms page. |
 | `/profile/:userId` | Public user profile. |

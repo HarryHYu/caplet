@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 // Mock the API singleton — the list view calls getEssays and getDueReviewItems
 // (for the per-essay "N due" badges) in parallel on mount.
@@ -7,6 +8,9 @@ vi.mock('../services/api', () => ({
   default: {
     getEssays: vi.fn().mockResolvedValue({ essays: [] }),
     getEssay: vi.fn(),
+    createEssay: vi.fn(),
+    parseEssay: vi.fn(),
+    request: vi.fn(),
     getDueReviewItems: vi.fn().mockResolvedValue({ items: [] }),
     submitReview: vi.fn().mockResolvedValue({ reviewItem: {} }),
     getProxiedImageSrc: (u) => u,
@@ -60,6 +64,63 @@ describe('EssayMemoriser', () => {
     fireEvent.click(screen.getByRole('button', { name: /Rebuild it/i }));
     expect(await screen.findByText(/Step 2 of 4/i)).toBeInTheDocument();
     expect(screen.getByText(/Change activity/i)).toBeInTheDocument();
+  });
+
+  it('records AI consent and continues straight into essay practice', async () => {
+    const savedEssay = { id: 'essay-consent', title: 'Macbeth', parsedStructure: null };
+    const parsedEssay = {
+      ...savedEssay,
+      parsed: true,
+      parsedStructure: {
+        thesis: 'Unchecked ambition is destructive.',
+        bodyParagraphs: [{ text: 'Macbeth chooses ambition over loyalty.', quotes: [], techniques: [] }],
+        conclusion: 'Ambition destroys Macbeth.',
+      },
+    };
+    const consentError = Object.assign(new Error('Enable AI-assisted learning first.'), {
+      data: { code: 'ai_consent_required', consentRequired: true },
+    });
+    api.createEssay.mockResolvedValueOnce({ essay: savedEssay });
+    api.parseEssay.mockRejectedValueOnce(consentError).mockResolvedValueOnce({ essay: parsedEssay });
+    api.request.mockResolvedValueOnce({ consent: { status: 'granted' } });
+
+    render(<MemoryRouter><EssayMemoriser /></MemoryRouter>);
+    await screen.findByText(/No essays yet/i);
+    fireEvent.click(screen.getByRole('button', { name: /Add essay/i }));
+    fireEvent.change(screen.getByPlaceholderText('Essay title'), { target: { value: 'Macbeth' } });
+    fireEvent.change(screen.getByPlaceholderText(/Paste your essay here/i), { target: { value: 'Power corrupts Macbeth.' } });
+    fireEvent.click(screen.getByRole('button', { name: /Set up practice/i }));
+
+    fireEvent.click(await screen.findByRole('button', { name: /Enable AI and continue/i }));
+
+    expect(await screen.findByText(/Your learning path/i)).toBeInTheDocument();
+    expect(api.request).toHaveBeenCalledWith('/privacy/consents', expect.objectContaining({ method: 'POST' }));
+    expect(api.parseEssay).toHaveBeenNthCalledWith(2, 'essay-consent');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('does not show the enable-AI dialog again when parsing fails after consent succeeds', async () => {
+    const savedEssay = { id: 'essay-parser-failure', title: 'Macbeth', parsedStructure: null };
+    const consentError = Object.assign(new Error('Enable AI-assisted learning first.'), {
+      data: { code: 'ai_consent_required', consentRequired: true },
+    });
+    api.createEssay.mockResolvedValueOnce({ essay: savedEssay });
+    api.parseEssay
+      .mockRejectedValueOnce(consentError)
+      .mockRejectedValueOnce(new Error('AI assistance is temporarily paused.'));
+    api.request.mockResolvedValueOnce({ consent: { status: 'granted' } });
+
+    render(<MemoryRouter><EssayMemoriser /></MemoryRouter>);
+    await screen.findByText(/No essays yet/i);
+    fireEvent.click(screen.getByRole('button', { name: /Add essay/i }));
+    fireEvent.change(screen.getByPlaceholderText('Essay title'), { target: { value: 'Macbeth' } });
+    fireEvent.change(screen.getByPlaceholderText(/Paste your essay here/i), { target: { value: 'Power corrupts Macbeth.' } });
+    fireEvent.click(screen.getByRole('button', { name: /Set up practice/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Enable AI and continue/i }));
+
+    expect(await screen.findByText(/AI assistance is temporarily paused/i)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: /Try setup again/i })).toBeInTheDocument();
   });
 
   it('penalises each uniquely revealed word once and persists hint-aware completion scoring', () => {

@@ -55,8 +55,7 @@ async function requireAIConsent(req, res, next) {
         consentRequired: true,
       });
     }
-    const hasAIConsent = await hasActiveConsent(req.user?.id, 'ai_processing');
-    if (hasAIConsent && requiresGuardianConsent(req.user)) {
+    if (requiresGuardianConsent(req.user)) {
       const { UserPrivacyPreference } = require('../models');
       const preference = await UserPrivacyPreference.findOne({ where: { userId: req.user.id } });
       if (preference?.parentConsentStatus !== 'granted') {
@@ -67,6 +66,7 @@ async function requireAIConsent(req, res, next) {
         });
       }
     }
+    const hasAIConsent = await hasActiveConsent(req.user?.id, 'ai_processing');
     if (hasAIConsent) return next();
     return res.status(403).json({
       message: 'Enable AI-assisted learning in Settings → Privacy & data before sending learning text to an AI service.',

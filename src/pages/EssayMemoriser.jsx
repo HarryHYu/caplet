@@ -1485,7 +1485,8 @@ export default function EssayMemoriser() {
     };
 
     const enableAIAndRetry = async () => {
-        if (!consentIssue?.essayId) return;
+        const essayId = consentIssue?.essayId;
+        if (!essayId) return;
         setSavingConsent(true);
         try {
             await api.request('/privacy/consents', {
@@ -1496,19 +1497,39 @@ export default function EssayMemoriser() {
                     metadata: { source: 'essay_setup_prompt' },
                 }),
             });
-            setConsentIssue(null);
-            setParseFailure(null);
-            setIsParsing(true);
-            const parsed = await api.parseEssay(consentIssue.essayId);
-            if (mountedRef.current) setEssay(parsed.essay);
         } catch (error) {
             if (mountedRef.current) {
-                setConsentIssue({ code: error?.data?.code || consentIssue.code, message: error?.message || 'AI access could not be enabled.', essayId: consentIssue.essayId });
+                setConsentIssue({ code: error?.data?.code || consentIssue.code, message: error?.message || 'AI access could not be enabled.', essayId });
+                setParseFailure(error?.message || 'AI parsing did not finish. Your essay is still saved.');
+                setSavingConsent(false);
+            }
+            return;
+        }
+
+        // Consent is now recorded. Close the permission dialog before starting
+        // the independent AI request so a parser/service failure cannot leave
+        // the learner stuck in a misleading "Enable AI" loop.
+        if (mountedRef.current) {
+            setConsentIssue(null);
+            setParseFailure(null);
+            setSavingConsent(false);
+            setIsParsing(true);
+        }
+        try {
+            const parsed = await api.parseEssay(essayId);
+            if (mountedRef.current) {
+                setEssay(parsed.essay);
+                loadEssays();
+            }
+        } catch (error) {
+            if (mountedRef.current) {
+                if (error?.data?.consentRequired) {
+                    setConsentIssue({ code: error.data.code, message: error.message, essayId });
+                }
                 setParseFailure(error?.message || 'AI parsing did not finish. Your essay is still saved.');
             }
         } finally {
             if (mountedRef.current) setIsParsing(false);
-            setSavingConsent(false);
         }
     };
 
