@@ -66,13 +66,21 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
     { path: '/dashboard', label: 'Dashboard', privateOnly: true },
     { path: '/library', label: 'Learn' },
   ];
+  const publicItems = [
+    { path: '/library', label: 'Learn' },
+    { path: '/money', label: 'Tools' },
+  ];
 
   const visibleItems = (items) => items.filter((item) => {
     if (item.flagKey && (featureFlagsLoading || !isEnabled(item.flagKey))) return false;
     if (isAuthenticated) return !item.publicOnly;
     return !item.privateOnly;
   });
-  const visibleCoreItems = effectiveProductMode === 'money' ? visibleItems(moneyNavigation) : visibleItems(studyCoreItems);
+  const visibleCoreItems = !isAuthenticated
+    ? publicItems
+    : effectiveProductMode === 'money'
+      ? visibleItems(moneyNavigation)
+      : visibleItems(studyCoreItems);
 
   const homePath = effectiveProductMode === 'money' ? '/money' : isAuthenticated ? '/dashboard' : '/';
   const isActive = (path) => {
@@ -115,7 +123,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                 Caplet.
               </span>
             </Link>
-            <ProductModeSwitch className="shrink-0" />
+            {isAuthenticated && <ProductModeSwitch className="shrink-0" />}
           </div>
 
           {/* Right cluster — folded nav toggles pinned to the far right, then actions */}
@@ -196,12 +204,20 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                 )}
               </div>
             ) : (
-              <Link
-                to="/register"
-                className="hidden items-center justify-center rounded-lg bg-accent px-3 py-1.5 text-[11px] font-bold tracking-[0.08em] text-white transition-all duration-300 hover:bg-accent-strong md:inline-flex"
-              >
-                Get started
-              </Link>
+              <div className="hidden items-center gap-1 lg:flex">
+                <Link
+                  to="/login"
+                  className="inline-flex min-h-9 items-center rounded-lg px-2.5 text-xs font-bold tracking-[0.02em] text-text-muted transition-colors hover:bg-surface-soft hover:text-text-primary"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex min-h-9 items-center justify-center rounded-lg bg-accent px-3 text-xs font-bold tracking-[0.02em] text-white transition-colors hover:bg-accent-strong"
+                >
+                  Get started
+                </Link>
+              </div>
             )}
 
             {/* Mobile hamburger */}
@@ -227,7 +243,9 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
           <div id="mobile-navigation" className="mobile-nav-panel nav-scrollbar-hidden max-h-[calc(100dvh-3.25rem)] overflow-y-auto overscroll-contain border-t border-line-soft px-1.5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
             <div className="mb-2 flex items-center justify-between px-3 py-1">
               <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-text-dim">Navigate</span>
-              <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-bold text-accent">Study</span>
+              <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-bold text-accent">
+                {isAuthenticated ? 'Study' : 'Explore'}
+              </span>
             </div>
             {visibleCoreItems.map((item) => {
               const active = isItemActive(item);
@@ -250,13 +268,22 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
               );
             })}
             {!isAuthenticated && (
-              <Link
-                to="/register"
-                onClick={() => setIsOpen(false)}
-                className="btn-primary mt-3 min-h-10 text-xs"
-              >
-                Get started
-              </Link>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-line-soft text-xs font-bold text-text-primary transition-colors hover:bg-surface-soft"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="btn-primary min-h-10 text-xs"
+                >
+                  Get started
+                </Link>
+              </div>
             )}
           </div>
         )}

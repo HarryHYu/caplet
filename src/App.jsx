@@ -370,7 +370,6 @@ function AppShell() {
   // large screens (the two never coexist) but kept on mobile as the nav.
   const vertical = navMode === 'vertical' && isAuthenticated && !bareChrome;
   const moneyModeRoute = isMoneyPath(pathname);
-  const guestHomepage = pathname === '/' && !isAuthenticated;
   const pageOwnsMain =
     pathname === '/about' ||
     pathname === '/trust' ||
@@ -421,9 +420,9 @@ function AppShell() {
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <RouteMetadata />
       {!isAuthenticated && <MarkerCursor />}
-      {!bareChrome && !guestHomepage && <Navbar hideOnTablet />}
-      {!bareChrome && !guestHomepage && <TabletPublicNavbar />}
-      {!bareChrome && !guestHomepage && <TabletDashboardNavbar />}
+      {!bareChrome && <Navbar hideOnTablet />}
+      {!bareChrome && <TabletPublicNavbar />}
+      {!bareChrome && <TabletDashboardNavbar />}
       <ContentLandmark id="main-content" tabIndex="-1" className="flex-grow">
         <Suspense fallback={<FullPageSpinner />}>
           <AppRoutes />
