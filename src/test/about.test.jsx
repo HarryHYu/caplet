@@ -23,9 +23,9 @@ describe('About page', () => {
     expect(screen.getByRole('link', { name: 'Sean Xin on GitHub' })).toHaveAttribute('href', 'https://github.com/HarryHYu/caplet/commits?author=withmebucks');
   });
 
-  it('is discoverable from the homepage footer', () => {
+  it('keeps the archived page out of the homepage footer', () => {
     render(<MemoryRouter initialEntries={['/']}><Footer /></MemoryRouter>);
 
-    expect(screen.getByRole('link', { name: 'Who built Caplet' })).toHaveAttribute('href', '/about');
+    expect(screen.queryByRole('link', { name: /Team|Who built Caplet/i })).not.toBeInTheDocument();
   });
 });

@@ -19,7 +19,6 @@ const PUBLIC_META = [
   { match: /^\/edutools(?:\/|$)/, title: 'Education Tools — Caplet', description: 'Practical study, writing, revision, and classroom tools from Caplet.' },
   { match: /^\/demo$/, title: 'School Product Demo — Caplet', description: 'Explore how Caplet connects curriculum, classroom delivery, student learning, and evidence-led teaching.' },
   { match: /^\/pitch$/, title: 'CapletMark — Caplet', description: 'CapletMark product vision, marking workflow, opportunity, and roadmap.' },
-  { match: /^\/about$/, title: 'Who built Caplet — Caplet', description: 'Meet Harry Yu, Ray Wang and contributor Sean Xin, the people behind Caplet.' },
   { match: /^\/contact$/, title: 'Contact — Caplet', description: 'Contact the Caplet team.' },
   { match: /^\/trust$/, title: 'Trust Center — Caplet', description: 'How Caplet handles educational guidance, financial tools, privacy, and responsible AI.' },
   { match: /^\/terms$/, title: 'Terms — Caplet', description: 'Terms for using Caplet.' },

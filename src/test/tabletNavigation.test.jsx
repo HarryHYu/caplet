@@ -36,7 +36,6 @@ describe('tablet navigation variants', () => {
         expect(screen.getByRole('navigation', { name: 'Public navigation' })).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'Courses' })).toHaveAttribute('href', '/courses');
         expect(screen.getByRole('link', { name: 'Financial tools' })).toHaveAttribute('href', '/money');
-        expect(screen.getByRole('link', { name: 'Team' })).toHaveAttribute('href', '/about');
         expect(screen.getByRole('link', { name: 'Get started' })).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: /Study/i })).not.toBeInTheDocument();
         expect(screen.queryByRole('button', { name: /Money/i })).not.toBeInTheDocument();

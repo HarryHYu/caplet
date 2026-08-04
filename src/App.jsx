@@ -29,7 +29,6 @@ const Home = lazy(() => import('./pages/Home'));
 const DemoApp = lazy(() => import('./pages/DemoApp'));
 const DemoPitch = lazy(() => import('./pages/DemoPitch'));
 const Contact = lazy(() => import('./pages/Contact'));
-const About = lazy(() => import('./pages/About'));
 const FinancialTools = lazy(() => import('./pages/FinancialTools'));
 const EduTools = lazy(() => import('./pages/EduTools'));
 const TaxCalculator = lazy(() => import('./pages/tools/TaxCalculator'));
@@ -280,7 +279,6 @@ function AppRoutes() {
           <Route path="/tools/*" element={<LegacyMoneyRedirect prefix="/tools" />} />
           <Route path="/edutools" element={<EduTools />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/about" element={<About />} />
           <Route path="/pitch" element={<DemoPitch />} />
           <Route path="/money/tools/tax-calculator" element={<MoneyPilot><TaxCalculator /></MoneyPilot>} />
           <Route path="/money/tools/budget-planner" element={<MoneyPilot><BudgetPlanner /></MoneyPilot>} />
@@ -371,7 +369,6 @@ function AppShell() {
   const vertical = navMode === 'vertical' && isAuthenticated && !bareChrome;
   const moneyModeRoute = isMoneyPath(pathname);
   const pageOwnsMain =
-    pathname === '/about' ||
     pathname === '/trust' ||
     pathname === '/terms' ||
     pathname === '/pitch' ||

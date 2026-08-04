@@ -33,7 +33,6 @@ export default function TabletPublicNavbar() {
                 <nav aria-label="Public navigation" className="ml-auto flex items-center gap-1">
                     <Link to="/courses" className={linkClass}>Courses</Link>
                     <Link to="/money" className={linkClass}>Financial tools</Link>
-                    <Link to="/about" className={linkClass}>Team</Link>
                 </nav>
 
                 <div className="flex shrink-0 items-center gap-2">

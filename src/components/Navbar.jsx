@@ -69,7 +69,6 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
   const publicItems = [
     { path: '/courses', label: 'Courses' },
     { path: '/money', label: 'Financial tools' },
-    { path: '/about', label: 'Team' },
   ];
 
   const visibleItems = (items) => items.filter((item) => {
