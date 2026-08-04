@@ -1,5 +1,4 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useReveal } from '../lib/useReveal';
 import CapletLoader from '../components/CapletLoader';
@@ -1258,7 +1257,7 @@ function LearningPath({ mode, onChange, dueCount, compact = false }) {
     );
 }
 
-function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialParseError, onConsentRequired }) {
+function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialParseError }) {
     const [parsing, setParsing] = useState(false);
     const [parseError, setParseError] = useState(initialParseError || null);
     const [mode, setMode] = useState('read');
@@ -1283,10 +1282,7 @@ function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialPar
         setParsing(true);
         setParseError(null);
         try { const res = await api.parseEssay(essay.id); onParsed?.(res.essay); }
-        catch (e) {
-            if (e?.data?.consentRequired) onConsentRequired?.(e, essay.id);
-            setParseError(e?.message || 'Could not parse this essay right now.');
-        }
+        catch (e) { setParseError(e?.message || 'Could not parse this essay right now.'); }
         finally { setParsing(false); }
     };
 
@@ -1401,8 +1397,6 @@ export default function EssayMemoriser() {
     const [opening, setOpening] = useState(false);
     const [isParsing, setIsParsing] = useState(false);
     const [parseFailure, setParseFailure] = useState(null);
-    const [consentIssue, setConsentIssue] = useState(null);
-    const [savingConsent, setSavingConsent] = useState(false);
     const [dueByEssay, setDueByEssay] = useState({}); // essayId -> due count
     const mountedRef = useRef(true);
 
@@ -1455,7 +1449,6 @@ export default function EssayMemoriser() {
 
     const handleCreate = async (title, text) => {
         setParseFailure(null);
-        setConsentIssue(null);
 
         // Step 1: persist the original so the AI result can be attached to a
         // private essay record and retried without losing the student's text.
@@ -1472,7 +1465,6 @@ export default function EssayMemoriser() {
             .then((parsed) => { if (mountedRef.current) setEssay(parsed.essay); })
             .catch((e) => {
                 if (mountedRef.current) {
-                    if (e?.data?.consentRequired) setConsentIssue({ code: e.data.code, message: e.message, essayId: created.id });
                     setParseFailure(e?.message || 'AI parsing failed. Your essay is saved; please retry.');
                 }
             })
@@ -1482,55 +1474,6 @@ export default function EssayMemoriser() {
                     loadEssays();
                 }
             });
-    };
-
-    const enableAIAndRetry = async () => {
-        const essayId = consentIssue?.essayId;
-        if (!essayId) return;
-        setSavingConsent(true);
-        try {
-            await api.request('/privacy/consents', {
-                method: 'POST',
-                body: JSON.stringify({
-                    type: 'ai_processing',
-                    policyVersion: 'privacy-controls-v2',
-                    metadata: { source: 'essay_setup_prompt' },
-                }),
-            });
-        } catch (error) {
-            if (mountedRef.current) {
-                setConsentIssue({ code: error?.data?.code || consentIssue.code, message: error?.message || 'AI access could not be enabled.', essayId });
-                setParseFailure(error?.message || 'AI parsing did not finish. Your essay is still saved.');
-                setSavingConsent(false);
-            }
-            return;
-        }
-
-        // Consent is now recorded. Close the permission dialog before starting
-        // the independent AI request so a parser/service failure cannot leave
-        // the learner stuck in a misleading "Enable AI" loop.
-        if (mountedRef.current) {
-            setConsentIssue(null);
-            setParseFailure(null);
-            setSavingConsent(false);
-            setIsParsing(true);
-        }
-        try {
-            const parsed = await api.parseEssay(essayId);
-            if (mountedRef.current) {
-                setEssay(parsed.essay);
-                loadEssays();
-            }
-        } catch (error) {
-            if (mountedRef.current) {
-                if (error?.data?.consentRequired) {
-                    setConsentIssue({ code: error.data.code, message: error.message, essayId });
-                }
-                setParseFailure(error?.message || 'AI parsing did not finish. Your essay is still saved.');
-            }
-        } finally {
-            if (mountedRef.current) setIsParsing(false);
-        }
     };
 
     const handleParsed = (updated) => { setParseFailure(null); setEssay(updated); loadEssays(); };
@@ -1561,7 +1504,6 @@ export default function EssayMemoriser() {
                         onDeleted={handleDelete}
                         isParsing={isParsing}
                         initialParseError={parseFailure}
-                        onConsentRequired={(error, essayId) => setConsentIssue({ code: error?.data?.code, message: error?.message, essayId })}
                     />
                 ) : (
                     <>
@@ -1634,33 +1576,6 @@ export default function EssayMemoriser() {
                     </>
                 )}
             </div>
-            {consentIssue && (
-                <div className="fixed inset-0 z-[90] grid place-items-end bg-black/45 p-4 sm:place-items-center" role="presentation">
-                    <section role="dialog" aria-modal="true" aria-labelledby="essay-ai-consent-title" className="w-full max-w-lg rounded-3xl bg-surface-raised p-7 shadow-2xl sm:p-8">
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-accent">Optional AI feature</p>
-                        <h2 id="essay-ai-consent-title" className="mt-2 font-display text-2xl font-extrabold tracking-tight text-text-primary">
-                            {consentIssue.code === 'ai_consent_required' ? 'Choose before your essay is sent' : 'One privacy step is still needed'}
-                        </h2>
-                        <p className="mt-4 text-sm font-medium leading-relaxed text-text-muted">
-                            Caplet sends the essay text to OpenAI to identify its thesis, paragraphs, quotes and techniques. AI output can be wrong, so you should check the structure. Your essay has already been saved and will not be sent unless the required permission is recorded.
-                        </p>
-                        {consentIssue.code !== 'ai_consent_required' && (
-                            <p className="mt-4 rounded-2xl bg-surface-soft p-4 text-sm font-semibold text-text-primary">{consentIssue.message}</p>
-                        )}
-                        <div className="mt-6 flex flex-wrap gap-3">
-                            {consentIssue.code === 'ai_consent_required' && (
-                                <button type="button" onClick={enableAIAndRetry} disabled={savingConsent} className="btn-primary px-6 py-3 text-sm disabled:opacity-40">
-                                    {savingConsent ? 'Enabling…' : 'Enable AI and continue'}
-                                </button>
-                            )}
-                            <button type="button" onClick={() => setConsentIssue(null)} className="btn-secondary px-6 py-3 text-sm">Not now</button>
-                            <Link to={consentIssue.code === 'age_confirmation_required' ? '/settings/profile' : '/settings/privacy'} className="min-h-11 content-center px-2 text-sm font-bold text-accent hover:underline">
-                                {consentIssue.code === 'age_confirmation_required' ? 'Add date of birth' : 'Review privacy controls'}
-                            </Link>
-                        </div>
-                    </section>
-                </div>
-            )}
         </div>
     );
 }

@@ -12,7 +12,7 @@ const TERMS = [
   {
     title: '2. Learners under 18',
     body: [
-      'A child should use Caplet with the involvement of a parent, guardian, school or teacher appropriate to their age and circumstances. Optional AI processing, learning analytics and classroom-data sharing are disabled for an under-18 account until the required guardian permission is recorded.',
+      'A child should use Caplet with the involvement of a parent, guardian, school or teacher appropriate to their age and circumstances. AI-assisted learning is available without parent or guardian approval. Learning analytics and classroom-data sharing may still require age-appropriate permission.',
       'Schools and teachers must confirm that their use is permitted by school policy, provide required notices and permissions, and supervise classroom activity. Caplet does not replace a school’s duty of care.',
     ],
   },

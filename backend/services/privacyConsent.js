@@ -30,12 +30,7 @@ function requiresGuardianConsent(user, now = new Date()) {
 }
 
 async function canUseAI(user) {
-  if (!user?.id || !user.dateOfBirth) return false;
-  if (!(await hasActiveConsent(user.id, 'ai_processing'))) return false;
-  if (!requiresGuardianConsent(user)) return true;
-  const { UserPrivacyPreference } = require('../models');
-  const preference = await UserPrivacyPreference.findOne({ where: { userId: user.id } });
-  return preference?.parentConsentStatus === 'granted';
+  return Boolean(user?.id);
 }
 
 async function canUseLearningAnalytics(user) {
@@ -46,36 +41,10 @@ async function canUseLearningAnalytics(user) {
   return !requiresGuardianConsent(user) || preference.parentConsentStatus === 'granted';
 }
 
-async function requireAIConsent(req, res, next) {
-  try {
-    if (!req.user?.dateOfBirth) {
-      return res.status(403).json({
-        message: 'Add your date of birth in Settings → Profile before enabling optional AI-assisted learning.',
-        code: 'age_confirmation_required',
-        consentRequired: true,
-      });
-    }
-    if (requiresGuardianConsent(req.user)) {
-      const { UserPrivacyPreference } = require('../models');
-      const preference = await UserPrivacyPreference.findOne({ where: { userId: req.user.id } });
-      if (preference?.parentConsentStatus !== 'granted') {
-        return res.status(403).json({
-          message: 'A parent or guardian must approve optional AI-assisted learning before it can be used.',
-          code: 'guardian_consent_required',
-          consentRequired: true,
-        });
-      }
-    }
-    const hasAIConsent = await hasActiveConsent(req.user?.id, 'ai_processing');
-    if (hasAIConsent) return next();
-    return res.status(403).json({
-      message: 'Enable AI-assisted learning in Settings → Privacy & data before sending learning text to an AI service.',
-      code: 'ai_consent_required',
-      consentRequired: true,
-    });
-  } catch (error) {
-    return next(error);
-  }
+// Kept as a middleware compatibility point for AI-backed routes. AI assistance
+// is available to authenticated learners without an age or consent gate.
+function requireAIConsent(req, res, next) {
+  next();
 }
 
 module.exports = {

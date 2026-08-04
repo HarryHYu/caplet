@@ -27,11 +27,6 @@ const DELETE_CONFIRMATION = 'DELETE MY ACCOUNT';
 
 const CONSENT_OPTIONS = [
   {
-    type: 'ai_processing',
-    title: 'AI-assisted learning',
-    description: 'Allow Caplet to send the learning text you submit to configured AI services for optional feedback and tutoring.',
-  },
-  {
     type: 'learning_analytics',
     title: 'Personal learning analytics',
     description: 'Allow optional learning-analytics insights that help Caplet improve recommendations and understand how learning features are used. Core evidence needed to provide your mastery map is managed separately.',
@@ -258,7 +253,7 @@ function PreferenceControls({ preference, consents, savingKey, ageVerificationRe
         <p className="mt-1 text-xs font-medium text-text-muted">You can withdraw optional consent at any time. Withdrawal is recorded in your consent history.</p>
         {ageVerificationRequired && (
           <div className="mt-3 rounded-2xl bg-[color:var(--block-amber)] p-4 text-xs font-medium leading-relaxed text-text-primary">
-            Add your date of birth before enabling optional AI so Caplet can apply the right age-appropriate safeguards. It is never shown publicly.
+            Add your date of birth before enabling analytics or classroom sharing so Caplet can apply the right age-appropriate safeguards. It is never shown publicly.
             <Link to="/settings/profile" className="ml-2 font-bold text-accent underline underline-offset-2">Open profile settings</Link>
           </div>
         )}
@@ -266,7 +261,7 @@ function PreferenceControls({ preference, consents, savingKey, ageVerificationRe
           {CONSENT_OPTIONS.map((option) => {
             const consent = latestConsent(consents, option.type);
             const granted = consent?.status === 'granted';
-            const ageSensitive = ['ai_processing', 'learning_analytics', 'classroom_data'].includes(option.type);
+            const ageSensitive = ['learning_analytics', 'classroom_data'].includes(option.type);
             return (
               <Switch
                 key={option.type}
@@ -287,7 +282,7 @@ function PreferenceControls({ preference, consents, savingKey, ageVerificationRe
           <InformationCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
           <div>
             <h4 className="text-sm font-bold text-text-primary">Age-appropriate privacy notice</h4>
-            <p className="mt-1 text-xs font-medium leading-relaxed text-text-muted">Caplet stores account and learning data to provide your courses, practice, feedback, and classes. Optional AI and analytics choices can be changed here.</p>
+            <p className="mt-1 text-xs font-medium leading-relaxed text-text-muted">AI learning assistance is available without parent or guardian approval. Analytics and classroom-sharing choices can be changed here.</p>
             {preference.ageNoticeAcknowledgedAt ? (
               <p className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-accent"><CheckCircleIcon className="h-4 w-4" aria-hidden="true" /> Acknowledged {formatDate(preference.ageNoticeAcknowledgedAt)}</p>
             ) : (
@@ -296,12 +291,12 @@ function PreferenceControls({ preference, consents, savingKey, ageVerificationRe
               </button>
             )}
             {preference.parentConsentStatus && preference.parentConsentStatus !== 'not_required' && (
-              <p className="mt-3 text-xs font-bold text-text-primary">Parent or guardian consent: {humanise(preference.parentConsentStatus)}</p>
+              <p className="mt-3 text-xs font-bold text-text-primary">Parent or guardian consent for analytics and classroom participation: {humanise(preference.parentConsentStatus)}</p>
             )}
             {['pending', 'declined'].includes(preference.parentConsentStatus) && (
               <form className="mt-4 rounded-2xl bg-surface-raised p-4" onSubmit={requestGuardianConsent}>
                 <label htmlFor="guardian-email" className="text-xs font-bold text-text-primary">Parent or guardian email</label>
-                <p className="mt-1 text-xs font-medium leading-relaxed text-text-muted">Caplet will email a private, single-use approval link to your parent or legal guardian. It expires after 7 days.</p>
+                <p className="mt-1 text-xs font-medium leading-relaxed text-text-muted">Caplet will email a private, single-use approval link for analytics and classroom participation. AI assistance does not need their approval. The link expires after 7 days.</p>
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                   <input id="guardian-email" type="email" required autoComplete="email" value={guardianEmail} onChange={(event) => setGuardianEmail(event.target.value)} placeholder="guardian@example.com" className="min-w-0 flex-1 rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-sm font-medium text-text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft" />
                   <button type="submit" disabled={guardianBusy} className="btn-primary shrink-0"><EnvelopeIcon className="h-4 w-4" aria-hidden="true" />{guardianBusy ? 'Sending…' : 'Send request'}</button>

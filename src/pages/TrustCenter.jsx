@@ -60,12 +60,12 @@ const TrustCenter = () => {
           <main className="reveal-stagger space-y-6 max-w-4xl">
             <TrustSection id="privacy" title="Privacy overview" icon={ShieldCheckIcon} tone="block-blue">
               <p>Caplet is the service operator responsible for this notice. Contact <a className="font-bold text-accent" href="mailto:contact@caplet.org">contact@caplet.org</a> for its privacy contact. We collect the information needed to create and secure an account, provide learning and classroom features, save chosen work, measure optional product analytics, respond to support or safety issues, and meet legal obligations.</p>
-              <p>Core service data is processed to deliver the feature a user or school requests. Optional AI processing, learning analytics and classroom sharing use a recorded consent choice and can be withdrawn. We do not sell personal information or use student data to target advertising.</p>
+              <p>Core service data, including text submitted to an AI learning feature, is processed to deliver the feature a user requests. AI assistance does not require prior parent or guardian approval. Optional learning analytics and classroom sharing use a recorded consent choice and can be withdrawn. We do not sell personal information or use student data to target advertising.</p>
             </TrustSection>
 
             <TrustSection id="student-data" title="Student data handling" icon={AcademicCapIcon} tone="block-green">
               <p>Student work may include lesson progress, assignment submissions, saved slides, essays, practice answers and study-plan activity. Teachers see information connected to classes they manage; they do not receive a student&apos;s private financial profile.</p>
-              <p>Accounts with an unknown age are treated conservatively. Under-18 accounts require guardian permission before optional AI, analytics or classroom-data sharing is enabled. Peer profiles are minimised, class members do not receive learner email addresses, and learning evidence is limited to verified teachers with a current class relationship.</p>
+              <p>AI learning assistance is available without parent or guardian approval. Accounts with an unknown age are treated conservatively for optional analytics and classroom-data sharing, which may require guardian permission for under-18 accounts. Peer profiles are minimised, class members do not receive learner email addresses, and learning evidence is limited to verified teachers with a current class relationship.</p>
               <p>Students should avoid entering unnecessary personal, medical or highly sensitive information in free-text learning and AI fields. A user can report classroom content; reports about staff or serious safety concerns are routed outside the accused person&apos;s control.</p>
             </TrustSection>
 

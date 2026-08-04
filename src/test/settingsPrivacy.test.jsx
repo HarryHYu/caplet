@@ -116,7 +116,7 @@ describe('SettingsPrivacy', () => {
     expect(screen.getByRole('status', { name: 'Loading privacy controls' })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Privacy & data' })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Keep my AI activity history' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('switch', { name: 'AI-assisted learning' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.queryByRole('switch', { name: 'AI-assisted learning' })).not.toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Personal learning analytics' })).toHaveAttribute('aria-checked', 'false');
     expect(screen.getByLabelText('AI history retention')).toHaveValue('365');
     expect(screen.getByText('Practice Feedback')).toBeInTheDocument();
@@ -135,10 +135,6 @@ describe('SettingsPrivacy', () => {
       body: JSON.stringify({ aiHistoryEnabled: false }),
     }));
     expect(await screen.findByText('Your privacy preference was updated.')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('switch', { name: 'AI-assisted learning' }));
-    await waitFor(() => expect(api.request).toHaveBeenCalledWith('/privacy/consents/ai_processing', { method: 'DELETE' }));
-    expect(screen.getByRole('switch', { name: 'AI-assisted learning' })).toHaveAttribute('aria-checked', 'false');
 
     fireEvent.click(screen.getByRole('switch', { name: 'Personal learning analytics' }));
     await waitFor(() => expect(api.request).toHaveBeenCalledWith('/privacy/consents', {

@@ -36,7 +36,7 @@ async function sendGuardianConsentEmail({ to, url, expiresAt }, options = {}) {
       from,
       to: [to],
       subject: 'Review a Caplet guardian consent request',
-      text: `A learner has asked you to review optional AI feedback, product analytics, and classroom participation in Caplet. Each feature also requires the learner’s own choice. Review the request at ${url}. This private, single-use link expires ${expiry}. If you did not expect this request, ignore this email.`,
+      text: `A learner has asked you to review optional product analytics and classroom participation in Caplet. Each feature also requires the learner’s own choice. AI learning assistance does not require guardian approval. Review the request at ${url}. This private, single-use link expires ${expiry}. If you did not expect this request, ignore this email.`,
     }),
     signal: AbortSignal.timeout(10000),
   });

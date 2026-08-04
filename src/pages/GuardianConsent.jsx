@@ -62,7 +62,7 @@ export default function GuardianConsent() {
                 {terminalStatus === 'granted' ? 'Consent recorded' : terminalStatus === 'declined' ? 'Decision recorded' : 'This request is no longer active'}
               </h1>
               <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">
-                {terminalStatus === 'granted' ? 'The learner may now choose whether to enable optional AI, analytics, and classroom participation.' : terminalStatus === 'declined' ? 'Optional AI, analytics, and classroom participation will remain unavailable for this learner.' : 'Ask the learner to create a new guardian consent request from their privacy settings.'}
+                {terminalStatus === 'granted' ? 'The learner may now choose whether to enable analytics and classroom participation. AI assistance is already available without guardian approval.' : terminalStatus === 'declined' ? 'Analytics and classroom participation will remain unavailable for this learner. AI assistance is unaffected.' : 'Ask the learner to create a new guardian consent request from their privacy settings.'}
               </p>
             </div>
           ) : (
@@ -70,13 +70,12 @@ export default function GuardianConsent() {
               <span className="grid h-14 w-14 place-items-center rounded-2xl bg-accent-soft text-accent"><ShieldCheckIcon className="h-7 w-7" aria-hidden="true" /></span>
               <p className="mt-6 text-xs font-bold uppercase tracking-[0.14em] text-accent">Parent or guardian decision</p>
               <h1 id="guardian-consent-title" className="mt-2 text-3xl font-display font-extrabold text-text-primary">Review optional learning features</h1>
-              <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">This decision covers the age safeguard for optional AI feedback, product analytics, and joining teacher-managed classrooms. The learner must still choose each feature separately. Core courses and non-AI practice remain available if you decline.</p>
+              <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">This decision covers optional product analytics and joining teacher-managed classrooms. It does not control AI assistance, which the learner can use without guardian approval. The learner must still choose analytics and classroom participation separately.</p>
 
               <div className="mt-6 rounded-2xl bg-surface-soft p-5 text-sm font-medium leading-relaxed text-text-muted">
-                <p><strong className="text-text-primary">What may be processed:</strong> submitted answers, questions, and generated feedback.</p>
                 <p className="mt-2"><strong className="text-text-primary">Classrooms:</strong> teachers can see the learner’s display name, assignments, and mastery evidence. Classmates do not receive their email or private mastery map.</p>
                 <p className="mt-2"><strong className="text-text-primary">Analytics:</strong> opted-in, de-identified usage events help Caplet measure learning journeys.</p>
-                <p className="mt-2"><strong className="text-text-primary">Control:</strong> the learner can withdraw AI consent and clear stored AI-history summaries at any time.</p>
+                <p className="mt-2"><strong className="text-text-primary">AI:</strong> this decision does not enable or disable AI assistance.</p>
                 <p className="mt-2"><strong className="text-text-primary">Expiry:</strong> this request expires {new Intl.DateTimeFormat('en-AU', { dateStyle: 'medium' }).format(new Date(request.expiresAt))}.</p>
               </div>
 

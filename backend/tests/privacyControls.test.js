@@ -86,7 +86,7 @@ function appForPrivacy() {
 }
 
 describe('guardian privacy controls', () => {
-  test('reports guardian approval before offering a minor self-service AI consent', async () => {
+  test('lets a minor use AI without guardian approval', () => {
     const { requireAIConsent } = require('../services/privacyConsent');
     const response = {
       status: jest.fn().mockReturnThis(),
@@ -94,14 +94,11 @@ describe('guardian privacy controls', () => {
     };
     const next = jest.fn();
 
-    await requireAIConsent({ user: currentUser }, response, next);
+    requireAIConsent({ user: currentUser }, response, next);
 
-    expect(response.status).toHaveBeenCalledWith(403);
-    expect(response.json).toHaveBeenCalledWith(expect.objectContaining({
-      code: 'guardian_consent_required',
-      consentRequired: true,
-    }));
-    expect(next).not.toHaveBeenCalled();
+    expect(response.status).not.toHaveBeenCalled();
+    expect(response.json).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
   });
 
   test('migration matches the guardian request model and indexes lookup paths', async () => {
@@ -128,7 +125,7 @@ describe('guardian privacy controls', () => {
     expect(attempted.body.preference.parentConsentStatus).toBe('pending');
   });
 
-  test('requires an age confirmation before optional AI consent', async () => {
+  test('does not expose AI assistance as a permission-gated consent type', async () => {
     const app = appForPrivacy();
     const originalDate = currentUser.dateOfBirth;
     currentUser.dateOfBirth = null;
@@ -136,8 +133,8 @@ describe('guardian privacy controls', () => {
       const response = await request(app)
         .post('/api/privacy/consents')
         .send({ type: 'ai_processing', policyVersion: 'privacy-controls-v1' });
-      expect(response.status).toBe(409);
-      expect(response.body.message).toMatch(/date of birth/i);
+      expect(response.status).toBe(400);
+      expect(response.body.message).toMatch(/valid consent type/i);
     } finally {
       currentUser.dateOfBirth = originalDate;
     }
