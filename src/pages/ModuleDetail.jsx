@@ -104,7 +104,7 @@ const ModuleDetail = () => {
     <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
       <div className="container-custom">
         <nav aria-label="Breadcrumb" className="mb-7 flex flex-wrap items-center gap-2 text-sm font-bold text-text-muted">
-          <Link to="/library" className="min-h-11 content-center transition-colors hover:text-accent">Learn</Link><span aria-hidden="true">/</span><Link to="/courses" className="min-h-11 content-center transition-colors hover:text-accent">Learning paths</Link><span aria-hidden="true">/</span><Link to={`/courses/${courseId}`} className="min-h-11 content-center transition-colors hover:text-accent">{course.title}</Link>
+          <Link to="/library" className="min-h-11 content-center transition-colors hover:text-accent">Learn</Link><span aria-hidden="true">/</span><Link to="/courses" className="min-h-11 content-center transition-colors hover:text-accent">Courses</Link><span aria-hidden="true">/</span><Link to={`/courses/${courseId}`} className="min-h-11 content-center transition-colors hover:text-accent">{course.title}</Link>
         </nav>
 
         <div className="reveal mb-12 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-end">

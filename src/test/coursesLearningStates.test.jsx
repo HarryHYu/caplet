@@ -33,16 +33,16 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe('Learning path states', () => {
+describe('Course states', () => {
   it('distinguishes a genuinely empty catalogue from filtered no-results', () => {
     renderCourses();
 
     expect(screen.getByText(/Start with Economics while new paths are being prepared/i)).toBeInTheDocument();
-    expect(screen.queryByText(/No learning paths match those filters/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No courses match those filters/i)).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Search' }), { target: { value: 'macroeconomics' } });
 
-    expect(screen.getByText(/No learning paths match those filters/i)).toBeInTheDocument();
+    expect(screen.getByText(/No courses match those filters/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Clear filters' })).toBeInTheDocument();
   });
 

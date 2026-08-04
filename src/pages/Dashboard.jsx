@@ -22,7 +22,7 @@ import LearningToday from '../components/learning/LearningToday';
 const QUICK_ACTIONS = [
   { path: '/practice', label: 'Practice', description: 'Work through a focused question set.', icon: ArrowPathIcon, block: 'block-blue' },
   { path: '/mastery', label: 'Mastery', description: 'See what to strengthen next.', icon: CheckCircleIcon, block: 'block-green' },
-  { path: '/courses', label: 'Learning paths', description: 'Follow structured courses and lessons.', icon: BookOpenIcon, block: 'block-cream' },
+  { path: '/courses', label: 'Courses', description: 'Follow structured courses and lessons.', icon: BookOpenIcon, block: 'block-cream' },
   { path: '/edutools', label: 'Education tools', description: 'Open revision, essays, and more.', icon: WrenchScrewdriverIcon, block: 'block-amber' },
 ];
 
@@ -168,7 +168,7 @@ export default function Dashboard() {
             <h2 className="mt-1 font-display text-2xl font-extrabold">Useful places</h2>
             <div className="mt-6 grid gap-3">
               {[
-                { path: '/courses', label: 'Learning paths', detail: `${courses.length} available`, icon: AcademicCapIcon },
+                { path: '/courses', label: 'Courses', detail: `${courses.length} available`, icon: AcademicCapIcon },
                 { path: '/revision', label: 'Saved revision', detail: `${data.savedSlides.length} saved`, icon: BookmarkIcon },
                 { path: '/essays', label: 'Essay Memoriser', detail: 'Practise recall', icon: DocumentTextIcon },
               ].map((item) => {

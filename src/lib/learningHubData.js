@@ -22,7 +22,7 @@ export function createLearningHubData({ faculties = [], courses = [], courseProg
       title: course.title,
       description: course.shortDescription || course.description,
       href: coursePath(course, progress),
-      kind: course.metadata?.subject || course.category || 'Learning path',
+      kind: course.metadata?.subject || course.category || 'Course',
       metadata: [
         course.duration > 0 ? `${course.duration} min` : 'Self-paced',
         `${lessonCount} ${lessonCount === 1 ? 'lesson' : 'lessons'}`,

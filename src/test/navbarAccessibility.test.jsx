@@ -59,8 +59,9 @@ describe('Navbar accessibility', () => {
 
     render(<MemoryRouter initialEntries={['/']}><Navbar /></MemoryRouter>);
 
-    expect(screen.getByRole('link', { name: 'Learn' })).toHaveAttribute('href', '/library');
-    expect(screen.getByRole('link', { name: 'Tools' })).toHaveAttribute('href', '/money');
+    expect(screen.getByRole('link', { name: 'Courses' })).toHaveAttribute('href', '/courses');
+    expect(screen.getByRole('link', { name: 'Financial tools' })).toHaveAttribute('href', '/money');
+    expect(screen.getByRole('link', { name: 'Team' })).toHaveAttribute('href', '/about');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: 'Get started' })).toHaveAttribute('href', '/register');
     expect(screen.queryByRole('group', { name: 'Product mode' })).not.toBeInTheDocument();

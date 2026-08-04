@@ -90,11 +90,11 @@ const CourseDetail = () => {
     <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
       <div className="container-custom">
         <nav aria-label="Breadcrumb" className="mb-7 flex flex-wrap items-center gap-2 text-sm font-bold text-text-muted">
-          <Link to="/library" className="min-h-11 content-center transition-colors hover:text-accent">Learn</Link><span aria-hidden="true">/</span><Link to="/courses" className="min-h-11 content-center transition-colors hover:text-accent">Learning paths</Link>
+          <Link to="/library" className="min-h-11 content-center transition-colors hover:text-accent">Learn</Link><span aria-hidden="true">/</span><Link to="/courses" className="min-h-11 content-center transition-colors hover:text-accent">Courses</Link>
         </nav>
 
         <div className="mb-12 reveal">
-          <LearningPageHeader eyebrow="Learning path" title={course.title} description={course.description || course.shortDescription} />
+          <LearningPageHeader eyebrow="Course" title={course.title} description={course.description || course.shortDescription} />
           <div className="mt-8">
             {course.thumbnail && (
               <div className="aspect-[21/8] w-full max-w-4xl overflow-hidden rounded-3xl bg-surface-soft shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
@@ -127,13 +127,13 @@ const CourseDetail = () => {
                 </div>
               </div>
 
-              {progress?.courseProgress && <LearningProgressSummary className="mb-8 bg-surface-soft shadow-none" label="Your learning-path progress" completed={progress.courseProgress.completedLessons} total={progress.courseProgress.totalLessons} detail={progress.courseProgress.nextLesson?.title ? `Next: ${progress.courseProgress.nextLesson.title}` : 'Every completed lesson is saved.'} />}
+              {progress?.courseProgress && <LearningProgressSummary className="mb-8 bg-surface-soft shadow-none" label="Course progress" completed={progress.courseProgress.completedLessons} total={progress.courseProgress.totalLessons} detail={progress.courseProgress.nextLesson?.title ? `Next: ${progress.courseProgress.nextLesson.title}` : 'Every completed lesson is saved.'} />}
 
               <button
                 onClick={startCourse}
                 className="btn-primary py-3 px-10 hover:-translate-y-0.5 transition-transform"
               >
-                {progress?.courseProgress?.status === 'in_progress' ? `Continue ${progress.courseProgress.nextLesson?.title || 'learning'}` : 'Start learning path'}
+                {progress?.courseProgress?.status === 'in_progress' ? `Continue ${progress.courseProgress.nextLesson?.title || 'learning'}` : 'Start course'}
               </button>
             </div>
           </div>

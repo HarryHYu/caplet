@@ -69,7 +69,7 @@ describe('Dashboard study plan handoff', () => {
     expect(await screen.findByRole('heading', { name: 'Jump back in.' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Practice.*focused question set/i })).toHaveAttribute('href', '/practice');
     expect(screen.getByRole('link', { name: /Mastery.*strengthen next/i })).toHaveAttribute('href', '/mastery');
-    expect(screen.getByRole('link', { name: /Learning paths.*structured courses and lessons/i })).toHaveAttribute('href', '/courses');
+    expect(screen.getByRole('link', { name: /Courses.*structured courses and lessons/i })).toHaveAttribute('href', '/courses');
     expect(screen.getByRole('link', { name: /Education tools.*revision, essays/i })).toHaveAttribute('href', '/edutools');
   });
 

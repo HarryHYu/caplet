@@ -200,7 +200,7 @@ const Library = () => {
         )}
         </LearningSection>
 
-        <LearningSection eyebrow="Structured study" title="Learning paths" description="Follow lessons in order and resume from the exact point you stopped." className="reveal mb-16" action={<Link to="/courses" className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">Browse all paths <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>}>
+        <LearningSection eyebrow="Structured study" title="Courses" description="Follow lessons in order and resume from the exact point you stopped." className="reveal mb-16" action={<Link to="/courses" className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">Browse all courses <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>}>
           {hubData.learningPaths.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {hubData.learningPaths.slice(0, 6).map((path) => <LearningCard key={path.id} {...path} icon={AcademicCapIcon} status={path.status === 'completed' ? 'Complete' : path.status === 'in_progress' ? 'In progress' : undefined} actionLabel={path.status === 'in_progress' ? 'Continue path' : 'Open path'} />)}

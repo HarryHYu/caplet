@@ -64,7 +64,7 @@ const Courses = () => {
   const inProgressCourses = visibleCourses.filter((course) => courseProgress[String(course.id)]?.status === 'in_progress');
   const groupedCourses = visibleCourses.reduce((groups, course) => {
     const metadata = course.metadata || {};
-    const subject = metadata.subject || (course.tags || []).find((tag) => String(tag).toLowerCase() === 'economics') || course.category || 'Learning paths';
+    const subject = metadata.subject || (course.tags || []).find((tag) => String(tag).toLowerCase() === 'economics') || course.category || 'Courses';
     const stage = courseStage(course);
     const year = metadata.yearLevel ? ` · Year ${metadata.yearLevel}` : ` · ${stage}`;
     const label = `${String(subject).replaceAll('-', ' ')}${year}`;
@@ -82,7 +82,7 @@ const Courses = () => {
       `${lessonCount} ${lessonCount === 1 ? 'lesson' : 'lessons'}`,
       courseStage(course),
     ];
-    return <LearningCard key={course.id} title={course.title} description={course.shortDescription} href={courseHref(course)} kind={course.metadata?.subject || course.category || 'Learning path'} metadata={metadata} status={hasProgress ? 'In progress' : progress?.status === 'completed' ? 'Complete' : undefined} progress={hasProgress || progress?.status === 'completed' ? percentage : undefined} icon={AcademicCapIcon} actionLabel={hasProgress ? `Continue ${progress.nextLesson?.title || 'learning'}` : 'Open learning path'} />;
+    return <LearningCard key={course.id} title={course.title} description={course.shortDescription} href={courseHref(course)} kind={course.metadata?.subject || course.category || 'Course'} metadata={metadata} status={hasProgress ? 'In progress' : progress?.status === 'completed' ? 'Complete' : undefined} progress={hasProgress || progress?.status === 'completed' ? percentage : undefined} icon={AcademicCapIcon} actionLabel={hasProgress ? `Continue ${progress.nextLesson?.title || 'learning'}` : 'Open course'} />;
   };
 
   const hasActiveFilters = Boolean(filters.stage || filters.search.trim());
@@ -102,12 +102,12 @@ const Courses = () => {
       <div className="container-custom">
         {error && (
           <div role="alert" className="reveal mb-10 rounded-2xl bg-surface-error p-5 text-sm font-semibold text-text-error">
-            Learning paths could not be loaded. Economics study and diagnostic practice are still available below.
+            Courses could not be loaded. Economics study and diagnostic practice are still available below.
           </div>
         )}
 
         <Link to="/library" className="mb-7 inline-flex min-h-11 items-center text-sm font-bold text-text-muted transition-colors hover:text-accent">← Learn</Link>
-        <LearningPageHeader eyebrow="Structured study" title="Learning paths" description="Follow lessons in order, resume exactly where you stopped, or begin with a quick Economics diagnostic." className="reveal mb-12" />
+        <LearningPageHeader eyebrow="Structured study" title="Courses" description="Follow lessons in order, resume exactly where you stopped, or begin with a quick Economics diagnostic." className="reveal mb-12" />
 
         {/* Filters */}
         <div className="reveal mb-12 flex flex-col gap-5 rounded-3xl bg-surface-soft p-5 sm:flex-row sm:p-6">
@@ -147,8 +147,8 @@ const Courses = () => {
 
         {showNoMatches && (
           <div className="reveal rounded-3xl border border-dashed border-line-soft bg-surface-soft px-8 py-12 text-center">
-            <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">No learning paths match those filters.</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm font-medium text-text-muted">Clear the stage or search filters to see every published path.</p>
+            <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">No courses match those filters.</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm font-medium text-text-muted">Clear the stage or search filters to see every published course.</p>
             <button type="button" onClick={() => setFilters({ stage: '', search: '' })} className="btn-primary mx-auto mt-6">Clear filters</button>
           </div>
         )}
