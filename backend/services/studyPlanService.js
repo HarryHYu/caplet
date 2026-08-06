@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const NSW_SUBJECT_CATALOGUE = require('../../shared/nswSubjectCatalog.json');
+const NSW_SUBJECT_CATALOGUE = require('../shared/nswSubjectCatalog.json');
 
 /**
  * The MVP subject catalogue. Every resource points to a route that already

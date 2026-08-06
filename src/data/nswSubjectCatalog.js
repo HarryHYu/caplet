@@ -1,4 +1,4 @@
-import catalogue from '../../shared/nswSubjectCatalog.json';
+import catalogue from '../../backend/shared/nswSubjectCatalog.json';
 
 export const NSW_CATALOGUE_SOURCE = catalogue.source;
 export const NSW_STAGES = catalogue.stages;
