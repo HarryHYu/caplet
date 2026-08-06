@@ -318,7 +318,7 @@ const Home = () => {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3 relative">
-            <Link to="/register" className="hero-cta inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-[color:var(--mark-blue)] text-white text-base font-bold shadow-[0_12px_30px_-10px_rgba(19,81,170,0.5)] hover:-translate-y-0.5 transition-transform duration-200">
+            <Link to="/dashboard" className="hero-cta inline-flex items-center gap-2 px-7 py-4 rounded-2xl bg-[color:var(--mark-blue)] text-white text-base font-bold shadow-[0_12px_30px_-10px_rgba(19,81,170,0.5)] hover:-translate-y-0.5 transition-transform duration-200">
               Start learning
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </Link>

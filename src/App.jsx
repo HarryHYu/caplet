@@ -306,11 +306,11 @@ function AppRoutes() {
           <Route path="/library/economics/:section/:focusId" element={<ResourceLibrary />} />
           <Route path="/library/economics/:section" element={<ResourceLibrary />} />
           <Route path="/library/:subject" element={<LibrarySubject />} />
-          <Route path="/courses" element={<Courses />} />
+          <Route path="/courses" element={<RequireAuth><Courses /></RequireAuth>} />
           <Route path="/resources" element={<Navigate to="/library/economics" replace />} />
-          <Route path="/courses/:courseId" element={<CourseDetail />} />
-          <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
-          <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
+          <Route path="/courses/:courseId" element={<RequireAuth><CourseDetail /></RequireAuth>} />
+          <Route path="/courses/:courseId/modules/:moduleId" element={<RequireAuth><ModuleDetail /></RequireAuth>} />
+          <Route path="/courses/:courseId/lessons/:lessonId" element={<RequireAuth><LessonPlayer /></RequireAuth>} />
           <Route path="/courses/:courseId/complete" element={<RequireAuth><CourseComplete /></RequireAuth>} />
           <Route path="/classes" element={<Classes />} />
           <Route path="/classes/:classId" element={<RequireAuth><ClassDetail /></RequireAuth>} />
