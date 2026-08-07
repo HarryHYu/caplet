@@ -186,14 +186,14 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 flex max-w-3xl flex-col items-center px-5 text-center">
-          <p className="hero-kicker mb-5 -rotate-2 font-hand text-2xl text-blue md:text-[1.65rem]">free, open, and a little playful</p>
-          <h1 aria-label="Build, learn, and ship anything." className="font-bricolage text-[clamp(3rem,8.5vw,6.25rem)] font-extrabold leading-[0.96] tracking-[-0.03em] text-text-primary">
-            <span className="hero-line block">Build, <span className="hero-hl hero-mark hl-swipe">learn</span>,</span>
-            <span className="hero-line block">and ship <span className="relative inline-block">anything<Scribble pathClass="hero-circle hero-mark" /></span>.</span>
+          <p className="hero-kicker mb-5 -rotate-2 font-hand text-2xl text-blue md:text-[1.65rem]">made for students, built around learning</p>
+          <h1 aria-label="Study, practise, and stay on track." className="font-bricolage text-[clamp(3rem,8.5vw,6.25rem)] font-extrabold leading-[0.96] tracking-[-0.03em] text-text-primary">
+            <span className="hero-line block">Study, <span className="hero-hl hero-mark hl-swipe">practise</span>,</span>
+            <span className="hero-line block">and stay <span className="relative inline-block">on track<Scribble pathClass="hero-circle hero-mark" /></span>.</span>
           </h1>
-          <p className="hero-sub body-text mx-auto mt-8 max-w-xl">Caplet is a free, open platform for building interactive courses and learning from them. Lessons, live code, graphing, quizzes. No subscriptions. No lock-in.</p>
+          <p className="hero-sub body-text mx-auto mt-8 max-w-xl">Keep your subjects, notes, practice, study plan and upcoming assessments together—so you always know what to do next.</p>
           <div className="relative mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/register" className="hero-cta inline-flex items-center gap-2 rounded-2xl bg-[color:var(--mark-blue)] px-7 py-4 text-base font-bold text-white shadow-[0_12px_30px_-10px_rgba(19,81,170,0.5)] transition-transform duration-200 hover:-translate-y-0.5">Start building <ArrowRightIcon className="h-5 w-5" aria-hidden="true" /></Link>
+            <Link to="/register" className="hero-cta inline-flex items-center gap-2 rounded-2xl bg-[color:var(--mark-blue)] px-7 py-4 text-base font-bold text-white shadow-[0_12px_30px_-10px_rgba(19,81,170,0.5)] transition-transform duration-200 hover:-translate-y-0.5">Start learning <ArrowRightIcon className="h-5 w-5" aria-hidden="true" /></Link>
             <button type="button" onClick={() => goTo('#features')} className="hero-cta block-blue inline-flex items-center gap-2 rounded-2xl px-6 py-4 text-base font-bold text-text-primary transition-transform duration-200 hover:-translate-y-0.5">See how it works</button>
             <div className="hero-note pointer-events-none absolute -bottom-16 left-1/2 hidden -translate-x-[9rem] -rotate-6 sm:block"><span className="font-hand text-xl text-mark">it’s genuinely free</span><Arrow className="absolute -top-11 left-2 h-12 w-16 rotate-180" pathClass="hero-arrow hero-mark" stroke="stroke-mark" /></div>
           </div>

@@ -41,7 +41,7 @@ describe('public homepage', () => {
   it('restores the animated product hero and feature depth', () => {
     render(<MemoryRouter><Home /></MemoryRouter>);
 
-    expect(screen.getByRole('heading', { name: /Build, learn, and ship anything/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Study, practise, and stay on track/i })).toBeInTheDocument();
     expect(screen.getByText('Lesson builder')).toBeInTheDocument();
     expect(screen.getByText('Live code IDE')).toBeInTheDocument();
     expect(screen.getByText('AI lesson generation')).toBeInTheDocument();
