@@ -189,7 +189,7 @@ export default function Home() {
           <p className="hero-kicker mb-5 -rotate-2 font-hand text-2xl text-blue md:text-[1.65rem]">made for students, built around learning</p>
           <h1 aria-label="Study, practise, and stay on track." className="font-bricolage text-[clamp(3rem,8.5vw,6.25rem)] font-extrabold leading-[0.96] tracking-[-0.03em] text-text-primary">
             <span className="hero-line block">Study, <span className="hero-hl hero-mark hl-swipe">practise</span>,</span>
-            <span className="hero-line block">and stay <span className="relative inline-block">on track<Scribble pathClass="hero-circle hero-mark" /></span>.</span>
+            <span className="hero-line block">and stay <span className="relative inline-block">on track.<Scribble pathClass="hero-circle hero-mark" /></span></span>
           </h1>
           <p className="hero-sub body-text mx-auto mt-8 max-w-xl">Keep your subjects, notes, practice, study plan and upcoming assessments together—so you always know what to do next.</p>
           <div className="relative mt-10 flex flex-wrap items-center justify-center gap-3">

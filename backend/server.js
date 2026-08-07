@@ -124,6 +124,7 @@ app.use('/api/financial-twin', require('./routes/financialTwin'));
 app.use('/api/money', require('./routes/money'));
 app.use('/api/review', require('./routes/review'));
 app.use('/api/essays', require('./routes/essays'));
+app.use('/api/assessment-reports', require('./routes/assessmentReports'));
 app.use('/api/economics-marker', require('./routes/economicsMarker'));
 app.use('/api/economics-exams', require('./routes/economicsExams'));
 app.use('/api/study-plan', require('./routes/studyPlan'));

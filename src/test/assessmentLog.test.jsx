@@ -22,6 +22,7 @@ describe('AssessmentLog', () => {
     render(<AssessmentLog />);
 
     await user.click(screen.getByRole('button', { name: 'Log result' }));
+    await user.selectOptions(screen.getByLabelText('School year'), 'Year 12');
     await user.selectOptions(screen.getByLabelText('Result term'), 'Term 2');
     await user.type(screen.getByLabelText('Task name'), 'Economic policies essay');
     await user.type(screen.getByLabelText('Date'), '2026-06-12');
@@ -36,17 +37,19 @@ describe('AssessmentLog', () => {
     expect(screen.getByText('Economic policies essay')).toBeInTheDocument();
     expect(screen.getAllByText('84%')).toHaveLength(2);
     expect(screen.getByText('Use evidence more precisely.')).toBeInTheDocument();
+    expect(screen.getAllByText(/Year 12/).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Open scan/ })).toBeInTheDocument();
     expect(saveAssessmentAttachment).toHaveBeenCalledWith(expect.any(String), scan);
   });
 
   it('rejects impossible marks and filters by term', async () => {
     const user = userEvent.setup();
-    localStorage.setItem('caplet:assessment-log', JSON.stringify([{ id: 'one', term: 'Term 1', subject: 'Economics', taskName: 'Topic test', date: '2026-02-10', score: '18', maxMarks: '20', weighting: '10', reflection: '' }]));
+    localStorage.setItem('caplet:assessment-log', JSON.stringify([{ id: 'one', yearLevel: 'Year 11', term: 'Term 1', subject: 'Economics', taskName: 'Topic test', date: '2026-02-10', score: '18', maxMarks: '20', weighting: '10', reflection: '' }]));
     render(<AssessmentLog />);
 
     expect(screen.getByRole('heading', { name: 'Results', level: 1 })).toBeInTheDocument();
     expect(screen.getByLabelText('Filter by term')).toHaveClass('appearance-none', 'rounded-xl');
+    expect(screen.getByLabelText('Filter by year')).toHaveClass('appearance-none', 'rounded-xl');
 
     await user.selectOptions(screen.getByLabelText('Filter by term'), 'Term 2');
     expect(screen.queryByText('Topic test')).not.toBeInTheDocument();

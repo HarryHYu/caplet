@@ -47,7 +47,7 @@ describe('Resource library hub', () => {
 
     expect(screen.getByRole('heading', { name: 'Resource library' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Take the quick Economics diagnostic/i })).toHaveAttribute('href', expect.stringContaining('mode=diagnostic'));
-    expect(screen.getByRole('link', { name: /Economics.*Year 11–12.*Open/i })).toHaveAttribute('href', '/library/economics');
+    expect(screen.getByRole('link', { name: /^Economics Open$/i })).toHaveAttribute('href', '/library/economics');
     await waitFor(() => expect(api.getCourses).toHaveBeenCalledOnce());
     expect(api.getStudyPlan).not.toHaveBeenCalled();
   });
@@ -56,9 +56,11 @@ describe('Resource library hub', () => {
     renderHub();
 
     expect(screen.getByRole('heading', { name: 'Subjects' })).toBeInTheDocument();
-    expect(screen.getByText('English')).toBeInTheDocument();
-    expect(screen.getByText('Business Studies')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Economics.*Year 11–12.*Open/i })).toHaveAttribute('href', '/library/economics');
+    expect(screen.getByRole('heading', { name: 'English (EAL/D)' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Business Studies' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^Economics Open$/i })).toHaveAttribute('href', '/library/economics');
+    expect(screen.queryByText('English', { selector: 'h3' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Year 11–12')).not.toBeInTheDocument();
     expect(screen.queryByText('Coming soon')).not.toBeInTheDocument();
     expect(screen.queryByText(/Placeholder/)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'English (EAL/D)' }).closest('[aria-disabled="true"]')).toBeInTheDocument();
@@ -70,10 +72,11 @@ describe('Resource library hub', () => {
     renderHub();
 
     await user.click(screen.getByRole('button', { name: 'Choose subjects' }));
-    await user.click(screen.getByRole('button', { name: 'Physics' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Search subjects' }), 'physics');
+    await user.click(screen.getByRole('option', { name: 'Physics' }));
 
     expect(JSON.parse(localStorage.getItem('caplet:my-subjects'))).toEqual(['Physics']);
-    expect(screen.getByRole('button', { name: 'Physics' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('option', { name: 'Physics' })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('shows signed-in next tasks and resumable courses', async () => {
@@ -102,6 +105,6 @@ describe('Resource library hub', () => {
     renderHub();
 
     expect(await screen.findByText(/unavailable right now/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Economics.*Year 11–12.*Open/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^Economics Open$/i })).toBeInTheDocument();
   });
 });

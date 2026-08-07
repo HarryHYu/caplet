@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, CheckIcon, ChevronDownIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useReveal } from '../lib/useReveal';
 import { useMySubjects } from '../lib/useMySubjects';
 import { useLearningHubData } from '../lib/useLearningHubData';
@@ -16,21 +16,6 @@ import { faculties } from '../data/hscSubjects';
  * (see data/hscSubjects) link through to their shelf at /library/:slug.
  */
 
-const SubjectChip = ({ subject, picked, onToggle }) => (
-  <button
-    type="button"
-    onClick={() => onToggle(subject.name)}
-    aria-pressed={picked}
-    className={`rounded-full border px-3 py-1.5 text-sm font-bold transition-colors ${
-      picked
-        ? 'border-transparent bg-accent-soft text-accent'
-        : 'border-line-soft bg-surface-raised text-text-muted hover:text-text-primary'
-    }`}
-  >
-    {subject.name}
-  </button>
-);
-
 const LibrarySubjectCard = ({ subject }) => {
   const isAvailable = subject.available === true;
   const classes = `group flex min-h-36 flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 transition-colors ${
@@ -40,7 +25,6 @@ const LibrarySubjectCard = ({ subject }) => {
     <>
       <div>
         <h4 className="font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{subject.name}</h4>
-        {subject.tag && <p className="mt-2 text-sm font-medium text-text-muted">{subject.tag}</p>}
       </div>
       {isAvailable && (
         <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent">
@@ -88,14 +72,14 @@ const Library = () => {
   const { data: hubData, loading: hubLoading } = useLearningHubData(isAuthenticated);
   const [filterActive, setFilterActive] = useState(() => mySubjects.length > 0);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [subjectQuery, setSubjectQuery] = useState('');
 
-  const { subjectFaculties } = useMemo(() => {
-    const filterSubjects = (subjects) => filterActive ? subjects.filter((subject) => mySubjects.includes(subject.name)) : subjects;
-    const visible = faculties
-      .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects) }))
-      .filter((faculty) => faculty.subjects.length > 0);
-    return { subjectFaculties: visible };
-  }, [filterActive, mySubjects]);
+  const allSubjects = useMemo(() => faculties.flatMap((faculty) => faculty.subjects), []);
+  const matchingSubjects = useMemo(() => {
+    const query = subjectQuery.trim().toLowerCase();
+    return allSubjects.filter((subject) => !query || subject.name.toLowerCase().includes(query));
+  }, [allSubjects, subjectQuery]);
+  const visibleSubjects = useMemo(() => matchingSubjects.filter((subject) => !filterActive || mySubjects.includes(subject.name)), [filterActive, matchingSubjects, mySubjects]);
 
   const continueItems = hubData.continueItems.filter((item) => item.href !== hubData.nextAction.resume?.href);
 
@@ -132,7 +116,6 @@ const Library = () => {
 
         <LearningSection
           title="Subjects"
-          description="Choose a subject to explore."
           className="reveal mb-16"
         >
           <div className="mb-8 flex flex-wrap items-center gap-3">
@@ -154,33 +137,31 @@ const Library = () => {
             </div>
             <button
               type="button"
-              onClick={() => setPickerOpen((v) => !v)}
-              className="rounded-full border border-line-soft bg-surface-raised px-4 py-1.5 text-sm font-bold text-text-muted transition-colors hover:text-accent"
+              onClick={() => setPickerOpen((value) => !value)}
+              aria-expanded={pickerOpen}
+              aria-controls="subject-picker"
+              className="inline-flex items-center gap-2 rounded-full border border-line-soft bg-surface-raised px-4 py-1.5 text-sm font-bold text-text-muted transition-colors hover:text-accent"
             >
-              {pickerOpen ? 'Done' : 'Choose subjects'}
+              Choose subjects <ChevronDownIcon className={`h-4 w-4 transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
             </button>
           </div>
 
           {pickerOpen && (
-            <div className="mb-8 rounded-2xl border border-line-soft bg-surface-soft p-6">
-              <p className="mb-5 text-sm text-text-muted">Choose the subjects you study to filter this list.</p>
-              <div className="space-y-6">
-                {faculties.map((faculty) => (
-                  <div key={faculty.name}>
-                    <h4 className="mb-2 text-sm font-bold text-text-primary">{faculty.name}</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {faculty.subjects.map((subject) => (
-                        <SubjectChip
-                          key={subject.name}
-                          subject={subject}
-                          picked={mySubjects.includes(subject.name)}
-                          onToggle={toggleSubject}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
+            <div id="subject-picker" className="mb-8 max-w-2xl rounded-2xl border border-line-soft bg-surface-raised p-4 shadow-[0_24px_60px_-42px_rgba(20,20,18,0.55)]">
+              <label htmlFor="subject-search" className="sr-only">Search subjects</label>
+              <div className="relative">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-dim" />
+                <input id="subject-search" type="search" value={subjectQuery} onChange={(event) => setSubjectQuery(event.target.value)} autoFocus placeholder="Search subjects" className="min-h-12 w-full rounded-xl border border-line-soft bg-surface-soft py-3 pl-12 pr-4 text-sm font-bold text-text-primary outline-none placeholder:font-medium placeholder:text-text-dim focus:border-accent focus:ring-4 focus:ring-accent-soft" />
               </div>
+              {mySubjects.length > 0 && <div className="mt-3 flex flex-wrap gap-2" aria-label="Selected subjects">{mySubjects.map((name) => <button key={name} type="button" onClick={() => toggleSubject(name)} className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1.5 text-xs font-bold text-accent">{name}<XMarkIcon className="h-3.5 w-3.5" /></button>)}</div>}
+              <div role="listbox" aria-label="Subject search results" aria-multiselectable="true" className="mt-3 max-h-72 overflow-y-auto rounded-xl border border-line-soft bg-surface-body p-1">
+                {matchingSubjects.map((subject) => {
+                  const selected = mySubjects.includes(subject.name);
+                  return <button key={subject.name} type="button" role="option" aria-selected={selected} onClick={() => toggleSubject(subject.name)} className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition-colors ${selected ? 'bg-accent-soft text-accent' : 'text-text-primary hover:bg-surface-soft'}`}><span>{subject.name}</span>{selected && <CheckIcon className="h-4 w-4 shrink-0" />}</button>;
+                })}
+                {!matchingSubjects.length && <p className="px-3 py-8 text-center text-sm text-text-muted">No subjects match “{subjectQuery}”.</p>}
+              </div>
+              <div className="mt-3 flex justify-end"><button type="button" onClick={() => { setPickerOpen(false); setSubjectQuery(''); }} className="btn-primary min-h-10 px-4 py-2">Done</button></div>
             </div>
           )}
 
@@ -198,12 +179,7 @@ const Library = () => {
             </div>
           ) : (
             <div>
-              {subjectFaculties.length ? <div className="space-y-9">{subjectFaculties.map((faculty) => (
-                <div key={faculty.name}>
-                  <h3 className="mb-3 font-display text-lg font-bold tracking-tight text-text-primary">{faculty.name}</h3>
-                  <div className="reveal-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{faculty.subjects.map((subject) => <LibrarySubjectCard key={subject.name} subject={subject} />)}</div>
-                </div>
-              ))}</div> : <div className="rounded-2xl border border-dashed border-line-soft bg-surface-soft p-8"><p className="font-display text-xl font-bold text-text-primary">No matching subjects</p><button type="button" onClick={() => setFilterActive(false)} className="btn-secondary mt-5">Show all</button></div>}
+              {visibleSubjects.length ? <div className="reveal-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{visibleSubjects.map((subject) => <LibrarySubjectCard key={subject.name} subject={subject} />)}</div> : <div className="rounded-2xl border border-dashed border-line-soft bg-surface-soft p-8"><p className="font-display text-xl font-bold text-text-primary">No matching subjects</p><button type="button" onClick={() => { setFilterActive(false); setSubjectQuery(''); }} className="btn-secondary mt-5">Show all</button></div>}
             </div>
           )}
         </LearningSection>

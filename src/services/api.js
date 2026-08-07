@@ -883,6 +883,13 @@ class ApiService {
     return this.request(`/essays/${id}`, { method: 'DELETE' });
   }
 
+  async parseAssessmentReport({ text, fileName, subjects }) {
+    return this.request('/assessment-reports/parse', {
+      method: 'POST',
+      body: JSON.stringify({ text, fileName, subjects }),
+    });
+  }
+
   // CapletMark — HSC Economics answer marker (AI-marked practice attempts)
   async markEconomicsAnswer({ question, markValue, responseType, studentAnswer, focusArea, sourceResourceId, sourcePromptId, sourceFocusId }) {
     return this.request('/economics-marker', {

@@ -1,96 +1,73 @@
-# Caplet system-wide minimal redesign — design QA
+# Design QA
 
-## Source and implementation evidence
+## Source visual truth
 
-- Visual source of truth: `/Users/ray/.codex/generated_images/019fdbe5-9f01-7861-b5d1-365f490b752d/exec-f40df3ce-041d-4846-9e2b-2b2047f8ca66.png`
-- Source pixels: 1487 × 1058
-- Exact dashboard implementation: `output/design-qa/dashboard-desktop.png` at 1487 × 1058 CSS px, device scale 1
-- Current system views:
-  - `output/design-qa/system/home-desktop.png` at 1440 × 1000 CSS px
-  - `output/design-qa/system/home-mobile.png` at 390 × 844 CSS px
-  - `output/design-qa/system/practice-desktop.png` at 1440 × 1000 CSS px
-  - `output/design-qa/system/study-plan-desktop.png` at 1440 × 1000 CSS px
-- Combined comparison input: `output/design-qa/system/system-comparison.png`
-- State: light theme; authenticated desktop study routes where required; signed-out public/auth routes; live local API data
+- Hero: `/var/folders/fz/x56ny69x5mv574zqg28t004c0000gn/T/TemporaryItems/NSIRD_screencaptureui_TmTc1D/Screenshot 2026-08-08 at 9.20.25 AM.png` (3038 x 1776 px)
+- Registration: `/var/folders/fz/x56ny69x5mv574zqg28t004c0000gn/T/TemporaryItems/NSIRD_screencaptureui_CFEHCO/Screenshot 2026-08-08 at 9.20.48 AM.png` (3032 x 1776 px)
+- Subject selection: `/var/folders/fz/x56ny69x5mv574zqg28t004c0000gn/T/TemporaryItems/NSIRD_screencaptureui_gSeylM/Screenshot 2026-08-08 at 9.21.46 AM.png` (2888 x 1714 px)
+- Results history: `/var/folders/fz/x56ny69x5mv574zqg28t004c0000gn/T/TemporaryItems/NSIRD_screencaptureui_63S86Q/Screenshot 2026-08-08 at 9.24.13 AM.png` (2290 x 502 px)
 
-## Full-view comparison
+The source screenshots were macOS captures. Their CSS viewport and source density were not embedded, so the comparisons below normalize by rendered image height and do not make pixel-precise claims about above-the-fold crop.
 
-The combined comparison places the approved dashboard reference beside the new public homepage, Practice, and Study Plan. Across route families the implementation now carries the same visible system: white canvas, Bricolage/Hanken type hierarchy, thin grey dividers, restrained blue accent, small circular icon surfaces, flat controls, short headings, and one dominant action. The system views intentionally retain their own information architecture rather than copying the dashboard columns onto unrelated tasks.
+## Implementation evidence
 
-## Focused region checks
+- Hero: `output/design-qa/home-implementation.png` (1276 x 718 px; 1276 x 720 CSS viewport; device pixel ratio 2; browser capture returned CSS-resolution pixels)
+- Registration: `output/design-qa/register-implementation.png` (1276 x 718 px; 1276 x 720 CSS viewport; device pixel ratio 2)
+- Searchable subject picker: `output/design-qa/library-search-implementation.png` (1389 x 879 px; 1389 x 881 CSS viewport; device pixel ratio 2)
+- Results empty state: `output/design-qa/results-implementation.png` (1389 x 879 px; 1389 x 881 CSS viewport; device pixel ratio 2)
+- Results chart section: `output/design-qa/results-charts-implementation.png` (1389 x 987 px, full-page capture)
+- Combined visual comparisons: `output/design-qa/home-comparison.png`, `output/design-qa/register-comparison.png`, and `output/design-qa/results-comparison.png`
 
-- **Navigation:** The approved real logo, `Caplet` wordmark, short route labels, flat active state, collapsible rail, and resize handle remain consistent. Public mobile navigation uses the compact logo/menu form.
-- **Headings and copy:** Public, learning, planning, money, classes, settings, About, and Contact use the reduced page-title scale and shorter descriptions. Decorative handwriting is normalised to a small structural kicker. Practice and Study Plan removed the largest explanatory blocks and visible placeholder labels.
-- **Cards and controls:** Shared learning cards, tool cards, forms, buttons, modal surfaces, legacy rounded panels, gradients, and shadows are normalised through the `caplet-minimal` shell. Focus workspaces retain task-specific controls but not ornamental lift.
-- **Forms:** Settings, authentication, calculator, and study-plan fields use one flat input treatment. The Google sign-in control was reduced from a fixed 384 px to 320 px so the 390 px viewport no longer overflows.
-- **Assets and icons:** The real `/logo.png` remains the brand asset. New UI icons use Heroicons. No new CSS-drawn or handcrafted SVG imagery was introduced.
+State: desktop, light theme. The guest hero and registration flow were opened on an isolated signed-out origin. Subjects and Results were tested in the authenticated Caplet shell.
 
-## Route and behavior coverage
+## Full-view comparison evidence
 
-- Authenticated desktop route checks at 1440 × 1000: Dashboard, Library, Practice, Study Plan, Money, Financial Tools, Settings, Classes, Courses, About, Contact, Trust, Terms, and Mastery.
-- Mobile checks at 390 × 844: Home, Login, Register, Library, Money, Financial Tools, Classes, Courses, About, Contact, Trust, and Terms. The prior dashboard mobile capture remains at `output/design-qa/dashboard-mobile.png`.
-- No checked page had document-width overflow after the Google sign-in width correction.
-- Primary navigation, dashboard collapse/resize, Practice mode selection, Study Plan step controls, settings tabs, public calls to action, and tool/library links remained interactive.
-- Semantic landmark checks found one main region on the checked route families after correcting Money and About ownership.
+- Hero: the stray standalone period is gone. The period is now attached to `on track.` and the hand-drawn underline remains anchored to that phrase. Typography, white space, header, blue accent and soft background treatment remain consistent with the source. The implementation capture is shorter than the source viewport, so the lower hero content is below the captured fold; this is a capture difference, not a missing-content finding.
+- Registration: the Google control now shares the same full form-column width as the email, date and password fields. The split light/dark layout, typography, spacing and blue accent remain consistent with the supplied reference.
+- Subjects: the dense faculty/category chip wall is replaced by one compact dropdown-style picker with search, selected-subject chips, check states and an explicit Done action. The main list is flat and has no faculty headings or subject subtitles.
+- Results: the compact history layout and polished select controls remain consistent with the source. The implementation adds a matching year filter, report import action and a separate trends section without crowding the table.
+
+## Focused region comparison evidence
+
+- Registration form controls were checked at readable size in `register-comparison.png`; the Google control left/right edges align with the single-column text fields.
+- The subject picker was opened, searched for `chem`, and verified to return only Chemistry while retaining selected-subject state in `library-search-implementation.png`.
+- The Results dialog was opened and verified to expose Year 7 through Year 12. The report importer was opened and verified to accept PDF, DOCX and TXT, keep analysis disabled until a file is chosen, and explain the review-before-save boundary.
+- Results empty-state charts were checked in `results-implementation.png`; populated bar/line rendering and persistence are covered by the frontend test fixture because the browser's date input automation could not enter a locale-formatted date without changing user data.
+- Browser diagnostics were checked after the interactions: no warning or error console entries were present.
 
 ## Required fidelity surfaces
 
-- **Fonts and typography:** Passed. Bricolage Grotesque remains the display face and Hanken Grotesk remains the body face. Page headings are capped at the approved visual scale; labels and long titles wrap without clipping.
-- **Spacing and layout rhythm:** Passed. Containers share a 1220 px maximum frame, desktop sections use generous whitespace and dividers, and mobile sections collapse into a readable single column.
-- **Colors and tokens:** Passed. The default light surface is white with neutral grey lines and one blue accent. Dark and user palette support remain token-driven.
-- **Image quality and asset fidelity:** Passed. The supplied logo is sharp and consistently contained; the reference does not require additional raster imagery.
-- **Copy and content:** Passed. Core route headings and descriptions were shortened while required trust, financial, assessment, and learning-state information remains available.
+- Fonts and typography: Bricolage Grotesque display headings and Hanken Grotesk body/UI text remain in use. Heading weights, control labels and supporting-copy hierarchy are consistent; no truncation or broken wrapping was visible.
+- Spacing and layout rhythm: form controls align to the same column, filters share one baseline, and the picker/trends sections retain the existing calm page rhythm. No overlap or horizontal clipping was visible at the inspected desktop widths.
+- Colors and visual tokens: all additions use Caplet surface, text, accent and line tokens. Focus rings and selected states use the existing blue accent and retain contrast.
+- Image quality and asset fidelity: the existing Caplet logo, hero cards and hand-drawn marks remain source assets; no visible asset was replaced with placeholder art, emoji or handcrafted SVG.
+- Copy and content: wording is student-facing and concise. AI report import explicitly says what is processed and requires review before adding results.
+- Interaction and accessibility: searchable listbox semantics, multiselect state, labelled selects, labelled chart regions, focus states, disabled import state and dialog dismissal were checked. Mobile behavior remains covered structurally by the existing responsive grid classes; a separate mobile browser capture was not available in the selected in-app browser.
 
-## Findings and comparison history
+## Comparison history
 
-1. **P1 · system inconsistency:** The initial cross-route review showed large decorative headings, handwritten labels, shadows, gradients, oversized rounded cards, and dense descriptions outside Dashboard. Fixed with the shared `caplet-minimal` shell, revised tokens/primitives, and targeted rewrites of the highest-noise pages. The combined comparison now shows one consistent design language.
-2. **P2 · Practice hierarchy:** The recommendation dominated the page as a large solid-blue panel. Rebuilt it as a concise divided row and reduced the mode cards. The current Practice capture restores the action-first hierarchy.
-3. **P2 · Study Plan noise:** Thirty-nine visible `Placeholder` labels and a large centred introduction increased cognitive load. Removed visible placeholder badges, retained availability context in accessible labels, shortened the introduction, and flattened the form surface.
-4. **P2 · mobile auth overflow:** The Google sign-in control extended 26 px beyond the 390 px viewport. Reduced and centred the control; Login and Register now fit their viewport.
-5. **P3 · development environment warning:** The browser reported local auto-login rate-limit warnings and repeated Google Identity initialisation warnings after repeated route cycling. These did not create rendering errors and are outside the visual change set.
+1. Earlier P1/P2 findings from the supplied screenshots: standalone hero period, narrow Google control, fragmented faculty subject wall without search, missing school-year selection, and no result visualisation/report import.
+2. Fixes applied: attached hero punctuation to its phrase; made the Google iframe/control fill the form width; replaced subject categories with a searchable multiselect dropdown and flat cards; added Year 7–12 entry/filter controls; added bar and historical line charts; added reviewed AI report import.
+3. Post-fix evidence: `home-comparison.png`, `register-comparison.png`, `library-search-implementation.png`, `results-implementation.png`, frontend interaction tests, and browser diagnostics.
+4. Revised comparison found no remaining actionable P0, P1 or P2 mismatch in the requested areas.
 
-## Automated verification
+## Findings
 
-- `npm run lint` — passed
-- `npm test` — passed, 43 files and 199 tests
-- `npm run build` — passed
-- `git diff --check` — passed
+- No actionable P0, P1 or P2 findings remain in the requested desktop states.
 
-## Browser comment iteration — 7 August 2026
+## Follow-up polish
 
-- Source truth: the five attached browser-comment screenshots at 1406 × 1024 or their captured page height, plus the approved dashboard source above.
-- Rendered evidence:
-  - `output/design-qa/comments-aug7/dashboard-viewport.jpg` — 1406 × 1024 CSS px, device scale 1, authenticated dark theme.
-  - `output/design-qa/comments-aug7/dashboard-source-comparison.jpg` — approved dashboard and revised Dashboard combined in one comparison input.
-  - `output/design-qa/comments-aug7/practice-sentence-case.jpg` — 1406 × 1024 CSS px, authenticated dark theme.
-  - `output/design-qa/comments-aug7/assessments-note-removed.png` — 1402 × 3393 full-page evidence, authenticated dark theme.
-- Focused evidence: DOM and computed-style checks confirmed the exact six Library selections appear on Dashboard, `Learn by doing` and `Ready to resume` render with `text-transform: none`, the assessment planning note and source links are absent, and a resource shortcut can be added and removed from the sidebar.
-- Primary interactions: subject deselection was reflected on Dashboard immediately and then restored; resource pinning was exercised in the browser through the keyboard-accessible bookmark control, while native drop handling was covered by the interaction test.
-- Console: a fresh browser tab produced no current errors. One older Vite hot-reload error remained in the reused tab history and was not reproducible.
+- P3: capture a dedicated narrow mobile viewport for the searchable picker and two-chart stack when the selected browser exposes viewport emulation.
 
-### Required fidelity surfaces for this iteration
+## Implementation checklist
 
-- **Fonts and typography:** Passed. Practice eyebrow labels and mode metadata now use sentence case with normal letter spacing; the existing Bricolage/Hanken hierarchy remains intact.
-- **Spacing and layout rhythm:** Passed. The exact selected subjects fit the left column without duplicate shorthand labels; pinned shortcuts form a compact secondary navigation group.
-- **Colors and tokens:** Passed. Drop, pinned, hover and active states reuse the existing accent and neutral tokens in both themes.
-- **Image quality and assets:** Passed. The existing Caplet logo and Heroicons remain unchanged; no new raster or improvised assets were introduced.
-- **Copy and content:** Passed. The unwanted assessment explainer is removed, resource pinning has one concise instruction, and shortcut labels remain understandable at narrow sidebar widths.
-
-### Comparison history
-
-1. **P1 · subject selection drift:** Dashboard injected Economics and fallback subjects, limited the list to three, and shortened both Mathematics courses to the same label. It now reads the shared persisted selection and renders every exact subject name. Live remove-and-restore verification passed.
-2. **P1 · resource shortcuts were not customisable:** Dashboard tools are now draggable to the sidebar, also expose an accessible bookmark action, persist locally, show a drop target, and can be removed. Drag/drop and removal tests passed.
-3. **P2 · forced uppercase practice labels:** The shared minimal shell no longer forces uppercase or expanded letter spacing. Computed-style and visual checks passed.
-4. **P2 · assessment source explainer remained visible:** The full planning note, buttons and source footer were removed. Full-page and DOM checks confirm absence.
-5. **P3 · long pinned label at a user-narrowed sidebar width:** The pinned `Resource library` item uses the concise visible label `Library` while retaining its full accessible name and tooltip.
-
-## Exam countdown and assessment customisation iteration
-
-- Dashboard evidence: the next Yearly exam appears in the existing `This week` column as `English Advanced exam`, `24 days · Mon, 31 Aug`, linking directly to `/assessments`.
-- Assessment-page evidence: the page shows a dedicated next-exam countdown, editable timeline controls, a desktop editor dialog, and a 390 × 844 responsive editor with no horizontal overflow.
-- Interaction coverage: add, edit, remove, official-task personalisation, official-task hiding, persistence, and personalised countdown priority all pass automated tests.
-- Data boundary: workbook-derived defaults remain in an immutable source module. Browser-local overrides are labelled `Personalised`; hiding a default does not alter the source schedule.
-- Console: a fresh authenticated browser tab produced no errors. The reused development tab retained one stale Footer hot-reload message that was not reproduced.
-- **Typography, spacing, colors, assets, and copy:** Passed. The feature reuses the established type, divider, icon, form, and accent system; both countdown surfaces remain concise and the editor fits desktop and mobile without clipping.
+- [x] Hero punctuation attached to its heading
+- [x] Google sign-in control aligned to form width
+- [x] Searchable subject dropdown without faculty categories or subject subtitles
+- [x] Year 7–12 result entry and filtering
+- [x] Assessment comparison bar chart
+- [x] Historical academic-growth line chart
+- [x] Reviewed AI report import
+- [x] Focused tests, full tests, lint, production build and browser QA
 
 final result: passed

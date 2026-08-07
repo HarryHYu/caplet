@@ -389,6 +389,7 @@
      official control fluid inside our auth panels so narrow screens never crop. */
   .google-auth-button > div,
   .google-auth-button > div > div,
+  .google-auth-button iframe,
   .google-auth-button [role='button'] {
     width: 100% !important;
     max-width: 100% !important;
