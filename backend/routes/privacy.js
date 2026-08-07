@@ -224,20 +224,12 @@ router.post('/consents', async (req, res) => {
     const type = String(req.body?.type || '');
     if (!CONSENT_TYPES.has(type)) return res.status(400).json({ message: 'A valid consent type is required.' });
     if (['learning_analytics', 'classroom_data'].includes(type) && !req.user.dateOfBirth) {
-      return res.status(409).json({
-        message: 'Add your date of birth in Settings → Profile before enabling age-sensitive optional features.',
-        code: 'age_confirmation_required',
-        consentRequired: true,
-      });
+      return res.status(409).json({ message: 'Add your date of birth in Settings → Profile before enabling age-sensitive optional features.' });
     }
     if (['learning_analytics', 'classroom_data'].includes(type) && requiresGuardianConsent(req.user)) {
       const preference = await preferenceFor(req.user);
       if (preference.parentConsentStatus !== 'granted') {
-        return res.status(403).json({
-          message: 'A parent or guardian must approve optional analytics and classroom participation first.',
-          code: 'guardian_consent_required',
-          consentRequired: true,
-        });
+        return res.status(403).json({ message: 'A parent or guardian must approve optional analytics and classroom participation first.' });
       }
     }
     const policyVersion = String(req.body?.policyVersion || '').trim();

@@ -7,10 +7,10 @@ export function LearningPageHeader({ eyebrow, title, description, actions, class
       {eyebrow && <p className="section-kicker">{eyebrow}</p>}
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="font-display text-5xl font-extrabold leading-[0.96] tracking-[-0.04em] text-text-primary md:text-6xl">
+          <h1 className="font-display text-4xl font-extrabold leading-tight tracking-[-0.035em] text-text-primary md:text-5xl">
             {title}
           </h1>
-          {description && <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">{description}</p>}
+          {description && <p className="mt-3 max-w-2xl text-base font-medium leading-relaxed text-text-muted">{description}</p>}
         </div>
         {actions && <div className="flex shrink-0 flex-wrap gap-3">{actions}</div>}
       </div>
@@ -22,10 +22,10 @@ export function LearningSection({ eyebrow, title, description, action, children,
   const headingId = labelledBy || `learning-section-${String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   return (
     <section aria-labelledby={headingId} className={className}>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           {eyebrow && <p className="section-kicker">{eyebrow}</p>}
-          <h2 id={headingId} className="font-display text-3xl font-extrabold tracking-tight text-text-primary">{title}</h2>
+          <h2 id={headingId} className="font-display text-2xl font-extrabold tracking-tight text-text-primary">{title}</h2>
           {description && <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">{description}</p>}
         </div>
         {action}
@@ -52,8 +52,8 @@ export function LearningCard({
   const content = (
     <>
       <div className="flex items-start justify-between gap-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent">
-          <CardIcon className="h-6 w-6" aria-hidden="true" />
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
+          <CardIcon className="h-5 w-5" aria-hidden="true" />
         </span>
         {status && (
           <span className={`rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.11em] ${status === 'Complete' ? 'block-green text-green' : 'bg-surface-soft text-text-muted'}`}>
@@ -62,8 +62,8 @@ export function LearningCard({
           </span>
         )}
       </div>
-      <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[0.13em] text-text-dim">{kind}</p>
-      <h3 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-text-primary transition-colors group-hover:text-accent">{title}</h3>
+      <p className="mt-5 text-[11px] font-extrabold uppercase tracking-[0.13em] text-text-dim">{kind}</p>
+      <h3 className="mt-1 font-display text-xl font-extrabold tracking-tight text-text-primary transition-colors group-hover:text-accent">{title}</h3>
       {description && <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{description}</p>}
       {metadata.length > 0 && <p className="mt-5 text-xs font-bold text-text-dim">{metadata.filter(Boolean).join(' · ')}</p>}
       {percentage !== null && (
@@ -79,7 +79,7 @@ export function LearningCard({
       </span>
     </>
   );
-  const classes = `group flex min-h-full flex-col rounded-3xl border border-line-soft bg-surface-raised p-6 shadow-[0_22px_48px_-40px_rgba(20,20,18,0.5)] transition-[transform,border-color,box-shadow] duration-200 ${href ? 'hover:-translate-y-1 hover:border-accent/50 hover:shadow-[0_28px_54px_-38px_rgba(20,20,18,0.45)]' : 'opacity-75'} ${className}`;
+  const classes = `group flex min-h-full flex-col rounded-lg border border-line-soft bg-surface-body p-6 transition-colors duration-150 ${href ? 'hover:border-accent/60' : 'opacity-75'} ${className}`;
 
   if (!href) return <div className={classes} aria-disabled="true">{content}</div>;
   return <Link to={href} className={classes}>{content}</Link>;

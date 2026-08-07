@@ -2,10 +2,16 @@ const PROD_API_BASE_URL = 'https://caplet-production.up.railway.app/api';
 const DEV_API_BASE_URLS = [
   'http://localhost:5002/api',
   'http://localhost:5000/api',
-  PROD_API_BASE_URL,
 ];
 const ENV_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_BASE_URL = ENV_API_BASE_URL || (import.meta.env.DEV ? DEV_API_BASE_URLS[0] : PROD_API_BASE_URL);
+const AUTH_ENDPOINTS_WITHOUT_REFRESH = new Set([
+  '/auth/login',
+  '/auth/register',
+  '/auth/google',
+  '/auth/refresh',
+  '/auth/logout',
+]);
 
 // `/demo` is a hard-isolated application entry: its internal MemoryRouter never
 // changes the browser pathname, and exiting it performs a full page load. Using
@@ -21,17 +27,50 @@ class ApiService {
     this.baseURLCandidates = ENV_API_BASE_URL
       ? [ENV_API_BASE_URL]
       : (import.meta.env.DEV ? DEV_API_BASE_URLS : [PROD_API_BASE_URL]);
-    this.token = localStorage.getItem('token');
+    // Access tokens are memory-only. The backend keeps the refresh token in an
+    // HttpOnly cookie so a script-readable storage XSS cannot persistently
+    // exfiltrate the account session.
+    this.token = null;
   }
 
   setToken(token) {
     this.token = token;
-    localStorage.setItem('token', token);
   }
 
   clearToken() {
     this.token = null;
-    localStorage.removeItem('token');
+  }
+
+  async refreshAccessToken() {
+    if (isDemoSandboxRequest()) return null;
+    try {
+      const response = await fetch(`${this.baseURL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Caplet-Client': 'web',
+        },
+      });
+      if (!response.ok) {
+        this.clearToken();
+        return null;
+      }
+      const data = await response.json();
+      if (!data?.token) {
+        this.clearToken();
+        return null;
+      }
+      this.setToken(data.token);
+      return data.token;
+    } catch {
+      // A local backend being offline must never trigger a production request.
+      return null;
+    }
+  }
+
+  restoreSession() {
+    return this.refreshAccessToken();
   }
 
   setEditorToken(token) {
@@ -52,12 +91,13 @@ class ApiService {
       return resolveDemo((options.method || 'GET').toUpperCase(), endpoint, options);
     }
 
-    const { auth, ...rest } = options;
+    const { auth, skipAuthRefresh = false, ...rest } = options;
     const config = {
       headers: {
         'Content-Type': 'application/json',
         ...rest.headers,
       },
+      credentials: 'include',
       ...rest,
     };
 
@@ -116,25 +156,38 @@ class ApiService {
     ];
 
     let lastError;
-    for (let i = 0; i < candidateBaseURLs.length; i += 1) {
-      const baseURL = candidateBaseURLs[i];
-      try {
-        const data = await requestWithBaseURL(baseURL);
-        if (this.baseURL !== baseURL) {
-          this.baseURL = baseURL;
-        }
-        return data;
-      } catch (error) {
-        lastError = error;
-        const canRetry = i < candidateBaseURLs.length - 1;
-        const isNetworkError = error instanceof TypeError;
-        if (!(canRetry && isNetworkError)) {
-          throw error;
+    const method = String(config.method || 'GET').toUpperCase();
+    const retryableMethod = ['GET', 'HEAD', 'OPTIONS'].includes(method);
+    try {
+      for (let i = 0; i < candidateBaseURLs.length; i += 1) {
+        const baseURL = candidateBaseURLs[i];
+        try {
+          const data = await requestWithBaseURL(baseURL);
+          if (this.baseURL !== baseURL) {
+            this.baseURL = baseURL;
+          }
+          return data;
+        } catch (error) {
+          lastError = error;
+          const canRetry = retryableMethod && i < candidateBaseURLs.length - 1;
+          const isNetworkError = error instanceof TypeError;
+          if (!(canRetry && isNetworkError)) {
+            throw error;
+          }
         }
       }
-    }
 
-    throw lastError;
+      throw lastError;
+    } catch (error) {
+      const canRefresh = !skipAuthRefresh
+        && auth !== 'editor'
+        && error?.status === 401
+        && !AUTH_ENDPOINTS_WITHOUT_REFRESH.has(endpoint);
+      if (canRefresh && await this.refreshAccessToken()) {
+        return this.request(endpoint, { ...options, skipAuthRefresh: true });
+      }
+      throw error;
+    }
   }
 
   // Authentication
@@ -186,7 +239,10 @@ class ApiService {
 
   async logout() {
     this.clearToken();
-    return this.request('/auth/logout', { method: 'POST' });
+    return this.request('/auth/logout', {
+      method: 'POST',
+      headers: { 'X-Caplet-Client': 'web' },
+    });
   }
 
   /**
@@ -1158,4 +1214,5 @@ class ApiService {
   }
 }
 
+export { ApiService };
 export default new ApiService();

@@ -1,0 +1,149 @@
+import { useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import {
+  ArrowTopRightOnSquareIcon,
+  DocumentTextIcon,
+  LinkIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import useDialogFocus from '../lib/useDialogFocus';
+import { useMySubjects } from '../lib/useMySubjects';
+import { isGoogleDocUrl, isResourceUrl, useSubjectNotes } from '../lib/useSubjectNotes';
+
+function NoteDialog({ note, subjects, initialSubject, onCancel, onSave }) {
+  const [form, setForm] = useState(note || { subject: initialSubject, title: '', content: '' });
+  const dialogRef = useDialogFocus({ onDismiss: onCancel });
+  const update = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
+      <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="note-dialog-title" className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-line-soft bg-surface-body p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div><h2 id="note-dialog-title" className="font-display text-2xl font-extrabold">{note ? 'Edit note' : 'New note'}</h2><p className="mt-1 text-sm text-text-muted">Keep the useful part close to your subject.</p></div>
+          <button type="button" onClick={onCancel} aria-label="Close note editor" className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft"><XMarkIcon className="h-5 w-5" /></button>
+        </div>
+        <form onSubmit={(event) => { event.preventDefault(); onSave({ ...form, title: form.title.trim(), content: form.content.trim() }); }} className="mt-6 grid gap-5">
+          <label className="grid gap-2 text-sm font-bold">Subject<select data-initial-focus required value={form.subject} onChange={update('subject')} className="min-h-11 rounded-lg border border-line-soft bg-surface-raised px-3 outline-none focus:border-accent">{subjects.map((subject) => <option key={subject}>{subject}</option>)}</select></label>
+          <label className="grid gap-2 text-sm font-bold">Title<input required value={form.title} onChange={update('title')} className="min-h-11 rounded-lg border border-line-soft bg-surface-raised px-3 outline-none focus:border-accent" placeholder="e.g. Fiscal policy summary" /></label>
+          <label className="grid gap-2 text-sm font-bold">Note<textarea required rows="12" value={form.content} onChange={update('content')} className="rounded-lg border border-line-soft bg-surface-raised px-3 py-3 font-medium leading-relaxed outline-none focus:border-accent" placeholder="Write your note…" /></label>
+          <div className="flex justify-end gap-3"><button type="button" onClick={onCancel} className="btn-secondary">Cancel</button><button type="submit" className="btn-primary">Save note</button></div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+function LinkDialog({ link, subjects, initialSubject, onCancel, onSave }) {
+  const [form, setForm] = useState(link || { subject: initialSubject, title: '', url: '' });
+  const [error, setError] = useState('');
+  const dialogRef = useDialogFocus({ onDismiss: onCancel });
+  const update = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
+  const submit = (event) => {
+    event.preventDefault();
+    if (!isGoogleDocUrl(form.url.trim())) return setError('Paste a valid Google Docs document link.');
+    onSave({ ...form, title: form.title.trim(), url: form.url.trim() });
+  };
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
+      <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="link-dialog-title" className="w-full max-w-xl rounded-xl border border-line-soft bg-surface-body p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div><h2 id="link-dialog-title" className="font-display text-2xl font-extrabold">{link ? 'Edit Google Doc' : 'Add Google Doc'}</h2><p className="mt-1 text-sm text-text-muted">The document opens in Google Docs with its existing sharing permissions.</p></div>
+          <button type="button" onClick={onCancel} aria-label="Close Google Doc editor" className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft"><XMarkIcon className="h-5 w-5" /></button>
+        </div>
+        <form onSubmit={submit} className="mt-6 grid gap-5">
+          <label className="grid gap-2 text-sm font-bold">Subject<select required value={form.subject} onChange={update('subject')} className="min-h-11 rounded-lg border border-line-soft bg-surface-raised px-3 outline-none focus:border-accent">{subjects.map((subject) => <option key={subject}>{subject}</option>)}</select></label>
+          <label className="grid gap-2 text-sm font-bold">Name<input data-initial-focus required value={form.title} onChange={update('title')} className="min-h-11 rounded-lg border border-line-soft bg-surface-raised px-3 outline-none focus:border-accent" placeholder="e.g. Economics class notes" /></label>
+          <label className="grid gap-2 text-sm font-bold">Google Docs link<input required type="url" value={form.url} onChange={(event) => { update('url')(event); setError(''); }} aria-describedby={error ? 'google-doc-error' : undefined} className="min-h-11 rounded-lg border border-line-soft bg-surface-raised px-3 outline-none focus:border-accent" placeholder="https://docs.google.com/document/d/…" /></label>
+          {error && <p id="google-doc-error" role="alert" className="text-sm font-bold text-red-600">{error}</p>}
+          <div className="flex justify-end gap-3"><button type="button" onClick={onCancel} className="btn-secondary">Cancel</button><button type="submit" className="btn-primary">Save link</button></div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+function ResourceDialog({ resource, subjects, initialSubject, onCancel, onSave }) {
+  const [form, setForm] = useState(resource || { subject: initialSubject, title: '', url: '', description: '' });
+  const [error, setError] = useState('');
+  const dialogRef = useDialogFocus({ onDismiss: onCancel });
+  const update = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
+  const submit = (event) => {
+    event.preventDefault();
+    if (!isResourceUrl(form.url.trim())) return setError('Paste a valid website link beginning with http:// or https://.');
+    onSave({ ...form, title: form.title.trim(), url: form.url.trim(), description: form.description.trim() });
+  };
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
+      <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="resource-dialog-title" className="w-full max-w-xl rounded-xl border border-line-soft bg-surface-body p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div><h2 id="resource-dialog-title" className="font-display text-2xl font-extrabold">{resource ? 'Edit resource' : 'Add link or resource'}</h2><p className="mt-1 text-sm text-text-muted">Save a useful website, video, worksheet or reference.</p></div>
+          <button type="button" onClick={onCancel} aria-label="Close resource editor" className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft"><XMarkIcon className="h-5 w-5" /></button>
+        </div>
+        <form onSubmit={submit} className="mt-6 grid gap-5">
+          <label className="grid gap-2 text-sm font-bold">Subject<select required value={form.subject} onChange={update('subject')} className="min-h-11 rounded-lg border border-line-soft bg-surface-raised px-3 outline-none focus:border-accent">{subjects.map((subject) => <option key={subject}>{subject}</option>)}</select></label>
+          <label className="grid gap-2 text-sm font-bold">Name<input data-initial-focus required value={form.title} onChange={update('title')} className="min-h-11 rounded-lg border border-line-soft bg-surface-raised px-3 outline-none focus:border-accent" placeholder="e.g. Chemistry formula sheet" /></label>
+          <label className="grid gap-2 text-sm font-bold">Link<input required type="url" value={form.url} onChange={(event) => { update('url')(event); setError(''); }} aria-describedby={error ? 'resource-link-error' : undefined} className="min-h-11 rounded-lg border border-line-soft bg-surface-raised px-3 outline-none focus:border-accent" placeholder="https://…" /></label>
+          <label className="grid gap-2 text-sm font-bold">Description <span className="font-medium text-text-muted">(optional)</span><input value={form.description} onChange={update('description')} className="min-h-11 rounded-lg border border-line-soft bg-surface-raised px-3 outline-none focus:border-accent" placeholder="What this is useful for" /></label>
+          {error && <p id="resource-link-error" role="alert" className="text-sm font-bold text-red-600">{error}</p>}
+          <div className="flex justify-end gap-3"><button type="button" onClick={onCancel} className="btn-secondary">Cancel</button><button type="submit" className="btn-primary">Save resource</button></div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+export default function Notes() {
+  const { mySubjects } = useMySubjects();
+  const { notes, links, resources, saveNote, saveLink, saveResource, removeNote, removeLink, removeResource } = useSubjectNotes();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedSubject = searchParams.get('subject');
+  const initialSubject = mySubjects.includes(requestedSubject) ? requestedSubject : mySubjects[0] || '';
+  const [subject, setSubject] = useState(initialSubject);
+  const [editingNote, setEditingNote] = useState(undefined);
+  const [editingLink, setEditingLink] = useState(undefined);
+  const [editingResource, setEditingResource] = useState(undefined);
+  const visibleNotes = useMemo(() => notes.filter((note) => !subject || note.subject === subject), [notes, subject]);
+  const visibleLinks = useMemo(() => links.filter((link) => !subject || link.subject === subject), [links, subject]);
+  const visibleResources = useMemo(() => resources.filter((resource) => !subject || resource.subject === subject), [resources, subject]);
+  const chooseSubject = (value) => { setSubject(value); setSearchParams(value ? { subject: value } : {}); };
+
+  if (mySubjects.length === 0) return (
+    <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary md:pt-28"><div className="container-custom max-w-5xl"><h1 className="font-display text-4xl font-extrabold tracking-tight md:text-5xl">Notes</h1><div className="mt-8 border-y border-line-soft py-8"><h2 className="text-xl font-extrabold">Choose your subjects first</h2><p className="mt-2 text-sm text-text-muted">Your notes and Google Docs will be organised around the same subjects used on Today.</p><Link to="/library" className="btn-primary mt-5 w-fit">Choose subjects</Link></div></div></div>
+  );
+
+  return (
+    <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary md:pt-28">
+      <div className="container-custom max-w-5xl">
+        <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div><h1 className="font-display text-4xl font-extrabold tracking-tight md:text-5xl">Notes</h1><p className="mt-3 text-base text-text-muted">Your own notes and Google Docs, organised by subject.</p></div>
+          <div className="flex flex-wrap gap-3"><button type="button" onClick={() => setEditingLink(null)} className="btn-secondary"><LinkIcon className="h-4 w-4" /> Add Google Doc</button><button type="button" onClick={() => setEditingNote(null)} className="btn-primary"><PlusIcon className="h-4 w-4" /> New note</button></div>
+        </header>
+
+        <nav aria-label="Note subjects" className="nav-scrollbar-hidden mt-8 flex gap-2 overflow-x-auto scroll-smooth border-b border-line-soft pb-4">{mySubjects.map((item) => <button key={item} type="button" onClick={() => chooseSubject(item)} aria-pressed={subject === item} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${subject === item ? 'bg-accent text-white' : 'border border-line-soft text-text-muted hover:text-text-primary'}`}>{item}</button>)}</nav>
+
+        <section className="mt-9" aria-labelledby="google-docs-heading">
+          <h2 id="google-docs-heading" className="text-xl font-extrabold">Google Docs</h2>
+          {visibleLinks.length ? <div className="mt-4 divide-y divide-line-soft border-y border-line-soft">{visibleLinks.map((item) => <article key={item.id} className="flex items-center gap-4 py-4"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent-soft text-accent"><LinkIcon className="h-5 w-5" /></span><div className="min-w-0 flex-1"><h3 className="truncate font-bold">{item.title}</h3><p className="mt-1 text-xs text-text-muted">{item.subject}</p></div><a href={item.url} target="_blank" rel="noreferrer" className="btn-secondary min-h-10 px-3">Open <ArrowTopRightOnSquareIcon className="h-4 w-4" /></a><button type="button" onClick={() => setEditingLink(item)} aria-label={`Edit ${item.title}`} className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft"><PencilSquareIcon className="h-4 w-4" /></button><button type="button" onClick={() => removeLink(item.id)} aria-label={`Remove ${item.title}`} className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft hover:text-red-600"><TrashIcon className="h-4 w-4" /></button></article>)}</div> : <p className="mt-4 border-y border-line-soft py-6 text-sm text-text-muted">No Google Docs saved for {subject}.</p>}
+        </section>
+
+        <section className="mt-10" aria-labelledby="resources-heading">
+          <div className="flex items-center justify-between gap-4">
+            <h2 id="resources-heading" className="text-xl font-extrabold">Links and Resources</h2>
+            <button type="button" onClick={() => setEditingResource(null)} className="btn-secondary min-h-10 px-3"><PlusIcon className="h-4 w-4" /> Add link</button>
+          </div>
+          {visibleResources.length ? <div className="mt-4 divide-y divide-line-soft border-y border-line-soft">{visibleResources.map((item) => <article key={item.id} className="flex items-center gap-4 py-4"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent-soft text-accent"><ArrowTopRightOnSquareIcon className="h-5 w-5" /></span><div className="min-w-0 flex-1"><h3 className="truncate font-bold">{item.title}</h3><p className="mt-1 truncate text-xs text-text-muted">{item.description || item.subject}</p></div><a href={item.url} target="_blank" rel="noreferrer" className="btn-secondary min-h-10 px-3">Open <ArrowTopRightOnSquareIcon className="h-4 w-4" /></a><button type="button" onClick={() => setEditingResource(item)} aria-label={`Edit ${item.title}`} className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft"><PencilSquareIcon className="h-4 w-4" /></button><button type="button" onClick={() => removeResource(item.id)} aria-label={`Remove ${item.title}`} className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft hover:text-red-600"><TrashIcon className="h-4 w-4" /></button></article>)}</div> : <p className="mt-4 border-y border-line-soft py-6 text-sm text-text-muted">No links or resources saved for {subject}.</p>}
+        </section>
+
+        <section className="mt-10" aria-labelledby="caplet-notes-heading">
+          <h2 id="caplet-notes-heading" className="text-xl font-extrabold">Caplet notes</h2>
+          {visibleNotes.length ? <div className="mt-4 grid gap-3 md:grid-cols-2">{visibleNotes.map((item) => <article key={item.id} className="rounded-xl border border-line-soft bg-surface-raised p-5"><div className="flex items-start justify-between gap-4"><DocumentTextIcon className="h-5 w-5 text-accent" /><div className="flex gap-1"><button type="button" onClick={() => setEditingNote(item)} aria-label={`Edit ${item.title}`} className="grid h-9 w-9 place-items-center rounded-lg text-text-muted hover:bg-surface-soft"><PencilSquareIcon className="h-4 w-4" /></button><button type="button" onClick={() => removeNote(item.id)} aria-label={`Remove ${item.title}`} className="grid h-9 w-9 place-items-center rounded-lg text-text-muted hover:bg-surface-soft hover:text-red-600"><TrashIcon className="h-4 w-4" /></button></div></div><h3 className="mt-5 text-lg font-extrabold">{item.title}</h3><p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-text-muted">{item.content}</p></article>)}</div> : <p className="mt-4 border-y border-line-soft py-6 text-sm text-text-muted">No Caplet notes for {subject} yet.</p>}
+        </section>
+      </div>
+      {editingNote !== undefined && <NoteDialog note={editingNote} subjects={mySubjects} initialSubject={subject} onCancel={() => setEditingNote(undefined)} onSave={(value) => { saveNote(value); setEditingNote(undefined); }} />}
+      {editingLink !== undefined && <LinkDialog link={editingLink} subjects={mySubjects} initialSubject={subject} onCancel={() => setEditingLink(undefined)} onSave={(value) => { saveLink(value); setEditingLink(undefined); }} />}
+      {editingResource !== undefined && <ResourceDialog resource={editingResource} subjects={mySubjects} initialSubject={subject} onCancel={() => setEditingResource(undefined)} onSave={(value) => { saveResource(value); setEditingResource(undefined); }} />}
+    </div>
+  );
+}

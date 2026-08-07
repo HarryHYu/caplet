@@ -7,7 +7,10 @@ const DEFAULT_META = {
 
 const PUBLIC_META = [
   { match: /^\/$/, title: DEFAULT_META.title, description: DEFAULT_META.description },
-  { match: /^\/library(?:\/|$)/, title: 'Learning Library — Caplet', description: 'Explore structured study resources, exam practice, and subject libraries on Caplet.' },
+  { match: /^\/assessments$/, title: 'Upcoming Assessment Tasks 2026 — Caplet', description: 'See the remaining Year 11 assessment windows for 2026 and plan your preparation.' },
+  { match: /^\/notes$/, title: 'Notes — Caplet', description: 'Keep subject notes and Google Docs together on Caplet.' },
+  { match: /^\/assessment-log$/, title: 'Assessment Log — Caplet', description: 'Record assessment results, reflections and scanned tasks.' },
+  { match: /^\/library(?:\/|$)/, title: 'Resource Library — Caplet', description: 'Explore structured study resources, exam practice, and subject libraries on Caplet.' },
   { match: /^\/courses(?:\/|$)/, title: 'Curriculum — Caplet', description: 'Explore structured, interactive courses on Caplet.' },
   { match: /^\/fintools\/tax-calculator$/, title: 'Australian Income Tax Calculator — Caplet', description: 'Estimate Australian resident income tax and a simplified Medicare levy for supported financial years.' },
   { match: /^\/fintools(?:\/|$)/, title: 'Financial Calculators — Caplet', description: 'Free educational calculators for Australian tax, budgeting, loans, super, savings, and investing.' },
@@ -20,6 +23,7 @@ const PUBLIC_META = [
   { match: /^\/demo$/, title: 'School Product Demo — Caplet', description: 'Explore how Caplet connects curriculum, classroom delivery, student learning, and evidence-led teaching.' },
   { match: /^\/pitch$/, title: 'CapletMark — Caplet', description: 'CapletMark product vision, marking workflow, opportunity, and roadmap.' },
   { match: /^\/contact$/, title: 'Contact — Caplet', description: 'Contact the Caplet team.' },
+  { match: /^\/about$/, title: 'The Team Behind Caplet — Caplet', description: 'Learn what Caplet is building and how the platform approaches learning, privacy, and responsible tools.' },
   { match: /^\/trust$/, title: 'Trust Center — Caplet', description: 'How Caplet handles educational guidance, financial tools, privacy, and responsible AI.' },
   { match: /^\/terms$/, title: 'Terms — Caplet', description: 'Terms for using Caplet.' },
   { match: /^\/login$/, title: 'Sign in — Caplet', description: 'Sign in to your Caplet account.' },
@@ -38,6 +42,8 @@ const PRIVATE_PATHS = [
   /^\/money\/my-money$/,
   /^\/study-plan(?:\/|$)/,
   /^\/practice(?:\/|$)/,
+  /^\/notes(?:\/|$)/,
+  /^\/assessment-log(?:\/|$)/,
   /^\/mastery(?:\/|$)/,
   /^\/review(?:\/|$)/,
   /^\/curriculum-studio(?:\/|$)/,

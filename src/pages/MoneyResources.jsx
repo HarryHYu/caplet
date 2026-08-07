@@ -64,6 +64,8 @@ const categoryTones = {
   'starting-business': 'bg-[color:var(--block-amber)] text-text-primary',
 };
 
+const RESOURCE_PAGE_SIZE = 60;
+
 function matchesResource(resource, query) {
   if (!query) return true;
   const searchable = [
@@ -105,6 +107,7 @@ function ResourceCard({ resource }) {
 export default function MoneyResources() {
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [page, setPage] = useState(1);
   const normalizedQuery = query.trim().toLowerCase();
   const isFiltering = Boolean(normalizedQuery) || selectedCategory !== 'all';
 
@@ -118,13 +121,20 @@ export default function MoneyResources() {
   const displayedResources = isFiltering
     ? filteredResources
     : filteredResources.filter((resource) => !featuredIds.has(resource.id));
+  const pageCount = Math.max(1, Math.ceil(displayedResources.length / RESOURCE_PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedResources = displayedResources.slice(
+    (currentPage - 1) * RESOURCE_PAGE_SIZE,
+    currentPage * RESOURCE_PAGE_SIZE,
+  );
   const visibleCategories = MONEY_RESOURCE_CATEGORIES.filter((category) => (
-    displayedResources.some((resource) => resource.categoryId === category.id)
+    pagedResources.some((resource) => resource.categoryId === category.id)
   ));
 
   const clearFilters = () => {
     setQuery('');
     setSelectedCategory('all');
+    setPage(1);
   };
 
   return (
@@ -172,7 +182,10 @@ export default function MoneyResources() {
                   id="money-resource-search"
                   type="search"
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setPage(1);
+                  }}
                   placeholder="Search sites, topics or keywords…"
                   className="w-full rounded-2xl border border-line-soft bg-surface-raised py-3.5 pl-12 pr-12 text-sm font-semibold text-text-primary outline-none transition-colors placeholder:text-text-dim focus:border-accent focus:ring-2 focus:ring-accent-soft"
                 />
@@ -190,7 +203,10 @@ export default function MoneyResources() {
                   id="money-resource-category"
                   aria-label="Browse resource categories"
                   value={selectedCategory}
-                  onChange={(event) => setSelectedCategory(event.target.value)}
+                  onChange={(event) => {
+                    setSelectedCategory(event.target.value);
+                    setPage(1);
+                  }}
                   className="min-h-12 w-full appearance-none rounded-2xl border border-line-soft bg-surface-raised px-4 pr-11 text-sm font-bold text-text-primary outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent-soft"
                 >
                   <option value="all">All categories · {MONEY_RESOURCES.length} resources</option>
@@ -201,19 +217,20 @@ export default function MoneyResources() {
             </div>
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line-soft pt-3">
-            <p className="text-sm font-bold text-text-muted" aria-live="polite">{isFiltering ? `${filteredResources.length} matching resource${filteredResources.length === 1 ? '' : 's'}` : `Showing all ${MONEY_RESOURCES.length} resources`}</p>
+            <p className="text-sm font-bold text-text-muted" aria-live="polite">{isFiltering ? `${filteredResources.length} matching resource${filteredResources.length === 1 ? '' : 's'}` : `Showing ${Math.min(displayedResources.length, RESOURCE_PAGE_SIZE)} of ${displayedResources.length} catalogue resources`}</p>
             {isFiltering ? <button type="button" onClick={clearFilters} className="inline-flex min-h-10 items-center rounded-full bg-accent-soft px-4 text-sm font-extrabold text-accent transition-colors hover:bg-accent hover:text-white">Clear filters</button> : <p className="text-xs font-semibold text-text-dim">Open any card to visit the source website.</p>}
           </div>
         </section>
 
         <div className="mt-10 space-y-12">
           {visibleCategories.length > 0 ? visibleCategories.map((category) => {
-            const resources = displayedResources.filter((resource) => resource.categoryId === category.id);
+            const resources = pagedResources.filter((resource) => resource.categoryId === category.id);
+            const totalResources = displayedResources.filter((resource) => resource.categoryId === category.id).length;
             return (
               <section key={category.id} id={category.id} className="scroll-mt-36" aria-labelledby={`${category.id}-title`}>
                 <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">{resources.length} {isFiltering ? 'bookmarks' : 'more bookmarks'} in this shelf</p>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">{resources.length}{resources.length !== totalResources ? ` of ${totalResources}` : ''} {isFiltering ? 'bookmarks' : 'more bookmarks'} in this shelf</p>
                     <h2 id={`${category.id}-title`} className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">{category.label}</h2>
                     <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">{category.description}</p>
                   </div>
@@ -233,6 +250,28 @@ export default function MoneyResources() {
             </section>
           )}
         </div>
+
+        {pageCount > 1 ? (
+          <nav className="mt-10 flex items-center justify-center gap-3" aria-label="Resource pages">
+            <button
+              type="button"
+              className="min-h-10 rounded-full border border-line-soft px-4 text-sm font-bold text-text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => setPage((value) => Math.max(1, value - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span className="text-sm font-bold text-text-muted" aria-live="polite">Page {currentPage} of {pageCount}</span>
+            <button
+              type="button"
+              className="min-h-10 rounded-full border border-line-soft px-4 text-sm font-bold text-text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
+              disabled={currentPage === pageCount}
+            >
+              Next
+            </button>
+          </nav>
+        ) : null}
 
         <aside className="mt-12 rounded-3xl border border-line-soft bg-surface-raised p-6 md:p-8" aria-label="Resource hub note">
           <div className="flex items-start gap-4">

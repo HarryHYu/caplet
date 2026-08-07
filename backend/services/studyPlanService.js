@@ -1,391 +1,94 @@
 const crypto = require('crypto');
-const NSW_SUBJECT_CATALOGUE = require('../shared/nswSubjectCatalog.json');
 
 /**
- * The MVP subject catalogue. Every resource points to a route that already
- * exists in Caplet; no generated plan can strand a student on a dead link.
+ * The school subject catalogue is shared with the frontend. Economics has a
+ * complete diagnostic and learning routes; every other subject is an honest
+ * planning placeholder until its content is ready.
  */
-const SUBJECTS = {
-  economics: {
-    label: 'Economics',
-    topics: ['Markets and consumers', 'Macroeconomic management', 'The global economy', 'Economic policies'],
-    diagnostic: {
-      topic: 'Macroeconomic management',
-      question: 'Which measure is most commonly used to track changes in the general price level?',
-      options: ['Consumer Price Index', 'Unemployment rate', 'Terms of trade', 'Cash balance'],
-      answer: 0
-    },
+const SUBJECT_CATALOG = require('../../shared/hscSubjectCatalog.json');
+
+function placeholderSubject(subject) {
+  return {
+    label: subject.name,
+    yearLevels: subject.yearLevels,
+    topics: ['Course planning', 'Core knowledge', 'Assessment preparation', 'Revision'],
+    diagnostic: null,
+    placeholder: true,
     resources: [
-      { label: 'Economics resource library', path: '/library/economics', kind: 'Learn' },
-      { label: 'Economics practice answer', path: '/edutools/economics-marker', kind: 'Practise' }
-    ]
-  },
-  business: {
-    label: 'Business Studies',
-    topics: ['Operations', 'Marketing', 'Finance', 'Human resources'],
-    diagnostic: {
-      topic: 'Finance',
-      question: 'Which statement best describes cash flow?',
-      options: ['Money moving into and out of a business', 'The total value of business assets', 'Profit after tax only', 'The number of units sold'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Business Studies library', path: '/library/business-studies', kind: 'Learn' },
-      { label: 'Business Studies practice', path: '/practice?subject=business-studies&mode=daily&source=study_plan', kind: 'Practise' }
-    ]
-  },
-  legal: {
-    label: 'Legal Studies',
-    topics: ['Crime', 'Human rights', 'Family law', 'Law reform'],
-    diagnostic: {
-      topic: 'Law reform',
-      question: 'What is the main role of precedent in common law?',
-      options: ['Guiding decisions in later similar cases', 'Replacing legislation', 'Electing judges', 'Creating a jury'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Legal Studies courses', path: '/courses', kind: 'Learn' },
-      { label: 'Build an evidence-rich essay', path: '/essays', kind: 'Practise' }
-    ]
-  },
-  english: {
-    label: 'English',
-    topics: ['Thesis and argument', 'Textual evidence', 'Analysis', 'Essay structure'],
-    diagnostic: {
-      topic: 'Analysis',
-      question: 'Which response moves beyond identifying a technique?',
-      options: ['Explaining how it shapes meaning for the audience', 'Naming the technique twice', 'Retelling the plot', 'Adding a longer quotation'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Essay Memoriser', path: '/essays', kind: 'Practise' },
-      { label: 'Browse English courses', path: '/courses', kind: 'Learn' }
-    ]
-  },
-  mathematics: {
-    label: 'Mathematics',
-    topics: ['Algebra', 'Functions', 'Calculus', 'Statistics'],
-    diagnostic: {
-      topic: 'Algebra',
-      question: 'If 3x + 6 = 18, what is x?',
-      options: ['4', '6', '8', '12'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review archived slides', path: '/revision', kind: 'Review' }
-    ]
-  },
-  'modern-history': {
-    label: 'Modern History',
-    topics: ['Historical investigations', 'Source analysis', 'Cause and effect', 'Perspectives'],
-    diagnostic: {
-      topic: 'Source analysis',
-      question: 'What is the most useful first step when analysing a historical source?',
-      options: ['Identify its origin and purpose', 'Memorise every date mentioned', 'Rewrite it in modern language', 'Ignore the context'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse History courses', path: '/courses', kind: 'Learn' },
+      { label: `${subject.name} study placeholder`, path: '/courses', kind: 'Plan' },
       { label: 'Review saved work', path: '/revision', kind: 'Review' }
     ]
+  };
+}
+
+const SUBJECTS = Object.fromEntries(
+  SUBJECT_CATALOG.map((subject) => [subject.value, placeholderSubject(subject)])
+);
+
+SUBJECTS.economics = {
+  ...SUBJECTS.economics,
+  placeholder: false,
+  topics: ['Markets and consumers', 'Macroeconomic management', 'The global economy', 'Economic policies'],
+  diagnostic: {
+    topic: 'Macroeconomic management',
+    question: 'Which measure is most commonly used to track changes in the general price level?',
+    options: ['Consumer Price Index', 'Unemployment rate', 'Terms of trade', 'Cash balance'],
+    answer: 0
   },
-  'ancient-history': {
-    label: 'Ancient History',
-    topics: ['Archaeology', 'Evidence and sources', 'Historical interpretations', 'Ancient societies'],
-    diagnostic: {
-      topic: 'Evidence and sources',
-      question: 'Why do historians compare different types of ancient evidence?',
-      options: ['To test interpretations against multiple perspectives', 'To avoid using primary sources', 'To replace historical argument with opinion', 'To make every source say the same thing'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse History courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  },
-  geography: {
-    label: 'Geography',
-    topics: ['Geographical inquiry', 'Population and place', 'Environmental change', 'Fieldwork'],
-    diagnostic: {
-      topic: 'Geographical inquiry',
-      question: 'What does a geographical inquiry use evidence to explain?',
-      options: ['Patterns, processes and connections between places', 'Only the names of locations', 'A single person’s opinion', 'The order of textbook chapters'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Geography courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  },
-  'society-and-culture': {
-    label: 'Society & Culture',
-    topics: ['Social and cultural research', 'Persons and society', 'Social change', 'Cross-cultural comparison'],
-    diagnostic: {
-      topic: 'Social and cultural research',
-      question: 'What makes a social and cultural investigation reliable?',
-      options: ['A clear method supported by relevant evidence', 'Only a large number of opinions', 'A conclusion written before research', 'Avoiding different perspectives'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Society & Culture courses', path: '/courses', kind: 'Learn' },
-      { label: 'Practise a written response', path: '/essays', kind: 'Practise' }
-    ]
-  },
-  'mathematics-advanced': {
-    label: 'Mathematics Advanced',
-    topics: ['Functions', 'Calculus', 'Financial mathematics', 'Statistics'],
-    diagnostic: {
-      topic: 'Functions',
-      question: 'What does the domain of a function describe?',
-      options: ['The allowed input values', 'The output values only', 'The gradient at one point', 'The area under a curve'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  },
-  'extension-1': {
-    label: 'Mathematics Extension 1',
-    topics: ['Proof and reasoning', 'Functions', 'Calculus', 'Combinatorics'],
-    diagnostic: {
-      topic: 'Proof and reasoning',
-      question: 'What is the purpose of a mathematical proof?',
-      options: ['To justify that a result follows from accepted assumptions', 'To show only one numerical example', 'To replace definitions with a diagram', 'To estimate without explaining'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  },
-  'extension-2': {
-    label: 'Mathematics Extension 2',
-    topics: ['Complex numbers', 'Vectors', 'Mechanics', 'Advanced calculus'],
-    diagnostic: {
-      topic: 'Advanced calculus',
-      question: 'Why is a substitution useful when integrating?',
-      options: ['It can transform a difficult integral into a simpler equivalent form', 'It removes the need for a constant', 'It always turns an integral into a derivative', 'It changes the value of the area'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  },
-  'mathematics-standard': {
-    label: 'Mathematics Standard',
-    topics: ['Data analysis', 'Finance', 'Measurement', 'Networks'],
-    diagnostic: {
-      topic: 'Data analysis',
-      question: 'What does the median represent in an ordered data set?',
-      options: ['The middle value', 'The most frequent value', 'The difference between extremes', 'The average of the extremes only'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Mathematics courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  },
-  physics: {
-    label: 'Physics',
-    topics: ['Motion', 'Forces', 'Energy', 'Electricity'],
-    diagnostic: {
-      topic: 'Forces',
-      question: 'What is the net force on an object moving at constant velocity?',
-      options: ['Zero', 'Equal to its mass', 'Always increasing', 'Equal to its speed'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Physics courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  },
-  chemistry: {
-    label: 'Chemistry',
-    topics: ['Atomic structure', 'Chemical reactions', 'Equilibrium', 'Organic chemistry'],
-    diagnostic: {
-      topic: 'Chemical reactions',
-      question: 'What does a balanced chemical equation show?',
-      options: ['Conservation of atoms in the reaction', 'The reaction speed only', 'The colour of every substance', 'The temperature of the room'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Chemistry courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  },
-  biology: {
-    label: 'Biology',
-    topics: ['Cells', 'Genetics', 'Evolution', 'Ecosystems'],
-    diagnostic: {
-      topic: 'Cells',
-      question: 'What is the main role of the cell membrane?',
-      options: ['Controlling movement into and out of the cell', 'Producing all the cell’s energy', 'Storing the organism’s bones', 'Making every protein directly'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Biology courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  },
-  'investigating-science': {
-    label: 'Investigating Science',
-    topics: ['Scientific inquiry', 'Data and evidence', 'Technology and society', 'Research design'],
-    diagnostic: {
-      topic: 'Scientific inquiry',
-      question: 'What makes a scientific investigation a fair test?',
-      options: ['Changing one key variable while controlling relevant conditions', 'Changing every variable at once', 'Choosing results before collecting data', 'Using no measurements'],
-      answer: 0
-    },
-    resources: [
-      { label: 'Browse Science courses', path: '/courses', kind: 'Learn' },
-      { label: 'Review saved work', path: '/revision', kind: 'Review' }
-    ]
-  }
+  resources: [
+    { label: 'Economics resource library', path: '/library/economics', kind: 'Learn' },
+    { label: 'Economics practice answer', path: '/edutools/economics-marker', kind: 'Practise' }
+  ]
+};
+const DEFAULT_DAYS = [1, 2, 3, 4, 5];
+const VALID_YEAR_LEVELS = new Set(['9', '10', '11', '12', 'other']);
+const LEGACY_SUBJECT_ALIASES = {
+  business: 'business-studies',
+  legal: 'legal-studies',
+  english: 'english-standard',
+  mathematics: 'mathematics-advanced',
+  'extension-1': 'mathematics-extension-1',
+  'extension-2': 'mathematics-extension-2'
 };
 
-const makeGeneralSubject = (label, topic, question, options, resources = []) => ({
-  label,
-  topics: [topic, 'Knowledge and understanding', 'Applying skills', 'Communicating'],
-  diagnostic: { topic, question, options, answer: 0 },
-  resources: resources.length ? resources : [
-    { label: `Browse ${label} learning paths`, path: '/courses', kind: 'Learn' },
-    { label: 'Review saved work', path: '/revision', kind: 'Review' },
-  ],
-});
-
-Object.assign(SUBJECTS, {
-  science: makeGeneralSubject(
-    'Science',
-    'Scientific inquiry',
-    'Which approach best supports a scientific conclusion?',
-    ['Using relevant evidence collected through a clear method', 'Choosing the conclusion before collecting evidence', 'Changing every variable at once', 'Ignoring results that do not fit'],
-  ),
-  history: makeGeneralSubject(
-    'History',
-    'Sources and evidence',
-    'What is the best first step when using a historical source?',
-    ['Identify its origin, context and purpose', 'Assume it is completely objective', 'Ignore when it was created', 'Use it without comparing other evidence'],
-  ),
-  commerce: makeGeneralSubject(
-    'Commerce',
-    'Consumer and financial decisions',
-    'Which information is most useful when comparing two purchases?',
-    ['The total cost and relevant terms', 'The colour of the advertisement', 'Only the first price shown', 'Whether the product is popular'],
-  ),
-  pdhpe: makeGeneralSubject(
-    'PDHPE',
-    'Health information',
-    'Which source is most useful for making a health decision?',
-    ['A current source with clear evidence and qualified authors', 'An anonymous claim with no source', 'A single advertisement', 'A rumour repeated online'],
-  ),
-  'technology-mandatory': makeGeneralSubject(
-    'Technology Mandatory',
-    'Design process',
-    'Why are criteria used when evaluating a design?',
-    ['To judge how well it meets the identified need', 'To avoid testing it', 'To guarantee the first idea is best', 'To remove user needs from the process'],
-  ),
-  'visual-arts-7-10': makeGeneralSubject(
-    'Visual Arts',
-    'Artmaking and interpretation',
-    'What strengthens an interpretation of an artwork?',
-    ['Using visual evidence and relevant context', 'Only stating whether it is liked', 'Ignoring material choices', 'Describing size alone'],
-  ),
-  'music-7-10': makeGeneralSubject(
-    'Music',
-    'Listening and musical concepts',
-    'What makes a musical observation useful?',
-    ['Linking what is heard to a musical concept', 'Naming the song only', 'Guessing without listening', 'Describing the cover art'],
-  ),
-  'computing-technology': makeGeneralSubject(
-    'Computing Technology',
-    'Designing digital solutions',
-    'What should be defined before building a digital solution?',
-    ['The problem, users and success criteria', 'Only the final colour palette', 'A launch date without requirements', 'The answer before testing'],
-  ),
-  'design-and-technology': makeGeneralSubject(
-    'Design and Technology',
-    'Design process',
-    'Why should a prototype be tested with its intended users?',
-    ['To find whether it meets the need and improve it', 'To avoid making changes', 'To prove every assumption was correct', 'To replace design criteria'],
-  ),
-  'food-technology': makeGeneralSubject(
-    'Food Technology',
-    'Food selection and safety',
-    'Which practice most directly reduces cross-contamination?',
-    ['Keeping raw and ready-to-eat food separate', 'Using the same unwashed board', 'Leaving food at room temperature', 'Ignoring use-by dates'],
-  ),
-  'industrial-technology': makeGeneralSubject(
-    'Industrial Technology',
-    'Production and evaluation',
-    'Why should production processes be documented?',
-    ['To support safe, accurate work and later evaluation', 'To remove the need for measurements', 'To avoid quality checks', 'To guarantee materials never change'],
-  ),
-  'agricultural-technology': makeGeneralSubject(
-    'Agricultural Technology',
-    'Agricultural systems',
-    'Which evidence best helps evaluate an agricultural system?',
-    ['Measured production, resource and environmental data', 'One unsupported opinion', 'A product label alone', 'A prediction with no observations'],
-  ),
-  'geography-7-10': SUBJECTS.geography,
-  'english-standard': SUBJECTS.english,
-  'english-advanced': SUBJECTS.english,
-  'english-extension-1': SUBJECTS.english,
-  'english-extension-2': SUBJECTS.english,
-});
-
-const DEFAULT_DAYS = [1, 2, 3, 4, 5];
-const VALID_YEAR_LEVELS = new Set(['7', '8', '9', '10', '11', '12', 'other']);
-const CATALOGUE_BY_ID = new Map(NSW_SUBJECT_CATALOGUE.subjects.map((subject) => [subject.id, subject]));
+function supportsYear(subject, yearLevel) {
+  if (!['11', '12'].includes(yearLevel)) return true;
+  return subject.yearLevels.includes(yearLevel);
+}
 
 function publicOptions() {
   return {
     yearLevels: [
-      ...[7, 8, 9, 10, 11, 12].map((year) => ({ value: String(year), label: `Year ${year}` })),
+      { value: '9', label: 'Year 9' },
+      { value: '10', label: 'Year 10' },
+      { value: '11', label: 'Year 11' },
+      { value: '12', label: 'Year 12' },
       { value: 'other', label: 'Other / independent study' }
     ],
-    subjects: NSW_SUBJECT_CATALOGUE.subjects.filter((item) => SUBJECTS[item.id]).map((item) => ({
-      value: item.id,
-      label: item.label,
-      years: item.years,
-      stage: NSW_SUBJECT_CATALOGUE.stages.find((stage) => stage.years.some((year) => item.years.includes(year)))?.label,
-      legacyAliases: item.aliases,
-      topics: SUBJECTS[item.id].topics,
-      diagnostic: {
-        topic: SUBJECTS[item.id].diagnostic.topic,
-        question: SUBJECTS[item.id].diagnostic.question,
-        options: SUBJECTS[item.id].diagnostic.options
-      }
-    })),
-    catalogueSource: NSW_SUBJECT_CATALOGUE.source
+    subjects: SUBJECT_CATALOG.map(({ value }) => {
+      const subject = SUBJECTS[value];
+      return {
+        value,
+        label: subject.label,
+        years: subject.yearLevels.map(Number),
+        yearLevels: subject.yearLevels,
+        topics: subject.topics,
+        placeholder: subject.placeholder,
+        diagnostic: subject.diagnostic ? {
+          topic: subject.diagnostic.topic,
+          question: subject.diagnostic.question,
+          options: subject.diagnostic.options
+        } : null
+      };
+    })
   };
-}
-
-function canonicalSubjectId(value, yearLevel) {
-  const candidate = String(value || '').trim().toLowerCase();
-  const matches = NSW_SUBJECT_CATALOGUE.subjects.filter((item) => (
-    item.id === candidate
-    || item.label.toLowerCase() === candidate
-    || item.aliases.some((alias) => alias.toLowerCase() === candidate)
-  ));
-  const year = Number(yearLevel);
-  const match = matches.find((item) => !Number.isInteger(year) || item.years.includes(year)) || matches[0];
-  return match?.id || null;
-}
-
-function validForYear(subjectId, yearLevel) {
-  if (yearLevel === 'other') return Boolean(SUBJECTS[subjectId]);
-  const definition = CATALOGUE_BY_ID.get(subjectId);
-  return Boolean(definition?.years.includes(Number(yearLevel)));
 }
 
 function normalizeConfig(input = {}) {
   const yearLevel = VALID_YEAR_LEVELS.has(String(input.yearLevel)) ? String(input.yearLevel) : '';
-  const subjects = [...new Set((Array.isArray(input.subjects) ? input.subjects : [])
-    .map((subject) => canonicalSubjectId(subject, yearLevel))
-    .filter((subject) => subject && SUBJECTS[subject] && validForYear(subject, yearLevel)))];
+  const subjects = [...new Set(Array.isArray(input.subjects) ? input.subjects : [])]
+    .map((subject) => LEGACY_SUBJECT_ALIASES[subject] || subject)
+    .filter((subject) => SUBJECTS[subject] && supportsYear(SUBJECTS[subject], yearLevel));
   const hasAvailableDays = Array.isArray(input.availableDays);
   const availableDays = [...new Set(hasAvailableDays ? input.availableDays : DEFAULT_DAYS)]
     .map(Number)
@@ -409,12 +112,6 @@ function normalizeConfig(input = {}) {
   };
 }
 
-/*
- * The catalogue metadata above is intentionally kept out of each diagnostic
- * definition. It is shared by onboarding, study planning and the library,
- * while the subject-specific questions remain owned by this service.
- */
-
 function validateConfig(config) {
   const errors = [];
   if (!config.yearLevel) errors.push('Choose a year level');
@@ -422,7 +119,7 @@ function validateConfig(config) {
   if (!config.goal) errors.push('Add a study goal');
   if (!config.availableDays.length) errors.push('Choose at least one study day');
   config.subjects.forEach((subject) => {
-    if (!Number.isInteger(config.diagnosticAnswers[subject])) {
+    if (SUBJECTS[subject].diagnostic && !Number.isInteger(config.diagnosticAnswers[subject])) {
       errors.push(`Complete the ${SUBJECTS[subject].label} diagnostic`);
     }
   });
@@ -432,8 +129,10 @@ function validateConfig(config) {
 function normalizeAnswers(answers, subjects) {
   const source = answers && typeof answers === 'object' ? answers : {};
   return subjects.reduce((result, subject) => {
+    const diagnostic = SUBJECTS[subject].diagnostic;
+    if (!diagnostic) return result;
     const value = Number(source[subject]);
-    if (Number.isInteger(value) && value >= 0 && value < SUBJECTS[subject].diagnostic.options.length) {
+    if (Number.isInteger(value) && value >= 0 && value < diagnostic.options.length) {
       result[subject] = value;
     }
     return result;
@@ -443,6 +142,16 @@ function normalizeAnswers(answers, subjects) {
 function diagnosticWeakTopics(config) {
   return config.subjects.map((subject) => {
     const definition = SUBJECTS[subject];
+    if (!definition.diagnostic) {
+      return {
+        subject,
+        subjectLabel: definition.label,
+        topic: definition.topics[0],
+        reason: 'Caplet content is still being prepared; this plan uses your schedule and exam date',
+        source: 'schedule',
+        priority: 'medium'
+      };
+    }
     const correct = config.diagnosticAnswers[subject] === definition.diagnostic.answer;
     return {
       subject,
@@ -541,7 +250,7 @@ function generatePlan(configInput, { marker = null, recommendation = null, exist
     weakTopics,
     tasks,
     sourceFingerprint: [markerData?.fingerprint, masteryData?.fingerprint].filter(Boolean).join('|') || diagnosticFingerprint(config),
-    signalSummary: [masteryData?.summary, markerData?.summary].filter(Boolean).join(' ') || 'Built from your quick subject diagnostic, weekly availability, and any exam dates you know.',
+    signalSummary: [masteryData?.summary, markerData?.summary].filter(Boolean).join(' ') || 'Built from your quick subject diagnostic and exam deadlines.',
     generatedAt: new Date(now).toISOString()
   };
 }
@@ -584,7 +293,8 @@ function examPriority(examDate, taskDate, basePriority) {
 }
 
 function diagnosticFingerprint(config) {
-  return `diagnostic:${crypto.createHash('sha1').update(JSON.stringify(config.diagnosticAnswers)).digest('hex').slice(0, 16)}`;
+  const diagnosticState = { subjects: config.subjects, answers: config.diagnosticAnswers };
+  return `diagnostic:${crypto.createHash('sha1').update(JSON.stringify(diagnosticState)).digest('hex').slice(0, 16)}`;
 }
 
 function taskId(dueDate, subject, topic, index) {

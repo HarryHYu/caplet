@@ -14,16 +14,15 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const initialHasToken = !!localStorage.getItem('token');
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(initialHasToken);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const initAuth = async () => {
       try {
-        let token = localStorage.getItem('token');
+        let token = api.token || await api.restoreSession();
 
         // "autodev mode": skip the login screen while testing locally. This whole
         // block only exists in the dev build — import.meta.env.DEV is statically

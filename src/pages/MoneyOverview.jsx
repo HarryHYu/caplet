@@ -105,30 +105,28 @@ export default function MoneyOverview() {
   const finishFirstVisit = () => { writeMoneyStorage(MONEY_STORAGE_KEYS.onboarded, true); writeMoneyStorage(MONEY_STORAGE_KEYS.intent, selected.id); setReturning(true); navigate(selected.to); };
 
   return (
-    <div className="min-h-screen bg-surface-body pb-32 pt-28 selection:bg-accent selection:text-white md:pt-32 lg:pb-20">
+    <div className="minimal-page selection:bg-accent selection:text-white">
       <div className="container-custom">
-        <header className="reveal mb-10 max-w-4xl"><span className="font-hand text-xl text-accent -rotate-2 inline-block">money skills, one useful step at a time</span><h1 className="mt-3 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">{returning ? `Welcome back${user?.firstName ? `, ${user.firstName}` : ''}.` : 'Money, made understandable.'}</h1><p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">Learn the ideas, make sense of Australian data and try synthetic scenarios without being told what to do.</p></header>
+        <header className="reveal minimal-page-header"><span className="section-kicker">Money</span><h1 className="minimal-page-title">{returning ? `Welcome back${user?.firstName ? `, ${user.firstName}` : ''}` : 'Money made understandable'}</h1><p className="minimal-page-description">Learn the basics, check Australian data and try simple scenarios.</p></header>
         {moneyNotice ? <div role="status" className="animate-slide-up mb-8 rounded-2xl bg-accent-soft px-5 py-4 text-sm font-bold leading-relaxed text-accent">{moneyNotice}</div> : null}
         {!returning ? (
-          <section className="reveal mb-8 overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-7 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] md:p-10" aria-labelledby="money-first-visit-title">
+          <section className="reveal mb-8 border-y border-line-soft py-7" aria-labelledby="money-first-visit-title">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
               <div aria-live="polite">
-                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-white/70"><SparklesIcon className="h-4 w-4" aria-hidden="true" /> First visit · {selected.label}</p>
-                <h2 id="money-first-visit-title" className="mt-3 max-w-2xl font-display text-3xl font-extrabold tracking-tight text-white md:text-4xl">{selected.actionTitle}</h2>
-                <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/80">{selected.actionDescription}</p>
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent"><SparklesIcon className="h-4 w-4" aria-hidden="true" /> Start here · {selected.label}</p>
+                <h2 id="money-first-visit-title" className="mt-2 max-w-2xl font-display text-2xl font-extrabold tracking-tight text-text-primary">{selected.actionTitle}</h2>
               </div>
-              <button type="button" onClick={finishFirstVisit} className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent transition-transform hover:-translate-y-0.5 active:translate-y-0">{selected.actionLabel} <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" /></button>
+              <button type="button" onClick={finishFirstVisit} className="btn-primary shrink-0">{selected.actionLabel} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></button>
             </div>
           </section>
         ) : (
-          <section className="reveal mb-8 overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-7 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] md:p-10" aria-labelledby="money-next-action-title">
+          <section className="reveal mb-8 border-y border-line-soft py-7" aria-labelledby="money-next-action-title">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
               <div aria-live="polite">
-                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-white/70"><SparklesIcon className="h-4 w-4" aria-hidden="true" /> Your next step · {selected.label}</p>
-                <h2 id="money-next-action-title" className="mt-3 max-w-2xl font-display text-3xl font-extrabold tracking-tight text-white md:text-4xl">{selected.actionTitle}</h2>
-                <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/80">{selected.actionDescription}</p>
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent"><SparklesIcon className="h-4 w-4" aria-hidden="true" /> Next · {selected.label}</p>
+                <h2 id="money-next-action-title" className="mt-2 max-w-2xl font-display text-2xl font-extrabold tracking-tight text-text-primary">{selected.actionTitle}</h2>
               </div>
-              <Link to={selected.to} className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent transition-transform hover:-translate-y-0.5">{selected.actionLabel} <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" /></Link>
+              <Link to={selected.to} className="btn-primary shrink-0">{selected.actionLabel} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
             </div>
           </section>
         )}

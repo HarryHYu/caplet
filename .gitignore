@@ -30,6 +30,8 @@ AGENTS.md
 .playwright-cli/
 output/
 .playwright-mcp/
+.superdesign/tmp/
+/tmp/
 
 # Local DB (testing only; production uses PostgreSQL)
 caplet.db

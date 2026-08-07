@@ -8,15 +8,35 @@ const User = require('../models/User');
 const { JWT_SECRET, requireAuth } = require('../middleware/auth');
 const { createRateLimiter } = require('../middleware/rateLimit');
 const { sendPasswordResetEmail } = require('../services/passwordResetDelivery');
+const {
+  setRefreshCookie,
+  clearRefreshCookie,
+  getRefreshCookie,
+  hasWebClientHeader,
+} = require('../services/authCookies');
 
 const router = express.Router();
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
-// Generate JWT Token
-const generateToken = (user) => {
-  return jwt.sign({ userId: user.id, tokenVersion: Number(user.tokenVersion || 0) }, JWT_SECRET, { expiresIn: '90d' });
+// Access tokens are short-lived because they are held in browser memory. The
+// longer-lived refresh token is kept in an HttpOnly cookie instead.
+const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN || '15m';
+const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
+const generateToken = (user) => jwt.sign(
+  { userId: user.id, tokenVersion: Number(user.tokenVersion || 0), typ: 'access' },
+  JWT_SECRET,
+  { expiresIn: ACCESS_TOKEN_EXPIRES_IN },
+);
+const generateRefreshToken = (userId) => jwt.sign(
+  { userId, typ: 'refresh', jti: crypto.randomUUID() },
+  JWT_SECRET,
+  { expiresIn: REFRESH_TOKEN_EXPIRES_IN },
+);
+const issueSession = (res, user) => {
+  setRefreshCookie(res, generateRefreshToken(user.id));
+  return generateToken(user);
 };
 const hashResetToken = (token) => crypto.createHash('sha256').update(String(token || '')).digest('hex');
 const resetRequestLimiter = createRateLimiter({ scope: 'password_reset_request', windowMs: 15 * 60 * 1000, max: 5 });
@@ -133,7 +153,7 @@ router.post('/register', [
       passwordLoginEnabled: true,
     });
 
-    const token = generateToken(user);
+    const token = issueSession(res, user);
 
     res.status(201).json({
       message: 'User created successfully',
@@ -175,7 +195,7 @@ router.post('/login', [
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = generateToken(user);
+    const token = issueSession(res, user);
 
     res.json({
       message: 'Login successful',
@@ -242,7 +262,7 @@ router.post('/google', [
       }
     }
 
-    const token = generateToken(user);
+    const token = issueSession(res, user);
 
     res.json({
       message: 'Google login successful',
@@ -267,31 +287,31 @@ router.post('/change-password', requireAuth, [
         validation: Object.fromEntries(errors.array().map((error) => [error.path, error.msg])),
       });
     }
-    if (req.user.passwordLoginEnabled !== false) {
-      if (!String(req.body.currentPassword || '')) {
-        return res.status(400).json({ message: 'Enter your current password.', validation: { currentPassword: 'Enter your current password.' } });
-      }
-      if (!(await req.user.validatePassword(req.body.currentPassword))) {
-        return res.status(400).json({ message: 'Your current password is incorrect.', validation: { currentPassword: 'Your current password is incorrect.' } });
-      }
-    } else {
+    if (req.user.passwordLoginEnabled === false) {
       return res.status(409).json({
         message: 'Use the password setup email so Caplet can verify your Google account first.',
         code: 'password_setup_required',
       });
     }
+    if (!String(req.body.currentPassword || '')) {
+      return res.status(400).json({ message: 'Enter your current password.', validation: { currentPassword: 'Enter your current password.' } });
+    }
+    if (!(await req.user.validatePassword(req.body.currentPassword))) {
+      return res.status(400).json({ message: 'Your current password is incorrect.', validation: { currentPassword: 'Your current password is incorrect.' } });
+    }
 
     const { PasswordResetToken } = require('../models');
     const now = new Date();
+    const nextTokenVersion = Number(req.user.tokenVersion || 0) + 1;
     await req.user.update({
       password: req.body.newPassword,
       passwordLoginEnabled: true,
-      tokenVersion: Number(req.user.tokenVersion || 0) + 1,
+      tokenVersion: nextTokenVersion,
     });
     await PasswordResetToken.update({ usedAt: now }, { where: { userId: req.user.id, usedAt: null } });
     return res.json({
       message: 'Password changed. Other signed-in sessions have been ended.',
-      token: generateToken(req.user),
+      token: issueSession(res, { ...req.user, id: req.user.id, tokenVersion: nextTokenVersion }),
     });
   } catch (error) {
     console.error('Change password error:', error);
@@ -326,7 +346,6 @@ router.post('/forgot-password', resetRequestLimiter, async (req, res) => {
         console.error('Password reset delivery error:', deliveryError.message);
       });
     } else {
-      // Keep the unknown-account path doing comparable local cryptographic work.
       crypto.timingSafeEqual(Buffer.from(tokenHash), Buffer.from(hashResetToken(token)));
     }
   } catch (error) {
@@ -396,9 +415,37 @@ router.get('/me', requireAuth, async (req, res) => {
   res.json({ user: req.user.toJSON() });
 });
 
-// Logout (client-side token removal)
+// Exchange the HttpOnly refresh cookie for a short-lived access token. The
+// custom header prevents a cross-site form POST from rotating a session.
+router.post('/refresh', async (req, res) => {
+  if (!hasWebClientHeader(req)) {
+    return res.status(403).json({ message: 'Web client header required' });
+  }
+
+  const refreshToken = getRefreshCookie(req);
+  if (!refreshToken) return res.status(401).json({ message: 'Refresh session not found' });
+
+  try {
+    const decoded = jwt.verify(refreshToken, JWT_SECRET);
+    if (decoded?.typ !== 'refresh' || !decoded.userId) throw new Error('Invalid refresh token');
+    const user = await User.findByPk(decoded.userId);
+    if (!user) throw new Error('Invalid refresh token');
+    const token = issueSession(res, user);
+    return res.json({ token });
+  } catch {
+    clearRefreshCookie(res);
+    return res.status(401).json({ message: 'Refresh session expired' });
+  }
+});
+
+// Logout clears the server-managed refresh session. Existing access tokens
+// expire quickly and are intentionally not persisted in browser storage.
 router.post('/logout', (req, res) => {
-  res.json({ message: 'Logout successful' });
+  if (getRefreshCookie(req) && !hasWebClientHeader(req)) {
+    return res.status(403).json({ message: 'Web client header required' });
+  }
+  clearRefreshCookie(res);
+  return res.json({ message: 'Logout successful' });
 });
 
 module.exports = router;

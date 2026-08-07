@@ -1,0 +1,50 @@
+[
+  { "value": "english-eald", "name": "English (EAL/D)", "faculty": "English", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "english" },
+  { "value": "english-studies", "name": "English Studies", "faculty": "English", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "english" },
+  { "value": "english-standard", "name": "English Standard", "faculty": "English", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "english" },
+  { "value": "english-advanced", "name": "English Advanced", "faculty": "English", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "english" },
+  { "value": "english-extension-1", "name": "English Extension 1", "faculty": "English", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "english" },
+  { "value": "english-extension-2", "name": "English Extension 2", "faculty": "English", "tag": "Year 12", "yearLevels": ["12"], "glyph": "english" },
+
+  { "value": "mathematics-standard", "name": "Mathematics Standard", "faculty": "Mathematics", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "mathStandard" },
+  { "value": "mathematics-advanced", "name": "Mathematics Advanced", "faculty": "Mathematics", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "mathAdvanced" },
+  { "value": "mathematics-extension-1", "name": "Mathematics Extension 1", "faculty": "Mathematics", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "ext1" },
+  { "value": "mathematics-extension-2", "name": "Mathematics Extension 2", "faculty": "Mathematics", "tag": "Year 12", "yearLevels": ["12"], "glyph": "ext2" },
+
+  { "value": "business-services-vet", "name": "Business Services VET", "faculty": "Humanities & Commerce", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "business" },
+  { "value": "business-studies", "name": "Business Studies", "faculty": "Humanities & Commerce", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "business" },
+  { "value": "economics", "name": "Economics", "faculty": "Humanities & Commerce", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "economics", "slug": "economics", "available": true },
+  { "value": "legal-studies", "name": "Legal Studies", "faculty": "Humanities & Commerce", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "legal" },
+  { "value": "geography", "name": "Geography", "faculty": "Humanities & Commerce", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "geography" },
+  { "value": "ancient-history", "name": "Ancient History", "faculty": "Humanities & Commerce", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "ancientHistory" },
+  { "value": "modern-history", "name": "Modern History", "faculty": "Humanities & Commerce", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "modernHistory" },
+  { "value": "studies-of-religion-1", "name": "Studies of Religion I", "faculty": "Humanities & Commerce", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "ancientHistory" },
+  { "value": "studies-of-religion-2", "name": "Studies of Religion II", "faculty": "Humanities & Commerce", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "ancientHistory" },
+
+  { "value": "chinese-in-context", "name": "Chinese in Context", "faculty": "Languages", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "english" },
+  { "value": "french-continuers", "name": "French Continuers", "faculty": "Languages", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "english" },
+  { "value": "german-continuers", "name": "German Continuers", "faculty": "Languages", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "english" },
+  { "value": "japanese-continuers", "name": "Japanese Continuers", "faculty": "Languages", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "english" },
+
+  { "value": "drama", "name": "Drama", "faculty": "Creative Arts", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "society" },
+  { "value": "music-1", "name": "Music 1", "faculty": "Creative Arts", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "society" },
+  { "value": "music-2", "name": "Music 2", "faculty": "Creative Arts", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "society" },
+  { "value": "photography-video-digital-imaging", "name": "Photography, Video and Digital Imaging", "faculty": "Creative Arts", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "investigating" },
+  { "value": "visual-arts", "name": "Visual Arts", "faculty": "Creative Arts", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "investigating" },
+
+  { "value": "health-and-movement-science", "name": "Health and Movement Science", "faculty": "Health & Movement", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "society" },
+  { "value": "sport-lifestyle-recreation", "name": "Sport, Lifestyle and Recreation Studies", "faculty": "Health & Movement", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "society" },
+
+  { "value": "agriculture", "name": "Agriculture", "faculty": "Sciences", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "biology" },
+  { "value": "biology", "name": "Biology", "faculty": "Sciences", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "biology" },
+  { "value": "chemistry", "name": "Chemistry", "faculty": "Sciences", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "chemistry" },
+  { "value": "earth-and-environmental-science", "name": "Earth and Environmental Science", "faculty": "Sciences", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "geography" },
+  { "value": "investigating-science", "name": "Investigating Science", "faculty": "Sciences", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "investigating" },
+  { "value": "physics", "name": "Physics", "faculty": "Sciences", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "physics" },
+
+  { "value": "design-and-technology", "name": "Design and Technology", "faculty": "Technology", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "business" },
+  { "value": "enterprise-computing", "name": "Enterprise Computing", "faculty": "Technology", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "business" },
+  { "value": "engineering-studies", "name": "Engineering Studies", "faculty": "Technology", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "investigating" },
+  { "value": "industrial-technology", "name": "Industrial Technology", "faculty": "Technology", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "business" },
+  { "value": "software-engineering", "name": "Software Engineering", "faculty": "Technology", "tag": "Year 11–12", "yearLevels": ["11", "12"], "glyph": "investigating" }
+]

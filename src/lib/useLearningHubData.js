@@ -14,7 +14,11 @@ export function useLearningHubData(isAuthenticated) {
       ['courses', api.getCourses()],
       ...(isAuthenticated ? [
         ['courseProgress', api.getCourseProgressSummaries()],
-        ['today', api.getLearningToday()],
+        ...(typeof api.getLearningToday === 'function'
+          ? [['today', api.getLearningToday()]]
+          : typeof api.getStudyPlan === 'function'
+            ? [['studyPlan', api.getStudyPlan()]]
+            : []),
       ] : []),
     ];
 
@@ -34,6 +38,7 @@ export function useLearningHubData(isAuthenticated) {
           courses: values.courses?.courses || values.courses?.data?.courses || [],
           courseProgress: values.courseProgress?.courses || [],
           todayActions: values.today?.actions || [],
+          studyPlan: values.studyPlan?.studyPlan || null,
           partialErrors,
         }),
       });

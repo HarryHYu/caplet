@@ -21,6 +21,7 @@ const { parseEssay } = require('../services/essayParser');
 const { requireAIConsent } = require('../services/privacyConsent');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { reserveAIQuota } = require('../middleware/aiQuota');
+const { publicAIError } = require('../utils/aiErrors');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -121,9 +122,14 @@ router.post('/:id/parse', requireAIConsent, essayParseQuota, async (req, res) =>
     });
     res.json({ essay });
   } catch (e) {
-    const status = e.status || 500;
-    console.error('Parse essay error:', e.message || e);
-    res.status(status).json({ message: e.message || 'Failed to parse essay' });
+    const error = publicAIError(e, 'Failed to parse essay. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'essay_parse_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
   }
 });
 

@@ -12,11 +12,8 @@ import TabletDashboardNavbar from './components/TabletDashboardNavbar';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
 import CapletLoader from './components/CapletLoader';
-import MarkerCursor from './components/MarkerCursor';
 import MoneyMobileNav from './components/MoneyMobileNav';
-import StudyCoachHighlight from './components/StudyCoachHighlight';
 import MoneyRouteGate from './components/MoneyRouteGate';
-import StudyCoachDrawer from './components/StudyCoachDrawer';
 import ProductModeRouteSync from './components/ProductModeRouteSync';
 import LegacyMoneyRedirect from './components/LegacyMoneyRedirect';
 import { FinancialAssumptions } from './components/AccessibleUI';
@@ -29,6 +26,7 @@ const Home = lazy(() => import('./pages/Home'));
 const DemoApp = lazy(() => import('./pages/DemoApp'));
 const DemoPitch = lazy(() => import('./pages/DemoPitch'));
 const Contact = lazy(() => import('./pages/Contact'));
+const About = lazy(() => import('./pages/About'));
 const FinancialTools = lazy(() => import('./pages/FinancialTools'));
 const EduTools = lazy(() => import('./pages/EduTools'));
 const TaxCalculator = lazy(() => import('./pages/tools/TaxCalculator'));
@@ -64,16 +62,16 @@ const LessonPlayer = lazy(() => import('./pages/LessonPlayer'));
 const CourseComplete = lazy(() => import('./pages/CourseComplete'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Revision = lazy(() => import('./pages/Revision'));
-const Review = lazy(() => import('./pages/Review'));
 const EssayMemoriser = lazy(() => import('./pages/EssayMemoriser'));
 const EconomicsMarker = lazy(() => import('./pages/EconomicsMarker'));
 const EconomicsExam = lazy(() => import('./pages/EconomicsExam'));
 const Library = lazy(() => import('./pages/Library'));
 const LibrarySubject = lazy(() => import('./pages/LibrarySubject'));
 const ResourceLibrary = lazy(() => import('./pages/ResourceLibrary'));
+const AssessmentSchedule = lazy(() => import('./pages/AssessmentSchedule'));
+const Notes = lazy(() => import('./pages/Notes'));
+const AssessmentLog = lazy(() => import('./pages/AssessmentLog'));
 const Login = lazy(() => import('./pages/Login'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Register = lazy(() => import('./pages/Register'));
 const Classes = lazy(() => import('./pages/Classes'));
 const ClassDetail = lazy(() => import('./pages/ClassDetail'));
@@ -90,8 +88,6 @@ const TrustCenter = lazy(() => import('./pages/TrustCenter'));
 const StudyPlan = lazy(() => import('./pages/StudyPlan'));
 const Practice = lazy(() => import('./pages/Practice'));
 const Mastery = lazy(() => import('./pages/Mastery'));
-const CurriculumStudio = lazy(() => import('./pages/CurriculumStudio'));
-const StudyCoach = lazy(() => import('./pages/StudyCoach'));
 const TeacherOnboarding = lazy(() => import('./pages/TeacherOnboarding'));
 const TeacherClassLearning = lazy(() => import('./pages/TeacherClassLearning'));
 const TeacherEvidenceOverride = lazy(() => import('./pages/TeacherEvidenceOverride'));
@@ -107,13 +103,8 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 function FullPageSpinner() {
   return (
-    <div className="min-h-screen bg-surface-soft flex flex-col items-center justify-center p-8" role="status" aria-live="polite">
-      <div className="relative">
-        <div className="absolute inset-0 bg-accent/10 blur-3xl animate-pulse rounded-full scale-150" />
-        <div className="relative">
-          <CapletLoader message="Getting things ready..." />
-        </div>
-      </div>
+    <div className="min-h-screen bg-surface-body flex flex-col items-center justify-center p-8" role="status" aria-live="polite">
+      <CapletLoader message="Loading…" />
     </div>
   );
 }
@@ -239,8 +230,8 @@ function RequireAdmin({ children }) {
   return children;
 }
 
-// Core Money learning and calculators are always available. Higher-risk
-// private and personalised tools retain their own explicit gates.
+// The approved prototype routes stay directly accessible. Higher-risk future
+// surfaces, such as Financial Twin, retain their own explicit feature gate.
 function MoneyPilot({ children }) {
   return children;
 }
@@ -250,18 +241,13 @@ function AppRoutes() {
     <Routes>
           <Route path="/" element={<HomeOrRedirect />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/study-plan" element={<RequireAuth><StudyPlan /></RequireAuth>} />
           <Route path="/practice" element={<RequireAuth><Practice /></RequireAuth>} />
+          <Route path="/notes" element={<RequireAuth><Notes /></RequireAuth>} />
+          <Route path="/assessment-log" element={<RequireAuth><AssessmentLog /></RequireAuth>} />
           <Route path="/mastery" element={<RequireAuth><Mastery /></RequireAuth>} />
-          <Route path="/review" element={<RequireAuth><Review /></RequireAuth>} />
-          <Route path="/curriculum-studio" element={<RequireAuth><CurriculumStudio /></RequireAuth>} />
-          <Route path="/curriculum-studio/:packId" element={<RequireAuth><CurriculumStudio /></RequireAuth>} />
-          <Route path="/study" element={<RequireAuth><StudyCoach /></RequireAuth>} />
           <Route path="/teacher/onboarding" element={<RequireAuth><TeacherOnboarding /></RequireAuth>} />
-          <Route path="/revision" element={<RequireAuth><Navigate to="/review?source=legacy" replace /></RequireAuth>} />
-          <Route path="/saved-slides" element={<RequireAuth><Revision /></RequireAuth>} />
+          <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
           <Route path="/edutools/economics-marker" element={<RequireAuth><EconomicsMarker /></RequireAuth>} />
           <Route path="/library/economics/exam-practice/:packId/session" element={<RequireAuth><EconomicsExam /></RequireAuth>} />
@@ -279,6 +265,7 @@ function AppRoutes() {
           <Route path="/tools/*" element={<LegacyMoneyRedirect prefix="/tools" />} />
           <Route path="/edutools" element={<EduTools />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About />} />
           <Route path="/pitch" element={<DemoPitch />} />
           <Route path="/money/tools/tax-calculator" element={<MoneyPilot><TaxCalculator /></MoneyPilot>} />
           <Route path="/money/tools/budget-planner" element={<MoneyPilot><BudgetPlanner /></MoneyPilot>} />
@@ -303,14 +290,15 @@ function AppRoutes() {
           <Route path="/money/tools/capital-gains" element={<MoneyPilot><CapitalGains /></MoneyPilot>} />
           <Route path="/money/tools/financial-twin" element={<MoneyPilot><MoneyRouteGate flagKey="money.financial_twin.enabled" fallbackPath="/money/tools"><RequireAuth><FinancialTwin /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
           <Route path="/library" element={<Library />} />
+          <Route path="/assessments" element={<AssessmentSchedule />} />
           <Route path="/library/economics/:section/:focusId" element={<ResourceLibrary />} />
           <Route path="/library/economics/:section" element={<ResourceLibrary />} />
           <Route path="/library/:subject" element={<LibrarySubject />} />
-          <Route path="/courses" element={<RequireAuth><Courses /></RequireAuth>} />
+          <Route path="/courses" element={<Courses />} />
           <Route path="/resources" element={<Navigate to="/library/economics" replace />} />
-          <Route path="/courses/:courseId" element={<RequireAuth><CourseDetail /></RequireAuth>} />
-          <Route path="/courses/:courseId/modules/:moduleId" element={<RequireAuth><ModuleDetail /></RequireAuth>} />
-          <Route path="/courses/:courseId/lessons/:lessonId" element={<RequireAuth><LessonPlayer /></RequireAuth>} />
+          <Route path="/courses/:courseId" element={<CourseDetail />} />
+          <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleDetail />} />
+          <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPlayer />} />
           <Route path="/courses/:courseId/complete" element={<RequireAuth><CourseComplete /></RequireAuth>} />
           <Route path="/classes" element={<Classes />} />
           <Route path="/classes/:classId" element={<RequireAuth><ClassDetail /></RequireAuth>} />
@@ -359,7 +347,7 @@ function AppShell() {
 
   // Pages that suppress all chrome (their own full-bleed layouts).
   const bareChrome =
-    ['/login', '/register', '/forgot-password', '/reset-password', '/play'].includes(pathname) ||
+    ['/login', '/register', '/play'].includes(pathname) ||
     pathname.startsWith('/guardian-consent/') ||
     pathname.startsWith('/live/host');
 
@@ -381,17 +369,15 @@ function AppShell() {
     pathname.startsWith('/teacher/') ||
     /^\/classes\/[^/]+\/learning(?:\/|$)/.test(pathname) ||
     pathname.startsWith('/settings') ||
-    pathname.startsWith('/money') ||
     (pathname.startsWith('/library/economics') && !['/library/economics', '/library/economics/assessment'].includes(pathname)) ||
     /^\/courses\/[^/]+\/lessons\//.test(pathname);
   const ContentLandmark = pageOwnsMain ? 'div' : 'main';
 
   if (vertical) {
     return (
-      <div className="min-h-screen bg-surface-body lg:flex">
+      <div className="caplet-minimal min-h-screen bg-surface-body lg:flex">
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <RouteMetadata />
-        {!isAuthenticated && <MarkerCursor />}
         <Sidebar />
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <Navbar mobileOnly hideOnTablet />
@@ -405,31 +391,26 @@ function AppShell() {
           </ContentLandmark>
           <Footer />
           {moneyModeRoute && <MoneyMobileNav />}
-          {isAuthenticated && pathname !== '/study' && <StudyCoachHighlight />}
-          {!moneyModeRoute && pathname !== '/study' && <StudyCoachDrawer />}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="caplet-minimal min-h-screen flex flex-col bg-surface-body">
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <RouteMetadata />
-      {!isAuthenticated && <MarkerCursor />}
-      {!bareChrome && <Navbar hideOnTablet />}
-      {!bareChrome && <TabletPublicNavbar />}
-      {!bareChrome && <TabletDashboardNavbar />}
+      <Navbar hideOnTablet />
+      <TabletPublicNavbar />
+      <TabletDashboardNavbar />
       <ContentLandmark id="main-content" tabIndex="-1" className="flex-grow">
         <Suspense fallback={<FullPageSpinner />}>
           <AppRoutes />
         </Suspense>
         <FinancialRouteDisclosure />
       </ContentLandmark>
-      {!bareChrome && <Footer />}
-      {!bareChrome && moneyModeRoute && <MoneyMobileNav />}
-      {isAuthenticated && !bareChrome && pathname !== '/study' && <StudyCoachHighlight />}
-      {!bareChrome && !moneyModeRoute && pathname !== '/study' && <StudyCoachDrawer />}
+      <Footer />
+      {moneyModeRoute && <MoneyMobileNav />}
     </div>
   );
 }
@@ -442,9 +423,11 @@ function App() {
   if (typeof window !== 'undefined' && window.location.pathname === '/demo') {
     return (
       <ThemeProvider>
-        <Suspense fallback={<FullPageSpinner />}>
-          <DemoApp />
-        </Suspense>
+        <div className="caplet-minimal">
+          <Suspense fallback={<FullPageSpinner />}>
+            <DemoApp />
+          </Suspense>
+        </div>
       </ThemeProvider>
     );
   }

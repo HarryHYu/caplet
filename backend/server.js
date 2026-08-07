@@ -60,8 +60,10 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Keep parser limits explicit so malformed requests cannot allocate an
+// unbounded body before route-level validation runs.
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb', parameterLimit: 100, depth: 10 }));
 
 const authLimiter = createRateLimiter({ scope: 'auth', windowMs: 15 * 60 * 1000, max: 120 });
 

@@ -16,12 +16,12 @@
 
 ## Frontend
 
-**Stack:** React 19 + Vite 6 + Tailwind CSS v3.4
+**Stack:** React 19 + Vite 7 + Tailwind CSS v3.4
 
 | Technology | Version | Purpose |
 |---|---|---|
 | React | 19 | Modern UI with latest features |
-| Vite | 6 | Fast build tool and HMR dev server |
+| Vite | 7 | Fast build tool and HMR dev server |
 | Tailwind CSS | 3.4 | Utility-first CSS (configured via `postcss.config.js` and `tailwind.config.js`) |
 | React Router | 7 | Client-side routing — all routes defined in `src/App.jsx` |
 | React Markdown | — | Rendering lesson/course content |
@@ -30,7 +30,7 @@
 **Key frontend conventions:**
 - **Routing**: All routes defined in one file — `src/App.jsx`
 - **State**: React Context only — `AuthContext`, `CoursesContext`, `ThemeContext`. No Redux/Zustand.
-- **API layer**: Singleton `ApiService` class in `src/services/api.js`. All backend calls go through this. Auth token stored in `localStorage`.
+- **API layer**: Singleton `ApiService` class in `src/services/api.js`. All backend calls go through this. Short-lived access tokens stay in memory; refresh sessions use an HttpOnly backend cookie.
 - **Styling**: Tailwind CSS with `class`-based dark mode. No custom theme extensions in `tailwind.config.js`.
 - **Pages**: `src/pages/` contains route-level components. Calculator tools live in `src/pages/tools/`.
 - **Module system**: ESM (`"type": "module"` in root `package.json`)
@@ -39,25 +39,26 @@
 
 ## Backend
 
-**Stack:** Node.js + Express 5 + Sequelize + PostgreSQL
+**Stack:** Node.js + Express 5 + Sequelize + PostgreSQL in production, with SQLite for local development
 
 | Technology | Purpose |
 |---|---|
 | Node.js + Express 5 | RESTful API server |
-| PostgreSQL | Production database (via Railway) — **mandatory**, no SQLite fallback |
-| Sequelize ORM | Database management; syncs with `{ alter: true }` on every server start |
-| OpenAI API (GPT-4o → GPT-4-turbo → GPT-3.5-turbo) | AI financial literacy assistant with model fallback (educational tool only — not financial advice) |
+| PostgreSQL | Production database via Railway |
+| SQLite | Local fallback when `DATABASE_URL` is not configured |
+| Sequelize ORM + Umzug | ORM models plus explicit, reversible migrations |
+| OpenAI API | Two-stage lesson generation and learning-assistance services (educational tools, not official advice or marking) |
 | JWT | Authentication |
 | bcryptjs | Password hashing (12 rounds) |
 | express-validator | Input validation |
 | Helmet | Security headers |
 
 **Key backend conventions:**
-- **Entry point**: `backend/server.js` — sets up middleware, mounts route files, auto-syncs DB with `{ alter: true }`
+- **Entry point**: `backend/server.js` — sets up middleware, mounts route files, runs Umzug migrations, then starts background readiness/retention jobs
 - **Models**: `backend/models/` with associations in `backend/models/index.js`. Key hierarchy: `Course → Module → Lesson`. Classroom system: `Classroom → ClassMembership`, `Assignment → AssignmentSubmission`, `ClassAnnouncement → Comment`
 - **Routes**: `backend/routes/` — auth, courses, users, progress, admin, survey, classes
-- **Auth**: JWT tokens, bcryptjs password hashing. Middleware in `backend/routes/auth.js`
-- **DB config**: `backend/config/database.js` — Sequelize with PostgreSQL only
+- **Auth**: Short-lived JWT access tokens plus an HttpOnly refresh cookie; bcryptjs password hashing. Verification middleware lives in `backend/middleware/auth.js`
+- **DB config**: `backend/config/database.js` — PostgreSQL when `DATABASE_URL` is set, SQLite otherwise
 - **Module system**: CommonJS (`"type": "commonjs"` in `backend/package.json`)
 
 **API Base URL:**
@@ -73,14 +74,14 @@ No explicit enroll action — accessing a course auto-creates a `UserProgress` r
 ### Lesson Content Format
 Lesson content uses a **slides-based format** (types: `text` / `video` / `image` / `question`) stored as JSON in the DB. See [content-pipeline.md](./content-pipeline.md) for the full format spec.
 
-### Database Sync
-The DB syncs with `{ alter: true }` on every server start — there are **no separate migration files**. Schema changes are applied automatically.
+### Database Migrations
+Schema changes are explicit Umzug migrations in `backend/migrations/`. They run on server startup and are rehearsed with `npm run migrations:check`. Existing legacy filename collisions are preserved because renaming an applied Umzug migration would make it appear new in production; new collisions are rejected by the migration naming check.
 
 ### ESLint Config
 The flat config (`eslint.config.js`) has separate rule sets for `src/**` (browser/React) and `backend/**` (Node.js). Unused vars prefixed with uppercase or underscore are allowed: `varsIgnorePattern: '^[A-Z_]'`.
 
-### AI Unified Prompt
-The AI financial literacy assistant uses a single API call that simultaneously extracts financial data, merges it with existing state, and generates an educational response. This is an educational tool only — it does not provide financial advice. See [database.md](./database.md) for the data models and the main [README.md](./README.md) for the full AI flow.
+### AI Services
+AI features use route-specific services and shared quotas/rate limits. Lesson generation is a planner/formatter pipeline; tutor, essay, saved-slide, and economics-marker features each have their own service and safety framing. Provider failures are logged with request IDs and returned as generic retryable errors.
 
 ---
 

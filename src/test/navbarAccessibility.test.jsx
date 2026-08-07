@@ -7,18 +7,17 @@ const mockAuth = vi.hoisted(() => ({
     isAuthenticated: true,
     logout: vi.fn(),
 }));
+const mockLayout = vi.hoisted(() => ({
+  toggleNavMode: vi.fn(),
+  productMode: 'study',
+  setProductMode: vi.fn(),
+  lastStudyRoute: '/dashboard',
+  lastMoneyRoute: '/money',
+}));
 
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => mockAuth }));
 vi.mock('../contexts/ThemeContext', () => ({ useTheme: () => ({ isDark: false, toggleTheme: vi.fn() }) }));
-vi.mock('../contexts/LayoutContext', () => ({
-  useLayout: () => ({
-    toggleNavMode: vi.fn(),
-    productMode: 'study',
-    setProductMode: vi.fn(),
-    lastStudyRoute: '/dashboard',
-    lastMoneyRoute: '/money',
-  }),
-}));
+vi.mock('../contexts/LayoutContext', () => ({ useLayout: () => mockLayout }));
 
 import Navbar from '../components/Navbar';
 
@@ -31,13 +30,14 @@ describe('Navbar accessibility', () => {
   it('keeps the primary study navigation intentionally small', () => {
     render(<MemoryRouter initialEntries={['/dashboard']}><Navbar /></MemoryRouter>);
 
-    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Learn' })).toHaveAttribute('href', '/library');
-    expect(screen.queryByRole('link', { name: 'Practice' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Subjects' })).toHaveAttribute('href', '/library');
+    expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('href', '/practice');
+    expect(screen.getByRole('link', { name: 'Plan' })).toHaveAttribute('href', '/study-plan');
+    expect(screen.getByRole('link', { name: 'Money' })).toHaveAttribute('href', '/money');
     expect(screen.queryByRole('link', { name: 'Classes' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Study' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Money' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByRole('group', { name: 'Product mode' })).not.toBeInTheDocument();
   });
 
   it('keeps theme and navigation layout controls in settings', () => {
@@ -54,16 +54,18 @@ describe('Navbar accessibility', () => {
     expect(screen.queryByText('ray@example.com')).not.toBeInTheDocument();
   });
 
-  it('shows only useful public destinations and auth actions to homepage guests', () => {
+  it('keeps the guest header focused on authentication', () => {
     mockAuth.isAuthenticated = false;
-
     render(<MemoryRouter initialEntries={['/']}><Navbar /></MemoryRouter>);
 
-    expect(screen.getByRole('link', { name: 'Courses' })).toHaveAttribute('href', '/courses');
-    expect(screen.getByRole('link', { name: 'Financial tools' })).toHaveAttribute('href', '/money');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: 'Get started' })).toHaveAttribute('href', '/register');
+    expect(screen.queryByRole('link', { name: 'Resource library' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Courses' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Assessment dates' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Financial tools' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Team' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'open menu' })).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Product mode' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Dashboard' })).not.toBeInTheDocument();
   });
 });

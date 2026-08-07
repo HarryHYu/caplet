@@ -98,18 +98,14 @@ const Classes = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="minimal-page selection:bg-accent selection:text-white">
       <div className="container-custom">
         {/* Header Section */}
-        <header data-tour-id="academy-header" className="mb-32 flex flex-col md:flex-row md:items-end justify-between gap-12 reveal">
+        <header data-tour-id="academy-header" className="minimal-page-header flex flex-col justify-between gap-8 md:max-w-none md:flex-row md:items-end reveal">
           <div>
-            <span className="font-hand text-accent text-2xl">Learn together</span>
-            <h1 className="font-display font-extrabold tracking-tight text-6xl md:text-8xl mb-12 mt-2">
-              The Academy.
-            </h1>
-            <p className="text-2xl text-text-muted max-w-xl leading-relaxed">
-              Collaborative learning environments built for peer progression and academic leadership.
-            </p>
+            <span className="section-kicker">Learn together</span>
+            <h1 className="minimal-page-title">Classes</h1>
+            <p className="minimal-page-description">Join a class or manage one you teach.</p>
           </div>
           <div data-tour-id="academy-actions" className="flex items-center gap-3">
             {isTeacher && (
@@ -125,7 +121,7 @@ const Classes = () => {
                 onClick={() => setShowCreate(true)}
                 className="btn-secondary px-6 py-2.5 text-sm"
               >
-                Establish Class
+                Create class
               </button>
             )}
             <button
@@ -138,7 +134,7 @@ const Classes = () => {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Join Class
+              Join class
             </button>
           </div>
         </header>

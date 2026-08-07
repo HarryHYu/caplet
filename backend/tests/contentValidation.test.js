@@ -40,4 +40,12 @@ describe('lesson publishing validation', () => {
     expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'unsupported_embed' })]));
     expect(result.warnings).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'missing_image_description' })]));
   });
+
+  test('applies the same embed policy to legacy media embeds', () => {
+    const result = validateLessonContent({
+      ...valid,
+      slides: [{ type: 'media', source: 'embed', url: 'javascript:alert(1)' }],
+    });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'unsupported_embed' })]));
+  });
 });

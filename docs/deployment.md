@@ -47,6 +47,10 @@ npm start         # node server.js
 | `DATABASE_URL` | PostgreSQL connection string (Railway) |
 | `OPENAI_API_KEY` | OpenAI API key for the AI financial advisor |
 | `JWT_SECRET` | Secret for JWT token signing — use a long, random string |
+| `ACCESS_TOKEN_EXPIRES_IN` | Optional short access-token lifetime; defaults to `15m` |
+| `REFRESH_TOKEN_EXPIRES_IN` | Optional refresh-token lifetime; defaults to `30d` |
+| `AUTH_REFRESH_COOKIE_MAX_AGE_MS` | Optional refresh-cookie lifetime in milliseconds; defaults to 30 days |
+| `COOKIE_SECURE` / `AUTH_COOKIE_SAMESITE` | Optional cookie overrides for controlled test or cross-site deployments; production defaults to Secure + SameSite=None |
 | `NODE_ENV` | `production` or `development` |
 | `FRONTEND_URL` | Frontend URL for CORS (e.g. `https://caplet.org`) |
 | `TRUST_PROXY_HOPS` | Trusted reverse-proxy hop count (normally `1` on Railway) |

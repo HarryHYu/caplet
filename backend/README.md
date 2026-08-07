@@ -4,7 +4,7 @@ Backend API for the Caplet financial education platform.
 
 ## Features
 
-- **Auth** — JWT registration/login
+- **Auth** — short-lived JWT access tokens with an HttpOnly refresh cookie
 - **Courses** — CRUD for courses, modules, lessons
 - **Progress** — Lesson completion, quiz scores, auto-enrollment
 - **Classes** — Classroom management (teachers, students, announcements, assignments)
@@ -42,7 +42,7 @@ Backend API for the Caplet financial education platform.
 
 ## Database
 
-PostgreSQL only. `DATABASE_URL` is required. Tables sync on startup via Sequelize `{ alter: true }`.
+PostgreSQL is used in production. Local development and tests fall back to SQLite when `DATABASE_URL` is omitted. Schema changes are applied through the Umzug migrations in `backend/migrations/`; `npm run migrations:check` rehearses the full migration set.
 
 ## Course Content
 

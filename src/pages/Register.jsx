@@ -5,7 +5,7 @@ const Register = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-[100dvh] bg-surface-body">
+    <div className="min-h-screen flex bg-surface-body">
 
       {/* Left — Brand Panel */}
       <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative bg-surface-inverse overflow-hidden flex-col">
@@ -16,7 +16,7 @@ const Register = () => {
         <div className="relative z-10 p-12 xl:p-16">
           <Link to="/" className="group inline-flex items-center">
             <span className="font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-contrast group-hover:text-accent transition-colors duration-200">
-              Caplet.
+              Caplet
             </span>
           </Link>
         </div>
@@ -42,17 +42,17 @@ const Register = () => {
       <div className="w-full lg:w-[55%] xl:w-1/2 flex flex-col relative">
 
         {/* Top bar: mobile wordmark + back to home */}
-        <div className="flex items-center justify-between px-5 pt-6 sm:px-8 sm:pt-10 lg:px-16 xl:px-24">
-          <Link to="/" className="inline-flex min-h-11 items-center font-bricolage text-xl font-extrabold tracking-[-0.02em] text-text-primary transition-colors hover:text-accent lg:hidden">
-            Caplet.
+        <div className="flex items-center justify-between px-8 lg:px-16 xl:px-24 pt-10">
+          <Link to="/" className="lg:hidden font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors">
+            Caplet
           </Link>
-          <Link to="/" className="ml-auto inline-flex min-h-11 items-center text-sm font-bold text-text-dim transition-colors hover:text-accent">
+          <Link to="/" className="ml-auto text-sm font-bold text-text-dim hover:text-accent transition-colors">
             Back to home
           </Link>
         </div>
 
         {/* Form centered in remaining space */}
-        <div className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8 sm:py-12 lg:px-16 xl:px-24">
+        <div className="flex-1 flex items-center justify-center px-8 lg:px-16 xl:px-24 py-12">
           <div className="w-full max-w-sm">
             <RegisterForm
               onSuccess={() => navigate('/dashboard', { replace: true })}

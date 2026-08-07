@@ -73,7 +73,7 @@ The frontend routes are defined in `src/App.jsx`.
 
 ### Editor
 
-`/editor` is a code-gated lesson editor. It does not require a normal user login. Instead, `POST /api/editor/enter` exchanges a workspace code for a 60-day editor JWT stored in `sessionStorage`.
+`/editor` is a code-gated lesson editor. It does not require a normal user login. Instead, `POST /api/editor/enter` exchanges a workspace code for a 24-hour editor JWT stored in `sessionStorage`.
 
 The editor supports:
 
@@ -179,7 +179,7 @@ Authentication supports:
 
 - email/password registration and login
 - Google ID token login
-- JWT sessions with 7-day expiry
+- Short-lived JWT access sessions with an HttpOnly refresh cookie
 - Gmail canonicalization for account matching
 
 New accounts always start with the `student` role. Role elevation is handled through admin/bootstrap endpoints, not self-service signup.
@@ -393,7 +393,7 @@ VITE_GOOGLE_MAPS_KEY=
 VITE_DESMOS_API_KEY=dcb31709b452b1cf9dc26972add0fda6
 ```
 
-`VITE_API_BASE_URL` must include the `/api` suffix. If it is omitted in development, `src/services/api.js` defaults to `http://localhost:5002/api`, then falls back to `http://localhost:5000/api` and the production Railway API for network errors.
+`VITE_API_BASE_URL` must include the `/api` suffix. If it is omitted in development, `src/services/api.js` uses `http://localhost:5002/api` and may try the explicitly listed local fallback `http://localhost:5000/api` for failed read requests. It never falls back to the production Railway API from a development build, and state-changing requests are not retried against another base URL.
 
 ### Run the App
 
@@ -506,7 +506,7 @@ Database setup is handled in `backend/config/database.js`.
 - If `DATABASE_URL` is set, Sequelize uses PostgreSQL.
 - If `DATABASE_URL` is omitted, Sequelize uses SQLite at `backend/caplet.db`.
 - `backend/server.js` runs `runMigrations()` on startup.
-- `backend/models/index.js` calls `sequelize.sync({ force: false })` only as a safe fallback. Schema changes should be made through migration files, not through destructive sync behavior.
+- Sequelize models define the ORM shape; schema changes are applied by Umzug migrations. The server does not use `sequelize.sync()` as a schema-management fallback.
 
 Current migrations:
 
@@ -683,7 +683,7 @@ S3_PUBLIC_BASE_URL=
 - `docs/roadmap.md`
 - `content/LESSON_FORMAT.md`
 
-Some older docs may still mention removed financial planning tables or Sequelize `alter` sync. The current codebase uses migrations and has removed the older financial tables via `004-drop-financial-tables.js`.
+Documentation should describe the current migration-backed schema and current route names; the migration naming check preserves three documented legacy filename collisions and rejects new ones.
 
 ## Contact
 

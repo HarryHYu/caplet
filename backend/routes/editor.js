@@ -10,8 +10,15 @@ const { JWT_SECRET } = require('../middleware/auth');
 const { resolveEditorWorkspaceId, resolveReviewerUser } = require('../middleware/editorAuth');
 const { validateSlides } = require('../utils/slideSchema');
 const { validateLessonContent } = require('../services/contentValidation');
+const { createRateLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
+const editorEntryLimiter = createRateLimiter({
+  scope: 'editor_code_exchange',
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many editor access attempts. Try again later.',
+});
 
 /**
  * Normalize/validate the optional `slides` field on a lesson payload.
@@ -156,7 +163,7 @@ async function lessonValidationPayload(lesson, overrides = {}) {
 }
 
 // POST /api/editor/enter — exchange code for editor JWT (no user login)
-router.post('/enter', async (req, res) => {
+router.post('/enter', editorEntryLimiter, async (req, res) => {
   try {
     const code = req.body?.code;
     if (!code || typeof code !== 'string') {

@@ -268,6 +268,9 @@ const seedProductionDatabase = async () => {
 
   } catch (error) {
     console.error('❌ Error seeding production database:', error);
+    // Production startup must fail if the seed is incomplete. Continuing here
+    // would advertise a healthy deployment with a partially populated catalog.
+    throw error;
   }
 };
 
@@ -275,6 +278,8 @@ const seedProductionDatabase = async () => {
 if (require.main === module) {
   seedProductionDatabase().then(() => {
     process.exit(0);
+  }).catch(() => {
+    process.exitCode = 1;
   });
 }
 

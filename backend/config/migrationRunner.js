@@ -1,6 +1,7 @@
 const path = require('path');
 const { Umzug, SequelizeStorage } = require('umzug');
 const { sequelize } = require('./database');
+const { assertMigrationNames } = require('../utils/migrationNaming');
 
 /**
  * Umzug migration runner.
@@ -34,6 +35,7 @@ const umzug = new Umzug({
  */
 const runMigrations = async () => {
   try {
+    assertMigrationNames(path.join(__dirname, '../migrations'));
     console.log('🔄 Running database migrations...');
     const migrations = await umzug.up();
     if (migrations.length > 0) {

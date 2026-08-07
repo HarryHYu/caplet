@@ -1,229 +1,219 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AcademicCapIcon, ArrowRightIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { useReveal } from '../lib/useReveal';
 import { useMySubjects } from '../lib/useMySubjects';
 import { useLearningHubData } from '../lib/useLearningHubData';
 import { useAuth } from '../contexts/AuthContext';
-import Glyph from '../components/SubjectGlyph';
 import LearningNextAction from '../components/learning/LearningNextAction';
-import LearningToday from '../components/learning/LearningToday';
 import ResumeLearningCard from '../components/learning/ResumeLearningCard';
-import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
-import { facultiesForYear } from '../data/hscSubjects';
-import { stageForYear } from '../data/nswSubjectCatalog';
-import api from '../services/api';
+import { LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
+import { faculties } from '../data/hscSubjects';
 
 /**
- * Resource Library — an HSC subject browser. Mostly a placeholder for now: the
- * shelves are laid out and each subject has its own hand-drawn glyph, but the
- * per-subject syllabus content is still being built, so most tiles carry a
- * "Soon" marker instead of a link. Subjects with `available: true` (see
- * data/hscSubjects) link through to their shelf at /library/:slug.
+ * Resource Library — an HSC subject browser. The full catalogue is visible so
+ * students can find their subject in one place. Subjects with `available: true`
+ * (see data/hscSubjects) link through to their shelf at /library/:slug.
  */
 
-const SubjectChip = ({ subject, faculty, picked, onToggle }) => (
+const SubjectChip = ({ subject, picked, onToggle }) => (
   <button
     type="button"
     onClick={() => onToggle(subject.name)}
     aria-pressed={picked}
-    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold transition-colors ${
+    className={`rounded-full border px-3 py-1.5 text-sm font-bold transition-colors ${
       picked
-        ? `border-transparent ${faculty.block} ${faculty.text}`
+        ? 'border-transparent bg-accent-soft text-accent'
         : 'border-line-soft bg-surface-raised text-text-muted hover:text-text-primary'
     }`}
   >
-    <Glyph className="h-4 w-4">{subject.glyph}</Glyph>
     {subject.name}
   </button>
 );
 
+const LibrarySubjectCard = ({ subject }) => {
+  const isAvailable = subject.available === true;
+  const classes = `group flex min-h-36 flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 transition-colors ${
+    isAvailable ? 'hover:border-accent/50 hover:bg-surface-soft' : 'opacity-75'
+  }`;
+  const content = (
+    <>
+      <div>
+        <h4 className="font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{subject.name}</h4>
+        {subject.tag && <p className="mt-2 text-sm font-medium text-text-muted">{subject.tag}</p>}
+      </div>
+      {isAvailable && (
+        <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent">
+          Open <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+        </span>
+      )}
+    </>
+  );
+
+  if (!isAvailable) return <div className={classes} aria-disabled="true">{content}</div>;
+  return <Link to={`/library/${subject.slug}`} className={classes}>{content}</Link>;
+};
+
+const LibraryCourseCard = ({ path }) => {
+  const metadata = (path.metadata || []).filter(Boolean).join(' · ');
+  const progress = Number(path.progress);
+  const actionLabel = path.status === 'in_progress' ? 'Continue' : 'Open';
+
+  return (
+    <Link to={path.href} className="group flex min-h-full flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 transition-colors hover:border-accent/50 hover:bg-surface-soft">
+      <div>
+        <h3 className="font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{path.title}</h3>
+        {path.description && <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{path.description}</p>}
+        {metadata && <p className="mt-4 text-xs font-bold text-text-dim">{metadata}</p>}
+        {Number.isFinite(progress) && progress > 0 && (
+          <div className="mt-4">
+            <div className="mb-2 flex justify-between text-xs font-bold text-text-muted"><span>Progress</span><span>{Math.round(progress)}%</span></div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-surface-soft" role="progressbar" aria-label={`${path.title} progress`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(progress)}>
+              <div className="h-full rounded-full bg-accent" style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
+            </div>
+          </div>
+        )}
+      </div>
+      <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent">
+        {actionLabel} <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+      </span>
+    </Link>
+  );
+};
+
 const Library = () => {
   useReveal();
   const { isAuthenticated } = useAuth();
-  const { mySubjects, toggleSubject, subjectYear, setSubjectYear, selectionNotice } = useMySubjects();
+  const { mySubjects, toggleSubject } = useMySubjects();
   const { data: hubData, loading: hubLoading } = useLearningHubData(isAuthenticated);
   const [filterActive, setFilterActive] = useState(() => mySubjects.length > 0);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [publishedSubjects, setPublishedSubjects] = useState(new Set());
 
-  useEffect(() => {
-    let cancelled = false;
-    Promise.resolve(api.getPublishedSubjectPacks?.() || { subjectPacks: [] })
-      .then((data) => {
-        if (!cancelled) setPublishedSubjects(new Set((data?.subjectPacks || []).map((pack) => pack.subject)));
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
-
-  const selectedFaculties = useMemo(() => facultiesForYear(subjectYear), [subjectYear]);
-  const selectedStage = stageForYear(subjectYear);
-  const { availableFaculties, comingFaculties, availableCount } = useMemo(() => {
-    const isAvailable = (subject) => subject.available || publishedSubjects.has(subject.slug);
+  const { subjectFaculties } = useMemo(() => {
     const filterSubjects = (subjects) => filterActive ? subjects.filter((subject) => mySubjects.includes(subject.name)) : subjects;
-    const available = selectedFaculties
-      .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects.filter(isAvailable)) }))
+    const visible = faculties
+      .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects) }))
       .filter((faculty) => faculty.subjects.length > 0);
-    const coming = selectedFaculties
-      .map((faculty) => ({ ...faculty, subjects: filterSubjects(faculty.subjects.filter((subject) => !isAvailable(subject))) }))
-      .filter((faculty) => faculty.subjects.length > 0);
-    return {
-      availableFaculties: available,
-      comingFaculties: coming,
-      availableCount: selectedFaculties.flatMap((faculty) => faculty.subjects).filter(isAvailable).length,
-    };
-  }, [filterActive, mySubjects, publishedSubjects, selectedFaculties]);
+    return { subjectFaculties: visible };
+  }, [filterActive, mySubjects]);
+
+  const continueItems = hubData.continueItems.filter((item) => item.href !== hubData.nextAction.resume?.href);
 
   return (
     <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
       <div className="container-custom">
         <LearningPageHeader
-          eyebrow="Your learning home"
-          title="Learn"
-          description="See your next useful step, return to saved work, or explore the subjects and structured paths available in Caplet."
+          title="Resource library"
+          description="Choose a subject, or return to something you were already learning."
+          className="reveal mb-8"
+        />
+
+        <LearningNextAction
+          {...hubData.nextAction}
+          source="learn_hub"
+          trackingEnabled={isAuthenticated}
+          variant="minimal"
           className="reveal mb-10"
         />
 
-        {isAuthenticated && hubData.todayActions.length > 0 ? (
-          <LearningToday actions={hubData.todayActions} source="learn_hub" className="reveal mb-12" />
-        ) : (
-          <LearningNextAction {...hubData.nextAction} source="learn_hub" trackingEnabled={isAuthenticated} className="reveal mb-12" />
-        )}
-
         {hubData.partialErrors.length > 0 && (
           <div role="status" className="mb-10 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">
-            Some personalised learning information is temporarily unavailable. Everything else below is ready to use.
+            Some saved learning information is unavailable right now. You can still browse subjects.
           </div>
         )}
 
-        {isAuthenticated && hubData.continueItems.length > 0 && (
-          <LearningSection eyebrow="Saved progress" title="Continue learning" description="Return to the exact course, practice, or exam session you last used." className="reveal mb-16">
+        {isAuthenticated && continueItems.length > 0 && (
+          <LearningSection title="Continue learning" className="reveal mb-14">
             <div className="grid gap-4 lg:grid-cols-2">
-              {hubData.continueItems.slice(0, 4).map((item) => <ResumeLearningCard key={item.id} href={item.href} title={item.title} detail={item.detail} progress={item.progress} />)}
+              {continueItems.slice(0, 4).map((item) => <ResumeLearningCard key={item.id} href={item.href} title={item.title} detail={item.detail} progress={item.progress} variant="minimal" />)}
             </div>
           </LearningSection>
         )}
 
         <LearningSection
-          eyebrow="Ready now"
-          title="Available subjects"
-          description={`${availableCount} complete subject ${availableCount === 1 ? 'library is' : 'libraries are'} available today. Keep your shortlist focused on what you actually study.`}
+          title="Subjects"
+          description="Choose a subject to explore."
           className="reveal mb-16"
-          action={subjectYear >= 11 ? <Link to="/library/economics" className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">Open Economics <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link> : null}
         >
           <div className="mb-8 flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 rounded-full border border-line-soft bg-surface-raised px-4 py-2 text-sm font-bold text-text-muted">
-            Year
-            <select
-              aria-label="Year level"
-              value={subjectYear}
-              onChange={(event) => setSubjectYear(Number(event.target.value))}
-              className="bg-transparent font-bold text-text-primary outline-none"
-            >
-              {[7, 8, 9, 10, 11, 12].map((year) => <option key={year} value={year}>Year {year}</option>)}
-            </select>
-          </label>
-          <div className="inline-flex rounded-full border border-line-soft bg-surface-raised p-1">
+            <div className="inline-flex rounded-full border border-line-soft bg-surface-raised p-1">
+              <button
+                type="button"
+                onClick={() => setFilterActive(false)}
+                className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${!filterActive ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'}`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterActive(true)}
+                className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${filterActive ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'}`}
+              >
+                My subjects
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => setFilterActive(false)}
-              className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${!filterActive ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'}`}
+              onClick={() => setPickerOpen((v) => !v)}
+              className="rounded-full border border-line-soft bg-surface-raised px-4 py-1.5 text-sm font-bold text-text-muted transition-colors hover:text-accent"
             >
-              All subjects
+              {pickerOpen ? 'Done' : 'Choose subjects'}
             </button>
-            <button
-              type="button"
-              onClick={() => setFilterActive(true)}
-              className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${filterActive ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'}`}
-            >
-              My subjects{mySubjects.length > 0 ? ` (${mySubjects.length})` : ''}
-            </button>
-          </div>
-          {selectionNotice && <p role="status" className="mb-6 rounded-2xl bg-surface-soft px-4 py-3 text-sm font-medium text-text-muted">{selectionNotice}</p>}
-          <button
-            type="button"
-            onClick={() => setPickerOpen((v) => !v)}
-            className="rounded-full border border-line-soft bg-surface-raised px-4 py-1.5 text-sm font-bold text-text-muted transition-colors hover:text-accent"
-          >
-            {pickerOpen ? 'Done choosing' : 'Choose your subjects'}
-          </button>
           </div>
 
           {pickerOpen && (
-          <div className="mb-8 rounded-2xl border border-line-soft bg-surface-soft p-6">
-            <p className="mb-5 text-sm text-text-muted">
-              Choose the {selectedStage?.label || 'NSW'} subjects you study in Year {subjectYear}. Your choices are saved on this device.
-            </p>
-            <div className="space-y-6">
-              {selectedFaculties.map((faculty) => (
-                <div key={faculty.name}>
-                  <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-text-dim">{faculty.name}</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {faculty.subjects.map((subject) => (
-                      <SubjectChip
-                        key={subject.name}
-                        subject={subject}
-                        faculty={faculty}
-                        picked={mySubjects.includes(subject.name)}
-                        onToggle={toggleSubject}
-                      />
-                    ))}
+            <div className="mb-8 rounded-2xl border border-line-soft bg-surface-soft p-6">
+              <p className="mb-5 text-sm text-text-muted">Choose the subjects you study to filter this list.</p>
+              <div className="space-y-6">
+                {faculties.map((faculty) => (
+                  <div key={faculty.name}>
+                    <h4 className="mb-2 text-sm font-bold text-text-primary">{faculty.name}</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {faculty.subjects.map((subject) => (
+                        <SubjectChip
+                          key={subject.name}
+                          subject={subject}
+                          picked={mySubjects.includes(subject.name)}
+                          onToggle={toggleSubject}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
           )}
 
           {filterActive && mySubjects.length === 0 ? (
-          <div className="reveal rounded-2xl border border-dashed border-line-soft bg-surface-soft p-12 text-center">
-            <p className="font-display text-xl font-bold text-text-primary">No subjects picked yet</p>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-text-muted">Choose the subjects you study and this shelf will filter down to just them.</p>
-            <button
-              type="button"
-              onClick={() => setPickerOpen(true)}
-              className="mt-6 rounded-full bg-accent px-5 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
-            >
-              Choose your subjects
-            </button>
-          </div>
-        ) : (
-          <div>
-              {availableFaculties.length ? <div className="space-y-10">{availableFaculties.map((faculty) => (
-                <div key={faculty.name}>
-                  <div className="mb-5 flex items-center gap-4"><h3 className="font-display text-lg font-bold tracking-tight text-text-primary">{faculty.name}</h3><span className={`${faculty.block} ${faculty.text} rounded-full px-3 py-1 text-xs font-bold`}>{faculty.subjects.length}</span></div>
-                  <div className="reveal-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{faculty.subjects.map((subject) => <LearningCard key={subject.name} title={subject.name} description={subject.tag} href={`/library/${subject.slug}`} kind={`${faculty.name} subject`} metadata={[selectedStage?.label || `Year ${subjectYear}`, subject.tag]} status="Available" icon={BookOpenIcon} actionLabel="Explore subject" />)}</div>
-                </div>
-              ))}</div> : <div className="rounded-2xl border border-dashed border-line-soft bg-surface-soft p-8"><p className="font-display text-xl font-bold text-text-primary">None of your selected subjects are available yet.</p><p className="mt-2 text-sm text-text-muted">Open all subjects to study Economics now, or keep your choices saved while the next libraries are prepared.</p><button type="button" onClick={() => setFilterActive(false)} className="btn-secondary mt-5">Show available subjects</button></div>}
-          </div>
-        )}
-        </LearningSection>
-
-        <LearningSection eyebrow="Structured study" title="Courses" description="Follow lessons in order and resume from the exact point you stopped." className="reveal mb-16" action={<Link to="/courses" className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">Browse all courses <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>}>
-          {hubData.learningPaths.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {hubData.learningPaths.slice(0, 6).map((path) => <LearningCard key={path.id} {...path} icon={AcademicCapIcon} status={path.status === 'completed' ? 'Complete' : path.status === 'in_progress' ? 'In progress' : undefined} actionLabel={path.status === 'in_progress' ? 'Continue path' : 'Open path'} />)}
+            <div className="reveal rounded-2xl border border-dashed border-line-soft bg-surface-soft p-12 text-center">
+              <p className="font-display text-xl font-bold text-text-primary">No subjects selected</p>
+              <p className="mx-auto mt-2 max-w-sm text-sm text-text-muted">Choose subjects to filter this list.</p>
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                className="mt-6 rounded-full bg-accent px-5 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+              >
+                Choose subjects
+              </button>
             </div>
           ) : (
-            <div className="rounded-3xl block-blue p-7 md:p-9">
-              <AcademicCapIcon className="h-9 w-9 text-accent" aria-hidden="true" />
-              <h3 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-text-primary">Structured paths are being prepared.</h3>
-              <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">Economics topics, diagnostic practice, feedback, and mastery are ready while the first complete course path is assembled.</p>
-              <Link to="/library/economics" className="btn-primary mt-6 w-fit">Study Economics <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
+            <div>
+              {subjectFaculties.length ? <div className="space-y-9">{subjectFaculties.map((faculty) => (
+                <div key={faculty.name}>
+                  <h3 className="mb-3 font-display text-lg font-bold tracking-tight text-text-primary">{faculty.name}</h3>
+                  <div className="reveal-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{faculty.subjects.map((subject) => <LibrarySubjectCard key={subject.name} subject={subject} />)}</div>
+                </div>
+              ))}</div> : <div className="rounded-2xl border border-dashed border-line-soft bg-surface-soft p-8"><p className="font-display text-xl font-bold text-text-primary">No matching subjects</p><button type="button" onClick={() => setFilterActive(false)} className="btn-secondary mt-5">Show all</button></div>}
             </div>
           )}
         </LearningSection>
 
-        {comingFaculties.length > 0 && (
-          <details className="reveal rounded-3xl border border-line-soft bg-surface-soft p-6 md:p-8">
-            <summary className="cursor-pointer list-none rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-              <span className="section-kicker">Transparent roadmap</span>
-              <span className="flex items-center justify-between gap-4"><span className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Coming next</span><span className="text-sm font-bold text-text-muted">{hubData.comingSubjects.length} subjects</span></span>
-              <span className="mt-2 block max-w-2xl text-sm font-medium text-text-muted">Planned subject libraries are kept secondary until they contain a complete student learning experience.</span>
-            </summary>
-            <div className="mt-6 space-y-6 border-t border-line-soft pt-6">{comingFaculties.map((faculty) => <div key={faculty.name}><h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-dim">{faculty.name}</h3><div className="flex flex-wrap gap-2">{faculty.subjects.map((subject) => <span key={subject.name} className="inline-flex items-center gap-2 rounded-full border border-line-soft bg-surface-raised px-3 py-2 text-sm font-bold text-text-muted"><Glyph className="h-4 w-4">{subject.glyph}</Glyph>{subject.name}</span>)}</div></div>)}</div>
-          </details>
+        {hubData.learningPaths.length > 0 && (
+          <LearningSection title="Courses" className="reveal mb-16" action={<Link to="/courses" className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">View all <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>}>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {hubData.learningPaths.slice(0, 6).map((path) => <LibraryCourseCard key={path.id} path={path} />)}
+            </div>
+          </LearningSection>
         )}
 
         {hubLoading && <p className="sr-only" role="status">Loading personalised learning information</p>}

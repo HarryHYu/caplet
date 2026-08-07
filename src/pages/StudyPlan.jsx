@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowPathIcon,
@@ -24,8 +24,12 @@ const DAY_OPTIONS = [
 
 const STEPS = ['Subjects', 'Schedule', 'Diagnostic'];
 
+const supportsYear = (subject, yearLevel) => (
+  !['11', '12'].includes(yearLevel) || subject.yearLevels?.includes(yearLevel)
+);
+
 const EMPTY_FORM = {
-  yearLevel: '12',
+  yearLevel: '11',
   subjects: [],
   goal: 'Build a consistent weekly study routine',
   examDates: {},
@@ -46,7 +50,6 @@ export default function StudyPlan() {
   const [recommendation, setRecommendation] = useState(null);
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
   const [taskNotice, setTaskNotice] = useState('');
-  const onboardingErrorRef = useRef(null);
 
   useReveal(undefined, [loading, plan, editing, step, recommendation]);
 
@@ -92,8 +95,9 @@ export default function StudyPlan() {
     if (step === 1) {
       if (!form.goal.trim()) return 'Add a study goal.';
       if (!form.availableDays.length) return 'Choose at least one study day.';
+      if (selectedSubjects.some((subject) => !form.examDates[subject.value])) return 'Add an exam date for every subject.';
     }
-    if (step === 2 && selectedSubjects.some((subject) => !Number.isInteger(form.diagnosticAnswers[subject.value]))) {
+    if (step === 2 && selectedSubjects.some((subject) => subject.diagnostic && !Number.isInteger(form.diagnosticAnswers[subject.value]))) {
       return 'Answer each quick diagnostic question.';
     }
     return '';
@@ -101,22 +105,14 @@ export default function StudyPlan() {
 
   const next = () => {
     const message = validateStep();
-    if (message) {
-      setError(message);
-      requestAnimationFrame(() => onboardingErrorRef.current?.focus());
-      return;
-    }
+    if (message) return setError(message);
     setError('');
     setStep((value) => Math.min(2, value + 1));
   };
 
   const generate = async () => {
     const message = validateStep();
-    if (message) {
-      setError(message);
-      requestAnimationFrame(() => onboardingErrorRef.current?.focus());
-      return;
-    }
+    if (message) return setError(message);
     setSaving(true);
     setError('');
     try {
@@ -146,7 +142,7 @@ export default function StudyPlan() {
       setPlan(data.studyPlan);
       setTaskNotice(completed
         ? data.momentum?.currentStreak
-          ? `Nice work — today counts. Your study streak is ${data.momentum.currentStreak} ${data.momentum.currentStreak === 1 ? 'day' : 'days'}.`
+          ? `Nice work — today counts. Your meaningful study streak is ${data.momentum.currentStreak} ${data.momentum.currentStreak === 1 ? 'day' : 'days'}.`
           : 'Nice work — task marked complete.'
         : 'Task reopened for this week.');
     } catch (err) {
@@ -190,7 +186,6 @@ export default function StudyPlan() {
         step={step}
         setStep={setStep}
         error={error}
-        errorRef={onboardingErrorRef}
         saving={saving}
         next={next}
         generate={generate}
@@ -210,13 +205,13 @@ export default function StudyPlan() {
   const weakTopics = Array.isArray(plan.weakTopics) ? plan.weakTopics : [];
 
   return (
-    <div className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+    <div className="minimal-page selection:bg-accent selection:text-white">
       <div className="container-custom">
         <header className="reveal mb-14 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <span className="font-hand text-accent text-xl -rotate-2 inline-block mb-3">one useful task at a time</span>
-            <h1 className="font-display text-5xl md:text-7xl font-extrabold tracking-tight text-text-primary">My study plan.</h1>
-            <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">{plan.signalSummary}</p>
+            <span className="section-kicker">This week</span>
+            <h1 className="minimal-page-title">Study plan</h1>
+            <p className="minimal-page-description">{plan.signalSummary}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <button type="button" onClick={beginEdit} disabled={saving || Boolean(updatingTaskId)} className="btn-secondary disabled:opacity-50">Change settings</button>
@@ -234,7 +229,7 @@ export default function StudyPlan() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[color:var(--mark-green)]">Live evidence update</p>
               <h2 className="mt-2 text-2xl font-display font-extrabold text-text-primary">
-                {recommendation.studentTitle || recommendation.outcome?.title || 'Add a diagnostic signal'}
+                {recommendation.outcome?.title || 'Add a diagnostic signal'}
               </h2>
               <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">{recommendation.reason}</p>
             </div>
@@ -325,12 +320,12 @@ export default function StudyPlan() {
   );
 }
 
-function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, setStep, error, errorRef, saving, next, generate, cancel }) {
+function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, setStep, error, saving, next, generate, cancel }) {
   const [subjectQuery, setSubjectQuery] = useState('');
-  const subjectsForYear = options.subjects.filter((subject) => (
-    form.yearLevel === 'other' || !subject.years?.length || subject.years.includes(Number(form.yearLevel))
-  ));
+  const subjectsForYear = options.subjects.filter((subject) => supportsYear(subject, form.yearLevel));
   const visibleSubjects = subjectsForYear.filter((subject) => subject.label.toLowerCase().includes(subjectQuery.trim().toLowerCase()));
+  const diagnosticSubjects = selectedSubjects.filter((subject) => subject.diagnostic);
+  const placeholderSubjects = selectedSubjects.filter((subject) => !subject.diagnostic);
   const toggleSubject = (subject) => setForm((current) => ({
     ...current,
     subjects: current.subjects.includes(subject)
@@ -345,12 +340,12 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
   }));
 
   return (
-    <div className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+    <div className="minimal-page selection:bg-accent selection:text-white">
       <div className="container-custom max-w-5xl">
-        <header className="reveal mb-10 text-center">
-          <span className="font-hand text-accent text-xl -rotate-2 inline-block mb-3">ready in under five minutes</span>
-          <h1 className="font-display text-5xl md:text-7xl font-extrabold tracking-tight">Plan the week.</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg font-medium text-text-muted">Tell Caplet what matters, when you can study, and what needs attention. You&apos;ll get a concrete seven-day plan using resources already in Caplet.</p>
+        <header className="reveal minimal-page-header">
+          <span className="section-kicker">Three steps</span>
+          <h1 className="minimal-page-title">Plan the week</h1>
+          <p className="minimal-page-description">Choose your subjects, time and priorities.</p>
         </header>
 
         <div className="reveal mx-auto mb-8 flex max-w-xl items-center gap-3">
@@ -362,43 +357,25 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
             </div>
           ))}
         </div>
-        <p className="reveal -mt-4 mb-6 text-center text-xs font-bold uppercase tracking-[0.14em] text-text-dim" aria-live="polite">Step {step + 1} of {STEPS.length} · {STEPS[step]}</p>
+        <p className="reveal -mt-4 mb-6 text-xs font-bold uppercase tracking-[0.14em] text-text-dim" aria-live="polite">Step {step + 1} of {STEPS.length} · {STEPS[step]}</p>
 
-        <div className="reveal rounded-3xl bg-surface-raised p-7 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+        <div className="reveal border-t border-line-soft py-8">
           <div key={step} className="animate-slide-up">
           {step === 0 && (
             <div>
-              <h2 className="text-3xl font-display font-extrabold tracking-tight">What are you studying?</h2>
+              <h2 className="text-2xl font-display font-extrabold tracking-tight">What are you studying?</h2>
               <label htmlFor="study-year-level" className="mt-8 block text-sm font-bold text-text-muted">Year level</label>
-              <select id="study-year-level" value={form.yearLevel} onChange={(event) => {
-                const yearLevel = event.target.value;
-                const validIds = new Set(options.subjects
-                  .filter((subject) => yearLevel === 'other' || subject.years?.includes(Number(yearLevel)))
-                  .map((subject) => subject.value));
-                setForm((current) => ({
-                  ...current,
-                  yearLevel,
-                  subjects: current.subjects.filter((subject) => validIds.has(subject)),
-                  diagnosticAnswers: Object.fromEntries(
-                    Object.entries(current.diagnosticAnswers).filter(([subject]) => validIds.has(subject)),
-                  ),
-                }));
-              }} className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft">
+              <select id="study-year-level" value={form.yearLevel} onChange={(event) => setForm((current) => ({ ...current, yearLevel: event.target.value, subjects: [], examDates: {}, diagnosticAnswers: {} }))} className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft">
                 {options.yearLevels.map((level) => <option key={level.value} value={level.value}>{level.label}</option>)}
               </select>
-              {form.yearLevel !== 'other' && (
-                <p className="mt-2 text-xs font-medium text-text-dim">
-                  Showing {subjectsForYear[0]?.stage || 'NSW'} subjects available for Year {form.yearLevel}.
-                </p>
-              )}
               <fieldset className="mt-8">
-                <legend className="text-sm font-bold text-text-muted">Subjects <span className="font-medium text-text-dim">({form.subjects.length} selected)</span></legend>
+                <legend className="text-sm font-bold text-text-muted">Subjects <span className="font-medium text-text-dim">({form.subjects.length} selected · {subjectsForYear.length} available)</span></legend>
                 <label htmlFor="study-subject-search" className="sr-only">Search subjects</label>
-                <input id="study-subject-search" type="search" value={subjectQuery} onChange={(event) => setSubjectQuery(event.target.value)} placeholder="Search all subjects" className="mt-3 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-sm font-medium text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 placeholder:text-text-dim focus:border-accent focus:ring-4 focus:ring-accent-soft" />
+                <input id="study-subject-search" type="search" value={subjectQuery} onChange={(event) => setSubjectQuery(event.target.value)} placeholder={['11', '12'].includes(form.yearLevel) ? `Search Year ${form.yearLevel} subjects` : 'Search all subjects'} className="mt-3 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-sm font-medium text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 placeholder:text-text-dim focus:border-accent focus:ring-4 focus:ring-accent-soft" />
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {visibleSubjects.map((subject) => {
                     const selected = form.subjects.includes(subject.value);
-                    return <button key={subject.value} type="button" aria-pressed={selected} onClick={() => toggleSubject(subject.value)} className={`rounded-2xl p-4 text-left text-sm font-bold transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 ${selected ? 'bg-accent text-white shadow-[0_16px_32px_-24px_rgba(19,81,170,0.75)]' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{subject.label}</button>;
+                    return <button key={subject.value} type="button" aria-label={`${subject.label}${subject.placeholder ? ', library coming soon' : ''}`} aria-pressed={selected} onClick={() => toggleSubject(subject.value)} className={`flex items-center justify-between gap-3 rounded-lg border p-4 text-left text-sm font-bold transition-colors duration-150 ${selected ? 'border-accent bg-accent text-white' : 'border-line-soft bg-surface-body text-text-primary hover:border-accent/60'}`}><span>{subject.label}</span></button>;
                   })}
                 </div>
                 {!visibleSubjects.length && <p className="mt-3 rounded-2xl bg-surface-soft px-4 py-3 text-sm font-medium text-text-muted">No subjects match “{subjectQuery}”. Try a different search.</p>}
@@ -408,7 +385,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
 
           {step === 1 && (
             <div>
-              <h2 className="text-3xl font-display font-extrabold tracking-tight">When can you study?</h2>
+              <h2 className="text-2xl font-display font-extrabold tracking-tight">When can you study?</h2>
               <label htmlFor="study-goal" className="mt-8 block text-sm font-bold text-text-muted">Main goal</label>
               <input id="study-goal" value={form.goal} maxLength={200} onChange={(event) => setForm((current) => ({ ...current, goal: event.target.value }))} className="mt-2 w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft" />
               <fieldset className="mt-8">
@@ -421,10 +398,9 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
               <input id="minutes-per-study-day" type="range" min="15" max="120" step="5" value={form.minutesPerDay} aria-valuetext={`${form.minutesPerDay} minutes per study day`} onChange={(event) => setForm((current) => ({ ...current, minutesPerDay: Number(event.target.value) }))} className="mt-4 w-full accent-[var(--accent)]" />
               <p className="mt-2 text-sm font-bold text-accent">{form.minutesPerDay} minutes</p>
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <p className="sm:col-span-2 text-sm font-medium text-text-muted">Exam dates are optional. Add one if you know it; your plan will still work if you do not.</p>
                 {selectedSubjects.map((subject) => (
                   <label key={subject.value} htmlFor={`exam-date-${subject.value}`} className="text-sm font-bold text-text-muted">
-                    {subject.label} exam date <span className="font-medium text-text-dim">(optional)</span>
+                    {subject.label} exam date
                     <input id={`exam-date-${subject.value}`} type="date" value={form.examDates[subject.value] || ''} onChange={(event) => setForm((current) => ({ ...current, examDates: { ...current.examDates, [subject.value]: event.target.value } }))} className="mt-2 block w-full rounded-2xl border border-line-soft bg-surface-soft px-4 py-3 text-text-primary outline-none transition-[background-color,border-color,box-shadow] duration-200 focus:border-accent focus:ring-4 focus:ring-accent-soft" />
                   </label>
                 ))}
@@ -434,10 +410,11 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
 
           {step === 2 && (
             <div>
-              <h2 className="text-3xl font-display font-extrabold tracking-tight">Quick diagnostic</h2>
-              <p className="mt-3 text-sm font-medium text-text-muted">One question per subject gives the first priority signal. Future marked work will update the plan automatically.</p>
+              <h2 className="text-2xl font-display font-extrabold tracking-tight">Quick diagnostic</h2>
+              <p className="mt-3 text-sm font-medium text-text-muted">Answer any available subject questions to improve your first plan.</p>
+              {placeholderSubjects.length > 0 && <p className="mt-5 border-l-2 border-accent pl-4 text-sm font-medium text-text-muted">No diagnostic is needed for {placeholderSubjects.map((subject) => subject.label).join(', ')}.</p>}
               <div className="mt-8 space-y-8">
-                {selectedSubjects.map((subject) => (
+                {diagnosticSubjects.map((subject) => (
                   <fieldset key={subject.value}>
                     <legend className="text-base font-display font-bold text-text-primary"><span className="text-accent">{subject.label}:</span> {subject.diagnostic.question}</legend>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -447,12 +424,13 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
                     </div>
                   </fieldset>
                 ))}
+                {diagnosticSubjects.length === 0 && <p className="rounded-2xl bg-surface-soft px-5 py-4 text-sm font-medium text-text-muted">You can build this plan without a diagnostic while these subject libraries are being prepared.</p>}
               </div>
             </div>
           )}
           </div>
 
-          {error && <div ref={errorRef} tabIndex="-1" role="alert" className="animate-slide-up mt-7 flex items-center gap-3 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error outline-none focus:ring-4 focus:ring-[color:var(--border-error)]"><ExclamationTriangleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />{error}</div>}
+          {error && <div role="alert" className="animate-slide-up mt-7 flex items-center gap-3 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error"><ExclamationTriangleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />{error}</div>}
 
           <div className="mt-9 flex items-center justify-between gap-3 border-t border-line-soft pt-6">
             <div>

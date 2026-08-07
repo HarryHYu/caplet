@@ -14,34 +14,24 @@ const MarkedAttempt = require('../models/MarkedAttempt');
 const { markEconomicsAnswer } = require('../services/economicsMarker');
 const { requireAIConsent } = require('../services/privacyConsent');
 const { reserveAIQuota } = require('../middleware/aiQuota');
+const { createRateLimiter } = require('../middleware/rateLimit');
+const { publicAIError } = require('../utils/aiErrors');
 
 const router = express.Router();
 router.use(requireAuth);
 const markingQuota = reserveAIQuota({ scope: 'economics-marker', units: 2 });
+const markingRequestLimiter = createRateLimiter({
+  scope: 'economics_marker_requests',
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  keyGenerator: (req) => `user:${req.user?.id || 'unknown'}`,
+  message: 'Too many markings. Take a moment and try again later.',
+});
 
 const sourceText = (value, limit = 200) => String(value || '').trim().slice(0, limit) || null;
 
-// 15 markings per user per 15 minutes — generous for real practice, cheap to abuse-proof.
-const recent = new Map();
-const WINDOW_MS = 15 * 60 * 1000;
-const LIMIT = 15;
-
-function throttle(req, res, next) {
-  const uid = req.user?.id;
-  const now = Date.now();
-  const hits = (recent.get(uid) || []).filter((t) => now - t < WINDOW_MS);
-  if (hits.length >= LIMIT) {
-    return res.status(429).json({
-      message: `Too many markings — you can submit up to ${LIMIT} every 15 minutes. Take a moment and try again.`,
-    });
-  }
-  hits.push(now);
-  recent.set(uid, hits);
-  next();
-}
-
 // POST /api/economics-marker — mark and persist one attempt
-router.post('/', requireAIConsent, throttle, markingQuota, async (req, res) => {
+router.post('/', requireAIConsent, markingRequestLimiter, markingQuota, async (req, res) => {
   try {
     const sourceResourceId = sourceText(req.body?.sourceResourceId);
     const sourcePromptId = sourceText(req.body?.sourcePromptId);
@@ -109,9 +99,16 @@ router.post('/', requireAIConsent, throttle, markingQuota, async (req, res) => {
       : null;
     res.status(201).json({ attempt, improvement });
   } catch (e) {
-    const status = e.status || 502;
-    if (status >= 500) console.error('Economics marker error:', e.message);
-    res.status(status).json({ message: e.message || 'Marking failed' });
+    const error = publicAIError(e, 'Marking failed. Try again shortly.');
+    if (error.status >= 500) {
+      console.error(JSON.stringify({
+        event: 'economics_marker_error',
+        requestId: req.requestId || null,
+        errorType: e?.name || 'Error',
+        status: error.status,
+      }));
+    }
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
   }
 });
 

@@ -5,11 +5,27 @@ const { generateLessonSlides, getClient } = require('../services/lessonAI');
 const { requireAIConsent } = require('../services/privacyConsent');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { reserveAIQuota } = require('../middleware/aiQuota');
+const { createRateLimiter } = require('../middleware/rateLimit');
+const { publicAIError } = require('../utils/aiErrors');
 
 const router = express.Router();
 const lessonGenerationQuota = reserveAIQuota({ scope: 'lesson-generation', units: 12 });
 const lessonChatQuota = reserveAIQuota({ scope: 'lesson-chat', units: 8 });
 const tutorQuota = reserveAIQuota({ scope: 'lesson-tutor', units: 1 });
+const editorAIRequestLimiter = createRateLimiter({
+  scope: 'ai_editor_requests',
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  keyGenerator: (req) => `workspace:${req.workspaceId || 'unknown'}`,
+  message: 'Too many AI requests for this workspace. Try again later.',
+});
+const tutorRequestLimiter = createRateLimiter({
+  scope: 'ai_tutor_requests',
+  windowMs: 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => `user:${req.user?.id || 'unknown'}`,
+  message: 'Too many tutor questions. Wait a moment and try again.',
+});
 
 async function requireEditor(req, res, next) {
   try {
@@ -21,26 +37,7 @@ async function requireEditor(req, res, next) {
   }
 }
 
-// 20 AI generations per workspace per 15 minutes.
-const recent = new Map();
-const WINDOW_MS = 15 * 60 * 1000;
-const LIMIT = 20;
-
-function throttle(req, res, next) {
-  const ws = req.workspaceId;
-  const now = Date.now();
-  const hits = (recent.get(ws) || []).filter((t) => now - t < WINDOW_MS);
-  if (hits.length >= LIMIT) {
-    return res.status(429).json({
-      message: `Too many AI generations. You can run up to ${LIMIT} per 15 minutes — wait a moment and try again.`,
-    });
-  }
-  hits.push(now);
-  recent.set(ws, hits);
-  next();
-}
-
-router.post('/generate-lesson', requireEditor, throttle, lessonGenerationQuota, async (req, res) => {
+router.post('/generate-lesson', requireEditor, editorAIRequestLimiter, lessonGenerationQuota, async (req, res) => {
   const ALLOWED_MODELS    = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
   const FORMATTER_MODELS  = ['gpt-5.4-nano', 'gpt-5.4-mini'];
 
@@ -83,18 +80,20 @@ router.post('/generate-lesson', requireEditor, throttle, lessonGenerationQuota, 
     });
     res.json(out);
   } catch (e) {
-    const status = e.status || 502;
-    console.error('AI generate-lesson error:', e.message, e.details || '');
-    res.status(status).json({
-      message: e.message || 'AI generation failed',
-      details: e.details,
-    });
+    const error = publicAIError(e, 'AI generation failed. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'ai_generate_lesson_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
   }
 });
 
 // Conversational chat: interprets a natural-language message and either
 // generates slides (action="generate") or answers the question (action="message").
-router.post('/lesson-chat', requireEditor, throttle, lessonChatQuota, async (req, res) => {
+router.post('/lesson-chat', requireEditor, editorAIRequestLimiter, lessonChatQuota, async (req, res) => {
   const ALLOWED_MODELS   = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
   const FORMATTER_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini'];
   const message          = (req.body?.message ?? '').toString().trim().slice(0, 2000);
@@ -171,9 +170,14 @@ router.post('/lesson-chat', requireEditor, throttle, lessonChatQuota, async (req
     });
     return res.json({ action: 'message', text: intent_parsed.text || '' });
   } catch (e) {
-    const status = e.status || 502;
-    console.error('AI lesson-chat error:', e.message);
-    return res.status(status).json({ message: e.message || 'AI request failed' });
+    const error = publicAIError(e, 'AI request failed. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'ai_lesson_chat_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    return res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
   }
 });
 
@@ -181,26 +185,9 @@ router.post('/lesson-chat', requireEditor, throttle, lessonChatQuota, async (req
 // Tutor endpoint — per-user rate limit (not per-workspace like the editor).
 // Auth: regular user JWT so lesson players can call it without editor access.
 // ---------------------------------------------------------------------------
-const tutorRecent = new Map();
-const TUTOR_WINDOW_MS = 60 * 1000; // 1-minute window
-const TUTOR_LIMIT = 10;             // 10 questions per user per minute
-
-function throttleTutor(req, res, next) {
-  const uid = req.user?.id;
-  if (!uid) return next(); // edge: unauthenticated request already rejected by requireAuth
-  const now = Date.now();
-  const hits = (tutorRecent.get(uid) || []).filter((t) => now - t < TUTOR_WINDOW_MS);
-  if (hits.length >= TUTOR_LIMIT) {
-    return res.status(429).json({ message: 'Too many tutor questions — wait a moment and try again.' });
-  }
-  hits.push(now);
-  tutorRecent.set(uid, hits);
-  next();
-}
-
 // POST /api/ai/tutor  { lessonId, slide, question }
 // Returns { answer } — a concise, educational AI explanation scoped to the slide.
-router.post('/tutor', requireAuth, requireAIConsent, throttleTutor, tutorQuota, async (req, res) => {
+router.post('/tutor', requireAuth, requireAIConsent, tutorRequestLimiter, tutorQuota, async (req, res) => {
   const question = (req.body?.question ?? '').toString().trim().slice(0, 600);
   const slide = req.body?.slide; // slide object for context
 
@@ -249,9 +236,14 @@ router.post('/tutor', requireAuth, requireAIConsent, throttleTutor, tutorQuota, 
     });
     res.json({ answer });
   } catch (e) {
-    const status = e.status || 502;
-    console.error('AI tutor error:', e.message);
-    res.status(status).json({ message: e.message || 'Tutor request failed' });
+    const error = publicAIError(e, 'Tutor request failed. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'ai_tutor_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
   }
 });
 

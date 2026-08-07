@@ -9,20 +9,35 @@ const {
 
 const validConfig = {
   yearLevel: '12',
-  subjects: ['economics', 'english'],
+  subjects: ['economics', 'english-standard'],
   goal: 'Prepare consistently for the HSC',
-  examDates: { economics: '2026-08-01', english: '2026-09-15' },
+  examDates: { economics: '2026-08-01', 'english-standard': '2026-09-15' },
   availableDays: [1, 3, 5],
   minutesPerDay: 45,
-  diagnosticAnswers: { economics: 2, english: 0 }
+  diagnosticAnswers: { economics: 2 }
 };
 
 describe('studyPlanService', () => {
   test('publishes safe diagnostic options without answer keys', () => {
     const options = publicOptions();
-    expect(options.subjects.length).toBeGreaterThanOrEqual(16);
-    expect(options.subjects[0].diagnostic.answer).toBeUndefined();
-    expect(options.subjects.every((subject) => subject.diagnostic.options.length === 4)).toBe(true);
+    const labels = options.subjects.map((subject) => subject.label);
+    const economics = options.subjects.find((subject) => subject.value === 'economics');
+
+    expect(options.subjects).toHaveLength(41);
+    expect(options.subjects.filter((subject) => subject.yearLevels.includes('11'))).toHaveLength(39);
+    expect(labels).toEqual(expect.arrayContaining([
+      'English Extension 1',
+      'English Extension 2',
+      'Mathematics Extension 1',
+      'Mathematics Extension 2',
+      'Software Engineering',
+    ]));
+    expect(labels).not.toContain('Society & Culture');
+    expect(labels).not.toContain('Extension 1');
+    expect(labels).not.toContain('Extension 2');
+    expect(economics.diagnostic.answer).toBeUndefined();
+    expect(economics.diagnostic.options).toHaveLength(4);
+    expect(options.subjects.filter((subject) => subject.placeholder).every((subject) => subject.diagnostic === null)).toBe(true);
   });
 
   test('keeps Stage 6 Mathematics and English courses distinct and fully named', () => {
@@ -57,6 +72,15 @@ describe('studyPlanService', () => {
 
     expect(config.subjects).toEqual(subjects);
     expect(validateConfig(config)).toEqual([]);
+  });
+
+  test('excludes Year 12-only extension courses from a Year 11 plan', () => {
+    const config = normalizeConfig({
+      yearLevel: '11',
+      subjects: ['economics', 'english-extension-2', 'mathematics-extension-2'],
+    });
+
+    expect(config.subjects).toEqual(['economics']);
   });
 
   test('normalizes and validates onboarding configuration', () => {

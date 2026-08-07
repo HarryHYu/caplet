@@ -1,89 +1,68 @@
-import { useRef, useState } from 'react';
+import { createElement, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useFeatureFlags } from '../contexts/FeatureFlagContext';
-import { useLayout } from '../contexts/LayoutContext';
-import ProductModeSwitch from './ProductModeSwitch';
-import UserAvatar from './UserAvatar';
-import { availableMoneyNavigation, isProductNavItemActive } from '../config/productNavigation';
 import {
-    Squares2X2Icon,
+    ArrowPathIcon,
+    BanknotesIcon,
     BookOpenIcon,
     CalendarDaysIcon,
-    ArrowPathIcon,
-    ChartBarIcon,
-    BookmarkIcon,
-    DocumentTextIcon,
-    WrenchScrewdriverIcon,
-    BookmarkSquareIcon,
+    ClipboardDocumentListIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
-    ChartBarSquareIcon,
-    LockClosedIcon,
-    UserGroupIcon,
+    Cog6ToothIcon,
+    CalculatorIcon,
+    DocumentTextIcon,
+    EllipsisVerticalIcon,
+    HomeIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { useLayout } from '../contexts/LayoutContext';
+import { usePinnedNavItems } from '../lib/usePinnedNavItems';
 
-/**
- * The app's vertical navigation island — the "vertical bar" mode. When active
- * it fully replaces the top navbar on large screens, so it carries the brand,
- * primary nav, account controls, and rail collapse action. Theme and navigation
- * layout choices live in Settings → Appearance. Shown on every page (desktop
- * only; mobile still uses the top bar), so it stays consistent across the app.
- * Collapse and nav-mode state are owned by LayoutContext so they survive navigation.
- */
+const primaryItems = [
+    { path: '/dashboard', label: 'Today', icon: HomeIcon, end: true },
+    { path: '/library', label: 'Subjects', icon: BookOpenIcon },
+    { path: '/notes', label: 'Notes', icon: DocumentTextIcon },
+    { path: '/assessment-log', label: 'Results', icon: ClipboardDocumentListIcon },
+    { path: '/practice', label: 'Practice', icon: ArrowPathIcon },
+    { path: '/study-plan', label: 'Plan', icon: CalendarDaysIcon },
+];
+
 export default function Sidebar() {
     const location = useLocation();
-    const { user, isAuthenticated } = useAuth();
-    const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
     const {
         sidebarCollapsed: collapsed,
         toggleSidebar,
         sidebarWidth,
         resizeSidebar,
         sidebarWidthBounds,
-        productMode = 'study',
     } = useLayout();
     const sidebarRef = useRef(null);
     const [isResizing, setIsResizing] = useState(false);
+    const [isDropTarget, setIsDropTarget] = useState(false);
+    const [shortcutNotice, setShortcutNotice] = useState('');
+    const { pinnedItems, pin, unpin } = usePinnedNavItems();
 
-    const isActive = (path) => {
-        if (path === '/dashboard') return location.pathname === '/dashboard';
-        return location.pathname === path || location.pathname.startsWith(`${path}/`);
+    const shortcutIcons = {
+        book: BookOpenIcon,
+        document: DocumentTextIcon,
+        calendar: CalendarDaysIcon,
+        calculator: CalculatorIcon,
+        notes: DocumentTextIcon,
     };
 
-    const studyPrimaryItems = [
-        { path: '/dashboard', label: 'Dashboard', icon: Squares2X2Icon },
-        { path: '/study-plan', label: 'Study plan', icon: CalendarDaysIcon },
-        { path: '/practice', label: 'Practice', icon: ArrowPathIcon },
-        { path: '/mastery', label: 'Mastery', icon: ChartBarIcon },
-        { path: '/review', label: 'Review', icon: BookmarkIcon },
-        { path: '/essays', label: 'Essays', icon: DocumentTextIcon },
-        { path: '/library', label: 'Learn', icon: BookOpenIcon },
-        { path: '/classes', label: 'Classes', icon: UserGroupIcon },
-    ];
+    const isActive = (path, end = false) => end
+        ? location.pathname === path
+        : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-    const moneyIcons = {
-        Overview: Squares2X2Icon,
-        Learn: BookOpenIcon,
-        Economy: ChartBarSquareIcon,
-        Tools: WrenchScrewdriverIcon,
-        Resources: BookmarkSquareIcon,
-        'My Money': LockClosedIcon,
-    };
-    const items = productMode === 'money'
-        ? availableMoneyNavigation({ isAuthenticated, featureFlagsLoading, isFeatureEnabled: isEnabled })
-            .map((item) => ({ ...item, icon: moneyIcons[item.label] }))
-        : studyPrimaryItems;
-
-    // Shared row shape so nav links, footer actions and the account row line up.
-    const row = (active) =>
-        `group relative flex min-h-11 items-center gap-3 transition-[color,background-color,transform,box-shadow] duration-200 ease-out ${
-            collapsed ? 'mx-auto aspect-square h-9 min-h-0 w-9 shrink-0 justify-center rounded-full p-0 active:scale-95' : 'rounded-xl px-3 py-2 active:scale-[0.99]'
-        } ${
-            active
-                ? 'bg-accent-soft text-accent'
-                : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'
-        }`;
+    const rowClass = (active) => `group relative flex min-h-11 items-center gap-3 text-sm font-medium transition-[color,background-color,transform] duration-150 ${
+        collapsed
+            ? 'mx-auto aspect-square h-11 w-11 justify-center rounded-full p-0 active:scale-95'
+            : 'rounded-lg px-3 py-2 active:scale-[0.99]'
+    } ${
+        active
+            ? `${collapsed ? 'bg-accent-soft' : ''} font-bold text-accent`
+            : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'
+    }`;
 
     const updateWidthFromPointer = (event) => {
         const rect = sidebarRef.current?.getBoundingClientRect();
@@ -108,7 +87,7 @@ export default function Sidebar() {
     const handleResizeKeyDown = (event) => {
         if (collapsed) return;
         const { min, max } = sidebarWidthBounds;
-        const step = event.shiftKey ? 32 : 12;
+        const step = event.shiftKey ? 24 : 8;
         if (event.key === 'ArrowRight') {
             event.preventDefault();
             resizeSidebar(Math.min(max, sidebarWidth + step));
@@ -124,114 +103,111 @@ export default function Sidebar() {
         }
     };
 
+    const renderLink = (item) => {
+        const { path, label, end = false } = item;
+        const active = isActive(path, end);
+        return (
+            <Link
+                key={path}
+                to={path}
+                title={collapsed ? label : undefined}
+                aria-label={collapsed ? label : undefined}
+                aria-current={active ? 'page' : undefined}
+                className={rowClass(active)}
+            >
+                {active && !collapsed && <span className="absolute -left-5 inset-y-1.5 w-0.5 rounded-r-full bg-accent" aria-hidden="true" />}
+                <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                {!collapsed && <span className="min-w-0 flex-1 truncate">{label}</span>}
+            </Link>
+        );
+    };
+
+    const handleDrop = (event) => {
+        event.preventDefault();
+        const id = event.dataTransfer.getData('application/x-caplet-shortcut') || event.dataTransfer.getData('text/plain');
+        const item = pinnedItems.find((shortcut) => shortcut.id === id);
+        pin(id);
+        setIsDropTarget(false);
+        setShortcutNotice(item ? `${item.label} is already in the sidebar.` : 'Shortcut added to the sidebar.');
+    };
+
     return (
         <aside
             ref={sidebarRef}
             aria-label="Sidebar navigation"
-            className={`relative sticky top-0 hidden h-screen shrink-0 p-3 lg:flex ${isResizing ? 'select-none' : 'transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]'}`}
-            style={{ width: collapsed ? 96 : sidebarWidth }}
+            onDragEnter={(event) => { event.preventDefault(); setIsDropTarget(true); }}
+            onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDropTarget(true); }}
+            onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsDropTarget(false); }}
+            onDrop={handleDrop}
+            className={`relative sticky top-0 hidden h-screen shrink-0 border-r bg-surface-body lg:flex ${isDropTarget ? 'border-accent bg-accent-soft/30' : 'border-line-soft'} ${isResizing ? 'select-none' : 'transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]'}`}
+            style={{ width: collapsed ? 76 : sidebarWidth }}
         >
-            <div className={`flex h-full w-full flex-col border border-line-soft bg-surface-raised shadow-[0_28px_64px_-38px_rgba(20,20,18,0.32)] transition-[padding,border-radius] duration-300 ${collapsed ? 'rounded-3xl p-2' : 'rounded-3xl p-3'}`}>
-                {/* Brand */}
+            <div className={`flex h-full min-w-0 flex-1 flex-col py-5 ${collapsed ? 'px-2.5' : 'px-5'}`}>
                 <Link
-                    to={productMode === 'money' ? '/money' : '/dashboard'}
-                    className={`flex min-h-12 items-center gap-2 transition-[background-color,transform] duration-200 hover:bg-surface-soft hover:scale-[1.01] ${collapsed ? 'mx-auto aspect-square h-10 min-h-0 w-10 shrink-0 justify-center rounded-full p-0' : 'rounded-xl px-1.5 py-1.5'}`}
+                    to="/dashboard"
+                    aria-label="Caplet dashboard"
+                    className={`flex min-h-14 items-center gap-2.5 rounded-lg transition-colors hover:bg-surface-soft ${collapsed ? 'mx-auto aspect-square h-12 min-h-0 w-12 justify-center p-0' : 'px-1.5'}`}
                 >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft">
-                        <img src="/logo.png" alt="Caplet" className="h-full w-full scale-105 rounded-full object-cover" />
+                    <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-line-soft bg-surface-raised">
+                        <img src="/logo.png" alt="" className="h-full w-full object-cover" />
                     </span>
-                    {!collapsed && (
-                        <span className="font-bricolage text-xl font-extrabold tracking-[-0.03em] text-text-primary">
-                            Caplet.
-                        </span>
-                    )}
+                    {!collapsed && <span className="font-bricolage text-xl font-extrabold tracking-[-0.03em] text-text-primary">Caplet</span>}
                 </Link>
 
-                <ProductModeSwitch collapsed={collapsed} className="mt-2 w-full" />
-
-                <div className="my-3 border-t border-line-soft" />
-
-                {/* Primary nav */}
-                <nav aria-label="Primary navigation" className="nav-scrollbar-hidden flex flex-1 flex-col gap-1 overflow-x-clip overflow-y-auto pt-1">
-                    {items.map((item) => {
-                        const { path, label, badge } = item;
-                        const active = productMode === 'money'
-                            ? isProductNavItemActive(item, location)
-                            : isActive(path);
-                        return (
-                            <Link
-                                key={path}
-                                to={path}
-                                title={collapsed ? label : undefined}
-                                aria-current={active ? 'page' : undefined}
-                                className={row(active)}
-                            >
-                                <span className="relative grid h-5 w-5 shrink-0 place-items-center">
-                                    <item.icon className={`h-5 w-5 ${active ? 'text-accent' : ''}`} aria-hidden="true" />
-                                    {badge > 0 && collapsed && (
-                                        <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-accent px-1 text-[10px] font-bold leading-none text-white">
-                                            {badge > 9 ? '9+' : badge}
-                                        </span>
-                                    )}
-                                </span>
-                                {!collapsed && (
-                                    <>
-                                        <span className="min-w-0 flex-1 truncate text-sm font-bold tracking-[0.01em]">
-                                            {label}
-                                        </span>
-                                        {badge > 0 && (
-                                            <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold leading-none text-white">
-                                                {badge > 99 ? '99+' : badge}
-                                            </span>
-                                        )}
-                                    </>
-                                )}
-                            </Link>
-                        );
-                    })}
-
+                <nav aria-label="Primary navigation" className="mt-8 flex flex-col gap-1">
+                    {primaryItems.map(renderLink)}
                 </nav>
 
-                <div className="my-3 border-t border-line-soft" />
+                {pinnedItems.length > 0 && (
+                    <nav aria-label="Pinned shortcuts" className="mt-5 border-t border-line-soft pt-4">
+                        {!collapsed && <p className="mb-2 px-3 text-xs font-bold text-text-dim">Shortcuts</p>}
+                        <div className="flex flex-col gap-1">
+                            {pinnedItems.map((item) => {
+                                const active = isActive(item.path);
+                                const Icon = shortcutIcons[item.icon];
+                                return (
+                                    <div key={item.id} className="group/shortcut relative flex items-center">
+                                        <Link to={item.path} title={collapsed ? item.label : undefined} aria-label={item.label} aria-current={active ? 'page' : undefined} className={`${rowClass(active)} min-w-0 flex-1`}>
+                                            {active && !collapsed && <span className="absolute -left-5 inset-y-1.5 w-0.5 rounded-r-full bg-accent" aria-hidden="true" />}
+                                            {createElement(Icon, { className: 'h-5 w-5 shrink-0', 'aria-hidden': true })}
+                                            {!collapsed && <span className="min-w-0 flex-1 truncate">{item.navLabel || item.label}</span>}
+                                        </Link>
+                                        {!collapsed && (
+                                            <button type="button" onClick={() => unpin(item.id)} aria-label={`Remove ${item.label} from sidebar`} title="Remove shortcut" className="absolute right-1 grid h-8 w-8 place-items-center rounded-md text-text-dim opacity-0 transition-opacity hover:bg-surface-soft hover:text-text-primary focus:opacity-100 group-hover/shortcut:opacity-100">
+                                                <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </nav>
+                )}
 
-                {/* Account and rail controls stay quiet; theme and navigation
-                    choices live in Settings → Appearance. */}
-                <div className="flex flex-col gap-1">
-                    {/* Account → settings, mirrors the navbar's account menu */}
-                    <Link
-                        to="/settings"
-                        title={collapsed ? (user?.firstName || 'Account') : undefined}
-                        aria-label={collapsed ? 'Settings' : undefined}
-                        className={row(isActive('/settings'))}
-                    >
-                        <UserAvatar user={user} size="sm" showStatus={false} />
-                        {!collapsed && (
-                            <span className="min-w-0 flex-1 truncate text-xs font-bold text-text-primary">
-                                {user?.firstName || 'Account'}
-                            </span>
-                        )}
-                    </Link>
+                {isDropTarget && !collapsed && <p className="mt-4 rounded-lg border border-dashed border-accent px-3 py-2 text-center text-xs font-bold text-accent">Drop to add shortcut</p>}
+                <p className="sr-only" aria-live="polite">{shortcutNotice}</p>
 
-                    <div className="my-2 border-t border-line-soft" />
-
+                <div className="mt-auto flex flex-col gap-1">
                     <button
                         type="button"
                         onClick={toggleSidebar}
                         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                        className={row(false)}
+                        className={rowClass(false)}
                     >
-                        {collapsed ? (
-                            <ChevronDoubleRightIcon className="h-4 w-4 shrink-0" />
-                        ) : (
-                            <ChevronDoubleLeftIcon className="h-4 w-4 shrink-0" />
-                        )}
-                        {!collapsed && (
-                            <span className="text-xs font-bold tracking-[0.02em]">Collapse</span>
-                        )}
+                        {collapsed
+                            ? <ChevronDoubleRightIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                            : <ChevronDoubleLeftIcon className="h-5 w-5 shrink-0" aria-hidden="true" />}
+                        {!collapsed && <span className="min-w-0 flex-1 text-left">Collapse</span>}
                     </button>
+
+                    <div className="my-3 border-t border-line-soft" />
+
+                    {renderLink({ path: '/money', label: 'Money', icon: BanknotesIcon, end: false })}
+                    {renderLink({ path: '/settings', label: 'Settings', icon: Cog6ToothIcon, end: false })}
                 </div>
             </div>
+
             {!collapsed && (
                 <div
                     role="separator"
@@ -247,10 +223,12 @@ export default function Sidebar() {
                     onPointerMove={(event) => isResizing && updateWidthFromPointer(event)}
                     onPointerUp={handleResizeEnd}
                     onPointerCancel={handleResizeEnd}
-                    className="group absolute right-0 top-1/2 z-30 hidden h-28 w-5 -translate-y-1/2 cursor-col-resize items-center justify-center lg:flex"
+                    className="group absolute right-0 top-1/2 z-30 hidden h-28 w-5 -translate-y-1/2 translate-x-1/2 cursor-col-resize items-center justify-center lg:flex"
                     title="Drag to resize sidebar"
                 >
-                    <span className="h-12 w-1 rounded-full bg-line-soft transition-[height,background-color,box-shadow] duration-200 group-hover:h-20 group-hover:bg-accent/70 group-focus-visible:h-20 group-focus-visible:bg-accent group-focus-visible:shadow-[0_0_0_4px_var(--accent-soft)]" />
+                    <span className="grid h-14 w-5 place-items-center rounded-full border border-line-soft bg-surface-raised text-text-dim shadow-[0_8px_20px_-16px_rgba(20,20,18,0.45)] transition-colors group-hover:border-accent/40 group-hover:text-accent group-focus-visible:border-accent group-focus-visible:text-accent">
+                        <EllipsisVerticalIcon className="h-4 w-4" aria-hidden="true" />
+                    </span>
                 </div>
             )}
         </aside>

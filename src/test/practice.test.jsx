@@ -98,7 +98,7 @@ describe('Practice', () => {
   it('offers all six modes and completes the accessible answer-feedback-retry loop', async () => {
     renderPage('/practice?subject=economics&mode=weak-topic&outcomeId=outcome-1');
 
-    expect(await screen.findByRole('heading', { name: 'Practice.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Practice' })).toBeInTheDocument();
     for (const mode of ['Quick diagnostic', 'Daily five', 'Weak-topic practice', 'Timed exam practice', 'Due revision', 'Teacher assigned']) {
       expect(screen.getByRole('button', { name: `Start ${mode}` })).toBeInTheDocument();
     }

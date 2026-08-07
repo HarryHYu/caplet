@@ -122,7 +122,35 @@ describe('Auth Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('token');
+      expect(response.headers['set-cookie'][0]).toMatch(/caplet_refresh=.*HttpOnly/i);
       expect(mockUser.validatePassword).toHaveBeenCalledWith('correct');
+    });
+
+    it('refreshes a short-lived access token through the HttpOnly cookie', async () => {
+      const mockUser = {
+        id: 'id-refresh',
+        email: 'refresh@example.com',
+        validatePassword: jest.fn().mockResolvedValue(true),
+        toJSON() { return { id: this.id, email: this.email }; },
+      };
+      User.findOne = jest.fn().mockResolvedValue(mockUser);
+      User.findByPk = jest.fn().mockResolvedValue(mockUser);
+      const agent = request.agent(app);
+
+      const login = await agent
+        .post('/api/auth/login')
+        .send({ email: 'refresh@example.com', password: 'correct' });
+      expect(login.status).toBe(200);
+
+      const refresh = await agent
+        .post('/api/auth/refresh')
+        .set('X-Caplet-Client', 'web');
+      expect(refresh.status).toBe(200);
+      expect(refresh.body).toHaveProperty('token');
+      expect(User.findByPk).toHaveBeenCalledWith('id-refresh');
+
+      const csrfAttempt = await agent.post('/api/auth/refresh');
+      expect(csrfAttempt.status).toBe(403);
     });
 
     it('should return 401 when user not found', async () => {

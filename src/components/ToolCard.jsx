@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ArrowUpRightIcon } from '@heroicons/react/24/outline';
 
 /**
  * Card used by both the financial and educational tool grids
@@ -8,10 +9,10 @@ import { Link } from 'react-router-dom';
 const ToolCard = ({ tool, badge }) => (
   <Link
     to={tool.path}
-    className="group flex flex-col gap-4 p-6 bg-surface-raised rounded-2xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform duration-200"
+    className="group flex min-h-full flex-col gap-4 rounded-lg border border-line-soft bg-surface-body p-6 transition-colors duration-150 hover:border-accent/60"
   >
     <div className="flex items-start justify-between">
-      <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-accent text-white shadow-[0_12px_24px_-16px_rgba(20,20,18,0.5)]">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">
         {tool.icon}
       </div>
       <div className="flex items-center gap-2">
@@ -20,12 +21,7 @@ const ToolCard = ({ tool, badge }) => (
             {badge > 99 ? '99+' : badge}
           </span>
         )}
-        <svg
-          className="w-4 h-4 text-text-dim group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7v10" />
-        </svg>
+        <ArrowUpRightIcon className="h-4 w-4 text-text-dim transition-colors group-hover:text-accent" aria-hidden="true" />
       </div>
     </div>
 

@@ -4,8 +4,8 @@ import { ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { actionDetails } from './learningNextActionUtils';
 
-export default function LearningNextAction({ resume, studyTask, recommendation, fallbackHref, fallbackTitle, fallbackDetail, fallbackMode, source = 'learning', className = '', trackingEnabled = true }) {
-  const action = actionDetails({ resume, studyTask, recommendation, fallbackHref, fallbackTitle, fallbackDetail, fallbackMode, source });
+export default function LearningNextAction({ resume, studyTask, recommendation, fallbackHref, fallbackTitle, source = 'learning', className = '', trackingEnabled = true, variant = 'default' }) {
+  const action = actionDetails({ resume, studyTask, recommendation, fallbackHref, fallbackTitle, source });
 
   useEffect(() => {
     if (!trackingEnabled) return;
@@ -19,17 +19,32 @@ export default function LearningNextAction({ resume, studyTask, recommendation, 
     });
   }, [action.mode, action.type, source, trackingEnabled]);
 
+  const handleClick = () => trackingEnabled && api.logEvent?.({
+    type: 'next_action_started',
+    idempotencyKey: `next-action-started:${source}:${action.type}:${Date.now()}`,
+    feature: `learning_loop:${source}`,
+    entityType: 'learning_action',
+    entityId: action.type,
+    metadata: { source, actionType: action.type, mode: action.mode || '' },
+  });
+
+  if (variant === 'minimal') {
+    return (
+      <Link to={action.href} onClick={handleClick} className={`group flex items-center justify-between gap-5 border-y border-line-soft py-4 transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-text-muted">{action.eyebrow}</p>
+          <h2 className="mt-1 truncate font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{action.title}</h2>
+          <p className="mt-1 max-w-2xl truncate text-sm font-medium text-text-muted">{action.detail}</p>
+        </div>
+        <span className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-accent">Open <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
+      </Link>
+    );
+  }
+
   return (
     <Link
       to={action.href}
-      onClick={() => trackingEnabled && api.logEvent?.({
-        type: 'next_action_started',
-        idempotencyKey: `next-action-started:${source}:${action.type}:${Date.now()}`,
-        feature: `learning_loop:${source}`,
-        entityType: 'learning_action',
-        entityId: action.type,
-        metadata: { source, actionType: action.type, mode: action.mode || '' },
-      })}
+      onClick={handleClick}
       className={`group flex flex-col gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-7 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 md:flex-row md:items-center md:justify-between md:p-9 ${className}`}
     >
       <div className="flex items-start gap-4">

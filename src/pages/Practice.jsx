@@ -170,25 +170,22 @@ function accuracyPercent(value) {
 function RecommendationCard({ recommendation, starting, onStart }) {
   if (!recommendation) return null;
   return (
-    <section className="mb-10 overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-7 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] md:p-9">
-      <div className="flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
+    <section className="mb-10 border-y border-line-soft py-7">
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-white/70">
-            <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Recommended for you
+          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-accent">
+            <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Recommended
           </p>
-          <h2 className="mt-3 text-3xl font-display font-extrabold tracking-tight text-white">
-            {recommendation.studentTitle || 'Take your next best step'}
+          <h2 className="mt-2 max-w-3xl text-xl font-display font-extrabold tracking-tight text-text-primary">
+            {recommendation.outcome?.title ? `Strengthen ${recommendation.outcome.title}` : 'Take your next best step'}
           </h2>
-          <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/80">
-            {recommendation.reason || 'Chosen from your latest mastery evidence and review schedule.'}
-          </p>
-          <p className="mt-4 text-xs font-bold text-white/65">
+          <p className="mt-2 text-xs font-bold text-text-dim">
             {MODE_MAP.get(recommendation.mode)?.label || 'Personalised practice'}
             {recommendation.estimatedMinutes ? ` · ${recommendation.estimatedMinutes} min` : ''}
           </p>
         </div>
-        <button type="button" onClick={onStart} disabled={starting} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60">
-          {starting ? 'Starting…' : 'Start recommendation'} {!starting && <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />}
+        <button type="button" onClick={onStart} disabled={starting} className="btn-primary shrink-0">
+          {starting ? 'Starting…' : 'Start'} {!starting && <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />}
         </button>
       </div>
     </section>
@@ -199,10 +196,10 @@ function ResumeCard({ session, onResume }) {
   const mode = MODE_MAP.get(session.mode) || MODE_MAP.get('daily');
   const progress = session.totalQuestions ? Math.min(session.currentIndex + 1, session.totalQuestions) : session.currentIndex + 1;
   return (
-    <section className="mb-8 flex flex-col gap-5 rounded-3xl bg-surface-raised p-6 shadow-[0_20px_48px_-38px_rgba(20,20,18,0.45)] sm:flex-row sm:items-center sm:justify-between">
+    <section className="mb-8 flex flex-col gap-5 border-y border-line-soft py-6 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-4">
-        <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${modeTone(mode.tone)}`}>
-          <PlayIcon className="h-6 w-6" aria-hidden="true" />
+        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${modeTone(mode.tone)}`}>
+          <PlayIcon className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-text-dim">Ready to resume</p>
@@ -222,7 +219,7 @@ function ModePicker({ selectedMode, startingMode, onStart }) {
     <section aria-labelledby="practice-modes-heading">
       <div className="mb-6">
         <span className="section-kicker">Choose your focus</span>
-        <h2 id="practice-modes-heading" className="text-3xl font-display font-extrabold tracking-tight text-text-primary">One practice space, six useful modes.</h2>
+        <h2 id="practice-modes-heading" className="text-2xl font-display font-extrabold tracking-tight text-text-primary">Practice modes</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {PRACTICE_MODES.map((mode) => {
@@ -236,15 +233,15 @@ function ModePicker({ selectedMode, startingMode, onStart }) {
               onClick={() => onStart(mode.id)}
               disabled={Boolean(startingMode)}
               aria-label={`Start ${mode.label}`}
-              className={`group min-h-56 rounded-3xl p-6 text-left shadow-[0_18px_44px_-36px_rgba(20,20,18,0.45)] transition-all hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-surface-body disabled:cursor-wait disabled:transform-none ${selected ? 'bg-accent-soft ring-2 ring-accent' : 'bg-surface-raised'}`}
+              className={`group min-h-48 rounded-lg border p-6 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-body disabled:cursor-wait ${selected ? 'border-accent bg-accent-soft' : 'border-line-soft bg-surface-body hover:border-accent/60'}`}
             >
               <div className="flex items-start justify-between gap-4">
-                <span className={`grid h-12 w-12 place-items-center rounded-2xl ${modeTone(mode.tone)}`}>
-                  <Icon className="h-6 w-6" aria-hidden="true" />
+                <span className={`grid h-10 w-10 place-items-center rounded-full ${modeTone(mode.tone)}`}>
+                  <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <span className="rounded-full bg-surface-soft px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-text-muted">{mode.detail}</span>
               </div>
-              <h3 className="mt-6 text-xl font-display font-extrabold text-text-primary">{mode.label}</h3>
+              <h3 className="mt-5 text-lg font-display font-extrabold text-text-primary">{mode.label}</h3>
               <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{mode.description}</p>
               <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-accent">
                 {starting ? 'Starting…' : 'Start practice'} {!starting && <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />}
@@ -261,35 +258,54 @@ function SessionHeader({ session, secondsRemaining, onExit }) {
   const mode = MODE_MAP.get(session.mode) || MODE_MAP.get('daily');
   const currentNumber = Math.min((session.currentIndex || 0) + 1, session.totalQuestions || (session.currentIndex || 0) + 1);
   const progress = session.totalQuestions ? Math.round((Math.max(0, currentNumber - 1) / session.totalQuestions) * 100) : 0;
+  const completedQuestions = Math.max(0, currentNumber - 1);
   return (
-    <header className="mb-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <button type="button" onClick={onExit} className="inline-flex items-center gap-2 text-sm font-bold text-text-muted hover:text-text-primary">
-          <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Practice home
+    <header className="mb-8 md:mb-10">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-2xl bg-surface-raised ring-1 ring-line-soft">
+            <img src="/logo.png" alt="" className="h-full w-full scale-105 object-cover" />
+          </span>
+          <div>
+            <p className="text-sm font-extrabold tracking-tight text-text-primary">Caplet practice</p>
+            <p className="text-xs font-medium text-text-dim">Focus mode</p>
+          </div>
+        </div>
+        <button type="button" onClick={onExit} aria-label="Practice home" className="inline-flex min-h-11 items-center gap-2 rounded-2xl px-3 text-sm font-bold text-text-muted transition-colors hover:bg-surface-raised hover:text-text-primary">
+          <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">Back to practice</span><span className="sm:hidden">Exit</span>
         </button>
-        <div className="flex items-center gap-2">
-          {session.mode === 'timed-exam' && (
-            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-xs font-bold ${secondsRemaining <= 300 ? 'bg-surface-error text-text-error' : 'bg-surface-raised text-text-primary'}`} aria-label={`${formatTimer(secondsRemaining)} remaining`}>
-              <ClockIcon className="h-4 w-4" aria-hidden="true" /> {formatTimer(secondsRemaining)}
-            </span>
-          )}
-          <span className="rounded-full bg-accent-soft px-3 py-1.5 text-xs font-bold text-accent">{mode.label}</span>
-        </div>
       </div>
-      <div className="mt-7 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-text-dim">Current progress</p>
-          <p className="mt-1 text-lg font-display font-extrabold text-text-primary">
-            Question {currentNumber}{session.totalQuestions ? ` of ${session.totalQuestions}` : ''}
-          </p>
+
+      <div className="mt-6 rounded-[2rem] border border-line-soft bg-surface-raised p-5 shadow-[0_24px_60px_-44px_rgba(20,20,18,0.5)] sm:p-7">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">{mode.label} · Practice session</p>
+            <p className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary sm:text-4xl">
+              Question {currentNumber}<span className="text-text-muted">{session.totalQuestions ? ` of ${session.totalQuestions}` : ''}</span>
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            {session.mode === 'timed-exam' && (
+              <span className={`inline-flex min-h-10 items-center gap-2 rounded-2xl px-3.5 font-mono text-sm font-bold ${secondsRemaining <= 300 ? 'bg-surface-error text-text-error' : 'bg-surface-soft text-text-primary'}`} aria-label={`${formatTimer(secondsRemaining)} remaining`}>
+                <ClockIcon className="h-4 w-4" aria-hidden="true" /> {formatTimer(secondsRemaining)}
+              </span>
+            )}
+            {session.maxScore > 0 && <span className="inline-flex min-h-10 items-center rounded-2xl bg-surface-soft px-3.5 font-mono text-sm font-bold text-text-muted">{session.score} / {session.maxScore} marks</span>}
+          </div>
         </div>
-        {session.maxScore > 0 && <p className="font-mono text-sm font-bold text-text-muted">{session.score} / {session.maxScore} marks</p>}
+
+        {session.totalQuestions > 0 && (
+          <div className="mt-6" role="group" aria-label="Practice progress">
+            <div className="mb-2 flex items-center justify-between gap-4 text-xs font-bold text-text-muted">
+              <span>Session progress</span>
+              <span>{completedQuestions} of {session.totalQuestions} answered</span>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-surface-soft" role="progressbar" aria-label={`Session progress: ${progress}%`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={progress}>
+              <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+        )}
       </div>
-      {session.totalQuestions > 0 && (
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-soft" role="progressbar" aria-label={`Session progress: ${progress}%`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={progress}>
-          <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${progress}%` }} />
-        </div>
-      )}
     </header>
   );
 }
@@ -389,6 +405,17 @@ export default function Practice() {
   const [secondsRemaining, setSecondsRemaining] = useState(null);
   const draftTimer = useRef(null);
   const autoStartRef = useRef(false);
+
+  useEffect(() => {
+    document.body.classList.toggle('practice-focus-mode', phase === 'session');
+    return () => document.body.classList.remove('practice-focus-mode');
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== 'session') return undefined;
+    const scrollTimer = window.setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }), 40);
+    return () => window.clearTimeout(scrollTimer);
+  }, [currentQuestion?.id, phase]);
 
   const loadLanding = useCallback(async () => {
     setInitialLoading(true);
@@ -652,10 +679,10 @@ export default function Practice() {
 
   if (phase === 'session') {
     return (
-      <main className="min-h-screen bg-surface-body py-24 selection:bg-accent selection:text-white">
-        <div className="mx-auto w-full max-w-5xl px-6 md:px-12">
+      <main className="min-h-screen bg-surface-body px-5 pb-16 pt-20 selection:bg-accent selection:text-white sm:px-8 sm:pt-24 lg:px-12 lg:pb-20 lg:pt-12 xl:px-16">
+        <div className="mx-auto w-full max-w-6xl">
           <SessionHeader session={session} secondsRemaining={secondsRemaining} onExit={returnHome} />
-          {actionError && <div role="alert" className="mb-5 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{actionError}</div>}
+          {actionError && <div role="alert" className="mb-6 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{actionError}</div>}
           {!currentQuestion && !answerResult && session?.totalQuestions > 0 && session.currentIndex >= session.totalQuestions ? (
             <LearningEmpty
               title="All answers are safely recorded."
@@ -679,13 +706,13 @@ export default function Practice() {
   }
 
   return (
-    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+    <main className="minimal-page selection:bg-accent selection:text-white">
       <div className="container-custom">
         <header className="mb-12 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <span className="font-hand text-xl text-accent -rotate-2 inline-block">learn by doing</span>
-            <h1 className="mt-2 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">Practice.</h1>
-            <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">One place to diagnose, strengthen, revisit, and prove what you know.</p>
+            <span className="section-kicker">Learn by doing</span>
+            <h1 className="minimal-page-title">Practice</h1>
+            <p className="minimal-page-description">Continue your session or choose a focused mode.</p>
           </div>
           <Link to={`/mastery?subject=${encodeURIComponent(subject)}`} className="btn-secondary w-fit">
             <ListBulletIcon className="h-4 w-4" aria-hidden="true" /> View mastery
@@ -701,16 +728,6 @@ export default function Practice() {
         />
         <ModePicker selectedMode={requestedMode} startingMode={startingMode} onStart={(mode) => startSession(mode, mode === 'weak-topic' ? requestedOutcomeId : '')} />
 
-        <section className="mt-10 flex flex-col gap-4 rounded-3xl bg-[color:var(--block-green)] p-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-raised text-[color:var(--mark-green)]"><CheckBadgeIcon className="h-5 w-5" aria-hidden="true" /></span>
-            <div>
-              <h2 className="text-lg font-display font-extrabold text-text-primary">Every answer updates the same learning profile.</h2>
-              <p className="mt-1 text-sm font-medium text-text-muted">Diagnostics, revision, and exam work all contribute evidence to your outcome mastery.</p>
-            </div>
-          </div>
-          <span className="inline-flex shrink-0 items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[color:var(--mark-green)]"><LightBulbIcon className="h-4 w-4" aria-hidden="true" /> Explainable recommendations</span>
-        </section>
       </div>
     </main>
   );

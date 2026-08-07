@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import { useLayout } from '../contexts/LayoutContext';
-import ProductModeSwitch from './ProductModeSwitch';
 import UserAvatar from './UserAvatar';
 import { isProductNavItemActive, moneyNavigation } from '../config/productNavigation';
 
@@ -63,21 +62,19 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
   }, [isOpen]);
 
   const studyCoreItems = [
-    { path: '/dashboard', label: 'Dashboard', privateOnly: true },
-    { path: '/library', label: 'Learn' },
+    { path: '/dashboard', label: 'Today', privateOnly: true },
+    { path: '/library', label: 'Subjects' },
+    { path: '/practice', label: 'Practice', privateOnly: true },
+    { path: '/study-plan', label: 'Plan', privateOnly: true },
+    { path: '/money', label: 'Money' },
   ];
-  const publicItems = [
-    { path: '/courses', label: 'Courses' },
-    { path: '/money', label: 'Financial tools' },
-  ];
-
   const visibleItems = (items) => items.filter((item) => {
     if (item.flagKey && (featureFlagsLoading || !isEnabled(item.flagKey))) return false;
     if (isAuthenticated) return !item.publicOnly;
     return !item.privateOnly;
   });
   const visibleCoreItems = !isAuthenticated
-    ? publicItems
+    ? []
     : effectiveProductMode === 'money'
       ? visibleItems(moneyNavigation)
       : visibleItems(studyCoreItems);
@@ -120,10 +117,9 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                 />
               </div>
               <span className="hidden text-base font-bricolage font-extrabold tracking-[-0.02em] text-text-primary transition-colors duration-300 group-hover:text-accent sm:inline md:text-lg">
-                Caplet.
+                Caplet
               </span>
             </Link>
-            {isAuthenticated && <ProductModeSwitch className="shrink-0" />}
           </div>
 
           {/* Right cluster — folded nav toggles pinned to the far right, then actions */}
@@ -204,24 +200,14 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                 )}
               </div>
             ) : (
-              <div className="hidden items-center gap-1 lg:flex">
-                <Link
-                  to="/login"
-                  className="inline-flex min-h-9 items-center rounded-lg px-2.5 text-xs font-bold tracking-[0.02em] text-text-muted transition-colors hover:bg-surface-soft hover:text-text-primary"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  to="/register"
-                  className="inline-flex min-h-9 items-center justify-center rounded-lg bg-accent px-3 text-xs font-bold tracking-[0.02em] text-white transition-colors hover:bg-accent-strong"
-                >
-                  Get started
-                </Link>
+              <div className="flex items-center gap-1">
+                <Link to="/login" className="inline-flex min-h-9 items-center rounded-lg px-2.5 text-xs font-bold tracking-[0.02em] text-text-muted transition-colors hover:bg-surface-soft hover:text-text-primary">Sign in</Link>
+                <Link to="/register" className="inline-flex min-h-9 items-center justify-center rounded-lg bg-accent px-3 text-xs font-bold tracking-[0.02em] text-white transition-colors hover:bg-accent-strong">Get started</Link>
               </div>
             )}
 
             {/* Mobile hamburger */}
-            {effectiveProductMode === 'study' && <button
+            {isAuthenticated && effectiveProductMode === 'study' && <button
               ref={mobileButtonRef}
               type="button"
               className={`relative h-9 w-9 rounded-full text-text-muted transition-[color,background-color,transform] duration-200 hover:bg-surface-soft hover:text-text-primary active:scale-95 lg:hidden ${isOpen ? 'bg-surface-soft text-text-primary' : ''}`}
@@ -239,13 +225,11 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
         </div>
 
         {/* Mobile menu */}
-        {effectiveProductMode === 'study' && isOpen && (
+        {isAuthenticated && effectiveProductMode === 'study' && isOpen && (
           <div id="mobile-navigation" className="mobile-nav-panel nav-scrollbar-hidden max-h-[calc(100dvh-3.25rem)] overflow-y-auto overscroll-contain border-t border-line-soft px-1.5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
             <div className="mb-2 flex items-center justify-between px-3 py-1">
               <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-text-dim">Navigate</span>
-              <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-bold text-accent">
-                {isAuthenticated ? 'Study' : 'Explore'}
-              </span>
+              <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[10px] font-bold text-accent">{isAuthenticated ? 'Study' : 'Explore'}</span>
             </div>
             {visibleCoreItems.map((item) => {
               const active = isItemActive(item);
@@ -267,24 +251,6 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                 </Link>
               );
             })}
-            {!isAuthenticated && (
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Link
-                  to="/login"
-                  onClick={() => setIsOpen(false)}
-                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-line-soft text-xs font-bold text-text-primary transition-colors hover:bg-surface-soft"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setIsOpen(false)}
-                  className="btn-primary min-h-10 text-xs"
-                >
-                  Get started
-                </Link>
-              </div>
-            )}
           </div>
         )}
       </div>

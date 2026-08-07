@@ -15,7 +15,7 @@ const navigationOptions = [
 
 const paletteOptions = [
   { value: 'paper', label: 'Paper', description: 'Warm and familiar', lightColours: ['#F8F5EF', '#ECE5D6', '#1351AA'], darkColours: ['#141413', '#232220', '#5B9BF0'] },
-  { value: 'white', label: 'Pure white', description: 'Clean and crisp', lightColours: ['#FFFFFF', '#F0F2F5', '#2856A3'], darkColours: ['#111418', '#1D2228', '#7DA8F0'] },
+  { value: 'white', label: 'Pure white', description: 'Clean and crisp', lightColours: ['#FFFFFF', '#F0F2F5', '#2856A3'], darkColours: ['#141413', '#232220', '#5B9BF0'] },
   { value: 'sky', label: 'Sky', description: 'Cool and focused', lightColours: ['#F2F7FC', '#DFEAF5', '#1B5A91'], darkColours: ['#0D1822', '#172A3A', '#78B9E8'] },
   { value: 'sage', label: 'Sage', description: 'Soft and calm', lightColours: ['#F4F8F1', '#E2EDDC', '#2E6B4A'], darkColours: ['#101A14', '#1C2D22', '#7CC69A'] },
   { value: 'rose', label: 'Rose', description: 'Warm and gentle', lightColours: ['#FCF5F7', '#F2E1E7', '#9A3D62'], darkColours: ['#1B1014', '#301C23', '#DE87A8'] },
