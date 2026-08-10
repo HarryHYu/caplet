@@ -5,7 +5,7 @@ const crypto = require('crypto');
  * complete diagnostic and learning routes; every other subject is an honest
  * planning placeholder until its content is ready.
  */
-const SUBJECT_CATALOG = require('../../shared/hscSubjectCatalog.json');
+const SUBJECT_CATALOG = require('../shared/hscSubjectCatalog.json');
 
 function placeholderSubject(subject) {
   return {

@@ -1,10 +1,11 @@
-import subjectCatalog from '../../shared/hscSubjectCatalog.json';
+import subjectCatalog from '../../backend/shared/hscSubjectCatalog.json';
 
 /**
  * HSC subject catalogue — the single source of truth for the Resource Library
  * page, Study Plan picker, and homepage showcase. Display names and year-level
- * availability come from shared/hscSubjectCatalog.json so the frontend and
- * backend cannot drift into different subject lists again.
+ * availability come from backend/shared/hscSubjectCatalog.json — inside the
+ * Railway deploy root (backend/) so production can resolve it, and imported
+ * here so the frontend and backend cannot drift into different subject lists.
  */
 
 // One unique glyph per subject, drawn from that subject's own world.
