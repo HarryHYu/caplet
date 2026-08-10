@@ -30,7 +30,25 @@ const MIME_TO_EXT = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
-  'image/gif': 'gif'
+  'image/gif': 'gif',
+  'model/gltf-binary': 'glb',
+  'model/gltf+json': 'gltf',
+};
+
+const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MODEL_MIME_TYPES = ['model/gltf-binary', 'model/gltf+json'];
+
+// Which mimetypes are acceptable for which purpose — the mimeType field
+// alone isn't enough since MIME_TO_EXT is shared across image and 3D-model
+// purposes; without this, an 'avatar' upload could be presigned as a .glb.
+const ALLOWED_MIME_BY_PURPOSE = {
+  avatar: IMAGE_MIME_TYPES,
+  classLogo: IMAGE_MIME_TYPES,
+  classBanner: IMAGE_MIME_TYPES,
+  lessonImage: IMAGE_MIME_TYPES,
+  courseCover: IMAGE_MIME_TYPES,
+  forumImage: IMAGE_MIME_TYPES,
+  forumModel: MODEL_MIME_TYPES,
 };
 
 /** Uploads require either a regular user JWT or a valid editor-workspace JWT. */
@@ -107,6 +125,11 @@ async function canCompleteAsset(req, asset) {
   if (asset.purpose === 'courseCover') {
     return canManageCourseContent(req.user, { courseId: asset.courseId });
   }
+  if (asset.purpose === 'forumImage' || asset.purpose === 'forumModel') {
+    // Ownership (ownsAssetRequest) is already required above — any signed-in
+    // user may attach an image or 3D model to their own forum post.
+    return true;
+  }
   return false;
 }
 
@@ -119,7 +142,7 @@ router.post(
   '/presign',
   authenticateUserOrEditor,
   [
-    body('purpose').isIn(['avatar', 'classLogo', 'classBanner', 'lessonImage', 'courseCover']),
+    body('purpose').isIn(['avatar', 'classLogo', 'classBanner', 'lessonImage', 'courseCover', 'forumImage', 'forumModel']),
     body('mimeType').isIn(Object.keys(MIME_TO_EXT)),
     body('classId').optional().isUUID(),
     body('lessonId').optional().isUUID(),
@@ -139,6 +162,9 @@ router.post(
       }
 
       const { purpose, mimeType, classId, lessonId, courseId } = req.body;
+      if (!ALLOWED_MIME_BY_PURPOSE[purpose]?.includes(mimeType)) {
+        return res.status(400).json({ message: `${mimeType} is not accepted for ${purpose} uploads` });
+      }
       const ext = MIME_TO_EXT[mimeType];
       const id = crypto.randomUUID();
       const uid = req.user?.id;
@@ -214,6 +240,16 @@ router.post(
           return res.status(401).json({ message: 'Invalid token' });
         }
         finalKey = `uploads/courses/${courseId}/cover-${id}.${ext}`;
+      } else if (purpose === 'forumImage') {
+        if (!req.user) {
+          return res.status(401).json({ message: 'Login required for forum image uploads' });
+        }
+        finalKey = `uploads/forum/${uid}/inline-${id}.${ext}`;
+      } else if (purpose === 'forumModel') {
+        if (!req.user) {
+          return res.status(401).json({ message: 'Login required for forum 3D model uploads' });
+        }
+        finalKey = `uploads/forum/${uid}/model-${id}.${ext}`;
       } else {
         return res.status(400).json({ message: 'Invalid purpose' });
       }

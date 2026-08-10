@@ -134,6 +134,7 @@ app.use('/api/teacher-learning', require('./routes/teacherLearning'));
 app.use('/api/subject-packs', require('./routes/subjectPacks'));
 app.use('/api/feature-flags', require('./routes/featureFlags'));
 app.use('/api/ops', require('./routes/operational'));
+app.use('/api/forum', require('./routes/forum'));
 app.use('/api', require('./routes/learning'));
 app.use('/api', require('./routes/proxy'));
 
@@ -208,6 +209,8 @@ const startServer = async () => {
     await ensureMoneyRegistry();
     const { ensureCurriculumEditions } = require('./services/curriculumEdition');
     await ensureCurriculumEditions();
+    const { ensureForumCategories } = require('./services/forumCategories');
+    await ensureForumCategories();
 
     // Seed production database if in production
     if (process.env.NODE_ENV === 'production') {

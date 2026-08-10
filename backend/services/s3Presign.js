@@ -63,6 +63,8 @@ const SIZE_LIMITS = {
   classBanner: 5 * 1024 * 1024, // 5 MB
   lessonImage: 10 * 1024 * 1024, // 10 MB
   courseCover: 5 * 1024 * 1024, // 5 MB
+  forumImage: 8 * 1024 * 1024,  // 8 MB
+  forumModel: 20 * 1024 * 1024, // 20 MB — .glb/.gltf
 };
 const DEFAULT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB fallback
 
@@ -126,6 +128,10 @@ function safeOwnedKey(key) {
   return value;
 }
 
+// Despite the name, this now also covers the two 3D-model mimetypes
+// (forumModel uploads) — kept as one gate since both are "does the file's
+// actual byte content match what the client declared" checks used the same
+// way by completeQuarantinedUpload below.
 function imageSignatureMatches(bytes, mimeType) {
   const buffer = Buffer.from(bytes || []);
   const mime = String(mimeType || '').toLowerCase();
@@ -144,6 +150,15 @@ function imageSignatureMatches(bytes, mimeType) {
   if (mime === 'image/gif') {
     const signature = buffer.subarray(0, 6).toString('ascii');
     return signature === 'GIF87a' || signature === 'GIF89a';
+  }
+  if (mime === 'model/gltf-binary') {
+    // .glb: magic "glTF" (0x676C5446) then a uint32 version.
+    return buffer.length >= 4 && buffer.subarray(0, 4).toString('ascii') === 'glTF';
+  }
+  if (mime === 'model/gltf+json') {
+    // .gltf is plain JSON text — the first non-whitespace byte is '{'.
+    const trimmed = buffer.toString('utf8').replace(/^﻿/, '').trimStart();
+    return trimmed.startsWith('{');
   }
   return false;
 }

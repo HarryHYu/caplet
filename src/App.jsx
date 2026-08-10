@@ -23,6 +23,7 @@ import { FinancialAssumptions } from './components/AccessibleUI';
 import { isMoneyPath } from './config/productNavigation';
 import { GOOGLE_OAUTH_CLIENT_ID } from './config/googleClient';
 import { getRouteMeta } from './config/routeMeta';
+import RequireForumModerator from './components/forum/RequireForumModerator';
 import api from './services/api';
 
 const Home = lazy(() => import('./pages/Home'));
@@ -104,6 +105,15 @@ const QuestionBank = lazy(() => import('./pages/QuestionBank'));
 const HostLive = lazy(() => import('./pages/live/HostLive'));
 const PlayLive = lazy(() => import('./pages/live/PlayLive'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const ForumLayout = lazy(() => import('./pages/forum/ForumLayout'));
+const ForumHome = lazy(() => import('./pages/forum/ForumHome'));
+const ForumCategoryPage = lazy(() => import('./pages/forum/ForumCategoryPage'));
+const ForumNewThread = lazy(() => import('./pages/forum/ForumNewThread'));
+const ForumThreadPage = lazy(() => import('./pages/forum/ForumThreadPage'));
+const ForumModQueue = lazy(() => import('./pages/forum/ForumModQueue'));
+const ForumSavedPage = lazy(() => import('./pages/forum/ForumSavedPage'));
+const ForumProfilePage = lazy(() => import('./pages/forum/ForumProfilePage'));
+const ForumSearchPage = lazy(() => import('./pages/forum/ForumSearchPage'));
 
 function FullPageSpinner() {
   return (
@@ -336,6 +346,16 @@ function AppRoutes() {
           <Route path="/editor/questions" element={<QuestionBank />} />
           <Route path="/live/host/:code" element={<RequireAuth><HostLive /></RequireAuth>} />
           <Route path="/play" element={<PlayLive />} />
+          <Route path="/forum" element={<RequireAuth><ForumLayout /></RequireAuth>}>
+            <Route index element={<ForumHome />} />
+            <Route path="c/:slug" element={<ForumCategoryPage />} />
+            <Route path="c/:slug/new" element={<ForumNewThread />} />
+            <Route path="t/:threadId" element={<ForumThreadPage />} />
+            <Route path="saved" element={<ForumSavedPage />} />
+            <Route path="search" element={<ForumSearchPage />} />
+            <Route path="u/:userId" element={<ForumProfilePage />} />
+            <Route path="mod" element={<RequireForumModerator><ForumModQueue /></RequireForumModerator>} />
+          </Route>
           <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -361,7 +381,8 @@ function AppShell() {
   const bareChrome =
     ['/login', '/register', '/forgot-password', '/reset-password', '/play'].includes(pathname) ||
     pathname.startsWith('/guardian-consent/') ||
-    pathname.startsWith('/live/host');
+    pathname.startsWith('/live/host') ||
+    pathname.startsWith('/forum');
 
   // The vertical rail only makes sense for signed-in users, and never on the
   // bare-chrome auth/live pages. When it's active the top navbar is dropped on
@@ -382,6 +403,7 @@ function AppShell() {
     /^\/classes\/[^/]+\/learning(?:\/|$)/.test(pathname) ||
     pathname.startsWith('/settings') ||
     pathname.startsWith('/money') ||
+    pathname.startsWith('/forum') ||
     (pathname.startsWith('/library/economics') && !['/library/economics', '/library/economics/assessment'].includes(pathname)) ||
     /^\/courses\/[^/]+\/lessons\//.test(pathname);
   const ContentLandmark = pageOwnsMain ? 'div' : 'main';

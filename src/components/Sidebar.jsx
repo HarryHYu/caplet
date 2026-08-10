@@ -21,6 +21,7 @@ import {
     ChartBarSquareIcon,
     LockClosedIcon,
     UserGroupIcon,
+    ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -60,6 +61,7 @@ export default function Sidebar() {
         { path: '/essays', label: 'Essays', icon: DocumentTextIcon },
         { path: '/library', label: 'Learn', icon: BookOpenIcon },
         { path: '/classes', label: 'Classes', icon: UserGroupIcon },
+        { path: '/forum', label: 'Forum', icon: ChatBubbleLeftRightIcon },
     ];
 
     const moneyIcons = {

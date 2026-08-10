@@ -63,6 +63,23 @@ const StudySession = require('./StudySession');
 const SchoolAssessment = require('./SchoolAssessment');
 const KnowledgeAtom = require('./KnowledgeAtom');
 const RecommendationEvent = require('./RecommendationEvent');
+// Study forum — subject boards, pre-moderated threads/posts, reports, sanctions.
+const ForumCategory = require('./ForumCategory');
+const ForumThread = require('./ForumThread');
+const ForumPost = require('./ForumPost');
+const ForumLike = require('./ForumLike');
+const ForumReport = require('./ForumReport');
+const ForumModerationAction = require('./ForumModerationAction');
+const ForumModerator = require('./ForumModerator');
+const ForumSanction = require('./ForumSanction');
+const ForumReaction = require('./ForumReaction');
+const ForumSave = require('./ForumSave');
+const ForumUserStats = require('./ForumUserStats');
+const ForumPoll = require('./ForumPoll');
+const ForumPollOption = require('./ForumPollOption');
+const ForumPollVote = require('./ForumPollVote');
+const ForumSubscription = require('./ForumSubscription');
+const ForumNotification = require('./ForumNotification');
 
 // Define associations: Course → Module → Lesson
 EditorWorkspace.hasMany(Course, {
@@ -778,6 +795,90 @@ SubjectPackReviewItem.belongsTo(User, {
 User.hasMany(PasswordResetToken, { foreignKey: 'userId', as: 'passwordResetTokens', onDelete: 'CASCADE' });
 PasswordResetToken.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Study forum — a self-contained space (Category -> Thread -> Post) that
+// shares only the User/auth layer with the rest of Caplet. Deliberately no
+// associations into Course/Module/Lesson/Classroom/CurriculumOutcome or any
+// other content entity — see backend/models/ForumCategory.js.
+ForumCategory.hasMany(ForumThread, { foreignKey: 'categoryId', as: 'threads', onDelete: 'RESTRICT' });
+ForumThread.belongsTo(ForumCategory, { foreignKey: 'categoryId', as: 'category' });
+User.hasMany(ForumCategory, { foreignKey: 'createdById', as: 'forumCategoriesCreated', onDelete: 'SET NULL' });
+ForumCategory.belongsTo(User, { foreignKey: 'createdById', as: 'creator' });
+
+User.hasMany(ForumThread, { foreignKey: 'authorId', as: 'forumThreads', onDelete: 'SET NULL' });
+ForumThread.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
+ForumThread.belongsTo(User, { foreignKey: 'reviewedById', as: 'reviewer' });
+ForumThread.belongsTo(User, { foreignKey: 'deletedById', as: 'deleter' });
+
+ForumThread.hasMany(ForumPost, { foreignKey: 'threadId', as: 'posts', onDelete: 'RESTRICT' });
+ForumPost.belongsTo(ForumThread, { foreignKey: 'threadId', as: 'thread' });
+ForumThread.belongsTo(ForumPost, { foreignKey: 'bestAnswerPostId', as: 'bestAnswerPost', constraints: false });
+
+User.hasMany(ForumPost, { foreignKey: 'authorId', as: 'forumPosts', onDelete: 'SET NULL' });
+ForumPost.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
+ForumPost.belongsTo(User, { foreignKey: 'reviewedById', as: 'reviewer' });
+ForumPost.belongsTo(User, { foreignKey: 'deletedById', as: 'deleter' });
+ForumPost.belongsTo(ForumPost, { foreignKey: 'parentPostId', as: 'parentPost' });
+ForumPost.hasMany(ForumPost, { foreignKey: 'parentPostId', as: 'childReplies', onDelete: 'SET NULL' });
+
+User.hasMany(ForumLike, { foreignKey: 'userId', as: 'forumLikes', onDelete: 'CASCADE' });
+ForumLike.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+ForumReport.belongsTo(User, { foreignKey: 'reportedById', as: 'reporter' });
+ForumReport.belongsTo(User, { foreignKey: 'contentAuthorId', as: 'contentAuthor' });
+ForumReport.belongsTo(User, { foreignKey: 'reviewedById', as: 'reviewer' });
+User.hasMany(ForumReport, { foreignKey: 'reportedById', as: 'forumReportsFiled', onDelete: 'SET NULL' });
+ForumReport.hasMany(ForumModerationAction, { foreignKey: 'reportId', as: 'actions', onDelete: 'SET NULL' });
+ForumModerationAction.belongsTo(ForumReport, { foreignKey: 'reportId', as: 'report' });
+
+ForumModerationAction.belongsTo(User, { foreignKey: 'actorId', as: 'actor' });
+User.hasMany(ForumModerationAction, { foreignKey: 'actorId', as: 'forumModerationActions', onDelete: 'SET NULL' });
+
+User.hasOne(ForumModerator, { foreignKey: 'userId', as: 'forumModeratorGrant', onDelete: 'CASCADE' });
+ForumModerator.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+ForumModerator.belongsTo(User, { foreignKey: 'grantedById', as: 'grantedBy' });
+
+User.hasMany(ForumSanction, { foreignKey: 'userId', as: 'forumSanctions', onDelete: 'CASCADE' });
+ForumSanction.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+ForumSanction.belongsTo(User, { foreignKey: 'issuedById', as: 'issuedBy' });
+ForumSanction.belongsTo(User, { foreignKey: 'liftedById', as: 'liftedBy' });
+
+// Named learning-signal reactions (separate from ForumLike's plain vote).
+User.hasMany(ForumReaction, { foreignKey: 'userId', as: 'forumReactions', onDelete: 'CASCADE' });
+ForumReaction.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// Saved threads — personal "Revision list".
+User.hasMany(ForumSave, { foreignKey: 'userId', as: 'forumSaves', onDelete: 'CASCADE' });
+ForumSave.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+ForumThread.hasMany(ForumSave, { foreignKey: 'threadId', as: 'saves', onDelete: 'CASCADE' });
+ForumSave.belongsTo(ForumThread, { foreignKey: 'threadId', as: 'thread' });
+
+// Contribution / reputation — forum-owned, keyed to the shared user identity.
+User.hasOne(ForumUserStats, { foreignKey: 'userId', as: 'forumStats', onDelete: 'CASCADE' });
+ForumUserStats.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// Polls — one per thread, "study check" style.
+ForumThread.hasOne(ForumPoll, { foreignKey: 'threadId', as: 'poll', onDelete: 'CASCADE' });
+ForumPoll.belongsTo(ForumThread, { foreignKey: 'threadId', as: 'thread' });
+ForumPoll.hasMany(ForumPollOption, { foreignKey: 'pollId', as: 'options', onDelete: 'CASCADE' });
+ForumPollOption.belongsTo(ForumPoll, { foreignKey: 'pollId', as: 'poll' });
+ForumPoll.hasMany(ForumPollVote, { foreignKey: 'pollId', as: 'votes', onDelete: 'CASCADE' });
+ForumPollVote.belongsTo(ForumPoll, { foreignKey: 'pollId', as: 'poll' });
+ForumPollOption.hasMany(ForumPollVote, { foreignKey: 'optionId', as: 'votes', onDelete: 'CASCADE' });
+ForumPollVote.belongsTo(ForumPollOption, { foreignKey: 'optionId', as: 'option' });
+User.hasMany(ForumPollVote, { foreignKey: 'userId', as: 'forumPollVotes', onDelete: 'CASCADE' });
+ForumPollVote.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// Subject follows + in-app notifications.
+User.hasMany(ForumSubscription, { foreignKey: 'userId', as: 'forumSubscriptions', onDelete: 'CASCADE' });
+ForumSubscription.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+ForumCategory.hasMany(ForumSubscription, { foreignKey: 'categoryId', as: 'subscriptions', onDelete: 'CASCADE' });
+ForumSubscription.belongsTo(ForumCategory, { foreignKey: 'categoryId', as: 'category' });
+
+User.hasMany(ForumNotification, { foreignKey: 'userId', as: 'forumNotifications', onDelete: 'CASCADE' });
+ForumNotification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+ForumNotification.belongsTo(ForumThread, { foreignKey: 'threadId', as: 'thread' });
+ForumNotification.belongsTo(ForumCategory, { foreignKey: 'categoryId', as: 'category' });
+
 module.exports = {
   sequelize,
   User,
@@ -843,4 +944,20 @@ module.exports = {
   SchoolAssessment,
   KnowledgeAtom,
   RecommendationEvent,
+  ForumCategory,
+  ForumThread,
+  ForumPost,
+  ForumLike,
+  ForumReport,
+  ForumModerationAction,
+  ForumModerator,
+  ForumSanction,
+  ForumReaction,
+  ForumSave,
+  ForumUserStats,
+  ForumPoll,
+  ForumPollOption,
+  ForumPollVote,
+  ForumSubscription,
+  ForumNotification,
 };

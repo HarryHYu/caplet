@@ -1144,6 +1144,241 @@ class ApiService {
    * Proxied image URL for hosts that may be blocked or don't hotlink (Reddit, Imgur, Google Drive, Cloudinary).
    * Backend fetches the image so the browser only hits your API.
    */
+  // Study forum — Category -> Thread -> Post, pre-moderated (see backend/routes/forum.js).
+  async getForumCategories() {
+    return this.request('/forum/categories');
+  }
+
+  async createForumCategory(payload) {
+    return this.request('/forum/categories', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async updateForumCategory(categoryId, payload) {
+    return this.request(`/forum/categories/${categoryId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  }
+
+  async getForumCategoryThreads(slug, { sort, page, limit, tag, solved, megathread } = {}) {
+    const qs = new URLSearchParams();
+    if (sort) qs.set('sort', sort);
+    if (page) qs.set('page', page);
+    if (limit) qs.set('limit', limit);
+    if (tag) qs.set('tag', tag);
+    if (solved !== undefined && solved !== null) qs.set('solved', solved);
+    if (megathread) qs.set('megathread', 'true');
+    const query = qs.toString();
+    return this.request(`/forum/categories/${encodeURIComponent(slug)}/threads${query ? `?${query}` : ''}`);
+  }
+
+  // Reddit-style aggregate home feed — approved threads across every board.
+  async getForumThreads({ sort, page, limit, tag, solved } = {}) {
+    const qs = new URLSearchParams();
+    if (sort) qs.set('sort', sort);
+    if (page) qs.set('page', page);
+    if (limit) qs.set('limit', limit);
+    if (tag) qs.set('tag', tag);
+    if (solved !== undefined && solved !== null) qs.set('solved', solved);
+    const query = qs.toString();
+    return this.request(`/forum/threads${query ? `?${query}` : ''}`);
+  }
+
+  async searchForum({ q, subject, tag, solved, page, limit } = {}) {
+    const qs = new URLSearchParams();
+    if (q) qs.set('q', q);
+    if (subject) qs.set('subject', subject);
+    if (tag) qs.set('tag', tag);
+    if (solved !== undefined && solved !== null) qs.set('solved', solved);
+    if (page) qs.set('page', page);
+    if (limit) qs.set('limit', limit);
+    return this.request(`/forum/search?${qs.toString()}`);
+  }
+
+  async createForumThread(categoryId, payload) {
+    return this.request(`/forum/categories/${categoryId}/threads`, { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async getForumThread(threadId) {
+    return this.request(`/forum/threads/${threadId}`);
+  }
+
+  async updateForumThread(threadId, payload) {
+    return this.request(`/forum/threads/${threadId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  }
+
+  async deleteForumThread(threadId, note) {
+    return this.request(`/forum/threads/${threadId}/delete`, { method: 'POST', body: JSON.stringify({ note }) });
+  }
+
+  async restoreForumThread(threadId) {
+    return this.request(`/forum/threads/${threadId}/restore`, { method: 'POST' });
+  }
+
+  async pinForumThread(threadId, pinned) {
+    return this.request(`/forum/threads/${threadId}/${pinned ? 'pin' : 'unpin'}`, { method: 'POST' });
+  }
+
+  async lockForumThread(threadId, locked) {
+    return this.request(`/forum/threads/${threadId}/${locked ? 'lock' : 'unlock'}`, { method: 'POST' });
+  }
+
+  async markForumBestAnswer(threadId, postId) {
+    return this.request(`/forum/threads/${threadId}/best-answer`, { method: 'POST', body: JSON.stringify({ postId }) });
+  }
+
+  async clearForumBestAnswer(threadId) {
+    return this.request(`/forum/threads/${threadId}/best-answer/clear`, { method: 'POST' });
+  }
+
+  async markForumMegathread(threadId, isMegathread) {
+    return this.request(`/forum/threads/${threadId}/megathread${isMegathread ? '' : '/clear'}`, { method: 'POST' });
+  }
+
+  async createForumPost(threadId, payload) {
+    return this.request(`/forum/threads/${threadId}/posts`, { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async updateForumPost(postId, content) {
+    return this.request(`/forum/posts/${postId}`, { method: 'PATCH', body: JSON.stringify({ content }) });
+  }
+
+  async deleteForumPost(postId, note) {
+    return this.request(`/forum/posts/${postId}/delete`, { method: 'POST', body: JSON.stringify({ note }) });
+  }
+
+  async restoreForumPost(postId) {
+    return this.request(`/forum/posts/${postId}/restore`, { method: 'POST' });
+  }
+
+  async likeForumThread(threadId, liked) {
+    return this.request(`/forum/threads/${threadId}/like`, { method: liked ? 'POST' : 'DELETE' });
+  }
+
+  async likeForumPost(postId, liked) {
+    return this.request(`/forum/posts/${postId}/like`, { method: liked ? 'POST' : 'DELETE' });
+  }
+
+  // Study reactions — "Helpful" / "Clear explanation" / "This helped me".
+  async reactToForumThread(threadId, type, active) {
+    return this.request(`/forum/threads/${threadId}/reactions${active ? '' : `/${type}`}`, {
+      method: active ? 'POST' : 'DELETE',
+      ...(active ? { body: JSON.stringify({ type }) } : {}),
+    });
+  }
+
+  async reactToForumPost(postId, type, active) {
+    return this.request(`/forum/posts/${postId}/reactions${active ? '' : `/${type}`}`, {
+      method: active ? 'POST' : 'DELETE',
+      ...(active ? { body: JSON.stringify({ type }) } : {}),
+    });
+  }
+
+  // Saved threads — personal "Revision list".
+  async saveForumThread(threadId, saved) {
+    return this.request(`/forum/threads/${threadId}/save`, { method: saved ? 'POST' : 'DELETE' });
+  }
+
+  async getForumSavedThreads(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.request(`/forum/me/saved${qs ? `?${qs}` : ''}`);
+  }
+
+  // Contribution profile.
+  async getForumUserProfile(userId) {
+    return this.request(`/forum/users/${userId}/profile`);
+  }
+
+  // Polls — "study check" attached to a thread.
+  async voteForumPoll(pollId, optionId) {
+    return this.request(`/forum/polls/${pollId}/vote`, { method: 'POST', body: JSON.stringify({ optionId }) });
+  }
+
+  async clearForumPollVote(pollId) {
+    return this.request(`/forum/polls/${pollId}/vote`, { method: 'DELETE' });
+  }
+
+  // Follow a subject (repurposed subscription) — drives notification fanout.
+  async followForumCategory(categoryId, following) {
+    return this.request(`/forum/categories/${categoryId}/follow`, { method: following ? 'POST' : 'DELETE' });
+  }
+
+  async getForumSubscriptions() {
+    return this.request('/forum/me/subscriptions');
+  }
+
+  async getForumNotifications(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.request(`/forum/me/notifications${qs ? `?${qs}` : ''}`);
+  }
+
+  async markForumNotificationRead(id) {
+    return this.request(`/forum/me/notifications/${id}/read`, { method: 'POST' });
+  }
+
+  async markAllForumNotificationsRead() {
+    return this.request('/forum/me/notifications/read-all', { method: 'POST' });
+  }
+
+  async reportForumThread(threadId, { reason, details }) {
+    return this.request(`/forum/threads/${threadId}/reports`, { method: 'POST', body: JSON.stringify({ reason, details }) });
+  }
+
+  async reportForumPost(postId, { reason, details }) {
+    return this.request(`/forum/posts/${postId}/reports`, { method: 'POST', body: JSON.stringify({ reason, details }) });
+  }
+
+  async getForumModerationPending(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.request(`/forum/moderation/pending${qs ? `?${qs}` : ''}`);
+  }
+
+  async approveForumThread(threadId) {
+    return this.request(`/forum/moderation/threads/${threadId}/approve`, { method: 'POST' });
+  }
+
+  async rejectForumThread(threadId, note) {
+    return this.request(`/forum/moderation/threads/${threadId}/reject`, { method: 'POST', body: JSON.stringify({ note }) });
+  }
+
+  async approveForumPost(postId) {
+    return this.request(`/forum/moderation/posts/${postId}/approve`, { method: 'POST' });
+  }
+
+  async rejectForumPost(postId, note) {
+    return this.request(`/forum/moderation/posts/${postId}/reject`, { method: 'POST', body: JSON.stringify({ note }) });
+  }
+
+  async getForumModerationReports(status = 'pending') {
+    return this.request(`/forum/moderation/reports?status=${encodeURIComponent(status)}`);
+  }
+
+  async resolveForumModerationReport(reportId, { status, note }) {
+    return this.request(`/forum/moderation/reports/${reportId}`, { method: 'PATCH', body: JSON.stringify({ status, note }) });
+  }
+
+  async getForumModerationActions(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.request(`/forum/moderation/actions${qs ? `?${qs}` : ''}`);
+  }
+
+  async getForumSanctions() {
+    return this.request('/forum/moderation/sanctions');
+  }
+
+  async issueForumSanction(userId, payload) {
+    return this.request(`/forum/moderation/users/${userId}/sanctions`, { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async liftForumSanction(sanctionId) {
+    return this.request(`/forum/moderation/sanctions/${sanctionId}/lift`, { method: 'POST' });
+  }
+
+  async getForumMyStatus() {
+    return this.request('/forum/me/status');
+  }
+
+  async getForumMyThreads() {
+    return this.request('/forum/me/threads');
+  }
+
   getProxiedImageSrc(imageUrl) {
     if (!imageUrl || typeof imageUrl !== 'string') return imageUrl;
     try {

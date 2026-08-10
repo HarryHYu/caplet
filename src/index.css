@@ -962,5 +962,60 @@ div.bg-surface-soft:has(> textarea.bg-transparent):focus-within {
   outline-offset: 2px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   FORUM — Caplet's study forum. A distinct *section*, not a foreign app: same
+   cream/editorial register, same fonts, same token discipline as the rest of
+   the site (see src/pages/forum/). Distinctness comes from a dedicated accent
+   plus denser, mono-inflected structural chrome (timestamps, counts, category
+   tags), not from a different color world or a dark theme.
+
+   The accent is a deep academic burgundy, chosen deliberately: the earlier
+   coral/orange read as Reddit's brand colour, and the app's own blue is
+   already spoken for. Burgundy on cream is a scholarly-press register, and
+   it stays clear of the section's semantic colours below — green (resolved /
+   best answer), amber (pinned / master resource), blue (open question) — and
+   of --text-error red.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.forum-root {
+  --forum-accent: #7B2D4E;
+  --forum-accent-strong: #5E2039;
+  --forum-accent-soft: rgba(123, 45, 78, 0.10);
+  --forum-blue: var(--mark-blue);
+  --forum-blue-soft: var(--block-blue);
+  --forum-amber: var(--mark-amber);
+  --forum-amber-soft: var(--block-amber);
+  --forum-green: var(--mark-green);
+  --forum-green-soft: var(--block-green);
+}
+/* Deep burgundy has too little contrast against the dark surfaces, so dark
+   mode lifts it to a muted wine-rose that keeps the same hue family. */
+.dark .forum-root {
+  --forum-accent: #D08BA6;
+  --forum-accent-strong: #E3A9C0;
+  --forum-accent-soft: rgba(208, 139, 166, 0.16);
+}
+
+.forum-shell {
+  font-family: var(--font-body);
+}
+
+.forum-card {
+  @apply rounded-2xl border border-line-soft bg-surface-raised transition-colors duration-150;
+}
+
+.forum-card:hover {
+  border-color: color-mix(in srgb, var(--forum-accent) 40%, var(--line-soft));
+}
+
+.forum-pill {
+  @apply inline-flex items-center gap-1.5 rounded-full border border-line-soft px-3 py-1 text-xs font-bold uppercase tracking-wide transition-colors duration-150;
+  font-family: var(--font-mono);
+}
+
+.forum-meta {
+  font-family: var(--font-mono);
+  @apply text-xs text-text-dim;
+}
+
 html:not(.dark) { color-scheme: light; }
 html.dark { color-scheme: dark; }
