@@ -47,7 +47,7 @@ export default function MoneyMobileNav() {
           className="flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 text-[9px] font-bold text-text-muted transition-colors hover:bg-surface-soft hover:text-text-primary"
         >
           <AcademicCapIcon className="h-4 w-4" aria-hidden="true" />
-          <span>Study</span>
+          <span className="w-full truncate text-center">Study</span>
         </Link>
         {items.map((item) => {
           const Icon = icons[item.label];
@@ -62,7 +62,7 @@ export default function MoneyMobileNav() {
               }`}
             >
               <Icon className="h-4 w-4" aria-hidden="true" />
-              <span>{item.label}</span>
+              <span className="w-full truncate text-center">{item.label}</span>
             </Link>
           );
         })}

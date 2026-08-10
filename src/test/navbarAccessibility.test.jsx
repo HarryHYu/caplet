@@ -57,6 +57,21 @@ describe('Navbar accessibility', () => {
     }
   });
 
+  it('keeps the signed-out money header down to auth actions', () => {
+    mockAuth.isAuthenticated = false;
+    mockLayout.productMode = 'money';
+    try {
+      render(<MemoryRouter initialEntries={['/money']}><Navbar /></MemoryRouter>);
+
+      // The switch + both auth buttons cannot share a 360px bar; visitors
+      // escape via the logo and can enter the app through Sign in.
+      expect(screen.queryByRole('group', { name: 'Product mode' })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
+    } finally {
+      mockLayout.productMode = 'study';
+    }
+  });
+
   it('keeps theme and navigation layout controls in settings', () => {
     render(<MemoryRouter initialEntries={['/library']}><Navbar /></MemoryRouter>);
     expect(screen.queryByRole('button', { name: 'Switch to dark mode' })).not.toBeInTheDocument();

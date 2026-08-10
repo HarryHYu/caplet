@@ -73,9 +73,20 @@ const authLimiter = createRateLimiter({ scope: 'auth', windowMs: 15 * 60 * 1000,
 // own short-window budget: still throttles abuse, never starves a NAT.
 const authSessionLimiter = createRateLimiter({ scope: 'auth_session', windowMs: 60 * 1000, max: 300 });
 const SESSION_UPKEEP_PATHS = new Set(['/refresh', '/me']);
-const routeAuthLimiter = (req, res, next) => (
-  SESSION_UPKEEP_PATHS.has(req.path) ? authSessionLimiter(req, res, next) : authLimiter(req, res, next)
-);
+const { getRefreshCookie } = require('./services/authCookies');
+const routeAuthLimiter = (req, res, next) => {
+  // Express routes case-insensitively and tolerates trailing slashes, so the
+  // scope decision must too — otherwise '/refresh/' silently bills the strict
+  // credential budget.
+  const path = req.path.replace(/\/+$/, '').toLowerCase() || '/';
+  if (!SESSION_UPKEEP_PATHS.has(path)) return authLimiter(req, res, next);
+  // A cookie-less /refresh can never succeed and its immediate 401 is the
+  // frontend's conclusive "signed out" signal — let it through instead of
+  // spending shared-NAT budget on it (or worse, masking the 401 with a 429
+  // that keeps a dead session limping forever).
+  if (path === '/refresh' && !getRefreshCookie(req)) return next();
+  return authSessionLimiter(req, res, next);
+};
 
 // Routes
 app.get('/', (req, res) => {

@@ -152,8 +152,10 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
           <div className="relative z-10 flex shrink-0 items-center gap-1 md:gap-1.5">
             {/* In money mode the study links are swapped out and the hamburger is
                 hidden, so without this switch there is no way back to the main
-                app — the "trapped in Money" bug. */}
-            {effectiveProductMode === 'money' && <ProductModeSwitch className="shrink-0" />}
+                app — the "trapped in Money" bug. Signed-in only: visitors keep
+                logo -> '/' and the auth buttons, and the switch + both auth
+                buttons don't fit a 360px-wide bar together. */}
+            {isAuthenticated && effectiveProductMode === 'money' && <ProductModeSwitch className="shrink-0" />}
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
                 <button

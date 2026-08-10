@@ -425,17 +425,32 @@ router.post('/refresh', async (req, res) => {
   const refreshToken = getRefreshCookie(req);
   if (!refreshToken) return res.status(401).json({ message: 'Refresh session not found' });
 
+  // Clients treat a 401 from this endpoint as the single conclusive
+  // "session is over" signal, so only token invalidity may produce it. A
+  // database blip must NOT destroy the cookie or read as a sign-out — it
+  // returns 503 and the client retries later with the same cookie.
+  let decoded;
   try {
-    const decoded = jwt.verify(refreshToken, JWT_SECRET);
+    decoded = jwt.verify(refreshToken, JWT_SECRET);
     if (decoded?.typ !== 'refresh' || !decoded.userId) throw new Error('Invalid refresh token');
-    const user = await User.findByPk(decoded.userId);
-    if (!user) throw new Error('Invalid refresh token');
-    const token = issueSession(res, user);
-    return res.json({ token });
   } catch {
     clearRefreshCookie(res);
     return res.status(401).json({ message: 'Refresh session expired' });
   }
+
+  let user;
+  try {
+    user = await User.findByPk(decoded.userId);
+  } catch (error) {
+    console.error('Refresh lookup failed:', error.message);
+    return res.status(503).json({ message: 'Session service temporarily unavailable' });
+  }
+  if (!user) {
+    clearRefreshCookie(res);
+    return res.status(401).json({ message: 'Refresh session expired' });
+  }
+  const token = issueSession(res, user);
+  return res.json({ token });
 });
 
 // Logout clears the server-managed refresh session. Existing access tokens

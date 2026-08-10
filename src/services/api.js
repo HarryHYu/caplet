@@ -40,15 +40,22 @@ class ApiService {
     // True only after /auth/refresh itself answered 401 — the one signal that
     // the refresh session is genuinely gone rather than momentarily unreachable.
     this.sessionDead = false;
+    // Bumped on every explicit token transition (login, logout). An in-flight
+    // refresh compares generations before acting on its outcome, so a stale
+    // refresh that resolves after the user just signed in can neither wipe the
+    // new token nor mark the new session dead.
+    this.authGeneration = 0;
   }
 
   setToken(token) {
     this.token = token;
+    this.authGeneration += 1;
     if (token) this.sessionDead = false;
   }
 
   clearToken() {
     this.token = null;
+    this.authGeneration += 1;
   }
 
   async refreshAccessToken() {
@@ -58,6 +65,7 @@ class ApiService {
     // shared networks, and a losing duplicate used to clobber the winner's
     // freshly issued token.
     if (this.refreshPromise) return this.refreshPromise;
+    const generationAtStart = this.authGeneration;
     this.refreshPromise = (async () => {
       try {
         const response = await fetch(`${this.baseURL}/auth/refresh`, {
@@ -68,6 +76,12 @@ class ApiService {
             'X-Caplet-Client': 'web',
           },
         });
+        // If the user explicitly signed in or out while this refresh was in
+        // flight, its outcome describes a session that no longer exists —
+        // discard it rather than clobber the new state.
+        if (this.authGeneration !== generationAtStart) {
+          return this.token;
+        }
         if (!response.ok) {
           // Only a 401 proves the refresh session is dead. 429 (shared-IP rate
           // limit at schools), 5xx (cold start), or 403 (a proxy stripping the
@@ -81,6 +95,7 @@ class ApiService {
         }
         const data = await response.json();
         if (!data?.token) return null;
+        if (this.authGeneration !== generationAtStart) return this.token;
         this.setToken(data.token);
         return data.token;
       } catch {

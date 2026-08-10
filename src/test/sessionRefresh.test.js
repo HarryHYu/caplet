@@ -58,6 +58,24 @@ describe('session refresh resilience', () => {
     expect(service.sessionDead).toBe(true);
   });
 
+  it('never lets a stale refresh clobber a login that raced it', async () => {
+    const service = makeService();
+    let resolveRefresh;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      () => new Promise((resolve) => { resolveRefresh = resolve; }),
+    );
+
+    const refresh = service.refreshAccessToken();
+    // The user submits the login form while the refresh hangs on a cold start.
+    service.setToken('fresh-login-token');
+    // The stale refresh finally resolves 401 (its cookie was already dead).
+    resolveRefresh(jsonResponse(401, {}));
+
+    await expect(refresh).resolves.toBe('fresh-login-token');
+    expect(service.token).toBe('fresh-login-token');
+    expect(service.sessionDead).toBe(false);
+  });
+
   it('recovers a 401 request by refreshing once and retrying with the new token', async () => {
     const service = makeService();
     service.setToken('expired');
