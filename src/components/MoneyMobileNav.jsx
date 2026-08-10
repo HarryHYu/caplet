@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
+  AcademicCapIcon,
   ChartBarSquareIcon,
   HomeIcon,
   LockClosedIcon,
@@ -9,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
+import { useLayout } from '../contexts/LayoutContext';
 import { availableMoneyNavigation, isProductNavItemActive } from '../config/productNavigation';
 
 const icons = {
@@ -24,7 +26,12 @@ export default function MoneyMobileNav() {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
   const { loading: featureFlagsLoading, isEnabled } = useFeatureFlags();
+  const { lastStudyRoute = '/dashboard' } = useLayout();
   const items = availableMoneyNavigation({ isAuthenticated, featureFlagsLoading, isFeatureEnabled: isEnabled });
+  // On mobile this bar is the ONLY nav in money mode (the hamburger is
+  // suppressed), so it must carry the way back to the main app.
+  // ProductModeRouteSync flips the mode automatically once the route changes.
+  const studyPath = isAuthenticated ? (lastStudyRoute || '/dashboard') : '/library';
 
   return (
     <nav
@@ -33,8 +40,15 @@ export default function MoneyMobileNav() {
     >
       <div
         className="mx-auto grid max-w-xl gap-0.5"
-        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${items.length + 1}, minmax(0, 1fr))` }}
       >
+        <Link
+          to={studyPath}
+          className="flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 text-[9px] font-bold text-text-muted transition-colors hover:bg-surface-soft hover:text-text-primary"
+        >
+          <AcademicCapIcon className="h-4 w-4" aria-hidden="true" />
+          <span>Study</span>
+        </Link>
         {items.map((item) => {
           const Icon = icons[item.label];
           const active = isProductNavItemActive(item, location);

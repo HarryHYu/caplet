@@ -32,10 +32,12 @@ describe('Study sidebar navigation', () => {
     render(<MemoryRouter initialEntries={['/study-plan']}><Sidebar /></MemoryRouter>);
 
     expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute('href', '/dashboard');
+    expect(screen.getByRole('link', { name: 'Classes' })).toHaveAttribute('href', '/classes');
     expect(screen.getByRole('link', { name: 'Plan' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('href', '/practice');
     expect(screen.getByRole('link', { name: 'Subjects' })).toHaveAttribute('href', '/library');
     expect(screen.getByRole('link', { name: 'Results' })).toHaveAttribute('href', '/assessment-log');
+    expect(screen.getByRole('link', { name: 'Essays' })).toHaveAttribute('href', '/essays');
     expect(screen.getByRole('link', { name: 'Money' })).toHaveAttribute('href', '/money');
     expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings');
     expect(screen.queryByRole('link', { name: 'Mastery' })).not.toBeInTheDocument();

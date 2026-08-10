@@ -58,7 +58,7 @@ const GSTCalculator = () => {
                 Add or remove 10% goods and services tax with statutory precision.
               </p>
             </div>
-            <Link to="/fintools" className="btn-secondary text-sm px-8">
+            <Link to="/money/tools" className="btn-secondary text-sm px-8">
               &larr; Back to Tools
             </Link>
           </div>

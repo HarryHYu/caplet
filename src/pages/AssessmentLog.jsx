@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ArrowTopRightOnSquareIcon,
   ChartBarIcon,
@@ -212,7 +213,7 @@ export default function AssessmentLog() {
       <div className="container-custom max-w-6xl">
         <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="font-display text-4xl font-extrabold tracking-tight md:text-5xl">Results</h1><p className="mt-3 max-w-2xl text-base text-text-muted">Treat each assessment like a project: record the result, keep the evidence and write down the next improvement.</p></div><div className="flex flex-wrap gap-3"><button type="button" onClick={() => setImporting(true)} disabled={!subjects.length} className="btn-secondary w-fit"><DocumentArrowUpIcon className="h-4 w-4" /> Import report</button><button type="button" onClick={() => setEditing(null)} disabled={!subjects.length} className="btn-primary w-fit"><PlusIcon className="h-4 w-4" /> Log result</button></div></header>
 
-        {!subjects.length && <div className="mt-8 border-y border-line-soft py-7"><p className="font-bold">Choose a subject before logging a result.</p><a href="/library" className="mt-3 inline-block text-sm font-bold text-accent">Choose subjects</a></div>}
+        {!subjects.length && <div className="mt-8 border-y border-line-soft py-7"><p className="font-bold">Choose a subject before logging a result.</p><Link to="/library" className="mt-3 inline-block text-sm font-bold text-accent">Choose subjects</Link></div>}
 
         <section className="mt-8 grid gap-px overflow-hidden rounded-xl border border-line-soft bg-line-soft sm:grid-cols-3" aria-label="Assessment result summary"><div className="bg-surface-raised p-5"><p className="text-xs font-bold text-text-muted">Results logged</p><p className="mt-2 font-display text-3xl font-extrabold">{visible.length}</p></div><div className="bg-surface-raised p-5"><p className="text-xs font-bold text-text-muted">Average result</p><p className="mt-2 font-display text-3xl font-extrabold">{average === null ? '—' : `${average}%`}</p></div><div className="bg-surface-raised p-5"><p className="text-xs font-bold text-text-muted">Weighting covered</p><p className="mt-2 font-display text-3xl font-extrabold">{totalWeight}%</p></div></section>
 

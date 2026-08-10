@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import AssessmentLog from '../pages/AssessmentLog';
 import { saveAssessmentAttachment } from '../lib/assessmentAttachmentStore';
@@ -19,7 +20,7 @@ describe('AssessmentLog', () => {
 
   it('logs marks, weighting, reflection and a scan', async () => {
     const user = userEvent.setup();
-    render(<AssessmentLog />);
+    render(<MemoryRouter><AssessmentLog /></MemoryRouter>);
 
     await user.click(screen.getByRole('button', { name: 'Log result' }));
     await user.selectOptions(screen.getByLabelText('School year'), 'Year 12');
@@ -45,7 +46,7 @@ describe('AssessmentLog', () => {
   it('rejects impossible marks and filters by term', async () => {
     const user = userEvent.setup();
     localStorage.setItem('caplet:assessment-log', JSON.stringify([{ id: 'one', yearLevel: 'Year 11', term: 'Term 1', subject: 'Economics', taskName: 'Topic test', date: '2026-02-10', score: '18', maxMarks: '20', weighting: '10', reflection: '' }]));
-    render(<AssessmentLog />);
+    render(<MemoryRouter><AssessmentLog /></MemoryRouter>);
 
     expect(screen.getByRole('heading', { name: 'Results', level: 1 })).toBeInTheDocument();
     expect(screen.getByLabelText('Filter by term')).toHaveClass('appearance-none', 'rounded-xl');

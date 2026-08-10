@@ -5,12 +5,17 @@ const DEV_API_BASE_URLS = [
 ];
 const ENV_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const API_BASE_URL = ENV_API_BASE_URL || (import.meta.env.DEV ? DEV_API_BASE_URLS[0] : PROD_API_BASE_URL);
+// A 401 from these endpoints never means "expired access token", so a refresh
+// attempt would be wasted: the auth endpoints issue tokens themselves, and
+// /editor/enter returns 401 for a wrong workspace code while the account
+// session is perfectly healthy.
 const AUTH_ENDPOINTS_WITHOUT_REFRESH = new Set([
   '/auth/login',
   '/auth/register',
   '/auth/google',
   '/auth/refresh',
   '/auth/logout',
+  '/editor/enter',
 ]);
 
 // `/demo` is a hard-isolated application entry: its internal MemoryRouter never
@@ -31,10 +36,15 @@ class ApiService {
     // HttpOnly cookie so a script-readable storage XSS cannot persistently
     // exfiltrate the account session.
     this.token = null;
+    this.refreshPromise = null;
+    // True only after /auth/refresh itself answered 401 — the one signal that
+    // the refresh session is genuinely gone rather than momentarily unreachable.
+    this.sessionDead = false;
   }
 
   setToken(token) {
     this.token = token;
+    if (token) this.sessionDead = false;
   }
 
   clearToken() {
@@ -43,33 +53,53 @@ class ApiService {
 
   async refreshAccessToken() {
     if (isDemoSandboxRequest()) return null;
-    try {
-      const response = await fetch(`${this.baseURL}/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Caplet-Client': 'web',
-        },
-      });
-      if (!response.ok) {
-        this.clearToken();
+    // Single-flight: concurrent 401s (e.g. Dashboard's parallel mount fetches)
+    // share one refresh call. Parallel refreshes burn the per-IP auth budget on
+    // shared networks, and a losing duplicate used to clobber the winner's
+    // freshly issued token.
+    if (this.refreshPromise) return this.refreshPromise;
+    this.refreshPromise = (async () => {
+      try {
+        const response = await fetch(`${this.baseURL}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Caplet-Client': 'web',
+          },
+        });
+        if (!response.ok) {
+          // Only a 401 proves the refresh session is dead. 429 (shared-IP rate
+          // limit at schools), 5xx (cold start), or 403 (a proxy stripping the
+          // client header) are recoverable — keep whatever session state we
+          // have instead of signing the user out.
+          if (response.status === 401) {
+            this.sessionDead = true;
+            this.clearToken();
+          }
+          return null;
+        }
+        const data = await response.json();
+        if (!data?.token) return null;
+        this.setToken(data.token);
+        return data.token;
+      } catch {
+        // A local backend being offline must never trigger a production request.
         return null;
+      } finally {
+        this.refreshPromise = null;
       }
-      const data = await response.json();
-      if (!data?.token) {
-        this.clearToken();
-        return null;
-      }
-      this.setToken(data.token);
-      return data.token;
-    } catch {
-      // A local backend being offline must never trigger a production request.
-      return null;
-    }
+    })();
+    return this.refreshPromise;
   }
 
-  restoreSession() {
+  async restoreSession() {
+    const token = await this.refreshAccessToken();
+    if (token || this.sessionDead || isDemoSandboxRequest()) return token;
+    // The refresh failed for a transient reason (rate limit, cold start, flaky
+    // wifi). One short retry keeps a full page load from booting to the login
+    // screen while the user still holds a valid refresh cookie.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     return this.refreshAccessToken();
   }
 
@@ -140,9 +170,14 @@ class ApiService {
         error.data = data;
         error.details = data.errors;
         error.validation = data.validation;
-        if (response.status === 401) {
-          if (auth === 'editor') this.clearEditorToken();
-          else this.clearToken();
+        if (response.status === 401 && auth === 'editor') {
+          // The editor workspace token is its own identity — a 401 here just
+          // re-opens the code gate. Account 401s are NOT cleared eagerly:
+          // request() below refreshes and retries, and refreshAccessToken()
+          // alone decides when the account session is truly over. Clearing
+          // here used to wipe tokens on wrong editor codes and on stale-token
+          // 401s that raced an already-completed refresh.
+          this.clearEditorToken();
         }
         throw error;
       }

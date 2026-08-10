@@ -7,10 +7,12 @@ const hiddenPaths = ['/login', '/register', '/play'];
 
 const navItems = [
     { path: '/dashboard', label: 'Today' },
+    { path: '/classes', label: 'Classes' },
     { path: '/library', label: 'Subjects' },
     { path: '/notes', label: 'Notes' },
     { path: '/practice', label: 'Practice' },
     { path: '/study-plan', label: 'Plan' },
+    { path: '/essays', label: 'Essays' },
     { path: '/money', label: 'Money' },
 ];
 

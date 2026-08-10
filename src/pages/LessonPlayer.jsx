@@ -412,8 +412,11 @@ const LessonPlayer = () => {
         navigate(`/courses/${course.id}/complete`);
       }
     } catch (e) {
-      if (e.status === 401) {
-        api.clearToken();
+      // Only bounce to the login screen when the refresh session is truly
+      // over. A 401 whose recovery merely hit a rate limit or cold start
+      // resolves on the next attempt — losing lesson context for it was the
+      // main "randomly signed me out" complaint.
+      if (e.status === 401 && api.sessionDead) {
         navigate('/login?reason=session_expired');
         return;
       }

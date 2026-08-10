@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import { useLayout } from '../contexts/LayoutContext';
 import UserAvatar from './UserAvatar';
+import ProductModeSwitch from './ProductModeSwitch';
 import { isProductNavItemActive, moneyNavigation } from '../config/productNavigation';
 
 // `mobileOnly` is set when the vertical rail owns navigation on large screens —
@@ -63,9 +64,11 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
 
   const studyCoreItems = [
     { path: '/dashboard', label: 'Today', privateOnly: true },
+    { path: '/classes', label: 'Classes', privateOnly: true },
     { path: '/library', label: 'Subjects' },
     { path: '/practice', label: 'Practice', privateOnly: true },
     { path: '/study-plan', label: 'Plan', privateOnly: true },
+    { path: '/essays', label: 'Essays', privateOnly: true },
     { path: '/money', label: 'Money' },
   ];
   const visibleItems = (items) => items.filter((item) => {
@@ -79,7 +82,9 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
       ? visibleItems(moneyNavigation)
       : visibleItems(studyCoreItems);
 
-  const homePath = effectiveProductMode === 'money' ? '/money' : isAuthenticated ? '/dashboard' : '/';
+  // The logo is the universal escape hatch: it always leaves for the main app,
+  // even from Money. Money's own home stays one tap away via its section nav.
+  const homePath = isAuthenticated ? '/dashboard' : '/';
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -145,6 +150,10 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
 
           {/* Actions */}
           <div className="relative z-10 flex shrink-0 items-center gap-1 md:gap-1.5">
+            {/* In money mode the study links are swapped out and the hamburger is
+                hidden, so without this switch there is no way back to the main
+                app — the "trapped in Money" bug. */}
+            {effectiveProductMode === 'money' && <ProductModeSwitch className="shrink-0" />}
             {isAuthenticated ? (
               <div className="relative" ref={menuRef}>
                 <button

@@ -58,9 +58,11 @@ describe('tablet navigation variants', () => {
         expect(screen.getByTestId('tablet-dashboard-navbar')).toBeInTheDocument();
         expect(screen.getByRole('navigation', { name: 'Dashboard navigation' })).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page');
+        expect(screen.getByRole('link', { name: 'Classes' })).toHaveAttribute('href', '/classes');
         expect(screen.getByRole('link', { name: 'Subjects' })).toHaveAttribute('href', '/library');
         expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('href', '/practice');
         expect(screen.getByRole('link', { name: 'Plan' })).toHaveAttribute('href', '/study-plan');
+        expect(screen.getByRole('link', { name: 'Essays' })).toHaveAttribute('href', '/essays');
         expect(screen.getByRole('link', { name: 'Money' })).toHaveAttribute('href', '/money');
         expect(screen.queryByRole('group', { name: 'Product mode' })).not.toBeInTheDocument();
 

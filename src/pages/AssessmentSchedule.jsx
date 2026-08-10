@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   CalendarDaysIcon,
   ClockIcon,
@@ -217,7 +218,7 @@ export default function AssessmentSchedule() {
             <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Upcoming assessment tasks</h1>
             <p className="mt-4 text-base font-medium leading-relaxed text-text-muted">See upcoming tasks for your chosen subjects, then adjust your personal schedule.</p>
           </div>
-          <div className="flex flex-wrap gap-3"><a href="/assessment-log" className="btn-secondary w-fit">Results</a><button type="button" onClick={openAdd} className="btn-primary w-fit"><PlusIcon className="h-4 w-4" aria-hidden="true" /> Add assessment</button></div>
+          <div className="flex flex-wrap gap-3"><Link to="/assessment-log" className="btn-secondary w-fit">Results</Link><button type="button" onClick={openAdd} className="btn-primary w-fit"><PlusIcon className="h-4 w-4" aria-hidden="true" /> Add assessment</button></div>
         </header>
 
         {nextExam && (

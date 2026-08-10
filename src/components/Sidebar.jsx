@@ -14,6 +14,8 @@ import {
     DocumentTextIcon,
     EllipsisVerticalIcon,
     HomeIcon,
+    PencilSquareIcon,
+    UserGroupIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useLayout } from '../contexts/LayoutContext';
@@ -21,11 +23,13 @@ import { usePinnedNavItems } from '../lib/usePinnedNavItems';
 
 const primaryItems = [
     { path: '/dashboard', label: 'Today', icon: HomeIcon, end: true },
+    { path: '/classes', label: 'Classes', icon: UserGroupIcon },
     { path: '/library', label: 'Subjects', icon: BookOpenIcon },
     { path: '/notes', label: 'Notes', icon: DocumentTextIcon },
     { path: '/assessment-log', label: 'Results', icon: ClipboardDocumentListIcon },
     { path: '/practice', label: 'Practice', icon: ArrowPathIcon },
     { path: '/study-plan', label: 'Plan', icon: CalendarDaysIcon },
+    { path: '/essays', label: 'Essays', icon: PencilSquareIcon },
     { path: '/forum', label: 'Forum', icon: ChatBubbleLeftRightIcon },
 ];
 

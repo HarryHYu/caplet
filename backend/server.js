@@ -66,6 +66,16 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb', parameterLimit: 100, depth: 10 }));
 
 const authLimiter = createRateLimiter({ scope: 'auth', windowMs: 15 * 60 * 1000, max: 120 });
+// Session upkeep (/refresh, /me) runs before authentication, so the limiter
+// can only key by IP — and a school or office NAT puts hundreds of legitimate
+// users behind one IP. Every page load costs two upkeep requests; sharing the
+// strict credential budget signed whole networks out at once. Upkeep gets its
+// own short-window budget: still throttles abuse, never starves a NAT.
+const authSessionLimiter = createRateLimiter({ scope: 'auth_session', windowMs: 60 * 1000, max: 300 });
+const SESSION_UPKEEP_PATHS = new Set(['/refresh', '/me']);
+const routeAuthLimiter = (req, res, next) => (
+  SESSION_UPKEEP_PATHS.has(req.path) ? authSessionLimiter(req, res, next) : authLimiter(req, res, next)
+);
 
 // Routes
 app.get('/', (req, res) => {
@@ -103,7 +113,7 @@ app.get('/health/db', async (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authLimiter, require('./routes/auth'));
+app.use('/api/auth', routeAuthLimiter, require('./routes/auth'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/progress', require('./routes/progress'));

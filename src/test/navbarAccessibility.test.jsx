@@ -31,13 +31,30 @@ describe('Navbar accessibility', () => {
     render(<MemoryRouter initialEntries={['/dashboard']}><Navbar /></MemoryRouter>);
 
     expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Classes' })).toHaveAttribute('href', '/classes');
     expect(screen.getByRole('link', { name: 'Subjects' })).toHaveAttribute('href', '/library');
     expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('href', '/practice');
     expect(screen.getByRole('link', { name: 'Plan' })).toHaveAttribute('href', '/study-plan');
+    expect(screen.getByRole('link', { name: 'Essays' })).toHaveAttribute('href', '/essays');
     expect(screen.getByRole('link', { name: 'Money' })).toHaveAttribute('href', '/money');
-    expect(screen.queryByRole('link', { name: 'Classes' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'More' })).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Product mode' })).not.toBeInTheDocument();
+  });
+
+  it('offers a way back to the main app from money mode', () => {
+    mockLayout.productMode = 'money';
+    try {
+      render(<MemoryRouter initialEntries={['/money/tools']}><Navbar /></MemoryRouter>);
+
+      // The mode switch is the escape hatch: money mode replaces the study
+      // links and hides the hamburger, so without it users were trapped.
+      expect(screen.getByRole('group', { name: 'Product mode' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Study' })).toBeInTheDocument();
+      // The logo always leads back to the main app, even inside Money.
+      expect(screen.getByRole('link', { name: /Caplet/ })).toHaveAttribute('href', '/dashboard');
+    } finally {
+      mockLayout.productMode = 'study';
+    }
   });
 
   it('keeps theme and navigation layout controls in settings', () => {

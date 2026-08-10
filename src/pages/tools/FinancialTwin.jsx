@@ -187,7 +187,7 @@ const FinancialTwin = () => {
                 HECS stays income-contingent and indexed; it is never treated as a credit card.
               </p>
             </div>
-            <Link to="/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
+            <Link to="/money/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
           </div>
         </header>
 

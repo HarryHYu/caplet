@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 
 import AssessmentSchedule from '../pages/AssessmentSchedule';
@@ -8,7 +9,7 @@ describe('AssessmentSchedule', () => {
   beforeEach(() => localStorage.clear());
 
   it('shows every dated task from the two Year 11 source grids', () => {
-    render(<AssessmentSchedule />);
+    render(<MemoryRouter><AssessmentSchedule /></MemoryRouter>);
 
     expect(screen.getByRole('heading', { name: 'Upcoming assessment tasks' })).toBeInTheDocument();
     expect(screen.getByText('Upcoming tasks')).toBeInTheDocument();
@@ -22,7 +23,7 @@ describe('AssessmentSchedule', () => {
 
   it('filters the timeline by subject', async () => {
     const user = userEvent.setup();
-    render(<AssessmentSchedule />);
+    render(<MemoryRouter><AssessmentSchedule /></MemoryRouter>);
 
     await user.selectOptions(screen.getByLabelText('Subject'), 'Economics');
 
@@ -37,7 +38,7 @@ describe('AssessmentSchedule', () => {
       'English Advanced', 'Chemistry', 'Physics',
     ]));
 
-    render(<AssessmentSchedule />);
+    render(<MemoryRouter><AssessmentSchedule /></MemoryRouter>);
 
     expect(screen.getByText('Showing 6 of 6 tasks.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Mathematics Advanced' })).toBeInTheDocument();
@@ -52,7 +53,7 @@ describe('AssessmentSchedule', () => {
   it('lets a student add, edit and remove a personal assessment', async () => {
     localStorage.setItem('caplet:my-subjects', JSON.stringify(['Society and Culture', 'Society and Culture Trial']));
     const user = userEvent.setup();
-    render(<AssessmentSchedule />);
+    render(<MemoryRouter><AssessmentSchedule /></MemoryRouter>);
 
     await user.click(screen.getByRole('button', { name: 'Add assessment' }));
     await user.type(screen.getByLabelText('Subject or task name'), 'Society and Culture');
@@ -79,7 +80,7 @@ describe('AssessmentSchedule', () => {
   it('marks official task edits as personal and can hide them without changing defaults', async () => {
     localStorage.setItem('caplet:my-subjects', JSON.stringify(['Economics']));
     const user = userEvent.setup();
-    render(<AssessmentSchedule />);
+    render(<MemoryRouter><AssessmentSchedule /></MemoryRouter>);
 
     await user.click(screen.getByRole('button', { name: 'Edit Economics' }));
     await user.clear(screen.getByLabelText('Notes'));
