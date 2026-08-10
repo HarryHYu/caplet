@@ -43,7 +43,7 @@ export default function GuardianConsent() {
   return (
     <main className="min-h-screen bg-surface-soft px-5 py-12">
       <div className="mx-auto w-full max-w-xl">
-        <Link to="/" className="font-display text-xl font-extrabold text-text-primary">Caplet.</Link>
+        <Link to="/" className="font-display text-xl font-extrabold text-text-primary">Caplet</Link>
         <section className="mt-8 rounded-3xl bg-surface-raised p-7 shadow-sm md:p-10" aria-labelledby="guardian-consent-title">
           {!request && !loadError ? (
             <div className="grid min-h-64 place-items-center" role="status"><CapletLoader message="Checking this consent request…" /></div>

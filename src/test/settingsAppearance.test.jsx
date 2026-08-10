@@ -23,7 +23,12 @@ describe('SettingsAppearance', () => {
     localStorage.setItem('theme', 'dark');
     render(<ThemeProvider><LayoutProvider><SettingsAppearance /></LayoutProvider></ThemeProvider>);
 
-    expect(screen.getByRole('radio', { name: /Pure white/ })).toBeInTheDocument();
+    const pureWhite = screen.getByRole('radio', { name: /Pure white/ });
+    const pureWhiteSwatches = pureWhite.querySelectorAll('span[style]');
+    expect(pureWhite).toBeInTheDocument();
+    expect(pureWhiteSwatches[0]).toHaveStyle({ backgroundColor: '#141413' });
+    expect(pureWhiteSwatches[1]).toHaveStyle({ backgroundColor: '#232220' });
+    expect(pureWhiteSwatches[2]).toHaveStyle({ backgroundColor: '#5B9BF0' });
     expect(screen.getByRole('radio', { name: /Sky/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Rose/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Vertical bar/ })).toHaveAttribute('aria-checked', 'true');

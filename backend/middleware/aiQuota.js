@@ -6,6 +6,9 @@ const MAX_UNITS = Number(process.env.AI_USER_QUOTA_UNITS || 40);
 const MAX_CONCURRENT = Number(process.env.AI_USER_MAX_CONCURRENT || 2);
 const DAILY_MAX_UNITS = Number(process.env.AI_DAILY_UNIT_BUDGET || 10000);
 const RESERVATION_LEASE_MS = Number(process.env.AI_RESERVATION_LEASE_MS || 10 * 60 * 1000);
+const MAX_TRACKED_IDENTITIES = Number.isInteger(Number(process.env.AI_MAX_TRACKED_IDENTITIES))
+  ? Math.max(100, Number(process.env.AI_MAX_TRACKED_IDENTITIES))
+  : 10000;
 const {
   isAICircuitOpen,
   recordAIEvent,
@@ -23,6 +26,12 @@ function validPositiveInteger(value, fallback) {
 function quotaState(userId, now = Date.now()) {
   const current = usage.get(userId);
   if (!current || current.resetAt <= now) {
+    if (usage.size >= MAX_TRACKED_IDENTITIES) {
+      for (const [key, state] of usage) {
+        if (state.resetAt <= now) usage.delete(key);
+      }
+      while (usage.size >= MAX_TRACKED_IDENTITIES) usage.delete(usage.keys().next().value);
+    }
     const fresh = { units: 0, active: 0, resetAt: now + WINDOW_MS };
     usage.set(userId, fresh);
     return fresh;

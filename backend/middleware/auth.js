@@ -30,13 +30,14 @@ const JWT_SECRET = (() => {
  */
 const requireAuth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    const authorization = req.header('Authorization') || '';
+    const token = /^Bearer\s+(\S+)$/i.exec(authorization)?.[1];
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (!decoded?.userId) {
+    if (!decoded?.userId || decoded.typ === 'refresh') {
       return res.status(401).json({ message: 'Invalid token' });
     }
 

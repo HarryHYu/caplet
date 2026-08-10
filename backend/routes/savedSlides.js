@@ -10,6 +10,7 @@ const { generateRecallQuestion } = require('../services/recallQuestion');
 const { requireAIConsent } = require('../services/privacyConsent');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { reserveAIQuota } = require('../middleware/aiQuota');
+const { publicAIError } = require('../utils/aiErrors');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -112,9 +113,14 @@ router.post('/:id/recall-question', requireAIConsent, recallQuota, async (req, r
     });
     res.json({ ...recall, savedSlideId: saved.id });
   } catch (e) {
-    const status = e.status || 500;
-    console.error('Recall question error:', e.message || e);
-    res.status(status).json({ message: e.message || 'Failed to generate a question' });
+    const error = publicAIError(e, 'Failed to generate a question. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'saved_slide_recall_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
   }
 });
 
@@ -195,11 +201,14 @@ router.post('/categorize', requireAIConsent, categorizeQuota, async (req, res) =
 
     res.json({ categorized: assignments.size });
   } catch (e) {
-    const status = e.status || 500;
-    console.error('Categorize saved slides error:', e.message || e);
-    res.status(status).json({
-      message: e.message || 'Failed to categorize slides',
-    });
+    const error = publicAIError(e, 'Failed to categorize slides. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'saved_slide_categorize_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
   }
 });
 
@@ -250,9 +259,14 @@ router.post('/summarize', requireAIConsent, summarizeQuota, async (req, res) => 
     });
     res.json({ slides: summarySlides, category });
   } catch (e) {
-    const status = e.status || 500;
-    console.error('Summarize saved slides error:', e.message || e);
-    res.status(status).json({ message: e.message || 'Failed to summarize slides' });
+    const error = publicAIError(e, 'Failed to summarize slides. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'saved_slide_summary_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
   }
 });
 

@@ -71,6 +71,7 @@ describe('route metadata', () => {
   it('provides public metadata and noindexes private routes', () => {
     expect(getRouteMeta('/fintools/tax-calculator').title).toMatch(/Tax Calculator/);
     expect(getRouteMeta('/library/economics').canonicalPath).toBe('/library/economics');
+    expect(getRouteMeta('/about').title).toMatch(/Team Behind Caplet/);
     expect(getRouteMeta('/dashboard').noIndex).toBe(true);
     expect(getRouteMeta('/mastery').noIndex).toBe(true);
   });

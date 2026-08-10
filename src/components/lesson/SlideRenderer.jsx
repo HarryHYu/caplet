@@ -9,8 +9,10 @@ import {
 } from 'recharts';
 import api from '../../services/api';
 import { normalizeSlide } from '../../lib/slideSchema';
+import { isAllowedEmbedUrl } from '../../lib/embedPolicy';
 import MathText from '../MathText';
 import DesmosCalculator from './DesmosCalculator';
+import DOMPurify from 'dompurify';
 
 /* ──────────────────────────────────────────────────────────────────────────
    Shared helpers
@@ -48,8 +50,21 @@ export function buildLessonScorePayload(slides, quizScores = {}) {
 
 function getYouTubeId(url) {
   if (!url) return '';
-  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/);
-  return m ? m[1] : url;
+  if (/^[A-Za-z0-9_-]{11}$/.test(url)) return url;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    let id = '';
+    if (host === 'youtu.be') id = parsed.pathname.slice(1);
+    else if (host === 'youtube.com' || host === 'www.youtube.com') {
+      id = parsed.pathname.startsWith('/embed/')
+        ? parsed.pathname.slice('/embed/'.length)
+        : parsed.searchParams.get('v') || '';
+    }
+    return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : '';
+  } catch {
+    return '';
+  }
 }
 
 function shuffle(arr) {
@@ -155,14 +170,17 @@ function MediaSlide({ slide }) {
   ) : null;
 
   if (slide.source === 'video') {
+    const videoId = getYouTubeId(slide.url);
+    if (!videoId) return null;
     return (
       <figure className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center gap-6">
         <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-line-soft shadow-lg">
           <iframe
-            src={`https://www.youtube.com/embed/${getYouTubeId(slide.url)}`}
+            src={`https://www.youtube.com/embed/${videoId}`}
             className="w-full h-full"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
             allowFullScreen
             title={slide.caption || 'Video'}
           />
@@ -184,10 +202,16 @@ function MediaSlide({ slide }) {
   }
 
   if (slide.source === 'embed') {
+    if (!isAllowedEmbedUrl(slide.url)) return null;
     return (
       <figure className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center gap-6">
         <div className="aspect-video bg-surface-soft rounded-2xl overflow-hidden border border-line-soft">
-          <iframe src={slide.url} className="w-full h-full" title={slide.caption || 'Embed'} />
+          <iframe
+            src={slide.url}
+            className="w-full h-full"
+            title={slide.caption || 'Embed'}
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          />
         </div>
         {caption}
       </figure>
@@ -1113,12 +1137,22 @@ function DiagramSlide({ slide }) {
 
     import('mermaid').then((m) => {
       const mermaid = m.default;
-      mermaid.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: 'inherit', fontSize: 15 });
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        theme: 'neutral',
+        fontFamily: 'inherit',
+        fontSize: 15,
+      });
       return mermaid.render(id, cleanCode);
     }).then(({ svg }) => {
       if (!mounted) return;
-      diagramSvgCache.set(cleanCode, svg);
-      if (ref.current) ref.current.innerHTML = svg;
+      const safeSvg = DOMPurify.sanitize(svg, {
+        USE_PROFILES: { svg: true, svgFilters: true },
+        FORBID_TAGS: ['foreignObject', 'script'],
+      });
+      diagramSvgCache.set(cleanCode, safeSvg);
+      if (ref.current) ref.current.innerHTML = safeSvg;
       setStatus('done');
     }).catch((err) => {
       if (mounted) { setError(err?.message || 'Diagram syntax error'); setStatus('error'); }
@@ -1168,16 +1202,7 @@ const ASPECT_CLASSES = {
 };
 
 function isEmbeddableUrl(url) {
-  if (!url) return false;
-  try {
-    const u = new URL(url);
-    // Bare google.com / google.com/maps are the regular web app — not embeddable.
-    // Only the embed API path (maps/embed/v1/*) works in an iframe.
-    if (/^(www\.)?google\.com$/.test(u.hostname) && !u.pathname.startsWith('/maps/embed')) return false;
-    return true;
-  } catch {
-    return false;
-  }
+  return isAllowedEmbedUrl(url);
 }
 
 function EmbedSlide({ slide }) {
@@ -1204,7 +1229,7 @@ function EmbedSlide({ slide }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
             <p className="text-sm font-medium text-text-muted">This content cannot be embedded.</p>
-            {slide.url && (
+            {slide.url && embeddable && (
               <a href={slide.url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline break-all">
                 Open in new tab ↗
               </a>

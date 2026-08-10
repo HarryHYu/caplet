@@ -34,8 +34,11 @@ describe('tablet navigation variants', () => {
 
         expect(screen.getByTestId('tablet-public-navbar')).toBeInTheDocument();
         expect(screen.getByRole('navigation', { name: 'Public navigation' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Resource library' })).toHaveAttribute('href', '/library');
         expect(screen.getByRole('link', { name: 'Courses' })).toHaveAttribute('href', '/courses');
+        expect(screen.getByRole('link', { name: 'Assessment dates' })).toHaveAttribute('href', '/assessments');
         expect(screen.getByRole('link', { name: 'Financial tools' })).toHaveAttribute('href', '/money');
+        expect(screen.getByRole('link', { name: 'Team' })).toHaveAttribute('href', '/about');
         expect(screen.getByRole('link', { name: 'Get started' })).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: /Study/i })).not.toBeInTheDocument();
         expect(screen.queryByRole('button', { name: /Money/i })).not.toBeInTheDocument();
@@ -54,8 +57,12 @@ describe('tablet navigation variants', () => {
         expect(screen.queryByTestId('tablet-public-navbar')).not.toBeInTheDocument();
         expect(screen.getByTestId('tablet-dashboard-navbar')).toBeInTheDocument();
         expect(screen.getByRole('navigation', { name: 'Dashboard navigation' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
-        expect(screen.getByRole('group', { name: 'Product mode' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page');
+        expect(screen.getByRole('link', { name: 'Subjects' })).toHaveAttribute('href', '/library');
+        expect(screen.getByRole('link', { name: 'Practice' })).toHaveAttribute('href', '/practice');
+        expect(screen.getByRole('link', { name: 'Plan' })).toHaveAttribute('href', '/study-plan');
+        expect(screen.getByRole('link', { name: 'Money' })).toHaveAttribute('href', '/money');
+        expect(screen.queryByRole('group', { name: 'Product mode' })).not.toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: 'Ray menu' }));
         expect(screen.queryByText('ray@example.com')).not.toBeInTheDocument();

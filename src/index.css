@@ -23,11 +23,11 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Surfaces — light cream paper, site-wide */
-  --surface-body: #F8F5EF;
-  --surface-base: #F8F5EF;   /* alias for --surface-body used in Tour/demo */
-  --surface-soft: #ECE5D6;
-  --surface-raised: #FCFAF4;
+  /* Surfaces — quiet and deliberately flat. */
+  --surface-body: #FFFFFF;
+  --surface-base: #FFFFFF;
+  --surface-soft: #F5F6F7;
+  --surface-raised: #FFFFFF;
   --surface-inverse: #141413;
 
   /* Typography — Bricolage display + Hanken body */
@@ -36,19 +36,19 @@
   --font-serif: 'Lora', Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --text-primary: #1C1A16;
-  --text-muted: #756F63;
-  --text-dim: #6F685C;
-  --text-contrast: #F8F5EF;
+  --text-primary: #151515;
+  --text-muted: #666A70;
+  --text-dim: #747980;
+  --text-contrast: #FFFFFF;
 
   /* Lines — warm and soft, so outlines recede */
-  --line-soft: #DCD4C2;
-  --line-strong: #1C1A16;
+  --line-soft: #E3E5E8;
+  --line-strong: #151515;
 
   /* Form controls — a lifted writing surface, lighter than the surrounding
      soft blocks so fields feel inviting rather than inset. */
-  --surface-input: #FFFEFB;
-  --input-line: #D7CEBD;
+  --surface-input: #FFFFFF;
+  --input-line: #D9DDE2;
   --input-shadow: rgba(20, 20, 18, 0.05);
 
   /* Accent */
@@ -229,31 +229,9 @@
   --block-green: rgba(95, 192, 140, 0.11);
 }
 
-/* User-selected dark palettes mirror their light counterparts while keeping
-   enough separation between the page, controls, and raised cards. */
-:root.dark[data-palette='white'] {
-  --surface-body: #111418;
-  --surface-base: #111418;
-  --surface-soft: #1D2228;
-  --surface-raised: #171B20;
-  --surface-inverse: #F7F9FB;
-  --text-primary: #F1F4F7;
-  --text-muted: #B5BEC8;
-  --text-dim: #909BA7;
-  --line-soft: #303841;
-  --line-strong: #F1F4F7;
-  --surface-input: #20252B;
-  --input-line: #3A424C;
-  --input-shadow: rgba(0, 0, 0, 0.3);
-  --accent: #7DA8F0;
-  --accent-strong: #A5C4F5;
-  --accent-soft: rgba(125, 168, 240, 0.16);
-  --mark-blue: #7DA8F0;
-  --hl-blue: rgba(125, 168, 240, 0.26);
-  --block-cream: #171B20;
-  --block-blue: rgba(125, 168, 240, 0.13);
-}
-
+/* Pure white deliberately inherits Paper in dark mode so the two choices
+   produce the same calm night palette. Other palettes keep distinct dark
+   counterparts below. */
 :root.dark[data-palette='sky'] {
   --surface-body: #0D1822;
   --surface-base: #0D1822;
@@ -361,8 +339,8 @@
   }
 
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--accent) 72%, white);
-    outline-offset: 3px;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   h1,
@@ -388,6 +366,13 @@
 }
 
 @layer components {
+  /* Practice sessions become a deliberate focus workspace. The learning
+     rail remains available on the landing page, but disappears once a
+     student starts answering so the question and response area can breathe. */
+  body.practice-focus-mode aside[aria-label="Sidebar navigation"] {
+    display: none;
+  }
+
   .skip-link {
     @apply fixed left-4 top-3 z-[100] -translate-y-24 rounded-xl bg-surface-inverse px-4 py-3 text-sm font-bold text-text-contrast shadow-xl transition-transform;
   }
@@ -397,13 +382,14 @@
   }
 
   .container-custom {
-    @apply max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20;
+    @apply max-w-[1220px] mx-auto px-6 md:px-10 lg:px-12;
   }
 
   /* Google renders its sign-in control with an inline pixel width. Keep the
      official control fluid inside our auth panels so narrow screens never crop. */
   .google-auth-button > div,
   .google-auth-button > div > div,
+  .google-auth-button iframe,
   .google-auth-button [role='button'] {
     width: 100% !important;
     max-width: 100% !important;
@@ -419,19 +405,19 @@
     background-position: -1px -1px;
   }
 
-  /* Section kicker — the small uppercase accent label above a heading. */
+  /* Section kicker — a quiet sentence-case label above a heading. */
   .section-kicker {
-    @apply text-xs font-bold uppercase tracking-[0.14em] text-accent mb-2 block;
+    @apply mb-2 block text-xs font-bold text-accent;
   }
 
-  /* Interactive Elements — rounded, bold, soft blue lift (no thin outlines). */
+  /* Interactive elements — one clear action, no decorative lift. */
   .btn-primary {
-    @apply px-6 py-3 bg-accent text-white font-bold text-sm tracking-wide rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 border border-transparent;
-    box-shadow: 0 12px 28px -14px rgba(19, 81, 170, 0.6);
+    @apply px-6 py-3 bg-accent text-white font-bold text-sm rounded-lg transition-colors duration-150 flex items-center justify-center gap-2 border border-transparent;
+    box-shadow: none;
   }
 
   .btn-primary:hover {
-    @apply bg-accent-strong -translate-y-0.5;
+    @apply bg-accent-strong;
   }
 
   .btn-primary:active {
@@ -444,16 +430,116 @@
   }
 
   .btn-secondary {
-    @apply px-6 py-3 bg-accent-soft text-accent font-bold text-sm tracking-wide rounded-2xl transition-all duration-200 flex items-center justify-center gap-2;
+    @apply px-6 py-3 bg-surface-body text-text-primary font-bold text-sm rounded-lg border border-line-soft transition-colors duration-150 flex items-center justify-center gap-2;
   }
 
   .btn-secondary:hover {
-    @apply -translate-y-0.5;
-    background-color: color-mix(in srgb, var(--accent) 18%, transparent);
+    @apply border-accent text-accent;
+    background-color: var(--surface-body);
   }
 
   .btn-secondary:active {
     @apply translate-y-0 scale-[0.98];
+  }
+
+  /*
+   * System-wide minimal layer.
+   * Older screens still carry their original utility classes; this layer
+   * normalises those surfaces while they continue to share the same data and
+   * interaction code. Purpose-built focus workspaces (lesson, editor, live)
+   * keep their layout, but inherit the quieter tokens and control treatment.
+   */
+  .caplet-minimal {
+    background: var(--surface-body);
+    color: var(--text-primary);
+  }
+
+  .caplet-minimal :where(.font-hand) {
+    font-family: var(--font-body) !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    line-height: 1rem !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    transform: none !important;
+  }
+
+  .caplet-minimal :where(.uppercase) {
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
+  .caplet-minimal :where([class*='shadow-']) {
+    box-shadow: none !important;
+  }
+
+  .caplet-minimal :where([class*='bg-gradient-to-']) {
+    background-image: none !important;
+  }
+
+  .caplet-minimal :where([class*='blur-3xl'], [class*='blur-2xl']) {
+    display: none !important;
+  }
+
+  .caplet-minimal :where([class*='rounded-3xl']) {
+    border-radius: 0.75rem !important;
+  }
+
+  .caplet-minimal :where([class*='rounded-2xl']) {
+    border-radius: 0.5rem !important;
+  }
+
+  .caplet-minimal :where([class~='bg-surface-raised'][class*='rounded-'], [class~='bg-surface-soft'][class*='rounded-']) {
+    border: 1px solid var(--line-soft);
+  }
+
+  .caplet-minimal :where([class*='text-8xl'], [class*='text-7xl'], [class*='text-6xl']) {
+    font-size: 3rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .caplet-minimal :where([class*='hover:-translate-y-']):hover,
+  .caplet-minimal :where([class*='group-hover:-translate-y-']):hover {
+    transform: none !important;
+  }
+
+  .caplet-minimal :where(.block-cream, .block-blue, .block-coral, .block-amber, .block-green) {
+    background: var(--surface-body) !important;
+    border: 1px solid var(--line-soft);
+  }
+
+  .caplet-minimal :where(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']) {
+    border-radius: 0.5rem !important;
+    box-shadow: none !important;
+  }
+
+  .caplet-minimal :where(dialog, [role='dialog']) {
+    box-shadow: none !important;
+  }
+
+  .minimal-page {
+    @apply min-h-screen bg-surface-body pb-28 pt-24 text-text-primary md:pt-28;
+  }
+
+  .minimal-page-header {
+    @apply mb-12 max-w-3xl;
+  }
+
+  .minimal-page-title {
+    @apply font-display text-4xl font-extrabold tracking-[-0.035em] text-text-primary md:text-5xl;
+  }
+
+  .minimal-page-description {
+    @apply mt-3 max-w-2xl text-base font-medium leading-relaxed text-text-muted;
+  }
+
+  .minimal-section {
+    @apply border-t border-line-soft py-10;
+  }
+
+  .minimal-panel {
+    @apply rounded-lg border border-line-soft bg-surface-body p-6;
+    box-shadow: none;
   }
 
   /* Lesson reading mode — editorial, slightly larger, refined spacing.
@@ -729,9 +815,9 @@
 /* Readable body text + comfortable rhythm for everything inside the homepage. */
 .home-root {
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
-  background-color: #F8F5EF; /* light cream paper */
+  background-color: var(--surface-body);
 }
-.dark .home-root { background-color: #141413; }
+.dark .home-root { background-color: var(--surface-body); }
 .body-text {
   color: var(--ink-body);
   font-size: 1.0625rem;

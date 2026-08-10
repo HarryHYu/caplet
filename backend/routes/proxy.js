@@ -21,6 +21,40 @@ const ALLOWED_IMAGE_HOSTS = new Set([
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
+async function readResponseBuffer(response, maxBytes) {
+  if (!response.body?.getReader) {
+    const arrayBuffer = await response.arrayBuffer();
+    if (arrayBuffer.byteLength > maxBytes) {
+      const error = new Error('Image too large');
+      error.code = 'IMAGE_TOO_LARGE';
+      throw error;
+    }
+    return Buffer.from(arrayBuffer);
+  }
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = Buffer.from(value);
+      total += chunk.length;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        const error = new Error('Image too large');
+        error.code = 'IMAGE_TOO_LARGE';
+        throw error;
+      }
+      chunks.push(chunk);
+    }
+  } finally {
+    reader.releaseLock?.();
+  }
+  return Buffer.concat(chunks, total);
+}
+
 function isAllowedUrl(urlString) {
   try {
     const u = new URL(urlString);
@@ -107,9 +141,10 @@ router.get('/proxy-image', proxyLimiter, async (req, res) => {
   const driveReferer = isDrive ? { Referer: 'https://drive.google.com/' } : {};
 
   for (const targetUrl of urlsToTry) {
+    let timeout;
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
+      timeout = setTimeout(() => controller.abort(), 15000);
 
       const response = await fetchAllowedUrl(targetUrl, {
         method: 'GET',
@@ -120,7 +155,6 @@ router.get('/proxy-image', proxyLimiter, async (req, res) => {
           ...driveReferer,
         },
       });
-      clearTimeout(timeout);
 
       if (!response.ok) continue;
 
@@ -129,11 +163,7 @@ router.get('/proxy-image', proxyLimiter, async (req, res) => {
         return res.status(413).json({ message: 'Image too large' });
       }
 
-      const arrayBuffer = await response.arrayBuffer();
-      if (arrayBuffer.byteLength > MAX_IMAGE_SIZE) {
-        return res.status(413).json({ message: 'Image too large' });
-      }
-      const buffer = Buffer.from(arrayBuffer);
+      const buffer = await readResponseBuffer(response, MAX_IMAGE_SIZE);
       const contentType = detectedImageType(buffer);
       if (!contentType) continue;
 
@@ -147,7 +177,12 @@ router.get('/proxy-image', proxyLimiter, async (req, res) => {
       if (err.name === 'AbortError') {
         return res.status(504).json({ message: 'Upstream timeout' });
       }
+      if (err.code === 'IMAGE_TOO_LARGE') {
+        return res.status(413).json({ message: 'Image too large' });
+      }
       continue;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
@@ -158,4 +193,6 @@ router.get('/proxy-image', proxyLimiter, async (req, res) => {
   });
 });
 
+router.readResponseBuffer = readResponseBuffer;
+router.MAX_IMAGE_SIZE = MAX_IMAGE_SIZE;
 module.exports = router;

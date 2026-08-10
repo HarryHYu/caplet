@@ -10,6 +10,8 @@
  * existing DB content keeps rendering.
  */
 
+const { isAllowedEmbedUrl } = require('./embedPolicy');
+
 const CANONICAL_TYPES = [
   'text', 'media', 'choice', 'fillblank', 'cards', 'match', 'order', 'table', 'divider',
   'chart', 'diagram', 'embed', 'hotspot', 'timeline', 'desmos',
@@ -294,6 +296,9 @@ function validateSlide(slide, index) {
       break;
     case 'media':
       if (!n.url) errors.push(`slide ${index} (media): url is required`);
+      if (n.source === 'embed' && !isAllowedEmbedUrl(n.url)) {
+        errors.push(`slide ${index} (media): embed URL is not approved`);
+      }
       break;
     case 'choice':
       if (!n.question) errors.push(`slide ${index} (choice): question is required`);
@@ -339,6 +344,7 @@ function validateSlide(slide, index) {
       break;
     case 'embed':
       if (!n.url?.trim()) errors.push(`slide ${index} (embed): url is required`);
+      else if (!isAllowedEmbedUrl(n.url)) errors.push(`slide ${index} (embed): URL is not approved`);
       break;
     case 'hotspot':
       if (!n.image?.trim()) errors.push(`slide ${index} (hotspot): image is required`);

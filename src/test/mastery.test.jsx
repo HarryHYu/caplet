@@ -76,7 +76,7 @@ describe('Mastery', () => {
   it('shows a hierarchical, evidence-backed mastery map and next action', async () => {
     renderPage();
 
-    expect(await screen.findByRole('heading', { name: 'My mastery.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Mastery' })).toBeInTheDocument();
     expect(api.getMastery).toHaveBeenCalledWith('economics');
     expect(screen.getByText('68%')).toBeInTheDocument();
     expect(screen.getByText('Economic management')).toBeInTheDocument();
@@ -112,6 +112,6 @@ describe('Mastery', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Mastery service unavailable');
     api.getMastery.mockResolvedValue(MASTERY);
     fireEvent.click(screen.getByRole('button', { name: /Try again/i }));
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'My mastery.' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Mastery' })).toBeInTheDocument());
   });
 });

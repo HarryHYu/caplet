@@ -1,20 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { canonicalSubjectLabelForYear, subjectsForYear } from '../data/nswSubjectCatalog';
 
 const STORAGE_KEY = 'caplet:my-subjects';
-const YEAR_STORAGE_KEY = 'caplet:subject-year';
+const SUBJECTS_CHANGED_EVENT = 'caplet:my-subjects-changed';
 
-const initialYear = () => {
-  const stored = Number(localStorage.getItem(YEAR_STORAGE_KEY));
-  return stored >= 7 && stored <= 12 ? stored : 11;
-};
-
-const readStored = (year) => {
+const readStored = () => {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return Array.isArray(parsed)
-      ? [...new Set(parsed.map((subject) => canonicalSubjectLabelForYear(subject, year)).filter(Boolean))]
-      : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
@@ -27,40 +19,29 @@ const readStored = (year) => {
  * auth and there's no per-subject account field to sync this to.
  */
 export const useMySubjects = () => {
-  const [subjectYear, setSubjectYearState] = useState(initialYear);
-  const [mySubjects, setMySubjects] = useState(() => readStored(subjectYear));
-  const [selectionNotice, setSelectionNotice] = useState('');
+  const [mySubjects, setMySubjects] = useState(readStored);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mySubjects));
-    } catch {
-      // Non-fatal: selection just won't persist.
-    }
-  }, [mySubjects]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(YEAR_STORAGE_KEY, String(subjectYear));
-    } catch {
-      // Non-fatal: the picker still works for this session.
-    }
-  }, [subjectYear]);
-
-  const setSubjectYear = useCallback((nextYear) => {
-    const year = Number(nextYear);
-    const valid = new Set(subjectsForYear(year).map((subject) => subject.label));
-    const removed = mySubjects.filter((subject) => !valid.has(subject));
-    setSelectionNotice(removed.length
-      ? `${removed.join(', ')} ${removed.length === 1 ? 'is not' : 'are not'} offered for Year ${year}, so ${removed.length === 1 ? 'it was' : 'they were'} removed from My subjects.`
-      : '');
-    setMySubjects((current) => current.filter((subject) => valid.has(subject)));
-    setSubjectYearState(year);
-  }, [mySubjects]);
-
-  const toggleSubject = useCallback((name) => {
-    setMySubjects((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
+    const syncSubjects = () => setMySubjects(readStored());
+    window.addEventListener('storage', syncSubjects);
+    window.addEventListener(SUBJECTS_CHANGED_EVENT, syncSubjects);
+    return () => {
+      window.removeEventListener('storage', syncSubjects);
+      window.removeEventListener(SUBJECTS_CHANGED_EVENT, syncSubjects);
+    };
   }, []);
 
-  return { mySubjects, toggleSubject, subjectYear, setSubjectYear, selectionNotice };
+  const toggleSubject = useCallback((name) => {
+    const current = readStored();
+    const next = current.includes(name) ? current.filter((subject) => subject !== name) : [...current, name];
+    setMySubjects(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event(SUBJECTS_CHANGED_EVENT));
+    } catch {
+      // Non-fatal: keep the current selection for this mounted view.
+    }
+  }, []);
+
+  return { mySubjects, toggleSubject };
 };

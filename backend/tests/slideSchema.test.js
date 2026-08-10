@@ -103,6 +103,12 @@ describe('validateSlides', () => {
     expect(validateSlides(null).ok).toBe(false);
     expect(validateSlides('nope').ok).toBe(false);
   });
+
+  test('rejects unsafe or unapproved embeds', () => {
+    expect(validateSlides([{ type: 'embed', url: 'javascript:alert(1)' }]).ok).toBe(false);
+    expect(validateSlides([{ type: 'embed', url: 'https://attacker.example/embed' }]).ok).toBe(false);
+    expect(validateSlides([{ type: 'embed', url: 'https://www.geogebra.org/classic' }]).ok).toBe(true);
+  });
 });
 
 describe('CANONICAL_TYPES', () => {

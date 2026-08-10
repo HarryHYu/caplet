@@ -9,7 +9,7 @@ const Login = () => {
     const sessionExpired = searchParams.get('reason') === 'session_expired';
 
     return (
-        <div className="flex min-h-[100dvh] bg-surface-body">
+        <div className="min-h-screen flex bg-surface-body">
 
             {/* Left — Brand Panel */}
             <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative bg-accent overflow-hidden flex-col">
@@ -19,7 +19,7 @@ const Login = () => {
                 <div className="relative z-10 p-12 xl:p-16">
                     <Link to="/" className="group inline-flex items-center">
                         <span className="font-bricolage font-extrabold tracking-[-0.02em] text-2xl text-white group-hover:opacity-80 transition-opacity duration-200">
-                            Caplet.
+                            Caplet
                         </span>
                     </Link>
                 </div>
@@ -45,17 +45,17 @@ const Login = () => {
             <div className="w-full lg:w-[55%] xl:w-1/2 flex flex-col relative">
 
                 {/* Top bar: mobile wordmark + back to home */}
-                <div className="flex items-center justify-between px-5 pt-6 sm:px-8 sm:pt-10 lg:px-16 xl:px-24">
-                    <Link to="/" className="inline-flex min-h-11 items-center font-bricolage text-xl font-extrabold tracking-[-0.02em] text-text-primary transition-colors hover:text-accent lg:hidden">
-                        Caplet.
+                <div className="flex items-center justify-between px-8 lg:px-16 xl:px-24 pt-10">
+                    <Link to="/" className="lg:hidden font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors">
+                        Caplet
                     </Link>
-                    <Link to="/" className="ml-auto inline-flex min-h-11 items-center text-sm font-bold text-text-dim transition-colors hover:text-accent">
+                    <Link to="/" className="ml-auto text-sm font-bold text-text-dim hover:text-accent transition-colors">
                         Back to home
                     </Link>
                 </div>
 
                 {/* Form centered in remaining space */}
-                <div className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8 sm:py-12 lg:px-16 xl:px-24">
+                <div className="flex-1 flex items-center justify-center px-8 lg:px-16 xl:px-24 py-12">
                     <div className="w-full max-w-sm">
                         {sessionExpired && (
                             <div className="mb-6 px-4 py-3 block-amber rounded-xl text-amber font-medium text-sm shadow-[0_18px_40px_-30px_rgba(20,20,18,0.4)]">

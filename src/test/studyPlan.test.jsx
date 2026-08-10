@@ -3,10 +3,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const OPTIONS = {
-  yearLevels: [{ value: '12', label: 'Year 12' }],
+  yearLevels: [{ value: '11', label: 'Year 11' }, { value: '12', label: 'Year 12' }],
   subjects: [{
     value: 'economics',
     label: 'Economics',
+    yearLevels: ['11', '12'],
+    placeholder: false,
     topics: ['Macroeconomic management'],
     diagnostic: {
       topic: 'Macroeconomic management',
@@ -16,12 +18,28 @@ const OPTIONS = {
   }, {
     value: 'physics',
     label: 'Physics',
+    yearLevels: ['11', '12'],
+    placeholder: false,
     topics: ['Forces'],
     diagnostic: {
       topic: 'Forces',
       question: 'What is the net force on an object moving at constant velocity?',
       options: ['Zero', 'Equal to its mass', 'Always increasing', 'Equal to its speed'],
     },
+  }, {
+    value: 'mathematics-extension-1',
+    label: 'Mathematics Extension 1',
+    yearLevels: ['11', '12'],
+    placeholder: true,
+    topics: ['Course planning'],
+    diagnostic: null,
+  }, {
+    value: 'mathematics-extension-2',
+    label: 'Mathematics Extension 2',
+    yearLevels: ['12'],
+    placeholder: true,
+    topics: ['Course planning'],
+    diagnostic: null,
   }],
 };
 
@@ -78,8 +96,8 @@ describe('StudyPlan', () => {
 
   it('completes the short onboarding diagnostic and generates a plan', async () => {
     renderPage();
-    expect(await screen.findByText(/ready in under five minutes/i)).toBeInTheDocument();
-    expect(screen.getByText(/concrete seven-day plan/i)).toBeInTheDocument();
+    expect(await screen.findByText(/three steps/i)).toBeInTheDocument();
+    expect(screen.getByText(/Choose your subjects, time and priorities/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Economics' }));
     fireEvent.click(screen.getByRole('button', { name: 'Physics' }));
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
@@ -90,12 +108,25 @@ describe('StudyPlan', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Zero' }));
     fireEvent.click(screen.getByRole('button', { name: /Build my plan/i }));
 
-    expect(await screen.findByRole('heading', { name: /My study plan/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Study plan/i })).toBeInTheDocument();
     expect(api.generateStudyPlan).toHaveBeenCalledWith(expect.objectContaining({
       subjects: ['economics', 'physics'],
       examDates: { economics: '2026-09-01', physics: '2026-09-01' },
       diagnosticAnswers: { economics: 0, physics: 0 },
     }));
+  });
+
+  it('uses explicit extension names and respects the selected year level', async () => {
+    renderPage();
+    await screen.findByRole('heading', { name: 'What are you studying?' });
+
+    expect(screen.getByRole('button', { name: /Mathematics Extension 1/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Mathematics Extension 2/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Extension 1' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Society & Culture' })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Year level'), { target: { value: '12' } });
+    expect(screen.getByRole('button', { name: /Mathematics Extension 2/i })).toBeInTheDocument();
   });
 
   it('surfaces the next real resource and persists task completion', async () => {

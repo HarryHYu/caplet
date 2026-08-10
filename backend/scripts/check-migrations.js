@@ -1,8 +1,13 @@
 const path = require('path');
 const { Sequelize } = require('sequelize');
 const { Umzug, SequelizeStorage } = require('umzug');
+const { assertMigrationNames } = require('../utils/migrationNaming');
 
 async function main() {
+  const migrationNaming = assertMigrationNames(path.join(__dirname, '../migrations'));
+  if (migrationNaming.collisions.length) {
+    console.warn(`Migration rehearsal is preserving ${migrationNaming.collisions.length} documented legacy prefix collision(s).`);
+  }
   const database = process.env.MIGRATION_CHECK_DATABASE_URL
     ? new Sequelize(process.env.MIGRATION_CHECK_DATABASE_URL, { logging: false })
     : new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });

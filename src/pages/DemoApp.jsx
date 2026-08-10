@@ -378,7 +378,7 @@ function DemoShell() {
             <span className="grid h-8 w-8 place-items-center overflow-hidden rounded-full border border-line-soft bg-surface-raised">
               <img src="/logo.png" alt="" className="h-full w-full object-contain" />
             </span>
-            <span className="hidden font-display text-lg font-extrabold sm:inline">Caplet.</span>
+            <span className="hidden font-display text-lg font-extrabold sm:inline">Caplet</span>
             <span className="hidden rounded-full bg-accent-soft px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-accent md:inline">Guided tour</span>
           </button>
 

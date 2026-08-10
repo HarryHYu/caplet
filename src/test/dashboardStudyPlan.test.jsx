@@ -1,28 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({ user: { firstName: 'Codex' } }),
 }));
 
-vi.mock('../contexts/CoursesContext', () => ({
-  useCourses: () => ({ courses: [], loading: false, hasFetched: true, fetchCourses: vi.fn() }),
-}));
-
 vi.mock('../lib/useReveal', () => ({ useReveal: vi.fn() }));
 
 vi.mock('../services/api', () => ({
   default: {
-    getUserProgress: vi.fn(),
     getClasses: vi.fn(),
-    getSavedSlides: vi.fn(),
     getDueReviewItems: vi.fn(),
     getStudyPlan: vi.fn(),
-    getEconomicsExamSessions: vi.fn(),
     getNextRecommendation: vi.fn(),
     getStudyStreak: vi.fn(),
-    getLearningToday: vi.fn(),
+    getPracticeSession: vi.fn(),
     logEvent: vi.fn(),
   },
 }));
@@ -30,15 +24,14 @@ vi.mock('../services/api', () => ({
 import api from '../services/api';
 import Dashboard from '../pages/Dashboard';
 
-describe('Dashboard study plan handoff', () => {
+describe('minimal dashboard study flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getUserProgress.mockResolvedValue({ progress: [] });
+    localStorage.clear();
     api.getClasses.mockResolvedValue({ teaching: [], student: [] });
-    api.getSavedSlides.mockResolvedValue({ savedSlides: [] });
     api.getDueReviewItems.mockResolvedValue({ items: [] });
+    api.getEconomicsExamSessions?.mockResolvedValue({ sessions: [] });
     api.getNextRecommendation.mockResolvedValue({ recommendation: null });
-    api.getLearningToday.mockResolvedValue({ actions: [] });
     api.getStudyStreak.mockResolvedValue({
       momentum: {
         currentStreak: 2,
@@ -49,48 +42,129 @@ describe('Dashboard study plan handoff', () => {
         activityDays: [],
       },
     });
+    api.getPracticeSession.mockResolvedValue(null);
   });
 
-  it('surfaces today’s next planned task', async () => {
-    api.getLearningToday.mockResolvedValue({ actions: [{ id: 'study-task:task-1', type: 'study_task', position: 1, eyebrow: 'Today’s study plan', title: 'Learn: Macroeconomic management', detail: 'Economics · 45 minutes', href: '/study-plan', estimatedMinutes: 45 }] });
+  it('makes today’s next planned task the primary action', async () => {
+    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    api.getStudyPlan.mockResolvedValue({
+      studyPlan: {
+        tasks: [{
+          id: 'task-1',
+          dueDate: today,
+          title: 'Learn: Macroeconomic management',
+          subjectLabel: 'Economics',
+          estimatedMinutes: 45,
+          completed: false,
+        }],
+      },
+    });
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
-    expect(await screen.findByText(/Today’s study plan/i)).toBeInTheDocument();
-    expect(screen.getByText('Learn: Macroeconomic management')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Start next/i })).toHaveAttribute('href', '/study-plan');
-    expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
+
+    expect(await screen.findByRole('heading', { name: 'Learn: Macroeconomic management' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Learn: Macroeconomic management.*Start/i })).toHaveAttribute('href', '/study-plan');
+    expect(screen.getByRole('heading', { name: 'This week' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'After that' })).toBeInTheDocument();
   });
 
-  it('keeps secondary study tools accessible from the dashboard', async () => {
+  it('keeps useful secondary destinations in one quiet resources section', async () => {
     api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
-    expect(await screen.findByRole('heading', { name: 'Jump back in.' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Practice.*focused question set/i })).toHaveAttribute('href', '/practice');
-    expect(screen.getByRole('link', { name: /Mastery.*strengthen next/i })).toHaveAttribute('href', '/mastery');
-    expect(screen.getByRole('link', { name: /Courses.*structured courses and lessons/i })).toHaveAttribute('href', '/courses');
-    expect(screen.getByRole('link', { name: /Education tools.*revision, essays/i })).toHaveAttribute('href', '/edutools');
+    expect(await screen.findByRole('heading', { name: 'Resources & tools' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Resource library.*Notes, guides/i })).toHaveAttribute('href', '/library');
+    expect(screen.getByRole('link', { name: /Essay practice.*improve essays/i })).toHaveAttribute('href', '/essays');
+    expect(screen.getByRole('link', { name: /Assessment dates.*exam information/i })).toHaveAttribute('href', '/assessments');
+    expect(screen.getByRole('link', { name: /Financial tools.*interest/i })).toHaveAttribute('href', '/money/tools');
+    expect(screen.getByRole('button', { name: 'Add Resource library to sidebar' })).toBeInTheDocument();
   });
 
-  it('makes study-plan setup the primary action before showing practice recommendations', async () => {
-    api.getLearningToday.mockResolvedValue({ actions: [] });
+  it('lets a pinned resource be removed from the sidebar', async () => {
+    const user = userEvent.setup();
+    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
-    const setupLink = await screen.findByRole('link', { name: /Set up my plan/i });
-    expect(setupLink).toHaveAttribute('href', '/study-plan');
-    expect(screen.queryByText('Your next best action')).not.toBeInTheDocument();
+    const addButton = await screen.findByRole('button', { name: 'Add Resource library to sidebar' });
+    await user.click(addButton);
+    const removeButton = screen.getByRole('button', { name: 'Remove Resource library from sidebar' });
+    expect(removeButton).toHaveAttribute('aria-pressed', 'true');
+    await user.click(removeButton);
+    expect(screen.getByRole('button', { name: 'Add Resource library to sidebar' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('shows a meaningful study streak with a useful next action', async () => {
-    api.getLearningToday.mockResolvedValue({ actions: [{ id: 'recommendation:diagnostic', type: 'recommendation', position: 1, eyebrow: 'Best place to start', title: 'Take the quick Economics diagnostic', detail: 'Five questions.', href: '/practice?subject=economics&mode=diagnostic&source=today' }] });
+  it('shows the exact subjects selected in the library without adding fallback subjects', async () => {
+    localStorage.setItem('caplet:my-subjects', JSON.stringify(['English Extension 1', 'Physics']));
+    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
 
     render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
-    expect(await screen.findByRole('heading', { name: '2 days' })).toBeInTheDocument();
-    expect(screen.getByText('One useful action today keeps it alive.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Start next/i })).toHaveAttribute('href', '/practice?subject=economics&mode=diagnostic&source=today');
+    expect(await screen.findAllByText('English Extension 1')).not.toHaveLength(0);
+    expect(screen.getAllByText('Physics')).not.toHaveLength(0);
+    expect(screen.queryByRole('link', { name: 'Economics' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Mathematics Advanced')).not.toBeInTheDocument();
   });
 
+  it('makes study-plan setup the primary action when no plan exists', async () => {
+    api.getStudyPlan.mockResolvedValue({ studyPlan: null });
+
+    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+
+    expect(await screen.findByRole('heading', { name: 'Set up your study plan' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Set up your study plan.*Start/i })).toHaveAttribute('href', '/study-plan');
+  });
+
+  it('shows weekly momentum without a separate streak card', async () => {
+    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+
+    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+
+    expect(await screen.findByRole('heading', { name: 'Weekly activity' })).toBeInTheDocument();
+    expect(screen.getByText('2 of 3 planned days completed.')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: '2 days' })).not.toBeInTheDocument();
+  });
+
+  it('shows a countdown to the next exam', async () => {
+    localStorage.setItem('caplet:my-subjects', JSON.stringify(['English Advanced', 'Physics']));
+    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+
+    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+
+    const countdownLink = await screen.findByRole('link', { name: /days.*until English Advanced/i });
+    expect(countdownLink).toHaveAttribute('href', '/assessments');
+    const upcoming = screen.getByRole('region', { name: 'Upcoming assessments' });
+    expect(upcoming).toBeInTheDocument();
+    expect(within(upcoming).queryByText('Economics')).not.toBeInTheDocument();
+  });
+
+  it('uses a personalised exam when it is the next assessment', async () => {
+    localStorage.setItem('caplet:my-subjects', JSON.stringify(['Biology']));
+    localStorage.setItem('caplet:assessment-customisations', JSON.stringify({
+      customTasks: [{
+        id: 'biology-exam', subject: 'Biology', date: '2026-08-15', dateLabel: '15 Aug',
+        group: 'Yearly exams', type: 'Exam', status: 'Preparing', detail: 'Personal task.', source: 'Personalised', custom: true,
+      }],
+      overrides: {},
+      hiddenIds: [],
+    }));
+    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+
+    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+
+    expect(await screen.findByRole('link', { name: /days.*until Biology/i })).toHaveAttribute('href', '/assessments');
+  });
+
+  it('resumes a saved practice session with one clear primary action', async () => {
+    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+    localStorage.setItem('caplet.practice.active.economics', JSON.stringify({ id: 'practice-1' }));
+    api.getPracticeSession.mockResolvedValue({ session: { id: 'practice-1', status: 'in_progress', currentIndex: 2, totalQuestions: 10, mode: 'adaptive' } });
+
+    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+
+    expect(await screen.findByRole('heading', { name: 'Continue practice' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Resume your Economics practice.*Continue/i })).toHaveAttribute('href', '/practice?subject=economics&session=practice-1&source=dashboard');
+    expect(screen.getAllByText('Question 3 of 10').length).toBeGreaterThan(0);
+  });
 });

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
@@ -58,16 +57,16 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
       {/* Heading */}
       <div className="mb-8">
         <p className="font-hand text-accent text-lg mb-1">Good to see you</p>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight text-text-primary mb-2">
+        <h2 className="text-4xl font-display font-extrabold text-text-primary tracking-tight mb-2">
           Welcome back.
-        </h1>
-        <p className="flex flex-wrap items-center gap-x-1 text-sm text-text-muted">
-          <span>New here?</span>
+        </h2>
+        <p className="text-sm text-text-muted">
+          New here?{' '}
           {onSwitchToRegister ? (
             <button
               type="button"
               onClick={onSwitchToRegister}
-              className="inline-flex min-h-11 items-center font-semibold text-accent hover:underline"
+              className="text-accent font-semibold hover:underline"
             >
               Create an account
             </button>
@@ -79,14 +78,14 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
 
       {/* Error */}
       {error && (
-        <div role="alert" className="mb-6 rounded-2xl bg-surface-error p-4 shadow-[0_16px_36px_-28px_rgba(20,20,18,0.3)]">
+        <div className="mb-6 p-4 bg-surface-error rounded-2xl shadow-[0_16px_36px_-28px_rgba(20,20,18,0.3)]">
           <p className="text-sm font-medium text-text-error">{error}</p>
         </div>
       )}
 
       {/* Google */}
       <div className={`w-full ${busy ? 'opacity-80' : ''}`}>
-        <div className={`google-auth-button w-full ${googleLoading ? 'pointer-events-none opacity-60' : ''}`}>
+        <div className={`flex w-full justify-center [&>div]:max-w-full [&>div>div]:max-w-full ${googleLoading ? 'pointer-events-none opacity-60' : ''}`}>
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => setError('Google sign-in was cancelled or failed.')}
@@ -94,7 +93,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
             size="large"
             text="continue_with"
             shape="rectangular"
-            width="384"
+            width="320"
           />
         </div>
         {googleLoading && (
@@ -131,7 +130,9 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
           />
         </div>
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-3"><label htmlFor="password" className="block text-sm font-medium text-text-muted">Password</label><Link to="/forgot-password" className="text-xs font-bold text-accent hover:underline">Forgot password?</Link></div>
+          <label htmlFor="password" className="block text-sm font-medium text-text-muted">
+            Password
+          </label>
           <input
             type="password"
             id="password"
@@ -147,14 +148,10 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
         <button
           type="submit"
           disabled={busy}
-          aria-busy={passwordLoading}
           className="w-full btn-primary py-4 text-base rounded-2xl hover:-translate-y-0.5 transition-transform disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
         >
           {passwordLoading ? (
-            <>
-              <span className="h-5 w-5 animate-spin rounded-full border-2 border-text-contrast/30 border-t-text-contrast" aria-hidden="true" />
-              <span>Signing in…</span>
-            </>
+            <span className="w-5 h-5 border-2 border-text-contrast/30 border-t-text-contrast rounded-full animate-spin" />
           ) : (
             <span>Sign in</span>
           )}

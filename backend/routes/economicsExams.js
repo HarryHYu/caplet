@@ -4,6 +4,7 @@ const { EconomicsExamSession, MarkedAttempt } = require('../models');
 const { markEconomicsAnswer } = require('../services/economicsMarker');
 const { requireAIConsent } = require('../services/privacyConsent');
 const { reserveAIQuota } = require('../middleware/aiQuota');
+const { publicAIError } = require('../utils/aiErrors');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -137,7 +138,18 @@ router.post('/:id/submit', requireAIConsent, examMarkingQuota, async (req, res) 
     }
     await session.update({ status: 'submitted', results, submittedAt: new Date() });
     res.json({ session: serialize(session) });
-  } catch (error) { const status = error.status || 500; if (status >= 500) console.error('Submit exam session error:', error.message); res.status(status).json({ message: error.message || 'Could not mark this exam session.' }); }
+  } catch (error) {
+    const safeError = publicAIError(error, 'Could not mark this exam session. Try again shortly.');
+    if (safeError.status >= 500) {
+      console.error(JSON.stringify({
+        event: 'economics_exam_submit_error',
+        requestId: req.requestId || null,
+        errorType: error?.name || 'Error',
+        status: safeError.status,
+      }));
+    }
+    res.status(safeError.status).json({ message: safeError.message, requestId: req.requestId || null });
+  }
 });
 
 module.exports = router;

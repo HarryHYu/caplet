@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import ProductModeSwitch from './ProductModeSwitch';
 import UserAvatar from './UserAvatar';
 
 const hiddenPaths = ['/login', '/register', '/play'];
 
 const navItems = [
-    { path: '/dashboard', label: 'Dashboard' },
-    { path: '/library', label: 'Learn' },
+    { path: '/dashboard', label: 'Today' },
+    { path: '/library', label: 'Subjects' },
+    { path: '/notes', label: 'Notes' },
+    { path: '/practice', label: 'Practice' },
+    { path: '/study-plan', label: 'Plan' },
+    { path: '/money', label: 'Money' },
 ];
 
 const isActivePath = (pathname, path) => path === '/dashboard'
@@ -61,7 +64,7 @@ export default function TabletDashboardNavbar() {
                     <span className="grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft transition-transform duration-300 group-hover:scale-105">
                         <img src="/logo.png" alt="Caplet logo" className="h-full w-full scale-105 rounded-full object-cover" />
                     </span>
-                    <span className="font-bricolage text-lg font-extrabold tracking-[-0.02em] text-text-primary">Caplet.</span>
+                    <span className="font-bricolage text-lg font-extrabold tracking-[-0.02em] text-text-primary">Caplet</span>
                 </Link>
 
                 <nav aria-label="Dashboard navigation" className="flex items-center gap-1">
@@ -83,8 +86,6 @@ export default function TabletDashboardNavbar() {
                 </nav>
 
                 <div className="ml-auto flex shrink-0 items-center gap-1.5">
-                    <ProductModeSwitch className="hidden sm:inline-flex" />
-
                     <div className="relative" ref={menuRef}>
                         <button
                             ref={userButtonRef}

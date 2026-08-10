@@ -1,9 +1,5 @@
 const { validateSlides } = require('../utils/slideSchema');
-
-const ALLOWED_EMBED_HOSTS = new Set([
-  'www.youtube.com', 'youtube.com', 'youtu.be', 'player.vimeo.com',
-  'www.desmos.com', 'desmos.com', 'phet.colorado.edu', 'www.google.com',
-]);
+const { APPROVED_EMBED_HOSTS, isAllowedEmbedUrl } = require('../utils/embedPolicy');
 
 function validHttpUrl(value) {
   try { const url = new URL(value); return ['http:', 'https:'].includes(url.protocol); } catch { return false; }
@@ -37,9 +33,8 @@ function validateLessonContent(input = {}) {
       if (!validHttpUrl(slide.url)) errors.push({ code: 'invalid_media_url', message: `Slide ${number} has an invalid media URL.` });
       if (slide.source === 'image' && !slide.caption && !slide.alt) qualityIssue({ code: 'missing_image_description', message: `Slide ${number} needs alternative text or a descriptive caption.` });
     }
-    if (slide.type === 'embed') {
-      if (!validHttpUrl(slide.url)) errors.push({ code: 'invalid_embed_url', message: `Slide ${number} has an invalid embed URL.` });
-      else if (!ALLOWED_EMBED_HOSTS.has(new URL(slide.url).hostname)) errors.push({ code: 'unsupported_embed', message: `Slide ${number} uses an unsupported embed host.` });
+    if (slide.type === 'embed' || (slide.type === 'media' && slide.source === 'embed')) {
+      if (!isAllowedEmbedUrl(slide.url)) errors.push({ code: 'unsupported_embed', message: `Slide ${number} uses an unsupported or unsafe embed URL.` });
     }
     if (slide.type === 'choice' && !(slide.explanation || '').trim()) qualityIssue({ code: 'missing_explanation', message: `Slide ${number} should explain the correct answer.` });
     if (['match', 'order', 'fillblank', 'hotspot', 'timeline'].includes(slide.type) && !slide.explanation) qualityIssue({ code: 'missing_feedback', message: `Slide ${number} should include learning feedback.` });
@@ -60,4 +55,4 @@ function validateLessonContent(input = {}) {
   return { ok: errors.length === 0, errors, warnings, checkedAt: new Date().toISOString() };
 }
 
-module.exports = { ALLOWED_EMBED_HOSTS, validHttpUrl, validateLessonContent };
+module.exports = { ALLOWED_EMBED_HOSTS: APPROVED_EMBED_HOSTS, validHttpUrl, validateLessonContent };

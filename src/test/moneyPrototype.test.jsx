@@ -89,7 +89,7 @@ describe('Money overview and indicator interactions', () => {
     featureFlagState.enabled = { 'money.mode.pilot': true, 'money.private.persistence': true };
     render(<MemoryRouter initialEntries={['/money']}><MoneyOverview /></MemoryRouter>);
 
-    expect(screen.getByRole('heading', { name: 'Money, made understandable.' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Money made understandable' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Save for something/ }));
     expect(screen.getByRole('heading', { name: 'Build a private savings scenario' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Open My Money' })).toBeInTheDocument();
@@ -304,7 +304,7 @@ describe('Money routing and mode persistence', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole('heading', { name: 'Money, made understandable.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Money made understandable' })).toBeInTheDocument();
     expect(screen.getByText('My Money is not available for this account yet.')).toBeInTheDocument();
     await waitFor(() => expect(localStorage.getItem('caplet:last-money-route')).toBe('/money'));
 
@@ -312,7 +312,7 @@ describe('Money routing and mode persistence', () => {
     expect(await screen.findByText('Study dashboard')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Money' }));
 
-    expect(await screen.findByRole('heading', { name: 'Money, made understandable.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Money made understandable' })).toBeInTheDocument();
     expect(screen.getByTestId('location')).toHaveTextContent('/money');
   });
 

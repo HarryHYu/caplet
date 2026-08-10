@@ -16,10 +16,10 @@ const NAV_MODE_KEY = 'caplet:nav-mode';
 // The rail is the calm default; an explicit saved choice still wins.
 const DEFAULT_NAV_MODE = 'vertical';
 const COLLAPSED_KEY = 'caplet:dashboard-sidebar-collapsed';
-const SIDEBAR_WIDTH_KEY = 'caplet:dashboard-sidebar-width';
-const DEFAULT_SIDEBAR_WIDTH = 304;
-const MIN_SIDEBAR_WIDTH = 240;
-const MAX_SIDEBAR_WIDTH = 420;
+const SIDEBAR_WIDTH_KEY = 'caplet:dashboard-sidebar-width-v2';
+const DEFAULT_SIDEBAR_WIDTH = 208;
+const MIN_SIDEBAR_WIDTH = 184;
+const MAX_SIDEBAR_WIDTH = 320;
 const PRODUCT_MODE_KEY = 'caplet:product-mode';
 const LAST_STUDY_ROUTE_KEY = 'caplet:last-study-route';
 const LAST_MONEY_ROUTE_KEY = 'caplet:last-money-route';

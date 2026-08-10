@@ -194,15 +194,13 @@ export default function Mastery() {
   const averagePercent = probabilityPercent(averageProbability);
 
   return (
-    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+    <main className="minimal-page selection:bg-accent selection:text-white">
       <div className="container-custom">
         <header className="mb-12 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <span className="font-hand text-xl text-accent -rotate-2 inline-block">evidence, not guesswork</span>
-            <h1 className="mt-2 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">My mastery.</h1>
-            <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">
-              See what you can demonstrate, what may be fading, and the clearest next step in {SUBJECT_LABELS[subject] || subject}.
-            </p>
+            <span className="section-kicker">Progress</span>
+            <h1 className="minimal-page-title">Mastery</h1>
+            <p className="minimal-page-description">See your evidence and next step in {SUBJECT_LABELS[subject] || subject}.</p>
           </div>
           <Link to={`/practice?subject=${encodeURIComponent(subject)}`} className="btn-secondary w-fit">
             Open practice <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />

@@ -107,7 +107,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
             size="large"
             text="continue_with"
             shape="rectangular"
-            width="384"
+            width="100%"
           />
         </div>
         {googleLoading && (

@@ -282,27 +282,18 @@ const FinancialTools = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="minimal-page selection:bg-accent selection:text-white">
       <div className="container-custom">
 
         {/* Header */}
-        <header className="mb-16 reveal">
-          <span className="font-hand text-accent text-xl mb-6 block">Your money toolkit</span>
+        <header className="minimal-page-header reveal">
+          <span className="section-kicker">Money tools</span>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <h1 className="font-display font-extrabold tracking-tight text-6xl lg:text-8xl mb-8">
-                Financial <br />calculators.
-              </h1>
-              <p className="text-xl text-text-muted max-w-xl leading-relaxed">
-                Free calculators for tax, budgeting, loans, super, and more, built for Australian rules and rates.
-              </p>
+              <h1 className="minimal-page-title">Financial calculators</h1>
+              <p className="minimal-page-description">Tax, budgeting, loans, super and everyday money calculations.</p>
             </div>
-            <div className="shrink-0 hidden md:block">
-              <div className="block-blue rounded-3xl px-8 py-6 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                <span className="text-5xl font-display font-extrabold tracking-tight text-blue">{availableTools.length}</span>
-                <p className="text-xs font-bold text-text-muted mt-1 uppercase tracking-wide">Calculators</p>
-              </div>
-            </div>
+            <p className="hidden shrink-0 text-sm font-bold text-text-muted md:block">{availableTools.length} calculators</p>
           </div>
         </header>
 
