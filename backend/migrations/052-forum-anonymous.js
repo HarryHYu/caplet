@@ -8,8 +8,10 @@
 // (bullying, self-harm disclosures, academic-integrity breaches). The UI
 // makes that promise explicit to the poster.
 //
-// SAFETY: strictly additive, same rule as 049–051. ADD COLUMN only, and
-// down() is a no-op — never drop.
+// SAFETY: up() is strictly additive in production, same rule as 049–051 —
+// ADD COLUMN only. down() exists for explicit rollback and CI rehearsal and
+// must fully reverse this migration — it is never run automatically in
+// production.
 
 async function ensureColumn(queryInterface, tableName, columnName, definition) {
   const columns = await queryInterface.describeTable(tableName);
@@ -27,7 +29,12 @@ module.exports = {
     });
   },
 
-  async down() {
-    // Intentionally a no-op — see the additive-only migration policy above.
+  async down(queryInterface) {
+    // Exact reverse of up(): remove the columns it added. Guarded with
+    // describeTable so a partially rolled-back state does not throw.
+    for (const tableName of ['forum_threads', 'forum_posts']) {
+      const columns = await queryInterface.describeTable(tableName);
+      if (columns.isAnonymous) await queryInterface.removeColumn(tableName, 'isAnonymous');
+    }
   },
 };

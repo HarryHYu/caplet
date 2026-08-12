@@ -6,11 +6,12 @@
 // classrooms/curriculum data: the forum is its own product sharing just the
 // account/auth layer, not a feature bolted onto the course catalog.
 //
-// SAFETY: this migration is strictly additive. It only ever creates tables
-// and indexes — it must never ALTER an existing table or DROP anything.
-// down() is intentionally a no-op: forum tables are never dropped, even on
-// rollback (see project rule: migrations are additive-only, no destructive
-// operations, ever).
+// SAFETY: up() is strictly additive in production. It only ever creates
+// tables and indexes — it must never ALTER an existing table or DROP
+// anything. down() exists for explicit rollback and CI rehearsal (the
+// migrations:check job walks every migration up and back down) and must
+// fully reverse this migration — it is never run automatically in
+// production.
 
 async function tableExists(queryInterface, tableName) {
   const tables = await queryInterface.showAllTables();
@@ -247,8 +248,25 @@ module.exports = {
     await ensureIndex(queryInterface, 'forum_sanctions', ['userId', 'active'], { name: 'forum_sanctions_user_active_idx' });
   },
 
-  async down() {
-    // Intentionally a no-op. Forum tables are never dropped — see the
-    // additive-only migration policy at the top of this file.
+  async down(queryInterface) {
+    // Exact reverse of up(): drop every table this migration created, in
+    // reverse dependency order (children before parents) so no foreign key
+    // is left dangling. Guarded with tableExists so a partially rolled-back
+    // state does not throw.
+    const tablesInDropOrder = [
+      'forum_sanctions',
+      'forum_moderators',
+      'forum_moderation_actions', // FK to forum_reports
+      'forum_reports',
+      'forum_likes',
+      'forum_posts', // FK to forum_threads
+      'forum_threads', // FK to forum_categories
+      'forum_categories',
+    ];
+    for (const tableName of tablesInDropOrder) {
+      if (await tableExists(queryInterface, tableName)) {
+        await queryInterface.dropTable(tableName);
+      }
+    }
   },
 };

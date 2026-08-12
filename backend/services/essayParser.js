@@ -56,9 +56,40 @@ const SMART_CHAR_MAP = {
 };
 const normChar = (ch) => SMART_CHAR_MAP[ch] || ch;
 
+// PDF-extracted text is often hard-wrapped: one short line per printed line.
+// When the single-newline fallback yields an implausible number of
+// "paragraphs", consecutive lines are merged into blocks so the essay is not
+// shredded into hundreds of tiny fragments (which the 30-paragraph cap would
+// then have to truncate). A block closes once it has accumulated at least
+// MIN_MERGED_BLOCK characters AND the current line ends a sentence.
+const MIN_MERGED_BLOCK = 400;
+const ENDS_SENTENCE = /[.!?…]['"’”)\]}»›]*$/;
+
+function mergeWrappedLines(lines) {
+  const blocks = [];
+  let current = [];
+  let length = 0;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    current.push(line);
+    length += line.length;
+    if (length >= MIN_MERGED_BLOCK && ENDS_SENTENCE.test(line)) {
+      blocks.push(current.join('\n'));
+      current = [];
+      length = 0;
+    }
+  }
+  if (current.length) blocks.push(current.join('\n'));
+  return blocks;
+}
+
 /**
  * Splits an essay into paragraphs deterministically. Blank lines are paragraph
- * breaks; if there are none (common for PDF text), single newlines are used.
+ * breaks; if there are none (common for PDF text), single newlines are used —
+ * and when that produces more than 30 line-"paragraphs", consecutive lines are
+ * merged into sentence-terminated blocks (joined with '\n') so every character
+ * of content is preserved in a plausible paragraph count.
  */
 function splitParagraphs(text) {
   const t = str(text).replace(/\r\n?/g, '\n').trim();
@@ -66,6 +97,7 @@ function splitParagraphs(text) {
   let parts = t.split(/\n\s*\n+/);
   if (parts.length < 2 && t.includes('\n')) {
     parts = t.split(/\n+/);
+    if (parts.length > 30) parts = mergeWrappedLines(parts);
   }
   return parts.map((p) => p.trim()).filter(Boolean);
 }
@@ -109,8 +141,13 @@ function buildMatcher(source) {
       origIndex.push(-1);
       pendingSpace = false;
     }
-    norm += mapped.toLowerCase();
-    origIndex.push(i);
+    const low = mapped.toLowerCase();
+    norm += low;
+    // toLowerCase can expand one char into several (e.g. 'İ' U+0130 -> 'i' +
+    // combining dot). The index map must gain one entry per NORMALIZED
+    // character, or every mapping after the expansion is misaligned and the
+    // returned "verbatim" slice is shifted.
+    for (let k = 0; k < low.length; k += 1) origIndex.push(i);
   }
   const normalizeNeedle = (needle) => {
     let out = '';
@@ -145,6 +182,26 @@ function buildMatcher(source) {
   };
 }
 
+// Matches the parse route's MAX_AI_TEXT so even a single-paragraph essay of
+// maximum parseable length is never truncated by the sanitizer.
+const MAX_PARAGRAPH_TEXT = 24000;
+
+// Technique names are short human labels ("metaphor", "dramatic irony"). An
+// AI-supplied entry that looks like anything else (digits, URLs, punctuation,
+// prompt fragments) is discarded rather than stored.
+const TECHNIQUE_NAME = /^[A-Za-z][A-Za-z\s'’-]{0,49}$/;
+
+/**
+ * Bounds a paragraph list at 30 WITHOUT dropping content: everything past the
+ * 30th paragraph is merged into it (joined with '\n\n'), so sanitizeStructure's
+ * slice(0, 30) can never discard part of the essay.
+ */
+function capParagraphs(paragraphs) {
+  const list = Array.isArray(paragraphs) ? paragraphs : [];
+  if (list.length <= 30) return list;
+  return [...list.slice(0, 29), list.slice(29).join('\n\n')];
+}
+
 /** Coerces a structure into canonical shape with bounded sizes. */
 function sanitizeStructure(parsed) {
   const root = parsed && typeof parsed === 'object' ? parsed : {};
@@ -160,12 +217,12 @@ function sanitizeStructure(parsed) {
       })
       .filter((q) => q.text.trim());
     const techniques = (Array.isArray(para.techniques) ? para.techniques : [])
-      .slice(0, 20)
-      .map((t) => clamp(t, 80))
-      .filter((t) => t.trim());
+      .map((t) => str(t).trim())
+      .filter((t) => TECHNIQUE_NAME.test(t))
+      .slice(0, 20);
     return {
       topicSentence: clamp(para.topicSentence, 1000),
-      text: clamp(para.text, 6000),
+      text: clamp(para.text, MAX_PARAGRAPH_TEXT),
       quotes,
       techniques,
     };
@@ -173,9 +230,9 @@ function sanitizeStructure(parsed) {
 
   return {
     thesis: clamp(root.thesis, 2000),
-    introduction: clamp(root.introduction, 6000),
+    introduction: clamp(root.introduction, MAX_PARAGRAPH_TEXT),
     bodyParagraphs,
-    conclusion: clamp(root.conclusion, 6000),
+    conclusion: clamp(root.conclusion, MAX_PARAGRAPH_TEXT),
   };
 }
 
@@ -192,6 +249,15 @@ function assembleFromLabels(labels, paragraphs) {
 
   let introIndex = validIndex(root.introIndex);
   let conclusionIndex = validIndex(root.conclusionIndex);
+  // Ordering sanity: an introduction can only be one of the first two
+  // paragraphs and a conclusion one of the last two, and a "conclusion" at or
+  // before the intro is a mislabel — treat such labels as absent rather than
+  // rendering the essay's structure reversed.
+  if (introIndex !== null && introIndex > 1) introIndex = null;
+  if (conclusionIndex !== null && conclusionIndex < total - 2) conclusionIndex = null;
+  if (introIndex !== null && conclusionIndex !== null && conclusionIndex <= introIndex) {
+    conclusionIndex = null;
+  }
   // A one/two-paragraph essay must keep at least one body paragraph — an AI
   // that labels everything intro+conclusion would leave nothing to practise.
   if (introIndex !== null && conclusionIndex === introIndex) conclusionIndex = null;
@@ -245,12 +311,22 @@ function assembleFromLabels(labels, paragraphs) {
 
   const introduction = introIndex !== null ? paragraphs[introIndex] : '';
   const conclusion = conclusionIndex !== null ? paragraphs[conclusionIndex] : '';
+  // The thesis is snapped against ONE paragraph at a time — never against a
+  // paragraphs.join() blob, whose synthetic separator could end up embedded in
+  // a "verbatim" thesis. A thesis that spans paragraphs stays ''.
   let thesis = '';
   if (root.thesis) {
     const scope = introduction ? buildMatcher(introduction) : null;
-    thesis = (scope && scope.find(root.thesis))
-      || buildMatcher(paragraphs.join('\n\n')).find(root.thesis)
-      || '';
+    thesis = (scope && scope.find(root.thesis)) || '';
+    if (!thesis) {
+      for (const paragraph of paragraphs) {
+        const found = buildMatcher(paragraph).find(root.thesis);
+        if (found) {
+          thesis = found;
+          break;
+        }
+      }
+    }
   }
 
   return sanitizeStructure({ thesis, introduction, bodyParagraphs, conclusion });
@@ -261,7 +337,7 @@ function fallbackStructure(paragraphs) {
   return sanitizeStructure({
     thesis: '',
     introduction: '',
-    bodyParagraphs: paragraphs.map((p) => ({
+    bodyParagraphs: capParagraphs(paragraphs).map((p) => ({
       topicSentence: firstSentence(p),
       text: p,
       quotes: extractQuotes(p).map((text) => ({ text, highLeverage: false })),
@@ -273,7 +349,9 @@ function fallbackStructure(paragraphs) {
 
 /**
  * @param {string} essayText  the student's verbatim essay
- * @param {object} opts { model, client } — client is injectable for tests
+ * @param {object} opts { model, client, onDegrade } — client is injectable for
+ *   tests; onDegrade (optional function) is invoked whenever the deterministic
+ *   fallback path is taken instead of AI labels.
  * @returns {Promise<{thesis:string, introduction:string, bodyParagraphs:Array, conclusion:string}>}
  */
 async function parseEssay(essayText, opts = {}) {
@@ -290,7 +368,9 @@ async function parseEssay(essayText, opts = {}) {
     err.status = 400;
     throw err;
   }
-  const paragraphs = splitParagraphs(text);
+  // Cap BEFORE labelling so nothing the AI (or the fallback) sees can later be
+  // discarded by sanitizeStructure's 30-paragraph bound.
+  const paragraphs = capParagraphs(splitParagraphs(text));
   if (!paragraphs.length) {
     const err = new Error('The essay has no text to parse.');
     err.status = 400;
@@ -329,6 +409,9 @@ async function parseEssay(essayText, opts = {}) {
       errorType: error?.name || 'Error',
       status: error?.status || null,
     }));
+    if (typeof opts.onDegrade === 'function') {
+      try { opts.onDegrade(error); } catch { /* observers must never break parsing */ }
+    }
     return fallbackStructure(paragraphs);
   }
 }
@@ -337,6 +420,7 @@ module.exports = {
   parseEssay,
   sanitizeStructure,
   splitParagraphs,
+  capParagraphs,
   firstSentence,
   extractQuotes,
   buildMatcher,

@@ -3,10 +3,12 @@
 // Forum feature pass: tags/flairs, study reactions, saves, contribution
 // stats, megathreads, polls, subject follows, in-app notifications.
 //
-// SAFETY: strictly additive, same rule as 049-forum.js. Only ADD COLUMN on
-// existing forum_* tables and CREATE TABLE for new ones — never ALTER an
-// existing column's type/constraint, never DROP anything. down() is a
-// no-op. Every FK here points at another forum_* table or at users
+// SAFETY: up() is strictly additive in production, same rule as
+// 049-forum.js. Only ADD COLUMN on existing forum_* tables and CREATE TABLE
+// for new ones — never ALTER an existing column's type/constraint, never
+// DROP anything. down() exists for explicit rollback and CI rehearsal and
+// must fully reverse this migration — it is never run automatically in
+// production. Every FK here points at another forum_* table or at users
 // (identity only) — still no relationship into Course/Lesson/Module/
 // Classroom/CurriculumOutcome.
 
@@ -196,7 +198,32 @@ module.exports = {
     await ensureIndex(queryInterface, 'forum_notifications', ['userId', 'isRead', 'createdAt'], { name: 'forum_notifications_user_read_idx' });
   },
 
-  async down() {
-    // Intentionally a no-op — see the additive-only migration policy above.
+  async down(queryInterface) {
+    // Exact reverse of up(): drop the tables this migration created in
+    // reverse dependency order (children before parents), then remove the
+    // columns it added. Guarded (tableExists / describeTable) so a partially
+    // rolled-back state does not throw.
+    const tablesInDropOrder = [
+      'forum_notifications',
+      'forum_subscriptions',
+      'forum_poll_votes', // FK to forum_poll_options + forum_polls
+      'forum_poll_options', // FK to forum_polls
+      'forum_polls',
+      'forum_user_stats',
+      'forum_saves',
+      'forum_reactions',
+    ];
+    for (const tableName of tablesInDropOrder) {
+      if (await tableExists(queryInterface, tableName)) {
+        await queryInterface.dropTable(tableName);
+      }
+    }
+
+    const threadColumns = await queryInterface.describeTable('forum_threads');
+    for (const columnName of ['tags', 'isMegathread', 'reactionCounts']) {
+      if (threadColumns[columnName]) await queryInterface.removeColumn('forum_threads', columnName);
+    }
+    const postColumns = await queryInterface.describeTable('forum_posts');
+    if (postColumns.reactionCounts) await queryInterface.removeColumn('forum_posts', 'reactionCounts');
   },
 };

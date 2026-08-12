@@ -9,7 +9,10 @@
  *                                    the text clears parsedStructure (stale)
  *   POST   /api/essays/:id/parse  -> AI structure labelling; accepts { model,
  *                                    force } — model from ESSAY_MODELS,
- *                                    force re-labels an already-parsed essay
+ *                                    force re-labels an already-parsed essay.
+ *                                    Essays over MAX_AI_TEXT are structured
+ *                                    deterministically (no AI call) instead of
+ *                                    being rejected
  *   DELETE /api/essays/:id        -> delete an essay (and its review schedule)
  *
  * Parsing is a SEPARATE step from create: create never depends on the AI key
@@ -21,7 +24,7 @@ const { Op } = require('sequelize');
 const Essay = require('../models/Essay');
 const ReviewItem = require('../models/ReviewItem');
 const { requireAuth } = require('../middleware/auth');
-const { parseEssay } = require('../services/essayParser');
+const { parseEssay, fallbackStructure, splitParagraphs } = require('../services/essayParser');
 const { requireAIConsent } = require('../services/privacyConsent');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { reserveAIQuota } = require('../middleware/aiQuota');
@@ -138,8 +141,9 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// POST /api/essays/:id/parse — AI structure labelling (never alters the text)
-router.post('/:id/parse', requireAIConsent, essayParseQuota, async (req, res) => {
+// Loads the essay and serves the cached fast-path BEFORE any AI quota is
+// reserved: returning an already-parsed structure must never consume quota.
+async function loadEssayForParse(req, res, next) {
   try {
     const essay = await Essay.findOne({
       where: { id: req.params.id, userId: req.user.id },
@@ -148,25 +152,71 @@ router.post('/:id/parse', requireAIConsent, essayParseQuota, async (req, res) =>
     if (essay.parsedStructure && req.body?.force !== true) {
       return res.json({ essay, cached: true });
     }
-    if (String(essay.originalText || '').length > MAX_AI_TEXT) {
-      return res.status(413).json({
-        message: `AI structuring supports essays up to ${MAX_AI_TEXT.toLocaleString()} characters. Shorten this copy before parsing.`,
+    req.essayForParse = essay;
+    return next();
+  } catch (e) {
+    console.error('Load essay for parse error:', e);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+// Race guard: the structure was built from a snapshot of the text, so it is
+// only stored while the text is still identical — a concurrent PUT clears
+// parsedStructure and must never be overwritten with stale labels. Returns the
+// reloaded essay, or null when the conditional update matched nothing.
+async function storeParsedStructure(req, essay, textAtParse, structure) {
+  const [affectedCount] = await Essay.update(
+    { parsedStructure: structure },
+    { where: { id: essay.id, userId: req.user.id, originalText: textAtParse } },
+  );
+  if (!affectedCount) return null;
+  return Essay.findOne({ where: { id: essay.id, userId: req.user.id } });
+}
+
+const PARSE_CONFLICT_MESSAGE = 'The essay changed while it was being mapped. Rescan to update.';
+
+// POST /api/essays/:id/parse — AI structure labelling (never alters the text)
+router.post('/:id/parse', requireAIConsent, loadEssayForParse, essayParseQuota, async (req, res) => {
+  try {
+    const essay = req.essayForParse;
+    const textAtParse = String(essay.originalText || '');
+    const model = ESSAY_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
+
+    // Oversize essays skip the AI entirely: the deterministic splitter still
+    // yields a fully practisable structure, so nothing is rejected or dropped.
+    if (textAtParse.length > MAX_AI_TEXT) {
+      const structure = fallbackStructure(splitParagraphs(textAtParse));
+      const stored = await storeParsedStructure(req, essay, textAtParse, structure);
+      if (!stored) return res.status(409).json({ message: PARSE_CONFLICT_MESSAGE });
+      await recordAIInteractionSafely({
+        userId: req.user.id,
+        feature: 'essay_structure',
+        modelVersion: 'deterministic-fallback',
+        status: 'completed',
+        inputSummary: `${essay.title} · ${textAtParse.length} characters`,
+        outputSummary: `${structure?.bodyParagraphs?.length || 0} body paragraphs structured`,
+        metadata: { essayId: essay.id },
       });
+      return res.json({ essay: stored });
     }
 
-    const model = ESSAY_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
-    const structure = await parseEssay(essay.originalText, { model });
-    await essay.update({ parsedStructure: structure });
+    let degraded = false;
+    const structure = await parseEssay(textAtParse, {
+      model,
+      onDegrade: () => { degraded = true; },
+    });
+    const stored = await storeParsedStructure(req, essay, textAtParse, structure);
+    if (!stored) return res.status(409).json({ message: PARSE_CONFLICT_MESSAGE });
     await recordAIInteractionSafely({
       userId: req.user.id,
       feature: 'essay_structure',
-      modelVersion: model,
+      modelVersion: degraded ? `${model} (fallback)` : model,
       status: 'completed',
-      inputSummary: `${essay.title} · ${String(essay.originalText || '').length} characters`,
+      inputSummary: `${essay.title} · ${textAtParse.length} characters`,
       outputSummary: `${structure?.bodyParagraphs?.length || 0} body paragraphs structured`,
       metadata: { essayId: essay.id },
     });
-    res.json({ essay });
+    res.json({ essay: stored });
   } catch (e) {
     const error = publicAIError(e, 'Failed to parse essay. Try again shortly.');
     console.error(JSON.stringify({

@@ -5,18 +5,21 @@ const { sequelize } = require('../config/database');
  * A student's essay, stored privately for memorisation practice.
  *
  * `originalText` is the verbatim text the student supplied (pasted or extracted
- * from a PDF on the client). `parsedStructure` is the AI segmentation —
- * SEGMENTATION AND ANNOTATION ONLY, never a rewrite of the student's words:
+ * from a PDF on the client). `parsedStructure` is the AI labelling of verbatim
+ * source slices — the server splits the text into paragraphs deterministically
+ * and every stored string is an exact slice of the original essay, never a
+ * rewrite of the student's words (see services/essayParser.js):
  *
  *   {
- *     thesis: string,
+ *     thesis: string,          // verbatim slice, '' when none is stated
+ *     introduction: string,    // verbatim paragraph, '' when none
  *     bodyParagraphs: [{
- *       topicSentence: string,
- *       text: string,
+ *       topicSentence: string, // verbatim slice of the paragraph
+ *       text: string,          // the whole paragraph, verbatim
  *       quotes: [{ text: string, highLeverage: boolean }],
  *       techniques: [string]
  *     }],
- *     conclusion: string
+ *     conclusion: string       // verbatim paragraph, '' when none
  *   }
  *
  * Stored as JSONB to mirror Lesson.slides (Sequelize returns it as a native

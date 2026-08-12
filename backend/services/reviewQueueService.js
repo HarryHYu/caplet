@@ -160,6 +160,9 @@ function makeEssayItem(review, essay) {
   const paragraph = row?.parsedStructure?.bodyParagraphs?.[ref?.paragraphIndex];
   if (!ref || !row || !paragraph) return null;
   const quote = ref.kind === 'quote' ? paragraph.quotes?.[ref.quoteIndex] : null;
+  // An orphaned quote item (its quote vanished after a re-parse) must drop out
+  // of the queue, not silently hydrate as a paragraph-style item.
+  if (ref.kind === 'quote' && !quote) return null;
   const answer = quote?.text || paragraph.text || paragraph.topicSentence;
   if (!answer) return null;
   const paragraphNumber = ref.paragraphIndex + 1;
