@@ -15,14 +15,17 @@ import {
     quoteItemId,
 } from '../lib/essaySlides';
 import {
+    AdjustmentsHorizontalIcon,
     DocumentTextIcon,
     PlusIcon,
     TrashIcon,
     ArrowLeftIcon,
+    ArrowRightCircleIcon,
     SparklesIcon,
     AcademicCapIcon,
     ArrowUpTrayIcon,
     ArrowRightIcon,
+    BoltIcon,
     CheckIcon,
     ChevronDownIcon,
     EyeIcon,
@@ -139,20 +142,6 @@ function diffWords(original, typed) {
     });
 }
 
-/** Replace every word with its first letter + dashes of matching length. */
-function toLetterHint(text) {
-    return String(text || '').trim().split(/(\s+)/).map((token) => {
-        if (/^\s+$/.test(token)) return token;
-        if (token.length <= 1) return token;
-        return token[0] + '─'.repeat(token.length - 1);
-    }).join('');
-}
-
-/** First letter of every word, concatenated — the hardest possible hint. */
-function toAcronym(text) {
-    return String(text || '').trim().split(/\s+/).filter(Boolean).map((w) => w[0]).join('');
-}
-
 function splitSentences(text) {
     return String(text || '').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
 }
@@ -173,6 +162,42 @@ function buildSpotlightSegments(structure) {
 }
 
 const wordCountOf = (text) => String(text || '').trim().split(/\s+/).filter(Boolean).length;
+
+/** Body paragraphs annotated with their index in the full essay. */
+const allParagraphsOf = (essay) => (essay?.parsedStructure?.bodyParagraphs || [])
+    .map((p, i) => ({ ...p, sourceIndex: i }));
+
+/** Parses a "0,2,3" scope param into valid sorted indices, or null for "all". */
+function parseScope(param, total) {
+    if (!param) return null;
+    const ids = [...new Set(String(param).split(',')
+        .map((n) => parseInt(n, 10))
+        .filter((n) => Number.isInteger(n) && n >= 0 && n < total))].sort((a, b) => a - b);
+    if (!ids.length || ids.length === total) return null;
+    return ids;
+}
+
+/** The sentence containing word number `wordIdx` of `text`. */
+function sentenceAtWord(text, wordIdx) {
+    const sentences = splitSentences(text);
+    let seen = 0;
+    for (const s of sentences) {
+        seen += s.trim().split(/\s+/).filter(Boolean).length;
+        if (wordIdx < seen) return s;
+    }
+    return sentences[sentences.length - 1] || '';
+}
+
+/** Shared keyframes for the practice modes. */
+function PracticeStyles() {
+    return (
+        <style>{`
+            @keyframes essayWordPop { 0% { opacity: 0; transform: translateY(6px) scale(0.85); } 60% { transform: translateY(-1px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes essayShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+            @keyframes essayStreak { 0% { opacity: 0; transform: scale(0.7); } 60% { transform: scale(1.15); } 100% { opacity: 1; transform: scale(1); } }
+        `}</style>
+    );
+}
 
 /** PDF page markers are extraction artifacts, not the student's essay. */
 const stripPdfArtifacts = (text) => String(text || '')
@@ -624,9 +649,9 @@ function ReadMode({ essay, onStartPractice }) {
 
 // ── RECALL — spaced-repetition cloze on topic sentences ─────────────────────
 
-function RecallChunks({ essay, onScheduled, onNext, nextLabel, onEdit }) {
+function RecallChunks({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
     const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
+    const paras = paragraphs || allParagraphsOf(essay);
     const [pIndex, setPIndex] = useState(0);
     const [graded, setGraded] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -640,18 +665,22 @@ function RecallChunks({ essay, onScheduled, onNext, nextLabel, onEdit }) {
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const current = paras[pIndex];
-    const cloze = buildTopicSentenceCloze(current, pIndex);
-    const cue = pIndex === 0
+    const sourceIdx = current.sourceIndex ?? pIndex;
+    const cloze = buildTopicSentenceCloze(current, sourceIdx);
+    // Cues come from the paragraph's REAL neighbour in the essay, so a scoped
+    // session still gives the true transition context.
+    const prevInEssay = sourceIdx > 0 ? structure.bodyParagraphs?.[sourceIdx - 1] : null;
+    const cue = !prevInEssay
         ? (structure.thesis ? `Thesis: "${structure.thesis}"` : 'Recall your first body paragraph.')
-        : `Previous paragraph ended: "${lastSentence(paras[pIndex - 1].text)}". What comes next?`;
+        : `Previous paragraph ended: "${lastSentence(prevInEssay.text)}". What comes next?`;
 
     const grade = async (recall) => {
         setBusy(true);
         try {
-            await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall);
+            await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), recall);
             await Promise.all(
                 (current.quotes || []).map((_, qIdx) =>
-                    api.submitReview('quote', quoteItemId(essay.id, pIndex, qIdx), recall).catch(() => {}),
+                    api.submitReview('quote', quoteItemId(essay.id, sourceIdx, qIdx), recall).catch(() => {}),
                 ),
             );
             onScheduled?.();
@@ -710,9 +739,21 @@ function RecallChunks({ essay, onScheduled, onNext, nextLabel, onEdit }) {
 
 // ── WORD BY WORD — type one word at a time; next letter revealed as you go ──
 
-export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }) {
-    const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
+const NEXT_WORD_HINTS = [
+    { key: 'first', label: '1 letter' },
+    { key: 'three', label: '3 letters' },
+    { key: 'word', label: 'Full word' },
+];
+
+const wordCue = (w, style) => {
+    if (style === 'word') return w;
+    const shown = style === 'three' ? Math.min(3, w.length) : 1;
+    return w.slice(0, shown) + '─'.repeat(Math.max(0, w.length - shown));
+};
+
+export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
+    const paras = paragraphs || allParagraphsOf(essay);
+    const [hintStyle, setHintStyle] = useState('first');
     const [pIndex, setPIndex] = useState(0);
     const [wordIdx, setWordIdx] = useState(0);
     const [current, setCurrent] = useState('');
@@ -722,12 +763,16 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(false);
     const [saveOk, setSaveOk] = useState(true);
+    const [shake, setShake] = useState(false);
+    const [streak, setStreak] = useState(0);
     const inputRef = useRef(null);
     const currentRef = useRef(null);
+    const shakeTimer = useRef(null);
 
-    const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false); setDone(false); setSaveOk(true); };
+    const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false); setDone(false); setSaveOk(true); setStreak(0); };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
+    useEffect(() => () => clearTimeout(shakeTimer.current), []);
     // Keep the word you're on visible inside its own scroll area, so a long
     // paragraph never pushes it (or the input) out of view.
     useEffect(() => {
@@ -740,16 +785,25 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const para = paras[pIndex];
+    const sourceIdx = para.sourceIndex ?? pIndex;
     const words = String(para.text || '').trim().split(/\s+/).filter(Boolean);
     const targetWord = words[wordIdx] || '';
+    const currentSentence = sentenceAtWord(para.text, wordIdx);
 
     const commitWord = () => {
         const typed = current.trim();
         if (!typed || paraDone) return;
         const isCorrect = normalise(typed) === normalise(targetWord);
-        const newHistory = [...history, { target: targetWord, typed, correct: isCorrect }];
-        setHistory(newHistory);
+        setHistory((prev) => [...prev, { target: targetWord, typed, correct: isCorrect }]);
         setCurrent('');
+        if (isCorrect) {
+            setStreak((s) => s + 1);
+        } else {
+            setStreak(0);
+            setShake(true);
+            clearTimeout(shakeTimer.current);
+            shakeTimer.current = setTimeout(() => setShake(false), 320);
+        }
         if (wordIdx + 1 >= words.length) setParaDone(true);
         else setWordIdx((i) => i + 1);
     };
@@ -757,7 +811,7 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
     const advance = async (recall) => {
         setBusy(true);
         try {
-            await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall, {
+            await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), recall, {
                 mode: 'word_by_word',
                 accuracy,
                 hintCount: peekedWords.size,
@@ -766,7 +820,7 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
         } catch { setSaveOk(false); }
         setBusy(false);
         if (pIndex + 1 < paras.length) {
-            setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false);
+            setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false); setStreak(0);
         } else setDone(true);
     };
 
@@ -782,12 +836,20 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
-                <span className="text-xs font-medium text-text-dim tabular-nums">{correct}/{history.length} correct</span>
+            <PracticeStyles />
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
+                <span className="text-xs font-medium text-text-dim">
+                    Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}
+                </span>
+                <div className="flex items-center gap-3">
+                    {streak >= 3 && (
+                        <span key={streak} className="text-xs font-bold text-accent animate-[essayStreak_0.25s_ease-out] tabular-nums">⚡ {streak} in a row</span>
+                    )}
+                    <HintToggle options={NEXT_WORD_HINTS} value={hintStyle} onChange={setHintStyle} />
+                </div>
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
-            <p className="text-xs font-medium text-text-dim mb-4">Type each word. The next word's first letter appears as you go.</p>
+            <p className="text-xs font-medium text-text-dim mb-4">Type each word — the cue shows as much of the next word as you choose.</p>
 
             <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
                 {/* Left — the word stream you're rebuilding (scrolls on its own) */}
@@ -795,17 +857,17 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
                     {words.map((w, i) => {
                         if (i < history.length) {
                             const h = history[i];
-                            if (h.correct) return <span key={i} aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined} title={peekedWords.has(i) ? 'Revealed with a hint' : undefined} className={peekedWords.has(i) ? 'rounded block-amber px-1 text-amber' : 'text-emerald-600 dark:text-emerald-400'}>{w}</span>;
+                            if (h.correct) return <span key={i} aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined} title={peekedWords.has(i) ? 'Revealed with a hint' : undefined} className={`animate-[essayWordPop_0.22s_ease-out] ${peekedWords.has(i) ? 'rounded block-amber px-1 text-amber' : 'text-emerald-600 dark:text-emerald-400'}`}>{w}</span>;
                             return (
-                                <span key={i} className="rounded px-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                                <span key={i} className="animate-[essayWordPop_0.22s_ease-out] rounded px-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
                                     {w}<span className="line-through opacity-50 ml-1">{h.typed}</span>
                                 </span>
                             );
                         }
                         if (i === wordIdx && !paraDone) {
                             return (
-                                <span key={i} ref={currentRef} aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined} title={peekedWords.has(i) ? 'Revealed with a hint' : undefined} className={`font-bold border-b-2 ${peekedWords.has(i) ? 'rounded block-amber px-1 text-amber border-[color:var(--mark-amber)]' : 'text-accent border-accent'}`}>
-                                    {w[0]}{'─'.repeat(Math.max(0, w.length - 1))}
+                                <span key={i} ref={currentRef} aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined} title={peekedWords.has(i) ? 'Revealed with a hint' : undefined} className={`font-bold border-b-2 transition-all duration-200 ${peekedWords.has(i) ? 'rounded block-amber px-1 text-amber border-[color:var(--mark-amber)]' : hintStyle === 'word' ? 'text-text-muted italic border-accent/60' : 'text-accent border-accent'}`}>
+                                    {wordCue(w, hintStyle)}<span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-pulse" />
                                 </span>
                             );
                         }
@@ -820,7 +882,7 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
                 {/* Right — input + running score, pinned so it never scrolls away */}
                 <div className="lg:sticky lg:top-24 self-start">
                     {!paraDone ? (
-                        <div className="p-5 rounded-2xl bg-surface-body border border-line-soft">
+                        <div className={`p-5 rounded-2xl bg-surface-body border transition-colors ${shake ? 'animate-[essayShake_0.3s_ease-in-out] border-rose-400/70' : 'border-line-soft'}`}>
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Next word</span>
                                 <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
@@ -832,7 +894,7 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
                                     value={current}
                                     onChange={(e) => setCurrent(e.target.value)}
                                     onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); commitWord(); } }}
-                                    placeholder={targetWord ? `${targetWord[0]}…` : ''}
+                                    placeholder={targetWord ? `${wordCue(targetWord, hintStyle === 'word' ? 'first' : hintStyle).slice(0, 6)}…` : ''}
                                     className="flex-1 px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif"
                                     autoComplete="off" autoCorrect="off" spellCheck={false}
                                 />
@@ -841,14 +903,17 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
                                     <ArrowRightIcon className="w-4 h-4" />
                                 </button>
                             </div>
-                            <div className="flex items-center justify-between mt-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
                                 <p className="text-[10px] text-text-dim">Space or Enter to confirm</p>
-                                <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} onReveal={revealCurrentWord} />
+                                <div className="flex items-center gap-2">
+                                    <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} onReveal={revealCurrentWord} />
+                                    <SneakPeek text={currentSentence} label="Peek sentence" autoHideMs={3500} onReveal={revealCurrentWord} />
+                                </div>
                                 {peekedWords.size > 0 && <span className="sr-only" role="status">{peekedWords.size} revealed {peekedWords.size === 1 ? 'word' : 'words'}; accuracy reduced by {peekedWords.size * 3} percentage points.</span>}
                             </div>
                         </div>
                     ) : (
-                        <div className="p-5 rounded-2xl block-blue">
+                        <div className="p-5 rounded-2xl block-blue animate-[essayWordPop_0.25s_ease-out]">
                             <div className="flex items-baseline gap-3 mb-1">
                                 <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
                                 <span className="text-xs text-text-dim">{correct}/{history.length} words</span>
@@ -856,6 +921,249 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }
                             <p className="text-xs text-text-muted mb-4">Paragraph rebuilt. How did that feel?</p>
                             <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')} passLabel="Got it" />
                         </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ── FIRST LETTERS — sprint the paragraph typing only each word's first letter ─
+
+const firstLetterOf = (word) => {
+    const match = String(word || '').match(/[a-z0-9]/i);
+    return match ? match[0].toLowerCase() : null;
+};
+
+function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
+    const paras = paragraphs || allParagraphsOf(essay);
+    const [pIndex, setPIndex] = useState(0);
+    const [wordIdx, setWordIdx] = useState(0);
+    const [results, setResults] = useState([]); // 'hit' | 'hinted' per word
+    const [missCount, setMissCount] = useState(0); // consecutive misses on current word
+    const [paraDone, setParaDone] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const [done, setDone] = useState(false);
+    const [saveOk, setSaveOk] = useState(true);
+    const [shake, setShake] = useState(false);
+    const [streak, setStreak] = useState(0);
+    const inputRef = useRef(null);
+    const currentRef = useRef(null);
+    const shakeTimer = useRef(null);
+
+    const reset = () => { setPIndex(0); setWordIdx(0); setResults([]); setMissCount(0); setParaDone(false); setDone(false); setSaveOk(true); setStreak(0); };
+
+    useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
+    useEffect(() => () => clearTimeout(shakeTimer.current), []);
+    useEffect(() => {
+        if (typeof currentRef.current?.scrollIntoView === 'function') {
+            currentRef.current.scrollIntoView({ block: 'nearest' });
+        }
+    }, [wordIdx, paraDone]);
+
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
+
+    const para = paras[pIndex];
+    const sourceIdx = para.sourceIndex ?? pIndex;
+    const words = String(para.text || '').trim().split(/\s+/).filter(Boolean);
+    const hits = results.filter((r) => r === 'hit').length;
+    const accuracy = results.length ? Math.round((hits / results.length) * 100) : 100;
+
+    const advanceWord = (result) => {
+        setResults((prev) => [...prev, result]);
+        setMissCount(0);
+        if (wordIdx + 1 >= words.length) setParaDone(true);
+        else setWordIdx((i) => i + 1);
+    };
+
+    const onKey = (e) => {
+        if (paraDone) return;
+        const key = String(e.key || '').toLowerCase();
+        if (key.length !== 1) return;
+        e.preventDefault();
+        const expected = firstLetterOf(words[wordIdx]);
+        if (!expected) { advanceWord('hit'); return; }
+        if (!/[a-z0-9]/.test(key)) return;
+        if (key === expected) {
+            setStreak((s) => s + 1);
+            advanceWord(missCount > 0 ? 'hinted' : 'hit');
+        } else {
+            setStreak(0);
+            setShake(true);
+            clearTimeout(shakeTimer.current);
+            shakeTimer.current = setTimeout(() => setShake(false), 320);
+            // Two misses reveal the word and move on — momentum beats stalling.
+            if (missCount + 1 >= 2) advanceWord('hinted');
+            else setMissCount((m) => m + 1);
+        }
+    };
+
+    const finishParagraph = async (recall) => {
+        setBusy(true);
+        try {
+            await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), recall, {
+                mode: 'first_letters',
+                accuracy,
+                hintCount: results.filter((r) => r === 'hinted').length,
+            });
+            onScheduled?.();
+        } catch { setSaveOk(false); }
+        setBusy(false);
+        if (pIndex + 1 < paras.length) {
+            setPIndex((i) => i + 1); setWordIdx(0); setResults([]); setMissCount(0); setParaDone(false); setStreak(0);
+        } else setDone(true);
+    };
+
+    return (
+        <div>
+            <PracticeStyles />
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
+                <span className="text-xs font-medium text-text-dim">
+                    Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}
+                </span>
+                {streak >= 5 && (
+                    <span key={streak} className="text-xs font-bold text-accent animate-[essayStreak_0.25s_ease-out] tabular-nums">⚡ {streak} in a row</span>
+                )}
+            </div>
+            <ProgressBar value={pIndex} total={paras.length} />
+            <p className="text-xs font-medium text-text-dim mb-4">
+                Recall at speed: press the <strong>first letter</strong> of each next word. Two misses reveal it and move on.
+            </p>
+
+            {!paraDone ? (
+                <div
+                    role="application"
+                    aria-label="First letters sprint"
+                    onClick={() => inputRef.current?.focus()}
+                    className={`p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[220px] max-h-[56vh] overflow-y-auto cursor-text ${shake ? 'animate-[essayShake_0.3s_ease-in-out]' : ''}`}
+                >
+                    {/* Hidden input keeps mobile keyboards working. */}
+                    <input
+                        ref={inputRef}
+                        onKeyDown={onKey}
+                        value=""
+                        onChange={() => {}}
+                        aria-label="Type the first letter of the next word"
+                        className="absolute h-px w-px opacity-0"
+                        autoComplete="off" autoCorrect="off" spellCheck={false}
+                    />
+                    {words.map((w, i) => {
+                        if (i < results.length) {
+                            return (
+                                <span key={i} className={`animate-[essayWordPop_0.2s_ease-out] ${results[i] === 'hit' ? 'text-text-primary' : 'rounded px-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'}`}>
+                                    {w}
+                                </span>
+                            );
+                        }
+                        if (i === wordIdx) {
+                            return (
+                                <span key={i} ref={currentRef} className={`font-bold border-b-2 ${missCount > 0 ? 'text-rose-500 border-rose-400' : 'text-accent border-accent'}`}>
+                                    {missCount > 0 ? words[i][0] : '?'}<span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-pulse" />
+                                </span>
+                            );
+                        }
+                        return <span key={i} className="text-text-dim/50 select-none">•</span>;
+                    })}
+                </div>
+            ) : (
+                <div className="p-5 rounded-2xl block-blue animate-[essayWordPop_0.25s_ease-out] max-w-md">
+                    <div className="flex items-baseline gap-3 mb-1">
+                        <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
+                        <span className="text-xs text-text-dim">{hits}/{results.length} first try</span>
+                    </div>
+                    <p className="text-xs text-text-muted mb-4">Sprint finished. How solid did it feel?</p>
+                    <GradeButtons busy={busy} onFail={() => finishParagraph('fail')} onPass={() => finishParagraph('pass')} passLabel="Got it" />
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── OPENINGS — drill each paragraph's opening from its transition cue ────────
+
+function OpeningsMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
+    const structure = essay.parsedStructure || {};
+    const paras = paragraphs || allParagraphsOf(essay);
+    const [pIndex, setPIndex] = useState(0);
+    const [typed, setTyped] = useState('');
+    const [revealed, setRevealed] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const [done, setDone] = useState(false);
+    const [saveOk, setSaveOk] = useState(true);
+    const textareaRef = useRef(null);
+
+    const reset = () => { setPIndex(0); setTyped(''); setRevealed(false); setDone(false); setSaveOk(true); };
+
+    useEffect(() => { textareaRef.current?.focus(); }, [pIndex]);
+
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
+
+    const para = paras[pIndex];
+    const sourceIdx = para.sourceIndex ?? pIndex;
+    const target = para.topicSentence || splitSentences(para.text)[0] || '';
+    const prevInEssay = sourceIdx > 0 ? structure.bodyParagraphs?.[sourceIdx - 1] : null;
+    const cue = !prevInEssay
+        ? (structure.thesis ? `Your thesis: "${structure.thesis}" — open your first body paragraph.` : 'Open your first body paragraph.')
+        : `The previous paragraph ended: "${lastSentence(prevInEssay.text)}" — write the next opening.`;
+
+    const diff = diffWords(target, typed);
+    const accuracy = diff.length ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
+
+    const goNext = async () => {
+        setBusy(true);
+        try {
+            await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), accuracy >= 70 ? 'pass' : 'fail', {
+                mode: 'openings',
+                accuracy,
+            });
+            onScheduled?.();
+        } catch { setSaveOk(false); }
+        setBusy(false);
+        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setRevealed(false); }
+        else setDone(true);
+    };
+
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-text-dim">
+                    Opening {pIndex + 1} / {paras.length}{paras.length !== (structure.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}
+                </span>
+            </div>
+            <ProgressBar value={pIndex} total={paras.length} />
+            <p className="text-sm text-text-muted italic mb-5 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
+
+            <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
+                <div>
+                    <textarea
+                        ref={textareaRef}
+                        value={typed}
+                        onChange={(e) => setTyped(e.target.value)}
+                        placeholder="Type this paragraph's opening sentence from memory…"
+                        rows={4}
+                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
+                        onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && typed.trim()) goNext(); }}
+                    />
+                    <div className="flex items-center justify-between gap-3 mt-3">
+                        <SneakPeek text={target} label="Sneak peek" />
+                        <button type="button" disabled={busy || !typed.trim()} onClick={goNext}
+                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            {pIndex + 1 < paras.length ? 'Next opening →' : 'Finish'}
+                        </button>
+                    </div>
+                    <p className="text-[10px] text-text-dim mt-2">Transitions win marks: cue → opening, again and again.</p>
+                </div>
+                <div className="lg:sticky lg:top-24 self-start">
+                    <LiveCheck target={target} typed={typed} currentHint="dashes" showRemaining title="Live check" />
+                    {!revealed ? (
+                        <button type="button" onClick={() => setRevealed(true)}
+                            className="mt-3 text-sm font-medium text-accent hover:opacity-70 transition-opacity">
+                            Reveal the opening
+                        </button>
+                    ) : (
+                        <p className="mt-3 p-4 rounded-2xl block-cream font-serif text-sm leading-relaxed text-text-primary">{target}</p>
                     )}
                 </div>
             </div>
@@ -872,9 +1180,8 @@ const SENTENCE_HINTS = [
 
 const startingPhase = (hintStyle) => (hintStyle === 'firstWord' ? 'type' : 'read');
 
-function SentenceMode({ essay, onScheduled, onNext, nextLabel, onEdit }) {
-    const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
+function SentenceMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
+    const paras = paragraphs || allParagraphsOf(essay);
     const [hintStyle, setHintStyle] = useState('readFirst');
     const [pIndex, setPIndex] = useState(0);
     const [sIndex, setSIndex] = useState(0);
@@ -895,6 +1202,7 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel, onEdit }) {
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const para = paras[pIndex];
+    const sourceIdx = para.sourceIndex ?? pIndex;
     const sentences = splitSentences(para.text);
     const sentence = sentences[sIndex] || '';
     const total = sentences.length;
@@ -910,7 +1218,7 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel, onEdit }) {
         if (sIndex + 1 < total) { setSIndex((i) => i + 1); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }
         else {
             setBusy(true);
-            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { setSaveOk(false); }
+            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), recall); onScheduled?.(); } catch { setSaveOk(false); }
             setBusy(false);
             if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }
             else setDone(true);
@@ -1002,109 +1310,172 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel, onEdit }) {
     );
 }
 
-// ── TYPE IT — free-type a full paragraph; choose how much hint you get ──────
+// ── EXAM RUN — write the whole selection from memory, no hints, timed ────────
 
-const TYPE_HINTS = [
-    { key: 'none', label: 'No hint' },
-    { key: 'letters', label: 'First letters' },
-    { key: 'acronym', label: 'Acronym' },
-];
+const formatDuration = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+};
 
-function TypeItMode({ essay, onScheduled, onNext, nextLabel, onEdit }) {
+function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
     const structure = essay.parsedStructure || {};
-    const paras = structure.bodyParagraphs || [];
-    const [hint, setHint] = useState('letters');
-    const [pIndex, setPIndex] = useState(0);
+    const paras = paragraphs || allParagraphsOf(essay);
     const [typed, setTyped] = useState('');
-    const [revealed, setRevealed] = useState(false);
+    const [phase, setPhase] = useState('write'); // 'write' | 'report' | 'done'
+    const [showLive, setShowLive] = useState(false);
+    const [elapsed, setElapsed] = useState(0);
+    const [startedAt, setStartedAt] = useState(null);
     const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
     const [saveOk, setSaveOk] = useState(true);
+    const [saved, setSaved] = useState(false);
     const textareaRef = useRef(null);
 
-    const reset = () => { setPIndex(0); setTyped(''); setRevealed(false); setDone(false); setSaveOk(true); };
+    useEffect(() => {
+        if (!startedAt || phase !== 'write') return undefined;
+        const id = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+        return () => clearInterval(id);
+    }, [startedAt, phase]);
 
-    useEffect(() => { textareaRef.current?.focus(); }, [pIndex]);
+    const reset = () => { setTyped(''); setPhase('write'); setElapsed(0); setStartedAt(null); setSaveOk(true); setSaved(false); };
 
     if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
-    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
+    if (phase === 'done') return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
-    const current = paras[pIndex];
-    const cue = pIndex === 0
-        ? (structure.thesis ? `Thesis: "${structure.thesis}"` : 'First paragraph.')
-        : `Previous ending: "${lastSentence(paras[pIndex - 1].text)}"`;
-    const hintBlock = hint === 'letters' ? toLetterHint(current.text) : hint === 'acronym' ? toAcronym(current.text) : null;
+    const targetJoined = paras.map((p) => p.text).join('\n\n');
+    const targetWords = wordCountOf(targetJoined);
+    const typedWords = wordCountOf(typed);
 
-    const diff = diffWords(current.text, typed);
-    const accuracy = diff.length ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
+    // Per-paragraph report: align typed paragraphs with the selection when the
+    // student separated them with blank lines; otherwise score the whole run.
+    const typedParas = typed.split(/\n\s*\n+/).map((t) => t.trim()).filter(Boolean);
+    const aligned = typedParas.length === paras.length;
+    const paraResults = paras.map((p, i) => {
+        const target = p.text;
+        const attempt = aligned ? typedParas[i] : typed;
+        const diff = diffWords(target, attempt);
+        const accuracy = diff.length ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
+        return { para: p, accuracy };
+    });
+    const overall = aligned
+        ? Math.round(paraResults.reduce((sum, r) => sum + r.accuracy * wordCountOf(r.para.text), 0) / Math.max(1, targetWords))
+        : (() => { const d = diffWords(targetJoined, typed); return d.length ? Math.round((d.filter((x) => x.status === 'correct').length / d.length) * 100) : 0; })();
 
-    const advance = async (recall) => {
+    const saveResults = async () => {
         setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { setSaveOk(false); }
+        let ok = true;
+        for (const r of paraResults) {
+            const sourceIdx = r.para.sourceIndex ?? 0;
+            const accuracy = aligned ? r.accuracy : overall;
+            try {
+                await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), accuracy >= 75 ? 'pass' : 'fail', {
+                    mode: 'exam_run',
+                    accuracy,
+                });
+            } catch { ok = false; }
+        }
+        setSaveOk(ok);
+        setSaved(true);
         setBusy(false);
-        if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setRevealed(false); }
-        else setDone(true);
+        onScheduled?.();
+        setPhase('done');
     };
+
+    if (phase === 'report') {
+        return (
+            <div>
+                <PracticeStyles />
+                <div className="flex flex-wrap items-baseline justify-between gap-3 mb-6">
+                    <div className="flex items-baseline gap-4">
+                        <span className="text-4xl font-display font-extrabold text-text-primary tabular-nums animate-[essayWordPop_0.3s_ease-out]">{overall}%</span>
+                        <span className="text-sm text-text-dim">{typedWords}/{targetWords} words · {formatDuration(elapsed)}</span>
+                    </div>
+                </div>
+                {!aligned && paras.length > 1 && (
+                    <p className="text-xs text-text-dim mb-4">Tip: separate paragraphs with a blank line next time for a per-paragraph report.</p>
+                )}
+                {aligned && (
+                    <div className="space-y-2 mb-6">
+                        {paraResults.map((r, i) => (
+                            <div key={i} className="flex items-center gap-3">
+                                <span className="text-xs font-bold text-text-dim w-10 shrink-0">¶{(r.para.sourceIndex ?? i) + 1}</span>
+                                <div className="h-2 flex-1 bg-line-soft rounded-full overflow-hidden">
+                                    <div className={`h-full rounded-full transition-all duration-500 ${r.accuracy >= 75 ? 'bg-emerald-500' : r.accuracy >= 50 ? 'bg-amber-400' : 'bg-rose-400'}`} style={{ width: `${r.accuracy}%` }} />
+                                </div>
+                                <span className="text-xs font-bold text-text-primary tabular-nums w-10 text-right">{r.accuracy}%</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <details className="mb-6">
+                    <summary className="cursor-pointer text-sm font-semibold text-accent">Compare with the original</summary>
+                    <div className="mt-3 grid md:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-2xl bg-surface-body border border-line-soft">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim mb-2">You wrote</p>
+                            <p className="font-serif text-sm leading-relaxed whitespace-pre-wrap text-text-primary">{typed || '(nothing)'}</p>
+                        </div>
+                        <div className="p-4 rounded-2xl block-cream">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim mb-2">Original</p>
+                            <p className="font-serif text-sm leading-relaxed whitespace-pre-wrap text-text-primary">{targetJoined}</p>
+                        </div>
+                    </div>
+                </details>
+                <div className="flex flex-wrap items-center gap-3">
+                    <button type="button" disabled={busy || saved} onClick={saveResults}
+                        className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                        {busy ? 'Saving…' : 'Save results'}
+                    </button>
+                    <button type="button" disabled={busy} onClick={() => setPhase('write')}
+                        className="btn-secondary inline-flex hover:-translate-y-0.5 transition-transform">
+                        Keep writing
+                    </button>
+                    <button type="button" disabled={busy} onClick={() => setPhase('done')}
+                        className="text-sm font-semibold text-text-dim hover:text-text-primary transition-colors">
+                        Skip saving
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div>
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
-                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
-                <HintToggle options={TYPE_HINTS} value={hint} onChange={setHint} />
+                <span className="text-xs font-medium text-text-dim">
+                    Exam conditions — {paras.length} paragraph{paras.length === 1 ? '' : 's'}, {targetWords} words
+                </span>
+                <span className="text-xs font-bold text-text-primary tabular-nums" aria-live="off">{startedAt ? formatDuration(elapsed) : 'Timer starts when you type'}</span>
             </div>
-            <ProgressBar value={pIndex} total={paras.length} />
-            <p className="text-sm text-text-muted italic mb-5 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
+            <p className="text-sm text-text-muted italic mb-5 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">
+                {structure.thesis ? `Your thesis: "${structure.thesis}"` : 'Write your selection from memory, start to finish.'}
+            </p>
 
-            <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
-                {/* Left — write the whole paragraph */}
-                <div>
-                    {hintBlock && (
-                        <div className="p-4 rounded-2xl block-cream border border-line-soft mb-3">
-                            <p className={
-                                hint === 'acronym'
-                                    ? 'font-mono text-sm md:text-base tracking-[0.15em] text-text-primary font-bold leading-relaxed break-all'
-                                    : 'font-mono text-sm leading-relaxed tracking-wide text-text-dim select-none break-words'
-                            }>
-                                {hintBlock}
-                            </p>
-                        </div>
-                    )}
-                    <textarea
-                        ref={textareaRef}
-                        value={typed}
-                        onChange={(e) => setTyped(e.target.value)}
-                        placeholder={hint === 'none' ? 'Type the paragraph from memory…' : 'Type the full paragraph using the hint…'}
-                        rows={10}
-                        className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-sm resize-none"
-                    />
-                    <div className="mt-3">
-                        <SneakPeek text={current.text} label="Sneak peek" />
-                    </div>
+            <textarea
+                ref={textareaRef}
+                value={typed}
+                onChange={(e) => { if (!startedAt) setStartedAt(Date.now()); setTyped(e.target.value); }}
+                placeholder="No hints, no peeking — write the whole selection from memory. Separate paragraphs with a blank line."
+                rows={14}
+                className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-sm leading-relaxed resize-y"
+            />
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
+                <div className="flex items-center gap-3">
+                    <span className="text-xs font-medium text-text-dim tabular-nums">{typedWords}/{targetWords} words</span>
+                    <button type="button" onClick={() => setShowLive((v) => !v)}
+                        className="text-xs font-semibold text-text-dim hover:text-text-primary transition-colors underline decoration-dotted">
+                        {showLive ? 'Hide live check' : 'Show live check (practice mode)'}
+                    </button>
                 </div>
-
-                {/* Right — live check + grade, no scrolling to compare */}
-                <div className="lg:sticky lg:top-24 self-start">
-                    <LiveCheck
-                        target={current.text}
-                        typed={typed}
-                        currentHint="none"
-                        showRemaining={hint !== 'none'}
-                        title="Live check"
-                    />
-                    {!revealed ? (
-                        <button type="button" onClick={() => setRevealed(true)}
-                            className="mt-3 text-sm font-medium text-accent hover:opacity-70 transition-opacity">
-                            Reveal full paragraph
-                        </button>
-                    ) : (
-                        <p className="mt-3 p-4 rounded-2xl block-cream font-serif text-sm leading-relaxed whitespace-pre-wrap text-text-primary">{current.text}</p>
-                    )}
-                    <div className="mt-5 pt-5 border-t border-line-soft">
-                        <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
-                            passLabel={!typed.trim() ? 'Got it' : accuracy >= 75 ? 'Got it' : 'Close enough'} />
-                    </div>
-                </div>
+                <button type="button" disabled={!typed.trim()} onClick={() => setPhase('report')}
+                    className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                    Finish &amp; mark
+                </button>
             </div>
+            {showLive && (
+                <div className="mt-5">
+                    <LiveCheck target={targetJoined} typed={typed} currentHint="none" title="Live check" />
+                </div>
+            )}
         </div>
     );
 }
@@ -1252,16 +1623,93 @@ function NewEssayComposer({ onCreated }) {
 const PRACTICE_STEPS = [
     { key: 'wordbyword', step: '1', label: 'Rebuild it', icon: PencilIcon, desc: 'Recall with a cue for each word.' },
     { key: 'sentence', step: '2', label: 'Sentences', icon: ChatBubbleBottomCenterTextIcon, desc: 'Read, hide, and rewrite each sentence.' },
-    { key: 'typeit', step: '3', label: 'Write it', icon: DocumentTextIcon, desc: 'Draft a whole paragraph from memory.' },
-    { key: 'recall', step: '4', label: 'Keep it fresh', icon: ClockIcon, desc: 'Return when it is due for review.' },
+    { key: 'letters', step: '3', label: 'First letters', icon: BoltIcon, desc: 'Sprint it from first letters only.' },
+    { key: 'typeit', step: '4', label: 'Exam run', icon: DocumentTextIcon, desc: 'Write the whole selection, no hints, timed.' },
+    { key: 'recall', step: '5', label: 'Keep it fresh', icon: ClockIcon, desc: 'Return when it is due for review.' },
 ];
 
 const DRILL_MODES = [
+    { key: 'openings', label: 'Openings', icon: ArrowRightCircleIcon },
     { key: 'quotes', label: 'Quote cards', icon: RectangleStackIcon },
     { key: 'order', label: 'Paragraph order', icon: ArrowsUpDownIcon },
 ];
 
+const PRACTICE_MODE_KEYS = new Set([...PRACTICE_STEPS, ...DRILL_MODES].map((m) => m.key));
+
 const modeLabel = (key) => [...PRACTICE_STEPS, ...DRILL_MODES].find((m) => m.key === key)?.label || key;
+
+/** Pick exactly which paragraphs a practice session covers. */
+function ScopePicker({ allParagraphs, scope, onChange }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+    const selected = scope || allParagraphs.map((p) => p.sourceIndex);
+
+    useEffect(() => {
+        if (!open) return undefined;
+        const handler = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [open]);
+
+    if (allParagraphs.length < 2) return null;
+
+    const toggle = (idx) => {
+        const next = selected.includes(idx) ? selected.filter((i) => i !== idx) : [...selected, idx].sort((a, b) => a - b);
+        if (!next.length) return; // never allow an empty selection
+        onChange(next.length === allParagraphs.length ? null : next);
+    };
+
+    const label = !scope
+        ? `All ${allParagraphs.length} paragraphs`
+        : `${scope.length} of ${allParagraphs.length} paragraphs`;
+
+    return (
+        <div ref={ref} className="relative inline-block">
+            <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
+                    scope ? 'border-accent text-accent bg-accent-soft' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'
+                }`}
+            >
+                <AdjustmentsHorizontalIcon className="w-3.5 h-3.5" />
+                Practising: {label}
+                <ChevronDownIcon className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+            {open && (
+                <div className="absolute top-full left-0 mt-1.5 w-80 max-w-[85vw] bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+                    <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Choose paragraphs</p>
+                        <button type="button" onClick={() => onChange(null)} className="text-[10px] font-bold text-accent hover:opacity-70 transition-opacity">
+                            Select all
+                        </button>
+                    </div>
+                    <div className="max-h-72 overflow-y-auto pb-1">
+                        {allParagraphs.map((p) => {
+                            const checked = selected.includes(p.sourceIndex);
+                            const snippet = (p.topicSentence || p.text || '').slice(0, 70);
+                            return (
+                                <label key={p.sourceIndex} className="flex items-start gap-2.5 px-3 py-2 cursor-pointer hover:bg-surface-soft/60 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={() => toggle(p.sourceIndex)}
+                                        className="mt-0.5 h-4 w-4 rounded border-line-soft accent-[color:var(--accent,currentColor)]"
+                                    />
+                                    <span className="min-w-0">
+                                        <span className="block text-xs font-bold text-text-primary">¶{p.sourceIndex + 1}</span>
+                                        <span className="block text-[11px] font-medium text-text-dim truncate">{snippet}</span>
+                                    </span>
+                                </label>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
 function PracticeHub({ mode, onChange, dueCount, drills }) {
     const availableDrills = DRILL_MODES.filter((d) => drills[d.key]);
@@ -1346,13 +1794,16 @@ const WORKSPACE_TABS = [
     { key: 'edit', label: 'Edit', icon: PencilSquareIcon },
 ];
 
-function EditPanel({ essay, onSaved, saving, error }) {
+function EditPanel({ essay, onSaved, saving, parsing = false, error }) {
     const [title, setTitle] = useState(essay.title || '');
     const [text, setText] = useState(essay.originalText || '');
     const [model, setModel] = useState(DEFAULT_MODEL);
     const [localError, setLocalError] = useState(null);
 
-    useEffect(() => { setTitle(essay.title || ''); setText(essay.originalText || ''); }, [essay.id, essay.title, essay.originalText]);
+    // Resync only when a DIFFERENT essay loads — resyncing on every server
+    // refresh would wipe keystrokes typed while a save was in flight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { setTitle(essay.title || ''); setText(essay.originalText || ''); }, [essay.id]);
 
     const textChanged = text !== (essay.originalText || '');
     const titleChanged = title.trim() !== (essay.title || '');
@@ -1385,12 +1836,12 @@ function EditPanel({ essay, onSaved, saving, error }) {
             />
             {(localError || error) && <p role="alert" className="text-sm text-rose-400 mt-3 font-medium">{localError || error}</p>}
             <div className="flex flex-wrap items-center gap-3 mt-4">
-                {textChanged && <EssayModelPicker model={model} onChange={setModel} disabled={saving} />}
-                <button type="button" onClick={save} disabled={saving || !dirty}
+                {textChanged && <EssayModelPicker model={model} onChange={setModel} disabled={saving || parsing} />}
+                <button type="button" onClick={save} disabled={saving || parsing || !dirty}
                     className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                    {saving ? 'Saving…' : textChanged ? 'Save & rescan' : 'Save changes'}
+                    {saving ? 'Saving…' : parsing ? 'AI mapping in progress…' : textChanged ? 'Save & rescan' : 'Save changes'}
                 </button>
-                {!dirty && !saving && <span className="text-xs font-medium text-text-dim">No changes yet.</span>}
+                {!dirty && !saving && !parsing && <span className="text-xs font-medium text-text-dim">No changes yet.</span>}
             </div>
             <p className="mt-3 text-xs font-medium leading-relaxed text-text-dim">
                 Changing the text rebuilds the practice structure with AI — your wording itself is never altered.
@@ -1447,7 +1898,17 @@ function EssayWorkspace({ essayId }) {
     const structure = essay?.parsedStructure || null;
     const tabParam = searchParams.get('tab');
     const tab = WORKSPACE_TABS.some((t) => t.key === tabParam) ? tabParam : 'overview';
-    const mode = searchParams.get('mode');
+    const modeParam = searchParams.get('mode');
+    const mode = PRACTICE_MODE_KEYS.has(modeParam) ? modeParam : null;
+    const allParas = allParagraphsOf(essay);
+    const scope = parseScope(searchParams.get('scope'), allParas.length);
+    const scoped = scope ? allParas.filter((p) => scope.includes(p.sourceIndex)) : allParas;
+    const setScope = (ids) => {
+        const next = new URLSearchParams(searchParams);
+        if (ids && ids.length && ids.length < allParas.length) next.set('scope', ids.join(','));
+        else next.delete('scope');
+        setSearchParams(next, { replace: true });
+    };
 
     const setTab = (key) => {
         const next = new URLSearchParams(searchParams);
@@ -1476,7 +1937,13 @@ function EssayWorkspace({ essayId }) {
         setDueCount(items.filter((it) => String(it.itemId).startsWith(prefix)).length);
     }, [essayId]);
 
+    const parsingRef = useRef(false);
     const parse = useCallback(async ({ model, force = false } = {}) => {
+        // One structural operation at a time: a parse racing a save could
+        // persist a structure computed from superseded text (also guarded
+        // server-side with a conditional write).
+        if (parsingRef.current) return;
+        parsingRef.current = true;
         setParsing(true);
         setParseError(null);
         try {
@@ -1485,6 +1952,7 @@ function EssayWorkspace({ essayId }) {
         } catch (e) {
             if (essayIdRef.current === essayId) setParseError(e?.message || 'Could not map this essay right now.');
         } finally {
+            parsingRef.current = false;
             if (essayIdRef.current === essayId) setParsing(false);
         }
     }, [essayId, parseModel]);
@@ -1520,6 +1988,10 @@ function EssayWorkspace({ essayId }) {
     useEffect(() => { if (structure) loadDue(); }, [structure, loadDue]);
 
     const handleSaved = async ({ title, text, model, textChanged }) => {
+        if (parsingRef.current) {
+            setSaveError('AI mapping is in progress — wait for it to finish before saving.');
+            return;
+        }
         setSaving(true);
         setSaveError(null);
         try {
@@ -1573,7 +2045,7 @@ function EssayWorkspace({ essayId }) {
 
     const quoteCards = structure ? buildQuoteCards(structure) : null;
     const paragraphOrder = structure ? buildParagraphOrder(structure) : null;
-    const drills = { quotes: !!quoteCards, order: !!paragraphOrder };
+    const drills = { openings: allParas.length > 0, quotes: !!quoteCards, order: !!paragraphOrder };
     const paragraphCount = structure?.bodyParagraphs?.length || 0;
 
     return (
@@ -1615,7 +2087,30 @@ function EssayWorkspace({ essayId }) {
                     />
                 )}
 
-                {!structure ? (
+                {/* ── Workspace section tabs — always visible once the essay loads ── */}
+                <nav aria-label="Essay workspace sections" className="mb-6 flex items-center gap-1 border-b border-line-soft">
+                    {WORKSPACE_TABS.map((t) => {
+                        const Icon = t.icon;
+                        const active = tab === t.key;
+                        return (
+                            <button
+                                key={t.key}
+                                type="button"
+                                aria-current={active ? 'page' : undefined}
+                                onClick={() => setTab(t.key)}
+                                className={`inline-flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
+                                    active
+                                        ? 'border-accent text-accent'
+                                        : 'border-transparent text-text-dim hover:text-text-primary'
+                                }`}
+                            >
+                                <Icon className="w-4 h-4" /> {t.label}
+                            </button>
+                        );
+                    })}
+                </nav>
+
+                {tab !== 'edit' && !structure && (
                     /* ── Setup: choose a model and map the structure ── */
                     <div className="block-blue rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                         {parsing ? (
@@ -1644,8 +2139,8 @@ function EssayWorkspace({ essayId }) {
                                     </div>
                                 )}
                                 <div className="flex flex-wrap items-center justify-center gap-3">
-                                    <EssayModelPicker model={parseModel} onChange={setParseModel} disabled={parsing} />
-                                    <button type="button" onClick={() => parse()} disabled={parsing}
+                                    <EssayModelPicker model={parseModel} onChange={setParseModel} disabled={parsing || saving} />
+                                    <button type="button" onClick={() => parse()} disabled={parsing || saving}
                                         className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
                                         <SparklesIcon className="w-4 h-4" />
                                         {parseError ? 'Try setup again' : 'Set up practice'}
@@ -1659,91 +2154,73 @@ function EssayWorkspace({ essayId }) {
                             </>
                         )}
                     </div>
-                ) : null}
+                )}
 
-                {(structure || tab === 'edit') && (
-                    <>
-                        {/* ── Workspace section tabs ── */}
-                        <nav aria-label="Essay workspace sections" className="mb-6 flex items-center gap-1 border-b border-line-soft">
-                            {WORKSPACE_TABS.map((t) => {
-                                const Icon = t.icon;
-                                const active = tab === t.key;
-                                return (
-                                    <button
-                                        key={t.key}
-                                        type="button"
-                                        aria-current={active ? 'page' : undefined}
-                                        onClick={() => setTab(t.key)}
-                                        className={`inline-flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
-                                            active
-                                                ? 'border-accent text-accent'
-                                                : 'border-transparent text-text-dim hover:text-text-primary'
-                                        }`}
-                                    >
-                                        <Icon className="w-4 h-4" /> {t.label}
-                                    </button>
-                                );
-                            })}
-                        </nav>
+                {tab === 'overview' && structure && (
+                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                        <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />
+                    </div>
+                )}
 
-                        {tab === 'overview' && (
-                            structure ? (
-                                <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                                    <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />
-                                </div>
-                            ) : (
-                                <p className="text-sm text-text-muted italic">Set up practice above to see the essay structure here.</p>
-                            )
-                        )}
-
-                        {tab === 'practice' && structure && (
-                            <div>
-                                <PracticeHub mode={mode} onChange={setMode} dueCount={dueCount} drills={drills} />
-                                {mode && (
-                                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                                        {mode === 'wordbyword' && (
-                                            <GuidedTypeMode essay={essay} onScheduled={loadDue} onEdit={goEdit}
-                                                onNext={() => setMode('sentence')} nextLabel={modeLabel('sentence')} />
-                                        )}
-                                        {mode === 'sentence' && (
-                                            <SentenceMode essay={essay} onScheduled={loadDue} onEdit={goEdit}
-                                                onNext={() => setMode('typeit')} nextLabel={modeLabel('typeit')} />
-                                        )}
-                                        {mode === 'typeit' && (
-                                            <TypeItMode essay={essay} onScheduled={loadDue} onEdit={goEdit}
-                                                onNext={() => setMode('recall')} nextLabel={modeLabel('recall')} />
-                                        )}
-                                        {mode === 'recall' && (
-                                            <RecallChunks essay={essay} onScheduled={loadDue} onEdit={goEdit}
-                                                onNext={drills.quotes ? () => setMode('quotes') : () => setMode(null)}
-                                                nextLabel={drills.quotes ? modeLabel('quotes') : 'all activities'} />
-                                        )}
-                                        {mode === 'quotes' && (
-                                            quoteCards
-                                                ? <QuoteDrill slide={quoteCards}
-                                                    onNext={drills.order ? () => setMode('order') : () => setMode(null)}
-                                                    nextLabel={drills.order ? modeLabel('order') : 'all activities'} />
-                                                : <EmptyModeNote>No quotes were found in this essay.</EmptyModeNote>
-                                        )}
-                                        {mode === 'order' && (
-                                            paragraphOrder
-                                                ? <QuoteDrill slide={paragraphOrder} onNext={() => setMode(null)} nextLabel="all activities" />
-                                                : <EmptyModeNote>Need at least two body paragraphs to practise ordering.</EmptyModeNote>
-                                        )}
-                                    </div>
+                {tab === 'practice' && structure && (
+                    <div>
+                        <div className="mb-4 flex flex-wrap items-center gap-3">
+                            <ScopePicker allParagraphs={allParas} scope={scope} onChange={setScope} />
+                            {scope && (
+                                <span className="text-xs font-medium text-text-dim">
+                                    Every activity below runs on just your selection.
+                                </span>
+                            )}
+                        </div>
+                        <PracticeHub mode={mode} onChange={setMode} dueCount={dueCount} drills={drills} />
+                        {mode && (
+                            <div key={`${mode}-${scope ? scope.join('-') : 'all'}`} className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                                {mode === 'wordbyword' && (
+                                    <GuidedTypeMode essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
+                                        onNext={() => setMode('sentence')} nextLabel={modeLabel('sentence')} />
+                                )}
+                                {mode === 'sentence' && (
+                                    <SentenceMode essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
+                                        onNext={() => setMode('letters')} nextLabel={modeLabel('letters')} />
+                                )}
+                                {mode === 'letters' && (
+                                    <FirstLettersMode essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
+                                        onNext={() => setMode('typeit')} nextLabel={modeLabel('typeit')} />
+                                )}
+                                {mode === 'typeit' && (
+                                    <ExamRunMode essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
+                                        onNext={() => setMode('recall')} nextLabel={modeLabel('recall')} />
+                                )}
+                                {mode === 'recall' && (
+                                    <RecallChunks essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
+                                        onNext={drills.quotes ? () => setMode('quotes') : () => setMode(null)}
+                                        nextLabel={drills.quotes ? modeLabel('quotes') : 'all activities'} />
+                                )}
+                                {mode === 'openings' && (
+                                    <OpeningsMode essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
+                                        onNext={() => setMode(null)} nextLabel="all activities" />
+                                )}
+                                {mode === 'quotes' && (
+                                    quoteCards
+                                        ? <QuoteDrill slide={quoteCards}
+                                            onNext={drills.order ? () => setMode('order') : () => setMode(null)}
+                                            nextLabel={drills.order ? modeLabel('order') : 'all activities'} />
+                                        : <EmptyModeNote>No quotes were found in this essay.</EmptyModeNote>
+                                )}
+                                {mode === 'order' && (
+                                    paragraphOrder
+                                        ? <QuoteDrill slide={paragraphOrder} onNext={() => setMode(null)} nextLabel="all activities" />
+                                        : <EmptyModeNote>Need at least two body paragraphs to practise ordering.</EmptyModeNote>
                                 )}
                             </div>
                         )}
-                        {tab === 'practice' && !structure && (
-                            <p className="text-sm text-text-muted italic">Set up practice above first — the AI needs to map the essay structure.</p>
-                        )}
+                    </div>
+                )}
 
-                        {tab === 'edit' && (
-                            <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                                <EditPanel essay={essay} onSaved={handleSaved} saving={saving} error={saveError} />
-                            </div>
-                        )}
-                    </>
+                {tab === 'edit' && (
+                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                        <EditPanel essay={essay} onSaved={handleSaved} saving={saving} parsing={parsing} error={saveError} />
+                    </div>
                 )}
             </div>
         </div>

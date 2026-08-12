@@ -16,7 +16,7 @@ vi.mock('@react-oauth/google', () => ({ GoogleLogin: () => <div>Google sign up</
 vi.mock('../services/api', () => ({
   default: {
     getDueReviewItems: vi.fn().mockResolvedValue({ items: [] }),
-    getSavedSlides: vi.fn().mockResolvedValue({ savedSlides: [] }),
+    getEssays: vi.fn().mockResolvedValue({ essays: [] }),
   },
 }));
 

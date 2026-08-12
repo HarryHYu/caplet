@@ -85,15 +85,51 @@ describe('EssayMemoriser', () => {
     expect(await screen.findByText(/Your learning path/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Rebuild it/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sentences/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Write it/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /First letters/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Exam run/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Keep it fresh/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Openings/i })).toBeInTheDocument();
     // Unavailable drills (no quotes, one paragraph) are hidden, not dead ends.
     expect(screen.queryByRole('button', { name: /Quote cards/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Paragraph order/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Rebuild it/i }));
-    expect(await screen.findByText(/Step 1 of 4/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Step 1 of 5/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /All activities/i })).toBeInTheDocument();
+  });
+
+  it('lets the student practise just a selected portion of the essay', async () => {
+    const twoParas = {
+      ...parsedEssay,
+      parsedStructure: {
+        ...parsedEssay.parsedStructure,
+        bodyParagraphs: [
+          { topicSentence: 'Macbeth chooses ambition over loyalty.', text: 'Macbeth chooses ambition over loyalty.', quotes: [], techniques: [] },
+          { topicSentence: 'Lady Macbeth drives the plan.', text: 'Lady Macbeth drives the plan.', quotes: [], techniques: [] },
+        ],
+      },
+    };
+    api.getEssay.mockResolvedValue({ essay: twoParas });
+    renderAt('/essays/essay-1?tab=practice');
+
+    const chip = await screen.findByRole('button', { name: /Practising: All 2 paragraphs/i });
+    fireEvent.click(chip);
+    // Deselect the first paragraph — practice narrows to the second.
+    fireEvent.click(screen.getByRole('checkbox', { name: /¶1/ }));
+    expect(screen.getByRole('button', { name: /Practising: 1 of 2 paragraphs/i })).toBeInTheDocument();
+  });
+
+  it('keeps the workspace tabs visible for an unparsed essay', async () => {
+    const savedEssay = { id: 'essay-3', title: 'Unparsed', originalText: 'Some text.', parsedStructure: null };
+    api.getEssay.mockResolvedValue({ essay: savedEssay });
+    renderAt('/essays/essay-3?tab=edit');
+
+    expect(await screen.findByLabelText(/Essay text/i)).toBeInTheDocument();
+    // Switching to Practice must not strand the user — the tab bar stays and
+    // the setup card renders instead of a blank page.
+    fireEvent.click(screen.getByRole('button', { name: /Practice/i }));
+    expect(await screen.findByRole('button', { name: /Set up practice/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Edit$/i })).toBeInTheDocument();
   });
 
   it('edits the essay in place and rescans with the chosen model', async () => {

@@ -45,24 +45,24 @@ const categories = ['Practice', 'Revision'];
 const EduTools = () => {
   useReveal();
   const [dueCount, setDueCount] = useState(0);
-  const [savedCount, setSavedCount] = useState(0);
+  const [essayCount, setEssayCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     Promise.all([
       api.getDueReviewItems().catch(() => null),
-      api.getSavedSlides().catch(() => null),
-    ]).then(([dueData, savedData]) => {
+      api.getEssays().catch(() => null),
+    ]).then(([dueData, essaysData]) => {
       if (cancelled) return;
       setDueCount(dueData?.items?.length || 0);
-      setSavedCount(savedData?.savedSlides?.length || 0);
+      setEssayCount(essaysData?.essays?.length || 0);
     });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const badges = { '/revision': dueCount, '/essays': savedCount };
+  const badges = { '/revision': dueCount, '/essays': essayCount };
 
   return (
     <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
