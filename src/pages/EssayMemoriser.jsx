@@ -1,4 +1,5 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { useReveal } from '../lib/useReveal';
 import CapletLoader from '../components/CapletLoader';
@@ -22,13 +23,17 @@ import {
     AcademicCapIcon,
     ArrowUpTrayIcon,
     ArrowRightIcon,
+    CheckIcon,
+    ChevronDownIcon,
     EyeIcon,
     BookOpenIcon,
     PencilIcon,
+    PencilSquareIcon,
     ChatBubbleBottomCenterTextIcon,
     ClockIcon,
     RectangleStackIcon,
     ArrowsUpDownIcon,
+    Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 
 // ── Cycling messages during AI parsing ─────────────────────────────────────
@@ -50,9 +55,78 @@ function CyclingMessage({ messages, intervalMs = 2800 }) {
     return <span>{messages[idx]}</span>;
 }
 
+// ── AI model selection (same set as the lesson generator) ───────────────────
+
+const MODEL_OPTIONS = [
+    { id: 'gpt-5.4-nano', short: 'GPT-5.4 Nano', desc: 'Fastest & cheapest' },
+    { id: 'gpt-5.4-mini', short: 'GPT-5.4 Mini', desc: 'Recommended default' },
+    { id: 'gpt-5.4', short: 'GPT-5.4', desc: 'Higher quality' },
+    { id: 'gpt-5.5', short: 'GPT-5.5', desc: 'Most powerful' },
+];
+const DEFAULT_MODEL = 'gpt-5.4-mini';
+const modelShort = (id) => MODEL_OPTIONS.find((m) => m.id === id)?.short || id;
+
+function EssayModelPicker({ model, onChange, disabled = false }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!open) return undefined;
+        const handler = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [open]);
+
+    return (
+        <div ref={ref} className="relative inline-block">
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+                aria-haspopup="listbox"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-line-soft px-3 py-2 text-xs font-bold text-text-dim hover:border-text-dim hover:text-text-primary transition-colors disabled:opacity-40"
+            >
+                <SparklesIcon className="w-3.5 h-3.5" />
+                {modelShort(model)}
+                <ChevronDownIcon className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+            {open && (
+                <div role="listbox" aria-label="AI model" className="absolute top-full left-0 mt-1.5 w-52 bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+                    <p className="px-3 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-widest text-text-dim">AI model</p>
+                    {MODEL_OPTIONS.map((opt) => (
+                        <button
+                            key={opt.id}
+                            type="button"
+                            role="option"
+                            aria-selected={opt.id === model}
+                            onClick={() => { onChange(opt.id); setOpen(false); }}
+                            className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left transition-colors ${
+                                opt.id === model ? 'bg-accent/[0.06]' : 'hover:bg-surface-soft/60'
+                            }`}
+                        >
+                            <span>
+                                <span className="block text-xs font-bold text-text-primary">{opt.short}</span>
+                                <span className="block text-[10px] font-medium text-text-dim">{opt.desc}</span>
+                            </span>
+                            {opt.id === model && <CheckIcon className="w-3.5 h-3.5 text-accent shrink-0" />}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ── Pure helpers ────────────────────────────────────────────────────────────
 
-const normalise = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9']/g, '');
+// Smart quotes/apostrophes are unified before stripping so a PDF-sourced
+// "it’s" and a typed "it's" compare equal — previously every curly apostrophe
+// marked a correctly typed word wrong.
+const normalise = (s) => String(s || '')
+    .toLowerCase()
+    .replace(/[‘’‚‛′]/g, "'")
+    .replace(/[^a-z0-9']/g, '');
 
 function diffWords(original, typed) {
     const origWords = String(original || '').trim().split(/\s+/).filter(Boolean);
@@ -85,8 +159,11 @@ function splitSentences(text) {
 
 function buildSpotlightSegments(structure) {
     const segs = [];
-    if (structure.thesis)
+    if (structure.introduction) {
+        segs.push({ label: 'Introduction', text: structure.introduction, type: 'thesis' });
+    } else if (structure.thesis) {
         segs.push({ label: 'Thesis', text: structure.thesis, type: 'thesis' });
+    }
     (structure.bodyParagraphs || []).forEach((p, i) =>
         segs.push({ label: `Body ${i + 1}`, text: p.text, type: 'body', quotes: p.quotes, techniques: p.techniques }),
     );
@@ -95,18 +172,16 @@ function buildSpotlightSegments(structure) {
     return segs;
 }
 
+const wordCountOf = (text) => String(text || '').trim().split(/\s+/).filter(Boolean).length;
+
+/** PDF page markers are extraction artifacts, not the student's essay. */
+const stripPdfArtifacts = (text) => String(text || '')
+    .replace(/^\s*\[Page \d+\]\s*$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
 // ── Shared UI ───────────────────────────────────────────────────────────────
 
-/**
- * Live word-by-word check panel. Renders the target text as a scaffold and,
- * as `typed` grows, fills each position green (match) or amber (miss) — so the
- * checking surface sits *beside* the input and updates on every keystroke.
- * No submit, no scrolling back up to see how you did.
- *
- *  - currentHint  how to cue the word you're on: 'firstletter' | 'dashes' | 'none'
- *  - showRemaining faint dashes for words you haven't reached yet
- *  - prefix       a fixed lead-in shown before the scaffold (e.g. a given first word)
- */
 function LiveCheck({ target, typed, currentHint = 'none', showRemaining = false, title = 'Live check', prefix = '' }) {
     const targetWords = String(target || '').trim().split(/\s+/).filter(Boolean);
     const raw = String(typed || '');
@@ -166,14 +241,14 @@ function LiveCheck({ target, typed, currentHint = 'none', showRemaining = false,
     );
 }
 
-function GradeButtons({ busy, onPass, onFail, passLabel = 'Got it' }) {
+function GradeButtons({ busy, onPass, onFail, passLabel = 'Got it', passDisabled = false }) {
     return (
         <div className="flex items-center gap-3 mt-5">
             <button type="button" disabled={busy} onClick={onFail}
                 className="text-sm font-semibold text-rose-500 border border-rose-400/60 rounded-xl px-5 py-2.5 hover:bg-rose-500 hover:text-white transition-colors disabled:opacity-40">
                 Missed it
             </button>
-            <button type="button" disabled={busy} onClick={onPass}
+            <button type="button" disabled={busy || passDisabled} onClick={onPass}
                 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/60 rounded-xl px-5 py-2.5 hover:bg-emerald-500 hover:text-white transition-colors disabled:opacity-40">
                 {passLabel}
             </button>
@@ -181,11 +256,6 @@ function GradeButtons({ busy, onPass, onFail, passLabel = 'Got it' }) {
     );
 }
 
-/**
- * A "sneak peek" button — tap to reveal `text` in a floating card for a few
- * seconds (or tap again to dismiss early). The caller decides how a reveal
- * affects scoring so other practice modes can keep their existing behaviour.
- */
 function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500, onReveal }) {
     const [peeking, setPeeking] = useState(false);
     const timerRef = useRef(null);
@@ -233,7 +303,6 @@ function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500, onReveal }) 
     );
 }
 
-/** A small pill-group toggle, used for in-mode hint-style switches. */
 function HintToggle({ options, value, onChange }) {
     return (
         <div className="flex items-center gap-1 p-1 bg-surface-body rounded-full border border-line-soft">
@@ -253,7 +322,7 @@ function HintToggle({ options, value, onChange }) {
     );
 }
 
-/** Thin progress bar tracking paragraph/step position within the current mode. */
+/** Thin progress bar; `value` counts COMPLETED units so it starts empty. */
 function ProgressBar({ value, total }) {
     const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
     return (
@@ -271,19 +340,21 @@ function ProgressBar({ value, total }) {
 }
 
 /**
- * End-of-session screen. Optionally offers a "Continue to X" button so
- * finishing one practice mode naturally hands you off to the next stage of
- * the Read → Practice → Recall progression, instead of leaving you to hunt
- * for the next tab yourself.
+ * End-of-session screen. `saveOk=false` is shown honestly instead of claiming
+ * the review ladder was updated when every submit actually failed.
  */
-function SessionDone({ onRestart, nextLabel, onNext }) {
+function SessionDone({ onRestart, nextLabel, onNext, saveOk = true }) {
     return (
         <div className="text-center py-14">
             <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-5 animate-pop-in">
                 <AcademicCapIcon className="w-7 h-7 text-emerald-500" />
             </div>
             <p className="font-display text-xl font-extrabold tracking-tight text-text-primary">Session complete</p>
-            <p className="text-sm text-text-muted mt-2">Items rescheduled on the 1, 3, 7, 14 day ladder.</p>
+            {saveOk ? (
+                <p className="text-sm text-text-muted mt-2">Items rescheduled on the 1, 3, 7, 14 day ladder.</p>
+            ) : (
+                <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">Progress could not be saved this time — your review schedule is unchanged.</p>
+            )}
             <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
                 <button type="button" onClick={onRestart}
                     className="btn-secondary inline-flex hover:-translate-y-0.5 transition-transform">
@@ -300,6 +371,20 @@ function SessionDone({ onRestart, nextLabel, onNext }) {
     );
 }
 
+/** Empty-mode fallback with a way forward instead of dead text. */
+function EmptyModeNote({ children, onEdit }) {
+    return (
+        <div className="text-center py-10">
+            <p className="text-sm text-text-muted italic">{children}</p>
+            {onEdit && (
+                <button type="button" onClick={onEdit} className="mt-4 text-sm font-semibold text-accent hover:opacity-70 transition-opacity">
+                    Edit the essay text →
+                </button>
+            )}
+        </div>
+    );
+}
+
 // ── READ — story view, colour-annotated, or exactly as saved ────────────────
 
 function SpotlightMode({ essay }) {
@@ -309,7 +394,7 @@ function SpotlightMode({ essay }) {
 
     if (!segments.length) return <p className="text-sm text-text-muted italic">Nothing to read yet.</p>;
 
-    const seg = segments[idx];
+    const seg = segments[Math.min(idx, segments.length - 1)];
     const bg =
         seg.type === 'thesis' ? 'block-blue' :
         seg.type === 'conclusion' ? 'block-cream' :
@@ -353,7 +438,7 @@ function SpotlightMode({ essay }) {
             <div className="flex items-center justify-between mt-6">
                 <button type="button" onClick={() => setIdx((i) => Math.max(0, i - 1))} disabled={idx === 0}
                     className="inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent disabled:opacity-30 transition-colors">
-                    <ArrowLeftIcon className="w-4 h-4" /> Back
+                    <ArrowLeftIcon className="w-4 h-4" /> Previous section
                 </button>
                 {idx + 1 < segments.length ? (
                     <button type="button" onClick={() => setIdx((i) => i + 1)}
@@ -435,6 +520,32 @@ function AnnotatedParagraphBlock({ paragraph, index }) {
     );
 }
 
+/** Renders an intro/conclusion block, highlighting the thesis inside the intro. */
+function FramingParagraphBlock({ label, text, thesis, tone }) {
+    const palette = tone === 'violet'
+        ? { box: 'bg-violet-50 dark:bg-violet-500/10 border-violet-200/60 dark:border-violet-500/20', tag: 'text-violet-500', mark: 'bg-violet-200 dark:bg-violet-500/30' }
+        : { box: 'bg-blue-50 dark:bg-blue-500/10 border-blue-200/60 dark:border-blue-500/20', tag: 'text-blue-500', mark: 'bg-blue-200 dark:bg-blue-500/30' };
+    let content = <span>{text}</span>;
+    if (thesis) {
+        const at = text.indexOf(thesis);
+        if (at >= 0) {
+            content = (
+                <>
+                    {text.slice(0, at)}
+                    <span className={`${palette.mark} rounded px-0.5`}>{thesis}</span>
+                    {text.slice(at + thesis.length)}
+                </>
+            );
+        }
+    }
+    return (
+        <div className={`p-5 rounded-2xl border ${palette.box}`}>
+            <span className={`text-[10px] font-bold uppercase tracking-widest ${palette.tag} mb-2 block`}>{label}</span>
+            <p className="font-serif text-base leading-relaxed text-text-primary whitespace-pre-wrap">{content}</p>
+        </div>
+    );
+}
+
 function AnnotatedEssayMode({ essay }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
@@ -443,14 +554,11 @@ function AnnotatedEssayMode({ essay }) {
         <div>
             <AnnotatedLegend />
             <div className="max-w-2xl mx-auto space-y-8">
-                {structure.thesis && (
-                    <div className="p-5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200/60 dark:border-blue-500/20">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-2 block">Thesis</span>
-                        <p className="font-serif text-base leading-relaxed text-text-primary bg-blue-200 dark:bg-blue-500/30 rounded px-0.5 inline">
-                            {structure.thesis}
-                        </p>
-                    </div>
-                )}
+                {structure.introduction ? (
+                    <FramingParagraphBlock label="Introduction" text={structure.introduction} thesis={structure.thesis} tone="blue" />
+                ) : structure.thesis ? (
+                    <FramingParagraphBlock label="Thesis" text={structure.thesis} tone="blue" />
+                ) : null}
 
                 {paras.length === 0 ? (
                     <p className="text-sm text-text-muted italic text-center py-8">No body paragraphs to annotate.</p>
@@ -461,12 +569,7 @@ function AnnotatedEssayMode({ essay }) {
                 )}
 
                 {structure.conclusion && (
-                    <div className="p-5 rounded-2xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200/60 dark:border-violet-500/20">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-violet-500 mb-2 block">Conclusion</span>
-                        <p className="font-serif text-base leading-relaxed text-text-primary bg-violet-200 dark:bg-violet-500/30 rounded px-0.5 inline">
-                            {structure.conclusion}
-                        </p>
-                    </div>
+                    <FramingParagraphBlock label="Conclusion" text={structure.conclusion} tone="violet" />
                 )}
             </div>
         </div>
@@ -495,12 +598,6 @@ const READ_VIEWS = [
     { key: 'original', label: 'Original' },
 ];
 
-/**
- * "Read" — the natural first stop for any essay: skim it block-by-block
- * (Story), see its structure colour-coded (Annotated), or check exactly what
- * was saved with zero AI touch (Original). One tab, three lenses, so this
- * doesn't eat three separate slots in the practice nav.
- */
 function ReadMode({ essay, onStartPractice }) {
     const [view, setView] = useState('story');
     return (
@@ -527,7 +624,7 @@ function ReadMode({ essay, onStartPractice }) {
 
 // ── RECALL — spaced-repetition cloze on topic sentences ─────────────────────
 
-function RecallChunks({ essay, onScheduled, onNext, nextLabel }) {
+function RecallChunks({ essay, onScheduled, onNext, nextLabel, onEdit }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
     const [pIndex, setPIndex] = useState(0);
@@ -535,11 +632,12 @@ function RecallChunks({ essay, onScheduled, onNext, nextLabel }) {
     const [busy, setBusy] = useState(false);
     const [revealed, setRevealed] = useState(false);
     const [done, setDone] = useState(false);
+    const [saveOk, setSaveOk] = useState(true);
 
-    const reset = () => { setPIndex(0); setGraded(false); setRevealed(false); setDone(false); };
+    const reset = () => { setPIndex(0); setGraded(false); setRevealed(false); setDone(false); setSaveOk(true); };
 
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs were found in this essay.</p>;
-    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs were found in this essay.</EmptyModeNote>;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const current = paras[pIndex];
     const cloze = buildTopicSentenceCloze(current, pIndex);
@@ -557,7 +655,7 @@ function RecallChunks({ essay, onScheduled, onNext, nextLabel }) {
                 ),
             );
             onScheduled?.();
-        } catch (e) { console.warn('SRS submit failed:', e?.message || e); }
+        } catch (e) { console.warn('SRS submit failed:', e?.message || e); setSaveOk(false); }
         setBusy(false);
         setGraded(true);
     };
@@ -572,7 +670,7 @@ function RecallChunks({ essay, onScheduled, onNext, nextLabel }) {
             <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
             </div>
-            <ProgressBar value={pIndex + 1} total={paras.length} />
+            <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-sm text-text-muted italic mb-6 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
 
             {cloze ? (
@@ -612,7 +710,7 @@ function RecallChunks({ essay, onScheduled, onNext, nextLabel }) {
 
 // ── WORD BY WORD — type one word at a time; next letter revealed as you go ──
 
-export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
+export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel, onEdit }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
     const [pIndex, setPIndex] = useState(0);
@@ -623,10 +721,11 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
     const [paraDone, setParaDone] = useState(false);
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(false);
+    const [saveOk, setSaveOk] = useState(true);
     const inputRef = useRef(null);
     const currentRef = useRef(null);
 
-    const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false); setDone(false); };
+    const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false); setDone(false); setSaveOk(true); };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
     // Keep the word you're on visible inside its own scroll area, so a long
@@ -637,11 +736,11 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
         }
     }, [wordIdx, paraDone]);
 
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const para = paras[pIndex];
-    const words = para.text.trim().split(/\s+/).filter(Boolean);
+    const words = String(para.text || '').trim().split(/\s+/).filter(Boolean);
     const targetWord = words[wordIdx] || '';
 
     const commitWord = () => {
@@ -657,15 +756,14 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
 
     const advance = async (recall) => {
         setBusy(true);
-        const scoredRecall = accuracy >= 80 ? recall : 'fail';
         try {
-            await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), scoredRecall, {
+            await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall, {
                 mode: 'word_by_word',
                 accuracy,
                 hintCount: peekedWords.size,
             });
             onScheduled?.();
-        } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
+        } catch { setSaveOk(false); }
         setBusy(false);
         if (pIndex + 1 < paras.length) {
             setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false);
@@ -688,7 +786,7 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
                 <span className="text-xs font-medium text-text-dim tabular-nums">{correct}/{history.length} correct</span>
             </div>
-            <ProgressBar value={pIndex + 1} total={paras.length} />
+            <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-xs font-medium text-text-dim mb-4">Type each word. The next word's first letter appears as you go.</p>
 
             <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
@@ -756,8 +854,7 @@ export function GuidedTypeMode({ essay, onScheduled, onNext, nextLabel }) {
                                 <span className="text-xs text-text-dim">{correct}/{history.length} words</span>
                             </div>
                             <p className="text-xs text-text-muted mb-4">Paragraph rebuilt. How did that feel?</p>
-                            <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
-                                passLabel={accuracy >= 80 ? 'Got it' : 'Close enough'} />
+                            <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')} passLabel="Got it" />
                         </div>
                     )}
                 </div>
@@ -775,12 +872,7 @@ const SENTENCE_HINTS = [
 
 const startingPhase = (hintStyle) => (hintStyle === 'firstWord' ? 'type' : 'read');
 
-/**
- * Merges the old "Sentences" (read → hide → type) and "Starts" (only the
- * first word is cued) flows into one tab with a hint-style toggle, since
- * they're the same underlying drill — just how much of a head start you get.
- */
-function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
+function SentenceMode({ essay, onScheduled, onNext, nextLabel, onEdit }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
     const [hintStyle, setHintStyle] = useState('readFirst');
@@ -791,15 +883,16 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
     const [revealed, setRevealed] = useState(false);
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(false);
+    const [saveOk, setSaveOk] = useState(true);
     const textareaRef = useRef(null);
 
-    const reset = () => { setPIndex(0); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); setDone(false); };
+    const reset = () => { setPIndex(0); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); setDone(false); setSaveOk(true); };
 
     useEffect(() => { if (phase === 'type') textareaRef.current?.focus(); }, [phase, sIndex, pIndex]);
     useEffect(() => { setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }, [hintStyle]);
 
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const para = paras[pIndex];
     const sentences = splitSentences(para.text);
@@ -817,7 +910,7 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
         if (sIndex + 1 < total) { setSIndex((i) => i + 1); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }
         else {
             setBusy(true);
-            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
+            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { setSaveOk(false); }
             setBusy(false);
             if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }
             else setDone(true);
@@ -830,7 +923,7 @@ function SentenceMode({ essay, onScheduled, onNext, nextLabel }) {
                 <span className="text-xs font-medium text-text-dim">Para {pIndex + 1}/{paras.length} · Sentence {sIndex + 1}/{total}</span>
                 <HintToggle options={SENTENCE_HINTS} value={hintStyle} onChange={setHintStyle} />
             </div>
-            <ProgressBar value={pIndex + 1} total={paras.length} />
+            <ProgressBar value={pIndex} total={paras.length} />
 
             {phase === 'read' ? (
                 <div>
@@ -917,13 +1010,7 @@ const TYPE_HINTS = [
     { key: 'acronym', label: 'Acronym' },
 ];
 
-/**
- * Merges the old "Type" (blank page), "Letters" (first letter of every word)
- * and "Acronym" (just the letters, hardest) tabs into one flow — they're the
- * exact same check-a-whole-paragraph mechanic, just a different hint above
- * the textarea. A toggle keeps that variety without three near-identical tabs.
- */
-function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
+function TypeItMode({ essay, onScheduled, onNext, nextLabel, onEdit }) {
     const structure = essay.parsedStructure || {};
     const paras = structure.bodyParagraphs || [];
     const [hint, setHint] = useState('letters');
@@ -932,14 +1019,15 @@ function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
     const [revealed, setRevealed] = useState(false);
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(false);
+    const [saveOk, setSaveOk] = useState(true);
     const textareaRef = useRef(null);
 
-    const reset = () => { setPIndex(0); setTyped(''); setRevealed(false); setDone(false); };
+    const reset = () => { setPIndex(0); setTyped(''); setRevealed(false); setDone(false); setSaveOk(true); };
 
     useEffect(() => { textareaRef.current?.focus(); }, [pIndex]);
 
-    if (!paras.length) return <p className="text-sm text-text-muted italic">No body paragraphs found.</p>;
-    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} />;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const current = paras[pIndex];
     const cue = pIndex === 0
@@ -952,7 +1040,7 @@ function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
 
     const advance = async (recall) => {
         setBusy(true);
-        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { /* best-effort SRS scheduling — practice flow continues regardless */ }
+        try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, pIndex), recall); onScheduled?.(); } catch { setSaveOk(false); }
         setBusy(false);
         if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setTyped(''); setRevealed(false); }
         else setDone(true);
@@ -964,7 +1052,7 @@ function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
                 <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
                 <HintToggle options={TYPE_HINTS} value={hint} onChange={setHint} />
             </div>
-            <ProgressBar value={pIndex + 1} total={paras.length} />
+            <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-sm text-text-muted italic mb-5 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
 
             <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
@@ -1012,10 +1100,28 @@ function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
                         <p className="mt-3 p-4 rounded-2xl block-cream font-serif text-sm leading-relaxed whitespace-pre-wrap text-text-primary">{current.text}</p>
                     )}
                     <div className="mt-5 pt-5 border-t border-line-soft">
-                        <GradeButtons busy={busy || !typed.trim()} onFail={() => advance('fail')} onPass={() => advance('pass')}
-                            passLabel={accuracy >= 75 ? 'Got it' : 'Close enough'} />
+                        <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')}
+                            passLabel={!typed.trim() ? 'Got it' : accuracy >= 75 ? 'Got it' : 'Close enough'} />
                     </div>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+// ── QUOTES + ORDER — extra drills with real completion states ───────────────
+
+function QuoteDrill({ slide, onNext, nextLabel }) {
+    const [done, setDone] = useState(false);
+    const [session, setSession] = useState(0);
+    if (done) return <SessionDone onRestart={() => { setDone(false); setSession((s) => s + 1); }} onNext={onNext} nextLabel={nextLabel} />;
+    return (
+        <div>
+            <SlideRenderer key={session} slide={slide} onSubmit={() => {}} />
+            <div className="flex justify-center mt-8 pt-6 border-t border-line-soft">
+                <button type="button" onClick={() => setDone(true)} className="btn-secondary inline-flex hover:-translate-y-0.5 transition-transform">
+                    Finish this drill
+                </button>
             </div>
         </div>
     );
@@ -1026,6 +1132,7 @@ function TypeItMode({ essay, onScheduled, onNext, nextLabel }) {
 function NewEssayForm({ onCreated }) {
     const [title, setTitle] = useState('');
     const [text, setText] = useState('');
+    const [model, setModel] = useState(DEFAULT_MODEL);
     const [pdfBusy, setPdfBusy] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
@@ -1037,8 +1144,8 @@ function NewEssayForm({ onCreated }) {
         setError(null);
         setPdfBusy(true);
         try {
-            const extracted = await extractPdfText(file);
-            if (!extracted?.trim()) { setError('Could not read any text from that PDF.'); }
+            const extracted = stripPdfArtifacts(await extractPdfText(file));
+            if (!extracted) { setError('Could not read any text from that PDF.'); }
             else {
                 setText((prev) => (prev.trim() ? `${prev}\n\n${extracted}` : extracted));
                 if (!title.trim()) setTitle(file.name.replace(/\.pdf$/i, ''));
@@ -1053,12 +1160,12 @@ function NewEssayForm({ onCreated }) {
         if (!text.trim()) return setError('Paste your essay or upload a PDF first.');
         setSubmitting(true);
         try {
-            await onCreated(title.trim(), text);
+            await onCreated(title.trim(), text, model);
         } catch (e) {
             setError(e?.message || 'Could not save the essay.');
             setSubmitting(false);
         }
-        // Note: don't set submitting=false on success — component unmounts when essay navigates away
+        // Note: don't set submitting=false on success — component unmounts when the route changes
     };
 
     return (
@@ -1084,6 +1191,7 @@ function NewEssayForm({ onCreated }) {
                     {pdfBusy ? 'Reading PDF…' : 'Upload PDF'}
                     <input type="file" accept="application/pdf" className="hidden" onChange={onPdf} disabled={pdfBusy} />
                 </label>
+                <EssayModelPicker model={model} onChange={setModel} disabled={submitting || pdfBusy} />
                 <button type="button" onClick={submit} disabled={submitting || pdfBusy}
                     className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
                     <PlusIcon className="w-4 h-4" />
@@ -1097,11 +1205,6 @@ function NewEssayForm({ onCreated }) {
     );
 }
 
-/**
- * Keep the library calm on first arrival. Creating an essay is always one tap
- * away, but it no longer competes with the saved work the learner came back to
- * practise.
- */
 function NewEssayComposer({ onCreated }) {
     const [open, setOpen] = useState(false);
 
@@ -1144,55 +1247,42 @@ function NewEssayComposer({ onCreated }) {
     );
 }
 
-// ── Essay detail ────────────────────────────────────────────────────────────
+// ── Practice hub — every activity visible, guided chain intact ──────────────
 
-// The primary route is deliberately short. Less-common drills remain nearby,
-// but do not compete with the learner's next study action.
-const CORE_MODES = [
-    { key: 'read', step: '1', label: 'Understand it', icon: BookOpenIcon, desc: 'See the structure and key ideas.' },
-    { key: 'wordbyword', step: '2', label: 'Rebuild it', icon: PencilIcon, desc: 'Recall with a cue for each word.' },
+const PRACTICE_STEPS = [
+    { key: 'wordbyword', step: '1', label: 'Rebuild it', icon: PencilIcon, desc: 'Recall with a cue for each word.' },
+    { key: 'sentence', step: '2', label: 'Sentences', icon: ChatBubbleBottomCenterTextIcon, desc: 'Read, hide, and rewrite each sentence.' },
     { key: 'typeit', step: '3', label: 'Write it', icon: DocumentTextIcon, desc: 'Draft a whole paragraph from memory.' },
     { key: 'recall', step: '4', label: 'Keep it fresh', icon: ClockIcon, desc: 'Return when it is due for review.' },
 ];
 
-const EXTRA_MODES = [
-    { key: 'sentence', label: 'Sentence practice', icon: ChatBubbleBottomCenterTextIcon },
+const DRILL_MODES = [
     { key: 'quotes', label: 'Quote cards', icon: RectangleStackIcon },
     { key: 'order', label: 'Paragraph order', icon: ArrowsUpDownIcon },
 ];
 
-function LearningPath({ mode, onChange, dueCount, compact = false }) {
-    const activeCoreMode = CORE_MODES.find((item) => item.key === mode);
-    const activeExtraMode = EXTRA_MODES.find((item) => item.key === mode);
-    const activeMode = activeCoreMode || activeExtraMode;
+const modeLabel = (key) => [...PRACTICE_STEPS, ...DRILL_MODES].find((m) => m.key === key)?.label || key;
 
-    if (compact) {
+function PracticeHub({ mode, onChange, dueCount, drills }) {
+    const availableDrills = DRILL_MODES.filter((d) => drills[d.key]);
+    const active = [...PRACTICE_STEPS, ...DRILL_MODES].find((m) => m.key === mode);
+
+    if (mode && active) {
+        // Compact bar while inside an activity — one tap back to the hub.
+        const step = PRACTICE_STEPS.find((m) => m.key === mode);
         return (
             <section aria-label="Current essay practice" className="mb-6 rounded-2xl border border-line-soft bg-surface-raised px-4 py-3 shadow-[0_18px_40px_-34px_rgba(20,20,18,0.45)]">
                 <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">
-                            {activeCoreMode ? `Step ${activeCoreMode.step} of ${CORE_MODES.length}` : 'Extra drill'}
+                            {step ? `Step ${step.step} of ${PRACTICE_STEPS.length}` : 'Extra drill'}
                         </p>
-                        <p className="font-display text-base font-extrabold tracking-tight text-text-primary truncate mt-0.5">{activeMode?.label}</p>
+                        <p className="font-display text-base font-extrabold tracking-tight text-text-primary truncate mt-0.5">{active.label}</p>
                     </div>
-                    <details className="relative shrink-0">
-                        <summary className="cursor-pointer list-none rounded-xl border border-line-soft px-3 py-2 text-xs font-bold text-text-dim hover:text-text-primary hover:border-text-dim transition-colors">
-                            Change activity
-                        </summary>
-                        <div className="absolute z-20 right-0 top-full mt-2 w-64 rounded-2xl border border-line-soft bg-surface-raised p-2 shadow-xl">
-                            {[...CORE_MODES, ...EXTRA_MODES].map((item) => {
-                                const Icon = item.icon;
-                                const active = mode === item.key;
-                                return (
-                                    <button key={item.key} type="button" aria-pressed={active} onClick={() => onChange(item.key)}
-                                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold transition-colors ${active ? 'bg-accent text-white' : 'text-text-dim hover:bg-surface-body hover:text-text-primary'}`}>
-                                        <Icon className="w-4 h-4 shrink-0" /> {item.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </details>
+                    <button type="button" onClick={() => onChange(null)}
+                        className="shrink-0 inline-flex items-center gap-2 rounded-xl border border-line-soft px-3 py-2 text-xs font-bold text-text-dim hover:text-text-primary hover:border-text-dim transition-colors">
+                        <Squares2X2Icon className="w-3.5 h-3.5" /> All activities
+                    </button>
                 </div>
             </section>
         );
@@ -1212,192 +1302,462 @@ function LearningPath({ mode, onChange, dueCount, compact = false }) {
                 )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
-                {CORE_MODES.map((item) => {
+                {PRACTICE_STEPS.map((item) => {
                     const Icon = item.icon;
-                    const active = mode === item.key;
                     return (
                         <button
                             key={item.key}
                             type="button"
-                            aria-pressed={active}
                             onClick={() => onChange(item.key)}
-                            className={`text-left rounded-2xl px-4 py-3.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-                                active
-                                    ? 'bg-accent text-white shadow-[0_12px_24px_-18px_rgba(19,81,170,0.95)]'
-                                    : 'bg-surface-body text-text-primary hover:bg-accent-soft'
-                            }`}
+                            className="text-left rounded-2xl px-4 py-3.5 bg-surface-body text-text-primary hover:bg-accent-soft transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                         >
-                            <span className={`flex items-center justify-between text-[11px] font-bold uppercase tracking-widest ${active ? 'text-white/70' : 'text-text-dim'}`}>
+                            <span className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-text-dim">
                                 Step {item.step}<Icon className="w-4 h-4" />
                             </span>
                             <span className="block font-display font-extrabold text-sm mt-3">{item.label}</span>
-                            <span className={`block text-xs leading-relaxed mt-1.5 ${active ? 'text-white/80' : 'text-text-muted'}`}>{item.desc}</span>
+                            <span className="block text-xs leading-relaxed mt-1.5 text-text-muted">{item.desc}</span>
                         </button>
                     );
                 })}
             </div>
-            <details className="group mt-3 px-2">
-                <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-xs font-bold text-text-dim hover:text-text-primary transition-colors">
-                    <span className="inline-block transition-transform group-open:rotate-90">›</span> Extra drills
-                </summary>
-                <div className="flex flex-wrap gap-2 pt-3">
-                    {EXTRA_MODES.map((item) => {
+            {availableDrills.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 px-2 pt-3">
+                    <span className="text-xs font-bold text-text-dim">Extra drills:</span>
+                    {availableDrills.map((item) => {
                         const Icon = item.icon;
-                        const active = mode === item.key;
                         return (
-                            <button key={item.key} type="button" aria-pressed={active} onClick={() => onChange(item.key)}
-                                className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-colors ${active ? 'bg-accent text-white' : 'bg-surface-body text-text-dim hover:text-text-primary'}`}>
+                            <button key={item.key} type="button" onClick={() => onChange(item.key)}
+                                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold bg-surface-body text-text-dim hover:text-text-primary transition-colors">
                                 <Icon className="w-3.5 h-3.5" /> {item.label}
                             </button>
                         );
                     })}
                 </div>
-            </details>
+            )}
         </section>
     );
 }
 
-function EssayDetail({ essay, onBack, onParsed, onDeleted, isParsing, initialParseError }) {
-    const [parsing, setParsing] = useState(false);
-    const [parseError, setParseError] = useState(initialParseError || null);
-    const [mode, setMode] = useState('read');
-    const [dueCount, setDueCount] = useState(0);
+// ── Workspace sections ──────────────────────────────────────────────────────
 
-    const structure = essay.parsedStructure;
+const WORKSPACE_TABS = [
+    { key: 'overview', label: 'Overview', icon: BookOpenIcon },
+    { key: 'practice', label: 'Practice', icon: AcademicCapIcon },
+    { key: 'edit', label: 'Edit', icon: PencilSquareIcon },
+];
 
-    const loadDue = useCallback(async () => {
-        const data = await api.getDueReviewItems().catch(() => null);
-        const items = data?.items || [];
-        const prefix = `${essay.id}:`;
-        setDueCount(items.filter((it) => String(it.itemId).startsWith(prefix)).length);
-    }, [essay.id]);
+function EditPanel({ essay, onSaved, saving, error }) {
+    const [title, setTitle] = useState(essay.title || '');
+    const [text, setText] = useState(essay.originalText || '');
+    const [model, setModel] = useState(DEFAULT_MODEL);
+    const [localError, setLocalError] = useState(null);
 
-    useEffect(() => { if (structure) loadDue(); }, [structure, loadDue]);
+    useEffect(() => { setTitle(essay.title || ''); setText(essay.originalText || ''); }, [essay.id, essay.title, essay.originalText]);
 
-    useEffect(() => {
-        if (initialParseError) setParseError(initialParseError);
-    }, [initialParseError]);
+    const textChanged = text !== (essay.originalText || '');
+    const titleChanged = title.trim() !== (essay.title || '');
+    const dirty = textChanged || titleChanged;
 
-    const parse = async () => {
-        setParsing(true);
-        setParseError(null);
-        try { const res = await api.parseEssay(essay.id); onParsed?.(res.essay); }
-        catch (e) { setParseError(e?.message || 'Could not parse this essay right now.'); }
-        finally { setParsing(false); }
+    const save = () => {
+        setLocalError(null);
+        if (!title.trim()) return setLocalError('Give your essay a title.');
+        if (!text.trim()) return setLocalError('The essay text cannot be empty.');
+        onSaved({ title: title.trim(), text, model, textChanged });
     };
-
-    const quoteCards = structure ? buildQuoteCards(structure) : null;
-    const paragraphOrder = structure ? buildParagraphOrder(structure) : null;
 
     return (
         <div>
-            <button type="button" onClick={onBack}
-                className="inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent transition-colors mb-8">
-                <ArrowLeftIcon className="w-4 h-4" /> All essays
-            </button>
-
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
-                <div className="min-w-0">
-                    <span className="font-hand text-lg text-accent -rotate-2 inline-block mb-1">essay</span>
-                    <h1 className="text-4xl md:text-6xl break-words">{essay.title}</h1>
-                    {dueCount > 0 && (
-                        <button type="button" onClick={() => setMode('recall')}
-                            className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-accent hover:opacity-75 transition-opacity">
-                            <AcademicCapIcon className="w-4 h-4" /> {dueCount} item{dueCount === 1 ? '' : 's'} due for review
-                        </button>
-                    )}
-                </div>
-                <button type="button" onClick={() => onDeleted?.(essay.id)}
-                    className="btn-secondary shrink-0 inline-flex items-center gap-2 hover:-translate-y-0.5 hover:text-rose-400 transition-all">
-                    <TrashIcon className="w-4 h-4" /> Delete
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-text-dim mb-2" htmlFor="essay-edit-title">Title</label>
+            <input
+                id="essay-edit-title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full mb-4 px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary outline-none focus:border-accent transition-colors font-body"
+            />
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-text-dim mb-2" htmlFor="essay-edit-text">Essay text</label>
+            <textarea
+                id="essay-edit-text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={16}
+                className="w-full px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary outline-none focus:border-accent transition-colors font-serif text-sm leading-relaxed resize-y"
+            />
+            {(localError || error) && <p role="alert" className="text-sm text-rose-400 mt-3 font-medium">{localError || error}</p>}
+            <div className="flex flex-wrap items-center gap-3 mt-4">
+                {textChanged && <EssayModelPicker model={model} onChange={setModel} disabled={saving} />}
+                <button type="button" onClick={save} disabled={saving || !dirty}
+                    className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                    {saving ? 'Saving…' : textChanged ? 'Save & rescan' : 'Save changes'}
                 </button>
+                {!dirty && !saving && <span className="text-xs font-medium text-text-dim">No changes yet.</span>}
             </div>
-
-            {!structure ? (
-                /* ── Parse prompt / parsing banner ── */
-                <div className="block-blue rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                    {isParsing || parsing ? (
-                        <>
-                            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-5" />
-                            <p className="font-display text-lg font-extrabold tracking-tight text-text-primary mb-2">
-                                Preparing your essay
-                            </p>
-                            <p className="text-sm text-text-muted">
-                                Saving the original, then asking AI to map its structure. <CyclingMessage messages={PARSE_MESSAGES} />
-                            </p>
-                        </>
-                    ) : (
-                        <>
-                            <SparklesIcon className="w-8 h-8 text-accent mx-auto mb-5" />
-                            <p className="text-base text-text-primary font-medium mb-2">
-                                Use AI to map this essay into its thesis, body paragraphs, quotes and techniques before you practise it.
-                            </p>
-                            <p className="font-hand text-base text-accent mb-6">
-                                Your original wording stays exactly as you wrote it.
-                            </p>
-                            {parseError && (
-                                <div role="alert" className="text-sm text-rose-400 mb-5 font-medium">
-                                    <p className="mb-1">Your essay is saved, but AI parsing did not finish.</p>
-                                    <p>{parseError}</p>
-                                </div>
-                            )}
-                            <button type="button" onClick={parse} disabled={parsing}
-                                className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
-                                <SparklesIcon className="w-4 h-4" />
-                                {parseError ? 'Try setup again' : 'Set up practice'}
-                            </button>
-                        </>
-                    )}
-                </div>
-            ) : (
-                <div>
-                    <LearningPath mode={mode} onChange={setMode} dueCount={dueCount} compact={mode !== 'read'} />
-
-                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                        {mode === 'read' && <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />}
-                        {mode === 'recall' && (
-                            <RecallChunks essay={essay} onScheduled={loadDue}
-                                onNext={() => setMode('quotes')} nextLabel="Quotes" />
-                        )}
-                        {mode === 'wordbyword' && (
-                            <GuidedTypeMode essay={essay} onScheduled={loadDue}
-                                onNext={() => setMode('sentence')} nextLabel="Sentence by sentence" />
-                        )}
-                        {mode === 'sentence' && (
-                            <SentenceMode essay={essay} onScheduled={loadDue}
-                                onNext={() => setMode('typeit')} nextLabel="Type it" />
-                        )}
-                        {mode === 'typeit' && (
-                            <TypeItMode essay={essay} onScheduled={loadDue}
-                                onNext={() => setMode('recall')} nextLabel="Recall" />
-                        )}
-                        {mode === 'quotes' && (
-                            quoteCards
-                                ? <SlideRenderer slide={quoteCards} onSubmit={() => {}} />
-                                : <p className="text-sm text-text-muted italic text-center">No quotes were found in this essay.</p>
-                        )}
-                        {mode === 'order' && (
-                            paragraphOrder
-                                ? <SlideRenderer slide={paragraphOrder} onSubmit={() => {}} />
-                                : <p className="text-sm text-text-muted italic text-center">Need at least two body paragraphs to practise ordering.</p>
-                        )}
-                    </div>
-                </div>
-            )}
+            <p className="mt-3 text-xs font-medium leading-relaxed text-text-dim">
+                Changing the text rebuilds the practice structure with AI — your wording itself is never altered.
+                Review items keep their schedule where paragraphs still match.
+            </p>
         </div>
     );
 }
 
-// ── Page ────────────────────────────────────────────────────────────────────
+function DeleteConfirm({ title, busy, error, onConfirm, onCancel }) {
+    return (
+        <div role="alertdialog" aria-label="Delete essay" className="rounded-2xl border border-rose-300/60 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-900/15 p-5 mb-8">
+            <p className="text-sm font-bold text-text-primary">Delete “{title}”?</p>
+            <p className="text-sm text-text-muted mt-1">This removes the essay and its review schedule. There is no undo.</p>
+            {error && <p role="alert" className="text-sm text-rose-500 mt-2 font-medium">{error}</p>}
+            <div className="flex items-center gap-3 mt-4">
+                <button type="button" disabled={busy} onClick={onConfirm}
+                    className="text-sm font-semibold text-white bg-rose-500 rounded-xl px-5 py-2.5 hover:bg-rose-600 transition-colors disabled:opacity-40">
+                    {busy ? 'Deleting…' : 'Delete essay'}
+                </button>
+                <button type="button" disabled={busy} onClick={onCancel}
+                    className="text-sm font-semibold text-text-dim hover:text-text-primary transition-colors">
+                    Keep it
+                </button>
+            </div>
+        </div>
+    );
+}
 
-export default function EssayMemoriser() {
+// ── Workspace (one essay = one project) ─────────────────────────────────────
+
+function EssayWorkspace({ essayId }) {
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [essay, setEssay] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState(null);
+    const [parsing, setParsing] = useState(false);
+    const [parseError, setParseError] = useState(null);
+    const [parseModel, setParseModel] = useState(() => {
+        const fromUrl = searchParams.get('model');
+        return MODEL_OPTIONS.some((m) => m.id === fromUrl) ? fromUrl : DEFAULT_MODEL;
+    });
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState(null);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
+    const [deleteBusy, setDeleteBusy] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
+    const [dueCount, setDueCount] = useState(0);
+    // Guards async continuations against a workspace that switched essays.
+    const essayIdRef = useRef(essayId);
+    essayIdRef.current = essayId;
+
+    const structure = essay?.parsedStructure || null;
+    const tabParam = searchParams.get('tab');
+    const tab = WORKSPACE_TABS.some((t) => t.key === tabParam) ? tabParam : 'overview';
+    const mode = searchParams.get('mode');
+
+    const setTab = (key) => {
+        const next = new URLSearchParams(searchParams);
+        if (key === 'overview') next.delete('tab'); else next.set('tab', key);
+        next.delete('mode');
+        setSearchParams(next);
+    };
+    const setMode = useCallback((key) => {
+        const next = new URLSearchParams(searchParams);
+        next.set('tab', 'practice');
+        if (key) next.set('mode', key); else next.delete('mode');
+        setSearchParams(next);
+    }, [searchParams, setSearchParams]);
+    const goEdit = useCallback(() => {
+        const next = new URLSearchParams(searchParams);
+        next.set('tab', 'edit');
+        next.delete('mode');
+        setSearchParams(next);
+    }, [searchParams, setSearchParams]);
+
+    const loadDue = useCallback(async () => {
+        const data = await api.getDueReviewItems().catch(() => null);
+        if (essayIdRef.current !== essayId) return;
+        const items = data?.items || [];
+        const prefix = `${essayId}:`;
+        setDueCount(items.filter((it) => String(it.itemId).startsWith(prefix)).length);
+    }, [essayId]);
+
+    const parse = useCallback(async ({ model, force = false } = {}) => {
+        setParsing(true);
+        setParseError(null);
+        try {
+            const res = await api.parseEssay(essayId, { model: model || parseModel, force });
+            if (essayIdRef.current === essayId) setEssay(res.essay);
+        } catch (e) {
+            if (essayIdRef.current === essayId) setParseError(e?.message || 'Could not map this essay right now.');
+        } finally {
+            if (essayIdRef.current === essayId) setParsing(false);
+        }
+    }, [essayId, parseModel]);
+
+    // Load the essay; kick off the first parse automatically when arriving
+    // from the composer (?setup=1) so creation flows straight into practice.
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            setLoading(true);
+            setLoadError(null);
+            try {
+                const res = await api.getEssay(essayId);
+                if (cancelled) return;
+                setEssay(res.essay);
+                if (!res.essay.parsedStructure && searchParams.get('setup') === '1') {
+                    const next = new URLSearchParams(searchParams);
+                    next.delete('setup');
+                    next.delete('model');
+                    setSearchParams(next, { replace: true });
+                    parse({ model: parseModel });
+                }
+            } catch (e) {
+                if (!cancelled) setLoadError(e?.status === 404 ? 'This essay does not exist (it may have been deleted).' : e?.message || 'Could not load this essay.');
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [essayId]);
+
+    useEffect(() => { if (structure) loadDue(); }, [structure, loadDue]);
+
+    const handleSaved = async ({ title, text, model, textChanged }) => {
+        setSaving(true);
+        setSaveError(null);
+        try {
+            const res = await api.updateEssay(essayId, { title, text });
+            if (essayIdRef.current !== essayId) return;
+            setEssay(res.essay);
+            if (textChanged) {
+                setParseModel(model);
+                setTab('overview');
+                parse({ model });
+            }
+        } catch (e) {
+            if (essayIdRef.current === essayId) setSaveError(e?.message || 'Could not save your changes.');
+        } finally {
+            if (essayIdRef.current === essayId) setSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        setDeleteBusy(true);
+        setDeleteError(null);
+        try {
+            await api.deleteEssay(essayId);
+            navigate('/essays');
+        } catch (e) {
+            setDeleteError(e?.message || 'Could not delete the essay. Try again.');
+            setDeleteBusy(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-surface-body flex items-center justify-center">
+                <CapletLoader message="Opening your essay…" />
+            </div>
+        );
+    }
+
+    if (loadError || !essay) {
+        return (
+            <div className="min-h-screen bg-surface-body py-32">
+                <div className="container-custom text-center">
+                    <p className="text-text-primary font-bold">{loadError || 'Could not load this essay.'}</p>
+                    <Link to="/essays" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:opacity-70 transition-opacity">
+                        <ArrowLeftIcon className="w-4 h-4" /> All essays
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    const quoteCards = structure ? buildQuoteCards(structure) : null;
+    const paragraphOrder = structure ? buildParagraphOrder(structure) : null;
+    const drills = { quotes: !!quoteCards, order: !!paragraphOrder };
+    const paragraphCount = structure?.bodyParagraphs?.length || 0;
+
+    return (
+        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+            <div className="container-custom">
+                <Link to="/essays"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent transition-colors mb-8">
+                    <ArrowLeftIcon className="w-4 h-4" /> All essays
+                </Link>
+
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-6">
+                    <div className="min-w-0">
+                        <span className="font-hand text-lg text-accent -rotate-2 inline-block mb-1">essay</span>
+                        <h1 className="text-4xl md:text-6xl break-words">{essay.title}</h1>
+                        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-text-dim">
+                            <span>{wordCountOf(essay.originalText)} words</span>
+                            {structure && <span>{paragraphCount} body paragraph{paragraphCount === 1 ? '' : 's'}</span>}
+                            {dueCount > 0 && (
+                                <button type="button" onClick={() => setMode('recall')}
+                                    className="inline-flex items-center gap-1.5 font-bold text-accent hover:opacity-75 transition-opacity">
+                                    <ClockIcon className="w-3.5 h-3.5" /> {dueCount} due for review
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    <button type="button" onClick={() => { setConfirmingDelete(true); setDeleteError(null); }}
+                        className="btn-secondary shrink-0 inline-flex items-center gap-2 hover:-translate-y-0.5 hover:text-rose-400 transition-all">
+                        <TrashIcon className="w-4 h-4" /> Delete
+                    </button>
+                </div>
+
+                {confirmingDelete && (
+                    <DeleteConfirm
+                        title={essay.title}
+                        busy={deleteBusy}
+                        error={deleteError}
+                        onConfirm={handleDelete}
+                        onCancel={() => setConfirmingDelete(false)}
+                    />
+                )}
+
+                {!structure ? (
+                    /* ── Setup: choose a model and map the structure ── */
+                    <div className="block-blue rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                        {parsing ? (
+                            <>
+                                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-5" />
+                                <p className="font-display text-lg font-extrabold tracking-tight text-text-primary mb-2">
+                                    Preparing your essay
+                                </p>
+                                <p className="text-sm text-text-muted">
+                                    Mapping the structure with {modelShort(parseModel)}. <CyclingMessage messages={PARSE_MESSAGES} />
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <SparklesIcon className="w-8 h-8 text-accent mx-auto mb-5" />
+                                <p className="text-base text-text-primary font-medium mb-2">
+                                    Use AI to map this essay into its structure — introduction, thesis, body paragraphs, quotes and techniques — before you practise it.
+                                </p>
+                                <p className="font-hand text-base text-accent mb-6">
+                                    Your original wording stays exactly as you wrote it.
+                                </p>
+                                {parseError && (
+                                    <div role="alert" className="text-sm text-rose-400 mb-5 font-medium">
+                                        <p className="mb-1">Your essay is saved, but AI mapping did not finish.</p>
+                                        <p>{parseError}</p>
+                                    </div>
+                                )}
+                                <div className="flex flex-wrap items-center justify-center gap-3">
+                                    <EssayModelPicker model={parseModel} onChange={setParseModel} disabled={parsing} />
+                                    <button type="button" onClick={() => parse()} disabled={parsing}
+                                        className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                                        <SparklesIcon className="w-4 h-4" />
+                                        {parseError ? 'Try setup again' : 'Set up practice'}
+                                    </button>
+                                </div>
+                                <div className="mt-6">
+                                    <button type="button" onClick={goEdit} className="text-sm font-semibold text-accent hover:opacity-70 transition-opacity">
+                                        Edit the essay text first →
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ) : null}
+
+                {(structure || tab === 'edit') && (
+                    <>
+                        {/* ── Workspace section tabs ── */}
+                        <nav aria-label="Essay workspace sections" className="mb-6 flex items-center gap-1 border-b border-line-soft">
+                            {WORKSPACE_TABS.map((t) => {
+                                const Icon = t.icon;
+                                const active = tab === t.key;
+                                return (
+                                    <button
+                                        key={t.key}
+                                        type="button"
+                                        aria-current={active ? 'page' : undefined}
+                                        onClick={() => setTab(t.key)}
+                                        className={`inline-flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
+                                            active
+                                                ? 'border-accent text-accent'
+                                                : 'border-transparent text-text-dim hover:text-text-primary'
+                                        }`}
+                                    >
+                                        <Icon className="w-4 h-4" /> {t.label}
+                                    </button>
+                                );
+                            })}
+                        </nav>
+
+                        {tab === 'overview' && (
+                            structure ? (
+                                <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                                    <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />
+                                </div>
+                            ) : (
+                                <p className="text-sm text-text-muted italic">Set up practice above to see the essay structure here.</p>
+                            )
+                        )}
+
+                        {tab === 'practice' && structure && (
+                            <div>
+                                <PracticeHub mode={mode} onChange={setMode} dueCount={dueCount} drills={drills} />
+                                {mode && (
+                                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                                        {mode === 'wordbyword' && (
+                                            <GuidedTypeMode essay={essay} onScheduled={loadDue} onEdit={goEdit}
+                                                onNext={() => setMode('sentence')} nextLabel={modeLabel('sentence')} />
+                                        )}
+                                        {mode === 'sentence' && (
+                                            <SentenceMode essay={essay} onScheduled={loadDue} onEdit={goEdit}
+                                                onNext={() => setMode('typeit')} nextLabel={modeLabel('typeit')} />
+                                        )}
+                                        {mode === 'typeit' && (
+                                            <TypeItMode essay={essay} onScheduled={loadDue} onEdit={goEdit}
+                                                onNext={() => setMode('recall')} nextLabel={modeLabel('recall')} />
+                                        )}
+                                        {mode === 'recall' && (
+                                            <RecallChunks essay={essay} onScheduled={loadDue} onEdit={goEdit}
+                                                onNext={drills.quotes ? () => setMode('quotes') : () => setMode(null)}
+                                                nextLabel={drills.quotes ? modeLabel('quotes') : 'all activities'} />
+                                        )}
+                                        {mode === 'quotes' && (
+                                            quoteCards
+                                                ? <QuoteDrill slide={quoteCards}
+                                                    onNext={drills.order ? () => setMode('order') : () => setMode(null)}
+                                                    nextLabel={drills.order ? modeLabel('order') : 'all activities'} />
+                                                : <EmptyModeNote>No quotes were found in this essay.</EmptyModeNote>
+                                        )}
+                                        {mode === 'order' && (
+                                            paragraphOrder
+                                                ? <QuoteDrill slide={paragraphOrder} onNext={() => setMode(null)} nextLabel="all activities" />
+                                                : <EmptyModeNote>Need at least two body paragraphs to practise ordering.</EmptyModeNote>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {tab === 'practice' && !structure && (
+                            <p className="text-sm text-text-muted italic">Set up practice above first — the AI needs to map the essay structure.</p>
+                        )}
+
+                        {tab === 'edit' && (
+                            <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                                <EditPanel essay={essay} onSaved={handleSaved} saving={saving} error={saveError} />
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ── Library (project gallery) ───────────────────────────────────────────────
+
+function EssayLibrary() {
+    const navigate = useNavigate();
     const [essays, setEssays] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [essay, setEssay] = useState(null);
-    const [opening, setOpening] = useState(false);
-    const [isParsing, setIsParsing] = useState(false);
-    const [parseFailure, setParseFailure] = useState(null);
-    const [dueByEssay, setDueByEssay] = useState({}); // essayId -> due count
+    const [loadError, setLoadError] = useState(false);
+    const [dueByEssay, setDueByEssay] = useState({});
     const mountedRef = useRef(true);
 
     useReveal(undefined, [loading]);
@@ -1408,12 +1768,14 @@ export default function EssayMemoriser() {
     }, []);
 
     const loadEssays = useCallback(async () => {
+        setLoadError(false);
         const [essaysData, dueData] = await Promise.all([
             api.getEssays().catch(() => null),
-            api.getDueReviewItems('essayParagraph').catch(() => null),
+            api.getDueReviewItems().catch(() => null),
         ]);
         if (!mountedRef.current) return;
-        setEssays(essaysData?.essays || []);
+        if (!essaysData) { setLoadError(true); return; }
+        setEssays(essaysData.essays || []);
         const counts = {};
         (dueData?.items || []).forEach((it) => {
             const essayId = String(it.itemId).split(':')[0];
@@ -1429,60 +1791,9 @@ export default function EssayMemoriser() {
         })();
     }, [loadEssays]);
 
-    // Opening an essay is an in-page state change, so the app-level route
-    // scroll reset does not run. Reset before the new detail layout paints;
-    // otherwise opening a card near the bottom of the list hides the title
-    // behind the fixed navbar.
-    useLayoutEffect(() => {
-        if (typeof window !== 'undefined' && window.scrollY > 0) {
-            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-        }
-    }, [essay?.id]);
-
-    const openEssay = async (id) => {
-        setOpening(true);
-        setParseFailure(null);
-        try { const res = await api.getEssay(id); setEssay(res.essay); }
-        catch (e) { console.warn('Open essay failed:', e?.message || e); }
-        finally { setOpening(false); }
-    };
-
-    const handleCreate = async (title, text) => {
-        setParseFailure(null);
-
-        // Step 1: persist the original so the AI result can be attached to a
-        // private essay record and retried without losing the student's text.
+    const handleCreate = async (title, text, model) => {
         const res = await api.createEssay(title, text);
-        const created = res.essay;
-
-        // Step 2: navigate immediately; show parsing banner inside EssayDetail
-        setEssay(created);
-        setIsParsing(true);
-        loadEssays();
-
-        // Step 3: parse in background — does NOT block the form cleanup
-        api.parseEssay(created.id)
-            .then((parsed) => { if (mountedRef.current) setEssay(parsed.essay); })
-            .catch((e) => {
-                if (mountedRef.current) {
-                    setParseFailure(e?.message || 'AI parsing failed. Your essay is saved; please retry.');
-                }
-            })
-            .finally(() => {
-                if (mountedRef.current) {
-                    setIsParsing(false);
-                    loadEssays();
-                }
-            });
-    };
-
-    const handleParsed = (updated) => { setParseFailure(null); setEssay(updated); loadEssays(); };
-
-    const handleDelete = async (id) => {
-        try { await api.deleteEssay(id); } catch (e) { console.warn('Delete essay failed:', e?.message || e); }
-        setParseFailure(null);
-        setEssay(null);
-        setEssays((prev) => prev.filter((e) => e.id !== id));
+        navigate(`/essays/${res.essay.id}?setup=1&model=${encodeURIComponent(model)}`);
     };
 
     if (loading) {
@@ -1496,86 +1807,88 @@ export default function EssayMemoriser() {
     return (
         <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
             <div className="container-custom">
-                {essay ? (
-                    <EssayDetail
-                        essay={essay}
-                        onBack={() => { setParseFailure(null); setEssay(null); setIsParsing(false); loadEssays(); }}
-                        onParsed={handleParsed}
-                        onDeleted={handleDelete}
-                        isParsing={isParsing}
-                        initialParseError={parseFailure}
-                    />
-                ) : (
-                    <>
-                        <header className="mb-10 reveal">
-                            <span className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">essay memoriser</span>
-                            <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl">Learn it by heart.</h1>
-                            <p className="mt-6 text-xl text-text-muted font-medium max-w-xl">
-                                Caplet breaks your essay into its real structure, then walks you from a first read to
-                                word-perfect, exam-ready recall.
-                            </p>
-                        </header>
+                <header className="mb-10 reveal">
+                    <span className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">essay memoriser</span>
+                    <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl">Learn it by heart.</h1>
+                    <p className="mt-6 text-xl text-text-muted font-medium max-w-xl">
+                        Every essay is its own workspace: read it, edit it, and practise it until it is word-perfect and exam-ready.
+                    </p>
+                </header>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-8 reveal-stagger">
-                            <section>
-                                <div className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
-                                    <div>
-                                        <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim mb-1">Your library</p>
-                                        <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Your essays</h2>
-                                    </div>
-                                    {essays.length > 0 && <span className="text-xs font-bold text-text-dim">{essays.length} saved</span>}
-                                </div>
-                                {opening && <p className="text-sm text-text-dim mb-3">Opening…</p>}
-                                {essays.length === 0 ? (
-                                    <div className="block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                                        <DocumentTextIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
-                                        <p className="text-text-primary text-sm font-bold">No essays yet.</p>
-                                        <p className="text-text-dim text-sm mt-1">Add one when you’re ready to start practising.</p>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {essays.map((e) => {
-                                            const due = dueByEssay[String(e.id)] || 0;
-                                            return (
-                                                <button key={e.id} type="button" onClick={() => openEssay(e.id)}
-                                                    className="bg-surface-raised rounded-2xl p-5 text-left flex items-center justify-between gap-4 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
-                                                    <div className="flex items-center gap-3 min-w-0">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                                            e.parsed ? 'bg-emerald-500/10' : 'bg-accent-soft'
-                                                        }`}>
-                                                            {e.parsed
-                                                                ? <BookOpenIcon className="w-4 h-4 text-emerald-500" />
-                                                                : <SparklesIcon className="w-4 h-4 text-accent" />}
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">{e.title}</p>
-                                                            <p className="text-xs font-medium text-text-dim mt-1">
-                                                                {e.parsed ? `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}` : 'AI parsing needed — click to continue'}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-3 shrink-0">
-                                                        {due > 0 && (
-                                                            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-accent-soft text-accent">
-                                                                {due} due
-                                                            </span>
-                                                        )}
-                                                        <ArrowRightIcon className="w-4 h-4 text-text-dim group-hover:text-accent transition-colors" />
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </section>
-
-                            <aside className="lg:pt-8">
-                                <NewEssayComposer onCreated={handleCreate} />
-                            </aside>
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-8 reveal-stagger">
+                    <section>
+                        <div className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
+                            <div>
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim mb-1">Your library</p>
+                                <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Your essays</h2>
+                            </div>
+                            {essays.length > 0 && <span className="text-xs font-bold text-text-dim">{essays.length} saved</span>}
                         </div>
-                    </>
-                )}
+                        {loadError ? (
+                            <div className="block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                                <p className="text-text-primary text-sm font-bold">Could not load your essays.</p>
+                                <button type="button" onClick={loadEssays} className="mt-3 text-sm font-semibold text-accent hover:opacity-70 transition-opacity">
+                                    Try again
+                                </button>
+                            </div>
+                        ) : essays.length === 0 ? (
+                            <div className="block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                                <DocumentTextIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
+                                <p className="text-text-primary text-sm font-bold">No essays yet.</p>
+                                <p className="text-text-dim text-sm mt-1">Add one when you’re ready to start practising.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-3">
+                                {essays.map((e) => {
+                                    const due = dueByEssay[String(e.id)] || 0;
+                                    return (
+                                        <Link key={e.id} to={`/essays/${e.id}`}
+                                            className="bg-surface-raised rounded-2xl p-5 flex items-center justify-between gap-4 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                                    e.parsed ? 'bg-emerald-500/10' : 'bg-accent-soft'
+                                                }`}>
+                                                    {e.parsed
+                                                        ? <BookOpenIcon className="w-4 h-4 text-emerald-500" />
+                                                        : <SparklesIcon className="w-4 h-4 text-accent" />}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">{e.title}</p>
+                                                    {e.excerpt && <p className="text-xs font-medium text-text-dim mt-1 truncate font-serif">{e.excerpt}</p>}
+                                                    <p className="text-xs font-medium text-text-dim mt-1">
+                                                        {typeof e.wordCount === 'number' ? `${e.wordCount} words · ` : ''}
+                                                        {e.parsed ? `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}` : 'Set-up needed — open to continue'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3 shrink-0">
+                                                {due > 0 && (
+                                                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-accent-soft text-accent">
+                                                        {due} due
+                                                    </span>
+                                                )}
+                                                <ArrowRightIcon className="w-4 h-4 text-text-dim group-hover:text-accent transition-colors" />
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </section>
+
+                    <aside className="lg:pt-8">
+                        <NewEssayComposer onCreated={handleCreate} />
+                    </aside>
+                </div>
             </div>
         </div>
     );
+}
+
+// ── Page — routes /essays (library) and /essays/:essayId (workspace) ────────
+
+export default function EssayMemoriser() {
+    const { essayId } = useParams();
+    if (essayId) return <EssayWorkspace key={essayId} essayId={essayId} />;
+    return <EssayLibrary />;
 }

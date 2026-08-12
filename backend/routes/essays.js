@@ -5,7 +5,11 @@
  *   GET    /api/essays            -> list the user's essays (lightweight)
  *   GET    /api/essays/:id        -> one essay (full text + parsed structure)
  *   POST   /api/essays            -> create from { title, text }
- *   POST   /api/essays/:id/parse  -> AI segmentation (segment/annotate only)
+ *   PUT    /api/essays/:id        -> edit in place { title?, text? }; changing
+ *                                    the text clears parsedStructure (stale)
+ *   POST   /api/essays/:id/parse  -> AI structure labelling; accepts { model,
+ *                                    force } — model from ESSAY_MODELS,
+ *                                    force re-labels an already-parsed essay
  *   DELETE /api/essays/:id        -> delete an essay (and its review schedule)
  *
  * Parsing is a SEPARATE step from create: create never depends on the AI key
@@ -29,6 +33,8 @@ router.use(requireAuth);
 const MAX_TITLE = 200;
 const MAX_TEXT = 100000; // generous cap for a long essay
 const MAX_AI_TEXT = 24000;
+// Same selectable set as the AI lesson generator (routes/ai.js ALLOWED_MODELS).
+const ESSAY_MODELS = ['gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'];
 const essayParseQuota = reserveAIQuota({
   scope: 'essay-structure',
   units: 6,
@@ -39,7 +45,7 @@ router.get('/', async (req, res) => {
   try {
     const essays = await Essay.findAll({
       where: { userId: req.user.id },
-      attributes: ['id', 'title', 'parsedStructure', 'createdAt', 'updatedAt'],
+      attributes: ['id', 'title', 'originalText', 'parsedStructure', 'createdAt', 'updatedAt'],
       order: [['updatedAt', 'DESC']],
     });
     const list = essays.map((e) => ({
@@ -47,6 +53,8 @@ router.get('/', async (req, res) => {
       title: e.title,
       parsed: !!e.parsedStructure,
       paragraphCount: e.parsedStructure?.bodyParagraphs?.length || 0,
+      wordCount: String(e.originalText || '').trim().split(/\s+/).filter(Boolean).length,
+      excerpt: String(e.originalText || '').trim().slice(0, 180),
       createdAt: e.createdAt,
       updatedAt: e.updatedAt,
     }));
@@ -95,26 +103,64 @@ router.post('/', async (req, res) => {
   }
 });
 
-// POST /api/essays/:id/parse — AI segmentation (segment & annotate only)
+// PUT /api/essays/:id — edit in place. Changing the text invalidates the
+// parsed structure so the client re-labels it (the review schedule is kept:
+// items whose paragraph survives keep their timing; orphans hydrate to null).
+router.put('/:id', async (req, res) => {
+  try {
+    const essay = await Essay.findOne({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+    if (!essay) return res.status(404).json({ message: 'Essay not found' });
+
+    const updates = {};
+    if (req.body?.title !== undefined) {
+      const title = String(req.body.title).trim().slice(0, MAX_TITLE);
+      if (!title) return res.status(400).json({ message: 'A title is required' });
+      updates.title = title;
+    }
+    if (req.body?.text !== undefined) {
+      const text = String(req.body.text);
+      if (!text.trim()) return res.status(400).json({ message: 'Essay text is required' });
+      if (text.length > MAX_TEXT) {
+        return res.status(400).json({ message: 'Essay is too long.' });
+      }
+      if (text !== essay.originalText) {
+        updates.originalText = text;
+        updates.parsedStructure = null;
+      }
+    }
+    if (Object.keys(updates).length) await essay.update(updates);
+    res.json({ essay });
+  } catch (e) {
+    console.error('Update essay error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST /api/essays/:id/parse — AI structure labelling (never alters the text)
 router.post('/:id/parse', requireAIConsent, essayParseQuota, async (req, res) => {
   try {
     const essay = await Essay.findOne({
       where: { id: req.params.id, userId: req.user.id },
     });
     if (!essay) return res.status(404).json({ message: 'Essay not found' });
-    if (essay.parsedStructure) return res.json({ essay, cached: true });
+    if (essay.parsedStructure && req.body?.force !== true) {
+      return res.json({ essay, cached: true });
+    }
     if (String(essay.originalText || '').length > MAX_AI_TEXT) {
       return res.status(413).json({
         message: `AI structuring supports essays up to ${MAX_AI_TEXT.toLocaleString()} characters. Shorten this copy before parsing.`,
       });
     }
 
-    const structure = await parseEssay(essay.originalText);
+    const model = ESSAY_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
+    const structure = await parseEssay(essay.originalText, { model });
     await essay.update({ parsedStructure: structure });
     await recordAIInteractionSafely({
       userId: req.user.id,
       feature: 'essay_structure',
-      modelVersion: 'gpt-5.4-mini',
+      modelVersion: model,
       status: 'completed',
       inputSummary: `${essay.title} · ${String(essay.originalText || '').length} characters`,
       outputSummary: `${structure?.bodyParagraphs?.length || 0} body paragraphs structured`,

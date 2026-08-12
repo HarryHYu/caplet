@@ -259,6 +259,7 @@ function AppRoutes() {
           <Route path="/teacher/onboarding" element={<RequireAuth><TeacherOnboarding /></RequireAuth>} />
           <Route path="/revision" element={<RequireAuth><Revision /></RequireAuth>} />
           <Route path="/essays" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
+          <Route path="/essays/:essayId" element={<RequireAuth><EssayMemoriser /></RequireAuth>} />
           <Route path="/edutools/economics-marker" element={<RequireAuth><EconomicsMarker /></RequireAuth>} />
           <Route path="/library/economics/exam-practice/:packId/session" element={<RequireAuth><EconomicsExam /></RequireAuth>} />
           <Route path="/login" element={<Login />} />

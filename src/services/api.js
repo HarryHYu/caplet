@@ -924,9 +924,19 @@ class ApiService {
     });
   }
 
-  // AI: segment + annotate a stored essay (thesis / paragraphs / quotes).
-  async parseEssay(id) {
-    return this.request(`/essays/${id}/parse`, { method: 'POST' });
+  async updateEssay(id, { title, text } = {}) {
+    return this.request(`/essays/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ title, text }),
+    });
+  }
+
+  // AI: label the stored essay's structure (never alters the text itself).
+  async parseEssay(id, { model, force } = {}) {
+    return this.request(`/essays/${id}/parse`, {
+      method: 'POST',
+      body: JSON.stringify({ model, force }),
+    });
   }
 
   async deleteEssay(id) {

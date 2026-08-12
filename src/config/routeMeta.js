@@ -10,6 +10,7 @@ const PUBLIC_META = [
   { match: /^\/assessments$/, title: 'Upcoming Assessment Tasks 2026 — Caplet', description: 'See the remaining Year 11 assessment windows for 2026 and plan your preparation.' },
   { match: /^\/notes$/, title: 'Notes — Caplet', description: 'Keep subject notes and Google Docs together on Caplet.' },
   { match: /^\/assessment-log$/, title: 'Assessment Log — Caplet', description: 'Record assessment results, reflections and scanned tasks.' },
+  { match: /^\/essays(?:\/|$)/, title: 'Essay Memoriser — Caplet', description: 'Learn your essays by heart with structured, word-perfect recall practice.' },
   { match: /^\/library(?:\/|$)/, title: 'Resource Library — Caplet', description: 'Explore structured study resources, exam practice, and subject libraries on Caplet.' },
   { match: /^\/courses(?:\/|$)/, title: 'Curriculum — Caplet', description: 'Explore structured, interactive courses on Caplet.' },
   { match: /^\/fintools\/tax-calculator$/, title: 'Australian Income Tax Calculator — Caplet', description: 'Estimate Australian resident income tax and a simplified Medicare levy for supported financial years.' },

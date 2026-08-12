@@ -15,6 +15,7 @@ const request = require('supertest');
 const express = require('express');
 const Essay = require('../models/Essay');
 const { parseEssay } = require('../services/essayParser');
+const { resetAIQuotaForTests } = require('../middleware/aiQuota');
 const essaysRouter = require('../routes/essays');
 
 const createTestApp = () => {
@@ -30,6 +31,9 @@ describe('Essay routes', () => {
   beforeEach(() => {
     app = createTestApp();
     jest.clearAllMocks();
+    // The parse route reserves shared in-memory AI quota units per request;
+    // reset between tests so later parse tests never hit the window limit.
+    resetAIQuotaForTests();
   });
 
   describe('POST /api/essays', () => {
@@ -82,6 +86,113 @@ describe('Essay routes', () => {
       expect(res.body.essays[0]).toMatchObject({ parsed: true, paragraphCount: 2 });
       expect(res.body.essays[1]).toMatchObject({ parsed: false, paragraphCount: 0 });
     });
+
+    it('includes a wordCount and a 180-character excerpt for each essay', async () => {
+      const longText = `  ${'word '.repeat(60)}end.  `;
+      Essay.findAll = jest.fn().mockResolvedValue([
+        {
+          id: 'e1',
+          title: 'Long essay',
+          originalText: longText,
+          parsedStructure: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        { id: 'e2', title: 'No text', originalText: '', parsedStructure: null, createdAt: new Date(), updatedAt: new Date() },
+      ]);
+
+      const res = await request(app).get('/api/essays');
+
+      expect(res.status).toBe(200);
+      expect(res.body.essays[0].wordCount).toBe(61);
+      expect(res.body.essays[0].excerpt).toBe(longText.trim().slice(0, 180));
+      expect(res.body.essays[0].excerpt).toHaveLength(180);
+      expect(res.body.essays[1]).toMatchObject({ wordCount: 0, excerpt: '' });
+    });
+  });
+
+  describe('PUT /api/essays/:id', () => {
+    const makeEssay = (overrides = {}) => ({
+      id: 'e1',
+      title: 'Old title',
+      originalText: 'Original essay text.',
+      parsedStructure: { bodyParagraphs: [{ topicSentence: 'a' }] },
+      update: jest.fn().mockResolvedValue(),
+      ...overrides,
+    });
+
+    it('updates the title only and leaves parsedStructure untouched', async () => {
+      const essay = makeEssay();
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+
+      const res = await request(app).put('/api/essays/e1').send({ title: '  New title  ' });
+
+      expect(res.status).toBe(200);
+      // Exact-args match: no originalText and no parsedStructure key in the update.
+      expect(essay.update).toHaveBeenCalledWith({ title: 'New title' });
+    });
+
+    it('replaces the text and clears parsedStructure when the text changes', async () => {
+      const essay = makeEssay();
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+
+      const res = await request(app).put('/api/essays/e1').send({ text: 'Rewritten essay text.' });
+
+      expect(res.status).toBe(200);
+      expect(essay.update).toHaveBeenCalledWith({
+        originalText: 'Rewritten essay text.',
+        parsedStructure: null,
+      });
+    });
+
+    it('does NOT clear parsedStructure when the same text is sent back', async () => {
+      const essay = makeEssay();
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+
+      const res = await request(app)
+        .put('/api/essays/e1')
+        .send({ text: 'Original essay text.' });
+
+      expect(res.status).toBe(200);
+      expect(essay.update).not.toHaveBeenCalled();
+
+      // Same text alongside a title change: only the title is written.
+      const res2 = await request(app)
+        .put('/api/essays/e1')
+        .send({ title: 'Renamed', text: 'Original essay text.' });
+      expect(res2.status).toBe(200);
+      expect(essay.update).toHaveBeenCalledWith({ title: 'Renamed' });
+    });
+
+    it('rejects empty title, empty text, and oversized text with 400', async () => {
+      const essay = makeEssay();
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+
+      const emptyTitle = await request(app).put('/api/essays/e1').send({ title: '   ' });
+      expect(emptyTitle.status).toBe(400);
+
+      const emptyText = await request(app).put('/api/essays/e1').send({ text: '   ' });
+      expect(emptyText.status).toBe(400);
+
+      const oversized = await request(app)
+        .put('/api/essays/e1')
+        .send({ text: 'x'.repeat(100001) });
+      expect(oversized.status).toBe(400);
+      expect(oversized.body.message).toMatch(/too long/i);
+
+      expect(essay.update).not.toHaveBeenCalled();
+    });
+
+    it("404s for another user's essay (owner-scoped lookup)", async () => {
+      Essay.findOne = jest.fn().mockResolvedValue(null);
+
+      const res = await request(app).put('/api/essays/someone-elses').send({ title: 'Steal' });
+
+      expect(res.status).toBe(404);
+      expect(Essay.findOne).toHaveBeenCalledWith({
+        where: { id: 'someone-elses', userId: 'test-user-1' },
+      });
+    });
   });
 
   describe('POST /api/essays/:id/parse', () => {
@@ -101,7 +212,7 @@ describe('Essay routes', () => {
       const res = await request(app).post('/api/essays/e1/parse');
 
       expect(res.status).toBe(200);
-      expect(parseEssay).toHaveBeenCalledWith('Power corrupts. It always has.');
+      expect(parseEssay).toHaveBeenCalledWith('Power corrupts. It always has.', { model: 'gpt-5.4-mini' });
       expect(essay.update).toHaveBeenCalledWith(
         expect.objectContaining({ parsedStructure: expect.objectContaining({ thesis: 'Power corrupts.' }) }),
       );
@@ -124,6 +235,70 @@ describe('Essay routes', () => {
       const res = await request(app).post('/api/essays/missing/parse');
       expect(res.status).toBe(404);
       expect(parseEssay).not.toHaveBeenCalled();
+    });
+
+    it('passes an allowed model choice through to parseEssay', async () => {
+      const essay = { id: 'e1', originalText: 'Some essay text.', update: jest.fn().mockResolvedValue() };
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+      parseEssay.mockResolvedValue({ thesis: '', bodyParagraphs: [], conclusion: '' });
+
+      const res = await request(app).post('/api/essays/e1/parse').send({ model: 'gpt-5.5' });
+
+      expect(res.status).toBe(200);
+      expect(parseEssay).toHaveBeenCalledWith('Some essay text.', { model: 'gpt-5.5' });
+    });
+
+    it('falls back to gpt-5.4-mini when the requested model is not in the allowlist', async () => {
+      const essay = { id: 'e1', originalText: 'Some essay text.', update: jest.fn().mockResolvedValue() };
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+      parseEssay.mockResolvedValue({ thesis: '', bodyParagraphs: [], conclusion: '' });
+
+      const res = await request(app)
+        .post('/api/essays/e1/parse')
+        .send({ model: 'gpt-4-totally-bogus' });
+
+      expect(res.status).toBe(200);
+      expect(parseEssay).toHaveBeenCalledWith('Some essay text.', { model: 'gpt-5.4-mini' });
+    });
+
+    it('returns the cached structure without calling parseEssay when already parsed', async () => {
+      const essay = {
+        id: 'e1',
+        originalText: 'Some essay text.',
+        parsedStructure: { thesis: 'Cached thesis', bodyParagraphs: [] },
+        update: jest.fn(),
+      };
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+
+      const res = await request(app).post('/api/essays/e1/parse').send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body.cached).toBe(true);
+      expect(res.body.essay.parsedStructure.thesis).toBe('Cached thesis');
+      expect(parseEssay).not.toHaveBeenCalled();
+      expect(essay.update).not.toHaveBeenCalled();
+    });
+
+    it('re-parses an already-parsed essay when force is true', async () => {
+      const essay = {
+        id: 'e1',
+        originalText: 'Some essay text.',
+        parsedStructure: { thesis: 'Stale thesis', bodyParagraphs: [] },
+        update: jest.fn().mockResolvedValue(),
+      };
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+      parseEssay.mockResolvedValue({ thesis: 'Fresh thesis', bodyParagraphs: [], conclusion: '' });
+
+      const res = await request(app)
+        .post('/api/essays/e1/parse')
+        .send({ force: true, model: 'gpt-5.4' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.cached).toBeUndefined();
+      expect(parseEssay).toHaveBeenCalledWith('Some essay text.', { model: 'gpt-5.4' });
+      expect(essay.update).toHaveBeenCalledWith(
+        expect.objectContaining({ parsedStructure: expect.objectContaining({ thesis: 'Fresh thesis' }) }),
+      );
     });
   });
 });

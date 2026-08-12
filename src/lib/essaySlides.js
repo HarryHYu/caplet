@@ -101,10 +101,10 @@ export function buildQuoteCards(structure) {
   const paras = structure?.bodyParagraphs || [];
   const cards = [];
   paras.forEach((p, i) => {
-    (p.quotes || []).forEach((q) => {
+    (p?.quotes || []).forEach((q) => {
       const text = String(q?.text || '').trim();
       if (!text) return;
-      const techniques = (p.techniques || []).filter(Boolean).join(', ');
+      const techniques = (p?.techniques || []).filter(Boolean).join(', ');
       cards.push({
         front: q.highLeverage ? `${text}  ⭐` : text,
         back: techniques ? `Techniques: ${techniques}` : `Body paragraph ${i + 1}`,
