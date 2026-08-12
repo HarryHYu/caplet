@@ -119,6 +119,36 @@ describe('EssayMemoriser', () => {
     expect(screen.getByRole('button', { name: /Practising: 1 of 2 paragraphs/i })).toBeInTheDocument();
   });
 
+  it('shows planning labels as annotations, never as exam prose', async () => {
+    const annotated = {
+      id: 'essay-notes',
+      title: 'Conrad and Walcott',
+      originalText: 'Cry\nTo interrogate the moral crises engendered by colonialism.',
+      parsedStructure: {
+        thesis: '',
+        introduction: '',
+        bodyParagraphs: [{
+          heading: 'Cry',
+          notes: ['two slots to fill'],
+          topicSentence: 'To interrogate the moral crises engendered by colonialism.',
+          text: 'To interrogate the moral crises engendered by colonialism.',
+          quotes: [],
+          techniques: [],
+        }],
+        conclusion: '',
+      },
+    };
+    api.getEssay.mockResolvedValue({ essay: annotated });
+    renderAt('/essays/essay-notes');
+
+    // Story view: the label renders as a marked annotation chip beside the
+    // section tag, and the note as a pencil line — outside the prose block.
+    expect(await screen.findByTitle(/not part of the exam prose/i)).toHaveTextContent('Cry');
+    expect(screen.getByText(/✎ two slots to fill/)).toBeInTheDocument();
+    const prose = screen.getByText(/To interrogate the moral crises/);
+    expect(prose.textContent).not.toContain('Cry');
+  });
+
   it('keeps the workspace tabs visible for an unparsed essay', async () => {
     const savedEssay = { id: 'essay-3', title: 'Unparsed', originalText: 'Some text.', parsedStructure: null };
     api.getEssay.mockResolvedValue({ essay: savedEssay });

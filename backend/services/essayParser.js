@@ -35,9 +35,10 @@ The essay is given as numbered paragraphs [P0], [P1], ... Refer to paragraphs ON
 Essays may be incomplete or unconventional: there may be no introduction, no conclusion, and no stated thesis (for example, body paragraphs only). Use null / "" in those cases instead of forcing one.
 
 Return ONLY a JSON object of this exact shape:
-{"introIndex": 0 or null, "conclusionIndex": 5 or null, "thesis": "the thesis sentence copied verbatim, or \\"\\"", "bodyParagraphs": [{"index": 1, "topicSentence": "the paragraph's topic sentence copied verbatim", "quotes": [{"text": "quoted evidence copied verbatim", "highLeverage": false}], "techniques": ["metaphor"]}]}
+{"introIndex": 0 or null, "conclusionIndex": 5 or null, "thesis": "the thesis sentence copied verbatim, or \\"\\"", "bodyParagraphs": [{"index": 1, "topicSentence": "the paragraph's topic sentence copied verbatim", "quotes": [{"text": "quoted evidence copied verbatim", "highLeverage": false}], "techniques": ["metaphor"], "annotationLines": []}]}
 
 Rules:
+- annotationLines: student documents often contain planning scaffold that is NOT exam prose — section labels ("Body 2", "BP1"), plan notes ("Intro (fixed · two slots)"), reminders. If a paragraph still contains such a FULL LINE, copy that whole line verbatim into annotationLines. Never list lines of actual essay prose. [] when the paragraph is pure prose.
 - introIndex: the paragraph number of the introduction, or null if there is no distinct introduction.
 - conclusionIndex: the paragraph number of the conclusion, or null if there is no distinct conclusion.
 - thesis: the essay's central argument copied verbatim character-for-character (usually one or two sentences inside the introduction). "" if none is stated.
@@ -100,6 +101,92 @@ function splitParagraphs(text) {
     if (parts.length > 30) parts = mergeWrappedLines(parts);
   }
   return parts.map((p) => p.trim()).filter(Boolean);
+}
+
+// ── Annotation lines vs exam prose ──────────────────────────────────────────
+// Essay documents often carry planning scaffold the student would never write
+// in the exam: section labels ("Body 1", "BP2", "Cry"), plan notes ("Intro
+// (fixed · two slots)"), standalone placeholders. Those lines are segmented
+// out of the practice prose and kept as annotations — still verbatim, still
+// visible, just not part of what gets memorised. Inline placeholders like
+// "[MANDATED POEM]" mid-sentence are part of the writing skeleton and stay.
+
+const ANNOTATION_KEYWORDS = /^(intro(duction)?\b|body\s*(paragraph)?\s*\d*\b|bp\s*\d+\b|para(graph)?\s*\d+\b|conclusion\b|thesis\b|notes?\b|plan\b|outline\b|topic\s+sentence\b|quote\s*bank\b|context\b|section\b|part\s+\d+\b)/i;
+
+function isAnnotationLine(line) {
+  const t = str(line).trim();
+  if (!t || t.length > 120) return false;
+  // A placeholder alone on its own line is a note; inline ones stay in prose.
+  if (/^\[[^\]]{0,100}\]$/.test(t)) return true;
+  // Lines that end like sentences, or look like quoted verse, are prose.
+  if (ENDS_SENTENCE.test(t)) return false;
+  if (/^["'“‘]/.test(t) || /["'”’]$/.test(t)) return false;
+  const words = t.split(/\s+/).length;
+  if (ANNOTATION_KEYWORDS.test(t) && words <= 12) return true;
+  return words <= 6 && /^[A-Z0-9([]/.test(t);
+}
+
+/**
+ * Splits an essay into practice segments: `{ heading, notes, text }` where
+ * `text` is exam prose only and heading/notes are the verbatim annotation
+ * lines that accompanied it. An annotation line inside a block also splits the
+ * block — a mid-block section label starts a new paragraph.
+ */
+function segmentEssay(text) {
+  const segments = [];
+  let pendingAnnotations = [];
+  for (const block of splitParagraphs(text)) {
+    const lines = block.split('\n');
+    let proseLines = [];
+    const flush = () => {
+      if (!proseLines.length) return;
+      segments.push({
+        heading: pendingAnnotations[0] || '',
+        notes: pendingAnnotations.slice(1),
+        text: proseLines.join('\n').trim(),
+      });
+      pendingAnnotations = [];
+      proseLines = [];
+    };
+    for (const line of lines) {
+      if (isAnnotationLine(line)) {
+        flush();
+        pendingAnnotations.push(line.trim());
+      } else {
+        proseLines.push(line);
+      }
+    }
+    flush();
+  }
+  // Trailing annotations with no prose after them attach to the last segment.
+  if (pendingAnnotations.length && segments.length) {
+    segments[segments.length - 1].notes.push(...pendingAnnotations);
+  } else if (pendingAnnotations.length) {
+    // An "essay" that is annotations only — keep it practisable as prose.
+    segments.push({ heading: '', notes: [], text: pendingAnnotations.join('\n') });
+  }
+  return segments;
+}
+
+const toSegment = (p) => (typeof p === 'string' ? { heading: '', notes: [], text: p } : {
+  heading: str(p?.heading), notes: Array.isArray(p?.notes) ? p.notes : [], text: str(p?.text),
+});
+
+/**
+ * Bounds a segment list at 30 WITHOUT dropping content: everything past the
+ * 30th segment merges into it, annotations included.
+ */
+function capSegments(segments) {
+  const list = (Array.isArray(segments) ? segments : []).map(toSegment);
+  if (list.length <= 30) return list;
+  const head = list.slice(0, 29);
+  const tail = list.slice(29);
+  head.push({
+    heading: tail[0].heading,
+    notes: tail.flatMap((s, i) => (i === 0 ? s.notes : [s.heading, ...s.notes])).filter(Boolean),
+    text: tail.map((s) => s.text).filter(Boolean).join('\n\n'),
+  });
+  return head;
 }
 
 /** First sentence of a paragraph (whole paragraph when unterminated). */
@@ -220,7 +307,13 @@ function sanitizeStructure(parsed) {
       .map((t) => str(t).trim())
       .filter((t) => TECHNIQUE_NAME.test(t))
       .slice(0, 20);
+    const notes = (Array.isArray(para.notes) ? para.notes : [])
+      .map((n) => clamp(n, 200))
+      .filter((n) => n.trim())
+      .slice(0, 10);
     return {
+      heading: clamp(para.heading, 120),
+      notes,
       topicSentence: clamp(para.topicSentence, 1000),
       text: clamp(para.text, MAX_PARAGRAPH_TEXT),
       quotes,
@@ -242,7 +335,9 @@ function sanitizeStructure(parsed) {
  * verbatim source slices or dropped. Unlabelled paragraphs still become body
  * paragraphs, so the essay is never silently shortened.
  */
-function assembleFromLabels(labels, paragraphs) {
+function assembleFromLabels(labels, rawSegments) {
+  const segments = (Array.isArray(rawSegments) ? rawSegments : []).map(toSegment);
+  const paragraphs = segments.map((s) => s.text);
   const root = labels && typeof labels === 'object' ? labels : {};
   const total = paragraphs.length;
   const validIndex = (v) => (Number.isInteger(v) && v >= 0 && v < total ? v : null);
@@ -280,9 +375,26 @@ function assembleFromLabels(labels, paragraphs) {
   const bodyParagraphs = [];
   for (let i = 0; i < total; i += 1) {
     if (claimed.has(i)) continue;
-    const source = paragraphs[i];
-    const matcher = buildMatcher(source);
+    const segment = segments[i];
     const ai = byIndex.get(i) || {};
+
+    // The AI may flag additional FULL LINES as planning annotations the
+    // heuristic missed. Each must match a whole line of the prose exactly
+    // (whitespace-insensitively) or it is ignored — prose is never cut on the
+    // model's say-so alone.
+    let proseLines = segment.text.split('\n');
+    const extraNotes = [];
+    for (const rawLine of (Array.isArray(ai.annotationLines) ? ai.annotationLines : []).slice(0, 10)) {
+      const wanted = str(rawLine).trim();
+      if (!wanted) continue;
+      const at = proseLines.findIndex((l) => l.trim() === wanted);
+      if (at < 0) continue;
+      extraNotes.push(proseLines[at].trim());
+      proseLines = [...proseLines.slice(0, at), ...proseLines.slice(at + 1)];
+    }
+    const source = proseLines.join('\n').trim() || segment.text;
+
+    const matcher = buildMatcher(source);
     const topicSentence = (ai.topicSentence && matcher.find(ai.topicSentence)) || firstSentence(source);
     const quotes = [];
     const seen = new Set();
@@ -302,6 +414,8 @@ function assembleFromLabels(labels, paragraphs) {
       }
     }
     bodyParagraphs.push({
+      heading: segment.heading,
+      notes: [...segment.notes, ...(source === segment.text ? [] : extraNotes)],
       topicSentence,
       text: source,
       quotes,
@@ -332,15 +446,17 @@ function assembleFromLabels(labels, paragraphs) {
   return sanitizeStructure({ thesis, introduction, bodyParagraphs, conclusion });
 }
 
-/** No-AI structure: every paragraph is a body paragraph, quotes via regex. */
+/** No-AI structure: every segment is a body paragraph, quotes via regex. */
 function fallbackStructure(paragraphs) {
   return sanitizeStructure({
     thesis: '',
     introduction: '',
-    bodyParagraphs: capParagraphs(paragraphs).map((p) => ({
-      topicSentence: firstSentence(p),
-      text: p,
-      quotes: extractQuotes(p).map((text) => ({ text, highLeverage: false })),
+    bodyParagraphs: capSegments(paragraphs).map((segment) => ({
+      heading: segment.heading,
+      notes: segment.notes,
+      topicSentence: firstSentence(segment.text),
+      text: segment.text,
+      quotes: extractQuotes(segment.text).map((text) => ({ text, highLeverage: false })),
       techniques: [],
     })),
     conclusion: '',
@@ -370,8 +486,8 @@ async function parseEssay(essayText, opts = {}) {
   }
   // Cap BEFORE labelling so nothing the AI (or the fallback) sees can later be
   // discarded by sanitizeStructure's 30-paragraph bound.
-  const paragraphs = capParagraphs(splitParagraphs(text));
-  if (!paragraphs.length) {
+  const segments = capSegments(segmentEssay(text));
+  if (!segments.length) {
     const err = new Error('The essay has no text to parse.');
     err.status = 400;
     throw err;
@@ -379,7 +495,10 @@ async function parseEssay(essayText, opts = {}) {
 
   const chosenModel = opts.model || 'gpt-5.4-mini';
   const isReasoning = chosenModel.startsWith('o') || chosenModel === 'gpt-5';
-  const numbered = paragraphs.map((p, i) => `[P${i}]\n${p}`).join('\n\n');
+  const numbered = segments.map((s, i) => {
+    const label = s.heading ? ` (heading: ${JSON.stringify(s.heading)})` : '';
+    return `[P${i}]${label}\n${s.text}`;
+  }).join('\n\n');
 
   try {
     const completion = await client.chat.completions.create({
@@ -398,7 +517,7 @@ async function parseEssay(essayText, opts = {}) {
     const choice = completion.choices?.[0];
     if (choice?.finish_reason === 'length') throw new Error('AI output truncated');
     const labels = JSON.parse(choice?.message?.content || '{}');
-    const structure = assembleFromLabels(labels, paragraphs);
+    const structure = assembleFromLabels(labels, segments);
     if (!structure.bodyParagraphs.length) throw new Error('AI labels produced no body paragraphs');
     return structure;
   } catch (error) {
@@ -412,7 +531,7 @@ async function parseEssay(essayText, opts = {}) {
     if (typeof opts.onDegrade === 'function') {
       try { opts.onDegrade(error); } catch { /* observers must never break parsing */ }
     }
-    return fallbackStructure(paragraphs);
+    return fallbackStructure(segments);
   }
 }
 
@@ -420,7 +539,10 @@ module.exports = {
   parseEssay,
   sanitizeStructure,
   splitParagraphs,
+  segmentEssay,
+  isAnnotationLine,
   capParagraphs,
+  capSegments,
   firstSentence,
   extractQuotes,
   buildMatcher,

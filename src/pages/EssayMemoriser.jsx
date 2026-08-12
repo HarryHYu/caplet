@@ -154,7 +154,7 @@ function buildSpotlightSegments(structure) {
         segs.push({ label: 'Thesis', text: structure.thesis, type: 'thesis' });
     }
     (structure.bodyParagraphs || []).forEach((p, i) =>
-        segs.push({ label: `Body ${i + 1}`, text: p.text, type: 'body', quotes: p.quotes, techniques: p.techniques }),
+        segs.push({ label: `Body ${i + 1}`, text: p.text, type: 'body', quotes: p.quotes, techniques: p.techniques, heading: p.heading, notes: p.notes }),
     );
     if (structure.conclusion)
         segs.push({ label: 'Conclusion', text: structure.conclusion, type: 'conclusion' });
@@ -440,7 +440,21 @@ function SpotlightMode({ essay }) {
             </div>
 
             <div className={`${bg} rounded-3xl p-8 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] min-h-[180px]`}>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-accent mb-4 block">{seg.label}</span>
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-accent">{seg.label}</span>
+                    {seg.heading && (
+                        <span className="rounded-full border border-dashed border-line-strong px-2.5 py-0.5 text-[10px] font-bold text-text-dim" title="Your note — not part of the exam prose">
+                            {seg.heading}
+                        </span>
+                    )}
+                </div>
+                {(seg.notes || []).length > 0 && (
+                    <div className="mb-4 space-y-1">
+                        {seg.notes.map((n, i) => (
+                            <p key={i} className="text-xs italic text-text-dim">✎ {n}</p>
+                        ))}
+                    </div>
+                )}
                 <p className="font-serif text-base md:text-lg leading-relaxed text-text-primary whitespace-pre-wrap">{seg.text}</p>
                 {(seg.quotes || []).length > 0 && (
                     <div className="mt-6 space-y-2 border-t border-line-soft pt-5">
@@ -503,11 +517,23 @@ function AnnotatedLegend() {
 
 function AnnotatedParagraphBlock({ paragraph, index }) {
     const segments = buildAnnotatedParagraph(paragraph);
+    const annotations = [paragraph.heading, ...(paragraph.notes || [])].filter(Boolean);
     return (
         <div className="relative pl-5 border-l-2 border-line-soft">
             <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-surface-raised border-2 border-accent flex items-center justify-center">
                 <span className="text-[8px] font-bold text-accent">{index + 1}</span>
             </span>
+            {annotations.length > 0 && (
+                /* Margin annotations: the student's own labels/notes, kept beside
+                   the prose — never inside it. Sits in the right gutter on lg. */
+                <div className="mb-2 lg:mb-0 lg:absolute lg:left-full lg:top-0 lg:ml-8 lg:w-44">
+                    {annotations.map((a, i) => (
+                        <p key={i} className={`text-[11px] leading-snug text-text-dim ${i === 0 ? 'font-bold' : 'italic mt-1'}`} title="Your note — not part of the exam prose">
+                            {i === 0 ? a : `✎ ${a}`}
+                        </p>
+                    ))}
+                </div>
+            )}
             <p className="font-serif text-base leading-relaxed text-text-primary">
                 {segments.map((seg, i) => {
                     if (seg.type === 'topic') {
@@ -697,7 +723,7 @@ function RecallChunks({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
     return (
         <div>
             <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}</span>
+                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}{current.heading ? ` · ${current.heading}` : ''}</span>
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-sm text-text-muted italic mb-6 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
@@ -839,7 +865,7 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
             <PracticeStyles />
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">
-                    Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}
+                    Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
                 <div className="flex items-center gap-3">
                     {streak >= 3 && (
@@ -1020,7 +1046,7 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
             <PracticeStyles />
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">
-                    Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}
+                    Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
                 {streak >= 5 && (
                     <span key={streak} className="text-xs font-bold text-accent animate-[essayStreak_0.25s_ease-out] tabular-nums">⚡ {streak} in a row</span>
@@ -1228,7 +1254,7 @@ function SentenceMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
     return (
         <div>
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
-                <span className="text-xs font-medium text-text-dim">Para {pIndex + 1}/{paras.length} · Sentence {sIndex + 1}/{total}</span>
+                <span className="text-xs font-medium text-text-dim">Para {pIndex + 1}/{paras.length} · Sentence {sIndex + 1}/{total}{para.heading ? ` · ${para.heading}` : ''}</span>
                 <HintToggle options={SENTENCE_HINTS} value={hintStyle} onChange={setHintStyle} />
             </div>
             <ProgressBar value={pIndex} total={paras.length} />

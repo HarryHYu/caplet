@@ -24,7 +24,7 @@ const { Op } = require('sequelize');
 const Essay = require('../models/Essay');
 const ReviewItem = require('../models/ReviewItem');
 const { requireAuth } = require('../middleware/auth');
-const { parseEssay, fallbackStructure, splitParagraphs } = require('../services/essayParser');
+const { parseEssay, fallbackStructure, segmentEssay } = require('../services/essayParser');
 const { requireAIConsent } = require('../services/privacyConsent');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { reserveAIQuota } = require('../middleware/aiQuota');
@@ -185,7 +185,7 @@ router.post('/:id/parse', requireAIConsent, loadEssayForParse, essayParseQuota, 
     // Oversize essays skip the AI entirely: the deterministic splitter still
     // yields a fully practisable structure, so nothing is rejected or dropped.
     if (textAtParse.length > MAX_AI_TEXT) {
-      const structure = fallbackStructure(splitParagraphs(textAtParse));
+      const structure = fallbackStructure(segmentEssay(textAtParse));
       const stored = await storeParsedStructure(req, essay, textAtParse, structure);
       if (!stored) return res.status(409).json({ message: PARSE_CONFLICT_MESSAGE });
       await recordAIInteractionSafely({

@@ -724,3 +724,67 @@ describe('parseEssay (fake OpenAI client)', () => {
     expect(joined).toContain('Paragraph number 59 makes a short point.');
   });
 });
+
+describe('annotation segmentation (exam prose vs planning scaffold)', () => {
+  const { segmentEssay, isAnnotationLine } = require('../services/essayParser');
+
+  test('classifies section labels and plan notes as annotations, prose as prose', () => {
+    expect(isAnnotationLine('Intro (fixed \u00b7 two slots)')).toBe(true);
+    expect(isAnnotationLine('Cry')).toBe(true);
+    expect(isAnnotationLine('BP2')).toBe(true);
+    expect(isAnnotationLine('Body paragraph 3')).toBe(true);
+    expect(isAnnotationLine('[QUOTE BANK]')).toBe(true);
+    expect(isAnnotationLine('Narratives do not merely record the world.')).toBe(false);
+    expect(isAnnotationLine('"A Far Cry from Africa"')).toBe(false);
+    expect(isAnnotationLine('the quiet meiosis understates the atrocities inflicted')).toBe(false);
+  });
+
+  test('splits a block at annotation lines and keeps inline placeholders in prose', () => {
+    const text = [
+      'Intro (fixed \u00b7 two slots)',
+      'Narratives do not merely record the world. They ratify the powers that shape it, most pointedly in [MANDATED POEM] , reclaiming voice.',
+      'Cry',
+      'To interrogate the moral crises engendered by colonialism, Conrad and Walcott adopt divergent perspectives.',
+    ].join('\n');
+    const segments = segmentEssay(text);
+    expect(segments).toHaveLength(2);
+    expect(segments[0].heading).toBe('Intro (fixed \u00b7 two slots)');
+    expect(segments[0].text).toContain('[MANDATED POEM]');
+    expect(segments[0].text).not.toContain('Cry');
+    expect(segments[1].heading).toBe('Cry');
+    expect(segments[1].text).toMatch(/^To interrogate/);
+  });
+
+  test('plain essays segment exactly like splitParagraphs, with empty annotations', () => {
+    const text = 'First paragraph of prose that ends properly.\n\nSecond paragraph of prose, also fine.';
+    const segments = segmentEssay(text);
+    expect(segments.map((s) => s.text)).toEqual([
+      'First paragraph of prose that ends properly.',
+      'Second paragraph of prose, also fine.',
+    ]);
+    expect(segments.every((s) => s.heading === '' && s.notes.length === 0)).toBe(true);
+  });
+
+  test('fallbackStructure carries heading/notes and prose-only text', () => {
+    const structure = fallbackStructure(segmentEssay('Body 1\nThe prose of the first paragraph sits here and ends cleanly.'));
+    expect(structure.bodyParagraphs).toHaveLength(1);
+    expect(structure.bodyParagraphs[0].heading).toBe('Body 1');
+    expect(structure.bodyParagraphs[0].text).toBe('The prose of the first paragraph sits here and ends cleanly.');
+  });
+
+  test('assembleFromLabels honours AI annotationLines only for exact full lines', () => {
+    const segments = segmentEssay('Some plan words here first\nActual exam prose follows and ends with a full stop.');
+    // Heuristic already split the heading; simulate a leftover scaffold line the AI flags.
+    const withScaffold = [{ heading: '', notes: [], text: 'Quote bank goes here later\nActual exam prose follows and ends with a full stop.' }];
+    const structure = assembleFromLabels({
+      introIndex: null,
+      conclusionIndex: null,
+      thesis: '',
+      bodyParagraphs: [{ index: 0, annotationLines: ['Quote bank goes here later', 'NOT A REAL LINE'] }],
+    }, withScaffold);
+    expect(structure.bodyParagraphs[0].text).toBe('Actual exam prose follows and ends with a full stop.');
+    expect(structure.bodyParagraphs[0].notes).toContain('Quote bank goes here later');
+    expect(structure.bodyParagraphs[0].notes).not.toContain('NOT A REAL LINE');
+    expect(segments.length).toBeGreaterThan(0);
+  });
+});

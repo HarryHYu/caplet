@@ -17,7 +17,7 @@ jest.mock('../middleware/auth', () => ({
 const request = require('supertest');
 const express = require('express');
 const Essay = require('../models/Essay');
-const { parseEssay, fallbackStructure, splitParagraphs } = require('../services/essayParser');
+const { parseEssay, fallbackStructure, segmentEssay } = require('../services/essayParser');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { resetAIQuotaForTests } = require('../middleware/aiQuota');
 const essaysRouter = require('../routes/essays');
@@ -356,7 +356,7 @@ describe('Essay routes', () => {
         bodyParagraphs: [{ topicSentence: 'p1', text: 'p1', quotes: [], techniques: [] }],
         conclusion: '',
       };
-      splitParagraphs.mockReturnValue(['p1', 'p2']);
+      segmentEssay.mockReturnValue([{ heading: '', notes: [], text: 'p1' }, { heading: '', notes: [], text: 'p2' }]);
       fallbackStructure.mockReturnValue(deterministic);
 
       const res = await request(app).post('/api/essays/e1/parse');
@@ -364,8 +364,8 @@ describe('Essay routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.essay).toMatchObject({ id: 'e1' });
       expect(parseEssay).not.toHaveBeenCalled();
-      expect(splitParagraphs).toHaveBeenCalledWith(longText);
-      expect(fallbackStructure).toHaveBeenCalledWith(['p1', 'p2']);
+      expect(segmentEssay).toHaveBeenCalledWith(longText);
+      expect(fallbackStructure).toHaveBeenCalledWith([{ heading: '', notes: [], text: 'p1' }, { heading: '', notes: [], text: 'p2' }]);
       expect(Essay.update).toHaveBeenCalledWith(
         { parsedStructure: deterministic },
         { where: { id: 'e1', userId: 'test-user-1', originalText: longText } },
