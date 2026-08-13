@@ -20,7 +20,6 @@ import {
     PlusIcon,
     TrashIcon,
     ArrowLeftIcon,
-    ArrowRightCircleIcon,
     SparklesIcon,
     AcademicCapIcon,
     ArrowUpTrayIcon,
@@ -32,7 +31,6 @@ import {
     BookOpenIcon,
     PencilIcon,
     PencilSquareIcon,
-    ChatBubbleBottomCenterTextIcon,
     ClockIcon,
     RectangleStackIcon,
     ArrowsUpDownIcon,
@@ -188,6 +186,32 @@ function sentenceAtWord(text, wordIdx) {
     return sentences[sentences.length - 1] || '';
 }
 
+/**
+ * A word chip whose width NEVER changes. The real word is always rendered —
+ * invisibly while masked — so it reserves its exact final width; the mask
+ * (cue letters, dot, caret) is an overlay clipped to that box. Revealing a
+ * word therefore never re-wraps the line or makes the text jump.
+ */
+function MaskedWord({ word, hidden = false, overlay = null, className = '', overlayClassName = '', animate = false, refEl, ariaLabel, title }) {
+    return (
+        <span
+            ref={refEl}
+            aria-label={ariaLabel}
+            title={title}
+            className={`relative inline-block whitespace-pre align-baseline ${animate ? 'animate-[essayWordPop_0.22s_ease-out]' : ''} ${className}`}
+        >
+            <span className={hidden ? 'invisible' : undefined} aria-hidden={hidden || undefined}>{word}</span>
+            {hidden && (
+                <span aria-hidden="true" className={`absolute inset-0 flex items-baseline overflow-hidden ${overlayClassName}`}>
+                    {overlay}
+                </span>
+            )}
+        </span>
+    );
+}
+
+const Caret = () => <span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-pulse shrink-0" />;
+
 /** Shared keyframes for the practice modes. */
 function PracticeStyles() {
     return (
@@ -236,27 +260,29 @@ function LiveCheck({ target, typed, currentHint = 'none', showRemaining = false,
                 {targetWords.map((w, i) => {
                     if (i < committed) {
                         const ok = normalise(typedWords[i]) === normalise(w);
-                        if (ok) return <span key={i} className="text-emerald-600 dark:text-emerald-400">{w}</span>;
+                        if (ok) return <MaskedWord key={i} word={w} animate className="text-emerald-600 dark:text-emerald-400" />;
                         return (
-                            <span key={i} className="rounded px-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-                                {w}<span className="line-through opacity-50 ml-1">{typedWords[i]}</span>
-                            </span>
+                            <MaskedWord key={i} word={w} animate
+                                title={`You typed “${typedWords[i]}”`}
+                                ariaLabel={`${w} — you typed ${typedWords[i]}`}
+                                className="rounded-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 underline decoration-wavy decoration-amber-400/70" />
                         );
                     }
                     if (i === committed && !complete) {
-                        const cue = currentHint === 'firstletter'
-                            ? w[0] + '─'.repeat(Math.max(0, w.length - 1))
-                            : currentHint === 'dashes'
-                                ? '─'.repeat(w.length)
-                                : '';
                         return (
-                            <span key={i} className="font-bold text-accent border-b-2 border-accent">
-                                {cue}<span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-pulse" />
-                            </span>
+                            <MaskedWord key={i} word={w} hidden
+                                className="border-b-2 border-accent"
+                                overlayClassName="text-accent"
+                                overlay={<>{currentHint === 'firstletter' ? w[0] : ''}<Caret /></>} />
                         );
                     }
                     if (showRemaining) {
-                        return <span key={i} className="text-text-dim select-none">{w[0]}{'─'.repeat(Math.max(0, w.length - 1))}</span>;
+                        return (
+                            <MaskedWord key={i} word={w} hidden
+                                className="border-b border-line-strong select-none"
+                                overlayClassName="text-text-dim"
+                                overlay={w[0]} />
+                        );
                     }
                     return null;
                 })}
@@ -771,10 +797,11 @@ const NEXT_WORD_HINTS = [
     { key: 'word', label: 'Full word' },
 ];
 
+// Cue letters only — the chip's underline already conveys the word's length,
+// so no dash-padding (which never matched the real width anyway).
 const wordCue = (w, style) => {
     if (style === 'word') return w;
-    const shown = style === 'three' ? Math.min(3, w.length) : 1;
-    return w.slice(0, shown) + '─'.repeat(Math.max(0, w.length - shown));
+    return w.slice(0, style === 'three' ? Math.min(3, w.length) : 1);
 };
 
 export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
@@ -883,24 +910,34 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
                     {words.map((w, i) => {
                         if (i < history.length) {
                             const h = history[i];
-                            if (h.correct) return <span key={i} aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined} title={peekedWords.has(i) ? 'Revealed with a hint' : undefined} className={`animate-[essayWordPop_0.22s_ease-out] ${peekedWords.has(i) ? 'rounded block-amber px-1 text-amber' : 'text-emerald-600 dark:text-emerald-400'}`}>{w}</span>;
+                            if (h.correct) return (
+                                <MaskedWord key={i} word={w} animate
+                                    ariaLabel={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
+                                    title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
+                                    className={peekedWords.has(i) ? 'rounded-sm block-amber text-amber' : 'text-emerald-600 dark:text-emerald-400'} />
+                            );
                             return (
-                                <span key={i} className="animate-[essayWordPop_0.22s_ease-out] rounded px-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-                                    {w}<span className="line-through opacity-50 ml-1">{h.typed}</span>
-                                </span>
+                                <MaskedWord key={i} word={w} animate
+                                    title={`You typed “${h.typed}”`}
+                                    ariaLabel={`${w} — you typed ${h.typed}`}
+                                    className="rounded-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 underline decoration-wavy decoration-amber-400/70" />
                             );
                         }
                         if (i === wordIdx && !paraDone) {
                             return (
-                                <span key={i} ref={currentRef} aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined} title={peekedWords.has(i) ? 'Revealed with a hint' : undefined} className={`font-bold border-b-2 transition-all duration-200 ${peekedWords.has(i) ? 'rounded block-amber px-1 text-amber border-[color:var(--mark-amber)]' : hintStyle === 'word' ? 'text-text-muted italic border-accent/60' : 'text-accent border-accent'}`}>
-                                    {wordCue(w, hintStyle)}<span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-pulse" />
-                                </span>
+                                <MaskedWord key={i} word={w} hidden refEl={currentRef}
+                                    ariaLabel={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
+                                    title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
+                                    className={`border-b-2 transition-colors duration-200 ${peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}
+                                    overlayClassName={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}
+                                    overlay={<>{wordCue(w, hintStyle)}<Caret /></>} />
                             );
                         }
                         return (
-                            <span key={i} className="text-text-dim select-none">
-                                {w[0]}{'─'.repeat(Math.max(0, w.length - 1))}
-                            </span>
+                            <MaskedWord key={i} word={w} hidden
+                                className="border-b border-line-strong select-none"
+                                overlayClassName="text-text-dim"
+                                overlay={w[0]} />
                         );
                     })}
                 </div>
@@ -1077,19 +1114,24 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
                     {words.map((w, i) => {
                         if (i < results.length) {
                             return (
-                                <span key={i} className={`animate-[essayWordPop_0.2s_ease-out] ${results[i] === 'hit' ? 'text-text-primary' : 'rounded px-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'}`}>
-                                    {w}
-                                </span>
+                                <MaskedWord key={i} word={w} animate
+                                    className={results[i] === 'hit' ? 'text-text-primary' : 'rounded-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'} />
                             );
                         }
                         if (i === wordIdx) {
                             return (
-                                <span key={i} ref={currentRef} className={`font-bold border-b-2 ${missCount > 0 ? 'text-rose-500 border-rose-400' : 'text-accent border-accent'}`}>
-                                    {missCount > 0 ? words[i][0] : '?'}<span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-pulse" />
-                                </span>
+                                <MaskedWord key={i} word={w} hidden refEl={currentRef}
+                                    className={`border-b-2 ${missCount > 0 ? 'border-rose-400' : 'border-accent'}`}
+                                    overlayClassName={missCount > 0 ? 'text-rose-500' : 'text-accent'}
+                                    overlay={<>{missCount > 0 ? w[0] : '?'}<Caret /></>} />
                             );
                         }
-                        return <span key={i} className="text-text-dim/50 select-none">•</span>;
+                        return (
+                            <MaskedWord key={i} word={w} hidden
+                                className="select-none"
+                                overlayClassName="justify-center text-text-dim/60"
+                                overlay="·" />
+                        );
                     })}
                 </div>
             ) : (
@@ -1506,6 +1548,48 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
     );
 }
 
+// ── Consolidated tools: one Rebuild (unit toggle), one Review (style toggle) ─
+
+const REBUILD_UNITS = [
+    { key: 'words', label: 'Word by word' },
+    { key: 'sentences', label: 'Sentence by sentence' },
+];
+
+function RebuildMode({ initialUnit = 'words', ...props }) {
+    const [unit, setUnit] = useState(initialUnit);
+    return (
+        <div>
+            <div className="flex items-center justify-end gap-2 mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Unit</span>
+                <HintToggle options={REBUILD_UNITS} value={unit} onChange={setUnit} />
+            </div>
+            {unit === 'words'
+                ? <GuidedTypeMode key="words" {...props} />
+                : <SentenceMode key="sentences" {...props} />}
+        </div>
+    );
+}
+
+const REVIEW_STYLES = [
+    { key: 'cloze', label: 'Cloze cards' },
+    { key: 'write', label: 'Write the openings' },
+];
+
+function ReviewMode({ initialStyle = 'cloze', ...props }) {
+    const [style, setStyle] = useState(initialStyle);
+    return (
+        <div>
+            <div className="flex items-center justify-end gap-2 mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Style</span>
+                <HintToggle options={REVIEW_STYLES} value={style} onChange={setStyle} />
+            </div>
+            {style === 'cloze'
+                ? <RecallChunks key="cloze" {...props} />
+                : <OpeningsMode key="write" {...props} />}
+        </div>
+    );
+}
+
 // ── QUOTES + ORDER — extra drills with real completion states ───────────────
 
 function QuoteDrill({ slide, onNext, nextLabel }) {
@@ -1647,18 +1731,20 @@ function NewEssayComposer({ onCreated }) {
 // ── Practice hub — every activity visible, guided chain intact ──────────────
 
 const PRACTICE_STEPS = [
-    { key: 'wordbyword', step: '1', label: 'Rebuild it', icon: PencilIcon, desc: 'Recall with a cue for each word.' },
-    { key: 'sentence', step: '2', label: 'Sentences', icon: ChatBubbleBottomCenterTextIcon, desc: 'Read, hide, and rewrite each sentence.' },
-    { key: 'letters', step: '3', label: 'First letters', icon: BoltIcon, desc: 'Sprint it from first letters only.' },
-    { key: 'typeit', step: '4', label: 'Exam run', icon: DocumentTextIcon, desc: 'Write the whole selection, no hints, timed.' },
-    { key: 'recall', step: '5', label: 'Keep it fresh', icon: ClockIcon, desc: 'Return when it is due for review.' },
+    { key: 'wordbyword', step: '1', label: 'Rebuild it', icon: PencilIcon, desc: 'Type it back — word by word or sentence by sentence.' },
+    { key: 'letters', step: '2', label: 'First letters', icon: BoltIcon, desc: 'Sprint it from first letters only.' },
+    { key: 'typeit', step: '3', label: 'Exam run', icon: DocumentTextIcon, desc: 'Write the whole selection, no hints, timed.' },
+    { key: 'recall', step: '4', label: 'Review', icon: ClockIcon, desc: 'Cloze cards or written openings, on the schedule.' },
 ];
 
 const DRILL_MODES = [
-    { key: 'openings', label: 'Openings', icon: ArrowRightCircleIcon },
     { key: 'quotes', label: 'Quote cards', icon: RectangleStackIcon },
     { key: 'order', label: 'Paragraph order', icon: ArrowsUpDownIcon },
 ];
+
+// Old bookmarks may still carry the pre-consolidation mode keys — they open
+// the merged tool with the matching option preselected.
+const MODE_ALIASES = { sentence: 'wordbyword', openings: 'recall' };
 
 const PRACTICE_MODE_KEYS = new Set([...PRACTICE_STEPS, ...DRILL_MODES].map((m) => m.key));
 
@@ -1925,7 +2011,7 @@ function EssayWorkspace({ essayId }) {
     const tabParam = searchParams.get('tab');
     const tab = WORKSPACE_TABS.some((t) => t.key === tabParam) ? tabParam : 'overview';
     const modeParam = searchParams.get('mode');
-    const mode = PRACTICE_MODE_KEYS.has(modeParam) ? modeParam : null;
+    const mode = PRACTICE_MODE_KEYS.has(modeParam) ? modeParam : (MODE_ALIASES[modeParam] || null);
     const allParas = allParagraphsOf(essay);
     const scope = parseScope(searchParams.get('scope'), allParas.length);
     const scoped = scope ? allParas.filter((p) => scope.includes(p.sourceIndex)) : allParas;
@@ -2071,7 +2157,7 @@ function EssayWorkspace({ essayId }) {
 
     const quoteCards = structure ? buildQuoteCards(structure) : null;
     const paragraphOrder = structure ? buildParagraphOrder(structure) : null;
-    const drills = { openings: allParas.length > 0, quotes: !!quoteCards, order: !!paragraphOrder };
+    const drills = { quotes: !!quoteCards, order: !!paragraphOrder };
     const paragraphCount = structure?.bodyParagraphs?.length || 0;
 
     return (
@@ -2202,11 +2288,8 @@ function EssayWorkspace({ essayId }) {
                         {mode && (
                             <div key={`${mode}-${scope ? scope.join('-') : 'all'}`} className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
                                 {mode === 'wordbyword' && (
-                                    <GuidedTypeMode essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
-                                        onNext={() => setMode('sentence')} nextLabel={modeLabel('sentence')} />
-                                )}
-                                {mode === 'sentence' && (
-                                    <SentenceMode essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
+                                    <RebuildMode initialUnit={modeParam === 'sentence' ? 'sentences' : 'words'}
+                                        essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
                                         onNext={() => setMode('letters')} nextLabel={modeLabel('letters')} />
                                 )}
                                 {mode === 'letters' && (
@@ -2218,13 +2301,10 @@ function EssayWorkspace({ essayId }) {
                                         onNext={() => setMode('recall')} nextLabel={modeLabel('recall')} />
                                 )}
                                 {mode === 'recall' && (
-                                    <RecallChunks essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
+                                    <ReviewMode initialStyle={modeParam === 'openings' ? 'write' : 'cloze'}
+                                        essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
                                         onNext={drills.quotes ? () => setMode('quotes') : () => setMode(null)}
                                         nextLabel={drills.quotes ? modeLabel('quotes') : 'all activities'} />
-                                )}
-                                {mode === 'openings' && (
-                                    <OpeningsMode essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
-                                        onNext={() => setMode(null)} nextLabel="all activities" />
                                 )}
                                 {mode === 'quotes' && (
                                     quoteCards

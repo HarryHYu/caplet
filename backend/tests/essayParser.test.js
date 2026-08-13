@@ -150,11 +150,17 @@ describe('extractQuotes', () => {
       .toEqual(['“no spur to prick the sides”']);
   });
 
-  it('applies minimum lengths (12 for double quotes, 20 for single quotes)', () => {
+  it('applies the 12-char minimum for double quotes', () => {
     expect(extractQuotes('A "short" aside.')).toEqual([]); // 5 < 12
-    expect(extractQuotes("A 'short single' aside.")).toEqual([]); // 12 < 20
+  });
+
+  it('never treats single quotes or possessive apostrophes as quote marks', () => {
+    // The classic trap: two possessives bracket a span of the student's own
+    // prose — extracting it would produce a garbage "quote".
+    expect(extractQuotes("humanity's propensity to use violence, informed by Leopold II's atrocities."))
+      .toEqual([]);
     expect(extractQuotes("He said 'this single quote has enough length' here."))
-      .toEqual(["'this single quote has enough length'"]);
+      .toEqual([]);
   });
 
   it('caps extraction at 20 quotes', () => {

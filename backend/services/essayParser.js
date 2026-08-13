@@ -196,10 +196,16 @@ function firstSentence(paragraph) {
   return (match ? match[0] : t).trim();
 }
 
-/** Deterministic quote extraction — exact source slices including the marks. */
+/**
+ * Deterministic quote extraction — exact source slices including the marks.
+ * DOUBLE quotes only: single quotes are indistinguishable from possessive
+ * apostrophes ("humanity's … Leopold II's") without real parsing, and a wrong
+ * split turns the student's own prose into garbage "quotes". Single-quoted
+ * evidence still arrives via the AI labels, which are verbatim-validated.
+ */
 function extractQuotes(paragraph) {
   const out = [];
-  const re = /["“]([^"“”]{12,400})["”]|['‘]([^'‘’]{20,400})['’]/g;
+  const re = /["“]([^"“”]{12,400})["”]/g;
   let match;
   while ((match = re.exec(str(paragraph))) !== null && out.length < 20) {
     out.push(match[0]);

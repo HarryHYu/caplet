@@ -83,18 +83,22 @@ describe('EssayMemoriser', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Practice/i }));
     expect(await screen.findByText(/Your learning path/i)).toBeInTheDocument();
+    // Four consolidated tools — overlapping modes became option toggles.
     expect(screen.getByRole('button', { name: /Rebuild it/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Sentences/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /First letters/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Exam run/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Keep it fresh/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Openings/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Review/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Sentences$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Openings$/i })).not.toBeInTheDocument();
     // Unavailable drills (no quotes, one paragraph) are hidden, not dead ends.
     expect(screen.queryByRole('button', { name: /Quote cards/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Paragraph order/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Rebuild it/i }));
-    expect(await screen.findByText(/Step 1 of 5/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Step 1 of 4/i)).toBeInTheDocument();
+    // The merged tool exposes its unit options inside the mode.
+    expect(screen.getByRole('button', { name: /Word by word/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sentence by sentence/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /All activities/i })).toBeInTheDocument();
   });
 
