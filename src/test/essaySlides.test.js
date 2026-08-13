@@ -9,6 +9,7 @@ import {
   quoteItemId,
   highlightSpansInText,
   buildAnnotatedParagraph,
+  findQuoteSpans,
   isLikelyQuote,
 } from '../lib/essaySlides';
 
@@ -104,14 +105,15 @@ describe('buildQuoteCards', () => {
     expect(slide.cards[0].front).toContain('the horror');
   });
 
-  it('builds a carousel cards slide across all quotes, starring high-leverage ones', () => {
+  it('builds a carousel cards slide across all quotes with a consistent front', () => {
     const slide = buildQuoteCards(structure);
     expect(slide.type).toBe('cards');
     expect(slide.mode).toBe('carousel');
     expect(slide.cards).toHaveLength(3); // 1 + 2 quotes
-    expect(slide.cards[0].front).toContain('⭐'); // high-leverage
+    // No "high-leverage" starring — every card front is just the quote.
+    slide.cards.forEach((c) => expect(c.front).not.toContain('⭐'));
+    expect(slide.cards[0].front).toBe('Vaulting ambition');
     expect(slide.cards[0].back).toContain('metaphor');
-    expect(slide.cards[1].front).not.toContain('⭐'); // not high-leverage
   });
 
   it('returns null when there are no quotes', () => {
@@ -217,5 +219,38 @@ describe('composite item ids', () => {
     // both share the `${essayId}:` prefix the backend deletes by
     expect(paragraphItemId('abc', 2).startsWith('abc:')).toBe(true);
     expect(quoteItemId('abc', 2, 0).startsWith('abc:')).toBe(true);
+  });
+});
+
+describe('findQuoteSpans + annotated highlighting of integrated quotes', () => {
+  it('marks short quotes integrated mid-sentence, at every occurrence', () => {
+    const text = 'Walcott\u2019s "Patmos" reimagines "heaven" while "dust blown blood" recurs; the "dust blown blood" imagery accentuates violence.';
+    const spans = findQuoteSpans(text);
+    const contents = spans.map((s) => text.slice(s.start, s.end));
+    expect(contents).toEqual(['Patmos', 'heaven', 'dust blown blood', 'dust blown blood']);
+  });
+
+  it('never includes the quotation marks in the highlighted span', () => {
+    const text = 'He declares that "This island is heaven" today.';
+    const segments = buildAnnotatedParagraph({ topicSentence: '', text, quotes: [] });
+    const quoteSeg = segments.find((s) => s.type === 'quote');
+    expect(quoteSeg.text).toBe('This island is heaven');
+    expect(segments.map((s) => s.text).join('')).toBe(text);
+  });
+
+  it('lets a quote punch through the topic-sentence highlight', () => {
+    const text = 'The persona declares "heaven away from cities" early. More prose follows.';
+    const segments = buildAnnotatedParagraph({
+      topicSentence: 'The persona declares "heaven away from cities" early.',
+      text,
+      quotes: [],
+    });
+    expect(segments.map((s) => s.type)).toEqual(['topic', 'quote', 'topic', 'plain']);
+    expect(segments.map((s) => s.text).join('')).toBe(text);
+  });
+
+  it('ignores unbalanced straight marks (parity guard, matching the backend)', () => {
+    const spans = findQuoteSpans('A stray " mark then "a real span" appears.');
+    expect(spans).toEqual([]);
   });
 });

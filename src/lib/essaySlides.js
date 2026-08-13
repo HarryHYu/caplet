@@ -126,7 +126,7 @@ export function buildQuoteCards(structure) {
       if (!text || !isLikelyQuote(p?.text, text)) return;
       const techniques = (p?.techniques || []).filter(Boolean).join(', ');
       cards.push({
-        front: q.highLeverage ? `${text}  ⭐` : text,
+        front: text,
         back: techniques ? `Techniques: ${techniques}` : `Body paragraph ${i + 1}`,
       });
     });
@@ -216,14 +216,81 @@ export function highlightSpansInText(text, markers = []) {
  * "Annotated" essay view.
  * @returns {Array<{text:string, type:'plain'|'topic'|'quote', meta?:object}>}
  */
+/**
+ * Every quotation-mark-delimited span in `text`, as content positions (the
+ * marks themselves are never part of the span). Mirrors the backend's pairing
+ * rules: balanced pairs only, a parity guard for directionless straight
+ * quotes, outer span wins for nesting. No length floor — a two-letter quote
+ * integrated mid-sentence still deserves its highlight — and EVERY occurrence
+ * is returned, not just the first.
+ */
+const QUOTE_MARK_PAIRS = [
+  ['"', '"'],
+  ['“', '”'],
+  ['‘', '’'],
+  ['«', '»'],
+  ['„', '“'],
+];
+
+export function findQuoteSpans(text) {
+  const t = String(text || '');
+  const spans = [];
+  for (const [open, close] of QUOTE_MARK_PAIRS) {
+    if (open === close) {
+      const count = t.split(open).length - 1;
+      if (count % 2 !== 0) continue; // stray straight mark — pairing unreliable
+    }
+    let from = 0;
+    for (;;) {
+      const start = t.indexOf(open, from);
+      if (start === -1) break;
+      const end = t.indexOf(close, start + 1);
+      if (end === -1) break;
+      from = end + 1;
+      const content = t.slice(start + 1, end);
+      if (content.trim().length >= 2 && content.length <= 400) {
+        spans.push({ start: start + 1, end });
+      }
+    }
+  }
+  const ordered = spans.sort((a, b) => a.start - b.start || b.end - a.end);
+  const kept = [];
+  for (const s of ordered) {
+    if (kept.some((k) => s.start >= k.start && s.end <= k.end)) continue;
+    kept.push(s);
+  }
+  return kept;
+}
+
 export function buildAnnotatedParagraph(paragraph) {
   const p = paragraph || {};
-  const markers = [];
-  if (p.topicSentence) markers.push({ needle: p.topicSentence, type: 'topic' });
-  (p.quotes || []).forEach((q) => {
-    if (q?.text && isLikelyQuote(p.text, q.text)) {
-      markers.push({ needle: q.text, type: 'quote', meta: { highLeverage: !!q.highLeverage } });
+  const text = String(p.text || '');
+  if (!text) return [];
+
+  // Quotes are found positionally from the marks in the text itself — the
+  // stored quote list is irrelevant here, so short or repeated quotes can
+  // never be skipped. A quote inside the topic sentence punches through it.
+  const quoteSpans = findQuoteSpans(text);
+  const topic = String(p.topicSentence || '');
+  const topicStart = topic ? text.indexOf(topic) : -1;
+  const topicEnd = topicStart >= 0 ? topicStart + topic.length : -1;
+
+  const typeAt = (i) => {
+    if (quoteSpans.some((s) => i >= s.start && i < s.end)) return 'quote';
+    if (topicStart >= 0 && i >= topicStart && i < topicEnd) return 'topic';
+    return 'plain';
+  };
+
+  const segments = [];
+  let runStart = 0;
+  let runType = typeAt(0);
+  for (let i = 1; i <= text.length; i += 1) {
+    const type = i < text.length ? typeAt(i) : null;
+    if (type !== runType) {
+      segments.push({ text: text.slice(runStart, i), type: runType });
+      runStart = i;
+      runType = type;
     }
-  });
-  return highlightSpansInText(p.text, markers);
+  }
+  return segments;
 }

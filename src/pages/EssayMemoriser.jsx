@@ -486,7 +486,7 @@ function SpotlightMode({ essay }) {
                     <div className="mt-6 space-y-2 border-t border-line-soft pt-5">
                         {seg.quotes.map((q, i) => (
                             <p key={i} className="text-sm font-serif text-text-muted italic">
-                                &ldquo;{q.text}&rdquo;{q.highLeverage ? ' ⭐' : ''}
+                                &ldquo;{q.text}&rdquo;
                             </p>
                         ))}
                     </div>
@@ -526,7 +526,6 @@ function AnnotatedLegend() {
         { swatch: 'bg-blue-200 dark:bg-blue-500/30', label: 'Thesis' },
         { swatch: 'bg-amber-200 dark:bg-amber-500/30', label: 'Topic sentence' },
         { swatch: 'bg-emerald-200 dark:bg-emerald-500/30', label: 'Quote' },
-        { swatch: 'bg-emerald-300 dark:bg-emerald-500/50', label: 'High-leverage quote ⭐' },
         { swatch: 'bg-violet-200 dark:bg-violet-500/30', label: 'Conclusion' },
     ];
     return (
@@ -571,13 +570,8 @@ function AnnotatedParagraphBlock({ paragraph, index }) {
                     }
                     if (seg.type === 'quote') {
                         return (
-                            <span key={i}
-                                className={`rounded px-0.5 ${
-                                    seg.meta?.highLeverage
-                                        ? 'bg-emerald-300 dark:bg-emerald-500/50 font-medium'
-                                        : 'bg-emerald-200 dark:bg-emerald-500/30'
-                                }`}>
-                                {seg.text}{seg.meta?.highLeverage ? ' ⭐' : ''}
+                            <span key={i} className="rounded px-0.5 bg-emerald-200 dark:bg-emerald-500/30">
+                                {seg.text}
                             </span>
                         );
                     }
