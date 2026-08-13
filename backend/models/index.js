@@ -19,6 +19,8 @@ const SavedSlide = require('./SavedSlide');
 const UserFinancialProfile = require('./UserFinancialProfile');
 const ReviewItem = require('./ReviewItem');
 const Essay = require('./Essay');
+const EssayContextDoc = require('./EssayContextDoc');
+const EssayAnnotation = require('./EssayAnnotation');
 const LiveSession = require('./LiveSession');
 const LiveParticipant = require('./LiveParticipant');
 const LiveResponse = require('./LiveResponse');
@@ -307,6 +309,18 @@ ReviewItem.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 // Essays (private essay memoriser)
 User.hasMany(Essay, { foreignKey: 'userId', as: 'essays', onDelete: 'CASCADE' });
 Essay.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// Essay workspace — per-essay context documents (AI grounding library) and
+// paragraph annotations. Both cascade with the essay and with the user.
+Essay.hasMany(EssayContextDoc, { foreignKey: 'essayId', as: 'contextDocs', onDelete: 'CASCADE' });
+EssayContextDoc.belongsTo(Essay, { foreignKey: 'essayId', as: 'essay' });
+User.hasMany(EssayContextDoc, { foreignKey: 'userId', as: 'essayContextDocs', onDelete: 'CASCADE' });
+EssayContextDoc.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+Essay.hasMany(EssayAnnotation, { foreignKey: 'essayId', as: 'annotations', onDelete: 'CASCADE' });
+EssayAnnotation.belongsTo(Essay, { foreignKey: 'essayId', as: 'essay' });
+User.hasMany(EssayAnnotation, { foreignKey: 'userId', as: 'essayAnnotations', onDelete: 'CASCADE' });
+EssayAnnotation.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // Live hosted quiz sessions (Kahoot-style)
 User.hasMany(LiveSession, { foreignKey: 'hostUserId', as: 'hostedLiveSessions', onDelete: 'CASCADE' });
@@ -901,6 +915,8 @@ module.exports = {
   UserFinancialProfile,
   ReviewItem,
   Essay,
+  EssayContextDoc,
+  EssayAnnotation,
   LiveSession,
   LiveParticipant,
   LiveResponse,

@@ -5,6 +5,10 @@ import { useReveal } from '../lib/useReveal';
 import CapletLoader from '../components/CapletLoader';
 import SlideRenderer from '../components/lesson/SlideRenderer';
 import { extractPdfText } from '../lib/pdfExtract';
+import AnnotatedDocument from '../components/essay/AnnotatedDocument';
+import EssayChat from '../components/essay/EssayChat';
+import ContextLibrary, { AddContextForm, ContextDocRow } from '../components/essay/ContextLibrary';
+import { MAX_CONTEXT_DOCS } from '../lib/essayContext';
 import {
     buildTopicSentenceCloze,
     buildQuoteCards,
@@ -17,6 +21,9 @@ import {
 import {
     AdjustmentsHorizontalIcon,
     DocumentTextIcon,
+    PaperClipIcon,
+    ChatBubbleLeftRightIcon,
+    RectangleGroupIcon,
     PlusIcon,
     TrashIcon,
     ArrowLeftIcon,
@@ -1607,10 +1614,13 @@ function QuoteDrill({ slide, onNext, nextLabel }) {
 function NewEssayForm({ onCreated }) {
     const [title, setTitle] = useState('');
     const [text, setText] = useState('');
+    const [sourceFile, setSourceFile] = useState('');
     const [model, setModel] = useState(DEFAULT_MODEL);
     const [pdfBusy, setPdfBusy] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    // Context sources collected up front, saved once the essay exists.
+    const [pendingContext, setPendingContext] = useState([]);
 
     const onPdf = async (e) => {
         const file = e.target.files?.[0];
@@ -1620,22 +1630,25 @@ function NewEssayForm({ onCreated }) {
         setPdfBusy(true);
         try {
             const extracted = stripPdfArtifacts(await extractPdfText(file));
-            if (!extracted) { setError('Could not read any text from that PDF.'); }
+            if (!extracted) { setError('No readable text in that PDF — try pasting instead.'); }
             else {
-                setText((prev) => (prev.trim() ? `${prev}\n\n${extracted}` : extracted));
+                // The extracted text is held behind the file's name rather than
+                // dumped into the textarea for the student to tidy up.
+                setText(extracted);
+                setSourceFile(file.name);
                 if (!title.trim()) setTitle(file.name.replace(/\.pdf$/i, ''));
             }
-        } catch { setError('Failed to read the PDF. Try pasting the text instead.'); }
+        } catch { setError('Could not read that PDF. Try pasting the text instead.'); }
         finally { setPdfBusy(false); }
     };
 
     const submit = async () => {
         setError(null);
         if (!title.trim()) return setError('Give your essay a title.');
-        if (!text.trim()) return setError('Paste your essay or upload a PDF first.');
+        if (!text.trim()) return setError('Paste your essay or attach a PDF first.');
         setSubmitting(true);
         try {
-            await onCreated(title.trim(), text, model);
+            await onCreated({ title: title.trim(), text, model, context: pendingContext });
         } catch (e) {
             setError(e?.message || 'Could not save the essay.');
             setSubmitting(false);
@@ -1645,36 +1658,79 @@ function NewEssayForm({ onCreated }) {
 
     return (
         <div className="pt-5">
+            <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-text-dim" htmlFor="new-essay-title">
+                Essay
+            </label>
             <input
+                id="new-essay-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Essay title"
                 className="w-full mb-3 px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-body"
             />
-            <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Paste your essay here, or upload a PDF."
-                rows={8}
-                className="w-full px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-body resize-y"
-            />
-            {error && <p className="text-sm text-rose-400 mt-3 font-medium">{error}</p>}
-            <div className="flex flex-wrap items-center gap-3 mt-4">
-                <label className="btn-secondary inline-flex items-center gap-2 cursor-pointer hover:-translate-y-0.5 transition-transform">
-                    <ArrowUpTrayIcon className="w-4 h-4" />
-                    {pdfBusy ? 'Reading PDF…' : 'Upload PDF'}
-                    <input type="file" accept="application/pdf" className="hidden" onChange={onPdf} disabled={pdfBusy} />
-                </label>
+            {sourceFile ? (
+                <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-line-soft bg-surface-body px-4 py-3">
+                    <span className="inline-flex min-w-0 items-center gap-2 text-sm">
+                        <PaperClipIcon className="h-4 w-4 shrink-0 text-accent" />
+                        <span className="truncate font-medium text-text-primary">{sourceFile}</span>
+                        <span className="shrink-0 text-xs text-text-dim">{wordCountOf(text).toLocaleString()} words read</span>
+                    </span>
+                    <button type="button" onClick={() => { setText(''); setSourceFile(''); }}
+                        className="shrink-0 text-xs font-bold text-text-dim hover:text-text-primary">Remove</button>
+                </div>
+            ) : (
+                <textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Paste your essay here, or attach it as a PDF."
+                    rows={8}
+                    aria-label="Essay text"
+                    className="w-full px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-body resize-y"
+                />
+            )}
+
+            <div className="mt-6 border-t border-line-soft pt-5">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Context <span className="font-medium normal-case tracking-normal text-text-dim">(optional)</span></p>
+                <p className="mt-1 mb-3 text-sm text-text-muted">
+                    Marker feedback, quote banks, background reading — what the assistant will reason from. Kept separate from your essay.
+                </p>
+                {pendingContext.length > 0 && (
+                    <ul className="mb-3 space-y-2">
+                        {pendingContext.map((doc, i) => (
+                            <ContextDocRow
+                                key={i}
+                                doc={{ ...doc, id: i, chars: doc.content.length, preview: doc.content.slice(0, 160) }}
+                                onDelete={() => setPendingContext((prev) => prev.filter((_, idx) => idx !== i))}
+                            />
+                        ))}
+                    </ul>
+                )}
+                <AddContextForm
+                    onAdd={async (doc) => { setPendingContext((prev) => [...prev, doc]); }}
+                    disabled={pendingContext.length >= MAX_CONTEXT_DOCS}
+                    disabledReason={`That is the ${MAX_CONTEXT_DOCS}-source limit — you can manage sources inside the essay too.`}
+                />
+            </div>
+
+            {error && <p role="alert" className="text-sm text-rose-400 mt-4 font-medium">{error}</p>}
+            <div className="flex flex-wrap items-center gap-3 mt-5 border-t border-line-soft pt-5">
+                {!sourceFile && (
+                    <label className="btn-secondary inline-flex items-center gap-2 cursor-pointer hover:-translate-y-0.5 transition-transform">
+                        <ArrowUpTrayIcon className="w-4 h-4" />
+                        {pdfBusy ? 'Reading PDF…' : 'Attach essay PDF'}
+                        <input type="file" accept="application/pdf" className="hidden" onChange={onPdf} disabled={pdfBusy} />
+                    </label>
+                )}
                 <EssayModelPicker model={model} onChange={setModel} disabled={submitting || pdfBusy} />
                 <button type="button" onClick={submit} disabled={submitting || pdfBusy}
                     className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
                     <PlusIcon className="w-4 h-4" />
-                    {submitting ? 'Preparing…' : 'Set up practice'}
+                    {submitting ? 'Setting up…' : 'Create workspace'}
                 </button>
             </div>
             <p className="mt-3 text-xs font-medium leading-relaxed text-text-dim">
-                Caplet uses AI to identify the essay’s structure for practice. Your original wording is kept unchanged.
+                Caplet uses AI to map the essay’s structure for practice. Your original wording is kept unchanged.
             </p>
         </div>
     );
@@ -1894,8 +1950,24 @@ function PracticeHub({ mode, onChange, dueCount, drills }) {
 
 // ── Workspace sections ──────────────────────────────────────────────────────
 
+/**
+ * Context sources chosen in the composer, handed to the workspace once the
+ * essay row exists. Module-level (not state) so the hand-off survives the
+ * route change from the library to /essays/:id.
+ */
+const pendingContextStore = {
+    _byEssay: new Map(),
+    put(essayId, docs) { if (docs?.length) this._byEssay.set(essayId, docs); },
+    take(essayId) {
+        const docs = this._byEssay.get(essayId);
+        this._byEssay.delete(essayId);
+        return docs;
+    },
+};
+
 const WORKSPACE_TABS = [
-    { key: 'overview', label: 'Overview', icon: BookOpenIcon },
+    { key: 'overview', label: 'Document', icon: BookOpenIcon },
+    { key: 'context', label: 'Context', icon: RectangleGroupIcon },
     { key: 'practice', label: 'Practice', icon: AcademicCapIcon },
     { key: 'edit', label: 'Edit', icon: PencilSquareIcon },
 ];
@@ -1997,6 +2069,15 @@ function EssayWorkspace({ essayId }) {
     const [deleteBusy, setDeleteBusy] = useState(false);
     const [deleteError, setDeleteError] = useState(null);
     const [dueCount, setDueCount] = useState(0);
+    // Workspace layer: sources the assistant reads from, margin notes, chat.
+    const [contextDocs, setContextDocs] = useState([]);
+    const [contextLoading, setContextLoading] = useState(true);
+    const [contextBusy, setContextBusy] = useState(false);
+    const [annotations, setAnnotations] = useState([]);
+    const [chatOpen, setChatOpen] = useState(false);
+    const [chatSeed, setChatSeed] = useState(null);
+    const [explaining, setExplaining] = useState(false);
+    const [workspaceError, setWorkspaceError] = useState(null);
     // Guards async continuations against a workspace that switched essays.
     const essayIdRef = useRef(essayId);
     essayIdRef.current = essayId;
@@ -2092,6 +2173,118 @@ function EssayWorkspace({ essayId }) {
     }, [essayId]);
 
     useEffect(() => { if (structure) loadDue(); }, [structure, loadDue]);
+
+    // ── Context library + annotations ──────────────────────────────────────
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            setContextLoading(true);
+            const [ctx, notes] = await Promise.all([
+                api.getEssayContext(essayId).catch(() => null),
+                api.getEssayAnnotations(essayId).catch(() => null),
+            ]);
+            if (cancelled) return;
+            setContextDocs(ctx?.docs || []);
+            setAnnotations(notes?.annotations || []);
+            setContextLoading(false);
+            // Sources staged in the composer are saved once the essay exists.
+            const staged = pendingContextStore.take(essayId);
+            if (staged?.length) {
+                for (const doc of staged) {
+                    const res = await api.addEssayContext(essayId, doc).catch(() => null);
+                    if (cancelled) return;
+                    if (res?.doc) setContextDocs((prev) => [...prev, res.doc]);
+                }
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [essayId]);
+
+    const addContext = useCallback(async (doc) => {
+        setContextBusy(true);
+        try {
+            const res = await api.addEssayContext(essayId, doc);
+            if (essayIdRef.current === essayId && res?.doc) setContextDocs((prev) => [...prev, res.doc]);
+        } finally {
+            if (essayIdRef.current === essayId) setContextBusy(false);
+        }
+    }, [essayId]);
+
+    const removeContext = useCallback(async (docId) => {
+        setContextBusy(true);
+        try {
+            await api.deleteEssayContext(essayId, docId);
+            if (essayIdRef.current === essayId) setContextDocs((prev) => prev.filter((d) => d.id !== docId));
+        } catch (e) {
+            if (essayIdRef.current === essayId) setWorkspaceError(e?.message || 'Could not remove that source.');
+        } finally {
+            if (essayIdRef.current === essayId) setContextBusy(false);
+        }
+    }, [essayId]);
+
+    const addAnnotation = useCallback(async (payload) => {
+        setWorkspaceError(null);
+        try {
+            const res = await api.addEssayAnnotation(essayId, payload);
+            if (essayIdRef.current === essayId && res?.annotation) {
+                setAnnotations((prev) => [...prev, res.annotation]);
+            }
+            return res?.annotation;
+        } catch (e) {
+            if (essayIdRef.current === essayId) setWorkspaceError(e?.message || 'Could not save that note.');
+            throw e;
+        }
+    }, [essayId]);
+
+    const updateAnnotation = useCallback(async (annotationId, note) => {
+        const trimmed = String(note || '').trim();
+        if (!trimmed) return;
+        setAnnotations((prev) => prev.map((a) => (a.id === annotationId ? { ...a, note: trimmed } : a)));
+        await api.updateEssayAnnotation(essayId, annotationId, { note: trimmed }).catch((e) => {
+            if (essayIdRef.current === essayId) setWorkspaceError(e?.message || 'Could not update that note.');
+        });
+    }, [essayId]);
+
+    const deleteAnnotation = useCallback(async (annotationId) => {
+        const previous = annotations;
+        setAnnotations((prev) => prev.filter((a) => a.id !== annotationId));
+        await api.deleteEssayAnnotation(essayId, annotationId).catch((e) => {
+            if (essayIdRef.current !== essayId) return;
+            setAnnotations(previous); // restore — the note is still on the server
+            setWorkspaceError(e?.message || 'Could not delete that note.');
+        });
+    }, [essayId, annotations]);
+
+    const explainParagraphs = useCallback(async () => {
+        setExplaining(true);
+        setWorkspaceError(null);
+        try {
+            const res = await api.explainEssay(essayId, { model: parseModel });
+            if (essayIdRef.current !== essayId) return;
+            const created = res?.annotations || [];
+            setAnnotations((prev) => {
+                const replaced = new Set(created.map((a) => `${a.paragraphIndex}`));
+                const kept = prev.filter((a) => !(a.kind === 'explanation' && replaced.has(`${a.paragraphIndex}`)));
+                return [...kept, ...created];
+            });
+        } catch (e) {
+            if (essayIdRef.current === essayId) setWorkspaceError(e?.message || 'Could not explain the paragraphs right now.');
+        } finally {
+            if (essayIdRef.current === essayId) setExplaining(false);
+        }
+    }, [essayId, parseModel]);
+
+    const sendChat = useCallback(async (messages) => {
+        const res = await api.essayChat(essayId, { messages, model: parseModel });
+        return res;
+    }, [essayId, parseModel]);
+
+    const askAboutSelection = useCallback((paragraphIndex, anchor) => {
+        setChatSeed(anchor
+            ? `In paragraph ${paragraphIndex + 1}, what should I understand about "${anchor}"?`
+            : `Explain what paragraph ${paragraphIndex + 1} is doing and how it could be stronger.`);
+        setChatOpen(true);
+    }, []);
 
     const handleSaved = async ({ title, text, model, textChanged }) => {
         if (parsingRef.current) {
@@ -2262,9 +2455,42 @@ function EssayWorkspace({ essayId }) {
                     </div>
                 )}
 
+                {workspaceError && (
+                    <p role="alert" className="mb-4 rounded-xl border border-rose-300/60 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-500 dark:border-rose-500/30 dark:bg-rose-900/15">
+                        {workspaceError}
+                    </p>
+                )}
+
                 {tab === 'overview' && structure && (
+                    <div className="space-y-6">
+                        <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                            <AnnotatedDocument
+                                essay={essay}
+                                annotations={annotations}
+                                onAdd={addAnnotation}
+                                onUpdate={updateAnnotation}
+                                onDelete={deleteAnnotation}
+                                onExplain={explainParagraphs}
+                                explaining={explaining}
+                                onAskAI={askAboutSelection}
+                            />
+                        </div>
+                        <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                            <p className="mb-5 text-[11px] font-bold uppercase tracking-widest text-text-dim">Read it through</p>
+                            <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />
+                        </div>
+                    </div>
+                )}
+
+                {tab === 'context' && (
                     <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-                        <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />
+                        <ContextLibrary
+                            docs={contextDocs}
+                            loading={contextLoading}
+                            busy={contextBusy}
+                            onAdd={addContext}
+                            onDelete={removeContext}
+                        />
                     </div>
                 )}
 
@@ -2323,6 +2549,31 @@ function EssayWorkspace({ essayId }) {
                     </div>
                 )}
             </div>
+
+            {/* Assistant — available from every tab, never in the way. */}
+            {!chatOpen && (
+                <button
+                    type="button"
+                    onClick={() => setChatOpen(true)}
+                    className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-bold text-white shadow-[0_18px_40px_-20px_rgba(19,81,170,0.9)] transition-transform hover:-translate-y-0.5"
+                >
+                    <ChatBubbleLeftRightIcon className="h-4 w-4" /> Ask about this essay
+                </button>
+            )}
+            <EssayChat
+                open={chatOpen}
+                onClose={() => setChatOpen(false)}
+                onSend={sendChat}
+                onAddAnnotation={(proposal) => addAnnotation({
+                    paragraphIndex: proposal.paragraphIndex,
+                    anchor: proposal.anchor || '',
+                    note: proposal.note,
+                    kind: 'note',
+                })}
+                contextCount={contextDocs.length}
+                seed={chatSeed}
+                onSeedConsumed={() => setChatSeed(null)}
+            />
         </div>
     );
 }
@@ -2368,8 +2619,9 @@ function EssayLibrary() {
         })();
     }, [loadEssays]);
 
-    const handleCreate = async (title, text, model) => {
+    const handleCreate = async ({ title, text, model, context }) => {
         const res = await api.createEssay(title, text);
+        pendingContextStore.put(res.essay.id, context);
         navigate(`/essays/${res.essay.id}?setup=1&model=${encodeURIComponent(model)}`);
     };
 

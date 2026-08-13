@@ -943,6 +943,81 @@ class ApiService {
     return this.request(`/essays/${id}`, { method: 'DELETE' });
   }
 
+  // Essay workspace: context library, annotations, assistant.
+  async getEssayContext(id) {
+    return this.request(`/essays/${id}/context`);
+  }
+
+  async addEssayContext(id, { title, kind, content }) {
+    return this.request(`/essays/${id}/context`, {
+      method: 'POST',
+      body: JSON.stringify({ title, kind, content }),
+    });
+  }
+
+  async deleteEssayContext(id, docId) {
+    return this.request(`/essays/${id}/context/${docId}`, { method: 'DELETE' });
+  }
+
+  async getEssayAnnotations(id) {
+    return this.request(`/essays/${id}/annotations`);
+  }
+
+  async addEssayAnnotation(id, { paragraphIndex, anchor, note, kind }) {
+    return this.request(`/essays/${id}/annotations`, {
+      method: 'POST',
+      body: JSON.stringify({ paragraphIndex, anchor, note, kind }),
+    });
+  }
+
+  async updateEssayAnnotation(id, annotationId, { note, anchor }) {
+    return this.request(`/essays/${id}/annotations/${annotationId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ note, anchor }),
+    });
+  }
+
+  async deleteEssayAnnotation(id, annotationId) {
+    return this.request(`/essays/${id}/annotations/${annotationId}`, { method: 'DELETE' });
+  }
+
+  /**
+   * Essay AI calls use ACCOUNT auth (not the editor workspace token that
+   * _aiRequest sends) with a generous timeout, since a grounded reply over a
+   * large context library can take a while.
+   */
+  async _essayAIRequest(endpoint, payload) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 120000);
+    try {
+      return await this.request(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        throw new Error('That took too long. Try a shorter question or trim the context library.');
+      }
+      if (err instanceof TypeError) {
+        throw new Error('Could not reach the server. Check your connection and try again.');
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // Grounded assistant — answers from the essay + its context library.
+  async essayChat(id, { messages, model }) {
+    return this._essayAIRequest(`/essays/${id}/chat`, { messages, model });
+  }
+
+  // AI explanations for every body paragraph (persisted as annotations).
+  async explainEssay(id, { model } = {}) {
+    return this._essayAIRequest(`/essays/${id}/explain`, { model });
+  }
+
   async parseAssessmentReport({ text, fileName, subjects }) {
     return this.request('/assessment-reports/parse', {
       method: 'POST',

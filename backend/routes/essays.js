@@ -23,8 +23,11 @@ const express = require('express');
 const { Op } = require('sequelize');
 const Essay = require('../models/Essay');
 const ReviewItem = require('../models/ReviewItem');
+const EssayContextDoc = require('../models/EssayContextDoc');
+const EssayAnnotation = require('../models/EssayAnnotation');
 const { requireAuth } = require('../middleware/auth');
 const { parseEssay, fallbackStructure, segmentEssay } = require('../services/essayParser');
+const { assistEssay, explainEssay } = require('../services/essayAssistant');
 const { requireAIConsent } = require('../services/privacyConsent');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { reserveAIQuota } = require('../middleware/aiQuota');
@@ -42,6 +45,18 @@ const essayParseQuota = reserveAIQuota({
   scope: 'essay-structure',
   units: 6,
 });
+
+// ── Essay workspace limits (context docs, annotations, grounded chat) ───────
+const MAX_CONTEXT_DOC = 150000; // chars per context document
+const MAX_CONTEXT_DOCS = 12; // documents per essay
+const MAX_CONTEXT_TOTAL = 500000; // chars across an essay's whole library
+const MAX_NOTE = 2000; // chars per annotation note
+const MAX_ANCHOR = 300; // chars per annotation anchor snippet
+const MAX_ANNOTATIONS = 300; // annotations per essay
+const MAX_CHAT_MESSAGES = 12; // history turns forwarded to the assistant
+const MAX_CHAT_MESSAGE = 8000; // chars per forwarded turn
+const essayChatQuota = reserveAIQuota({ scope: 'essay-chat', units: 4 });
+const essayExplainQuota = reserveAIQuota({ scope: 'essay-structure', units: 6 });
 
 // GET /api/essays — list (omit the heavy originalText; flag whether parsed)
 router.get('/', async (req, res) => {
@@ -249,6 +264,326 @@ router.delete('/:id', async (req, res) => {
   } catch (e) {
     console.error('Delete essay error:', e);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ═══════════════════════════ Essay workspace ════════════════════════════
+// Per-essay context documents (the grounding library for the AI chat),
+// paragraph annotations (student notes + AI explanations), a grounded chat,
+// and one-shot AI paragraph explanations:
+//
+//   GET    /api/essays/:id/context              -> list docs (never content)
+//   POST   /api/essays/:id/context              -> add { title, kind, content }
+//   DELETE /api/essays/:id/context/:docId       -> remove a doc
+//   GET    /api/essays/:id/annotations          -> full annotation rows
+//   POST   /api/essays/:id/annotations          -> add a note (source 'user')
+//   PUT    /api/essays/:id/annotations/:annId   -> edit { note?, anchor? }
+//   DELETE /api/essays/:id/annotations/:annId   -> remove an annotation
+//   POST   /api/essays/:id/chat                 -> grounded AI chat
+//   POST   /api/essays/:id/explain              -> AI paragraph explanations
+//
+// Every route is owner-scoped: the essay is looked up by { id, userId } first
+// and anything else 404s, so nothing here can touch another user's essay.
+
+async function loadOwnedEssay(req, res, next) {
+  try {
+    const essay = await Essay.findOne({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+    if (!essay) return res.status(404).json({ message: 'Essay not found' });
+    req.essay = essay;
+    return next();
+  } catch (e) {
+    console.error('Load essay error:', e);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+// List shape for a context document — NEVER the full content (a document can
+// be 150k chars; lists stay light and the chat reads content server-side).
+const contextDocSummary = (doc) => ({
+  id: doc.id,
+  title: doc.title,
+  kind: doc.kind,
+  createdAt: doc.createdAt,
+  chars: String(doc.content || '').length,
+  preview: String(doc.content || '').slice(0, 200),
+});
+
+// GET /api/essays/:id/context — list the essay's context documents
+router.get('/:id/context', loadOwnedEssay, async (req, res) => {
+  try {
+    const docs = await EssayContextDoc.findAll({
+      where: { essayId: req.essay.id, userId: req.user.id },
+      order: [['createdAt', 'ASC']],
+    });
+    res.json({ docs: docs.map(contextDocSummary) });
+  } catch (e) {
+    console.error('List context docs error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST /api/essays/:id/context — add a document to the context library
+router.post('/:id/context', loadOwnedEssay, async (req, res) => {
+  try {
+    const title = String(req.body?.title ?? '').trim();
+    if (!title) return res.status(400).json({ message: 'A title is required' });
+    if (title.length > 160) return res.status(400).json({ message: 'Title is too long.' });
+    const content = String(req.body?.content ?? '');
+    if (!content.trim()) return res.status(400).json({ message: 'Document content is required' });
+    if (content.length > MAX_CONTEXT_DOC) {
+      return res.status(400).json({ message: 'Document is too large.' });
+    }
+    const kind = ['text', 'pdf'].includes(req.body?.kind) ? req.body.kind : 'text';
+
+    const existing = await EssayContextDoc.findAll({
+      where: { essayId: req.essay.id, userId: req.user.id },
+      attributes: ['content'],
+    });
+    const existingChars = existing.reduce((sum, doc) => sum + String(doc.content || '').length, 0);
+    if (existing.length >= MAX_CONTEXT_DOCS || existingChars + content.length > MAX_CONTEXT_TOTAL) {
+      return res.status(400).json({ message: 'Context library is full.' });
+    }
+
+    const doc = await EssayContextDoc.create({
+      essayId: req.essay.id,
+      userId: req.user.id,
+      title,
+      kind,
+      content,
+    });
+    res.status(201).json({ doc: contextDocSummary(doc) });
+  } catch (e) {
+    console.error('Create context doc error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// DELETE /api/essays/:id/context/:docId — remove a context document
+router.delete('/:id/context/:docId', loadOwnedEssay, async (req, res) => {
+  try {
+    const deleted = await EssayContextDoc.destroy({
+      where: { id: req.params.docId, essayId: req.essay.id, userId: req.user.id },
+    });
+    if (!deleted) return res.status(404).json({ message: 'Document not found' });
+    res.status(204).end();
+  } catch (e) {
+    console.error('Delete context doc error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// GET /api/essays/:id/annotations — full rows, in reading order
+router.get('/:id/annotations', loadOwnedEssay, async (req, res) => {
+  try {
+    const annotations = await EssayAnnotation.findAll({
+      where: { essayId: req.essay.id, userId: req.user.id },
+      order: [['paragraphIndex', 'ASC'], ['createdAt', 'ASC']],
+    });
+    res.json({ annotations });
+  } catch (e) {
+    console.error('List annotations error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST /api/essays/:id/annotations — add an annotation. source is ALWAYS
+// 'user': AI chat proposals are persisted through here by an explicit student
+// action, never automatically (only /explain writes source 'ai' rows).
+router.post('/:id/annotations', loadOwnedEssay, async (req, res) => {
+  try {
+    const paragraphIndex = req.body?.paragraphIndex;
+    if (!Number.isInteger(paragraphIndex) || paragraphIndex < 0) {
+      return res.status(400).json({ message: 'A valid paragraph is required' });
+    }
+    const note = String(req.body?.note ?? '').trim().slice(0, MAX_NOTE);
+    if (!note) return res.status(400).json({ message: 'A note is required' });
+    const anchor = String(req.body?.anchor ?? '').slice(0, MAX_ANCHOR);
+    const kind = ['note', 'explanation'].includes(req.body?.kind) ? req.body.kind : 'note';
+
+    const count = await EssayAnnotation.count({
+      where: { essayId: req.essay.id, userId: req.user.id },
+    });
+    if (count >= MAX_ANNOTATIONS) {
+      return res.status(400).json({ message: 'Annotation limit reached.' });
+    }
+
+    const annotation = await EssayAnnotation.create({
+      essayId: req.essay.id,
+      userId: req.user.id,
+      paragraphIndex,
+      anchor,
+      note,
+      kind,
+      source: 'user',
+    });
+    res.status(201).json({ annotation });
+  } catch (e) {
+    console.error('Create annotation error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// PUT /api/essays/:id/annotations/:annId — edit note/anchor only (kind and
+// source are fixed at creation)
+router.put('/:id/annotations/:annId', loadOwnedEssay, async (req, res) => {
+  try {
+    const annotation = await EssayAnnotation.findOne({
+      where: { id: req.params.annId, essayId: req.essay.id, userId: req.user.id },
+    });
+    if (!annotation) return res.status(404).json({ message: 'Annotation not found' });
+
+    const updates = {};
+    if (req.body?.note !== undefined) {
+      const note = String(req.body.note).trim().slice(0, MAX_NOTE);
+      if (!note) return res.status(400).json({ message: 'A note is required' });
+      updates.note = note;
+    }
+    if (req.body?.anchor !== undefined) {
+      updates.anchor = String(req.body.anchor).slice(0, MAX_ANCHOR);
+    }
+    if (Object.keys(updates).length) await annotation.update(updates);
+    res.json({ annotation });
+  } catch (e) {
+    console.error('Update annotation error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// DELETE /api/essays/:id/annotations/:annId — remove an annotation
+router.delete('/:id/annotations/:annId', loadOwnedEssay, async (req, res) => {
+  try {
+    const deleted = await EssayAnnotation.destroy({
+      where: { id: req.params.annId, essayId: req.essay.id, userId: req.user.id },
+    });
+    if (!deleted) return res.status(404).json({ message: 'Annotation not found' });
+    res.status(204).end();
+  } catch (e) {
+    console.error('Delete annotation error:', e);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Sanitizes the chat history BEFORE any AI quota is reserved: role whitelist
+// (user/assistant only), last MAX_CHAT_MESSAGES turns, each clamped to
+// MAX_CHAT_MESSAGE chars. An empty history 400s without consuming quota.
+function prepareChatMessages(req, res, next) {
+  const raw = Array.isArray(req.body?.messages) ? req.body.messages : [];
+  const messages = raw
+    .filter((m) => m && (m.role === 'user' || m.role === 'assistant')
+      && typeof m.content === 'string' && m.content.trim())
+    .slice(-MAX_CHAT_MESSAGES)
+    .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_CHAT_MESSAGE) }));
+  if (!messages.length) return res.status(400).json({ message: 'A message is required' });
+  req.chatMessages = messages;
+  return next();
+}
+
+// POST /api/essays/:id/chat — grounded workspace chat. The reply may carry
+// annotation PROPOSALS (validated by the service: in-bounds indices, anchors
+// snapped to verbatim source slices); they are never persisted here — the
+// client adds each one explicitly via POST /api/essays/:id/annotations.
+router.post('/:id/chat', requireAIConsent, loadOwnedEssay, prepareChatMessages, essayChatQuota, async (req, res) => {
+  try {
+    const essay = req.essay;
+    const model = ESSAY_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
+    const [contextDocs, annotations] = await Promise.all([
+      EssayContextDoc.findAll({
+        where: { essayId: essay.id, userId: req.user.id },
+        order: [['createdAt', 'ASC']],
+      }),
+      EssayAnnotation.findAll({
+        where: { essayId: essay.id, userId: req.user.id },
+        order: [['paragraphIndex', 'ASC'], ['createdAt', 'ASC']],
+      }),
+    ]);
+    const result = await assistEssay({
+      essay,
+      contextDocs,
+      annotations,
+      messages: req.chatMessages,
+      model,
+    });
+    await recordAIInteractionSafely({
+      userId: req.user.id,
+      feature: 'essay_assistant',
+      modelVersion: model,
+      status: 'completed',
+      inputSummary: `${essay.title} · ${req.chatMessages.length} message(s) · ${contextDocs.length} context doc(s)`,
+      outputSummary: `${result.annotations.length} annotation proposal(s)`,
+      metadata: { essayId: essay.id },
+    });
+    res.json({ reply: result.reply, annotations: result.annotations });
+  } catch (e) {
+    const error = publicAIError(e, 'The assistant could not reply. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'essay_chat_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
+  }
+});
+
+// The 400 for an unparsed essay must be served BEFORE any AI quota is
+// reserved — asking for explanations without a paragraph map costs nothing.
+function requireParsedStructure(req, res, next) {
+  if (!req.essay.parsedStructure) {
+    return res.status(400).json({ message: 'Set up practice first.' });
+  }
+  return next();
+}
+
+// POST /api/essays/:id/explain — one AI call that summarises every body
+// paragraph in plain English, persisted as kind='explanation', source='ai'
+// annotations. Re-running replaces the previous explanation per paragraph.
+router.post('/:id/explain', requireAIConsent, loadOwnedEssay, requireParsedStructure, essayExplainQuota, async (req, res) => {
+  try {
+    const essay = req.essay;
+    const model = ESSAY_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
+    const explanations = await explainEssay({ essay, model });
+
+    const created = [];
+    for (const item of explanations) {
+      await EssayAnnotation.destroy({
+        where: {
+          essayId: essay.id,
+          userId: req.user.id,
+          paragraphIndex: item.paragraphIndex,
+          kind: 'explanation',
+        },
+      });
+      created.push(await EssayAnnotation.create({
+        essayId: essay.id,
+        userId: req.user.id,
+        paragraphIndex: item.paragraphIndex,
+        anchor: '',
+        note: item.note,
+        kind: 'explanation',
+        source: 'ai',
+      }));
+    }
+    await recordAIInteractionSafely({
+      userId: req.user.id,
+      feature: 'essay_explain',
+      modelVersion: model,
+      status: 'completed',
+      inputSummary: `${essay.title} · ${essay.parsedStructure?.bodyParagraphs?.length || 0} paragraphs`,
+      outputSummary: `${created.length} paragraph explanation(s)`,
+      metadata: { essayId: essay.id },
+    });
+    res.json({ annotations: created });
+  } catch (e) {
+    const error = publicAIError(e, 'The essay could not be explained. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'essay_explain_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
   }
 });
 

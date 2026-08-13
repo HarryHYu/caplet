@@ -1,4 +1,4 @@
-import { afterEach, describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -11,6 +11,15 @@ vi.mock('../services/api', () => ({
     createEssay: vi.fn(),
     updateEssay: vi.fn(),
     parseEssay: vi.fn(),
+    getEssayContext: vi.fn().mockResolvedValue({ docs: [] }),
+    addEssayContext: vi.fn(),
+    deleteEssayContext: vi.fn().mockResolvedValue(null),
+    getEssayAnnotations: vi.fn().mockResolvedValue({ annotations: [] }),
+    addEssayAnnotation: vi.fn(),
+    updateEssayAnnotation: vi.fn().mockResolvedValue({}),
+    deleteEssayAnnotation: vi.fn().mockResolvedValue(null),
+    essayChat: vi.fn(),
+    explainEssay: vi.fn(),
     deleteEssay: vi.fn(),
     request: vi.fn(),
     getDueReviewItems: vi.fn().mockResolvedValue({ items: [] }),
@@ -23,6 +32,22 @@ import EssayMemoriser, { GuidedTypeMode } from '../pages/EssayMemoriser';
 import api from '../services/api';
 
 afterEach(() => cleanup());
+
+// Each test queues its own mockResolvedValueOnce responses; reset between
+// tests so an unconsumed queue can never leak into the next one.
+beforeEach(() => {
+  vi.mocked(api.getEssays).mockReset().mockResolvedValue({ essays: [] });
+  vi.mocked(api.getEssayContext).mockReset().mockResolvedValue({ docs: [] });
+  vi.mocked(api.getEssayAnnotations).mockReset().mockResolvedValue({ annotations: [] });
+  vi.mocked(api.getDueReviewItems).mockReset().mockResolvedValue({ items: [] });
+  vi.mocked(api.submitReview).mockReset().mockResolvedValue({ reviewItem: {} });
+  vi.mocked(api.deleteEssayAnnotation).mockReset().mockResolvedValue(null);
+  vi.mocked(api.deleteEssayContext).mockReset().mockResolvedValue(null);
+  vi.mocked(api.updateEssayAnnotation).mockReset().mockResolvedValue({});
+  [api.getEssay, api.createEssay, api.updateEssay, api.parseEssay, api.deleteEssay,
+    api.addEssayContext, api.addEssayAnnotation, api.essayChat, api.explainEssay,
+    api.request].forEach((fn) => vi.mocked(fn).mockReset());
+});
 
 const renderAt = (path) => render(
   <MemoryRouter initialEntries={[path]}>
@@ -54,9 +79,12 @@ describe('EssayMemoriser', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Add essay/i }));
     expect(screen.getByText(/Add an essay/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Set up practice/i })).toBeInTheDocument();
-    expect(screen.getByText(/uses AI to identify the essay’s structure/i)).toBeInTheDocument();
-    expect(screen.getByText(/Upload PDF/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Create workspace/i })).toBeInTheDocument();
+    expect(screen.getByText(/uses AI to map the essay’s structure/i)).toBeInTheDocument();
+    // PDFs attach as named files, never dumped as raw text into the textarea.
+    expect(screen.getByText(/Attach essay PDF/i)).toBeInTheDocument();
+    // Context can be supplied up front, beside the essay.
+    expect(screen.getByText(/Context library|Marker feedback, quote banks/i)).toBeInTheDocument();
     // The AI model is choosable before generating, like the lesson generator.
     fireEvent.click(screen.getByRole('button', { name: /GPT-5\.4 Mini/i }));
     expect(screen.getByRole('option', { name: /GPT-5\.5/i })).toBeInTheDocument();
@@ -71,13 +99,14 @@ describe('EssayMemoriser', () => {
     expect(card).toHaveAttribute('href', '/essays/essay-1');
   });
 
-  it('opens a workspace with Overview, Practice and Edit sections', async () => {
+  it('opens a workspace with Document, Context, Practice and Edit sections', async () => {
     api.getEssay.mockResolvedValue({ essay: parsedEssay });
     renderAt('/essays/essay-1');
 
     expect(await screen.findByRole('heading', { name: /Macbeth: ambition/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /All essays/i })).toHaveAttribute('href', '/essays');
-    expect(screen.getByRole('button', { name: /Overview/i })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: /Document/i })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: /Context/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Practice/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Edit$/i })).toBeInTheDocument();
 
@@ -145,12 +174,15 @@ describe('EssayMemoriser', () => {
     api.getEssay.mockResolvedValue({ essay: annotated });
     renderAt('/essays/essay-notes');
 
-    // Story view: the label renders as a marked annotation chip beside the
-    // section tag, and the note as a pencil line — outside the prose block.
-    expect(await screen.findByTitle(/not part of the exam prose/i)).toHaveTextContent('Cry');
-    expect(screen.getByText(/✎ two slots to fill/)).toBeInTheDocument();
-    const prose = screen.getByText(/To interrogate the moral crises/);
-    expect(prose.textContent).not.toContain('Cry');
+    // The label renders as a marked annotation beside the paragraph, and the
+    // note as a pencil line — both outside the prose itself.
+    const marked = await screen.findAllByTitle(/not part of the exam prose/i);
+    expect(marked.length).toBeGreaterThan(0);
+    expect(marked.some((el) => el.textContent.includes('Cry'))).toBe(true);
+    expect(screen.getAllByText(/✎ two slots to fill/).length).toBeGreaterThan(0);
+    screen.getAllByText(/To interrogate the moral crises/).forEach((prose) => {
+      expect(prose.textContent).not.toContain('Cry');
+    });
   });
 
   it('keeps the workspace tabs visible for an unparsed essay', async () => {
@@ -228,6 +260,104 @@ describe('EssayMemoriser', () => {
     fireEvent.change(input, { target: { value: "It's" } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(screen.getByText('100%')).toBeInTheDocument();
+  });
+
+
+  it('keeps source material in a context library, separate from the essay', async () => {
+    api.getEssay.mockResolvedValue({ essay: parsedEssay });
+    api.getEssayContext.mockResolvedValueOnce({
+      docs: [{ id: 'doc-1', title: 'Marker feedback', kind: 'text', chars: 420, preview: 'Push the analysis further…' }],
+    });
+    api.addEssayContext.mockResolvedValueOnce({
+      doc: { id: 'doc-2', title: 'Quote bank', kind: 'text', chars: 90, preview: 'the horror…' },
+    });
+    renderAt('/essays/essay-1?tab=context');
+
+    expect(await screen.findByText('Marker feedback')).toBeInTheDocument();
+    expect(screen.getByText(/1\/12 sources/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Add source/i }));
+    fireEvent.change(screen.getByLabelText(/Source name/i), { target: { value: 'Quote bank' } });
+    fireEvent.change(screen.getByLabelText(/Source text/i), { target: { value: 'the horror, the horror' } });
+    fireEvent.click(screen.getByRole('button', { name: /Add to context/i }));
+
+    await waitFor(() => expect(api.addEssayContext).toHaveBeenCalledWith('essay-1', {
+      title: 'Quote bank', kind: 'text', content: 'the horror, the horror',
+    }));
+    expect(await screen.findByText('Quote bank')).toBeInTheDocument();
+  });
+
+  it('adds a paragraph annotation from the document margin', async () => {
+    api.getEssay.mockResolvedValue({ essay: parsedEssay });
+    api.addEssayAnnotation.mockResolvedValueOnce({
+      annotation: { id: 'ann-1', paragraphIndex: 0, anchor: '', note: 'Link this back to the thesis.', kind: 'note', source: 'user' },
+    });
+    renderAt('/essays/essay-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: /Add a note to paragraph 1/i }));
+    fireEvent.change(screen.getByLabelText(/^Note text$/i), { target: { value: 'Link this back to the thesis.' } });
+    fireEvent.click(screen.getByRole('button', { name: /Save note/i }));
+
+    await waitFor(() => expect(api.addEssayAnnotation).toHaveBeenCalledWith('essay-1', {
+      paragraphIndex: 0, anchor: '', note: 'Link this back to the thesis.', kind: 'note',
+    }));
+    expect(await screen.findByText('Link this back to the thesis.')).toBeInTheDocument();
+  });
+
+  it('shows existing annotations in the margin and can delete one', async () => {
+    api.getEssay.mockResolvedValue({ essay: parsedEssay });
+    api.getEssayAnnotations.mockResolvedValueOnce({
+      annotations: [
+        { id: 'ann-1', paragraphIndex: 0, anchor: 'ambition over loyalty', note: 'Strong evidence here.', kind: 'note', source: 'user' },
+        { id: 'ann-2', paragraphIndex: 0, anchor: '', note: 'This paragraph argues X.', kind: 'explanation', source: 'ai' },
+      ],
+    });
+    renderAt('/essays/essay-1');
+
+    expect(await screen.findByText('Strong evidence here.')).toBeInTheDocument();
+    expect(screen.getByText('This paragraph argues X.')).toBeInTheDocument();
+    expect(screen.getByText('Explanation')).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /Delete note/i })[0]);
+    await waitFor(() => expect(api.deleteEssayAnnotation).toHaveBeenCalledWith('essay-1', 'ann-1'));
+  });
+
+  it('answers in the assistant and can push a suggestion into the margin', async () => {
+    api.getEssay.mockResolvedValue({ essay: parsedEssay });
+    api.essayChat.mockResolvedValueOnce({
+      reply: 'Your second paragraph leans on assertion rather than evidence.',
+      annotations: [{ paragraphIndex: 0, anchor: 'ambition over loyalty', note: 'Add a quote to support this.' }],
+    });
+    api.addEssayAnnotation.mockResolvedValueOnce({
+      annotation: { id: 'ann-9', paragraphIndex: 0, anchor: 'ambition over loyalty', note: 'Add a quote to support this.', kind: 'note', source: 'ai' },
+    });
+    renderAt('/essays/essay-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: /Ask about this essay/i }));
+    fireEvent.change(screen.getByLabelText(/Message the assistant/i), { target: { value: 'How is my evidence?' } });
+    fireEvent.click(screen.getByRole('button', { name: /Send message/i }));
+
+    expect(await screen.findByText(/leans on assertion/i)).toBeInTheDocument();
+    await waitFor(() => expect(api.essayChat).toHaveBeenCalledWith('essay-1', expect.objectContaining({
+      messages: [{ role: 'user', content: 'How is my evidence?' }],
+    })));
+
+    fireEvent.click(screen.getByRole('button', { name: /Add to margin/i }));
+    await waitFor(() => expect(api.addEssayAnnotation).toHaveBeenCalledWith('essay-1', {
+      paragraphIndex: 0, anchor: 'ambition over loyalty', note: 'Add a quote to support this.', kind: 'note',
+    }));
+  });
+
+  it('generates paragraph explanations on demand', async () => {
+    api.getEssay.mockResolvedValue({ essay: parsedEssay });
+    api.explainEssay.mockResolvedValueOnce({
+      annotations: [{ id: 'ex-1', paragraphIndex: 0, anchor: '', note: 'Argues ambition overrides loyalty.', kind: 'explanation', source: 'ai' }],
+    });
+    renderAt('/essays/essay-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: /Explain every paragraph/i }));
+    await waitFor(() => expect(api.explainEssay).toHaveBeenCalledWith('essay-1', expect.any(Object)));
+    expect(await screen.findByText('Argues ambition overrides loyalty.')).toBeInTheDocument();
   });
 
   it('penalises each uniquely revealed word once and persists hint-aware completion scoring', () => {
