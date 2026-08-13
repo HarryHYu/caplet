@@ -209,12 +209,23 @@ const QUOTE_PAIRS = [
   ['"', '"'],
   ['“', '”'],
   ['‘', '’'],
+  ['«', '»'],
+  ['„', '“'],
 ];
 
 function extractQuotes(paragraph) {
   const text = str(paragraph);
   const found = [];
   for (const [open, close] of QUOTE_PAIRS) {
+    // Straight quotes are directionless: with an ODD count (an unclosed or
+    // stray mark) sequential pairing would capture prose between a stray mark
+    // and the next real quote. Skip straight pairing for that paragraph and
+    // let curly pairs + anchored AI labels carry it — under-extracting is
+    // recoverable, fabricating a quote is not.
+    if (open === close) {
+      const count = text.split(open).length - 1;
+      if (count % 2 !== 0) continue;
+    }
     let from = 0;
     for (;;) {
       const start = text.indexOf(open, from);
@@ -223,19 +234,23 @@ function extractQuotes(paragraph) {
       if (end === -1) break;
       const content = text.slice(start + 1, end).trim();
       from = end + 1;
-      if (content.length >= 12 && content.length <= 400) found.push({ content, start });
+      if (content.length >= 12 && content.length <= 400) found.push({ content, start, end });
     }
   }
-  return found
-    .sort((a, b) => a.start - b.start)
-    .map((f) => f.content)
-    .slice(0, 20);
+  // A span fully inside another (e.g. a nested quote) keeps only the outer.
+  const ordered = found.sort((a, b) => a.start - b.start || b.end - a.end);
+  const kept = [];
+  for (const f of ordered) {
+    if (kept.some((k) => f.start >= k.start && f.end <= k.end)) continue;
+    kept.push(f);
+  }
+  return kept.map((f) => f.content).slice(0, 20);
 }
 
 // An AI-supplied quote is only trusted when it sits against real quotation
 // punctuation in the source — prose spans can never sneak in as "quotes".
-const OPEN_MARKS = new Set(['"', '“', '‘']);
-const CLOSE_MARKS = new Set(['"', '”']);
+const OPEN_MARKS = new Set(['"', '“', '‘', '«', '„']);
+const CLOSE_MARKS = new Set(['"', '”', '»', '“']);
 
 function isMarkAnchored(source, content) {
   const text = str(source);

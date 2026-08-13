@@ -820,3 +820,30 @@ describe('annotation segmentation (exam prose vs planning scaffold)', () => {
     expect(segments.length).toBeGreaterThan(0);
   });
 });
+
+describe('extractQuotes edge cases', () => {
+  it('skips straight-quote pairing when the marks are unbalanced (odd count)', () => {
+    // A stray/unclosed mark would otherwise pair with the NEXT quote's opener
+    // and capture prose between them.
+    const text = 'He said "unclosed and then later "a real quoted span here" follows.';
+    const quotes = extractQuotes(text);
+    expect(quotes).toEqual([]);
+  });
+
+  it('still extracts curly quotes when straight marks are unbalanced', () => {
+    const text = 'A stray " mark exists, yet “the curly quote survives intact” regardless.';
+    expect(extractQuotes(text)).toEqual(['the curly quote survives intact']);
+  });
+
+  it('keeps only the outer span for nested quotes', () => {
+    const text = 'He recalls “Marlow whispers ‘the horror of it all echoes’ to the crew” later.';
+    expect(extractQuotes(text)).toEqual(['Marlow whispers ‘the horror of it all echoes’ to the crew']);
+  });
+
+  it('supports guillemets and German low quotes', () => {
+    expect(extractQuotes('The critic writes «la gloire des vaincus» approvingly.'))
+      .toEqual(['la gloire des vaincus']);
+    expect(extractQuotes('Er schreibt \u201eDie Angst des Tormanns bleibt\u201c am Rand.'))
+      .toEqual(['Die Angst des Tormanns bleibt']);
+  });
+});
