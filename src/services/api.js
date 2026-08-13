@@ -1014,8 +1014,8 @@ class ApiService {
   }
 
   // AI explanations for every body paragraph (persisted as annotations).
-  async explainEssay(id, { model } = {}) {
-    return this._essayAIRequest(`/essays/${id}/explain`, { model });
+  async explainEssay(id, { model, paragraphIndex } = {}) {
+    return this._essayAIRequest(`/essays/${id}/explain`, { model, paragraphIndex });
   }
 
   async parseAssessmentReport({ text, fileName, subjects }) {

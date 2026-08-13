@@ -543,7 +543,9 @@ router.post('/:id/explain', requireAIConsent, loadOwnedEssay, requireParsedStruc
   try {
     const essay = req.essay;
     const model = ESSAY_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
-    const explanations = await explainEssay({ essay, model });
+    // Optional: explain a single paragraph instead of the whole essay.
+    const paragraphIndex = Number.isInteger(req.body?.paragraphIndex) ? req.body.paragraphIndex : null;
+    const explanations = await explainEssay({ essay, model, paragraphIndex });
 
     const created = [];
     for (const item of explanations) {

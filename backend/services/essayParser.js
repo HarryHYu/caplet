@@ -19,6 +19,7 @@
  * without OPENAI_API_KEY and this endpoint degrades with a 503.
  */
 const OpenAI = require('openai');
+const { samplingParams } = require('../utils/modelParams');
 
 let _client = null;
 function getClient() {
@@ -570,7 +571,6 @@ async function parseEssay(essayText, opts = {}) {
   }
 
   const chosenModel = opts.model || 'gpt-5.4-mini';
-  const isReasoning = chosenModel.startsWith('o') || chosenModel === 'gpt-5';
   const numbered = segments.map((s, i) => {
     const label = s.heading ? ` (heading: ${JSON.stringify(s.heading)})` : '';
     return `[P${i}]${label}\n${s.text}`;
@@ -584,7 +584,7 @@ async function parseEssay(essayText, opts = {}) {
       // plenty and guards against runaway output. The old design re-emitted
       // the entire essay and could silently exceed the completion ceiling.
       max_completion_tokens: 8000,
-      ...(isReasoning ? {} : { temperature: 0 }),
+      ...samplingParams(chosenModel, 0),
       messages: [
         { role: 'system', content: SYSTEM },
         { role: 'user', content: `Label the structure of this essay.\n\n${numbered}\n\nReturn ONLY the JSON object described.` },

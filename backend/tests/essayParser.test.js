@@ -648,7 +648,7 @@ describe('parseEssay (fake OpenAI client)', () => {
     ],
   };
 
-  it('(a) happy path: returns the assembled structure and sends model/max tokens/temperature 0', async () => {
+  it('(a) happy path: returns the assembled structure and sends model/max tokens, no temperature', async () => {
     const { client, create } = makeFakeClient(completionWith(HAPPY_LABELS));
 
     const structure = await parseEssay(ESSAY, { client, model: 'gpt-5.5' });
@@ -662,7 +662,8 @@ describe('parseEssay (fake OpenAI client)', () => {
     const args = create.mock.calls[0][0];
     expect(args.model).toBe('gpt-5.5');
     expect(args.max_completion_tokens).toBe(8000);
-    expect(args.temperature).toBe(0);
+    // gpt-5 family rejects a custom temperature — it must not be sent.
+    expect(args.temperature).toBeUndefined();
     expect(args.response_format).toEqual({ type: 'json_object' });
 
     const userMessage = args.messages.find((m) => m.role === 'user');

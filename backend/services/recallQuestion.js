@@ -8,6 +8,7 @@
  * server boots without OPENAI_API_KEY and this endpoint degrades with a 503.
  */
 const OpenAI = require('openai');
+const { samplingParams } = require('../utils/modelParams');
 
 let _client = null;
 function getClient() {
@@ -48,12 +49,11 @@ async function generateRecallQuestion(slideText, opts = {}) {
   }
 
   const chosenModel = opts.model || 'gpt-5.4-mini';
-  const isReasoning = chosenModel.startsWith('o') || chosenModel === 'gpt-5';
 
   const completion = await client.chat.completions.create({
     model: chosenModel,
     response_format: { type: 'json_object' },
-    ...(isReasoning ? {} : { temperature: 0.5 }),
+    ...samplingParams(chosenModel, 0.5),
     messages: [
       { role: 'system', content: SYSTEM },
       { role: 'user', content: `Slide text:\n\n${text}\n\nReturn ONLY {"question":"...","answer":"..."}.` },

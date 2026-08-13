@@ -6,6 +6,7 @@
  */
 const OpenAI = require('openai');
 const { slideToText } = require('./slideCategorizer');
+const { samplingParams } = require('../utils/modelParams');
 
 let _client = null;
 function getClient() {
@@ -58,12 +59,11 @@ async function summarizeSlides(items, opts = {}) {
   const userMsg = `${topic ? `Topic: ${topic}\n\n` : ''}Condense these ${items.length} flagged slides into a short revision summary slideshow.\n\n${sourceText}\n\nReturn ONLY {"slides":[...]}.`;
 
   const chosenModel = opts.model || 'gpt-5.4-mini';
-  const isReasoning = chosenModel.startsWith('o') || chosenModel === 'gpt-5';
 
   const completion = await client.chat.completions.create({
     model: chosenModel,
     response_format: { type: 'json_object' },
-    ...(isReasoning ? {} : { temperature: 0.4 }),
+    ...samplingParams(chosenModel, 0.4),
     messages: [
       { role: 'system', content: SYSTEM },
       { role: 'user', content: userMsg },

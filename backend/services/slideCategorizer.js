@@ -4,6 +4,7 @@
  * pattern in lessonAI.js so the server can boot without OPENAI_API_KEY.
  */
 const OpenAI = require('openai');
+const { samplingParams } = require('../utils/modelParams');
 
 let _client = null;
 function getClient() {
@@ -75,12 +76,11 @@ async function categorizeSlides(items, opts = {}) {
   const userMsg = `Here are ${items.length} flagged slides. Assign each a revision category.\n\n${lines.join('\n')}\n\nReturn ONLY {"assignments":[{"id":"...","category":"..."}]}.`;
 
   const chosenModel = opts.model || 'gpt-5.4-mini';
-  const isReasoning = chosenModel.startsWith('o') || chosenModel === 'gpt-5';
 
   const completion = await client.chat.completions.create({
     model: chosenModel,
     response_format: { type: 'json_object' },
-    ...(isReasoning ? {} : { temperature: 0.2 }),
+    ...samplingParams(chosenModel, 0.2),
     messages: [
       { role: 'system', content: SYSTEM },
       { role: 'user', content: userMsg },

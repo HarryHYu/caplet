@@ -89,7 +89,8 @@ describe('assistEssay', () => {
     expect(args.model).toBe('gpt-5.4-mini');
     expect(args.response_format).toEqual({ type: 'json_object' });
     expect(args.max_completion_tokens).toBe(2500);
-    expect(args.temperature).toBe(0.4);
+    // gpt-5 family rejects a custom temperature — it must not be sent.
+    expect(args.temperature).toBeUndefined();
 
     const system = args.messages[0];
     expect(system.role).toBe('system');
@@ -254,6 +255,31 @@ describe('explainEssay', () => {
     const { client } = makeClient({ explanations: [] });
     await expect(explainEssay({ essay: makeEssay({ parsedStructure: null }), client }))
       .rejects.toMatchObject({ status: 400, message: 'Set up practice first.' });
+  });
+
+  it('explains a single paragraph, keeping its REAL index in the prompt', async () => {
+    const { client, create } = makeClient({
+      explanations: [{ paragraphIndex: 1, note: 'This paragraph traces guilt through recurring blood imagery.' }],
+    });
+
+    const explanations = await explainEssay({ essay: makeEssay(), paragraphIndex: 1, client });
+
+    const prompt = create.mock.calls[0][0].messages[1].content;
+    expect(prompt).toContain('[P1]');
+    expect(prompt).not.toContain('[P0]'); // the other paragraph is not sent
+    expect(explanations).toEqual([
+      { paragraphIndex: 1, note: 'This paragraph traces guilt through recurring blood imagery.' },
+    ]);
+  });
+
+  it('falls back to explaining everything when paragraphIndex is out of bounds', async () => {
+    const { client, create } = makeClient({
+      explanations: [{ paragraphIndex: 0, note: 'A valid explanation of the first paragraph goes here.' }],
+    });
+    await explainEssay({ essay: makeEssay(), paragraphIndex: 99, client });
+    const prompt = create.mock.calls[0][0].messages[1].content;
+    expect(prompt).toContain('[P0]');
+    expect(prompt).toContain('[P1]');
   });
 
   it('sends the numbered full paragraphs and returns validated explanations', async () => {

@@ -1,4 +1,5 @@
 const OpenAI = require('openai');
+const { samplingParams } = require('../utils/modelParams');
 
 let client = null;
 
@@ -100,7 +101,7 @@ async function parseAssessmentReport(text, allowedSubjects, options = {}) {
   const completion = await openai.chat.completions.create({
     model: options.model || 'gpt-5.4-mini',
     response_format: { type: 'json_object' },
-    temperature: 0,
+    ...samplingParams(options.model || 'gpt-5.4-mini', 0),
     messages: [
       { role: 'system', content: SYSTEM },
       { role: 'user', content: `Allowed subjects:\n${subjects.join('\n')}\n\nReport text:\n${reportText.slice(0, 50000)}\n\nReturn only the required JSON.` },

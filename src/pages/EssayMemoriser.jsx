@@ -2077,6 +2077,7 @@ function EssayWorkspace({ essayId }) {
     const [chatOpen, setChatOpen] = useState(false);
     const [chatSeed, setChatSeed] = useState(null);
     const [explaining, setExplaining] = useState(false);
+    const [explainingIndex, setExplainingIndex] = useState(null);
     const [workspaceError, setWorkspaceError] = useState(null);
     // Guards async continuations against a workspace that switched essays.
     const essayIdRef = useRef(essayId);
@@ -2255,11 +2256,14 @@ function EssayWorkspace({ essayId }) {
         });
     }, [essayId, annotations]);
 
-    const explainParagraphs = useCallback(async () => {
-        setExplaining(true);
+    // paragraphIndex === null explains the whole essay; a number explains just
+    // that paragraph (same endpoint, same replace-in-place semantics).
+    const runExplain = useCallback(async (paragraphIndex = null) => {
+        if (paragraphIndex === null) setExplaining(true);
+        else setExplainingIndex(paragraphIndex);
         setWorkspaceError(null);
         try {
-            const res = await api.explainEssay(essayId, { model: parseModel });
+            const res = await api.explainEssay(essayId, { model: parseModel, paragraphIndex });
             if (essayIdRef.current !== essayId) return;
             const created = res?.annotations || [];
             setAnnotations((prev) => {
@@ -2270,9 +2274,15 @@ function EssayWorkspace({ essayId }) {
         } catch (e) {
             if (essayIdRef.current === essayId) setWorkspaceError(e?.message || 'Could not explain the paragraphs right now.');
         } finally {
-            if (essayIdRef.current === essayId) setExplaining(false);
+            if (essayIdRef.current === essayId) {
+                if (paragraphIndex === null) setExplaining(false);
+                else setExplainingIndex(null);
+            }
         }
     }, [essayId, parseModel]);
+
+    const explainParagraphs = useCallback(() => runExplain(null), [runExplain]);
+    const explainOneParagraph = useCallback((index) => runExplain(index), [runExplain]);
 
     const sendChat = useCallback(async (messages) => {
         const res = await api.essayChat(essayId, { messages, model: parseModel });
@@ -2472,6 +2482,8 @@ function EssayWorkspace({ essayId }) {
                                 onDelete={deleteAnnotation}
                                 onExplain={explainParagraphs}
                                 explaining={explaining}
+                                onExplainOne={explainOneParagraph}
+                                explainingIndex={explainingIndex}
                                 onAskAI={askAboutSelection}
                             />
                         </div>

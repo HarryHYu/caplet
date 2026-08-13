@@ -595,7 +595,18 @@ describe('Essay workspace routes', () => {
       expect(explainEssay).not.toHaveBeenCalled();
     });
 
-    it('persists explanation annotations, replacing any previous explanation per paragraph', async () => {
+    it('forwards a single paragraphIndex so one paragraph can be explained alone', async () => {
+    explainEssay.mockResolvedValue([{ paragraphIndex: 1, note: 'Just this paragraph.' }]);
+    const res = await request(app)
+      .post('/api/essays/e1/explain')
+      .send({ paragraphIndex: 1 });
+
+    expect(res.status).toBe(200);
+    expect(explainEssay).toHaveBeenCalledWith(expect.objectContaining({ paragraphIndex: 1 }));
+    expect(EssayAnnotation.destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('persists explanation annotations, replacing any previous explanation per paragraph', async () => {
       explainEssay.mockResolvedValue([
         { paragraphIndex: 0, note: 'Argues ambition drives the fall.' },
         { paragraphIndex: 1, note: 'Traces the blood imagery.' },
@@ -607,6 +618,7 @@ describe('Essay workspace routes', () => {
       expect(explainEssay).toHaveBeenCalledWith({
         essay: expect.objectContaining({ id: 'e1' }),
         model: 'gpt-5.5',
+        paragraphIndex: null, // whole-essay explain
       });
       // Old explanation for each returned paragraph is deleted first.
       expect(EssayAnnotation.destroy).toHaveBeenCalledTimes(2);

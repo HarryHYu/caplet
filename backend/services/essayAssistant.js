@@ -22,6 +22,7 @@
  */
 const OpenAI = require('openai');
 const { buildMatcher } = require('./essayParser');
+const { samplingParams } = require('../utils/modelParams');
 
 let _client = null;
 function getClient() {
@@ -44,8 +45,6 @@ const MAX_ANCHOR = 300;
 const MAX_PROPOSALS = 8;
 const MAX_EXPLAIN_PARAGRAPH = 8000;
 
-// Same reasoning-model check as essayParser: those models reject temperature.
-const isReasoningModel = (model) => model.startsWith('o') || model === 'gpt-5';
 
 function requireClient(opts) {
   const client = opts.client || getClient();
@@ -214,7 +213,7 @@ async function assistEssay(opts = {}) {
     model,
     response_format: { type: 'json_object' },
     max_completion_tokens: 2500,
-    ...(isReasoningModel(model) ? {} : { temperature: 0.4 }),
+    ...samplingParams(model, 0.4),
     messages: [
       { role: 'system', content: system },
       ...messages,
@@ -263,15 +262,24 @@ async function explainEssay(opts = {}) {
   }
 
   const model = opts.model || 'gpt-5.4-mini';
+  // An optional single-paragraph target: the paragraph keeps its REAL index in
+  // the prompt so the returned explanation lands on the right annotation.
+  const only = Number.isInteger(opts.paragraphIndex)
+    && opts.paragraphIndex >= 0
+    && opts.paragraphIndex < bodyParagraphs.length
+    ? opts.paragraphIndex
+    : null;
   const numbered = bodyParagraphs
-    .map((p, i) => `[P${i}]\n${clamp(str(p?.text), MAX_EXPLAIN_PARAGRAPH)}`)
+    .map((p, i) => ({ i, text: clamp(str(p?.text), MAX_EXPLAIN_PARAGRAPH) }))
+    .filter(({ i }) => only === null || i === only)
+    .map(({ i, text }) => `[P${i}]\n${text}`)
     .join('\n\n');
 
   const completion = await client.chat.completions.create({
     model,
     response_format: { type: 'json_object' },
     max_completion_tokens: 4000,
-    ...(isReasoningModel(model) ? {} : { temperature: 0.4 }),
+    ...samplingParams(model, 0.4),
     messages: [
       { role: 'system', content: EXPLAIN_SYSTEM },
       { role: 'user', content: `Explain each body paragraph of this essay.\n\n${numbered}\n\nReturn ONLY the JSON object described.` },

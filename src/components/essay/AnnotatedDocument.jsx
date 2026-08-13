@@ -88,20 +88,48 @@ function NoteCard({ annotation, active, onSelect, onDelete, onEdit }) {
     );
 }
 
-function NoteComposer({ anchor, onCancel, onSave, onAskAI }) {
+function NoteComposer({ anchor, onCancel, onSave, onAskAI, initialKind = 'note' }) {
     const [note, setNote] = useState('');
+    // Paragraph-level jottings can be saved either as a note or as THIS
+    // paragraph's explanation — the same slot the assistant writes into, so a
+    // hand-written explanation is a first-class alternative to generating one.
+    const [kind, setKind] = useState(anchor ? 'note' : initialKind);
     const ref = useRef(null);
     useEffect(() => { ref.current?.focus(); }, []);
+
+    const isExplanation = kind === 'explanation';
 
     return (
         <div className="rounded-xl border border-accent/50 bg-surface-raised p-3 shadow-[0_10px_28px_-18px_rgba(20,20,18,0.5)]">
             <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-accent">New note</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
+                    {isExplanation ? 'Your explanation' : 'New note'}
+                </span>
                 <button type="button" aria-label="Cancel note" onClick={onCancel}
                     className="rounded p-1 text-text-dim hover:text-text-primary">
                     <XMarkIcon className="h-3.5 w-3.5" />
                 </button>
             </div>
+            {!anchor && (
+                <div role="group" aria-label="Note type" className="mt-2 flex items-center gap-1 rounded-lg border border-line-soft p-0.5">
+                    {[
+                        { key: 'note', label: 'Note' },
+                        { key: 'explanation', label: 'Explanation' },
+                    ].map((opt) => (
+                        <button
+                            key={opt.key}
+                            type="button"
+                            aria-pressed={kind === opt.key}
+                            onClick={() => setKind(opt.key)}
+                            className={`flex-1 rounded-md px-2 py-1 text-[10px] font-bold transition-colors ${
+                                kind === opt.key ? 'bg-accent text-white' : 'text-text-dim hover:text-text-primary'
+                            }`}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+            )}
             {anchor && (
                 <p className="mt-1.5 border-l-2 border-accent/60 pl-2 font-serif text-[11px] italic leading-snug text-text-dim line-clamp-3">
                     “{anchor}”
@@ -112,15 +140,19 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI }) {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={4}
-                placeholder={anchor ? 'What matters about this bit?' : 'A note for this paragraph…'}
-                aria-label="Note text"
+                placeholder={anchor
+                    ? 'What matters about this bit?'
+                    : isExplanation
+                        ? 'In your own words: what does this paragraph argue, and how?'
+                        : 'A note for this paragraph…'}
+                aria-label={isExplanation ? 'Explanation text' : 'Note text'}
                 className="mt-2 w-full rounded-lg border border-line-soft bg-surface-body px-2 py-1.5 text-xs text-text-primary outline-none focus:border-accent"
-                onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && note.trim()) onSave(note.trim()); }}
+                onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && note.trim()) onSave(note.trim(), kind); }}
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
-                <button type="button" disabled={!note.trim()} onClick={() => onSave(note.trim())}
+                <button type="button" disabled={!note.trim()} onClick={() => onSave(note.trim(), kind)}
                     className="rounded-lg bg-accent px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-40">
-                    Save note
+                    {isExplanation ? 'Save explanation' : 'Save note'}
                 </button>
                 {onAskAI && (
                     <button type="button" onClick={onAskAI}
@@ -137,6 +169,7 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI }) {
 function ParagraphBlock({
     paragraph, index, annotations, activeId, onSelectNote,
     onStartNote, onSaveNote, onDeleteNote, onEditNote, composer, onCancelComposer, onAskAI,
+    onExplainOne, explainingIndex,
 }) {
     const textRef = useRef(null);
     const text = String(paragraph.text || '');
@@ -191,6 +224,8 @@ function ParagraphBlock({
         onStartNote(index, raw);
     };
 
+    const hasExplanation = annotations.some((a) => a.kind === 'explanation');
+
     return (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-8">
             <div className="group relative">
@@ -202,7 +237,7 @@ function ParagraphBlock({
                         type="button"
                         aria-label={`Add a note to paragraph ${index + 1}`}
                         title="Add a paragraph note"
-                        onClick={() => onStartNote(index, '')}
+                        onClick={() => onStartNote(index, '', 'note')}
                         className="grid h-6 w-6 place-items-center rounded-full border border-line-soft bg-surface-raised text-text-dim opacity-0 transition-opacity hover:border-accent hover:text-accent focus:opacity-100 group-hover:opacity-100"
                     >
                         <PlusIcon className="h-3.5 w-3.5" />
@@ -239,9 +274,13 @@ function ParagraphBlock({
                 </p>
 
                 <div className="mt-2 flex items-center gap-3 lg:hidden">
-                    <button type="button" onClick={() => onStartNote(index, '')}
+                    <button type="button" onClick={() => onStartNote(index, '', 'note')}
                         className="inline-flex items-center gap-1 text-[11px] font-bold text-text-dim hover:text-accent">
-                        <PlusIcon className="h-3 w-3" /> Note on ¶{index + 1}
+                        <PlusIcon className="h-3 w-3" /> Note
+                    </button>
+                    <button type="button" onClick={() => onStartNote(index, '', 'explanation')}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-text-dim hover:text-violet-500">
+                        <PlusIcon className="h-3 w-3" /> Explain
                     </button>
                     <span className="text-[11px] text-text-dim">Select text to note a phrase</span>
                 </div>
@@ -263,7 +302,8 @@ function ParagraphBlock({
                     <NoteComposer
                         anchor={composer.anchor}
                         onCancel={onCancelComposer}
-                        onSave={(note) => onSaveNote(index, composer.anchor, note)}
+                        initialKind={composer.kind || 'note'}
+                        onSave={(note, kind) => onSaveNote(index, composer.anchor, note, kind)}
                         onAskAI={onAskAI ? () => onAskAI(index, composer.anchor) : undefined}
                     />
                 )}
@@ -277,11 +317,27 @@ function ParagraphBlock({
                         onEdit={onEditNote}
                     />
                 ))}
-                {!composer && annotations.length === 0 && (
-                    <button type="button" onClick={() => onStartNote(index, '')}
-                        className="hidden w-full rounded-xl border border-dashed border-line-soft px-3 py-2 text-left text-[11px] font-medium text-text-dim transition-colors hover:border-accent hover:text-accent lg:block">
-                        + Add a note
-                    </button>
+                {!composer && (
+                    <div className="hidden gap-2 lg:flex">
+                        <button type="button" onClick={() => onStartNote(index, '', 'note')}
+                            className="flex-1 rounded-xl border border-dashed border-line-soft px-2.5 py-2 text-left text-[11px] font-medium text-text-dim transition-colors hover:border-accent hover:text-accent">
+                            + Note
+                        </button>
+                        {!hasExplanation && (
+                            <button type="button" onClick={() => onStartNote(index, '', 'explanation')}
+                                className="flex-1 rounded-xl border border-dashed border-line-soft px-2.5 py-2 text-left text-[11px] font-medium text-text-dim transition-colors hover:border-violet-400 hover:text-violet-500">
+                                + Explain
+                            </button>
+                        )}
+                        {onExplainOne && (
+                            <button type="button" onClick={() => onExplainOne(index)} disabled={explainingIndex === index}
+                                aria-label={`Explain paragraph ${index + 1} with AI`}
+                                title="Let the assistant explain this paragraph"
+                                className="grid h-[34px] w-9 shrink-0 place-items-center rounded-xl border border-dashed border-line-soft text-text-dim transition-colors hover:border-accent hover:text-accent disabled:opacity-40">
+                                <SparklesIcon className={`h-3.5 w-3.5 ${explainingIndex === index ? 'animate-pulse' : ''}`} />
+                            </button>
+                        )}
+                    </div>
                 )}
             </div>
         </div>
@@ -297,6 +353,8 @@ export default function AnnotatedDocument({
     onExplain,
     explaining,
     onAskAI,
+    onExplainOne,
+    explainingIndex,
 }) {
     const structure = essay?.parsedStructure || {};
     const paragraphs = structure.bodyParagraphs || [];
@@ -313,13 +371,15 @@ export default function AnnotatedDocument({
         return map;
     }, [annotations]);
 
-    const startNote = useCallback((paragraphIndex, anchor) => {
-        setComposer({ paragraphIndex, anchor });
+    const startNote = useCallback((paragraphIndex, anchor, kind = 'note') => {
+        setComposer({ paragraphIndex, anchor, kind });
         setActiveId(null);
     }, []);
 
-    const saveNote = useCallback(async (paragraphIndex, anchor, note) => {
-        await onAdd({ paragraphIndex, anchor, note, kind: 'note' });
+    const saveNote = useCallback(async (paragraphIndex, anchor, note, kind = 'note') => {
+        // A hand-written explanation replaces whatever explanation the
+        // paragraph had, exactly like re-running the assistant on it.
+        await onAdd({ paragraphIndex, anchor, note, kind: kind === 'explanation' ? 'explanation' : 'note' });
         setComposer(null);
     }, [onAdd]);
 
@@ -369,6 +429,8 @@ export default function AnnotatedDocument({
                         composer={composer?.paragraphIndex === i ? composer : null}
                         onCancelComposer={() => setComposer(null)}
                         onAskAI={onAskAI}
+                        onExplainOne={onExplainOne}
+                        explainingIndex={explainingIndex}
                     />
                 ))}
             </div>
@@ -382,7 +444,7 @@ export default function AnnotatedDocument({
 
             <p className="mt-8 flex items-center gap-2 border-t border-line-soft pt-4 text-[11px] text-text-dim">
                 <ChatBubbleLeftEllipsisIcon className="h-3.5 w-3.5" />
-                Select any words to note a phrase, or use ✚ for a whole paragraph. The essay text itself is edited in the Edit tab.
+                Select any words to note a phrase, or use ✚ for a whole paragraph. Write your own explanation, or let the assistant draft one — the essay text itself is edited in the Edit tab.
             </p>
         </div>
     );
