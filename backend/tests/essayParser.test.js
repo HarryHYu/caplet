@@ -140,14 +140,24 @@ describe('firstSentence', () => {
 });
 
 describe('extractQuotes', () => {
-  it('extracts double straight-quoted spans including the marks', () => {
+  it('extracts the content of double straight-quoted spans (marks stripped)', () => {
     expect(extractQuotes('He wrote "power tends to corrupt" in a letter.'))
-      .toEqual(['"power tends to corrupt"']);
+      .toEqual(['power tends to corrupt']);
   });
 
-  it('extracts curly-quoted spans including the marks', () => {
+  it('extracts the content of curly-quoted spans (marks stripped)', () => {
     expect(extractQuotes('He admits “no spur to prick the sides” early on.'))
-      .toEqual(['“no spur to prick the sides”']);
+      .toEqual(['no spur to prick the sides']);
+  });
+
+  it('extracts curly-single-quoted spans (an opening ‘ is never an apostrophe)', () => {
+    expect(extractQuotes('He calls it ‘a walking shadow on the stage’ in the end.'))
+      .toEqual(['a walking shadow on the stage']);
+  });
+
+  it('returns interleaved mark styles in source order', () => {
+    expect(extractQuotes('First “curly quoted span here” then "straight quoted span here" after.'))
+      .toEqual(['curly quoted span here', 'straight quoted span here']);
   });
 
   it('applies the 12-char minimum for double quotes', () => {
@@ -167,8 +177,8 @@ describe('extractQuotes', () => {
     const paragraph = Array.from({ length: 25 }, (_, i) => `"quote number ${String(i).padStart(2, '0')}"`).join(' and ');
     const quotes = extractQuotes(paragraph);
     expect(quotes).toHaveLength(20);
-    expect(quotes[0]).toBe('"quote number 00"');
-    expect(quotes[19]).toBe('"quote number 19"');
+    expect(quotes[0]).toBe('quote number 00');
+    expect(quotes[19]).toBe('quote number 19');
   });
 
   it('returns [] for empty or nullish input', () => {
@@ -270,12 +280,13 @@ describe('assembleFromLabels', () => {
     expect(structure.bodyParagraphs[1].text).toBe(BODY2);
     // Topic sentence snapped to the source's curly apostrophe.
     expect(structure.bodyParagraphs[0].topicSentence).toBe('Macbeth’s soliloquy exposes his doubt.');
-    // Quotes snapped to the source's curly marks; highLeverage preserved.
+    // Mark-paired detection provides the quote content (marks stripped); the
+    // matching AI label stars it as high-leverage without duplicating it.
     expect(structure.bodyParagraphs[0].quotes).toEqual([
-      { text: '“no spur to prick the sides of my intent”', highLeverage: true },
+      { text: 'no spur to prick the sides of my intent', highLeverage: true },
     ]);
     expect(structure.bodyParagraphs[1].quotes).toEqual([
-      { text: '“will have blood”', highLeverage: false },
+      { text: 'will have blood', highLeverage: false },
     ]);
     expect(structure.bodyParagraphs[0].techniques).toEqual(['soliloquy']);
   });
@@ -317,7 +328,7 @@ describe('assembleFromLabels', () => {
     expect(structure.bodyParagraphs[0].topicSentence).toBe('Ambition is the engine of tragedy.');
   });
 
-  it('(e) drops unfindable AI quotes and fills in regex-extracted quotes instead', () => {
+  it('(e) mark-paired quotes are authoritative; unfindable AI quotes are dropped', () => {
     const labels = {
       introIndex: null,
       conclusionIndex: null,
@@ -330,11 +341,11 @@ describe('assembleFromLabels', () => {
     };
     const structure = assembleFromLabels(labels, [BODY1]);
     expect(structure.bodyParagraphs[0].quotes).toEqual([
-      { text: '“no spur to prick the sides of my intent”', highLeverage: false },
+      { text: 'no spur to prick the sides of my intent', highLeverage: false },
     ]);
   });
 
-  it('(e2) does not add regex quotes when at least one AI quote was findable', () => {
+  it('(e2) an AI quote matching a detected quote stars it instead of duplicating', () => {
     const labels = {
       introIndex: null,
       conclusionIndex: null,
@@ -350,7 +361,22 @@ describe('assembleFromLabels', () => {
     };
     const structure = assembleFromLabels(labels, [BODY1, BODY2]);
     expect(structure.bodyParagraphs[1].quotes).toEqual([
-      { text: '“will have blood”', highLeverage: true },
+      { text: 'will have blood', highLeverage: true },
+    ]);
+  });
+
+  it('(e3) an AI quote NOT anchored to quotation marks is rejected outright', () => {
+    const para = 'Conrad frames "the fascination of the abomination" while humanity urges restraint always.';
+    const labels = {
+      introIndex: null,
+      conclusionIndex: null,
+      bodyParagraphs: [
+        { index: 0, quotes: [{ text: 'humanity urges restraint always', highLeverage: true }] },
+      ],
+    };
+    const structure = assembleFromLabels(labels, [para]);
+    expect(structure.bodyParagraphs[0].quotes).toEqual([
+      { text: 'the fascination of the abomination', highLeverage: false },
     ]);
   });
 
@@ -487,7 +513,7 @@ describe('fallbackStructure', () => {
       expect(p.techniques).toEqual([]);
     });
     expect(structure.bodyParagraphs[1].quotes).toEqual([
-      { text: '“no spur to prick the sides of my intent”', highLeverage: false },
+      { text: 'no spur to prick the sides of my intent', highLeverage: false },
     ]);
     expect(structure.bodyParagraphs[3].quotes).toEqual([]);
   });

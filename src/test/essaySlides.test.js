@@ -9,6 +9,7 @@ import {
   quoteItemId,
   highlightSpansInText,
   buildAnnotatedParagraph,
+  isLikelyQuote,
 } from '../lib/essaySlides';
 
 const structure = {
@@ -22,7 +23,7 @@ const structure = {
     },
     {
       topicSentence: 'Guilt manifests physically throughout the play.',
-      text: 'Guilt manifests physically throughout the play. "Out, damned spot" reveals her unraveling.',
+      text: 'Guilt manifests physically throughout the play. "Out, damned spot" reveals her unraveling, for "blood will have blood" in the end.',
       quotes: [
         { text: 'Out, damned spot', highLeverage: false },
         { text: 'blood will have blood', highLeverage: true },
@@ -69,7 +70,40 @@ describe('buildTopicSentenceCloze', () => {
   });
 });
 
+describe('isLikelyQuote', () => {
+  it('trusts mark-wrapped and mark-adjacent quotes', () => {
+    expect(isLikelyQuote('He said "stop the car" now.', 'stop the car')).toBe(true);
+    expect(isLikelyQuote('irrelevant', '“wrapped in curly marks”')).toBe(true);
+    expect(isLikelyQuote('irrelevant', '‘curly single wrapped’')).toBe(true);
+  });
+
+  it('rejects prose spans and straight-single-wrapped junk from old parses', () => {
+    // The possessive-apostrophe bug pattern: a slice of the student's own prose.
+    expect(isLikelyQuote(
+      "humanity's propensity to use violence, informed by Leopold II's atrocities.",
+      's propensity to use violence, informed by Leopold II',
+    )).toBe(false);
+    expect(isLikelyQuote('any text', "'s propensity to use violence'")).toBe(false);
+    expect(isLikelyQuote('plain prose with no marks at all', 'prose with no marks')).toBe(false);
+  });
+});
+
 describe('buildQuoteCards', () => {
+  it('drops stored quotes that are not visibly quotations', () => {
+    const slide = buildQuoteCards({
+      bodyParagraphs: [{
+        text: "humanity's propensity to use violence informs the reading. \"the horror, the horror\" lingers.",
+        quotes: [
+          { text: 's propensity to use violence informs the reading', highLeverage: false },
+          { text: 'the horror, the horror', highLeverage: true },
+        ],
+        techniques: [],
+      }],
+    });
+    expect(slide.cards).toHaveLength(1);
+    expect(slide.cards[0].front).toContain('the horror');
+  });
+
   it('builds a carousel cards slide across all quotes, starring high-leverage ones', () => {
     const slide = buildQuoteCards(structure);
     expect(slide.type).toBe('cards');
@@ -143,10 +177,22 @@ describe('buildAnnotatedParagraph', () => {
     const segments = buildAnnotatedParagraph(structure.bodyParagraphs[1]);
     const joined = segments.map((s) => s.text).join('');
     expect(joined).toBe(structure.bodyParagraphs[1].text);
-    // "blood will have blood" is a quote on the paragraph object but doesn't
-    // occur verbatim in this paragraph's text — it must be silently skipped.
-    expect(segments.filter((s) => s.type === 'quote')).toHaveLength(1);
+    expect(segments.filter((s) => s.type === 'quote')).toHaveLength(2);
     expect(segments.find((s) => s.type === 'topic')).toBeTruthy();
+  });
+
+  it('silently skips quotes that are not verbatim, mark-anchored substrings', () => {
+    const paragraph = {
+      topicSentence: 'Guilt manifests physically.',
+      text: 'Guilt manifests physically. "Out, damned spot" reveals her unraveling.',
+      quotes: [
+        { text: 'Out, damned spot', highLeverage: false },
+        { text: 'a paraphrase that never appears', highLeverage: true },
+      ],
+    };
+    const segments = buildAnnotatedParagraph(paragraph);
+    expect(segments.map((s) => s.text).join('')).toBe(paragraph.text);
+    expect(segments.filter((s) => s.type === 'quote')).toHaveLength(1);
   });
 
   it('highlights every quote when all are verbatim substrings of the text', () => {

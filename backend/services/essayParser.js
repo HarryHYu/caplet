@@ -197,21 +197,66 @@ function firstSentence(paragraph) {
 }
 
 /**
- * Deterministic quote extraction — exact source slices including the marks.
- * DOUBLE quotes only: single quotes are indistinguishable from possessive
- * apostrophes ("humanity's … Leopold II's") without real parsing, and a wrong
- * split turns the student's own prose into garbage "quotes". Single-quoted
- * evidence still arrives via the AI labels, which are verbatim-validated.
+ * Deterministic, mark-paired quote extraction — the AUTHORITATIVE source of
+ * quotes. Walks balanced quotation-mark pairs and returns the content between
+ * them (marks stripped), in source order. Straight single quotes are never
+ * treated as quote marks: they are indistinguishable from possessive
+ * apostrophes ("humanity's … Leopold II's") and a wrong split turns the
+ * student's own prose into garbage "quotes". Curly single quotes are safe —
+ * an opening ‘ is not an apostrophe.
  */
+const QUOTE_PAIRS = [
+  ['"', '"'],
+  ['“', '”'],
+  ['‘', '’'],
+];
+
 function extractQuotes(paragraph) {
-  const out = [];
-  const re = /["“]([^"“”]{12,400})["”]/g;
-  let match;
-  while ((match = re.exec(str(paragraph))) !== null && out.length < 20) {
-    out.push(match[0]);
+  const text = str(paragraph);
+  const found = [];
+  for (const [open, close] of QUOTE_PAIRS) {
+    let from = 0;
+    for (;;) {
+      const start = text.indexOf(open, from);
+      if (start === -1) break;
+      const end = text.indexOf(close, start + 1);
+      if (end === -1) break;
+      const content = text.slice(start + 1, end).trim();
+      from = end + 1;
+      if (content.length >= 12 && content.length <= 400) found.push({ content, start });
+    }
   }
-  return out;
+  return found
+    .sort((a, b) => a.start - b.start)
+    .map((f) => f.content)
+    .slice(0, 20);
 }
+
+// An AI-supplied quote is only trusted when it sits against real quotation
+// punctuation in the source — prose spans can never sneak in as "quotes".
+const OPEN_MARKS = new Set(['"', '“', '‘']);
+const CLOSE_MARKS = new Set(['"', '”']);
+
+function isMarkAnchored(source, content) {
+  const text = str(source);
+  const needle = str(content);
+  if (!needle) return false;
+  let at = text.indexOf(needle);
+  while (at !== -1) {
+    const before = at > 0 ? text[at - 1] : '';
+    const after = text[at + needle.length] || '';
+    if (OPEN_MARKS.has(before) || CLOSE_MARKS.has(after)) return true;
+    at = text.indexOf(needle, at + 1);
+  }
+  return false;
+}
+
+const stripQuoteMarks = (s) => str(s)
+  .replace(/^["“‘\s]+/, '')
+  .replace(/["”’\s]+$/, '')
+  .trim();
+
+const quoteKey = (s) => stripQuoteMarks(s).toLowerCase().replace(/\s+/g, ' ');
 
 /**
  * Locates near-verbatim needles inside `source` tolerating whitespace runs,
@@ -402,22 +447,32 @@ function assembleFromLabels(labels, rawSegments) {
 
     const matcher = buildMatcher(source);
     const topicSentence = (ai.topicSentence && matcher.find(ai.topicSentence)) || firstSentence(source);
-    const quotes = [];
-    const seen = new Set();
+
+    // Quotes: hardcoded mark-pairing FIRST (authoritative), then the AI's
+    // labels — which may star a detected quote as high-leverage or add one
+    // the pairing missed, but ONLY if it is anchored to real quotation
+    // punctuation in this paragraph. The model alone can never mint a quote.
+    const quotes = extractQuotes(source).map((text) => ({ text, highLeverage: false }));
+    const byKey = new Map(quotes.map((q, idx) => [quoteKey(q.text), idx]));
     for (const q of (Array.isArray(ai.quotes) ? ai.quotes : []).slice(0, 20)) {
       const obj = q && typeof q === 'object' ? q : { text: q };
-      // Quotes must live inside THIS paragraph, or annotation cannot place them.
       const snapped = matcher.find(obj.text);
-      if (!snapped || seen.has(snapped)) continue;
-      seen.add(snapped);
-      quotes.push({ text: snapped, highLeverage: obj.highLeverage === true });
-    }
-    if (!quotes.length) {
-      for (const q of extractQuotes(source)) {
-        if (seen.has(q)) continue;
-        seen.add(q);
-        quotes.push({ text: q, highLeverage: false });
+      if (!snapped) continue;
+      const content = stripQuoteMarks(snapped);
+      if (content.length < 4) continue;
+      const key = quoteKey(content);
+      let hit = byKey.get(key);
+      if (hit === undefined) {
+        const contained = [...byKey.entries()].find(([k]) => k.includes(key) || key.includes(k));
+        if (contained) hit = contained[1];
       }
+      if (hit !== undefined) {
+        if (obj.highLeverage === true) quotes[hit].highLeverage = true;
+        continue;
+      }
+      if (quotes.length >= 20 || !isMarkAnchored(source, content)) continue;
+      quotes.push({ text: content, highLeverage: obj.highLeverage === true });
+      byKey.set(key, quotes.length - 1);
     }
     bodyParagraphs.push({
       heading: segment.heading,

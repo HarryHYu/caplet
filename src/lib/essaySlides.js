@@ -93,6 +93,26 @@ export function buildTopicSentenceCloze(paragraph, pIdx) {
 }
 
 /**
+ * Guard against garbage "quotes" (old parses could store spans of the
+ * student's own prose bracketed by possessive apostrophes). A stored quote is
+ * trusted only when it is visibly a quotation: wrapped in double/curly marks
+ * itself, or sitting against double-quote punctuation in the paragraph text.
+ * Straight-single-wrapped strings are exactly the junk pattern — rejected.
+ */
+export function isLikelyQuote(paragraphText, quoteText) {
+  const text = String(paragraphText || '');
+  const q = String(quoteText || '').trim();
+  if (!q) return false;
+  if (/^["“].*["”]$/.test(q) || /^‘.*’$/.test(q)) return true;
+  if (/^'.*'$/.test(q)) return false;
+  const at = text.indexOf(q);
+  if (at === -1) return false;
+  const before = at > 0 ? text[at - 1] : '';
+  const after = text[at + q.length] || '';
+  return ['"', '“', '‘'].includes(before) || ['"', '”'].includes(after);
+}
+
+/**
  * One carousel `cards` slide drilling every quote (front) against the
  * paragraph's named techniques (back). High-leverage quotes are starred.
  * Returns null if the essay has no quotes.
@@ -103,7 +123,7 @@ export function buildQuoteCards(structure) {
   paras.forEach((p, i) => {
     (p?.quotes || []).forEach((q) => {
       const text = String(q?.text || '').trim();
-      if (!text) return;
+      if (!text || !isLikelyQuote(p?.text, text)) return;
       const techniques = (p?.techniques || []).filter(Boolean).join(', ');
       cards.push({
         front: q.highLeverage ? `${text}  ⭐` : text,
@@ -201,7 +221,9 @@ export function buildAnnotatedParagraph(paragraph) {
   const markers = [];
   if (p.topicSentence) markers.push({ needle: p.topicSentence, type: 'topic' });
   (p.quotes || []).forEach((q) => {
-    if (q?.text) markers.push({ needle: q.text, type: 'quote', meta: { highLeverage: !!q.highLeverage } });
+    if (q?.text && isLikelyQuote(p.text, q.text)) {
+      markers.push({ needle: q.text, type: 'quote', meta: { highLeverage: !!q.highLeverage } });
+    }
   });
   return highlightSpansInText(p.text, markers);
 }
