@@ -1018,6 +1018,22 @@ class ApiService {
     return this._essayAIRequest(`/essays/${id}/explain`, { model, paragraphIndex });
   }
 
+  // Select-and-fix: draft a drop-in replacement for a selected span. Nothing
+  // is persisted — the proposal comes back for an explicit Accept.
+  async rewriteEssay(id, { anchor, paragraphIndex, instruction, model }) {
+    return this._essayAIRequest(`/essays/${id}/rewrite`, {
+      anchor, paragraphIndex, instruction, model,
+    });
+  }
+
+  // The Accept: applies a proposed replacement to the essay text (no AI).
+  async applyEssayRewrite(id, { anchor, replacement, paragraphIndex }) {
+    return this.request(`/essays/${id}/rewrite/apply`, {
+      method: 'POST',
+      body: JSON.stringify({ anchor, replacement, paragraphIndex }),
+    });
+  }
+
   async parseAssessmentReport({ text, fileName, subjects }) {
     return this.request('/assessment-reports/parse', {
       method: 'POST',

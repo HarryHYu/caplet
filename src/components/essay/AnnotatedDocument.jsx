@@ -88,22 +88,42 @@ function NoteCard({ annotation, active, onSelect, onDelete, onEdit }) {
     );
 }
 
-function NoteComposer({ anchor, onCancel, onSave, onAskAI, initialKind = 'note' }) {
+function NoteComposer({ anchor, onCancel, onSave, onAskAI, onFix, initialKind = 'note' }) {
     const [note, setNote] = useState('');
     // Paragraph-level jottings can be saved either as a note or as THIS
     // paragraph's explanation — the same slot the assistant writes into, so a
     // hand-written explanation is a first-class alternative to generating one.
+    // A SELECTION composer instead toggles between a note and "Fix with AI":
+    // complain about the selected words and the assistant drafts a drop-in
+    // replacement (applied only after an explicit Accept).
     const [kind, setKind] = useState(anchor ? 'note' : initialKind);
+    const [busy, setBusy] = useState(false);
     const ref = useRef(null);
     useEffect(() => { ref.current?.focus(); }, []);
 
     const isExplanation = kind === 'explanation';
+    const isFix = kind === 'fix';
+
+    const submit = async () => {
+        const trimmed = note.trim();
+        if (!trimmed || busy) return;
+        if (isFix) {
+            setBusy(true);
+            try {
+                await onFix(trimmed);
+            } finally {
+                setBusy(false);
+            }
+            return;
+        }
+        onSave(trimmed, kind);
+    };
 
     return (
         <div className="rounded-xl border border-accent/50 bg-surface-raised p-3 shadow-[0_10px_28px_-18px_rgba(20,20,18,0.5)]">
             <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
-                    {isExplanation ? 'Your explanation' : 'New note'}
+                    {isFix ? 'Fix with AI' : isExplanation ? 'Your explanation' : 'New note'}
                 </span>
                 <button type="button" aria-label="Cancel note" onClick={onCancel}
                     className="rounded p-1 text-text-dim hover:text-text-primary">
@@ -130,6 +150,26 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI, initialKind = 'note' 
                     ))}
                 </div>
             )}
+            {anchor && onFix && (
+                <div role="group" aria-label="Selection action" className="mt-2 flex items-center gap-1 rounded-lg border border-line-soft p-0.5">
+                    {[
+                        { key: 'note', label: 'Note' },
+                        { key: 'fix', label: 'Fix with AI' },
+                    ].map((opt) => (
+                        <button
+                            key={opt.key}
+                            type="button"
+                            aria-pressed={kind === opt.key}
+                            onClick={() => setKind(opt.key)}
+                            className={`flex-1 rounded-md px-2 py-1 text-[10px] font-bold transition-colors ${
+                                kind === opt.key ? 'bg-accent text-white' : 'text-text-dim hover:text-text-primary'
+                            }`}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+            )}
             {anchor && (
                 <p className="mt-1.5 border-l-2 border-accent/60 pl-2 font-serif text-[11px] italic leading-snug text-text-dim line-clamp-3">
                     “{anchor}”
@@ -141,20 +181,22 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI, initialKind = 'note' 
                 onChange={(e) => setNote(e.target.value)}
                 rows={4}
                 placeholder={anchor
-                    ? 'What matters about this bit?'
+                    ? isFix
+                        ? 'What bothers you about it? e.g. I don’t want this word — find a better one.'
+                        : 'What matters about this bit?'
                     : isExplanation
                         ? 'In your own words: what does this paragraph argue, and how?'
                         : 'A note for this paragraph…'}
-                aria-label={isExplanation ? 'Explanation text' : 'Note text'}
+                aria-label={isFix ? 'Fix instruction' : isExplanation ? 'Explanation text' : 'Note text'}
                 className="mt-2 w-full rounded-lg border border-line-soft bg-surface-body px-2 py-1.5 text-xs text-text-primary outline-none focus:border-accent"
-                onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && note.trim()) onSave(note.trim(), kind); }}
+                onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') submit(); }}
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
-                <button type="button" disabled={!note.trim()} onClick={() => onSave(note.trim(), kind)}
+                <button type="button" disabled={!note.trim() || busy} onClick={submit}
                     className="rounded-lg bg-accent px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-40">
-                    {isExplanation ? 'Save explanation' : 'Save note'}
+                    {isFix ? (busy ? 'Drafting…' : 'Draft a fix') : isExplanation ? 'Save explanation' : 'Save note'}
                 </button>
-                {onAskAI && (
+                {onAskAI && !isFix && (
                     <button type="button" onClick={onAskAI}
                         className="inline-flex items-center gap-1 rounded-lg border border-line-soft px-2.5 py-1 text-[11px] font-bold text-text-dim hover:border-accent hover:text-accent transition-colors">
                         <SparklesIcon className="h-3 w-3" /> Ask the assistant
@@ -165,11 +207,49 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI, initialKind = 'note' 
     );
 }
 
+/**
+ * A drafted fix waiting on the student's verdict: the selected words struck
+ * out, the drop-in replacement beneath them, and an explicit Accept/Discard —
+ * nothing touches the essay until Accept.
+ */
+function ProposalCard({ proposal, applying, onAccept, onDiscard }) {
+    return (
+        <div className="rounded-xl border border-emerald-400/60 bg-surface-raised p-3 shadow-[0_10px_28px_-18px_rgba(20,20,18,0.5)]">
+            <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Proposed fix</span>
+                <button type="button" aria-label="Discard fix" onClick={onDiscard} disabled={applying}
+                    className="rounded p-1 text-text-dim hover:text-text-primary disabled:opacity-40">
+                    <XMarkIcon className="h-3.5 w-3.5" />
+                </button>
+            </div>
+            <p className="mt-1.5 font-serif text-xs leading-snug text-text-dim line-through decoration-rose-400/70">
+                {proposal.anchor}
+            </p>
+            <p className="mt-1 rounded-lg bg-emerald-100/70 px-2 py-1.5 font-serif text-xs leading-snug text-text-primary dark:bg-emerald-500/15">
+                {proposal.replacement}
+            </p>
+            {proposal.rationale && (
+                <p className="mt-1.5 text-[11px] italic leading-snug text-text-dim">{proposal.rationale}</p>
+            )}
+            <div className="mt-2 flex items-center gap-2">
+                <button type="button" onClick={onAccept} disabled={applying}
+                    className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-40">
+                    {applying ? 'Applying…' : 'Accept'}
+                </button>
+                <button type="button" onClick={onDiscard} disabled={applying}
+                    className="text-[11px] font-semibold text-text-dim hover:text-text-primary disabled:opacity-40">
+                    Discard
+                </button>
+            </div>
+        </div>
+    );
+}
+
 /** Renders one paragraph with quote/topic tinting and selection-note support. */
 function ParagraphBlock({
     paragraph, index, annotations, activeId, onSelectNote,
-    onStartNote, onSaveNote, onDeleteNote, onEditNote, composer, onCancelComposer, onAskAI,
-    onExplainOne, explainingIndex,
+    onStartNote, onSaveNote, onDeleteNote, onEditNote, composer, onCancelComposer, onAskAI, onFix,
+    onExplainOne, explainingIndex, proposal, applyingFix, onAcceptFix, onDiscardFix,
 }) {
     const textRef = useRef(null);
     const text = String(paragraph.text || '');
@@ -188,8 +268,12 @@ function ParagraphBlock({
                 return start >= 0 ? { start, end: start + a.anchor.length, id: a.id } : null;
             })
             .filter(Boolean);
+        // A pending fix strikes through exactly the words it would replace.
+        const fixStart = proposal ? text.indexOf(proposal.anchor) : -1;
+        const fixEnd = fixStart >= 0 ? fixStart + proposal.anchor.length : -1;
 
         const typeAt = (i) => {
+            if (fixStart >= 0 && i >= fixStart && i < fixEnd) return 'fix';
             const anchor = anchors.find((a) => i >= a.start && i < a.end);
             if (anchor) return `anchor:${anchor.id}`;
             if (quoteSpans.some((s) => i >= s.start && i < s.end)) return 'quote';
@@ -210,7 +294,7 @@ function ParagraphBlock({
             }
         }
         return out;
-    }, [text, paragraph.topicSentence, annotations]);
+    }, [text, paragraph.topicSentence, annotations, proposal]);
 
     const captureSelection = () => {
         const selection = typeof window !== 'undefined' ? window.getSelection() : null;
@@ -251,6 +335,9 @@ function ParagraphBlock({
                     className="font-serif text-base leading-relaxed text-text-primary lg:text-[17px]"
                 >
                     {segments.map((seg, i) => {
+                        if (seg.type === 'fix') {
+                            return <span key={i} className="rounded-sm bg-rose-200/70 px-0.5 line-through decoration-rose-500/60 dark:bg-rose-500/25">{seg.text}</span>;
+                        }
                         if (seg.type === 'quote') {
                             return <span key={i} className="rounded-sm bg-emerald-200 px-0.5 dark:bg-emerald-500/30">{seg.text}</span>;
                         }
@@ -305,6 +392,15 @@ function ParagraphBlock({
                         initialKind={composer.kind || 'note'}
                         onSave={(note, kind) => onSaveNote(index, composer.anchor, note, kind)}
                         onAskAI={onAskAI ? () => onAskAI(index, composer.anchor) : undefined}
+                        onFix={onFix && composer.anchor ? (instruction) => onFix(index, composer.anchor, instruction) : undefined}
+                    />
+                )}
+                {proposal && (
+                    <ProposalCard
+                        proposal={proposal}
+                        applying={applyingFix}
+                        onAccept={onAcceptFix}
+                        onDiscard={onDiscardFix}
                     />
                 )}
                 {annotations.map((a) => (
@@ -355,6 +451,11 @@ export default function AnnotatedDocument({
     onAskAI,
     onExplainOne,
     explainingIndex,
+    onRequestFix,
+    proposal,
+    applyingFix,
+    onAcceptFix,
+    onDiscardFix,
 }) {
     const structure = essay?.parsedStructure || {};
     const paragraphs = structure.bodyParagraphs || [];
@@ -382,6 +483,17 @@ export default function AnnotatedDocument({
         await onAdd({ paragraphIndex, anchor, note, kind: kind === 'explanation' ? 'explanation' : 'note' });
         setComposer(null);
     }, [onAdd]);
+
+    // Fix-with-AI: the composer stays open while the fix drafts and closes
+    // only on success (a failure keeps the complaint so it can be retried).
+    const requestFix = useCallback(async (paragraphIndex, anchor, instruction) => {
+        try {
+            await onRequestFix({ paragraphIndex, anchor, instruction });
+            setComposer(null);
+        } catch {
+            // the workspace surfaces the error banner
+        }
+    }, [onRequestFix]);
 
     const explanationCount = (annotations || []).filter((a) => a.kind === 'explanation').length;
 
@@ -429,8 +541,13 @@ export default function AnnotatedDocument({
                         composer={composer?.paragraphIndex === i ? composer : null}
                         onCancelComposer={() => setComposer(null)}
                         onAskAI={onAskAI}
+                        onFix={onRequestFix ? requestFix : undefined}
                         onExplainOne={onExplainOne}
                         explainingIndex={explainingIndex}
+                        proposal={proposal?.paragraphIndex === i ? proposal : null}
+                        applyingFix={applyingFix}
+                        onAcceptFix={onAcceptFix}
+                        onDiscardFix={onDiscardFix}
                     />
                 ))}
             </div>
@@ -444,7 +561,7 @@ export default function AnnotatedDocument({
 
             <p className="mt-8 flex items-center gap-2 border-t border-line-soft pt-4 text-[11px] text-text-dim">
                 <ChatBubbleLeftEllipsisIcon className="h-3.5 w-3.5" />
-                Select any words to note a phrase, or use ✚ for a whole paragraph. Write your own explanation, or let the assistant draft one — the essay text itself is edited in the Edit tab.
+                Select any words to note a phrase — or hit “Fix with AI”, say what bugs you, and accept or discard the drafted fix. Use ✚ for a whole paragraph; bigger edits live in the Edit tab.
             </p>
         </div>
     );

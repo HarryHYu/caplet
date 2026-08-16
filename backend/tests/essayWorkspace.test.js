@@ -22,7 +22,8 @@ const express = require('express');
 const Essay = require('../models/Essay');
 const EssayContextDoc = require('../models/EssayContextDoc');
 const EssayAnnotation = require('../models/EssayAnnotation');
-const { assistEssay, explainEssay } = require('../services/essayAssistant');
+const { assistEssay, explainEssay, rewriteSelection } = require('../services/essayAssistant');
+const { firstSentence, extractQuotes } = require('../services/essayParser');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { resetAIQuotaForTests } = require('../middleware/aiQuota');
 const essaysRouter = require('../routes/essays');
@@ -662,6 +663,254 @@ describe('Essay workspace routes', () => {
       expect(res.status).toBe(502);
       expect(res.body.message).toBe('The essay could not be explained. Try again shortly.');
       expect(EssayAnnotation.create).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Select-and-fix ─────────────────────────────────────────────────────────
+
+  const INTRO = 'Empire writes its own alibi.';
+  const PARA1 = 'Conrad frames empire as robbery. The record of empire is written by its agents, and he calls it "just robbery with violence" in the novella.';
+  const PARA2 = 'Walcott answers with the sea. The record of empire dissolves where the drowned remain "soldered by coral to bone" for ever.';
+  const CONCLUSION = 'Both writers refuse the alibi.';
+
+  const rewriteEssay = (overrides = {}) => {
+    const essay = {
+      id: 'e1',
+      title: 'Empire essays',
+      originalText: `${INTRO}\n\n${PARA1}\n\n${PARA2}\n\n${CONCLUSION}`,
+      parsedStructure: {
+        thesis: INTRO,
+        introduction: INTRO,
+        bodyParagraphs: [
+          {
+            topicSentence: 'Conrad frames empire as robbery.',
+            text: PARA1,
+            quotes: [{ text: 'just robbery with violence', highLeverage: true }],
+            techniques: [],
+          },
+          {
+            topicSentence: 'Walcott answers with the sea.',
+            text: PARA2,
+            quotes: [{ text: 'soldered by coral to bone', highLeverage: false }],
+            techniques: [],
+          },
+        ],
+        conclusion: CONCLUSION,
+      },
+      ...overrides,
+    };
+    essay.update = jest.fn().mockImplementation(async (values) => Object.assign(essay, values));
+    return essay;
+  };
+
+  describe('POST /api/essays/:id/rewrite', () => {
+    beforeEach(() => {
+      Essay.findOne = jest.fn().mockResolvedValue(rewriteEssay());
+      EssayContextDoc.findAll = jest.fn().mockResolvedValue([]);
+      EssayAnnotation.findAll = jest.fn().mockResolvedValue([]);
+      rewriteSelection.mockResolvedValue({ replacement: 'a sharper phrase', rationale: 'Tighter.' });
+    });
+
+    it('400s without a selection or an instruction, before the service runs', async () => {
+      const noAnchor = await request(app)
+        .post('/api/essays/e1/rewrite')
+        .send({ anchor: '  ', instruction: 'fix it' });
+      expect(noAnchor.status).toBe(400);
+
+      const noInstruction = await request(app)
+        .post('/api/essays/e1/rewrite')
+        .send({ anchor: 'for ever', instruction: '' });
+      expect(noInstruction.status).toBe(400);
+
+      expect(rewriteSelection).not.toHaveBeenCalled();
+    });
+
+    it('409s when the selection is no longer in the essay text', async () => {
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite')
+        .send({ anchor: 'this phrase was edited away', instruction: 'fix it' });
+
+      expect(res.status).toBe(409);
+      expect(res.body.message).toMatch(/no longer matches/i);
+      expect(rewriteSelection).not.toHaveBeenCalled();
+    });
+
+    it('drafts a fix grounded in the loaded context docs and annotations, persisting nothing', async () => {
+      const docs = [{ id: 'd1', title: 'Sources', content: 'History.' }];
+      const notes = [{ id: 'a1', paragraphIndex: 0, note: 'n', kind: 'note', source: 'user' }];
+      EssayContextDoc.findAll = jest.fn().mockResolvedValue(docs);
+      EssayAnnotation.findAll = jest.fn().mockResolvedValue(notes);
+
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite')
+        .send({ anchor: 'for ever', paragraphIndex: 1, instruction: 'I hate "for ever" — modernise it.' });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({
+        anchor: 'for ever',
+        paragraphIndex: 1,
+        replacement: 'a sharper phrase',
+        rationale: 'Tighter.',
+      });
+      expect(rewriteSelection).toHaveBeenCalledWith({
+        essay: expect.objectContaining({ id: 'e1' }),
+        contextDocs: docs,
+        annotations: notes,
+        anchor: 'for ever',
+        paragraphIndex: 1,
+        instruction: 'I hate "for ever" — modernise it.',
+        model: 'gpt-5.4-mini',
+      });
+      // The proposal round-trips to the client — nothing is written here.
+      const essay = await Essay.findOne.mock.results[0].value;
+      expect(essay.update).not.toHaveBeenCalled();
+      expect(recordAIInteractionSafely).toHaveBeenCalledWith(
+        expect.objectContaining({ feature: 'essay_rewrite' }),
+      );
+    });
+
+    it('normalises an out-of-bounds paragraphIndex to null via the global match', async () => {
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite')
+        .send({ anchor: 'for ever', paragraphIndex: 99, instruction: 'modernise it' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.paragraphIndex).toBeNull();
+      expect(rewriteSelection).toHaveBeenCalledWith(
+        expect.objectContaining({ paragraphIndex: null }),
+      );
+    });
+
+    it('maps opaque service failures to a 502 with the public fallback message', async () => {
+      rewriteSelection.mockRejectedValue(new Error('provider exploded: secret'));
+
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite')
+        .send({ anchor: 'for ever', paragraphIndex: 1, instruction: 'modernise it' });
+
+      expect(res.status).toBe(502);
+      expect(res.body.message).toBe('The fix could not be drafted. Try again shortly.');
+    });
+  });
+
+  describe('POST /api/essays/:id/rewrite/apply', () => {
+    let essay;
+
+    beforeEach(() => {
+      // The structure patch re-derives topic sentences and quotes with the
+      // REAL deterministic helpers, not auto-mocks.
+      const actualParser = jest.requireActual('../services/essayParser');
+      firstSentence.mockImplementation(actualParser.firstSentence);
+      extractQuotes.mockImplementation(actualParser.extractQuotes);
+      essay = rewriteEssay();
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+    });
+
+    it('400s on a missing anchor, missing replacement, or oversized replacement', async () => {
+      expect((await request(app).post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: '', replacement: 'x' })).status).toBe(400);
+      expect((await request(app).post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'for ever', replacement: '   ' })).status).toBe(400);
+      expect((await request(app).post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'for ever', replacement: 'x'.repeat(5001) })).status).toBe(400);
+      expect(essay.update).not.toHaveBeenCalled();
+    });
+
+    it('409s when the selection is no longer in the essay text', async () => {
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'vanished words', replacement: 'anything' });
+
+      expect(res.status).toBe(409);
+      expect(essay.update).not.toHaveBeenCalled();
+    });
+
+    it('replaces the SCOPED occurrence when the same words appear in two paragraphs', async () => {
+      // "The record of empire" opens a sentence in BOTH body paragraphs; with
+      // paragraphIndex 1 only the second paragraph's occurrence may change.
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'The record of empire', replacement: 'The imperial archive', paragraphIndex: 1 });
+
+      expect(res.status).toBe(200);
+      expect(essay.originalText).toContain('The record of empire is written by its agents'); // ¶1 untouched
+      expect(essay.originalText).toContain('The imperial archive dissolves'); // ¶2 replaced
+      const patched = essay.parsedStructure.bodyParagraphs;
+      expect(patched[0].text).toBe(PARA1);
+      expect(patched[1].text).toContain('The imperial archive dissolves');
+      // The edit sits past the topic sentence, which is therefore untouched.
+      expect(patched[1].topicSentence).toBe('Walcott answers with the sea.');
+      // The quote survives verbatim, flag intact.
+      expect(patched[1].quotes).toEqual([{ text: 'soldered by coral to bone', highLeverage: false }]);
+    });
+
+    it('re-derives the topic sentence when the fix lands inside it', async () => {
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'Walcott answers with the sea', replacement: 'Walcott replies with the sea', paragraphIndex: 1 });
+
+      expect(res.status).toBe(200);
+      expect(essay.parsedStructure.bodyParagraphs[1].topicSentence).toBe('Walcott replies with the sea.');
+    });
+
+    it('rebuilds mark-paired quotes when the fix rewrites inside quotation marks', async () => {
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'soldered by coral to bone', replacement: 'the sea is History itself', paragraphIndex: 1 });
+
+      expect(res.status).toBe(200);
+      const quotes = essay.parsedStructure.bodyParagraphs[1].quotes;
+      expect(quotes).toEqual([{ text: 'the sea is History itself', highLeverage: false }]);
+    });
+
+    it('patches the introduction (and thesis) when the fix is only there', async () => {
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'writes its own alibi', replacement: 'authors its own excuse' });
+
+      expect(res.status).toBe(200);
+      expect(essay.originalText.startsWith('Empire authors its own excuse.')).toBe(true);
+      expect(essay.parsedStructure.introduction).toBe('Empire authors its own excuse.');
+      expect(essay.parsedStructure.thesis).toBe('Empire authors its own excuse.');
+      expect(essay.parsedStructure.bodyParagraphs[0].text).toBe(PARA1);
+    });
+
+    it('clears the structure (for a rescan) when the edit cannot be attributed', async () => {
+      // The span exists in the text but the stored structure has drifted and
+      // no mapped region contains it.
+      essay = rewriteEssay({
+        originalText: `A stray unmapped opening line.\n\n${PARA1}`,
+      });
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'stray unmapped opening', replacement: 'orphaned preamble' });
+
+      expect(res.status).toBe(200);
+      expect(essay.originalText).toContain('A orphaned preamble line.');
+      expect(essay.parsedStructure).toBeNull();
+    });
+
+    it('applies to an unparsed essay and flattens replacement line breaks', async () => {
+      essay = rewriteEssay({ parsedStructure: null });
+      Essay.findOne = jest.fn().mockResolvedValue(essay);
+
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'for ever', replacement: 'for\n\never more' });
+
+      expect(res.status).toBe(200);
+      expect(essay.originalText).toContain('for ever more');
+      expect(essay.parsedStructure).toBeNull();
+    });
+
+    it("404s for another user's essay", async () => {
+      Essay.findOne = jest.fn().mockResolvedValue(null);
+      const res = await request(app)
+        .post('/api/essays/e1/rewrite/apply')
+        .send({ anchor: 'for ever', replacement: 'forever' });
+      expect(res.status).toBe(404);
     });
   });
 });

@@ -12,6 +12,7 @@ delete process.env.OPENAI_API_KEY;
 const {
   assistEssay,
   explainEssay,
+  rewriteSelection,
   fitContextDocs,
 } = require('../services/essayAssistant');
 
@@ -333,5 +334,103 @@ describe('explainEssay', () => {
     const garbled = makeClient('nope');
     await expect(explainEssay({ essay: makeEssay(), client: garbled.client }))
       .rejects.toThrow(/unparseable/i);
+  });
+});
+
+describe('rewriteSelection', () => {
+  const SELECTION = 'exposes his doubt';
+  const FIX = { anchor: SELECTION, paragraphIndex: 0, instruction: 'I hate "exposes" — give me a sharper verb.' };
+
+  it('throws a 503 when no client is available', async () => {
+    await expect(rewriteSelection({ essay: makeEssay(), ...FIX }))
+      .rejects.toMatchObject({ status: 503 });
+  });
+
+  it('throws a 400 without a selection or without an instruction', async () => {
+    const { client } = makeClient({ replacement: 'x', rationale: '' });
+    await expect(rewriteSelection({ essay: makeEssay(), ...FIX, anchor: '  ', client }))
+      .rejects.toMatchObject({ status: 400 });
+    await expect(rewriteSelection({ essay: makeEssay(), ...FIX, instruction: '', client }))
+      .rejects.toMatchObject({ status: 400 });
+  });
+
+  it('grounds the call in EVERYTHING and marks the exact slot in the containing paragraph', async () => {
+    const { client, create } = makeClient({ replacement: 'lays bare his doubt', rationale: 'Sharper verb.' });
+
+    const result = await rewriteSelection({
+      essay: makeEssay(),
+      contextDocs: [{ title: 'Holinshed chronicle notes', content: 'The real Macbeth reigned for seventeen years.' }],
+      annotations: [{ paragraphIndex: 1, kind: 'note', source: 'user', note: 'Link this to the dagger scene.' }],
+      ...FIX,
+      client,
+    });
+
+    expect(result).toEqual({ replacement: 'lays bare his doubt', rationale: 'Sharper verb.' });
+
+    const args = create.mock.calls[0][0];
+    expect(args.model).toBe('gpt-5.4-mini');
+    expect(args.response_format).toEqual({ type: 'json_object' });
+    // gpt-5 family rejects a custom temperature — it must not be sent.
+    expect(args.temperature).toBeUndefined();
+
+    // System prompt: the same everything-view the chat gets.
+    const system = args.messages[0].content;
+    expect(system).toContain(BODY1); // full essay verbatim
+    expect(system).toContain(BODY2);
+    expect(system).toContain('Holinshed chronicle notes'); // context library
+    expect(system).toContain('The real Macbeth reigned for seventeen years.');
+    expect(system).toContain('Link this to the dagger scene.'); // annotations
+    expect(system).toMatch(/Rewrite ONLY the selected span/);
+
+    // User turn: the selection, the marked slot, and the complaint.
+    const userTurn = args.messages[1].content;
+    expect(userTurn).toContain(`SELECTED SPAN (verbatim):\n${SELECTION}`);
+    expect(userTurn).toContain('¶1');
+    expect(userTurn).toContain(`⟦${SELECTION}⟧`);
+    expect(userTurn).toContain(FIX.instruction);
+  });
+
+  it('skips the marked-slot block when the selection is not in the given paragraph', async () => {
+    const { client, create } = makeClient({ replacement: 'lays bare his doubt', rationale: '' });
+    await rewriteSelection({ essay: makeEssay(), ...FIX, paragraphIndex: 1, client });
+    const userTurn = create.mock.calls[0][0].messages[1].content;
+    expect(userTurn).not.toContain('⟦');
+    expect(userTurn).toContain(`SELECTED SPAN (verbatim):\n${SELECTION}`);
+  });
+
+  it('flattens line breaks in the replacement so it can never split a paragraph', async () => {
+    const { client } = makeClient({ replacement: 'lays bare\n\nhis doubt', rationale: '' });
+    const result = await rewriteSelection({ essay: makeEssay(), ...FIX, client });
+    expect(result.replacement).toBe('lays bare his doubt');
+  });
+
+  it('rejects an empty, unchanged, or oversized replacement', async () => {
+    const empty = makeClient({ replacement: '   ', rationale: '' });
+    await expect(rewriteSelection({ essay: makeEssay(), ...FIX, client: empty.client }))
+      .rejects.toThrow(/empty replacement/i);
+
+    const unchanged = makeClient({ replacement: SELECTION, rationale: '' });
+    await expect(rewriteSelection({ essay: makeEssay(), ...FIX, client: unchanged.client }))
+      .rejects.toThrow(/unchanged/i);
+
+    const oversized = makeClient({ replacement: 'x'.repeat(2000), rationale: '' });
+    await expect(rewriteSelection({ essay: makeEssay(), ...FIX, client: oversized.client }))
+      .rejects.toThrow(/oversized/i);
+  });
+
+  it('rejects truncated or unparseable output', async () => {
+    const truncated = makeClient({ replacement: 'cut' }, 'length');
+    await expect(rewriteSelection({ essay: makeEssay(), ...FIX, client: truncated.client }))
+      .rejects.toThrow(/truncated/i);
+
+    const garbled = makeClient('nope');
+    await expect(rewriteSelection({ essay: makeEssay(), ...FIX, client: garbled.client }))
+      .rejects.toThrow(/unparseable/i);
+  });
+
+  it('clamps the rationale to 500 chars', async () => {
+    const { client } = makeClient({ replacement: 'lays bare his doubt', rationale: 'r'.repeat(800) });
+    const result = await rewriteSelection({ essay: makeEssay(), ...FIX, client });
+    expect(result.rationale).toHaveLength(500);
   });
 });

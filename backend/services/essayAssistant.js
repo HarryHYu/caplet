@@ -17,6 +17,10 @@
  *     plain English; the route persists the results as kind='explanation'
  *     annotations.
  *
+ *   rewriteSelection() — the student selected a span and complained about it;
+ *     one grounded call proposes a drop-in replacement. Nothing is persisted:
+ *     the client applies an accepted proposal via POST /:id/rewrite/apply.
+ *
  * Mirrors the lazy OpenAI client pattern used elsewhere (essayParser) so the
  * server boots without OPENAI_API_KEY and these endpoints degrade with a 503.
  */
@@ -110,7 +114,10 @@ Return ONLY a JSON object of this exact shape:
 - paragraphIndex is 0-based into the body paragraph list (¶1 is paragraphIndex 0).
 - anchor must be copied character-for-character from that paragraph, or "" to annotate the whole paragraph.`;
 
-function buildAssistSystemPrompt({ essay, contextDocs, annotations }) {
+// The shared "reads absolutely everything" block: the essay verbatim, the
+// paragraph map, every annotation, and the whole context library. Both the
+// chat and the selection-rewrite ground themselves in this identical view.
+function buildGroundingBlock({ essay, contextDocs, annotations }) {
   const title = str(essay?.title).trim() || 'Untitled essay';
   const essayText = clamp(str(essay?.originalText), MAX_ESSAY_CHARS);
   const bodyParagraphs = bodyParagraphsOf(essay);
@@ -135,9 +142,7 @@ function buildAssistSystemPrompt({ essay, contextDocs, annotations }) {
       .join('\n\n')
     : '(the student has not added any context documents yet)';
 
-  return `${ASSIST_RULES}
-
-ESSAY TITLE: ${title}
+  return `ESSAY TITLE: ${title}
 
 ORIGINAL ESSAY (verbatim):
 ${essayText}
@@ -150,6 +155,12 @@ ${annotationLines}
 
 CONTEXT LIBRARY:
 ${contextBlock}`;
+}
+
+function buildAssistSystemPrompt({ essay, contextDocs, annotations }) {
+  return `${ASSIST_RULES}
+
+${buildGroundingBlock({ essay, contextDocs, annotations })}`;
 }
 
 /**
@@ -309,9 +320,126 @@ async function explainEssay(opts = {}) {
   return explanations;
 }
 
+// ── Selection rewrite ("fix this bit") ──────────────────────────────────────
+// The student selects a span, complains ("I don't want this word"), and the
+// model proposes a drop-in replacement grounded in the SAME everything-view as
+// the chat (full essay + paragraph map + annotations + whole context library).
+// Nothing is persisted here: the route returns the proposal and the client
+// applies it through POST /:id/rewrite/apply only after an explicit Accept.
+
+const MAX_REWRITE_SELECTION = 1200; // chars in the selected span
+const MAX_REWRITE_INSTRUCTION = 1000; // chars in the student's complaint
+const MAX_REWRITE_RATIONALE = 500;
+// A marked-paragraph block longer than this is dropped from the user turn
+// (the full essay is already in the system prompt) rather than truncated,
+// which could cut off the ⟦…⟧ markers themselves.
+const MAX_MARKED_PARAGRAPH = 12000;
+
+const REWRITE_RULES = `You are an inline editor inside a student's essay workspace. The student selected a span of their essay, said what bothers them about it, and wants a drop-in replacement.
+
+Ground rules:
+- Rewrite ONLY the selected span. Your replacement is pasted into the essay EXACTLY where the selection was — it must read grammatically with the words immediately before and after it, and keep the student's voice, tense, and register.
+- Read the FULL essay and the entire CONTEXT LIBRARY before rewriting; the replacement must stay consistent with both.
+- NEVER invent quotes, evidence, or facts that are not in the essay or the context library.
+- Keep the replacement about the same length as the selection unless the student's instruction asks otherwise.
+- The replacement must be continuous prose: no line breaks, no bullet points, no commentary inside it.
+- Do exactly what the instruction asks — nothing more.
+
+Return ONLY a JSON object of this exact shape:
+{"replacement": "the new text that drops in where the selection was", "rationale": "one or two sentences on what changed and why"}`;
+
+/**
+ * One grounded completion that rewrites a selected span in place.
+ *
+ * @param {object} opts { essay, contextDocs, annotations, anchor,
+ *   paragraphIndex, instruction, model, client } — anchor is the selected
+ *   span verbatim; paragraphIndex (optional) scopes the marked-slot context.
+ * @returns {Promise<{replacement: string, rationale: string}>} a PROPOSAL
+ *   only — nothing is persisted here.
+ */
+async function rewriteSelection(opts = {}) {
+  const client = requireClient(opts);
+
+  const anchor = clamp(str(opts.anchor), MAX_REWRITE_SELECTION);
+  const instruction = clamp(str(opts.instruction).trim(), MAX_REWRITE_INSTRUCTION);
+  if (!anchor.trim()) {
+    const err = new Error('Select some essay text first.');
+    err.status = 400;
+    throw err;
+  }
+  if (!instruction) {
+    const err = new Error('Say what you want changed about the selection.');
+    err.status = 400;
+    throw err;
+  }
+
+  const essay = opts.essay || {};
+  const model = opts.model || 'gpt-5.4-mini';
+  const bodyParagraphs = bodyParagraphsOf(essay);
+  const pIdx = Number.isInteger(opts.paragraphIndex)
+    && opts.paragraphIndex >= 0
+    && opts.paragraphIndex < bodyParagraphs.length
+    ? opts.paragraphIndex
+    : null;
+
+  // Show the exact slot: the containing paragraph with the selection marked,
+  // so the model rewrites INTO the surrounding grammar rather than in a vacuum.
+  let marked = '';
+  if (pIdx !== null) {
+    const paragraphText = str(bodyParagraphs[pIdx]?.text);
+    const at = paragraphText.indexOf(anchor);
+    if (at !== -1) {
+      const candidate = `${paragraphText.slice(0, at)}⟦${anchor}⟧${paragraphText.slice(at + anchor.length)}`;
+      if (candidate.length <= MAX_MARKED_PARAGRAPH) marked = candidate;
+    }
+  }
+
+  const userParts = [
+    `SELECTED SPAN (verbatim):\n${anchor}`,
+    marked ? `IT SITS IN BODY PARAGRAPH ¶${pIdx + 1}, marked between ⟦ and ⟧:\n${marked}` : '',
+    `THE STUDENT'S INSTRUCTION:\n${instruction}`,
+    'Write the replacement. Return ONLY the JSON object described.',
+  ].filter(Boolean);
+
+  const completion = await client.chat.completions.create({
+    model,
+    response_format: { type: 'json_object' },
+    max_completion_tokens: 1500,
+    ...samplingParams(model, 0.4),
+    messages: [
+      {
+        role: 'system',
+        content: `${REWRITE_RULES}
+
+${buildGroundingBlock({ essay, contextDocs: opts.contextDocs, annotations: opts.annotations })}`,
+      },
+      { role: 'user', content: userParts.join('\n\n') },
+    ],
+  });
+  const choice = completion.choices?.[0];
+  if (choice?.finish_reason === 'length') throw new Error('AI output truncated');
+  let parsed;
+  try {
+    parsed = JSON.parse(choice?.message?.content || '');
+  } catch {
+    throw new Error('AI returned unparseable output');
+  }
+
+  // Line breaks in the replacement would split paragraphs when pasted back —
+  // flatten any to single spaces before validating.
+  const replacement = str(parsed?.replacement).replace(/\s*\n+\s*/g, ' ').trim();
+  if (!replacement) throw new Error('AI returned an empty replacement');
+  if (replacement === anchor.trim()) throw new Error('AI left the selection unchanged');
+  if (replacement.length > Math.max(600, anchor.length * 4)) {
+    throw new Error('AI returned an oversized replacement');
+  }
+  return { replacement, rationale: clamp(str(parsed?.rationale).trim(), MAX_REWRITE_RATIONALE) };
+}
+
 module.exports = {
   assistEssay,
   explainEssay,
+  rewriteSelection,
   buildAssistSystemPrompt,
   fitContextDocs,
   validateProposals,

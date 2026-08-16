@@ -26,8 +26,10 @@ const ReviewItem = require('../models/ReviewItem');
 const EssayContextDoc = require('../models/EssayContextDoc');
 const EssayAnnotation = require('../models/EssayAnnotation');
 const { requireAuth } = require('../middleware/auth');
-const { parseEssay, fallbackStructure, segmentEssay } = require('../services/essayParser');
-const { assistEssay, explainEssay } = require('../services/essayAssistant');
+const {
+  parseEssay, fallbackStructure, segmentEssay, firstSentence, extractQuotes,
+} = require('../services/essayParser');
+const { assistEssay, explainEssay, rewriteSelection } = require('../services/essayAssistant');
 const { requireAIConsent } = require('../services/privacyConsent');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { reserveAIQuota } = require('../middleware/aiQuota');
@@ -55,8 +57,12 @@ const MAX_ANCHOR = 300; // chars per annotation anchor snippet
 const MAX_ANNOTATIONS = 300; // annotations per essay
 const MAX_CHAT_MESSAGES = 12; // history turns forwarded to the assistant
 const MAX_CHAT_MESSAGE = 8000; // chars per forwarded turn
+const MAX_REWRITE_SELECTION = 1200; // chars in a select-and-fix span
+const MAX_REWRITE_INSTRUCTION = 1000; // chars in the student's complaint
+const MAX_REWRITE_REPLACEMENT = 5000; // chars in an applied replacement
 const essayChatQuota = reserveAIQuota({ scope: 'essay-chat', units: 4 });
 const essayExplainQuota = reserveAIQuota({ scope: 'essay-structure', units: 6 });
+const essayRewriteQuota = reserveAIQuota({ scope: 'essay-chat', units: 4 });
 
 // GET /api/essays — list (omit the heavy originalText; flag whether parsed)
 router.get('/', async (req, res) => {
@@ -281,6 +287,8 @@ router.delete('/:id', async (req, res) => {
 //   DELETE /api/essays/:id/annotations/:annId   -> remove an annotation
 //   POST   /api/essays/:id/chat                 -> grounded AI chat
 //   POST   /api/essays/:id/explain              -> AI paragraph explanations
+//   POST   /api/essays/:id/rewrite              -> AI drop-in fix PROPOSAL
+//   POST   /api/essays/:id/rewrite/apply        -> apply an accepted fix
 //
 // Every route is owner-scoped: the essay is looked up by { id, userId } first
 // and anything else 404s, so nothing here can touch another user's essay.
@@ -586,6 +594,204 @@ router.post('/:id/explain', requireAIConsent, loadOwnedEssay, requireParsedStruc
       status: error.status,
     }));
     res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
+  }
+});
+
+// ── Select-and-fix ───────────────────────────────────────────────────────────
+// Two-step, mirroring the propose/accept split everywhere else in the
+// workspace: /rewrite is the AI call and persists NOTHING; /rewrite/apply is
+// the explicit Accept and involves NO AI — it splices the replacement into the
+// text and patches the parsed structure in place, so a one-word fix never
+// costs a full re-map.
+
+const REWRITE_STALE_MESSAGE = 'The essay changed and that selection no longer matches. Reselect and try again.';
+
+// Finds the selected span in the stored text, preferring the paragraph the
+// student selected in (the same words can occur elsewhere in the essay).
+// Returns { abs, pIdx, posInPara } or null when the span cannot be found.
+function locateAnchor(essay, anchor, paragraphIndex) {
+  const text = String(essay.originalText || '');
+  const paragraphs = Array.isArray(essay.parsedStructure?.bodyParagraphs)
+    ? essay.parsedStructure.bodyParagraphs
+    : [];
+  if (Number.isInteger(paragraphIndex) && paragraphIndex >= 0 && paragraphIndex < paragraphs.length) {
+    const paraText = String(paragraphs[paragraphIndex]?.text || '');
+    const posInPara = paraText.indexOf(anchor);
+    if (posInPara !== -1) {
+      const paraStart = text.indexOf(paraText);
+      if (paraStart !== -1) return { abs: paraStart + posInPara, pIdx: paragraphIndex, posInPara };
+    }
+  }
+  const abs = text.indexOf(anchor);
+  return abs === -1 ? null : { abs, pIdx: null, posInPara: -1 };
+}
+
+// Patches the parsed structure after an applied rewrite. Returns the patched
+// structure, or null (= the client rescans) when the edit cannot be
+// attributed to a single mapped region.
+function patchStructureAfterRewrite(structure, located, anchor, replacement) {
+  if (!structure) return null;
+
+  if (located.pIdx === null || located.posInPara < 0) {
+    // Not inside a mapped body paragraph. Patch the introduction/conclusion
+    // only when the attribution is unambiguous: exactly one of them holds the
+    // span and no body paragraph does.
+    const paragraphs = Array.isArray(structure.bodyParagraphs) ? structure.bodyParagraphs : [];
+    if (paragraphs.some((p) => String(p?.text || '').includes(anchor))) return null;
+    const intro = String(structure.introduction || '');
+    const conclusion = String(structure.conclusion || '');
+    const inIntro = intro.includes(anchor);
+    const inConclusion = conclusion.includes(anchor);
+    if (inIntro === inConclusion) return null; // in both or in neither
+    const next = { ...structure };
+    if (inIntro) {
+      next.introduction = intro.replace(anchor, replacement);
+      const thesis = String(structure.thesis || '');
+      if (thesis.includes(anchor)) next.thesis = thesis.replace(anchor, replacement);
+    } else {
+      next.conclusion = conclusion.replace(anchor, replacement);
+    }
+    return next;
+  }
+
+  const paragraphs = structure.bodyParagraphs.map((p) => ({ ...p }));
+  const para = paragraphs[located.pIdx];
+  const oldText = String(para.text || '');
+  const newParaText = oldText.slice(0, located.posInPara)
+    + replacement
+    + oldText.slice(located.posInPara + anchor.length);
+  para.text = newParaText;
+
+  // The topic sentence is a verbatim slice of the paragraph opening — if the
+  // edit touched that region, re-derive it from the new text.
+  const topic = String(para.topicSentence || '');
+  if (topic && located.posInPara < topic.length) para.topicSentence = firstSentence(newParaText);
+
+  // Quotes: keep the ones still present verbatim (anchored AI additions
+  // included) and pick up any newly mark-paired quotes the fix introduced.
+  const kept = (Array.isArray(para.quotes) ? para.quotes : [])
+    .filter((q) => q?.text && newParaText.includes(q.text));
+  const have = new Set(kept.map((q) => q.text));
+  for (const content of extractQuotes(newParaText)) {
+    if (!have.has(content)) {
+      kept.push({ text: content, highLeverage: false });
+      have.add(content);
+    }
+  }
+  para.quotes = kept.slice(0, 20);
+
+  return { ...structure, bodyParagraphs: paragraphs };
+}
+
+// Validates the rewrite request BEFORE any AI quota is reserved — a stale
+// selection or an empty complaint costs nothing.
+function prepareRewrite(req, res, next) {
+  const anchor = String(req.body?.anchor ?? '');
+  const instruction = String(req.body?.instruction ?? '').trim();
+  if (!anchor.trim()) return res.status(400).json({ message: 'Select some essay text first.' });
+  if (anchor.length > MAX_REWRITE_SELECTION) {
+    return res.status(400).json({ message: 'Select a shorter span (a sentence or two at most).' });
+  }
+  if (!instruction) return res.status(400).json({ message: 'Say what you want changed about the selection.' });
+  const paragraphIndex = Number.isInteger(req.body?.paragraphIndex) ? req.body.paragraphIndex : null;
+  const located = locateAnchor(req.essay, anchor, paragraphIndex);
+  if (!located) return res.status(409).json({ message: REWRITE_STALE_MESSAGE });
+  req.rewrite = {
+    anchor,
+    instruction: instruction.slice(0, MAX_REWRITE_INSTRUCTION),
+    paragraphIndex: located.pIdx,
+  };
+  return next();
+}
+
+// POST /api/essays/:id/rewrite — draft a drop-in fix for a selected span.
+// The model reads the same everything-view as the chat (full essay + context
+// library + annotations). Persists NOTHING — the proposal round-trips to the
+// client for an explicit Accept.
+router.post('/:id/rewrite', requireAIConsent, loadOwnedEssay, prepareRewrite, essayRewriteQuota, async (req, res) => {
+  try {
+    const essay = req.essay;
+    const model = ESSAY_MODELS.includes(req.body?.model) ? req.body.model : 'gpt-5.4-mini';
+    const [contextDocs, annotations] = await Promise.all([
+      EssayContextDoc.findAll({
+        where: { essayId: essay.id, userId: req.user.id },
+        order: [['createdAt', 'ASC']],
+      }),
+      EssayAnnotation.findAll({
+        where: { essayId: essay.id, userId: req.user.id },
+        order: [['paragraphIndex', 'ASC'], ['createdAt', 'ASC']],
+      }),
+    ]);
+    const result = await rewriteSelection({
+      essay,
+      contextDocs,
+      annotations,
+      anchor: req.rewrite.anchor,
+      paragraphIndex: req.rewrite.paragraphIndex,
+      instruction: req.rewrite.instruction,
+      model,
+    });
+    await recordAIInteractionSafely({
+      userId: req.user.id,
+      feature: 'essay_rewrite',
+      modelVersion: model,
+      status: 'completed',
+      inputSummary: `${essay.title} · ${req.rewrite.anchor.length}-char selection`,
+      outputSummary: `${result.replacement.length}-char replacement proposed`,
+      metadata: { essayId: essay.id },
+    });
+    res.json({
+      anchor: req.rewrite.anchor,
+      paragraphIndex: req.rewrite.paragraphIndex,
+      replacement: result.replacement,
+      rationale: result.rationale,
+    });
+  } catch (e) {
+    const error = publicAIError(e, 'The fix could not be drafted. Try again shortly.');
+    console.error(JSON.stringify({
+      event: 'essay_rewrite_error',
+      requestId: req.requestId || null,
+      errorType: e?.name || 'Error',
+      status: error.status,
+    }));
+    res.status(error.status).json({ message: error.message, requestId: req.requestId || null });
+  }
+});
+
+// POST /api/essays/:id/rewrite/apply — the explicit Accept. No AI: splice the
+// replacement into originalText at the located selection and patch the parsed
+// structure in place. When the patch cannot be attributed (structure drifted),
+// parsedStructure is cleared and the client rescans.
+router.post('/:id/rewrite/apply', loadOwnedEssay, async (req, res) => {
+  try {
+    const essay = req.essay;
+    const anchor = String(req.body?.anchor ?? '');
+    // Mirror the proposal-side flattening so a hand-edited replacement can
+    // never split a paragraph in two.
+    const replacement = String(req.body?.replacement ?? '').replace(/\s*\n+\s*/g, ' ').trim();
+    if (!anchor.trim()) return res.status(400).json({ message: 'Select some essay text first.' });
+    if (anchor.length > MAX_REWRITE_SELECTION) {
+      return res.status(400).json({ message: 'Select a shorter span (a sentence or two at most).' });
+    }
+    if (!replacement) return res.status(400).json({ message: 'A replacement is required.' });
+    if (replacement.length > MAX_REWRITE_REPLACEMENT) {
+      return res.status(400).json({ message: 'That replacement is too long.' });
+    }
+
+    const paragraphIndex = Number.isInteger(req.body?.paragraphIndex) ? req.body.paragraphIndex : null;
+    const located = locateAnchor(essay, anchor, paragraphIndex);
+    if (!located) return res.status(409).json({ message: REWRITE_STALE_MESSAGE });
+
+    const text = String(essay.originalText || '');
+    const newText = text.slice(0, located.abs) + replacement + text.slice(located.abs + anchor.length);
+    if (newText.length > MAX_TEXT) return res.status(400).json({ message: 'Essay is too long.' });
+
+    const structure = patchStructureAfterRewrite(essay.parsedStructure, located, anchor, replacement);
+    await essay.update({ originalText: newText, parsedStructure: structure });
+    res.json({ essay });
+  } catch (e) {
+    console.error('Apply rewrite error:', e);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 

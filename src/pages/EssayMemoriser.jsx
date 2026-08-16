@@ -2078,6 +2078,10 @@ function EssayWorkspace({ essayId }) {
     const [chatSeed, setChatSeed] = useState(null);
     const [explaining, setExplaining] = useState(false);
     const [explainingIndex, setExplainingIndex] = useState(null);
+    // Select-and-fix: one pending AI proposal at a time; nothing touches the
+    // essay text until the student explicitly accepts it.
+    const [proposal, setProposal] = useState(null);
+    const [applyingFix, setApplyingFix] = useState(false);
     const [workspaceError, setWorkspaceError] = useState(null);
     // Guards async continuations against a workspace that switched essays.
     const essayIdRef = useRef(essayId);
@@ -2152,6 +2156,7 @@ function EssayWorkspace({ essayId }) {
         (async () => {
             setLoading(true);
             setLoadError(null);
+            setProposal(null);
             try {
                 const res = await api.getEssay(essayId);
                 if (cancelled) return;
@@ -2289,6 +2294,53 @@ function EssayWorkspace({ essayId }) {
         return res;
     }, [essayId, parseModel]);
 
+    // ── Select-and-fix ──────────────────────────────────────────────────────
+    // Draft: the AI reads everything (essay + context library + annotations)
+    // and proposes a drop-in replacement for the selection. Rethrows so the
+    // composer stays open with the complaint intact on failure.
+    const requestFix = useCallback(async ({ paragraphIndex, anchor, instruction }) => {
+        setWorkspaceError(null);
+        try {
+            const res = await api.rewriteEssay(essayId, {
+                anchor, paragraphIndex, instruction, model: parseModel,
+            });
+            if (essayIdRef.current !== essayId) return;
+            setProposal(res);
+        } catch (e) {
+            if (essayIdRef.current === essayId) setWorkspaceError(e?.message || 'Could not draft that fix right now.');
+            throw e;
+        }
+    }, [essayId, parseModel]);
+
+    // Accept: apply server-side (no AI call). The server patches the parsed
+    // structure in place; if it could not, the structure comes back null and
+    // a rescan starts automatically so the workspace never strands.
+    const acceptFix = useCallback(async () => {
+        if (!proposal) return;
+        setApplyingFix(true);
+        setWorkspaceError(null);
+        try {
+            const res = await api.applyEssayRewrite(essayId, {
+                anchor: proposal.anchor,
+                replacement: proposal.replacement,
+                paragraphIndex: proposal.paragraphIndex,
+            });
+            if (essayIdRef.current !== essayId) return;
+            setEssay(res.essay);
+            setProposal(null);
+            if (!res.essay.parsedStructure) parse({ model: parseModel });
+        } catch (e) {
+            if (essayIdRef.current === essayId) {
+                setWorkspaceError(e?.message || 'Could not apply the fix.');
+                if (e?.status === 409) setProposal(null); // stale — the text moved on
+            }
+        } finally {
+            if (essayIdRef.current === essayId) setApplyingFix(false);
+        }
+    }, [essayId, proposal, parse, parseModel]);
+
+    const discardFix = useCallback(() => setProposal(null), []);
+
     const askAboutSelection = useCallback((paragraphIndex, anchor) => {
         setChatSeed(anchor
             ? `In paragraph ${paragraphIndex + 1}, what should I understand about "${anchor}"?`
@@ -2308,6 +2360,7 @@ function EssayWorkspace({ essayId }) {
             if (essayIdRef.current !== essayId) return;
             setEssay(res.essay);
             if (textChanged) {
+                setProposal(null); // a pending fix was drafted against the old text
                 setParseModel(model);
                 setTab('overview');
                 parse({ model });
@@ -2485,6 +2538,11 @@ function EssayWorkspace({ essayId }) {
                                 onExplainOne={explainOneParagraph}
                                 explainingIndex={explainingIndex}
                                 onAskAI={askAboutSelection}
+                                onRequestFix={requestFix}
+                                proposal={proposal}
+                                applyingFix={applyingFix}
+                                onAcceptFix={acceptFix}
+                                onDiscardFix={discardFix}
                             />
                         </div>
                         <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">

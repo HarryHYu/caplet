@@ -2,7 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AnnotatedDocument from '../components/essay/AnnotatedDocument';
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const essay = {
   parsedStructure: {
@@ -104,5 +107,96 @@ describe('AnnotatedDocument — your own explanations', () => {
     // Paragraph-level composer shows the toggle…
     fireEvent.click(screen.getAllByRole('button', { name: '+ Note' })[0]);
     expect(screen.getByRole('group', { name: 'Note type' })).toBeInTheDocument();
+  });
+});
+
+describe('AnnotatedDocument — select and fix with AI', () => {
+  // Simulates highlighting a phrase inside paragraph `pIdx`: mock the DOM
+  // selection and fire the mouseup the component listens for.
+  const selectPhrase = (pIdx, phrase) => {
+    const marker = pIdx === 0 ? 'Conrad frames empire as robbery.' : 'Walcott answers with the sea.';
+    const para = screen.getByText(marker, { exact: false, selector: 'span' }).closest('p');
+    vi.spyOn(window, 'getSelection').mockReturnValue({
+      isCollapsed: false,
+      toString: () => phrase,
+      anchorNode: para,
+    });
+    fireEvent.mouseUp(para);
+    return para;
+  };
+
+  it('lets a selection complaint go to the AI and closes the composer on success', async () => {
+    const onRequestFix = vi.fn().mockResolvedValue({});
+    renderDoc({ onRequestFix });
+
+    selectPhrase(0, 'empire as robbery');
+
+    // The anchored composer offers Note | Fix with AI.
+    expect(screen.getByRole('group', { name: 'Selection action' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Fix with AI' }));
+
+    fireEvent.change(screen.getByLabelText('Fix instruction'), {
+      target: { value: 'I don’t want "robbery" — find a stronger word.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Draft a fix' }));
+
+    await waitFor(() => expect(onRequestFix).toHaveBeenCalledWith({
+      paragraphIndex: 0,
+      anchor: 'empire as robbery',
+      instruction: 'I don’t want "robbery" — find a stronger word.',
+    }));
+    await waitFor(() => expect(screen.queryByLabelText('Fix instruction')).not.toBeInTheDocument());
+  });
+
+  it('keeps the composer (and the complaint) open when drafting fails', async () => {
+    const onRequestFix = vi.fn().mockRejectedValue(new Error('quota'));
+    renderDoc({ onRequestFix });
+
+    selectPhrase(0, 'empire as robbery');
+    fireEvent.click(screen.getByRole('button', { name: 'Fix with AI' }));
+    fireEvent.change(screen.getByLabelText('Fix instruction'), { target: { value: 'better word please' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Draft a fix' }));
+
+    await waitFor(() => expect(onRequestFix).toHaveBeenCalled());
+    expect(screen.getByLabelText('Fix instruction')).toHaveValue('better word please');
+  });
+
+  it('shows the proposal beside its paragraph with Accept and Discard', () => {
+    const onAcceptFix = vi.fn();
+    const onDiscardFix = vi.fn();
+    renderDoc({
+      onRequestFix: vi.fn(),
+      proposal: {
+        paragraphIndex: 1,
+        anchor: 'soldered by coral to bone',
+        replacement: 'the sea is History itself',
+        rationale: 'Swaps the image for Walcott’s own line.',
+      },
+      onAcceptFix,
+      onDiscardFix,
+    });
+
+    expect(screen.getByText('Proposed fix')).toBeInTheDocument();
+    expect(screen.getByText('the sea is History itself')).toBeInTheDocument();
+    expect(screen.getByText('Swaps the image for Walcott’s own line.')).toBeInTheDocument();
+    // The doomed words are struck through inline in the essay text too.
+    const struck = document.querySelectorAll('.line-through');
+    expect(struck.length).toBeGreaterThanOrEqual(2); // card original + inline span
+
+    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
+    expect(onAcceptFix).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    expect(onDiscardFix).toHaveBeenCalled();
+  });
+
+  it('disables Accept while the fix is applying', () => {
+    renderDoc({
+      onRequestFix: vi.fn(),
+      proposal: { paragraphIndex: 0, anchor: 'robbery', replacement: 'plunder', rationale: '' },
+      applyingFix: true,
+      onAcceptFix: vi.fn(),
+      onDiscardFix: vi.fn(),
+    });
+    expect(screen.getByRole('button', { name: 'Applying…' })).toBeDisabled();
   });
 });
