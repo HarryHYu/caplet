@@ -33,14 +33,31 @@ export const foldAccents = (s) => String(s || '')
   .normalize('NFD')
   .replace(/\p{M}/gu, '');
 
-/** Word verdict under the current forgiveness toggles. */
+// German typists transliterate umlauts as two letters (ü→ue, ö→oe, ä→ae) —
+// a second canonical form so BOTH "fur" and "fuer" match "für".
+const GERMAN_MAP = {
+  'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'AE', 'Ö': 'OE', 'Ü': 'UE',
+};
+export const foldGerman = (s) => foldAccents(
+  String(s || '').replace(/[äöüÄÖÜ]/g, (c) => GERMAN_MAP[c]),
+);
+
+const IDENTITY = (s) => String(s || '');
+
+/**
+ * Word verdict under the current forgiveness toggles. With ignoreAccents the
+ * typed word matches if it equals the target under EITHER accent folding
+ * (für→fur) or German transliteration (für→fuer).
+ */
 export function compareWord(target, typed, opts = {}) {
-  let a = String(target || '');
-  let b = String(typed || '');
-  if (opts.ignoreAccents) { a = foldAccents(a); b = foldAccents(b); }
-  if (opts.ignoreCase) { a = a.toLowerCase(); b = b.toLowerCase(); }
-  if (opts.ignorePunct) { a = stripPunct(a); b = stripPunct(b); }
-  return a === b;
+  const folds = opts.ignoreAccents ? [foldAccents, foldGerman] : [IDENTITY];
+  return folds.some((fold) => {
+    let a = fold(target);
+    let b = fold(typed);
+    if (opts.ignoreCase) { a = a.toLowerCase(); b = b.toLowerCase(); }
+    if (opts.ignorePunct) { a = stripPunct(a); b = stripPunct(b); }
+    return a === b;
+  });
 }
 
 /**
@@ -51,13 +68,16 @@ export function compareWord(target, typed, opts = {}) {
 export function charStatuses(target, typed, opts = {}) {
   const t = String(target || '');
   const v = String(typed || '');
-  const eq = (x, y) => {
-    let a = x;
-    let b = y;
-    if (opts.ignoreAccents) { a = foldAccents(a); b = foldAccents(b); }
+  // Per character both folds are tried too, so ü/u colours as correct. (The
+  // two-letter German form can't align per character — the word verdict from
+  // compareWord stays authoritative for that.)
+  const folds = opts.ignoreAccents ? [foldAccents, foldGerman] : [IDENTITY];
+  const eq = (x, y) => folds.some((fold) => {
+    let a = fold(x);
+    let b = fold(y);
     if (opts.ignoreCase) { a = a.toLowerCase(); b = b.toLowerCase(); }
     return a === b;
-  };
+  });
   const out = [];
   for (let i = 0; i < Math.max(t.length, v.length); i += 1) {
     if (i >= v.length) out.push({ ch: t[i], status: 'pending' });

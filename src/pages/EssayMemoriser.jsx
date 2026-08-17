@@ -7,6 +7,7 @@ import SlideRenderer from '../components/lesson/SlideRenderer';
 import { extractPdfText } from '../lib/pdfExtract';
 import AnnotatedDocument from '../components/essay/AnnotatedDocument';
 import SpeedTypeMode from '../components/essay/SpeedTypeMode';
+import { foldAccents, foldGerman } from '../lib/speedType';
 import EssayChat from '../components/essay/EssayChat';
 import ContextLibrary, { AddContextForm, ContextDocRow } from '../components/essay/ContextLibrary';
 import { MAX_CONTEXT_DOCS } from '../lib/essayContext';
@@ -131,12 +132,19 @@ function EssayModelPicker({ model, onChange, disabled = false }) {
 // ── Pure helpers ────────────────────────────────────────────────────────────
 
 // Smart quotes/apostrophes are unified before stripping so a PDF-sourced
-// "it’s" and a typed "it's" compare equal — previously every curly apostrophe
-// marked a correctly typed word wrong.
-const normalise = (s) => String(s || '')
+// "it’s" and a typed "it's" compare equal, and accents are FOLDED, not
+// deleted: the old [^a-z0-9'] strip turned "café" into "caf" while the typed
+// "cafe" stayed "cafe", so an accented word could never be typed correctly
+// in any drill.
+const canonWord = (s, fold) => fold(String(s || '').replace(/[‘’‚‛′]/g, "'"))
     .toLowerCase()
-    .replace(/[‘’‚‛′]/g, "'")
     .replace(/[^a-z0-9']/g, '');
+const normalise = (s) => canonWord(s, foldAccents);
+
+// Equal under accent folding (für→fur) OR German transliteration (für→fuer),
+// so both typing styles count everywhere words are checked.
+const wordsEqual = (a, b) => normalise(a) === normalise(b)
+    || canonWord(a, foldGerman) === canonWord(b, foldGerman);
 
 function diffWords(original, typed) {
     const origWords = String(original || '').trim().split(/\s+/).filter(Boolean);
@@ -144,7 +152,7 @@ function diffWords(original, typed) {
     return origWords.map((word, i) => {
         const t = typedWords[i] || '';
         if (!t) return { word, status: 'missed' };
-        if (normalise(t) === normalise(word)) return { word, status: 'correct' };
+        if (wordsEqual(t, word)) return { word, status: 'correct' };
         return { word, status: 'wrong', typed: t };
     });
 }
@@ -249,7 +257,7 @@ function LiveCheck({ target, typed, currentHint = 'none', showRemaining = false,
 
     let correct = 0;
     for (let i = 0; i < committed; i++) {
-        if (normalise(typedWords[i]) === normalise(targetWords[i] || '')) correct++;
+        if (wordsEqual(typedWords[i], targetWords[i] || '')) correct++;
     }
     const pct = committed ? Math.round((correct / committed) * 100) : 0;
     const complete = targetWords.length > 0 && committed >= targetWords.length;
@@ -268,7 +276,7 @@ function LiveCheck({ target, typed, currentHint = 'none', showRemaining = false,
                 {targetWords.length === 0 && <span className="text-text-dim italic text-sm">Nothing to check yet.</span>}
                 {targetWords.map((w, i) => {
                     if (i < committed) {
-                        const ok = normalise(typedWords[i]) === normalise(w);
+                        const ok = wordsEqual(typedWords[i], w);
                         if (ok) return <MaskedWord key={i} word={w} animate className="text-emerald-600 dark:text-emerald-400" />;
                         return (
                             <MaskedWord key={i} word={w} animate
@@ -849,7 +857,7 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
     const commitWord = () => {
         const typed = current.trim();
         if (!typed || paraDone) return;
-        const isCorrect = normalise(typed) === normalise(targetWord);
+        const isCorrect = wordsEqual(typed, targetWord);
         setHistory((prev) => [...prev, { target: targetWord, typed, correct: isCorrect }]);
         setCurrent('');
         if (isCorrect) {

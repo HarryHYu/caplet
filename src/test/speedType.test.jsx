@@ -4,6 +4,7 @@ import SpeedTypeMode from '../components/essay/SpeedTypeMode';
 import {
   typeable,
   foldAccents,
+  foldGerman,
   compareWord,
   charStatuses,
   splitSentences,
@@ -53,6 +54,21 @@ describe('speed run helpers', () => {
     expect(compareWord('État', 'etat', { ignoreAccents: true, ignoreCase: true })).toBe(true);
     expect(charStatuses('éé', 'ee', { ignoreAccents: true }).every((c) => c.status === 'ok')).toBe(true);
     expect(charStatuses('Éé', 'ee', { ignoreAccents: true, ignoreCase: true }).every((c) => c.status === 'ok')).toBe(true);
+  });
+
+  it('accepts BOTH plain and German-style transliteration of umlauts and ß', () => {
+    expect(foldGerman('Größe für Übung')).toBe('Groesse fuer UEbung'); // ö→oe, ü→ue, ß→ss, Ü→UE
+    // für can be typed either way…
+    expect(compareWord('für', 'fur', { ignoreAccents: true })).toBe(true);
+    expect(compareWord('für', 'fuer', { ignoreAccents: true })).toBe(true);
+    // …and so can ß and capital umlauts (with Ignore capitals on).
+    expect(compareWord('Straße', 'strasse', { ignoreAccents: true, ignoreCase: true })).toBe(true);
+    expect(compareWord('Straße', 'Strase', { ignoreAccents: true })).toBe(false); // still checked
+    expect(compareWord('Übung', 'uebung', { ignoreAccents: true, ignoreCase: true })).toBe(true);
+    expect(compareWord('Übung', 'ubung', { ignoreAccents: true, ignoreCase: true })).toBe(true);
+    // A mixed word can't cherry-pick per letter across the two styles.
+    expect(compareWord('müde', 'muede', { ignoreAccents: true })).toBe(true);
+    expect(compareWord('müde', 'mude', { ignoreAccents: true })).toBe(true);
   });
 
   it('compares words under the forgiveness toggles', () => {

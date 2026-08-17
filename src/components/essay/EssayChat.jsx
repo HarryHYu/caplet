@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import {
     ArrowUpIcon,
     BookmarkSquareIcon,
@@ -33,7 +36,9 @@ function ProposedAnnotation({ proposal, onAdd, added }) {
                     “{proposal.anchor}”
                 </p>
             )}
-            <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-text-primary">{proposal.note}</p>
+            <div className="prose-chat mt-1.5 !text-xs">
+                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{proposal.note}</ReactMarkdown>
+            </div>
             <button
                 type="button"
                 disabled={added}
@@ -53,7 +58,17 @@ function Message({ message, onAddAnnotation, addedIds }) {
             <div className={isUser
                 ? 'max-w-[85%] rounded-2xl rounded-br-md bg-accent px-3.5 py-2.5 text-sm text-white'
                 : 'max-w-full'}>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                {isUser ? (
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                ) : (
+                    /* Assistant replies are markdown (the prompt allows it) —
+                       render it instead of showing raw asterisks and hashes. */
+                    <div className="prose-chat">
+                        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                            {message.content}
+                        </ReactMarkdown>
+                    </div>
+                )}
                 {!isUser && (message.annotations || []).length > 0 && (
                     <div className="mt-3 space-y-2">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">

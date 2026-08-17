@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import {
     ChatBubbleLeftEllipsisIcon,
     PencilSquareIcon,
@@ -80,6 +83,12 @@ function NoteCard({ annotation, active, onSelect, onDelete, onEdit }) {
                         <button type="button" onClick={() => { setDraft(annotation.note); setEditing(false); }}
                             className="text-[11px] font-semibold text-text-dim hover:text-text-primary">Cancel</button>
                     </div>
+                </div>
+            ) : annotation.source === 'ai' ? (
+                /* The assistant writes markdown — render it rather than show
+                   raw asterisks. Hand-written notes keep their exact breaks. */
+                <div className="prose-chat mt-1.5 !text-xs">
+                    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{annotation.note}</ReactMarkdown>
                 </div>
             ) : (
                 <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-text-primary">{annotation.note}</p>

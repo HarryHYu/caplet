@@ -262,6 +262,24 @@ describe('EssayMemoriser', () => {
     expect(screen.getByText('100%')).toBeInTheDocument();
   });
 
+  it('scores accented words typed on a plain keyboard, both transliteration styles', async () => {
+    // The old comparator DELETED accented letters (café → caf) so these
+    // words could never be typed correctly in any drill.
+    const essay = {
+      id: 'essay-accents',
+      parsedStructure: {
+        bodyParagraphs: [{ text: 'Café Größe für École', quotes: [], techniques: [] }],
+      },
+    };
+    render(<GuidedTypeMode essay={essay} />);
+    const input = screen.getByRole('textbox');
+    for (const word of ['Cafe', 'Groesse', 'fur', 'Ecole']) {
+      fireEvent.change(input, { target: { value: word } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    }
+    expect(screen.getByText('100%')).toBeInTheDocument();
+  });
+
 
   it('keeps source material in a context library, separate from the essay', async () => {
     api.getEssay.mockResolvedValue({ essay: parsedEssay });
@@ -326,7 +344,7 @@ describe('EssayMemoriser', () => {
   it('answers in the assistant and can push a suggestion into the margin', async () => {
     api.getEssay.mockResolvedValue({ essay: parsedEssay });
     api.essayChat.mockResolvedValueOnce({
-      reply: 'Your second paragraph leans on assertion rather than evidence.',
+      reply: 'Your second paragraph **leans on assertion** rather than evidence.',
       annotations: [{ paragraphIndex: 0, anchor: 'ambition over loyalty', note: 'Add a quote to support this.' }],
     });
     api.addEssayAnnotation.mockResolvedValueOnce({
@@ -338,7 +356,11 @@ describe('EssayMemoriser', () => {
     fireEvent.change(screen.getByLabelText(/Message the assistant/i), { target: { value: 'How is my evidence?' } });
     fireEvent.click(screen.getByRole('button', { name: /Send message/i }));
 
-    expect(await screen.findByText(/leans on assertion/i)).toBeInTheDocument();
+    // The reply is markdown — the **bold** span must render as <strong>,
+    // never as raw asterisks.
+    const bold = await screen.findByText('leans on assertion');
+    expect(bold.tagName).toBe('STRONG');
+    expect(screen.queryByText(/\*\*/)).not.toBeInTheDocument();
     await waitFor(() => expect(api.essayChat).toHaveBeenCalledWith('essay-1', expect.objectContaining({
       messages: [{ role: 'user', content: 'How is my evidence?' }],
     })));
