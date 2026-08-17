@@ -2188,13 +2188,24 @@ function EssayWorkspace({ essayId }) {
         let cancelled = false;
         (async () => {
             setContextLoading(true);
+            // Clear the previous essay's layer up front so a switch never
+            // shows stale docs/notes while the new ones load.
+            setContextDocs([]);
+            setAnnotations([]);
             const [ctx, notes] = await Promise.all([
                 api.getEssayContext(essayId).catch(() => null),
                 api.getEssayAnnotations(essayId).catch(() => null),
             ]);
             if (cancelled) return;
             setContextDocs(ctx?.docs || []);
-            setAnnotations(notes?.annotations || []);
+            // Merge, never clobber: a note added while this load was in
+            // flight must survive it.
+            setAnnotations((prev) => {
+                const loaded = notes?.annotations || [];
+                if (!prev.length) return loaded;
+                const have = new Set(prev.map((a) => a.id));
+                return [...loaded.filter((a) => !have.has(a.id)), ...prev];
+            });
             setContextLoading(false);
             // Sources staged in the composer are saved once the essay exists.
             const staged = pendingContextStore.take(essayId);

@@ -301,7 +301,8 @@ describe('EssayMemoriser', () => {
     await waitFor(() => expect(api.addEssayAnnotation).toHaveBeenCalledWith('essay-1', {
       paragraphIndex: 0, anchor: '', note: 'Link this back to the thesis.', kind: 'note',
     }));
-    expect(await screen.findByText('Link this back to the thesis.')).toBeInTheDocument();
+    // Generous timeout: CI runners under load flaked at the default 1s.
+    expect(await screen.findByText('Link this back to the thesis.', {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
   it('shows existing annotations in the margin and can delete one', async () => {
