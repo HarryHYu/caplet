@@ -6,6 +6,7 @@ import CapletLoader from '../components/CapletLoader';
 import SlideRenderer from '../components/lesson/SlideRenderer';
 import { extractPdfText } from '../lib/pdfExtract';
 import AnnotatedDocument from '../components/essay/AnnotatedDocument';
+import SpeedTypeMode from '../components/essay/SpeedTypeMode';
 import EssayChat from '../components/essay/EssayChat';
 import ContextLibrary, { AddContextForm, ContextDocRow } from '../components/essay/ContextLibrary';
 import { MAX_CONTEXT_DOCS } from '../lib/essayContext';
@@ -41,6 +42,7 @@ import {
     ClockIcon,
     RectangleStackIcon,
     ArrowsUpDownIcon,
+    RocketLaunchIcon,
     Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 
@@ -1788,6 +1790,7 @@ const PRACTICE_STEPS = [
 ];
 
 const DRILL_MODES = [
+    { key: 'speed', label: 'Speed run', icon: RocketLaunchIcon },
     { key: 'quotes', label: 'Quote cards', icon: RectangleStackIcon },
     { key: 'order', label: 'Paragraph order', icon: ArrowsUpDownIcon },
 ];
@@ -2407,7 +2410,7 @@ function EssayWorkspace({ essayId }) {
 
     const quoteCards = structure ? buildQuoteCards(structure) : null;
     const paragraphOrder = structure ? buildParagraphOrder(structure) : null;
-    const drills = { quotes: !!quoteCards, order: !!paragraphOrder };
+    const drills = { speed: !!structure, quotes: !!quoteCards, order: !!paragraphOrder };
     const paragraphCount = structure?.bodyParagraphs?.length || 0;
 
     return (
@@ -2596,6 +2599,7 @@ function EssayWorkspace({ essayId }) {
                                         onNext={drills.quotes ? () => setMode('quotes') : () => setMode(null)}
                                         nextLabel={drills.quotes ? modeLabel('quotes') : 'all activities'} />
                                 )}
+                                {mode === 'speed' && <SpeedTypeMode essay={essay} />}
                                 {mode === 'quotes' && (
                                     quoteCards
                                         ? <QuoteDrill slide={quoteCards}
