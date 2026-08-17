@@ -29,8 +29,14 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Install PostgreSQL client, AWS CLI and jq
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client awscli jq
+      # ubuntu-24.04 dropped the `awscli` apt package (this is what broke the
+      # drill when GitHub rolled runners onto noble) — AWS CLI v2 is already
+      # preinstalled on the runner image, so only the pg client and jq are
+      # installed here.
+      - name: Install PostgreSQL client and jq
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client jq
+          aws --version
       - name: Create encrypted backup and prove a clean restore
         env:
           BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
