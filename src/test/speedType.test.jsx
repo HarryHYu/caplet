@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import SpeedTypeMode from '../components/essay/SpeedTypeMode';
 import {
   typeable,
+  foldAccents,
   compareWord,
   charStatuses,
   splitSentences,
@@ -36,6 +37,22 @@ const essay = {
 describe('speed run helpers', () => {
   it('maps smart punctuation onto typeable keys', () => {
     expect(typeable('“It’s — fine…”')).toBe('"It\'s - fine..."');
+    expect(typeable('« Voilà »')).toBe('" Voilà "'); // guillemets incl. their NBSPs
+  });
+
+  it('folds accents and ligatures onto plain keyboard letters', () => {
+    expect(foldAccents('École déjà çà cœur Æther straße')).toBe('Ecole deja ca coeur AEther strasse');
+  });
+
+  it('forgives accents in word verdicts and live colouring when asked', () => {
+    expect(compareWord('café', 'cafe', { ignoreAccents: true })).toBe(true);
+    expect(compareWord('café', 'cafe')).toBe(false);
+    expect(compareWord('cœur', 'coeur', { ignoreAccents: true })).toBe(true);
+    // The reported bug: an accented CAPITAL — case folding alone never
+    // reaches it, accents must fold too for Ignore capitals to feel right.
+    expect(compareWord('État', 'etat', { ignoreAccents: true, ignoreCase: true })).toBe(true);
+    expect(charStatuses('éé', 'ee', { ignoreAccents: true }).every((c) => c.status === 'ok')).toBe(true);
+    expect(charStatuses('Éé', 'ee', { ignoreAccents: true, ignoreCase: true }).every((c) => c.status === 'ok')).toBe(true);
   });
 
   it('compares words under the forgiveness toggles', () => {
@@ -231,6 +248,29 @@ describe('SpeedTypeMode', () => {
     // Clearing restores the section scope.
     fireEvent.click(screen.getByRole('button', { name: 'Clear highlighted selection' }));
     expect(screen.queryByText(/Highlighted from/)).not.toBeInTheDocument();
+  });
+
+  it('types a French essay on a plain keyboard (accents forgiven by default)', () => {
+    const french = {
+      id: 'e-fr',
+      parsedStructure: {
+        thesis: '', introduction: 'Ça brûle déjà. À cœur vaillant.', bodyParagraphs: [], conclusion: '',
+      },
+    };
+    render(<SpeedTypeMode essay={french} />);
+    expect(screen.getByRole('button', { name: 'Ignore accents (é = e)' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: /Start the run/ }));
+    fireEvent.focus(screen.getByLabelText('Type the essay here'));
+
+    typeWord('Ca');
+    typeWord('brule');
+    typeWord('deja.');
+    typeWord('A');
+    typeWord('coeur');
+    fireEvent.change(screen.getByLabelText('Type the essay here'), { target: { value: 'vaillant.' } });
+
+    expect(screen.getByText('Run complete')).toBeInTheDocument();
+    expect(screen.getByText('100%')).toBeInTheDocument();
   });
 
   it('stores a personal best (10+ words) and shows it back in setup', () => {

@@ -75,6 +75,9 @@ export default function SpeedTypeMode({ essay }) {
     const [flow, setFlow] = useState('full'); // full | sentence
     const [ignoreCase, setIgnoreCase] = useState(false);
     const [ignorePunct, setIgnorePunct] = useState(false);
+    // Accents default to forgiven — most keyboards can't type é, ç or œ, and
+    // an accented essay is otherwise untypeable at speed.
+    const [ignoreAccents, setIgnoreAccents] = useState(true);
     const [strictStop, setStrictStop] = useState(false);
 
     // Run state.
@@ -94,7 +97,10 @@ export default function SpeedTypeMode({ essay }) {
     const inputRef = useRef(null);
     const currentWordRef = useRef(null);
 
-    const opts = useMemo(() => ({ ignoreCase, ignorePunct }), [ignoreCase, ignorePunct]);
+    const opts = useMemo(
+        () => ({ ignoreCase, ignorePunct, ignoreAccents }),
+        [ignoreCase, ignorePunct, ignoreAccents],
+    );
     // Blind means blind: with no verdicts there is nothing for strict stop to
     // stop on, so it switches itself off.
     const effectiveStrict = strictStop && feedback !== 'blind';
@@ -244,6 +250,9 @@ export default function SpeedTypeMode({ essay }) {
                     <OptionRow label="Forgive">
                         <TogglePill active={ignoreCase} onClick={() => setIgnoreCase((v) => !v)}>Ignore capitals</TogglePill>
                         <TogglePill active={ignorePunct} onClick={() => setIgnorePunct((v) => !v)}>Ignore punctuation</TogglePill>
+                        <TogglePill active={ignoreAccents} onClick={() => setIgnoreAccents((v) => !v)} title="é, ç, œ… match their plain keyboard letters">
+                            Ignore accents (é = e)
+                        </TogglePill>
                         <TogglePill
                             active={effectiveStrict}
                             disabled={feedback === 'blind'}

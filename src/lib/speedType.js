@@ -11,21 +11,33 @@
 const SMART_TYPE_MAP = {
   '‘': "'", '’': "'", '‚': "'", '‛': "'",
   '“': '"', '”': '"', '„': '"',
+  '«': '"', '»': '"', '‹': "'", '›': "'",
   '–': '-', '—': '-', '−': '-',
   '…': '...',
   ' ': ' ',
 };
 export const typeable = (s) => String(s || '').replace(
-  /[‘’‚‛“”„–—−… ]/g,
+  /[‘’‚‛“”„«»‹›–—−… ]/g,
   (c) => SMART_TYPE_MAP[c] || c,
 );
 
 const stripPunct = (w) => String(w || '').replace(/[^\p{L}\p{N}']/gu, '');
 
+// Accent folding: é/è/ê → e, ç → c, œ → oe… — what lets a plain keyboard
+// type a French (or any accented) essay. Without it, "École" typed as
+// "ecole" stays wrong even with Ignore capitals on, because case-folding É
+// only reaches é: the diacritic itself has to be stripped too.
+const LIGATURES = { 'œ': 'oe', 'Œ': 'OE', 'æ': 'ae', 'Æ': 'AE', 'ß': 'ss' };
+export const foldAccents = (s) => String(s || '')
+  .replace(/[œŒæÆß]/g, (c) => LIGATURES[c])
+  .normalize('NFD')
+  .replace(/\p{M}/gu, '');
+
 /** Word verdict under the current forgiveness toggles. */
 export function compareWord(target, typed, opts = {}) {
   let a = String(target || '');
   let b = String(typed || '');
+  if (opts.ignoreAccents) { a = foldAccents(a); b = foldAccents(b); }
   if (opts.ignoreCase) { a = a.toLowerCase(); b = b.toLowerCase(); }
   if (opts.ignorePunct) { a = stripPunct(a); b = stripPunct(b); }
   return a === b;
@@ -39,7 +51,13 @@ export function compareWord(target, typed, opts = {}) {
 export function charStatuses(target, typed, opts = {}) {
   const t = String(target || '');
   const v = String(typed || '');
-  const eq = (x, y) => (opts.ignoreCase ? x.toLowerCase() === y.toLowerCase() : x === y);
+  const eq = (x, y) => {
+    let a = x;
+    let b = y;
+    if (opts.ignoreAccents) { a = foldAccents(a); b = foldAccents(b); }
+    if (opts.ignoreCase) { a = a.toLowerCase(); b = b.toLowerCase(); }
+    return a === b;
+  };
   const out = [];
   for (let i = 0; i < Math.max(t.length, v.length); i += 1) {
     if (i >= v.length) out.push({ ch: t[i], status: 'pending' });
