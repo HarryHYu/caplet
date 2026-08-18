@@ -487,8 +487,13 @@
      intended polish (and the shared motion kit) actually renders. The
      .minimal-page/.minimal-panel layout helpers below remain in use. */
 
+  /* No min-h-screen here on purpose. The app shell (src/App.jsx) is already a
+     `min-h-screen flex flex-col` column whose content landmark is `flex-grow`,
+     so the footer is pushed to the fold without help. Adding another 100vh
+     floor inside that column stacked a guaranteed screen-height of empty
+     scroll under every short page. */
   .minimal-page {
-    @apply min-h-screen bg-surface-body pb-28 pt-24 text-text-primary md:pt-28;
+    @apply bg-surface-body pb-28 pt-24 text-text-primary md:pt-28;
   }
 
   /* The measure lives on the title/description, not the header, so a header
@@ -1076,9 +1081,20 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
  * utility cannot bring back the darker, inset treatment on a text field.
  * Choice controls are excluded because they have a different interaction
  * language and should retain their compact native/utility styling.
+ *
+ * NEVER write a Tailwind utility class as `.bg-transparent` in a selector
+ * here — write `[class~='bg-transparent']` instead. Tailwind's `@apply`
+ * resolver treats any rule whose *selector* mentions the class as a
+ * definition of it, so `.prose-chat pre code { @apply bg-transparent }`
+ * caused these rules to be cloned with `.bg-transparent` swapped for
+ * `.prose-chat pre code`, `.minimal-page`, `.skeleton`, `.btn-secondary`…
+ * That killed the guard (every transparent inner field got the full field
+ * chrome) and gave `.minimal-page` a page-wide accent ring on focus-within.
+ * Attribute selectors are invisible to that resolver and identical in
+ * specificity.
  */
 :is(
-  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  input:not([class~='bg-transparent']):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
   select,
   textarea
 ):not([data-control-unstyled]) {
@@ -1091,7 +1107,7 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
 }
 
 :is(
-  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  input:not([class~='bg-transparent']):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
   select,
   textarea
 ):not([data-control-unstyled]):focus {
@@ -1102,7 +1118,7 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
 }
 
 :is(
-  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  input:not([class~='bg-transparent']):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
   select,
   textarea
 ):not([data-control-unstyled])::placeholder {
@@ -1111,7 +1127,7 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
 }
 
 :is(
-  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  input:not([class~='bg-transparent']):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
   select,
   textarea
 ):not([data-control-unstyled]):disabled {
@@ -1120,7 +1136,7 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
 }
 
 :is(
-  input:not(.bg-transparent):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  input:not([class~='bg-transparent']):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
   select,
   textarea
 ):not([data-control-unstyled])[aria-invalid='true'] {
@@ -1131,24 +1147,24 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
 /* Compound controls use a transparent inner field inside a shell. Lift the
    shell itself when it was previously using a darker surface utility. */
 :is(
-  div.bg-surface-body:has(> input.bg-transparent),
-  div.bg-surface-soft:has(> input.bg-transparent),
-  div.bg-surface-body:has(> select.bg-transparent),
-  div.bg-surface-soft:has(> select.bg-transparent),
-  div.bg-surface-body:has(> textarea.bg-transparent),
-  div.bg-surface-soft:has(> textarea.bg-transparent)
+  div[class~='bg-surface-body']:has(> input[class~='bg-transparent']),
+  div[class~='bg-surface-soft']:has(> input[class~='bg-transparent']),
+  div[class~='bg-surface-body']:has(> select[class~='bg-transparent']),
+  div[class~='bg-surface-soft']:has(> select[class~='bg-transparent']),
+  div[class~='bg-surface-body']:has(> textarea[class~='bg-transparent']),
+  div[class~='bg-surface-soft']:has(> textarea[class~='bg-transparent'])
 ):not([data-control-unstyled]) {
   background-color: var(--surface-input);
   transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
 :is(
-  div.bg-surface-body:has(> input.bg-transparent),
-  div.bg-surface-soft:has(> input.bg-transparent),
-  div.bg-surface-body:has(> select.bg-transparent),
-  div.bg-surface-soft:has(> select.bg-transparent),
-  div.bg-surface-body:has(> textarea.bg-transparent),
-  div.bg-surface-soft:has(> textarea.bg-transparent)
+  div[class~='bg-surface-body']:has(> input[class~='bg-transparent']),
+  div[class~='bg-surface-soft']:has(> input[class~='bg-transparent']),
+  div[class~='bg-surface-body']:has(> select[class~='bg-transparent']),
+  div[class~='bg-surface-soft']:has(> select[class~='bg-transparent']),
+  div[class~='bg-surface-body']:has(> textarea[class~='bg-transparent']),
+  div[class~='bg-surface-soft']:has(> textarea[class~='bg-transparent'])
 ):not([data-control-unstyled]):focus-within {
   background-color: color-mix(in srgb, var(--surface-input) 94%, var(--accent) 6%);
   border-color: var(--accent) !important;
@@ -1157,12 +1173,12 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
 
 /* Keep the focus treatment deterministic for older selector engines that
    flatten the compound :is() list differently. */
-div.bg-surface-body:has(> input.bg-transparent):focus-within,
-div.bg-surface-soft:has(> input.bg-transparent):focus-within,
-div.bg-surface-body:has(> select.bg-transparent):focus-within,
-div.bg-surface-soft:has(> select.bg-transparent):focus-within,
-div.bg-surface-body:has(> textarea.bg-transparent):focus-within,
-div.bg-surface-soft:has(> textarea.bg-transparent):focus-within {
+div[class~='bg-surface-body']:has(> input[class~='bg-transparent']):focus-within,
+div[class~='bg-surface-soft']:has(> input[class~='bg-transparent']):focus-within,
+div[class~='bg-surface-body']:has(> select[class~='bg-transparent']):focus-within,
+div[class~='bg-surface-soft']:has(> select[class~='bg-transparent']):focus-within,
+div[class~='bg-surface-body']:has(> textarea[class~='bg-transparent']):focus-within,
+div[class~='bg-surface-soft']:has(> textarea[class~='bg-transparent']):focus-within {
   background-color: color-mix(in srgb, var(--surface-input) 94%, var(--accent) 6%) !important;
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 4px var(--accent-soft), 0 12px 26px -22px var(--accent) !important;

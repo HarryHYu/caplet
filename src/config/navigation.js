@@ -31,9 +31,9 @@ export const STUDY_NAV_ITEMS = [
   { path: '/forum', label: 'Forum', icon: ChatBubbleLeftRightIcon },
 ];
 
-/** Money is a sibling workspace, appended after the study set where the
- *  surface carries a Money entry (top bars); the sidebar renders it in its
- *  own utility section. */
+/** Money is a sibling workspace, not a footer utility, so every chrome
+ *  surface appends it directly after the study set — the top bars inline, the
+ *  sidebar behind a hairline inside the same primary nav. */
 export const MONEY_NAV_ITEM = { path: '/money', label: 'Money', icon: BanknotesIcon };
 
 /**
