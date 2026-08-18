@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { actionDetails } from '../components/learning/learningNextActionUtils';
+import { InlineEmpty } from '../components/learning/LearningStates';
 import CapletLoader from '../components/CapletLoader';
 import { useMySubjects } from '../lib/useMySubjects';
 import { RESOURCE_SHORTCUTS, usePinnedNavItems } from '../lib/usePinnedNavItems';
@@ -67,7 +68,7 @@ function subjectPath(subject) {
 
 function TodayRow({ href, icon, title, detail }) {
     return (
-        <Link to={href} className="focus-ring group flex min-h-20 items-center gap-4 rounded-lg border-b border-line-soft py-4 last:border-b-0">
+        <Link to={href} className="focus-ring group -mx-2 flex min-h-16 items-center gap-4 rounded-xl px-2 py-3 transition-colors hover:bg-surface-soft">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
                 {createElement(icon, { className: 'h-5 w-5', 'aria-hidden': true })}
             </span>
@@ -91,9 +92,9 @@ function ResourceLink({ id, path, icon, title, detail, pinned, onToggle }) {
         <div
             draggable
             onDragStart={handleDragStart}
-            className="group flex min-h-20 items-center gap-3 border-b border-line-soft py-4"
+            className="surface-card card-lift group flex items-start gap-3 p-5"
         >
-            <Link to={path} className="focus-ring flex min-w-0 flex-1 items-center gap-4 rounded-lg" aria-label={`${title}. ${detail}`}>
+            <Link to={path} className="focus-ring flex min-w-0 flex-1 items-start gap-4 rounded-xl" aria-label={`${title}. ${detail}`}>
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
                     {createElement(icon, { className: 'h-5 w-5', 'aria-hidden': true })}
                 </span>
@@ -187,35 +188,21 @@ export default function Dashboard() {
                 <div className="mx-auto max-w-6xl">
                     <CapletLoader message="Loading today…" />
                     {/* Skeleton mirrors the loaded layout: header, then the
-                        subjects / primary action / weekly columns, then rows. */}
-                    <div className="mt-12 space-y-10" aria-hidden="true">
+                        next-action card beside the subjects / week rail, then
+                        the assessments card. */}
+                    <div className="mt-12 space-y-6" aria-hidden="true">
                         <div className="space-y-3">
                             <div className="skeleton h-10 w-48" />
                             <div className="skeleton h-4 w-64" />
                         </div>
-                        <div className="grid gap-10 lg:grid-cols-[220px_minmax(320px,1fr)_minmax(280px,0.95fr)]">
-                            <div className="space-y-3">
-                                <div className="skeleton h-4 w-24" />
-                                <div className="skeleton h-4 w-32" />
-                                <div className="skeleton h-4 w-28" />
-                            </div>
-                            <div className="space-y-4">
-                                <div className="skeleton h-4 w-24" />
-                                <div className="skeleton h-8 w-3/4" />
-                                <div className="skeleton h-4 w-1/2" />
-                                <div className="skeleton h-12 w-48 rounded-lg" />
-                            </div>
-                            <div className="space-y-4">
-                                <div className="skeleton h-6 w-28" />
-                                <div className="skeleton h-16 w-full" />
-                                <div className="skeleton h-16 w-full" />
+                        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+                            <div className="skeleton h-80 rounded-3xl" />
+                            <div className="grid content-start gap-6">
+                                <div className="skeleton h-36 rounded-2xl" />
+                                <div className="skeleton h-56 rounded-2xl" />
                             </div>
                         </div>
-                        <div className="space-y-4">
-                            <div className="skeleton h-6 w-56" />
-                            <div className="skeleton h-16 w-full" />
-                            <div className="skeleton h-16 w-full" />
-                        </div>
+                        <div className="skeleton h-64 rounded-2xl" />
                     </div>
                 </div>
             </div>
@@ -285,37 +272,18 @@ export default function Dashboard() {
                 </header>
 
                 {loadError && (
-                    <div role="alert" className="mb-8 flex flex-col gap-3 border-y border-[color:var(--border-error)] bg-surface-error px-4 py-3 text-sm font-bold text-text-error sm:flex-row sm:items-center sm:justify-between">
+                    <div role="alert" className="mb-6 flex flex-col gap-3 rounded-2xl border border-[color:var(--border-error)] bg-surface-error px-5 py-4 text-sm font-bold text-text-error sm:flex-row sm:items-center sm:justify-between">
                         <p>{loadError}</p>
                         <button type="button" onClick={() => setRetryKey((value) => value + 1)} className="min-h-10 shrink-0 px-3 text-sm font-bold">Retry</button>
                     </div>
                 )}
 
-                <section aria-label="Today’s study overview" className="grid gap-10 border-b border-line-soft pb-12 lg:grid-cols-[220px_minmax(320px,1fr)] lg:gap-0 xl:grid-cols-[240px_minmax(360px,1fr)_minmax(320px,0.95fr)]">
-                    <div className="lg:border-r lg:border-line-soft lg:pr-10">
-                        <div className="flex items-center justify-between gap-4">
-                            <h2 className="text-sm font-extrabold tracking-normal text-text-primary">My Subjects</h2>
-                            <Link to="/library" className="text-sm font-bold text-accent hover:text-accent-strong">Edit</Link>
-                        </div>
-                        <nav aria-label="Your subjects" className="mt-5 space-y-1">
-                            {dashboardSubjects.length > 0 ? dashboardSubjects.map((subject) => (
-                                <Link
-                                    key={subject}
-                                    to={subjectPath(subject)}
-                                    className="focus-ring relative block min-h-11 rounded-lg py-3 pl-5 text-sm font-bold text-text-primary transition-colors hover:text-accent"
-                                >
-                                    {subject}
-                                </Link>
-                            )) : (
-                                <Link to="/library" className="block py-3 text-sm font-medium text-accent">Choose subjects</Link>
-                            )}
-                        </nav>
-                    </div>
-
-                    <div className="lg:px-10 xl:border-r xl:border-line-soft">
+                <section aria-label="Today’s study overview" className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+                    <div className="animate-rise surface-card flex flex-col rounded-3xl p-7 md:p-9">
                         <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-accent">{activeSubject}</p>
-                        <h2 className="mt-6 max-w-md font-display text-3xl font-extrabold tracking-[-0.025em] text-text-primary">{primaryTitle}</h2>
-                        <p className="mt-2 text-lg font-medium text-text-muted">{dashboardAction.detail}</p>
+                        <h2 className="mt-4 max-w-md font-display text-3xl font-extrabold tracking-[-0.025em] text-text-primary md:text-4xl">{primaryTitle}</h2>
+                        <p className="mt-3 max-w-lg text-lg font-medium text-text-muted">{dashboardAction.detail}</p>
+                        <div className="mt-7 flex flex-wrap items-center gap-4">
                         <Link
                             to={dashboardAction.href}
                             aria-label={`${dashboardAction.title}. ${primaryLabel}`}
@@ -327,78 +295,111 @@ export default function Dashboard() {
                                 entityId: dashboardAction.type,
                                 metadata: { source: 'dashboard', actionType: dashboardAction.type, mode: dashboardAction.mode || '' },
                             })}
-                            className="press focus-ring mt-7 inline-flex min-h-12 min-w-48 items-center justify-center rounded-lg bg-accent px-6 text-sm font-bold text-accent-contrast transition-colors hover:bg-accent-strong"
+                            className="press focus-ring inline-flex min-h-12 min-w-48 items-center justify-center rounded-xl bg-accent px-7 text-base font-bold text-accent-contrast shadow-card transition-colors hover:bg-accent-strong"
                         >
                             {primaryLabel}
                         </Link>
+                        <Link to="/library/economics" className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-bold text-accent hover:text-accent-strong">
+                            Open Economics <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+                        </Link>
+                        </div>
 
-                        <div className="mt-8 border-y border-line-soft py-5">
-                            <h3 className="text-sm font-extrabold text-text-primary">After that</h3>
-                            <Link to="/review" className="focus-ring group mt-3 flex min-h-11 items-center gap-3 rounded-lg text-sm font-medium text-text-primary hover:text-accent">
-                                <span className="grid h-7 w-7 place-items-center rounded-full border border-line-soft text-xs font-bold">1</span>
+                        <div className="mt-9 rounded-2xl bg-surface-soft p-5 pt-4">
+                            <h3 className="card-section-title mb-3">After that</h3>
+                            <Link to="/review" className="focus-ring group -mx-2 flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm font-semibold text-text-primary hover:text-accent">
+                                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line-soft bg-surface-raised text-xs font-bold">1</span>
                                 <span className="flex-1">{dueCount > 0 ? `Review ${dueCount} ${dueCount === 1 ? 'item' : 'items'}` : 'Review one item'}</span>
                                 <ChevronRightIcon className="h-4 w-4 text-text-dim group-hover:text-accent" aria-hidden="true" />
                             </Link>
-                            <Link to="/study-plan" className="focus-ring group flex min-h-11 items-center gap-3 rounded-lg text-sm font-medium text-text-primary hover:text-accent">
-                                <span className="grid h-7 w-7 place-items-center rounded-full border border-line-soft text-xs font-bold">2</span>
+                            <Link to="/study-plan" className="focus-ring group -mx-2 flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm font-semibold text-text-primary hover:text-accent">
+                                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line-soft bg-surface-raised text-xs font-bold">2</span>
                                 <span className="flex-1">Update study plan</span>
                                 <ChevronRightIcon className="h-4 w-4 text-text-dim group-hover:text-accent" aria-hidden="true" />
                             </Link>
                         </div>
-
-                        <Link to="/library/economics" className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-accent hover:text-accent-strong">
-                            Open Economics <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-                        </Link>
                     </div>
 
-                    <div className="lg:col-span-2 lg:border-t lg:border-line-soft lg:pt-10 xl:col-span-1 xl:border-t-0 xl:pl-10 xl:pt-0">
-                        <h2 className="text-xl font-extrabold tracking-tight text-text-primary">This week</h2>
-                        <div className="mt-5">
-                            <TodayRow href="/study-plan" icon={CalendarDaysIcon} title={nextStudyTask?.title || 'Study plan review'} detail={planDetail} />
-                            <TodayRow href={activePractice ? dashboardAction.href : '/practice'} icon={PencilSquareIcon} title={activePractice ? 'Continue practice' : 'Practice quiz'} detail={practiceDetail} />
+                    <div className="grid content-start gap-6">
+                        <div className="animate-rise surface-card" style={{ animationDelay: '70ms' }}>
+                            <div className="flex items-center justify-between gap-4">
+                                <h2 id="my-subjects-heading" className="card-section-title mb-0">My subjects</h2>
+                                <Link to="/library" className="text-sm font-bold text-accent hover:text-accent-strong">Edit</Link>
+                            </div>
+                            {dashboardSubjects.length > 0 ? (
+                                <nav aria-labelledby="my-subjects-heading" className="mt-4 flex flex-wrap gap-2">
+                                    {dashboardSubjects.map((subject) => (
+                                        <Link
+                                            key={subject}
+                                            to={subjectPath(subject)}
+                                            className="focus-ring press inline-flex min-h-10 items-center rounded-full border border-line-soft bg-surface-soft px-4 text-sm font-bold text-text-primary transition-colors hover:border-accent hover:text-accent"
+                                        >
+                                            {subject}
+                                        </Link>
+                                    ))}
+                                </nav>
+                            ) : (
+                                <div className="mt-4 flex items-center gap-4 rounded-2xl border border-dashed border-line-soft bg-surface-soft p-4">
+                                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
+                                        <BookOpenIcon className="h-5 w-5" aria-hidden="true" />
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-bold text-text-primary">No subjects yet</p>
+                                        <p className="mt-1 text-sm font-medium leading-snug text-text-muted">Pick your subjects and the rest of Today follows them.</p>
+                                    </div>
+                                    <Link to="/library" className="press focus-ring inline-flex min-h-10 shrink-0 items-center rounded-xl bg-accent px-4 text-sm font-bold text-accent-contrast transition-colors hover:bg-accent-strong">Choose</Link>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="mt-7">
+                        <div className="animate-rise surface-card" style={{ animationDelay: '140ms' }}>
                             <div className="flex items-center justify-between gap-4">
-                                <h3 className="text-sm font-extrabold text-text-primary">Weekly activity</h3>
+                                <h2 className="card-section-title mb-0">This week</h2>
                                 {Number(studyMomentum?.currentStreak) > 0 && (
                                     <span className="inline-flex animate-streak-pop items-center gap-1 rounded-full bg-[color:var(--block-green)] px-2.5 py-1 text-xs font-bold text-[color:var(--mark-green)]">
                                         🔥 {studyMomentum.currentStreak}-day streak
                                     </span>
                                 )}
                             </div>
-                            <div className="mt-5 grid grid-cols-7 gap-2" aria-label={`${weekActiveDays} active study days this week`}>
-                                {week.map((day) => (
-                                    <div key={day.key} className="text-center">
-                                        <span className="block text-[11px] font-medium text-text-muted">{day.label}</span>
-                                        <span
-                                            title={`${day.key}: ${day.count} study ${day.count === 1 ? 'action' : 'actions'}`}
-                                            className={`mx-auto mt-3 block h-5 w-5 rounded-full border-2 ${day.count > 0 ? 'border-accent bg-accent' : day.today ? 'border-accent bg-transparent' : 'border-line-soft bg-transparent'} ${day.future ? 'opacity-60' : ''}`}
-                                            aria-hidden="true"
-                                        />
-                                    </div>
-                                ))}
+                            <div className="mt-3 divide-y divide-line-soft">
+                                <TodayRow href="/study-plan" icon={CalendarDaysIcon} title={nextStudyTask?.title || 'Study plan review'} detail={planDetail} />
+                                <TodayRow href={activePractice ? dashboardAction.href : '/practice'} icon={PencilSquareIcon} title={activePractice ? 'Continue practice' : 'Practice quiz'} detail={practiceDetail} />
                             </div>
-                            <p className="mt-5 text-sm text-text-muted">{studyMomentum?.weekActiveDays || weekActiveDays} of {studyMomentum?.weeklyGoal || 3} planned days completed.</p>
+
+                            <div className="mt-6 rounded-2xl bg-surface-soft p-5 pt-4">
+                                <h3 className="card-section-title mb-0">Weekly activity</h3>
+                                <div className="mt-4 grid grid-cols-7 gap-2" aria-label={`${weekActiveDays} active study days this week`}>
+                                    {week.map((day) => (
+                                        <div key={day.key} className="text-center">
+                                            <span className="block text-[11px] font-medium text-text-muted">{day.label}</span>
+                                            <span
+                                                title={`${day.key}: ${day.count} study ${day.count === 1 ? 'action' : 'actions'}`}
+                                                className={`mx-auto mt-3 block h-5 w-5 rounded-full border-2 ${day.count > 0 ? 'border-accent bg-accent' : day.today ? 'border-accent bg-transparent' : 'border-line-soft bg-transparent'} ${day.future ? 'opacity-60' : ''}`}
+                                                aria-hidden="true"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="mt-4 text-sm text-text-muted">{studyMomentum?.weekActiveDays || weekActiveDays} of {studyMomentum?.weeklyGoal || 3} planned days completed.</p>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section aria-labelledby="upcoming-assessments-heading" className="border-b border-line-soft py-10">
+                <section aria-labelledby="upcoming-assessments-heading" className="animate-rise surface-card mt-6" style={{ animationDelay: '200ms' }}>
                     <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <h2 id="upcoming-assessments-heading" className="text-2xl font-extrabold tracking-tight text-text-primary">Upcoming assessments</h2>
+                            <h2 id="upcoming-assessments-heading" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Upcoming assessments</h2>
                             <p className="mt-2 text-sm text-text-muted">Only assessments for your chosen subjects.</p>
                         </div>
                         {nextExam ? (
-                            <Link to="/assessments" className="shrink-0 sm:text-right">
-                                <span className="block font-display text-3xl font-extrabold text-text-primary">{countdownLabel(calendarDaysUntil(nextExam.date))}</span>
-                                <span className="mt-1 block text-sm font-bold text-accent">until {nextExam.subject}</span>
+                            <Link to="/assessments" className="focus-ring shrink-0 rounded-2xl bg-surface-soft px-5 py-3 text-center transition-colors hover:bg-accent-soft sm:text-right">
+                                <span className="block font-display text-3xl font-extrabold leading-none text-text-primary">{countdownLabel(calendarDaysUntil(nextExam.date))}</span>
+                                <span className="mt-2 block text-sm font-bold text-accent">until {nextExam.subject}</span>
                             </Link>
                         ) : <Link to="/assessments" className="shrink-0 text-sm font-bold text-accent hover:text-accent-strong">View schedule</Link>}
                     </div>
                     {upcomingAssessments.length > 0 ? (
-                        <div className="mt-5 grid gap-x-8 border-y border-line-soft md:grid-cols-2">
+                        <div className="mt-4 grid gap-x-8 border-t border-line-soft pt-2 md:grid-cols-2">
                             {upcomingAssessments.slice(0, 6).map((task) => (
                                 <TodayRow
                                     key={task.id}
@@ -410,15 +411,19 @@ export default function Dashboard() {
                             ))}
                         </div>
                     ) : (
-                        <div className="mt-5 border-y border-line-soft py-6 text-sm text-text-muted">
-                            {mySubjects.length > 0 ? 'No upcoming assessments are listed for your subjects.' : 'Choose your subjects to see relevant assessments.'}
-                        </div>
+                        <InlineEmpty
+                            className="mt-5"
+                            icon={CalendarDaysIcon}
+                            title={mySubjects.length > 0 ? 'Nothing scheduled yet' : 'No subjects chosen yet'}
+                            message={mySubjects.length > 0 ? 'No upcoming assessments are listed for your subjects.' : 'Choose your subjects to see relevant assessments.'}
+                            action={<Link to={mySubjects.length > 0 ? '/assessments' : '/library'} className="btn-primary">{mySubjects.length > 0 ? 'View schedule' : 'Choose subjects'}</Link>}
+                        />
                     )}
                 </section>
 
-                <section aria-labelledby="resources-tools-heading" className="border-b border-line-soft py-10">
-                    <h2 id="resources-tools-heading" className="text-2xl font-extrabold tracking-tight text-text-primary">Resources &amp; tools</h2>
-                    <div className="mt-5 grid gap-x-10 border-y border-line-soft md:grid-cols-2">
+                <section aria-labelledby="resources-tools-heading" className="mt-10">
+                    <h2 id="resources-tools-heading" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Resources &amp; tools</h2>
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         {RESOURCE_SHORTCUTS.map((shortcut) => {
                             const details = {
                                 'resource-library': { icon: BookOpenIcon, detail: 'Notes, guides and past papers' },
@@ -434,12 +439,12 @@ export default function Dashboard() {
                 </section>
 
                 {classes.length > 0 && (
-                    <section aria-labelledby="classes-heading" className="py-10">
-                        <div className="flex items-end justify-between gap-4">
-                            <h2 id="classes-heading" className="text-lg font-extrabold text-text-primary">Classes</h2>
+                    <section aria-labelledby="classes-heading" className="surface-card mt-10">
+                        <div className="flex items-center justify-between gap-4">
+                            <h2 id="classes-heading" className="card-section-title mb-0">Classes</h2>
                             <Link to="/classes" className="text-sm font-bold text-accent hover:text-accent-strong">View all</Link>
                         </div>
-                        <div className="mt-5 divide-y divide-line-soft border-y border-line-soft">
+                        <div className="mt-3 divide-y divide-line-soft">
                             {classes.slice(0, 2).map((classroom) => (
                                 <Link key={classroom.id} to={`/classes/${classroom.id}`} className="group flex min-h-16 items-center gap-4 py-4">
                                     <ArrowPathIcon className="h-5 w-5 text-text-dim group-hover:text-accent" aria-hidden="true" />

@@ -10,6 +10,7 @@ import ResumeLearningCard from '../components/learning/ResumeLearningCard';
 import { LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
 import { InlineEmpty } from '../components/learning/LearningStates';
 import { faculties } from '../data/hscSubjects';
+import Glyph from '../components/SubjectGlyph';
 
 /**
  * Resource Library — an HSC subject browser. The full catalogue is visible so
@@ -17,18 +18,22 @@ import { faculties } from '../data/hscSubjects';
  * (see data/hscSubjects) link through to their shelf at /library/:slug.
  */
 
-const LibrarySubjectCard = ({ subject }) => {
+const LibrarySubjectCard = ({ subject, faculty }) => {
   const isAvailable = subject.available === true;
-  const classes = `group flex min-h-36 flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 shadow-card transition-colors ${
-    isAvailable ? 'card-lift focus-ring hover:border-accent/50 hover:bg-surface-soft hover:shadow-card-hover' : 'opacity-75'
+  const classes = `group flex items-center gap-4 rounded-2xl border border-line-soft bg-surface-raised p-4 shadow-card transition-colors ${
+    isAvailable ? 'card-lift focus-ring hover:border-accent/50 hover:shadow-card-hover' : 'opacity-70'
   }`;
   const content = (
     <>
-      <div>
-        <h3 className="font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{subject.name}</h3>
+      <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl ${faculty?.block || 'bg-surface-soft'} ${faculty?.text || 'text-text-muted'}`} aria-hidden="true">
+        <Glyph className="h-6 w-6">{subject.glyph}</Glyph>
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[11px] font-bold uppercase tracking-[0.11em] text-text-dim" aria-hidden="true">{faculty?.name}</p>
+        <h3 className="mt-0.5 font-display text-lg font-bold leading-tight tracking-tight text-text-primary transition-colors group-hover:text-accent">{subject.name}</h3>
       </div>
       {isAvailable && (
-        <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent">
+        <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-accent">
           Open <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
         </span>
       )}
@@ -75,7 +80,10 @@ const Library = () => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [subjectQuery, setSubjectQuery] = useState('');
 
-  const allSubjects = useMemo(() => faculties.flatMap((faculty) => faculty.subjects), []);
+  const allSubjects = useMemo(
+    () => faculties.flatMap((faculty) => faculty.subjects.map((subject) => ({ ...subject, faculty }))),
+    [],
+  );
   const matchingSubjects = useMemo(() => {
     const query = subjectQuery.trim().toLowerCase();
     return allSubjects.filter((subject) => !query || subject.name.toLowerCase().includes(query));
@@ -178,7 +186,7 @@ const Library = () => {
             />
           ) : (
             <div>
-              {visibleSubjects.length ? <div className="reveal-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{visibleSubjects.map((subject) => <LibrarySubjectCard key={subject.name} subject={subject} />)}</div> : <InlineEmpty className="animate-rise" icon={MagnifyingGlassIcon} title="No matching subjects" message="Nothing on your shelf matches this filter yet." action={<button type="button" onClick={() => { setFilterActive(false); setSubjectQuery(''); }} className="btn-secondary focus-ring">Show all</button>} />}
+              {visibleSubjects.length ? <div className="reveal-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{visibleSubjects.map((subject) => <LibrarySubjectCard key={subject.name} subject={subject} faculty={subject.faculty} />)}</div> : <InlineEmpty className="animate-rise" icon={MagnifyingGlassIcon} title="No matching subjects" message="Nothing on your shelf matches this filter yet." action={<button type="button" onClick={() => { setFilterActive(false); setSubjectQuery(''); }} className="btn-secondary focus-ring">Show all</button>} />}
             </div>
           )}
         </LearningSection>

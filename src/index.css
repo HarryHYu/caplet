@@ -528,9 +528,12 @@
     @apply surface-card card-lift focus-ring cursor-pointer;
   }
 
-  /* A titled region inside a card or page — replaces ad-hoc hairline stacks. */
+  /* A titled region inside a card or page — replaces ad-hoc hairline stacks.
+     No margin of its own: it is as often a flex child beside an action link
+     as it is a standalone heading, and baking in mb-4 forced an override at
+     every one of those call sites. Pair with mb-4 when it stands alone. */
   .card-section-title {
-    @apply mb-4 text-[11px] font-bold uppercase tracking-widest text-text-dim;
+    @apply text-[11px] font-bold uppercase tracking-widest text-text-dim;
   }
 
   /* ── Shared micro-interaction kit ──────────────────────────────────────

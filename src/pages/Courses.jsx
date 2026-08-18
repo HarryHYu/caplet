@@ -112,14 +112,14 @@ const Courses = () => {
         <LearningPageHeader eyebrow="Structured study" title="Courses" description="Follow lessons in order, resume exactly where you stopped, or begin with a quick Economics diagnostic." className="reveal mb-12" />
 
         {/* Filters */}
-        <div className="reveal mb-12 flex flex-col gap-5 rounded-3xl bg-surface-soft p-5 sm:flex-row sm:p-6">
+        <div className="reveal surface-card mb-12 flex flex-col gap-5 sm:flex-row">
           <div className="sm:w-48">
             <label htmlFor="learning-path-level" className="text-sm font-semibold text-text-muted mb-3 block">Level</label>
             <select
               id="learning-path-level"
               value={filters.level}
               onChange={(e) => handleFilterChange('level', e.target.value)}
-              className="w-full bg-surface-raised border border-line-soft px-5 py-4 rounded-xl text-sm font-semibold outline-none focus:border-accent transition-colors"
+              className="w-full bg-surface-soft border border-line-soft px-5 py-4 rounded-xl text-sm font-semibold outline-none focus:border-accent transition-colors"
             >
               <option value="">All levels</option>
               <option value="beginner">Beginner</option>
@@ -135,7 +135,7 @@ const Courses = () => {
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               placeholder="Search courses by title"
-              className="w-full bg-surface-raised border border-line-soft px-5 py-4 rounded-xl text-sm font-semibold outline-none focus:border-accent transition-colors placeholder:text-text-dim/40"
+              className="w-full bg-surface-soft border border-line-soft px-5 py-4 rounded-xl text-sm font-semibold outline-none focus:border-accent transition-colors placeholder:text-text-dim/40"
             />
           </div>
         </div>
@@ -166,11 +166,13 @@ const Courses = () => {
         )}
 
         {(showCatalogEmpty || error) && (
-          <div className="reveal rounded-3xl block-blue px-8 py-14 shadow-card md:px-12">
-            <AcademicCapIcon className="h-10 w-10 text-accent" />
-            <h2 className="mt-6 font-display text-3xl font-bold tracking-tight text-text-primary">Start with Economics while new paths are being prepared.</h2>
+          <div className="reveal rounded-3xl block-blue p-8 shadow-card md:p-10">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-raised text-accent shadow-card">
+              <AcademicCapIcon className="h-6 w-6" aria-hidden="true" />
+            </span>
+            <h2 className="mt-5 max-w-3xl font-display text-3xl font-bold tracking-tight text-text-primary">Start with Economics while new paths are being prepared.</h2>
             <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">The Economics library already includes Year 11 and Year 12 topics, saved adaptive practice, feedback, and a mastery map.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><Link to="/library/economics" className="btn-primary">Open Economics <ArrowRightIcon className="h-4 w-4" /></Link><Link to="/practice?subject=economics&mode=diagnostic&source=course" className="btn-secondary"><ClipboardDocumentCheckIcon className="h-4 w-4" /> Take the diagnostic</Link></div>
+            <div className="mt-7 flex flex-wrap gap-3"><Link to="/library/economics" className="btn-primary">Open Economics <ArrowRightIcon className="h-4 w-4" /></Link><Link to="/practice?subject=economics&mode=diagnostic&source=course" className="btn-secondary"><ClipboardDocumentCheckIcon className="h-4 w-4" /> Take the diagnostic</Link></div>
           </div>
         )}
       </div>

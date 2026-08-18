@@ -251,7 +251,11 @@ export default function Sidebar() {
                     className="group absolute right-0 top-1/2 z-30 hidden h-28 w-5 -translate-y-1/2 translate-x-1/2 cursor-col-resize items-center justify-center lg:flex"
                     title="Drag to resize sidebar"
                 >
-                    <span className="grid h-14 w-5 place-items-center rounded-full border border-line-soft bg-surface-raised text-text-dim shadow-card transition-colors group-hover:border-accent/40 group-hover:text-accent group-focus-visible:border-accent group-focus-visible:text-accent">
+                    {/* Resting state is a bare hairline flush with the rail —
+                        the pill only materialises on hover/focus. As a always-on
+                        floating chip it read as a stray artifact hanging in the
+                        middle of the page. */}
+                    <span className="grid h-14 w-5 place-items-center rounded-full border border-transparent bg-transparent text-transparent transition-all duration-150 group-hover:border-line-soft group-hover:bg-surface-raised group-hover:text-accent group-hover:shadow-card group-focus-visible:border-accent group-focus-visible:bg-surface-raised group-focus-visible:text-accent group-focus-visible:shadow-card">
                         <EllipsisVerticalIcon className="h-4 w-4" aria-hidden="true" />
                     </span>
                 </div>

@@ -79,7 +79,7 @@ export function LearningCard({
       </span>
     </>
   );
-  const classes = `group flex min-h-full flex-col rounded-lg border border-line-soft bg-surface-body p-6 transition-colors duration-150 ${href ? 'hover:border-accent/60' : 'opacity-75'} ${className}`;
+  const classes = `group flex min-h-full flex-col ${href ? 'surface-card-interactive hover:border-accent/50' : 'surface-card opacity-75'} ${className}`;
 
   if (!href) return <div className={classes} aria-disabled="true">{content}</div>;
   return <Link to={href} className={classes}>{content}</Link>;

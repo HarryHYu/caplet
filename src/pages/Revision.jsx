@@ -6,6 +6,7 @@ import SlideRenderer from '../components/lesson/SlideRenderer';
 import { slideKindLabel, normalizeSlide } from '../lib/slideSchema';
 import { BookmarkIcon, ArrowRightIcon, SparklesIcon, XMarkIcon, AcademicCapIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useReveal } from '../lib/useReveal';
+import { LearningEmpty } from '../components/learning/LearningStates';
 
 // Modal slideshow showing an AI-generated summary of a category's slides.
 function SummaryModal({ open, loading, error, category, slides, onClose }) {
@@ -418,14 +419,13 @@ export default function Revision() {
                 )}
 
                 {savedSlides.length === 0 ? (
-                    <div className="reveal bg-surface-raised rounded-3xl p-16 text-center shadow-card">
-                        <BookmarkIcon className="w-8 h-8 text-blue mx-auto mb-6" />
-                        <p className="text-text-muted text-base font-medium mb-8">
-                            No flagged slides yet.
-                        </p>
-                        <Link to="/courses" className="btn-primary focus-ring card-lift inline-flex items-center">
-                            Browse courses
-                        </Link>
+                    <div className="reveal grid min-h-[42vh] content-center">
+                        <LearningEmpty
+                            icon={BookmarkIcon}
+                            title="No flagged slides yet."
+                            message="Flag a slide while you study and it lands here, grouped by topic and scheduled for review."
+                            action={<Link to="/courses" className="btn-primary focus-ring">Browse courses <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>}
+                        />
                     </div>
                 ) : (
                     <div className="space-y-12 reveal-stagger">

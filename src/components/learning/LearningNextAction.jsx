@@ -30,9 +30,9 @@ export default function LearningNextAction({ resume, studyTask, recommendation, 
 
   if (variant === 'minimal') {
     return (
-      <Link to={action.href} onClick={handleClick} className={`group flex items-center justify-between gap-5 border-y border-line-soft py-4 transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}>
+      <Link to={action.href} onClick={handleClick} className={`surface-card-interactive group flex items-center justify-between gap-5 hover:border-accent/50 ${className}`}>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-text-muted">{action.eyebrow}</p>
+          <p className="card-section-title mb-0">{action.eyebrow}</p>
           <h2 className="mt-1 truncate font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{action.title}</h2>
           <p className="mt-1 max-w-2xl truncate text-sm font-medium text-text-muted">{action.detail}</p>
         </div>

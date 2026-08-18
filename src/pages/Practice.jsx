@@ -168,21 +168,21 @@ function accuracyPercent(value) {
 function RecommendationCard({ recommendation, starting, onStart }) {
   if (!recommendation) return null;
   return (
-    <section className="mb-10 border-y border-line-soft py-7">
+    <section className="animate-rise mb-10 rounded-3xl border border-line-soft bg-surface-raised p-7 shadow-card md:p-9">
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-accent">
             <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Recommended
           </p>
-          <h2 className="mt-2 max-w-3xl text-xl font-display font-extrabold tracking-tight text-text-primary">
+          <h2 className="mt-3 max-w-3xl font-display text-2xl font-extrabold tracking-tight text-text-primary md:text-3xl">
             {recommendation.outcome?.title ? `Strengthen ${recommendation.outcome.title}` : 'Take your next best step'}
           </h2>
-          <p className="mt-2 text-xs font-bold text-text-dim">
+          <p className="mt-3 inline-flex items-center rounded-full bg-surface-soft px-3 py-1.5 text-xs font-bold text-text-muted">
             {MODE_MAP.get(recommendation.mode)?.label || 'Personalised practice'}
             {recommendation.estimatedMinutes ? ` · ${recommendation.estimatedMinutes} min` : ''}
           </p>
         </div>
-        <button type="button" onClick={onStart} disabled={starting} className="btn-primary shrink-0">
+        <button type="button" onClick={onStart} disabled={starting} className="press focus-ring inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-accent px-7 text-base font-bold text-accent-contrast shadow-card transition-colors hover:bg-accent-strong disabled:opacity-50">
           {starting ? 'Starting…' : 'Start'} {!starting && <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />}
         </button>
       </div>
@@ -194,7 +194,7 @@ function ResumeCard({ session, onResume }) {
   const mode = MODE_MAP.get(session.mode) || MODE_MAP.get('daily');
   const progress = session.totalQuestions ? Math.min(session.currentIndex + 1, session.totalQuestions) : session.currentIndex + 1;
   return (
-    <section className="mb-8 flex flex-col gap-5 border-y border-line-soft py-6 sm:flex-row sm:items-center sm:justify-between">
+    <section className="animate-rise surface-card mb-6 flex flex-col gap-5 border-l-4 border-l-accent sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-4">
         <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${modeTone(mode.tone)}`}>
           <PlayIcon className="h-5 w-5" aria-hidden="true" />
@@ -214,7 +214,7 @@ function ResumeCard({ session, onResume }) {
 
 function ModePicker({ selectedMode, startingMode, onStart }) {
   return (
-    <section aria-labelledby="practice-modes-heading">
+    <section aria-labelledby="practice-modes-heading" className="animate-rise">
       <div className="mb-6">
         <span className="section-kicker">Choose your focus</span>
         <h2 id="practice-modes-heading" className="text-2xl font-display font-extrabold tracking-tight text-text-primary">Practice modes</h2>
@@ -231,7 +231,7 @@ function ModePicker({ selectedMode, startingMode, onStart }) {
               onClick={() => onStart(mode.id)}
               disabled={Boolean(startingMode)}
               aria-label={`Start ${mode.label}`}
-              className={`group min-h-48 rounded-lg border p-6 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-body disabled:cursor-wait ${selected ? 'border-accent bg-accent-soft' : 'border-line-soft bg-surface-body hover:border-accent/60'}`}
+              className={`surface-card-interactive group min-h-52 text-left disabled:cursor-wait ${selected ? 'border-accent ring-1 ring-accent' : 'hover:border-accent/50'}`}
             >
               <div className="flex items-start justify-between gap-4">
                 <span className={`grid h-10 w-10 place-items-center rounded-full ${modeTone(mode.tone)}`}>

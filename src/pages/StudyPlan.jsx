@@ -373,7 +373,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
         </div>
         <p className="reveal -mt-4 mb-6 text-xs font-bold uppercase tracking-[0.14em] text-text-dim" aria-live="polite">Step {step + 1} of {STEPS.length} · {STEPS[step]}</p>
 
-        <div className="reveal border-t border-line-soft py-8">
+        <div className="reveal surface-card rounded-3xl p-7 md:p-9">
           <div key={step} className="animate-slide-up">
           {step === 0 && (
             <div>
@@ -389,7 +389,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {visibleSubjects.map((subject) => {
                     const selected = form.subjects.includes(subject.value);
-                    return <button key={subject.value} type="button" aria-label={`${subject.label}${subject.placeholder ? ', library coming soon' : ''}`} aria-pressed={selected} onClick={() => toggleSubject(subject.value)} className={`flex items-center justify-between gap-3 rounded-lg border p-4 text-left text-sm font-bold transition-colors duration-150 ${selected ? 'border-accent bg-accent text-accent-contrast' : 'border-line-soft bg-surface-body text-text-primary hover:border-accent/60'}`}><span>{subject.label}</span></button>;
+                    return <button key={subject.value} type="button" aria-label={`${subject.label}${subject.placeholder ? ', library coming soon' : ''}`} aria-pressed={selected} onClick={() => toggleSubject(subject.value)} className={`press focus-ring flex items-center justify-between gap-3 rounded-xl border p-4 text-left text-sm font-bold transition-colors duration-150 ${selected ? 'border-accent bg-accent text-accent-contrast' : 'border-line-soft bg-surface-soft text-text-primary hover:border-accent hover:text-accent'}`}><span>{subject.label}</span></button>;
                   })}
                 </div>
                 {!visibleSubjects.length && <p className="mt-3 rounded-2xl bg-surface-soft px-4 py-3 text-sm font-medium text-text-muted">No subjects match “{subjectQuery}”. Try a different search.</p>}

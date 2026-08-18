@@ -97,11 +97,22 @@ function QueueScreen({ queue, onStart }) {
   const activeGroups = queue.groups.filter((group) => group.count > 0);
   if (!queue.items.length) {
     return (
-      <LearningEmpty
-        title="Nothing is due right now."
-        message="Caplet will line up outcomes, saved slides, and essay material here when they are ready to retrieve."
-        action={<Link to="/practice?mode=daily&source=review" className="btn-primary">Keep learning <ArrowRightIcon className="h-4 w-4" /></Link>}
-      />
+      <div className="mx-auto max-w-5xl">
+        <header className="minimal-page-header">
+          <span className="section-kicker">ready when memory is</span>
+          <h1 className="minimal-page-title">Review.</h1>
+          <p className="minimal-page-description">
+            Caplet has combined what is most likely to fade, so your time is focused where it matters.
+          </p>
+        </header>
+        <div className="animate-rise grid min-h-[42vh] content-center">
+          <LearningEmpty
+            title="Nothing is due right now."
+            message="Caplet will line up outcomes, saved slides, and essay material here when they are ready to retrieve."
+            action={<Link to="/practice?mode=daily&source=review" className="btn-primary">Keep learning <ArrowRightIcon className="h-4 w-4" /></Link>}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -115,21 +126,21 @@ function QueueScreen({ queue, onStart }) {
         </p>
       </header>
 
-      <section aria-labelledby="review-queue-heading">
-        <p id="review-queue-heading" className="text-xs font-bold uppercase tracking-[0.14em] text-text-dim">Your review queue</p>
-        <div className="mt-4 border-y border-line-soft">
+      <section aria-labelledby="review-queue-heading" className="animate-rise surface-card rounded-3xl p-7 md:p-8">
+        <p id="review-queue-heading" className="card-section-title mb-4">Your review queue</p>
+        <div className="divide-y divide-line-soft">
           {activeGroups.map((group) => {
             const Icon = GROUP_ICONS[group.id] || SparklesIcon;
             return (
-              <div key={group.id} className="grid gap-4 border-b border-line-soft px-1 py-6 last:border-b-0 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center sm:px-5">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-soft text-text-muted">
+              <div key={group.id} className="grid gap-4 py-5 first:pt-0 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-accent-soft text-accent">
                   <Icon className="h-6 w-6" aria-hidden="true" />
                 </span>
                 <div>
                   <h2 className="text-lg font-display font-extrabold text-text-primary">{group.label}</h2>
                   <p className="mt-1 text-sm font-medium text-text-muted">{group.rationale}</p>
                 </div>
-                <p className="text-sm font-bold text-text-muted">{group.count} due</p>
+                <p className="rounded-full bg-surface-soft px-3 py-1.5 text-sm font-bold text-text-muted">{group.count} due</p>
                 <p className="inline-flex items-center gap-2 text-sm font-bold text-text-muted">
                   <ClockIcon className="h-5 w-5" aria-hidden="true" /> {group.estimatedMinutes} min
                 </p>
@@ -137,11 +148,11 @@ function QueueScreen({ queue, onStart }) {
             );
           })}
         </div>
-        <p className="mt-5 text-sm font-medium text-text-muted">This queue is ordered by recent mistakes and due date.</p>
-        <button type="button" onClick={onStart} className="btn-primary mt-8 w-full justify-center py-4 text-base">
+        <p className="mt-6 text-sm font-medium text-text-muted">This queue is ordered by recent mistakes and due date.</p>
+        <button type="button" onClick={onStart} className="btn-primary mt-6 w-full justify-center rounded-xl py-4 text-base shadow-card">
           Start {queue.estimatedMinutes}-minute review <ArrowRightIcon className="h-5 w-5" aria-hidden="true" />
         </button>
-        <Link to="/revision" className="press focus-ring mx-auto mt-5 flex w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-accent hover:bg-accent-soft">
+        <Link to="/revision" className="press focus-ring mx-auto mt-4 flex w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-accent hover:bg-accent-soft">
           Adjust this session <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
         </Link>
       </section>
