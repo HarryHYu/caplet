@@ -355,7 +355,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
 
   return (
     <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
-      <div className="container-custom max-w-5xl">
+      <div className="container-custom">
         <header className="reveal minimal-page-header">
           <span className="section-kicker">Three steps</span>
           <h1 className="minimal-page-title">Plan the week</h1>

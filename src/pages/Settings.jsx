@@ -43,7 +43,11 @@ const Settings = () => {
                     to={item.path}
                     end={item.path === '/settings/profile'}
                     className={({ isActive }) =>
-                      `group block min-w-max snap-start rounded-xl px-4 py-2.5 transition-colors press focus-ring md:min-w-0 ${isActive
+                      // `relative` so the sr-only description below resolves its
+                      // containing block here rather than on the sticky nav —
+                      // otherwise it sits outside the tab strip's overflow clip
+                      // and stretches the page 74px wide on a phone.
+                      `group relative block min-w-max snap-start rounded-xl px-4 py-2.5 transition-colors press focus-ring md:min-w-0 ${isActive
                         ? 'bg-accent-soft text-accent'
                         : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'
                       }`

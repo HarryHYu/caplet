@@ -66,9 +66,13 @@ function subjectPath(subject) {
     return subject.toLowerCase() === 'economics' ? '/library/economics' : '/library';
 }
 
+// min-w-0 on the row is load-bearing: these are grid items, and a grid item's
+// automatic minimum size is its min-content width. Without it a long subject
+// name ("Photography, Video & Digital Imaging") pushed the row past its column
+// and took the whole phone layout with it — 57px of horizontal overflow.
 function TodayRow({ href, icon, title, detail }) {
     return (
-        <Link to={href} className="focus-ring group -mx-2 flex min-h-16 items-center gap-4 rounded-xl px-2 py-3 transition-colors hover:bg-surface-soft">
+        <Link to={href} className="focus-ring group -mx-2 flex min-h-16 min-w-0 items-center gap-4 rounded-xl px-2 py-3 transition-colors hover:bg-surface-soft">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
                 {createElement(icon, { className: 'h-5 w-5', 'aria-hidden': true })}
             </span>
@@ -263,8 +267,8 @@ export default function Dashboard() {
             : 'Start a focused question set';
 
     return (
-        <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-accent-contrast md:pt-28 lg:pt-24">
-            <div className="mx-auto w-full max-w-[1220px] px-6 md:px-10 lg:px-12">
+        <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+            <div className="container-custom">
                 <header className="minimal-page-header reveal">
                     <h1 className="minimal-page-title">Today</h1>
                     <p className="minimal-page-description">{dateLabel}</p>

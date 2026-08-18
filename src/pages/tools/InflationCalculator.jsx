@@ -34,7 +34,7 @@ const InflationCalculator = () => {
   useReveal();
 
   return (
-    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">

@@ -2750,7 +2750,7 @@ function EssayLibrary() {
     }
 
     return (
-        <div className="minimal-page !min-h-0 pb-16 selection:bg-accent selection:text-accent-contrast">
+        <div className="minimal-page pb-16 selection:bg-accent selection:text-accent-contrast">
             <div className="container-custom">
                 <header className="minimal-page-header reveal">
                     <span className="section-kicker">essay memoriser</span>

@@ -211,8 +211,8 @@ export default function AssessmentLog() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary md:pt-28">
-      <div className="container-custom max-w-6xl">
+    <div className="minimal-page">
+      <div className="container-custom">
         <header className="minimal-page-header flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="minimal-page-title">Results</h1><p className="mt-3 max-w-2xl text-base text-text-muted">Treat each assessment like a project: record the result, keep the evidence and write down the next improvement.</p></div><div className="flex flex-wrap gap-3"><button type="button" onClick={() => setImporting(true)} disabled={!subjects.length} className="btn-secondary w-fit"><DocumentArrowUpIcon className="h-4 w-4" /> Import report</button><button type="button" onClick={() => setEditing(null)} disabled={!subjects.length} className="btn-primary w-fit"><PlusIcon className="h-4 w-4" /> Log result</button></div></header>
 
         {!subjects.length && <InlineEmpty className="animate-rise" icon={AcademicCapIcon} title="Choose a subject before logging a result." message="Results are grouped by the same subjects you study on Today." action={<Link to="/library" className="btn-primary">Choose subjects</Link>} />}

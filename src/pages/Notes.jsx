@@ -137,8 +137,8 @@ export default function Notes() {
   };
 
   if (mySubjects.length === 0) return (
-    <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary md:pt-28">
-      <div className="container-custom max-w-5xl">
+    <div className="minimal-page">
+      <div className="container-custom">
         <header className="minimal-page-header">
           <h1 className="minimal-page-title">Notes</h1>
           <p className="minimal-page-description">Your own notes and Google Docs, organised by subject.</p>
@@ -156,8 +156,8 @@ export default function Notes() {
   );
 
   return (
-    <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary md:pt-28">
-      <div className="container-custom max-w-5xl">
+    <div className="minimal-page">
+      <div className="container-custom">
         <header className="minimal-page-header flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div><h1 className="minimal-page-title">Notes</h1><p className="minimal-page-description">Your own notes and Google Docs, organised by subject.</p></div>
           <div className="flex flex-wrap gap-3"><button type="button" onClick={() => setEditingLink(null)} className="btn-secondary"><LinkIcon className="h-4 w-4" /> Add Google Doc</button><button type="button" onClick={() => setEditingNote(null)} className="btn-primary"><PlusIcon className="h-4 w-4" /> New note</button></div>
