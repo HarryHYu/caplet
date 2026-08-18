@@ -33,8 +33,8 @@ export default function SettingsAppearance() {
   };
 
   return (
-    <div>
-      <div className="mb-10">
+    <div className="space-y-6">
+      <div>
         <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">make it yours</p>
         <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Appearance</h2>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">
@@ -42,8 +42,8 @@ export default function SettingsAppearance() {
         </p>
       </div>
 
-      <section aria-labelledby="appearance-mode-heading">
-        <div className="mb-4">
+      <section className="surface-card md:p-8" aria-labelledby="appearance-mode-heading">
+        <div className="mb-5">
           <h3 id="appearance-mode-heading" className="font-display text-xl font-extrabold tracking-tight text-text-primary">Display mode</h3>
           <p className="mt-1 text-sm font-medium text-text-dim">Set the overall brightness of the interface.</p>
         </div>
@@ -74,8 +74,8 @@ export default function SettingsAppearance() {
         </div>
       </section>
 
-      <section className="mt-12 border-t border-line-soft pt-10" aria-labelledby="navigation-mode-heading">
-        <div className="mb-4">
+      <section className="surface-card md:p-8" aria-labelledby="navigation-mode-heading">
+        <div className="mb-5">
           <h3 id="navigation-mode-heading" className="font-display text-xl font-extrabold tracking-tight text-text-primary">Navigation layout</h3>
           <p className="mt-1 text-sm font-medium text-text-dim">Choose where your main workspace navigation lives.</p>
         </div>
@@ -105,7 +105,7 @@ export default function SettingsAppearance() {
         </div>
       </section>
 
-      <section className="mt-12 border-t border-line-soft pt-10" aria-labelledby="background-palette-heading">
+      <section className="surface-card md:p-8" aria-labelledby="background-palette-heading">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h3 id="background-palette-heading" className="font-display text-xl font-extrabold tracking-tight text-text-primary">Background colour</h3>

@@ -86,17 +86,17 @@ function ResourceCard({ resource }) {
       href={resource.url}
       target="_blank"
       rel="noreferrer"
-      className="group flex min-w-0 h-full flex-col rounded-3xl border border-line-soft bg-surface-raised p-5 shadow-card card-lift hover:border-accent hover:shadow-glow"
+      className="group surface-card flex min-w-0 h-full flex-col p-5 card-lift focus-ring hover:border-accent"
     >
       <div className="flex items-start justify-between gap-4">
-        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${categoryTones[resource.categoryId] || 'bg-surface-soft text-accent'}`}>
+        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${categoryTones[resource.categoryId] || 'bg-surface-soft text-accent'}`}>
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
         <ArrowTopRightOnSquareIcon className="h-5 w-5 shrink-0 text-text-dim transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden="true" />
       </div>
-      <h3 className="mt-5 break-words font-display text-xl font-extrabold tracking-tight text-text-primary">{resource.name}</h3>
-      <p className="mt-3 flex-1 text-sm font-medium leading-relaxed text-text-muted">{resource.description}</p>
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <h3 className="mt-4 break-words font-display text-lg font-extrabold tracking-tight text-text-primary">{resource.name}</h3>
+      <p className="mt-2 flex-1 text-sm font-medium leading-relaxed text-text-muted">{resource.description}</p>
+      <div className="mt-5 flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-surface-soft px-2.5 py-1 text-[11px] font-bold text-text-dim">{resource.domain}</span>
         <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-bold text-accent">{resource.kind}</span>
       </div>
@@ -163,14 +163,14 @@ export default function MoneyResources() {
               <h1 className="minimal-page-title">The Money resource hub.</h1>
               <p className="minimal-page-description">A growing shelf of useful websites for data, markets, investing, work and everyday money. Search one place instead of starting from scratch.</p>
             </div>
-            <div className="flex shrink-0 items-center gap-2 rounded-2xl bg-surface-raised px-4 py-3 text-sm font-bold text-text-primary shadow-pop">
+            <div className="flex shrink-0 items-center gap-2 rounded-2xl border border-line-soft bg-surface-raised px-4 py-3 text-sm font-bold text-text-primary shadow-card">
               <BookmarkSquareIcon className="h-5 w-5 text-accent" aria-hidden="true" />
               <span>{MONEY_RESOURCES.length} bookmarks · {MONEY_RESOURCE_CATEGORIES.length} categories</span>
             </div>
           </div>
         </header>
 
-        {!isFiltering ? <section className="mt-10 rounded-3xl bg-[color:var(--block-blue)] p-6 md:p-8" aria-labelledby="resource-hub-start-title">
+        {!isFiltering ? <section className="surface-card mt-8 bg-[color:var(--block-blue)] md:p-8" aria-labelledby="resource-hub-start-title">
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
               <span className="section-kicker">Start here</span>
@@ -183,7 +183,7 @@ export default function MoneyResources() {
           </div>
         </section> : null}
 
-        <section className="mt-10 rounded-3xl border border-line-soft bg-surface-body p-4 md:p-5" aria-label="Search and filter resource websites">
+        <section className="surface-card mt-6 md:p-8" aria-label="Search and filter resource websites">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)] lg:items-end">
             <div className="min-w-0">
               <label htmlFor="money-resource-search" className="mb-2 block text-xs font-extrabold uppercase tracking-[0.14em] text-text-dim">Search the library</label>
@@ -233,16 +233,16 @@ export default function MoneyResources() {
           </div>
         </section>
 
-        <div ref={resultsRef} className="mt-10 scroll-mt-36 space-y-12">
+        <div ref={resultsRef} className="mt-6 scroll-mt-36 space-y-6">
           {visibleCategories.length > 0 ? visibleCategories.map((category) => {
             const resources = pagedResources.filter((resource) => resource.categoryId === category.id);
             const totalResources = displayedResources.filter((resource) => resource.categoryId === category.id).length;
             return (
-              <section key={category.id} id={category.id} className="scroll-mt-36" aria-labelledby={`${category.id}-title`}>
+              <section key={category.id} id={category.id} className="surface-card scroll-mt-36 md:p-8" aria-labelledby={`${category.id}-title`}>
                 <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">{resources.length}{resources.length !== totalResources ? ` of ${totalResources}` : ''} {isFiltering ? 'bookmarks' : 'more bookmarks'} in this shelf</p>
-                    <h2 id={`${category.id}-title`} className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">{category.label}</h2>
+                    <h2 id={`${category.id}-title`} className="mt-2 font-display text-2xl font-extrabold tracking-tight text-text-primary">{category.label}</h2>
                     <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">{category.description}</p>
                   </div>
                   {isFiltering ? <span className="text-sm font-bold text-text-muted">{resources.length} shown</span> : null}
@@ -253,7 +253,7 @@ export default function MoneyResources() {
               </section>
             );
           }) : (
-            <section className="rounded-3xl bg-[color:var(--block-cream)] px-6 py-20 text-center" aria-live="polite">
+            <section className="surface-card bg-[color:var(--block-cream)] px-6 py-20 text-center" aria-live="polite">
               <BookmarkSquareIcon className="mx-auto h-10 w-10 text-text-dim" aria-hidden="true" />
               <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-text-primary">No resource matches that search.</h2>
               <p className="mx-auto mt-3 max-w-md text-sm font-medium leading-relaxed text-text-muted">Try a broader topic, a website name or a different category.</p>
@@ -284,9 +284,9 @@ export default function MoneyResources() {
           </nav>
         ) : null}
 
-        <aside className="mt-12 rounded-3xl border border-line-soft bg-surface-raised p-6 md:p-8" aria-label="Resource hub note">
+        <aside className="surface-card mt-6 md:p-8" aria-label="Resource hub note">
           <div className="flex items-start gap-4">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent"><BookmarkSquareIcon className="h-5 w-5" aria-hidden="true" /></span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent"><BookmarkSquareIcon className="h-5 w-5" aria-hidden="true" /></span>
             <div>
               <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Use the source, not just the headline.</h2>
               <p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-text-muted">These links leave Caplet and are provided as a starting point for learning. Check the publisher, date, methodology and context before using a number in an assignment or decision.</p>

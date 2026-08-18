@@ -47,7 +47,7 @@ const MortgageCalculator = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -65,14 +65,14 @@ const MortgageCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-12">Loan Details</h2>
-            <form onSubmit={handleSubmit} className="space-y-12">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Loan Details</h2>
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="mort-amount" className="text-sm font-semibold text-text-dim mb-3 block">
                   Property Loan Amount (AUD)
                 </label>
-                <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition">
+                <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input id="mort-amount"
                     type="number"
@@ -81,7 +81,7 @@ const MortgageCalculator = () => {
                     value={loanAmount}
                     onChange={(e) => setLoanAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full bg-transparent pl-6 pr-2 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
+                    className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                   />
                 </div>
               </div>
@@ -91,7 +91,7 @@ const MortgageCalculator = () => {
                   <label htmlFor="mort-rate" className="text-sm font-semibold text-text-dim mb-3 block">
                     Annual Rate (%)
                   </label>
-                  <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input id="mort-rate"
                       type="number"
                       min="0"
@@ -100,7 +100,7 @@ const MortgageCalculator = () => {
                       value={interestRate}
                       onChange={(e) => setInterestRate(e.target.value)}
                       placeholder="0.0"
-                      className="w-full bg-transparent pr-6 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
+                      className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                   </div>
@@ -110,7 +110,7 @@ const MortgageCalculator = () => {
                   <label htmlFor="mort-term" className="text-sm font-semibold text-text-dim mb-3 block">
                     Loan Term
                   </label>
-                  <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input id="mort-term"
                       type="number"
                       min="1"
@@ -119,7 +119,7 @@ const MortgageCalculator = () => {
                       value={loanTerm}
                       onChange={(e) => setLoanTerm(e.target.value)}
                       placeholder="Years"
-                      className="w-full bg-transparent py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
+                      className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>
                 </div>
@@ -131,15 +131,15 @@ const MortgageCalculator = () => {
             </form>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-12">Your Repayments</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Your Repayments</h2>
 
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
                 <>
-                  <div className="animate-rise space-y-10">
+                  <div className="animate-rise space-y-6">
                     <div>
                       <p className="text-xs font-semibold text-text-dim mb-3">Monthly Repayment</p>
                       <p className="text-5xl font-display font-extrabold tracking-tight text-blue">
@@ -189,13 +189,13 @@ const MortgageCalculator = () => {
         {/* Sponsored listings sit outside the educational results panel so the
             teaching content is never mixed up with anything commercial. */}
         {result && !result.error ? (
-          <section className="mt-10" aria-labelledby="mortgage-sponsored-title">
+          <section className="mt-6" aria-labelledby="mortgage-sponsored-title">
             <div className="flex items-center gap-4">
               <h2 id="mortgage-sponsored-title" className="shrink-0 text-xs font-extrabold uppercase tracking-[0.14em] text-text-dim">Sponsored listings</h2>
               <span aria-hidden="true" className="h-px flex-1 bg-line-soft" />
             </div>
             <p className="mt-2 text-sm font-medium text-text-muted">Paid placements from third parties. Nothing above this line is sponsored, and Caplet does not sell any product.</p>
-            <div className="mt-5 rounded-3xl bg-surface-raised p-6 shadow-card md:p-8">
+            <div className="mt-5 surface-card md:p-8">
               <AffiliateListings type="realestate" maxBudget={parseFloat(loanAmount) || undefined} />
             </div>
           </section>

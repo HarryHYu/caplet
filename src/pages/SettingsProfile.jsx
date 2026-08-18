@@ -102,8 +102,8 @@ const SettingsProfile = () => {
   };
 
   return (
-    <div>
-      <div className="mb-10">
+    <div className="space-y-6">
+      <div>
         <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your details</p>
         <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Profile details</h2>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">
@@ -111,7 +111,7 @@ const SettingsProfile = () => {
         </p>
       </div>
 
-      <section className="border-b border-line-soft pb-10" aria-labelledby="personal-details-heading">
+      <section className="surface-card md:p-8" aria-labelledby="personal-details-heading">
         <h3 id="personal-details-heading" className="mb-6 text-xl font-display font-extrabold tracking-tight text-text-primary">Personal information</h3>
         <StatusNotice notice={notice} onDismiss={() => setNotice(null)} />
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -209,7 +209,7 @@ const SettingsProfile = () => {
         </form>
       </section>
 
-      <section className="pt-10" aria-labelledby="password-heading">
+      <section className="surface-card md:p-8" aria-labelledby="password-heading">
         <h3 id="password-heading" className="text-xl font-display font-extrabold tracking-tight text-text-primary">Password</h3>
         <p className="mt-2 max-w-2xl text-sm font-medium text-text-dim">
           Use your current password to make a change. If you signed up with Google or cannot remember it, use the secure email link.

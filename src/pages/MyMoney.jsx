@@ -170,7 +170,7 @@ export default function MyMoney() {
           <p className="minimal-page-description">Try a savings scenario with sample numbers or deliberately choose to use your own.</p>
         </header>
 
-        <section className="reveal mt-10 rounded-3xl bg-[color:var(--block-blue)] p-7 md:p-9" aria-labelledby="my-money-privacy-title">
+        <section className="reveal surface-card mt-8 bg-[color:var(--block-blue)] md:p-8" aria-labelledby="my-money-privacy-title">
           <div className="flex items-start gap-4">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-surface-raised text-accent"><ShieldCheckIcon className="h-6 w-6" aria-hidden="true" /></span>
             <div>
@@ -186,7 +186,7 @@ export default function MyMoney() {
         {notice && <div role="status" className="animate-slide-up mt-6 flex items-start gap-3 rounded-2xl bg-[color:var(--block-green)] px-5 py-4 text-sm font-bold text-text-primary"><CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--mark-green)]" aria-hidden="true" />{notice}</div>}
 
         {savedScenario && (
-          <section className="reveal mt-6 rounded-3xl bg-surface-raised p-7 shadow-card" aria-busy={saving || deleting} aria-labelledby="saved-scenario-title">
+          <section className="reveal surface-card mt-6 md:p-8" aria-busy={saving || deleting} aria-labelledby="saved-scenario-title">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <span className="section-kicker">Saved scenario</span>
@@ -222,11 +222,11 @@ export default function MyMoney() {
           <span className="section-kicker">Choose your data</span>
           <h2 id="number-choice-title" className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Start safely with an example.</h2>
           <div className="reveal-stagger mt-5 grid gap-4 md:grid-cols-2">
-            <button type="button" aria-pressed={inputMode === 'sample'} onClick={() => chooseMode('sample')} className={`min-h-32 rounded-3xl p-6 text-left card-lift ${inputMode === 'sample' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
+            <button type="button" aria-pressed={inputMode === 'sample'} onClick={() => chooseMode('sample')} className={`min-h-32 rounded-2xl border p-6 text-left card-lift focus-ring ${inputMode === 'sample' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
               <span className="block font-display text-xl font-extrabold">Use sample numbers</span>
               <span className={`mt-2 block text-sm font-medium ${inputMode === 'sample' ? 'text-accent-contrast/80' : 'text-text-muted'}`}>Recommended for trying the prototype. Nothing is added to your financial profile.</span>
             </button>
-            <button type="button" aria-pressed={inputMode === 'own'} onClick={() => chooseMode('own')} className={`min-h-32 rounded-3xl p-6 text-left card-lift ${inputMode === 'own' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
+            <button type="button" aria-pressed={inputMode === 'own'} onClick={() => chooseMode('own')} className={`min-h-32 rounded-2xl border p-6 text-left card-lift focus-ring ${inputMode === 'own' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
               <span className="block font-display text-xl font-extrabold">Use my own numbers</span>
               <span className={`mt-2 block text-sm font-medium ${inputMode === 'own' ? 'text-accent-contrast/80' : 'text-text-muted'}`}>Only saved after you press Save. Existing savings can be loaded from your private profile.</span>
             </button>
@@ -235,7 +235,7 @@ export default function MyMoney() {
         </section>
 
         <section className="reveal mt-8 grid gap-6 lg:grid-cols-12" aria-labelledby="savings-scenario-title">
-          <div className="rounded-3xl bg-surface-raised p-7 shadow-card lg:col-span-7 md:p-10">
+          <div className="surface-card lg:col-span-7 md:p-8">
             <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-accent-soft text-accent"><LockClosedIcon className="h-5 w-5" aria-hidden="true" /></span><p className="text-xs font-bold uppercase tracking-[0.12em] text-text-muted">{inputMode === 'sample' ? 'Sample scenario' : 'Your optional figures'}</p></div>
             <h2 id="savings-scenario-title" className="mt-5 font-display text-3xl font-extrabold tracking-tight text-text-primary">Compare a savings timeline.</h2>
             <div className="mt-8 grid gap-6 sm:grid-cols-2">
@@ -260,20 +260,20 @@ export default function MyMoney() {
             <button type="button" onClick={saveScenario} disabled={!valid || saving} aria-busy={saving} className="btn-primary mt-7 min-h-12 disabled:opacity-50">{saving ? 'Saving…' : inputMode === 'sample' ? 'Save sample scenario' : 'Save privately'}</button>
           </div>
 
-          <div className="rounded-3xl bg-[color:var(--block-blue)] p-7 lg:col-span-5 md:p-10" aria-live="polite">
+          <div className="surface-card bg-[color:var(--block-blue)] lg:col-span-5 lg:self-start lg:min-h-[19rem] md:p-8" aria-live="polite">
             <span className="section-kicker">Comparison</span>
             <p className="mt-1 max-w-sm text-sm font-medium leading-relaxed text-text-muted">See the difference a regular contribution makes, without turning it into a promise.</p>
             <div className="mt-5 space-y-4">
-              <div className="rounded-2xl bg-surface-raised p-5">
+              <div className="rounded-2xl border border-line-soft bg-surface-raised p-5">
                 <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-dim">At {money(values.monthly)} each month</p>
                 <p className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">{valid ? duration(baseTimeline.months) : '—'}</p>
               </div>
-              <div className="rounded-2xl bg-surface-raised p-5">
+              <div className="rounded-2xl border border-line-soft bg-surface-raised p-5">
                 <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-dim">At {money((Number(values.monthly) || 0) + (Number(values.extra) || 0))} each month</p>
                 <p className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">{valid ? duration(comparisonTimeline.months) : '—'}</p>
               </div>
             </div>
-            <div className="mt-4 rounded-2xl bg-surface-raised p-5">
+            <div className="mt-4 rounded-2xl border border-line-soft bg-surface-raised p-5">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-dim">Starting amount</p>
                 <span className="text-sm font-extrabold text-accent">{targetAmount > 0 ? `${progress}% covered` : 'Add a target'}</span>

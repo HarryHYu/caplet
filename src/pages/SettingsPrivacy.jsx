@@ -239,7 +239,7 @@ function PreferenceControls({ preference, consents, savingKey, ageVerificationRe
   };
 
   return (
-    <section className="border-b border-line-soft pb-10" aria-labelledby="privacy-preferences-heading">
+    <section className="surface-card md:p-8" aria-labelledby="privacy-preferences-heading">
       <SectionHeading icon={ShieldCheckIcon} eyebrow="Your choices" title="Privacy preferences" description="Change how Caplet stores optional activity and uses it to personalise your learning." />
       <h4 id="privacy-preferences-heading" className="sr-only">Privacy preferences</h4>
 
@@ -346,7 +346,7 @@ function PreferenceControls({ preference, consents, savingKey, ageVerificationRe
 
 function AIHistory({ interactions, clearing, onRequestClear }) {
   return (
-    <section className="border-b border-line-soft py-10" aria-labelledby="ai-history-heading">
+    <section className="surface-card md:p-8" aria-labelledby="ai-history-heading">
       <SectionHeading
         icon={SparklesIcon}
         eyebrow="Transparency"
@@ -400,7 +400,7 @@ function AIHistory({ interactions, clearing, onRequestClear }) {
 
 function Processors({ processors, note }) {
   return (
-    <section className="border-b border-line-soft py-10" aria-labelledby="processors-heading">
+    <section className="surface-card md:p-8" aria-labelledby="processors-heading">
       <SectionHeading icon={ServerStackIcon} eyebrow="Who handles data" title="Service providers" description="These providers may process data when the corresponding Caplet feature or hosting service is used." />
       <h4 id="processors-heading" className="sr-only">Service providers and data processors</h4>
       {processors.length ? (
@@ -424,7 +424,7 @@ function Processors({ processors, note }) {
 
 function DataActions({ exporting, deleting, deleteConfirmation, setDeleteConfirmation, onExport, onRequestDelete, onCancelDelete, onDelete }) {
   return (
-    <section className="pt-10" aria-labelledby="data-actions-heading">
+    <section className="surface-card md:p-8" aria-labelledby="data-actions-heading">
       <SectionHeading icon={CpuChipIcon} eyebrow="Your account" title="Export or delete your data" description="Download a machine-readable copy of your Caplet data, or permanently delete your account." />
       <h4 id="data-actions-heading" className="sr-only">Account data actions</h4>
       <div className="grid gap-4 md:grid-cols-2">
@@ -646,8 +646,8 @@ export default function SettingsPrivacy() {
   }
 
   return (
-    <div>
-      <div className="mb-10">
+    <div className="space-y-6">
+      <div>
         <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your data, your choices</p>
         <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Privacy & data</h2>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">Inspect what Caplet stores, control optional processing, download your information, or delete it permanently.</p>

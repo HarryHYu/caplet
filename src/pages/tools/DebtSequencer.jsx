@@ -113,7 +113,7 @@ const DebtSequencer = () => {
   };
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -134,7 +134,7 @@ const DebtSequencer = () => {
             <CapletLoader message="Loading your saved profile…" />
           </div>
         ) : !isAuthenticated ? (
-          <div className="max-w-xl block-cream rounded-3xl p-12 shadow-card">
+          <div className="max-w-xl surface-card block-cream md:p-8">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-4">Sign in to use the Debt Sequencer</h2>
             <p className="text-text-muted leading-relaxed mb-8">
               This tool reads the debts saved on your Caplet profile so you don&apos;t have to re-enter them, and
@@ -145,8 +145,8 @@ const DebtSequencer = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* ---------------- Form panel ---------------- */}
-            <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
-              <form onSubmit={handleRun} className="space-y-12">
+            <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+              <form onSubmit={handleRun} className="space-y-8">
                 {/* Ordinary debts */}
                 <section>
                   <div className="flex items-center justify-between mb-6">
@@ -238,7 +238,7 @@ const DebtSequencer = () => {
             </div>
 
             {/* ---------------- Results panel ---------------- */}
-            <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-card card-lift reveal">
+            <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
               <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Cost ranking</h2>
               {!result ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center">

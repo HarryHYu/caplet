@@ -43,7 +43,7 @@ const BudgetPlanner = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         {/* Header */}
         <header className="minimal-page-header reveal">
@@ -63,15 +63,15 @@ const BudgetPlanner = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Input Panel */}
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-12">Your budget</h2>
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Your budget</h2>
 
-            <form onSubmit={handleSubmit} className="space-y-16">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="budget-net-monthly-income-aud" className="text-sm font-semibold text-text-dim mb-4 block">
                   Net Monthly Income (AUD)
                 </label>
-                <div className="relative rounded-xl bg-surface-body pl-4 border border-line-soft focus-within:border-accent transition-colors">
+                <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-4 bottom-4 text-text-dim font-bold">$</span>
                   <input id="budget-net-monthly-income-aud"
                     type="number"
@@ -80,18 +80,18 @@ const BudgetPlanner = () => {
                     value={income}
                     onChange={(e) => setIncome(e.target.value)}
                     placeholder="0.00"
-                    className="w-full bg-transparent pl-6 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                    className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 {Object.keys(expenses).map((key) => (
                   <div key={key}>
                     <label htmlFor={`budget-${key}`} className="text-sm font-semibold text-text-dim mb-4 block">
                       {key.charAt(0).toUpperCase() + key.slice(1)} Account
                     </label>
-                    <div className="relative rounded-xl bg-surface-body pl-3 border border-line-soft focus-within:border-accent transition-colors">
+                    <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                       <span className="absolute left-3 bottom-2.5 text-text-dim font-bold text-sm">$</span>
                       <input id={`budget-${key}`}
                         type="number"
@@ -100,25 +100,25 @@ const BudgetPlanner = () => {
                         value={expenses[key]}
                         onChange={(e) => setExpenses({ ...expenses, [key]: e.target.value })}
                         placeholder="0"
-                        className="w-full bg-transparent pl-5 pr-4 py-2.5 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                        className="w-full bg-transparent pl-8 pr-4 py-2.5 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                       />
                     </div>
                   </div>
                 ))}
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-5 mt-12 press">
+              <button type="submit" className="btn-primary press w-full py-5 mt-8 press">
                 Calculate Budget
               </button>
             </form>
           </div>
 
           {/* Results Panel */}
-          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-12 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-12 relative z-10">Summary</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col relative overflow-hidden card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-8 relative z-10">Summary</h2>
 
             {result ? (
-              <div className="animate-rise space-y-12 relative z-10">
+              <div className="animate-rise space-y-8 relative z-10">
                 <div className="grid grid-cols-2 gap-8">
                   <div>
                     <p className="text-xs font-medium text-text-dim mb-2">Total Income</p>

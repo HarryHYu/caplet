@@ -88,7 +88,7 @@ const EduTools = () => {
               </p>
             </div>
             <div className="shrink-0 hidden md:block">
-              <div className="block-blue rounded-3xl px-8 py-6 text-center shadow-card">
+              <div className="surface-card block-blue px-8 py-6 text-center">
                 <span className="text-5xl font-display font-extrabold tracking-tight text-blue">{eduTools.length}</span>
                 <p className="text-xs font-bold text-text-muted mt-1 uppercase tracking-wide">Tools</p>
               </div>
@@ -96,7 +96,7 @@ const EduTools = () => {
           </div>
         </header>
 
-        <div className="reveal mb-12 flex flex-col gap-5 rounded-3xl block-amber p-7 md:flex-row md:items-center md:justify-between">
+        <div className="reveal surface-card mb-8 flex flex-col gap-5 block-amber md:flex-row md:items-center md:justify-between">
           <p className="max-w-3xl text-sm font-semibold leading-relaxed text-text-muted">
             AI feedback is practice guidance, not an official result. Check important feedback with a teacher and the original source.
           </p>
@@ -105,13 +105,14 @@ const EduTools = () => {
           </Link>
         </div>
 
-        {/* Tool grid — grouped by category */}
-        <div className="space-y-16">
+        {/* Tool grid — grouped by category, each group in its own panel so the
+            cards read as the contents of a section rather than loose boxes. */}
+        <div className="space-y-6">
           {categories.map(cat => {
             const group = eduTools.filter(t => t.category === cat);
             return (
-              <div key={cat}>
-                <div className="flex items-center gap-4 mb-6">
+              <section key={cat} className="reveal surface-card md:p-8">
+                <div className="flex items-center gap-3 mb-5">
                   <h2 className="font-display font-bold tracking-tight text-lg text-text-primary">{cat}</h2>
                   <span className="block-blue text-xs font-bold text-blue rounded-full px-3 py-1">{group.length}</span>
                 </div>
@@ -120,7 +121,7 @@ const EduTools = () => {
                     <ToolCard key={tool.path} tool={tool} badge={badges[tool.path]} />
                   ))}
                 </div>
-              </div>
+              </section>
             );
           })}
         </div>

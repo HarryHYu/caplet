@@ -480,7 +480,7 @@ function SpotlightMode({ essay }) {
                 </div>
             </div>
 
-            <div className={`${bg} rounded-3xl p-8 md:p-10 shadow-card min-h-[180px]`}>
+            <div className={`${bg} rounded-2xl border border-line-soft p-6 md:p-8 shadow-card min-h-[180px]`}>
                 <div className="mb-4 flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-accent">{seg.label}</span>
                     {seg.heading && (
@@ -1758,10 +1758,10 @@ function NewEssayComposer({ onCreated }) {
 
     if (open) {
         return (
-            <section className="bg-surface-raised rounded-3xl p-6 md:p-8 shadow-card">
+            <section className="surface-card md:p-8">
                 <div className="flex items-start justify-between gap-4 mb-1">
                     <div>
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim mb-2">New material</p>
+                        <p className="card-section-title mb-2">New material</p>
                         <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Add an essay</h2>
                     </div>
                     <button
@@ -1778,8 +1778,8 @@ function NewEssayComposer({ onCreated }) {
     }
 
     return (
-        <section className="block-blue rounded-3xl p-6 md:p-7 shadow-card">
-            <div className="w-10 h-10 rounded-2xl bg-surface-raised flex items-center justify-center mb-5">
+        <section className="surface-card block-blue md:p-8">
+            <div className="w-10 h-10 rounded-xl bg-surface-raised flex items-center justify-center mb-5">
                 <PlusIcon className="w-5 h-5 text-accent" />
             </div>
             <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Start a new essay</h2>
@@ -1917,7 +1917,7 @@ function PracticeHub({ mode, onChange, dueCount, drills }) {
     }
 
     return (
-        <section aria-label="Essay learning path" className="mb-6 rounded-3xl border border-line-soft bg-surface-raised p-3 md:p-4 shadow-card-hover">
+        <section aria-label="Essay learning path" className="mb-6 rounded-2xl border border-line-soft bg-surface-raised p-3 md:p-4 shadow-card">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-2 mb-3">
                 <div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Your learning path</p>
@@ -2510,7 +2510,7 @@ function EssayWorkspace({ essayId }) {
 
                 {tab !== 'edit' && !structure && (
                     /* ── Setup: choose a model and map the structure ── */
-                    <div className="block-blue rounded-3xl p-10 text-center shadow-card">
+                    <div className="surface-card block-blue px-8 py-12 text-center md:p-12">
                         {parsing ? (
                             <>
                                 <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-5" />
@@ -2562,7 +2562,7 @@ function EssayWorkspace({ essayId }) {
 
                 {tab === 'overview' && structure && (
                     <div className="space-y-6">
-                        <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-card">
+                        <div className="surface-card md:p-8">
                             <AnnotatedDocument
                                 essay={essay}
                                 annotations={annotations}
@@ -2581,7 +2581,7 @@ function EssayWorkspace({ essayId }) {
                                 onDiscardFix={discardFix}
                             />
                         </div>
-                        <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-card">
+                        <div className="surface-card md:p-8">
                             <p className="mb-5 text-[11px] font-bold uppercase tracking-widest text-text-dim">Read it through</p>
                             <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />
                         </div>
@@ -2589,7 +2589,7 @@ function EssayWorkspace({ essayId }) {
                 )}
 
                 {tab === 'context' && (
-                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-card">
+                    <div className="surface-card md:p-8">
                         <ContextLibrary
                             docs={contextDocs}
                             loading={contextLoading}
@@ -2616,7 +2616,7 @@ function EssayWorkspace({ essayId }) {
                             </>
                         )}
                         {mode && (
-                            <div key={`${mode}-${scope ? scope.join('-') : 'all'}`} className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-card">
+                            <div key={`${mode}-${scope ? scope.join('-') : 'all'}`} className="surface-card min-h-[320px] flex flex-col justify-center md:p-8">
                                 {mode === 'wordbyword' && (
                                     <RebuildMode initialUnit={modeParam === 'sentence' ? 'sentences' : 'words'}
                                         essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
@@ -2660,7 +2660,7 @@ function EssayWorkspace({ essayId }) {
                 )}
 
                 {tab === 'edit' && (
-                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-card">
+                    <div className="surface-card md:p-8">
                         <EditPanel essay={essay} onSaved={handleSaved} saving={saving} parsing={parsing} error={saveError} />
                     </div>
                 )}
@@ -2750,7 +2750,7 @@ function EssayLibrary() {
     }
 
     return (
-        <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+        <div className="minimal-page !min-h-0 pb-16 selection:bg-accent selection:text-accent-contrast">
             <div className="container-custom">
                 <header className="minimal-page-header reveal">
                     <span className="section-kicker">essay memoriser</span>
@@ -2760,24 +2760,24 @@ function EssayLibrary() {
                     </p>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-8 reveal-stagger">
-                    <section>
-                        <div className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-6 items-start reveal-stagger">
+                    <section className="surface-card md:p-8">
+                        <div className="flex flex-wrap items-baseline justify-between gap-3 mb-5">
                             <div>
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim mb-1">Your library</p>
+                                <p className="card-section-title mb-1">Your library</p>
                                 <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Your essays</h2>
                             </div>
                             {essays.length > 0 && <span className="text-xs font-bold text-text-dim">{essays.length} saved</span>}
                         </div>
                         {loadError ? (
-                            <div className="block-cream rounded-3xl p-10 text-center shadow-card">
+                            <div className="rounded-2xl border border-line-soft block-cream p-10 text-center">
                                 <p className="text-text-primary text-sm font-bold">Could not load your essays.</p>
                                 <button type="button" onClick={loadEssays} className="mt-3 text-sm font-semibold text-accent hover:opacity-70 transition-opacity">
                                     Try again
                                 </button>
                             </div>
                         ) : essays.length === 0 ? (
-                            <div className="block-cream rounded-3xl p-10 text-center shadow-card">
+                            <div className="rounded-2xl border border-dashed border-line-strong block-cream px-8 py-14 text-center">
                                 <DocumentTextIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
                                 <p className="text-text-primary text-sm font-bold">No essays yet.</p>
                                 <p className="text-text-dim text-sm mt-1">Add one when you’re ready to start practising.</p>
@@ -2788,7 +2788,7 @@ function EssayLibrary() {
                                     const due = dueByEssay[String(e.id)] || 0;
                                     return (
                                         <Link key={e.id} to={`/essays/${e.id}`}
-                                            className="bg-surface-raised rounded-2xl p-5 flex items-center justify-between gap-4 group shadow-card press">
+                                            className="rounded-2xl border border-line-soft bg-surface-raised p-5 flex items-center justify-between gap-4 group card-lift focus-ring press">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                                                     e.parsed ? 'block-green' : 'bg-accent-soft'
@@ -2821,7 +2821,7 @@ function EssayLibrary() {
                         )}
                     </section>
 
-                    <aside className="lg:pt-8">
+                    <aside>
                         <NewEssayComposer onCreated={handleCreate} />
                     </aside>
                 </div>

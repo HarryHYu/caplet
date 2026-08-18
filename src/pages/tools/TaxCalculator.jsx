@@ -47,7 +47,7 @@ const TaxCalculator = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -65,9 +65,9 @@ const TaxCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Assessment Parameters</h2>
-            <form onSubmit={handleSubmit} className="space-y-10">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Assessment Parameters</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <FormField id="tax-year" label="Financial year">
                 {(fieldProps) => (
                   <select {...fieldProps} value={taxYear} onChange={(e) => { setTaxYear(e.target.value); setResult(null); }} className="w-full rounded-xl border border-line-soft bg-surface-body px-4 py-4 text-base font-bold text-text-primary">
@@ -78,7 +78,7 @@ const TaxCalculator = () => {
 
               <FormField id="tax-income" label="Annual taxable income (AUD)" error={error} required>
                 {(fieldProps) => (
-                  <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition-shadow">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                     <input
                       {...fieldProps}
@@ -88,7 +88,7 @@ const TaxCalculator = () => {
                       value={income}
                       onChange={(e) => setIncome(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-transparent pl-6 pr-4 py-4 text-2xl font-bold text-text-primary placeholder:text-text-dim/60"
+                      className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary placeholder:text-text-dim/60"
                     />
                   </div>
                 )}
@@ -115,12 +115,12 @@ const TaxCalculator = () => {
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Fiscal Summary</h2>
+          <div className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Fiscal Summary</h2>
 
             <div aria-live="polite" aria-atomic="true" className="flex-1">
             {result ? (
-              <div className="space-y-10">
+              <div className="space-y-6">
                 <div>
                   <p className="text-xs font-semibold text-text-dim mb-3">Estimated liability</p>
                   <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">

@@ -45,7 +45,7 @@ const GSTCalculator = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -63,9 +63,9 @@ const GSTCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised p-10 lg:p-14 rounded-3xl shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Transaction Details</h2>
-            <form onSubmit={handleSubmit} className="space-y-12">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Transaction Details</h2>
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="gst-amount" className="text-sm font-semibold text-text-dim mb-3 block">
                   Amount (AUD)
@@ -119,14 +119,14 @@ const GSTCalculator = () => {
             </form>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue p-10 lg:p-14 flex flex-col min-h-full rounded-3xl shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Results</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Results</h2>
 
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
-                <div className="animate-rise space-y-10">
+                <div className="animate-rise space-y-6">
                   <div className="space-y-6">
                     <div>
                       <p className="text-sm font-medium text-text-muted mb-1">Original amount</p>

@@ -54,7 +54,7 @@ const NetWorth = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -70,32 +70,32 @@ const NetWorth = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-card card-lift reveal">
-            <form onSubmit={handleSubmit} className="space-y-16">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
-                <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Assets</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Assets</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {ASSETS.map(({ label, key }) => (
                     <InputRow key={key} label={label} groupKey="assets" field={key} values={assets} />
                   ))}
                 </div>
               </div>
               <div>
-                <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Liabilities</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Liabilities</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {LIABILITIES.map(({ label, key }) => (
                     <InputRow key={key} label={label} groupKey="liabilities" field={key} values={liabilities} />
                   ))}
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-6 text-sm press">Calculate Net Worth</button>
+              <button type="submit" className="btn-primary press w-full py-4 text-sm press">Calculate Net Worth</button>
             </form>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-16 relative z-10">Result</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col relative overflow-hidden card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-8 relative z-10">Result</h2>
             {result ? (
-              <div className="animate-rise space-y-12 relative z-10">
+              <div className="animate-rise space-y-8 relative z-10">
                 <div>
                   <p className="text-xs font-semibold text-text-dim mb-4 uppercase tracking-wide">Net Worth</p>
                   <p className={`font-display text-5xl font-extrabold tracking-tight ${result.netWorth >= 0 ? 'text-text-primary' : 'text-text-error'}`}>

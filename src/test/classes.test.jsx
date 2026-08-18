@@ -118,13 +118,22 @@ describe('Classes', () => {
     render(<MemoryRouter><Classes /></MemoryRouter>);
     fireEvent.click(await screen.findByRole('button', { name: /Create class/i }));
 
+    // The dialog moves focus inward on open via requestAnimationFrame; wait
+    // for that to land first, otherwise it can fire mid-test under load and
+    // look like the very regression this test exists to catch.
+    const dialog = screen.getByRole('dialog');
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+
     const input = screen.getByLabelText(/Class Name/i);
     input.focus();
+    expect(input).toHaveFocus();
+
     // Each keystroke re-renders the parent; a focus effect keyed on an inline
-    // onClose used to yank focus onto the dialog after every character.
+    // onClose used to yank focus onto the dialog after every character. Focus
+    // must survive synchronously — no waiting, or a steal would be masked.
     fireEvent.change(input, { target: { value: 'Y' } });
-    await waitFor(() => expect(input).toHaveFocus());
+    expect(input).toHaveFocus();
     fireEvent.change(input, { target: { value: 'Ye' } });
-    await waitFor(() => expect(input).toHaveFocus());
+    expect(input).toHaveFocus();
   });
 });

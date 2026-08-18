@@ -35,7 +35,7 @@ const RuleOf72 = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -51,8 +51,8 @@ const RuleOf72 = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-card card-lift reveal">
-            <div className="mb-16">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <div className="mb-8">
               <h2 className="font-display font-bold tracking-tight text-sm text-text-muted mb-6">Mode</h2>
               <div className="flex gap-3">
                 {[
@@ -67,29 +67,29 @@ const RuleOf72 = () => {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-16">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {mode === 'rate-to-years' ? (
                 <div>
                   <label htmlFor="r72-rate" className="text-sm font-bold text-text-dim mb-4 block">Annual interest / growth rate</label>
-                  <div className="relative bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors px-5">
+                  <div className="relative bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors">
                     <input id="r72-rate" type="number" min="0.1" max="100" step="0.1" value={rateInput} onChange={(e) => setRateInput(e.target.value)} placeholder="0.0"
-                      className="w-full bg-transparent pr-8 py-4 text-4xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      className="w-full bg-transparent px-5 pr-10 py-4 text-4xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     <span className="absolute right-5 bottom-5 text-text-dim font-bold text-xl">%</span>
                   </div>
                 </div>
               ) : (
                 <div>
                   <label htmlFor="r72-years" className="text-sm font-bold text-text-dim mb-4 block">Years to double your money</label>
-                  <div className="relative bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors px-5">
+                  <div className="relative bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors">
                     <input id="r72-years" type="number" min="0.5" max="200" step="0.5" value={yearsInput} onChange={(e) => setYearsInput(e.target.value)} placeholder="0"
-                      className="w-full bg-transparent pr-4 py-4 text-4xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      className="w-full bg-transparent px-5 py-4 text-4xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                 </div>
               )}
-              <button type="submit" className="btn-primary press w-full py-6 text-sm press">Calculate</button>
+              <button type="submit" className="btn-primary press w-full py-4 text-sm press">Calculate</button>
             </form>
 
-            <div className="mt-16">
+            <div className="mt-8">
               <h3 className="font-display font-bold tracking-tight text-sm text-text-dim mb-6">Quick reference</h3>
               <div className="grid grid-cols-2 gap-3">
                 {examples.map(({ rate, label }) => (
@@ -102,13 +102,13 @@ const RuleOf72 = () => {
             </div>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-sm text-text-muted mb-12 relative z-10">Result</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col relative overflow-hidden card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-sm text-text-muted mb-8 relative z-10">Result</h2>
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-medium text-text-error relative z-10">{result.error}</p>
               ) : (
-                <div className="animate-rise space-y-12 relative z-10">
+                <div className="animate-rise space-y-8 relative z-10">
                   {result.mode === 'rate-to-years' ? (
                     <>
                       <div>

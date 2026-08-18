@@ -40,7 +40,7 @@ const CapitalGains = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -56,11 +56,11 @@ const CapitalGains = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 bg-surface-raised p-10 lg:p-16 rounded-3xl shadow-card card-lift reveal">
-            <form onSubmit={handleSubmit} className="space-y-16">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
-                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-10">Asset Details</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-6">Asset Details</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="cgt-purchase-price" className="text-sm font-semibold text-text-dim mb-4 block">Purchase Price</label>
                     <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
@@ -80,8 +80,8 @@ const CapitalGains = () => {
                 </div>
               </div>
               <div>
-                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-10">Costs (optional)</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-6">Costs (optional)</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
                     <label htmlFor="cgt-acquisition-costs" className="text-sm font-semibold text-text-dim mb-4 block">Acquisition Costs</label>
                     <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
@@ -102,7 +102,7 @@ const CapitalGains = () => {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div>
                   <label htmlFor="cgt-other-income" className="text-sm font-semibold text-text-dim mb-4 block">Other Annual Income</label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
@@ -128,17 +128,17 @@ const CapitalGains = () => {
                   <p className="text-xs text-text-dim mt-2">{heldOver12m ? '50% CGT discount applies' : 'No discount, full gain is taxable'}</p>
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-6 text-sm press">Estimate Capital Gains Tax</button>
+              <button type="submit" className="btn-primary press w-full py-4 text-sm press">Estimate Capital Gains Tax</button>
             </form>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden rounded-3xl shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-12 relative z-10">CGT Estimate</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col relative overflow-hidden card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-8 relative z-10">CGT Estimate</h2>
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-medium text-text-error relative z-10">{result.error}</p>
               ) : result.isLoss ? (
-                <div className="animate-rise space-y-10 relative z-10">
+                <div className="animate-rise space-y-6 relative z-10">
                   <div>
                     <p className="text-xs font-semibold text-text-dim mb-4">Capital Loss</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-error">{formatCurrency(result.capitalLoss)}</p>

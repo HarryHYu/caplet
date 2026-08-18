@@ -36,7 +36,7 @@ const SuperContribution = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -54,8 +54,8 @@ const SuperContribution = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Contribution Inputs</h2>
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Contribution Inputs</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -164,14 +164,14 @@ const SuperContribution = () => {
             </form>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Maturity Projection</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Maturity Projection</h2>
 
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
-                <div className="animate-rise space-y-10">
+                <div className="animate-rise space-y-6">
                   <div>
                     <p className="text-xs font-semibold text-text-dim mb-3">Projected Portfolio Value</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">

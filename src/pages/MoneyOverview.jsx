@@ -37,18 +37,47 @@ function hasUsableObservation(indicator) {
   return value !== null && value !== undefined && Number.isFinite(Number(value));
 }
 
+/**
+ * The headline indicator, laid out as a full-width stat banner: the figure
+ * owns the left column and every piece of provenance metadata sits in the
+ * right one. It used to be a narrow `max-w-xl` column, which left the other
+ * half of the row completely empty and read as a broken grid.
+ */
 function IndicatorCard({ indicator }) {
   const current = indicator?.current;
   const freshness = indicator?.freshness;
   const tone = freshness?.state === 'current' || freshness?.state === 'awaiting_release' ? 'bg-surface-raised' : 'bg-[color:var(--block-cream)]';
+  const sourceUrl = indicator.sourceUrl || indicator.source?.url;
   return (
-    <article className={`rounded-3xl ${tone} p-6 shadow-card`}>
-      <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Official data</p><h2 className="mt-3 font-display text-xl font-extrabold tracking-tight text-text-primary">{indicator.displayTitle}</h2></div><span className="rounded-full bg-surface-soft px-3 py-1.5 text-[11px] font-bold text-text-muted">{indicator.nativeFrequency}</span></div>
-      <p className="mt-7 font-display text-4xl font-extrabold tracking-tight text-text-primary">{formatValue(current?.value, indicator.unit)}</p>
-      <p className="mt-2 text-sm font-bold text-text-muted">{current?.periodLabel || current?.observationDate || 'No observation available'}</p>
-      <p className="mt-5 text-xs font-semibold leading-relaxed text-text-muted">{freshness?.message || 'The official release has not been ingested yet.'}</p>
-      <div className="mt-5 flex flex-wrap gap-2 text-[11px] font-bold text-text-muted"><span className="rounded-full bg-surface-soft px-2.5 py-1">{freshnessLabel(freshness)}</span>{current?.revisionState === 'revised' ? <span className="rounded-full bg-accent-soft px-2.5 py-1 text-accent">Revised</span> : null}</div>
-      {(indicator.sourceUrl || indicator.source?.url) && <a href={indicator.sourceUrl || indicator.source.url} target="_blank" rel="noreferrer" className="mt-6 inline-flex text-sm font-bold text-accent underline underline-offset-4">Open source</a>}
+    <article className={`grid items-start gap-8 rounded-2xl border border-line-soft ${tone} p-6 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:gap-10 md:p-8`}>
+      <div>
+        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Official data</p>
+        <h2 className="mt-2 font-display text-lg font-extrabold tracking-tight text-text-primary">{indicator.displayTitle}</h2>
+        <p className="mt-5 font-display text-6xl font-extrabold leading-[0.9] tracking-tight text-text-primary">{formatValue(current?.value, indicator.unit)}</p>
+        <p className="mt-3 text-sm font-bold text-text-muted">{current?.periodLabel || current?.observationDate || 'No observation available'}</p>
+      </div>
+      <dl className="grid gap-5 sm:grid-cols-2">
+        <div>
+          <dt className="card-section-title mb-1.5">Release cadence</dt>
+          <dd className="text-sm font-bold text-text-primary">{indicator.nativeFrequency}</dd>
+        </div>
+        <div>
+          <dt className="card-section-title mb-1.5">Freshness</dt>
+          <dd className="flex flex-wrap items-center gap-2 text-sm font-bold text-text-primary">
+            <span>{freshnessLabel(freshness)}</span>
+            {current?.revisionState === 'revised' ? <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-bold text-accent">Revised</span> : null}
+          </dd>
+        </div>
+        <div className="sm:col-span-2">
+          <dt className="card-section-title mb-1.5">Provenance</dt>
+          <dd className="text-sm font-medium leading-relaxed text-text-muted">{freshness?.message || 'The official release has not been ingested yet.'}</dd>
+        </div>
+        {sourceUrl ? (
+          <div className="sm:col-span-2">
+            <a href={sourceUrl} target="_blank" rel="noreferrer" className="inline-flex text-sm font-bold text-accent underline underline-offset-4">Open source</a>
+          </div>
+        ) : null}
+      </dl>
     </article>
   );
 }
@@ -101,10 +130,12 @@ export default function MoneyOverview() {
     <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="reveal minimal-page-header"><span className="section-kicker">Money</span><h1 className="minimal-page-title">{returning ? `Welcome back${user?.firstName ? `, ${user.firstName}` : ''}` : 'Money made understandable'}</h1><p className="minimal-page-description">Learn the basics, check Australian data and try simple scenarios.</p></header>
-        {moneyNotice ? <div role="status" className="animate-slide-up mb-8 rounded-2xl bg-accent-soft px-5 py-4 text-sm font-bold leading-relaxed text-accent">{moneyNotice}</div> : null}
+        {moneyNotice ? <div role="status" className="animate-slide-up mb-6 rounded-2xl border border-line-soft bg-accent-soft px-5 py-4 text-sm font-bold leading-relaxed text-accent">{moneyNotice}</div> : null}
+        {/* The next-action band used to be bare text between two hairlines; it is
+            now the same card as everything else so the page has one rhythm. */}
         {!returning ? (
-          <section className="reveal mb-8 border-y border-line-soft py-7" aria-labelledby="money-first-visit-title">
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <section className="reveal surface-card mb-6 bg-[color:var(--block-blue)] md:p-8" aria-labelledby="money-first-visit-title">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div aria-live="polite">
                 <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent"><SparklesIcon className="h-4 w-4" aria-hidden="true" /> Start here · {selected.label}</p>
                 <h2 id="money-first-visit-title" className="mt-2 max-w-2xl font-display text-2xl font-extrabold tracking-tight text-text-primary">{selected.actionTitle}</h2>
@@ -113,8 +144,8 @@ export default function MoneyOverview() {
             </div>
           </section>
         ) : (
-          <section className="reveal mb-8 border-y border-line-soft py-7" aria-labelledby="money-next-action-title">
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <section className="reveal surface-card mb-6 bg-[color:var(--block-blue)] md:p-8" aria-labelledby="money-next-action-title">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div aria-live="polite">
                 <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent"><SparklesIcon className="h-4 w-4" aria-hidden="true" /> Next · {selected.label}</p>
                 <h2 id="money-next-action-title" className="mt-2 max-w-2xl font-display text-2xl font-extrabold tracking-tight text-text-primary">{selected.actionTitle}</h2>
@@ -124,37 +155,67 @@ export default function MoneyOverview() {
           </section>
         )}
 
-        <section className="reveal rounded-3xl bg-surface-raised p-6 shadow-card md:p-8" aria-labelledby="money-indicators-title"><div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between"><div><span className="section-kicker">Australia, with dates attached</span><h2 id="money-indicators-title" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">One economy story to understand</h2></div><p className="text-sm font-medium text-text-muted">{indicatorState === 'ready' && hasUsableObservation(officialEconomyIndicator) ? 'Official source metadata travels with the value.' : 'Using a clearly labelled local snapshot.'}</p></div><div className="mt-6 max-w-xl"><IndicatorCard indicator={economyIndicator} /></div></section>
+        <section className="reveal surface-card md:p-8" aria-labelledby="money-indicators-title">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <span className="section-kicker">Australia, with dates attached</span>
+              <h2 id="money-indicators-title" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">One economy story to understand</h2>
+            </div>
+            <p className="text-sm font-medium text-text-muted">{indicatorState === 'ready' && hasUsableObservation(officialEconomyIndicator) ? 'Official source metadata travels with the value.' : 'Using a clearly labelled local snapshot.'}</p>
+          </div>
+          <div className="mt-6"><IndicatorCard indicator={economyIndicator} /></div>
+        </section>
 
-        <section id="learn" className="reveal mt-8 scroll-mt-28 rounded-3xl bg-surface-raised p-6 shadow-card md:p-8" aria-labelledby="money-intents-title"><div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between"><div><span className="section-kicker">Choose your focus</span><h2 id="money-intents-title" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">What do you want to understand or try?</h2></div><p className="text-sm font-medium text-text-muted">Only synthetic scenario values are used in this pilot.</p></div><div className="reveal-stagger mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{MONEY_INTENTS.map((intent) => { const active = selectedIntentId === intent.id; return <button key={intent.id} type="button" aria-pressed={active} onClick={() => chooseIntent(intent.id)} className={`min-h-32 rounded-2xl p-5 text-left transition-[background-color,box-shadow,transform] duration-300 press ${active ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}><span className="block font-display text-lg font-extrabold tracking-tight">{intent.label}</span><span className={`mt-2 block text-sm font-medium leading-relaxed ${active ? 'text-accent-contrast/80' : 'text-text-muted'}`}>{intent.description}</span></button>; })}</div></section>
+        <section id="learn" className="reveal surface-card mt-6 scroll-mt-28 md:p-8" aria-labelledby="money-intents-title">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <span className="section-kicker">Choose your focus</span>
+              <h2 id="money-intents-title" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">What do you want to understand or try?</h2>
+            </div>
+            <p className="text-sm font-medium text-text-muted">Only synthetic scenario values are used in this pilot.</p>
+          </div>
+          <div className="reveal-stagger mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {MONEY_INTENTS.map((intent) => {
+              const active = selectedIntentId === intent.id;
+              return (
+                <button key={intent.id} type="button" aria-pressed={active} onClick={() => chooseIntent(intent.id)} className={`min-h-32 rounded-2xl border p-5 text-left transition-[background-color,border-color,box-shadow,transform] duration-300 press focus-ring ${active ? 'border-accent bg-accent text-accent-contrast shadow-glow' : 'border-line-soft bg-surface-soft text-text-primary hover:border-accent hover:bg-accent-soft'}`}>
+                  <span className="block font-display text-lg font-extrabold tracking-tight">{intent.label}</span>
+                  <span className={`mt-2 block text-sm font-medium leading-relaxed ${active ? 'text-accent-contrast/80' : 'text-text-muted'}`}>{intent.description}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
-        <div className="reveal-stagger mt-8 grid gap-6 lg:grid-cols-12">
-          <Link to="/money/economy/inflation" className="group rounded-3xl bg-[color:var(--block-blue)] p-7 card-lift lg:col-span-7 md:p-9">
-            <div className="flex items-start justify-between gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-raised text-accent"><ChartBarSquareIcon className="h-6 w-6" aria-hidden="true" /></span><span className="rounded-full bg-surface-raised px-3 py-1.5 text-xs font-bold text-text-muted">{freshnessLabel(economyIndicator.freshness)}</span></div>
+        <div className="reveal-stagger mt-6 grid gap-6 lg:grid-cols-12">
+          <Link to="/money/economy/inflation" className="group surface-card-interactive flex flex-col bg-[color:var(--block-blue)] md:p-8 lg:col-span-7">
+            <div className="flex items-start justify-between gap-4"><span className="grid h-12 w-12 place-items-center rounded-xl bg-surface-raised text-accent"><ChartBarSquareIcon className="h-6 w-6" aria-hidden="true" /></span><span className="rounded-full bg-surface-raised px-3 py-1.5 text-xs font-bold text-text-muted">{freshnessLabel(economyIndicator.freshness)}</span></div>
             <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Australia now</p>
             <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">{inflationHeadline(economyIndicator.current)}</h2>
             <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">See the reference period and source, then try a clearly separate hypothetical experiment.</p>
-            <span className="mt-6 inline-flex items-center gap-2 text-sm font-extrabold text-accent">Understand this <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
+            <span className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-extrabold text-accent">Understand this <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
           </Link>
-          <section className="rounded-3xl bg-surface-raised p-7 shadow-card card-lift lg:col-span-5 md:p-9" aria-labelledby="my-money-preview-title">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-accent-soft text-accent"><LockClosedIcon className="h-6 w-6" aria-hidden="true" /></span>
+          <section className="surface-card flex flex-col md:p-8 lg:col-span-5" aria-labelledby="my-money-preview-title">
+            <span className="grid h-12 w-12 place-items-center rounded-xl bg-accent-soft text-accent"><LockClosedIcon className="h-6 w-6" aria-hidden="true" /></span>
             <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.14em] text-accent">My Money</p>
             <h2 id="my-money-preview-title" className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">{myMoneyAvailable ? savedScenario?.label || 'A private place for goals.' : 'Private saving is coming later.'}</h2>
             <p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{myMoneyAvailable ? 'Teachers, classmates and classroom features cannot see figures you choose to save here.' : 'You can still explore a savings goal with sample figures without saving private information.'}</p>
-            {myMoneyAvailable ? <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl bg-surface-soft p-4"><span className="flex items-center gap-2 text-sm font-bold text-text-primary"><BanknotesIcon className="h-5 w-5 text-accent" aria-hidden="true" /> Figures hidden</span><span aria-hidden="true" className="font-mono text-lg tracking-[0.18em] text-text-dim">••••</span></div> : null}
-            {myMoneyAvailable ? (
-              <Link to={isAuthenticated ? '/money/my-money' : '/login'} state={!isAuthenticated ? { from: '/money/my-money' } : undefined} className="btn-primary mt-6 w-fit">{isAuthenticated ? 'Open My Money' : 'Sign in for My Money'} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
-            ) : (
-              <Link to="/money/tools/savings-goal" className="btn-primary mt-6 w-fit">Try the savings calculator <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
-            )}
+            {myMoneyAvailable ? <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-line-soft bg-surface-soft p-4"><span className="flex items-center gap-2 text-sm font-bold text-text-primary"><BanknotesIcon className="h-5 w-5 text-accent" aria-hidden="true" /> Figures hidden</span><span aria-hidden="true" className="font-mono text-lg tracking-[0.18em] text-text-dim">••••</span></div> : null}
+            <div className="mt-auto pt-6">
+              {myMoneyAvailable ? (
+                <Link to={isAuthenticated ? '/money/my-money' : '/login'} state={!isAuthenticated ? { from: '/money/my-money' } : undefined} className="btn-primary w-fit">{isAuthenticated ? 'Open My Money' : 'Sign in for My Money'} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
+              ) : (
+                <Link to="/money/tools/savings-goal" className="btn-primary w-fit">Try the savings calculator <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
+              )}
+            </div>
           </section>
         </div>
-        <section className="reveal mt-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--block-cream)] p-7 md:flex-row md:items-center md:justify-between md:p-9" aria-labelledby="money-resources-preview-title">
+        <section className="reveal surface-card mt-6 flex flex-col gap-6 bg-[color:var(--block-cream)] md:flex-row md:items-center md:justify-between md:p-8" aria-labelledby="money-resources-preview-title">
           <div className="flex items-start gap-4">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent"><BookmarkSquareIcon className="h-6 w-6" aria-hidden="true" /></span>
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent"><BookmarkSquareIcon className="h-6 w-6" aria-hidden="true" /></span>
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Resource hub</p>
-              <h2 id="money-resources-preview-title" className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">A better starting point for research.</h2>
+              <h2 id="money-resources-preview-title" className="mt-2 font-display text-2xl font-extrabold tracking-tight text-text-primary">A better starting point for research.</h2>
               <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">Browse trusted websites for data, markets, investing, tax, work and everyday money — all sorted into one growing library.</p>
             </div>
           </div>

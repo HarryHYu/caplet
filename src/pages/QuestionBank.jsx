@@ -63,7 +63,7 @@ function EditorAccessGate({ onEntered }) {
 
   return (
     <main className="min-h-screen bg-surface-body px-6 py-28 selection:bg-accent selection:text-accent-contrast">
-      <div className="mx-auto max-w-lg rounded-3xl bg-surface-raised p-8 shadow-card md:p-10">
+      <div className="surface-card mx-auto max-w-lg p-8 md:p-10">
         <p className="font-hand text-xl text-accent -rotate-2 inline-block">curriculum workspace</p>
         <h1 className="mt-3 text-4xl font-display font-extrabold tracking-tight text-text-primary">Enter the question bank.</h1>
         <p className="mt-4 text-sm font-medium leading-relaxed text-text-muted">Use your private editor code. Question authoring sessions stay on this device and expire automatically.</p>
@@ -371,7 +371,7 @@ function QuestionBankWorkspace({ onUnauthorized }) {
       </header>
 
       <div className="mx-auto mt-6 grid max-w-[1600px] gap-6 px-5 md:px-8 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <aside className={`${draft ? 'hidden lg:block' : 'block'} animate-rise overflow-hidden rounded-3xl bg-surface-raised shadow-card`} aria-label="Question bank navigation">
+        <aside className={`${draft ? 'hidden lg:block' : 'block'} animate-rise self-start overflow-hidden rounded-2xl border border-line-soft bg-surface-raised shadow-card`} aria-label="Question bank navigation">
           <FilterPanel filters={filters} searchDraft={searchDraft} setSearchDraft={setSearchDraft} outcomes={outcomes} subjects={subjects} onFilter={(key, value) => setFilters((current) => ({ ...current, [key]: value, ...(key === 'subject' ? { outcomeId: '' } : {}) }))} onSearch={(event) => { event.preventDefault(); setFilters((current) => ({ ...current, search: searchDraft.trim() })); }} />
           <div className="flex items-center justify-between border-b border-line-soft px-4 py-3"><p className="text-xs font-bold text-text-muted">{questions.length} {questions.length === 1 ? 'question' : 'questions'}</p><button type="button" onClick={loadQuestions} disabled={loading} className="press focus-ring rounded-xl p-2 text-accent hover:bg-accent-soft disabled:opacity-40" aria-label="Refresh question bank"><ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /></button></div>
           <div className="max-h-[calc(100vh-25rem)] min-h-80 overflow-y-auto"><QuestionList questions={questions} loading={loading} error={listError} selectedId={currentId} onSelect={(question) => navigateWithGuard({ type: 'open', question })} onRetry={loadQuestions} onCreate={() => navigateWithGuard({ type: 'new' })} /></div>
@@ -381,8 +381,8 @@ function QuestionBankWorkspace({ onUnauthorized }) {
           {draft ? (
             <QuestionEditorForm draft={draft} setDraft={setDraft} outcomes={outcomes} originalSignature={originalSignature} errors={formErrors} notice={notice} saving={saving} lifecycleBusy={lifecycleBusy} humanReviewed={humanReviewed} setHumanReviewed={setHumanReviewed} history={history} historyLoading={historyLoading} onSave={saveDraft} onCancel={() => navigateWithGuard({ type: 'close' })} onTransition={requestLifecycle} onRefreshHistory={() => loadHistory(draft.id)} />
           ) : (
-            <div className="grid min-h-[36rem] animate-rise place-items-center rounded-3xl bg-surface-raised p-8 text-center shadow-card">
-              <div className="max-w-lg"><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-accent-soft text-accent"><AcademicCapIcon className="h-7 w-7" aria-hidden="true" /></span><h2 className="mt-5 text-3xl font-display font-extrabold text-text-primary">Build evidence students can trust.</h2><p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">Choose a question to edit, or create a syllabus-mapped draft with a rubric, model answer, misconceptions, and source provenance.</p><button type="button" onClick={createQuestion} className="btn-primary mx-auto mt-6"><PlusIcon className="h-4 w-4" aria-hidden="true" /> Create question</button></div>
+            <div className="surface-card grid min-h-[36rem] animate-rise place-items-center p-8 text-center">
+              <div className="max-w-lg"><span className="mx-auto grid h-14 w-14 place-items-center rounded-xl bg-accent-soft text-accent"><AcademicCapIcon className="h-7 w-7" aria-hidden="true" /></span><h2 className="mt-5 text-3xl font-display font-extrabold text-text-primary">Build evidence students can trust.</h2><p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">Choose a question to edit, or create a syllabus-mapped draft with a rubric, model answer, misconceptions, and source provenance.</p><button type="button" onClick={createQuestion} className="btn-primary mx-auto mt-6"><PlusIcon className="h-4 w-4" aria-hidden="true" /> Create question</button></div>
             </div>
           )}
         </section>

@@ -40,7 +40,7 @@ const FIRENumber = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -56,11 +56,11 @@ const FIRENumber = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-card card-lift reveal">
-            <form onSubmit={handleSubmit} className="space-y-16">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
-                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-10">Retirement Target</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-6">Retirement Target</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="fire-monthly-expenses" className="text-sm font-semibold text-text-dim mb-4 block italic">Monthly Expenses in Retirement</label>
                     <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
@@ -81,8 +81,8 @@ const FIRENumber = () => {
                 </div>
               </div>
               <div>
-                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-10">Your Current Situation (optional)</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-6">Your Current Situation (optional)</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
                     <label htmlFor="fire-current-savings" className="text-sm font-semibold text-text-dim mb-4 block italic">Current Savings / Investments</label>
                     <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
@@ -110,17 +110,17 @@ const FIRENumber = () => {
                   </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-6 text-sm press">Calculate FIRE Number</button>
+              <button type="submit" className="btn-primary press w-full py-4 text-sm press">Calculate FIRE Number</button>
             </form>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-16 relative z-10">FIRE Projection</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col relative overflow-hidden card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-8 relative z-10">FIRE Projection</h2>
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-medium text-text-error relative z-10">{result.error}</p>
               ) : (
-                <div className="animate-rise space-y-12 relative z-10">
+                <div className="animate-rise space-y-8 relative z-10">
                   <div className="bg-surface-raised rounded-2xl p-8 shadow-pop">
                     <p className="text-xs font-semibold text-text-muted mb-4">Your FIRE Number</p>
                     <p className="text-5xl font-display font-extrabold tracking-tight text-text-primary">{formatCurrency(result.fireNumber)}</p>

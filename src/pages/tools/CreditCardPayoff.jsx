@@ -59,7 +59,7 @@ const CreditCardPayoff = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -75,9 +75,9 @@ const CreditCardPayoff = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Debt Parameters</h2>
-            <form onSubmit={handleSubmit} className="space-y-10">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Debt Parameters</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="cc-balance" className="text-sm font-semibold text-text-dim mb-3 block">Current Balance (AUD)</label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
@@ -115,13 +115,13 @@ const CreditCardPayoff = () => {
             </form>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Payoff Projection</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Payoff Projection</h2>
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
-                <div className="space-y-10">
+                <div className="space-y-6">
                   <div>
                     <p className="text-xs font-semibold text-text-dim mb-3">Time to Pay Off</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">

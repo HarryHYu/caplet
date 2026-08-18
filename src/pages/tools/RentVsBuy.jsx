@@ -47,7 +47,7 @@ const RentVsBuy = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -63,11 +63,11 @@ const RentVsBuy = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-card card-lift reveal">
-            <form onSubmit={handleSubmit} className="space-y-16">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Buying</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
                     <label htmlFor="rvb-home-price" className="text-sm font-semibold text-text-dim mb-3 block">Home Purchase Price</label>
                     <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
@@ -85,7 +85,7 @@ const RentVsBuy = () => {
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
                     <label htmlFor="rvb-mortgage-rate" className="text-sm font-semibold text-text-dim mb-3 block">Mortgage Rate (% p.a.)</label>
                     <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
@@ -121,7 +121,7 @@ const RentVsBuy = () => {
               </div>
               <div>
                 <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Renting</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
                     <label htmlFor="rvb-monthly-rent" className="text-sm font-semibold text-text-dim mb-3 block">Monthly Rent</label>
                     <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
@@ -144,13 +144,13 @@ const RentVsBuy = () => {
             </form>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-12">Comparison</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Comparison</h2>
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
-                <div className="animate-rise space-y-10">
+                <div className="animate-rise space-y-6">
                   <div>
                     <p className="text-xs font-semibold text-text-dim mb-4">
                       {result.buyingWins ? 'Buying is cheaper' : 'Renting is cheaper'} over {result.n} years

@@ -174,7 +174,7 @@ const FinancialTwin = () => {
     : [];
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -196,7 +196,7 @@ const FinancialTwin = () => {
             <CapletLoader message="Waking your twin…" />
           </div>
         ) : !isAuthenticated ? (
-          <div className="max-w-xl block-cream rounded-3xl p-12 shadow-card">
+          <div className="max-w-xl surface-card block-cream md:p-8">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-4">Sign in to build your Financial Twin</h2>
             <p className="text-text-muted leading-relaxed mb-8">
               The twin runs on data you consent to share and the figures saved on your Caplet profile.
@@ -207,7 +207,7 @@ const FinancialTwin = () => {
         ) : (
           <div className="space-y-8">
             {/* ---------------- Consent / connection card ---------------- */}
-            <div className="block-cream rounded-3xl p-8 lg:p-10 shadow-card card-lift reveal">
+            <div className="surface-card block-cream md:p-8 card-lift reveal">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="max-w-2xl">
                   <h2 className="font-display font-bold tracking-tight text-2xl mb-2">Connected data</h2>
@@ -247,7 +247,7 @@ const FinancialTwin = () => {
 
             {/* ---------------- Trajectory fan chart ---------------- */}
             {projection && (
-              <div className="bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
+              <div className="surface-card md:p-8 card-lift reveal">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
                   <div>
                     <h2 className="font-display font-bold tracking-tight text-2xl mb-1">Simulated trajectory</h2>
@@ -363,7 +363,7 @@ const FinancialTwin = () => {
                   transition={{ duration: 0.25 }}
                   className="grid grid-cols-1 lg:grid-cols-12 gap-8"
                 >
-                  <div className="lg:col-span-7 block-green rounded-3xl p-8 lg:p-10 shadow-card">
+                  <div className="lg:col-span-7 surface-card block-green md:p-8">
                     <h2 className="font-display font-bold tracking-tight text-2xl mb-2">What the data shows</h2>
                     <p className="text-xs text-text-dim mb-8">
                       {categorized.summary.transactionCount} transactions, categorized deterministically &mdash; no black box.
@@ -388,7 +388,7 @@ const FinancialTwin = () => {
                     </p>
                   </div>
 
-                  <div aria-live="polite" className="lg:col-span-5 block-amber rounded-3xl p-8 lg:p-10 shadow-card">
+                  <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-amber md:p-8">
                     <h2 className="font-display font-bold tracking-tight text-2xl mb-2">Needs a human</h2>
                     <p className="text-xs text-text-dim mb-6">
                       Anything ambiguous is flagged rather than guessed, and is <strong>not counted</strong> in any total.
@@ -420,7 +420,7 @@ const FinancialTwin = () => {
 
             {/* ---------------- Assumptions provenance ---------------- */}
             {projection && (
-              <div className="bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
+              <div className="surface-card md:p-8 card-lift reveal">
                 <h2 className="font-display font-bold tracking-tight text-2xl mb-2">Every assumption, on the table</h2>
                 <p className="text-xs text-text-dim mb-8">
                   Version {projection.assumptionsVersion}. Each figure carries the date it was true and where it came from.

@@ -124,18 +124,18 @@ const SettingsFinancial = () => {
   }
 
   return (
-    <div>
-      <div className="mb-12">
+    <div className="space-y-6">
+      <div>
         <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your money, at a glance</p>
         <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Financial Profile</h2>
         <p className="text-sm font-medium text-text-dim mt-2">
           Your current snapshot. We use it to tailor the tools and your next steps. It&apos;s private to you.
         </p>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-10">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {message.text && (
           <div
-            className={`px-6 py-4 rounded-2xl font-semibold text-sm ${message.type === 'success'
+            className={`px-6 py-4 rounded-2xl border border-line-soft font-semibold text-sm ${message.type === 'success'
               ? 'block-blue text-blue'
               : 'bg-surface-error text-text-error'
               }`}
@@ -144,7 +144,9 @@ const SettingsFinancial = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+        <div className="surface-card md:p-8">
+          <h3 className="card-section-title mb-4">Snapshot</h3>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="space-y-3">
             <label htmlFor="annualIncome" className="block text-sm font-semibold text-text-dim">
               Annual Income (AUD)
@@ -173,10 +175,11 @@ const SettingsFinancial = () => {
             <input id="monthlyExpenses" name="monthlyExpenses" type="number" min="0" max="2147483647" step="1"
               value={form.monthlyExpenses} onChange={handleMoneyChange} placeholder="e.g. 2500" className={inputClass} />
           </div>
+          </div>
         </div>
 
         {/* Debts */}
-        <div className="space-y-4 pt-2">
+        <div className="surface-card space-y-4 md:p-8">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-lg font-bold tracking-tight text-text-primary">Debts</h3>
             <button type="button" onClick={addDebt} className="text-xs font-semibold text-accent hover:underline">
@@ -206,7 +209,7 @@ const SettingsFinancial = () => {
         </div>
 
         {/* Goals */}
-        <div className="space-y-4 pt-2">
+        <div className="surface-card space-y-4 md:p-8">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-lg font-bold tracking-tight text-text-primary">Goals</h3>
             <button type="button" onClick={addGoal} className="text-xs font-semibold text-accent hover:underline">
@@ -234,13 +237,13 @@ const SettingsFinancial = () => {
         </div>
 
         {/* Net worth snapshot */}
-        <div className="block-blue rounded-3xl px-7 py-6 shadow-card">
-          <p className="text-xs font-semibold text-blue mb-1">Estimated net worth</p>
-          <p className="font-display text-3xl font-extrabold tracking-tight text-text-primary">{fmtMoney(netWorth)}</p>
+        <div className="surface-card block-blue md:p-8">
+          <p className="card-section-title mb-4">Estimated net worth</p>
+          <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">{fmtMoney(netWorth)}</p>
           <p className="text-xs font-medium text-text-dim mt-1">Savings plus super, minus total debt. A snapshot, not advice.</p>
         </div>
 
-        <div className="pt-2">
+        <div>
           <button type="submit" disabled={saving} className="btn-primary press py-4 px-10 text-sm press disabled:opacity-40">
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

@@ -20,7 +20,7 @@ const SalaryCalculator = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -38,9 +38,9 @@ const SalaryCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Compensation Inputs</h2>
-            <form onSubmit={handleSubmit} className="space-y-12">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Compensation Inputs</h2>
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="gross-salary" className="text-sm font-semibold text-text-dim mb-4 block">
                   Gross Annual Salary (AUD)
@@ -60,7 +60,7 @@ const SalaryCalculator = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="super-rate" className="text-sm font-semibold text-text-dim mb-4 block">
                     Superannuation Rate (%)
@@ -101,15 +101,15 @@ const SalaryCalculator = () => {
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Net Projection</h2>
+          <div className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Net Projection</h2>
 
             <div aria-live="polite" aria-atomic="true" className="flex-1">
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
-                <div className="animate-rise space-y-10">
+                <div className="animate-rise space-y-6">
                   <div>
                     <p className="text-xs font-semibold text-text-muted mb-3">Annual Net Pay</p>
                     <p className="text-5xl font-black tracking-tight text-text-primary">

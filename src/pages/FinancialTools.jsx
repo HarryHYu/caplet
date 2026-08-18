@@ -297,7 +297,7 @@ const FinancialTools = () => {
           </div>
         </header>
 
-        <div className="reveal mb-12 flex flex-col gap-5 rounded-3xl block-blue p-7 md:flex-row md:items-center md:justify-between">
+        <div className="reveal surface-card mb-6 flex flex-col gap-5 block-blue md:flex-row md:items-center md:justify-between">
           <p className="max-w-3xl text-sm font-semibold leading-relaxed text-text-muted">
             These tools provide general education and scenario estimates, not personal financial advice. Inputs and assumptions can change the result.
           </p>
@@ -307,7 +307,7 @@ const FinancialTools = () => {
         </div>
 
         {/* Search */}
-        <div className="mb-16 reveal sticky top-14 md:top-16 z-20 -mx-6 px-6 py-3 bg-surface-body/95 backdrop-blur md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent">
+        <div className="mb-6 reveal sticky top-14 md:top-16 z-20 -mx-6 px-6 py-3 bg-surface-body/95 backdrop-blur md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent">
           <div className="relative max-w-lg">
             <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -355,16 +355,16 @@ const FinancialTools = () => {
         {/* Tool grid — searched */}
         {isFiltering ? (
           filteredTools.length > 0 ? (
-            <div>
-              <p className="text-sm font-bold text-text-muted mb-8">{filteredTools.length} result{filteredTools.length !== 1 ? 's' : ''}</p>
+            <section className="surface-card md:p-8">
+              <p className="card-section-title mb-4">{filteredTools.length} result{filteredTools.length !== 1 ? 's' : ''}</p>
               <div className="reveal-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredTools.map(tool => (
                   <ToolCard key={tool.path} tool={tool} />
                 ))}
               </div>
-            </div>
+            </section>
           ) : (
-            <div className="py-24 text-center block-cream rounded-3xl shadow-card">
+            <div className="surface-card block-cream py-20 text-center">
               <p className="text-text-primary font-display font-bold text-xl mb-3">No match found.</p>
               <button
                 onClick={clearFilters}
@@ -375,13 +375,14 @@ const FinancialTools = () => {
             </div>
           )
         ) : (
-          /* Grouped by category */
-          <div data-tour-id="tools-grid" className="space-y-16">
+          /* Grouped by category — each group is one panel, so the grid reads as
+             a set of sections instead of loose cards on the page ground. */
+          <div data-tour-id="tools-grid" className="space-y-6">
             {categories.map(cat => {
               const group = availableTools.filter(t => t.category === cat);
               return (
-                <div key={cat}>
-                  <div className="flex items-center gap-4 mb-6">
+                <section key={cat} className="reveal surface-card md:p-8">
+                  <div className="flex items-center gap-3 mb-5">
                     <h2 className="font-display font-bold tracking-tight text-lg text-text-primary">{cat}</h2>
                     <span className="block-blue text-xs font-bold text-blue rounded-full px-3 py-1">{group.length}</span>
                   </div>
@@ -390,7 +391,7 @@ const FinancialTools = () => {
                       <ToolCard key={tool.path} tool={tool} />
                     ))}
                   </div>
-                </div>
+                </section>
               );
             })}
           </div>

@@ -43,7 +43,7 @@ const LoanRepayment = () => {
   useReveal();
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page !min-h-0 pb-10 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -61,9 +61,9 @@ const LoanRepayment = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Loan Details</h2>
-            <form onSubmit={handleSubmit} className="space-y-12">
+          <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Loan Details</h2>
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="loan-amount" className="text-sm font-semibold text-text-dim mb-4 block">
                   Loan Amount (AUD)
@@ -82,7 +82,7 @@ const LoanRepayment = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div>
                   <label htmlFor="loan-rate" className="text-sm font-semibold text-text-dim mb-4 block">
                     Annual Rate (%)
@@ -127,15 +127,15 @@ const LoanRepayment = () => {
             </form>
           </div>
 
-          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-card card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Your Results</h2>
+          <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Your Results</h2>
 
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
                 <>
-                  <div className="animate-rise space-y-10">
+                  <div className="animate-rise space-y-6">
                     <div>
                       <p className="text-xs font-semibold text-text-dim mb-3">Monthly Payment</p>
                       <p className="text-5xl font-display font-extrabold tracking-tight text-text-primary">
@@ -178,13 +178,13 @@ const LoanRepayment = () => {
         {/* Sponsored listings sit outside the educational results panel so the
             teaching content is never mixed up with anything commercial. */}
         {result && !result.error ? (
-          <section className="mt-10" aria-labelledby="loan-sponsored-title">
+          <section className="mt-6" aria-labelledby="loan-sponsored-title">
             <div className="flex items-center gap-4">
               <h2 id="loan-sponsored-title" className="shrink-0 text-xs font-extrabold uppercase tracking-[0.14em] text-text-dim">Sponsored listings</h2>
               <span aria-hidden="true" className="h-px flex-1 bg-line-soft" />
             </div>
             <p className="mt-2 text-sm font-medium text-text-muted">Paid placements from third parties. Nothing above this line is sponsored, and Caplet does not sell any product.</p>
-            <div className="mt-5 rounded-3xl bg-surface-raised p-6 shadow-card md:p-8">
+            <div className="mt-5 surface-card md:p-8">
               <AffiliateListings type="car" maxBudget={parseFloat(loanAmount) || undefined} />
             </div>
           </section>
