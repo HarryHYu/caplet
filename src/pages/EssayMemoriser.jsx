@@ -2616,7 +2616,15 @@ function EssayWorkspace({ essayId }) {
                             </>
                         )}
                         {mode && (
-                            <div key={`${mode}-${scope ? scope.join('-') : 'all'}`} className="surface-card min-h-[320px] flex flex-col justify-center md:p-8">
+                            <div
+                                key={`${mode}-${scope ? scope.join('-') : 'all'}`}
+                                /* A live speed run drops the card entirely and takes the
+                                   viewport: no border, no fill, the words centred on the
+                                   page ground. Every other drill keeps the card. */
+                                className={speedRunning
+                                    ? 'flex min-h-[calc(100vh-9rem)] flex-col justify-center'
+                                    : 'surface-card min-h-[320px] flex flex-col justify-center md:p-8'}
+                            >
                                 {mode === 'wordbyword' && (
                                     <RebuildMode initialUnit={modeParam === 'sentence' ? 'sentences' : 'words'}
                                         essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}

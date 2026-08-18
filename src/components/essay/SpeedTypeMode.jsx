@@ -345,9 +345,15 @@ export default function SpeedTypeMode({ essay, paragraphs = null, onRunningChang
     }, [phase, start]);
 
     // Focus mode: tell the workspace when a run is live so it can collapse
-    // the page chrome around the stream.
+    // the page chrome around the stream, and take the sidebar down too — a
+    // speed run should be the only thing on the screen. `practice-focus-mode`
+    // is the same body class the Practice session uses (see src/index.css).
     useEffect(() => { onRunningChange?.(phase === 'run'); }, [phase, onRunningChange]);
     useEffect(() => () => { onRunningChange?.(false); }, [onRunningChange]);
+    useEffect(() => {
+        document.body.classList.toggle('practice-focus-mode', phase === 'run');
+        return () => document.body.classList.remove('practice-focus-mode');
+    }, [phase]);
     useEffect(() => () => { clearTimeout(idleTimer.current); clearTimeout(shakeTimer.current); }, []);
 
     // 3-line rolling window: translate the stream so the active line sits on
@@ -603,7 +609,7 @@ export default function SpeedTypeMode({ essay, paragraphs = null, onRunningChang
     };
 
     return (
-        <div className="flex min-h-[40vh] flex-col justify-center">
+        <div className="mx-auto flex min-h-[52vh] w-full max-w-4xl flex-col justify-center">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-text-dim">
                 <div className="flex flex-1 flex-wrap items-center gap-x-5 gap-y-1">
                     <span aria-label="Elapsed time" className="tabular-nums text-text-primary">{Math.floor(elapsed / 1000)}s</span>
@@ -630,20 +636,19 @@ export default function SpeedTypeMode({ essay, paragraphs = null, onRunningChang
 
             {/* A hidden input drives everything; the stream is the display.
                 Clicking anywhere in the stream refocuses the input. */}
-            <div
-                className={`relative rounded-xl border bg-surface-body p-5 ${shake ? 'animate-shake-x' : ''} ${
-                    focused ? 'border-accent/60' : 'border-line-soft'
-                }`}
-            >
+            {/* No card, no border: the words sit straight on the page ground so
+                the run reads as a typing test rather than a form field. Focus is
+                communicated by the overlay below, not by a frame. */}
+            <div className={`relative py-2 ${shake ? 'animate-shake-x' : ''}`}>
                 {!focused && (
-                    <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-xl bg-surface-body/70 backdrop-blur-[1px]">
+                    <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-2xl bg-surface-body/70 backdrop-blur-[1px]">
                         <span className="text-sm font-bold text-text-dim">Click here and type</span>
                     </div>
                 )}
                 <div
                     ref={streamRef}
                     aria-hidden="true"
-                    className="relative overflow-hidden font-serif text-lg leading-loose"
+                    className="relative overflow-hidden font-serif text-2xl leading-loose md:text-[28px]"
                     style={{ height: '6em' }}
                 >
                     <div
