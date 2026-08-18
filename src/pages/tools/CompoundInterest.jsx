@@ -58,11 +58,11 @@ const CompoundInterest = () => {
             <form onSubmit={handleSubmit} className="space-y-12">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
-                  <label htmlFor="ci-principal" className="text-sm font-semibold text-text-dim mb-3 block">
+                  <label htmlFor="ci-principal" className="text-sm font-semibold text-text-muted mb-3 block">
                     Starting Amount (AUD)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">$</span>
                     <input
                       id="ci-principal"
                       type="number"
@@ -77,11 +77,11 @@ const CompoundInterest = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="ci-monthly" className="text-sm font-semibold text-text-dim mb-3 block">
+                  <label htmlFor="ci-monthly" className="text-sm font-semibold text-text-muted mb-3 block">
                     Monthly Contribution
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">$</span>
                     <input
                       id="ci-monthly"
                       type="number"
@@ -98,7 +98,7 @@ const CompoundInterest = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="ci-rate" className="text-sm font-semibold text-text-dim mb-3 block">
+                  <label htmlFor="ci-rate" className="text-sm font-semibold text-text-muted mb-3 block">
                     Annual Interest Rate (%)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
@@ -113,12 +113,12 @@ const CompoundInterest = () => {
                       placeholder="0.0"
                       className="w-full bg-transparent pl-4 pr-9 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted font-bold text-sm">%</span>
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="ci-years" className="text-sm font-semibold text-text-dim mb-3 block">
+                  <label htmlFor="ci-years" className="text-sm font-semibold text-text-muted mb-3 block">
                     Time Horizon
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
@@ -152,7 +152,7 @@ const CompoundInterest = () => {
               ) : (
                 <div className="animate-rise space-y-10">
                   <div>
-                    <p className="text-xs font-semibold text-text-dim mb-3">Final Balance</p>
+                    <p className="text-xs font-semibold text-text-muted mb-3">Final Balance</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
                       {formatCurrency(result.finalBalance)}
                     </p>
@@ -161,17 +161,17 @@ const CompoundInterest = () => {
                   <div className="space-y-6">
                     <div className="flex justify-between items-end gap-4">
                       <div className="bg-surface-raised rounded-2xl px-5 py-4 flex-1">
-                        <p className="text-xs font-semibold text-text-dim mb-1">Total Contributed</p>
+                        <p className="text-xs font-semibold text-text-muted mb-1">Total Contributed</p>
                         <p className="text-xl font-bold">{formatCurrency(result.totalContributions)}</p>
                       </div>
                       <div className="bg-surface-raised rounded-2xl px-5 py-4 flex-1 text-right">
-                        <p className="text-xs font-semibold text-text-dim mb-1">Interest Earned</p>
+                        <p className="text-xs font-semibold text-text-muted mb-1">Interest Earned</p>
                         <p className="text-xl font-bold text-accent">{formatCurrency(result.interestEarned)}</p>
                       </div>
                     </div>
 
                     <div className="bg-surface-raised rounded-2xl px-5 py-4">
-                      <p className="text-xs font-semibold text-text-dim mb-3">The Breakdown</p>
+                      <p className="text-xs font-semibold text-text-muted mb-3">The Breakdown</p>
                       <div className="flex items-center gap-4 text-sm font-semibold">
                         <span className="text-text-primary">{result.years} year horizon</span>
                         <div className="w-px h-3 bg-line-soft" />

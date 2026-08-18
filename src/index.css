@@ -38,7 +38,12 @@
 
   --text-primary: #151515;
   --text-muted: #666A70;
-  --text-dim: #747980;
+  /* Darkened from #747980, which was 4.38:1 on white and 4.05:1 on the soft
+     surfaces — below AA for normal text on EVERY light background, across
+     ~900 call sites. #6A6F77 clears 4.5:1 on white, surface-soft, cream and
+     the sky body while staying visibly lighter than --text-muted, so the
+     three-step text hierarchy survives. Dark palettes already pass (6.4-7.3). */
+  --text-dim: #6A6F77;
   --text-contrast: #FFFFFF;
 
   /* Lines — warm and soft, so outlines recede */

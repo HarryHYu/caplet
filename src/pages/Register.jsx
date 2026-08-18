@@ -24,14 +24,14 @@ const Register = () => {
         {/* Vertically centered headline */}
         <div className="relative z-10 flex-1 flex items-center px-12 xl:px-20 pb-40">
           <div className="max-w-lg animate-rise-slow">
-            <span className="mb-6 font-hand text-2xl text-accent -rotate-2 inline-block">
+            <span className="mb-6 font-hand text-2xl text-text-contrast/90 -rotate-2 inline-block">
               free, open, and a little playful
             </span>
             <h2 className="text-6xl xl:text-7xl font-display font-extrabold text-text-contrast leading-[0.95] tracking-tight mb-6">
               Start building,<br />
-              <span className="text-accent">learn for life.</span>
+              <span className="text-text-contrast">learn for life.</span>
             </h2>
-            <p className="text-text-dim text-xl leading-relaxed">
+            <p className="text-text-contrast/80 text-xl leading-relaxed">
               Courses, live code, graphing, quizzes, and classrooms — all free, all open-source.
             </p>
           </div>
@@ -46,7 +46,7 @@ const Register = () => {
           <Link to="/" className="lg:hidden font-display font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors focus-ring rounded-md">
             Caplet
           </Link>
-          <Link to="/" className="ml-auto text-sm font-bold text-text-dim hover:text-accent transition-colors focus-ring rounded-md">
+          <Link to="/" className="ml-auto text-sm font-bold text-text-muted hover:text-accent transition-colors focus-ring rounded-md">
             Back to home
           </Link>
         </div>

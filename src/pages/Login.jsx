@@ -34,7 +34,7 @@ const Login = () => {
                             Good to<br />
                             see you again.
                         </h2>
-                        <p className="text-accent-contrast/80 text-xl leading-relaxed">
+                        <p className="text-accent-contrast/90 text-xl leading-relaxed">
                             Pick up your courses, classes, and tools right where you left off.
                         </p>
                     </div>
@@ -49,7 +49,7 @@ const Login = () => {
                     <Link to="/" className="lg:hidden font-display font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors focus-ring rounded-md">
                         Caplet
                     </Link>
-                    <Link to="/" className="ml-auto text-sm font-bold text-text-dim hover:text-accent transition-colors focus-ring rounded-md">
+                    <Link to="/" className="ml-auto text-sm font-bold text-text-muted hover:text-accent transition-colors focus-ring rounded-md">
                         Back to home
                     </Link>
                 </div>

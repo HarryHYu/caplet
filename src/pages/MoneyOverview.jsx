@@ -46,8 +46,8 @@ function IndicatorCard({ indicator }) {
       <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent">Official data</p><h2 className="mt-3 font-display text-xl font-extrabold tracking-tight text-text-primary">{indicator.displayTitle}</h2></div><span className="rounded-full bg-surface-soft px-3 py-1.5 text-[11px] font-bold text-text-muted">{indicator.nativeFrequency}</span></div>
       <p className="mt-7 font-display text-4xl font-extrabold tracking-tight text-text-primary">{formatValue(current?.value, indicator.unit)}</p>
       <p className="mt-2 text-sm font-bold text-text-muted">{current?.periodLabel || current?.observationDate || 'No observation available'}</p>
-      <p className="mt-5 text-xs font-semibold leading-relaxed text-text-dim">{freshness?.message || 'The official release has not been ingested yet.'}</p>
-      <div className="mt-5 flex flex-wrap gap-2 text-[11px] font-bold text-text-dim"><span className="rounded-full bg-surface-soft px-2.5 py-1">{freshnessLabel(freshness)}</span>{current?.revisionState === 'revised' ? <span className="rounded-full bg-accent-soft px-2.5 py-1 text-accent">Revised</span> : null}</div>
+      <p className="mt-5 text-xs font-semibold leading-relaxed text-text-muted">{freshness?.message || 'The official release has not been ingested yet.'}</p>
+      <div className="mt-5 flex flex-wrap gap-2 text-[11px] font-bold text-text-muted"><span className="rounded-full bg-surface-soft px-2.5 py-1">{freshnessLabel(freshness)}</span>{current?.revisionState === 'revised' ? <span className="rounded-full bg-accent-soft px-2.5 py-1 text-accent">Revised</span> : null}</div>
       {(indicator.sourceUrl || indicator.source?.url) && <a href={indicator.sourceUrl || indicator.source.url} target="_blank" rel="noreferrer" className="mt-6 inline-flex text-sm font-bold text-accent underline underline-offset-4">Open source</a>}
     </article>
   );
@@ -160,7 +160,7 @@ export default function MoneyOverview() {
           </div>
           <Link to="/money/resources" className="btn-primary inline-flex w-fit shrink-0">Browse resources <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>
         </section>
-        <p className="reveal mt-8 text-center text-xs font-medium text-text-dim">General education and scenario estimates only, not personal financial advice.</p>
+        <p className="reveal mt-8 text-center text-xs font-medium text-text-muted">General education and scenario estimates only, not personal financial advice.</p>
       </div>
     </div>
   );

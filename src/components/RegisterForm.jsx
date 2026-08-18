@@ -114,7 +114,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
           />
         </div>
         {googleLoading && (
-          <p className="mt-3 text-sm text-text-dim flex items-center gap-2">
+          <p className="mt-3 text-sm text-text-muted flex items-center gap-2">
             <span className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin inline-block" />
             Continuing with Google…
           </p>
@@ -123,7 +123,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
 
       <div className="my-7 flex items-center gap-4">
         <div className="flex-1 h-px bg-line-soft/60" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-text-dim">Or</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">Or</span>
         <div className="flex-1 h-px bg-line-soft/60" />
       </div>
 
@@ -179,7 +179,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
             autoComplete="bday"
             className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm"
           />
-          <p className="text-xs font-medium leading-relaxed text-text-dim">Used to apply age-appropriate privacy controls. It is not shown publicly.</p>
+          <p className="text-xs font-medium leading-relaxed text-text-muted">Used to apply age-appropriate privacy controls. It is not shown publicly.</p>
         </div>
         <div className="space-y-1.5">
           <label htmlFor="reg-password" className="block text-sm font-medium text-text-muted">Password (at least 8 characters)</label>
@@ -247,7 +247,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
             <span className="font-semibold">Create account</span>
           )}
         </button>
-        <p className="text-center text-xs font-medium leading-relaxed text-text-dim">
+        <p className="text-center text-xs font-medium leading-relaxed text-text-muted">
           By creating an account, you agree to Caplet&apos;s{' '}
           <Link to="/terms" className="font-bold text-accent hover:text-accent-strong focus-ring rounded-md">terms of use</Link>
           {' '}and{' '}

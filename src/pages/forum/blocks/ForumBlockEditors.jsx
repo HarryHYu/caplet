@@ -3,10 +3,9 @@ import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import ForumContent from '../ForumContent';
 import ForumImageUploadButton from '../ForumImageUploadButton';
 import ForumAssetUploader from './ForumAssetUploader';
-import ForumChartBlock from './ForumChartBlock';
 import ForumTableBlock from './ForumTableBlock';
 import ForumEmbedIframe from './ForumEmbedIframe';
-import Forum3DModelBlock from './Forum3DModelBlock';
+import { Forum3DModelBlockLazy, ForumChartBlockLazy } from './lazyBlocks';
 
 const fieldClass = 'w-full rounded-xl px-3 py-2 text-sm';
 
@@ -92,7 +91,7 @@ export function Model3DBlockEditor({ data, onChange }) {
   return (
     <div className="flex flex-col gap-2">
       {data.url ? (
-        <Forum3DModelBlock data={data} />
+        <Forum3DModelBlockLazy data={data} />
       ) : (
         <ForumAssetUploader purpose="forumModel" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" label="Upload 3D model (.glb / .gltf)" onUploaded={({ assetId, url }) => onChange({ ...data, assetId, url })} />
       )}
@@ -140,12 +139,12 @@ export function ChartBlockEditor({ data, onChange }) {
           <input type="text" value={s.name} onChange={(e) => setSeriesName(i, e.target.value)} className="w-28 shrink-0 rounded-xl px-2 py-2 text-sm" />
           <input type="text" value={s.data.join(', ')} onChange={(e) => setSeriesValues(i, e.target.value)} placeholder="Values (comma-separated, e.g. 4, 8, 15)" className="flex-1 rounded-xl px-2 py-2 text-sm" />
           {series.length > 1 && (
-            <button type="button" onClick={() => removeSeries(i)} className="shrink-0 rounded-full p-1.5 text-text-muted hover:bg-surface-soft"><XMarkIcon className="h-4 w-4" /></button>
+            <button type="button" onClick={() => removeSeries(i)} aria-label={`Remove ${s.name || `series ${i + 1}`}`} className="shrink-0 rounded-full p-1.5 text-text-muted hover:bg-surface-soft"><XMarkIcon className="h-4 w-4" aria-hidden="true" /></button>
           )}
         </div>
       ))}
       <button type="button" onClick={addSeries} className="inline-flex w-fit items-center gap-1 text-xs font-bold text-[color:var(--forum-accent)]"><PlusIcon className="h-3.5 w-3.5" /> Add series</button>
-      {previewValid && <ForumChartBlock data={preview} />}
+      {previewValid && <ForumChartBlockLazy data={preview} />}
     </div>
   );
 }
@@ -171,12 +170,12 @@ export function TableBlockEditor({ data, onChange }) {
                 <th key={i} className="p-1">
                   <div className="flex items-center gap-1">
                     <input type="text" maxLength={80} value={col} onChange={(e) => setColumn(i, e.target.value)} className="w-full rounded-lg px-2 py-1.5 text-xs font-bold" />
-                    {columns.length > 1 && <button type="button" onClick={() => removeColumn(i)} className="shrink-0 rounded-full p-1 text-text-muted hover:bg-surface-soft"><XMarkIcon className="h-3.5 w-3.5" /></button>}
+                    {columns.length > 1 && <button type="button" onClick={() => removeColumn(i)} aria-label={`Remove column ${i + 1}`} className="shrink-0 rounded-full p-1 text-text-muted hover:bg-surface-soft"><XMarkIcon className="h-3.5 w-3.5" aria-hidden="true" /></button>}
                   </div>
                 </th>
               ))}
               <th className="p-1">
-                <button type="button" onClick={addColumn} className="rounded-full p-1.5 text-[color:var(--forum-accent)] hover:bg-surface-soft"><PlusIcon className="h-4 w-4" /></button>
+                <button type="button" onClick={addColumn} aria-label="Add column" className="rounded-full p-1.5 text-[color:var(--forum-accent)] hover:bg-surface-soft"><PlusIcon className="h-4 w-4" aria-hidden="true" /></button>
               </th>
             </tr>
           </thead>
@@ -189,7 +188,7 @@ export function TableBlockEditor({ data, onChange }) {
                   </td>
                 ))}
                 <td className="p-1">
-                  <button type="button" onClick={() => removeRow(r)} className="rounded-full p-1 text-text-muted hover:bg-surface-soft"><XMarkIcon className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => removeRow(r)} aria-label={`Remove row ${r + 1}`} className="rounded-full p-1 text-text-muted hover:bg-surface-soft"><XMarkIcon className="h-3.5 w-3.5" aria-hidden="true" /></button>
                 </td>
               </tr>
             ))}

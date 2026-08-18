@@ -114,7 +114,7 @@ const Courses = () => {
         {/* Filters */}
         <div className="reveal mb-12 flex flex-col gap-5 rounded-3xl bg-surface-soft p-5 sm:flex-row sm:p-6">
           <div className="sm:w-48">
-            <label htmlFor="learning-path-level" className="text-sm font-semibold text-text-dim mb-3 block">Level</label>
+            <label htmlFor="learning-path-level" className="text-sm font-semibold text-text-muted mb-3 block">Level</label>
             <select
               id="learning-path-level"
               value={filters.level}
@@ -128,7 +128,7 @@ const Courses = () => {
             </select>
           </div>
           <div className="flex-1">
-            <label htmlFor="learning-path-search" className="text-sm font-semibold text-text-dim mb-3 block">Search</label>
+            <label htmlFor="learning-path-search" className="text-sm font-semibold text-text-muted mb-3 block">Search</label>
             <input
               id="learning-path-search"
               type="text"
@@ -168,7 +168,7 @@ const Courses = () => {
         {(showCatalogEmpty || error) && (
           <div className="reveal rounded-3xl block-blue px-8 py-14 shadow-card md:px-12">
             <AcademicCapIcon className="h-10 w-10 text-accent" />
-            <h3 className="mt-6 font-display text-3xl font-bold tracking-tight text-text-primary">Start with Economics while new paths are being prepared.</h3>
+            <h2 className="mt-6 font-display text-3xl font-bold tracking-tight text-text-primary">Start with Economics while new paths are being prepared.</h2>
             <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">The Economics library already includes Year 11 and Year 12 topics, saved adaptive practice, feedback, and a mastery map.</p>
             <div className="mt-8 flex flex-wrap gap-3"><Link to="/library/economics" className="btn-primary">Open Economics <ArrowRightIcon className="h-4 w-4" /></Link><Link to="/practice?subject=economics&mode=diagnostic&source=course" className="btn-secondary"><ClipboardDocumentCheckIcon className="h-4 w-4" /> Take the diagnostic</Link></div>
           </div>

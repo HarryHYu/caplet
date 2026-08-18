@@ -1,8 +1,7 @@
 import ForumContent from '../ForumContent';
-import ForumChartBlock from './ForumChartBlock';
 import ForumTableBlock from './ForumTableBlock';
 import ForumEmbedIframe from './ForumEmbedIframe';
-import Forum3DModelBlock from './Forum3DModelBlock';
+import { Forum3DModelBlockLazy, ForumChartBlockLazy } from './lazyBlocks';
 
 /**
  * Renders one content block. Every branch is plain JSX (text nodes, mapped
@@ -36,7 +35,7 @@ function Block({ block }) {
         />
       );
     case 'chart':
-      return <ForumChartBlock data={block.data} />;
+      return <ForumChartBlockLazy data={block.data} />;
     case 'table':
       return <ForumTableBlock data={block.data} />;
     case 'graph':
@@ -46,7 +45,7 @@ function Block({ block }) {
     case 'embed':
       return <ForumEmbedIframe src={`https://www.youtube-nocookie.com/embed/${block.data.videoId}`} label="YouTube video" aspect="16 / 9" />;
     case 'model3d':
-      return <Forum3DModelBlock data={block.data} />;
+      return <Forum3DModelBlockLazy data={block.data} />;
     default:
       return null;
   }

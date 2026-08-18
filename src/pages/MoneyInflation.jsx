@@ -94,7 +94,7 @@ export default function MoneyInflation() {
                 <span className="rounded-full bg-accent-soft px-3 py-1.5 text-xs font-extrabold text-accent">{indicator?.isLocalSnapshot ? 'Dated local snapshot · not a live feed' : 'Official ABS series'}</span>
                 <span className="rounded-full bg-[color:var(--block-green)] px-3 py-1.5 text-xs font-bold text-text-primary">{indicator?.freshness?.state || 'loading'}</span>
               </div>
-              <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.14em] text-text-dim">Consumer Price Index</p>
+              <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.14em] text-text-muted">Consumer Price Index</p>
               <h2 id="cpi-card-title" className="mt-2 font-display text-3xl font-extrabold tracking-tight text-text-primary">
                 {loading ? 'Loading the latest validated observation…' : hasCurrent ? `Inflation was ${currentValue.toFixed(1)}% through the year to ${currentPeriod}.` : 'No validated CPI observation is available yet.'}
               </h2>
@@ -103,7 +103,7 @@ export default function MoneyInflation() {
               </p>
             </div>
             <div className="min-w-56 rounded-3xl bg-[color:var(--block-blue)] p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-dim">Published annual change</p>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-muted">Published annual change</p>
               <p className="mt-2 font-display text-6xl font-extrabold tracking-tight text-accent">{hasCurrent ? `${currentValue.toFixed(1)}%` : '—'}</p>
               <p className="mt-2 text-sm font-bold text-text-muted">{indicator?.freshness?.message || 'Waiting for validated source data.'}</p>
             </div>
@@ -134,7 +134,7 @@ export default function MoneyInflation() {
 
         <div className="mt-8"><FinancialAssumptions period="Hypothetical experiment" verified="Inputs are session-only" included={['Your starting price, assumed annual rate and number of years', 'Annual compounding for the sample calculation']} excluded={['A forecast of future CPI', 'Different price movements across household categories', 'Personal financial circumstances']} sources={sourceUrl ? [{ label: indicator?.series?.title || 'ABS Consumer Price Index', href: sourceUrl }] : []} /></div>
 
-        <section className="mt-8 overflow-x-auto rounded-3xl bg-surface-raised p-6" aria-labelledby="inflation-table-title"><h2 id="inflation-table-title" className="font-display text-xl font-extrabold text-text-primary">Published observations</h2><p className="mt-2 text-sm font-medium text-text-muted">Reference dates and values are shown exactly as received from the validated source adapter.</p><table className="mt-5 w-full min-w-[32rem] text-left text-sm"><caption className="sr-only">Validated annual Consumer Price Index observations</caption><thead><tr className="border-b border-line-soft text-text-dim"><th className="py-3 pr-4">Reference period</th><th className="py-3 pr-4">Annual change</th><th className="py-3">Status</th></tr></thead><tbody>{indicatorRows.length ? indicatorRows.map((row) => <tr key={row.period} className="border-b border-line-soft/60"><td className="py-3 pr-4 font-bold text-text-primary">{row.period}</td><td className="py-3 pr-4 text-text-primary">{row.annualChange.toFixed(1)}%</td><td className="py-3 text-text-muted">{row.status}</td></tr>) : <tr><td colSpan="3" className="py-6 text-text-muted">No validated observations are available.</td></tr>}</tbody></table></section>
+        <section className="mt-8 overflow-x-auto rounded-3xl bg-surface-raised p-6" aria-labelledby="inflation-table-title"><h2 id="inflation-table-title" className="font-display text-xl font-extrabold text-text-primary">Published observations</h2><p className="mt-2 text-sm font-medium text-text-muted">Reference dates and values are shown exactly as received from the validated source adapter.</p><table className="mt-5 w-full min-w-[32rem] text-left text-sm"><caption className="sr-only">Validated annual Consumer Price Index observations</caption><thead><tr className="border-b border-line-soft text-text-muted"><th className="py-3 pr-4">Reference period</th><th className="py-3 pr-4">Annual change</th><th className="py-3">Status</th></tr></thead><tbody>{indicatorRows.length ? indicatorRows.map((row) => <tr key={row.period} className="border-b border-line-soft/60"><td className="py-3 pr-4 font-bold text-text-primary">{row.period}</td><td className="py-3 pr-4 text-text-primary">{row.annualChange.toFixed(1)}%</td><td className="py-3 text-text-muted">{row.status}</td></tr>) : <tr><td colSpan="3" className="py-6 text-text-muted">No validated observations are available.</td></tr>}</tbody></table></section>
       </div>
     </div>
   );

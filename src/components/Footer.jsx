@@ -48,7 +48,7 @@ export default function Footer() {
           </nav>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-line-soft pt-6 text-xs text-text-dim sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-3 border-t border-line-soft pt-6 text-xs text-text-muted sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Caplet</p>
           <div className="flex gap-5">
             <Link to="/terms" className="focus-ring rounded hover:text-accent">Terms & privacy</Link>

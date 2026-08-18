@@ -60,9 +60,9 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
       {/* Heading */}
       <div className="mb-8">
         <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">Good to see you</p>
-        <h2 className="text-4xl font-display font-extrabold text-text-primary tracking-tight mb-2">
+        <h1 className="text-4xl font-display font-extrabold text-text-primary tracking-tight mb-2">
           Welcome back.
-        </h2>
+        </h1>
         <p className="text-sm text-text-muted">
           New here?{' '}
           {onSwitchToRegister ? (
@@ -100,7 +100,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
           />
         </div>
         {googleLoading && (
-          <p className="text-sm text-text-dim flex items-center gap-2 mt-3">
+          <p className="text-sm text-text-muted flex items-center gap-2 mt-3">
             <span className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin inline-block" />
             Signing you in with Google.
           </p>
@@ -110,7 +110,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
       {/* Divider */}
       <div className="my-7 flex items-center gap-4">
         <div className="flex-1 h-px bg-line-soft" />
-        <span className="text-xs font-medium text-text-dim">or</span>
+        <span className="text-xs font-medium text-text-muted">or</span>
         <div className="flex-1 h-px bg-line-soft" />
       </div>
 

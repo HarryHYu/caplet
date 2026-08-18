@@ -25,7 +25,7 @@ const LibrarySubjectCard = ({ subject }) => {
   const content = (
     <>
       <div>
-        <h4 className="font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{subject.name}</h4>
+        <h3 className="font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{subject.name}</h3>
       </div>
       {isAvailable && (
         <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-accent">

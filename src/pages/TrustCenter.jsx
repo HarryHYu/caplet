@@ -30,7 +30,7 @@ const TrustCenter = () => {
   return (
     <div className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="reveal max-w-5xl mb-16">
+        <div className="reveal max-w-5xl mb-16">
           <span className="mb-5 font-hand text-xl text-accent -rotate-2 inline-block">clear answers, in one place</span>
           <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl lg:text-8xl leading-[0.95] text-text-primary">
             Trust is part of<br />the product.
@@ -43,7 +43,7 @@ const TrustCenter = () => {
             <span className="rounded-full bg-surface-raised px-4 py-2">Privacy notice v2.0 · 13 July 2026</span>
             <span className="rounded-full block-blue px-4 py-2 text-accent">Plain-language overview</span>
           </div>
-        </header>
+        </div>
 
         <div className="grid gap-12 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="reveal lg:sticky lg:top-28 lg:self-start">

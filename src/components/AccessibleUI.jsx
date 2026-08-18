@@ -9,7 +9,7 @@ export function FormField({ id, label, hint, error, required = false, children, 
 
   return (
     <div className={className}>
-      <label htmlFor={controlId} className="mb-3 block text-sm font-semibold text-text-dim">
+      <label htmlFor={controlId} className="mb-3 block text-sm font-semibold text-text-muted">
         {label}{required ? <span aria-hidden="true"> *</span> : null}
       </label>
       {children({
@@ -18,7 +18,7 @@ export function FormField({ id, label, hint, error, required = false, children, 
         'aria-describedby': describedBy,
         'aria-invalid': error ? true : undefined,
       })}
-      {hint ? <p id={hintId} className="mt-2 text-xs font-medium text-text-dim">{hint}</p> : null}
+      {hint ? <p id={hintId} className="mt-2 text-xs font-medium text-text-muted">{hint}</p> : null}
       {error ? <ErrorMessage id={errorId}>{error}</ErrorMessage> : null}
     </div>
   );
@@ -50,12 +50,12 @@ export function FinancialAssumptions({ period, verified, included = [], excluded
         <h2 id="financial-assumptions-title" className="text-lg font-bold">Assumptions and sources</h2>
         {period ? <span className="text-xs font-bold text-accent">{period}</span> : null}
       </div>
-      {verified ? <p className="mt-2 text-xs font-medium text-text-dim">Rates verified {verified}</p> : null}
+      {verified ? <p className="mt-2 text-xs font-medium text-text-muted">Rates verified {verified}</p> : null}
       <div className="mt-4 grid gap-4 text-sm text-text-muted sm:grid-cols-2">
         {included.length ? <div><h3 className="text-sm font-bold text-text-primary">Included</h3><ul className="mt-2 list-disc space-y-1 pl-5">{included.map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
         {excluded.length ? <div><h3 className="text-sm font-bold text-text-primary">Not included</h3><ul className="mt-2 list-disc space-y-1 pl-5">{excluded.map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
       </div>
-      <p className="mt-4 text-xs font-medium leading-relaxed text-text-dim">For general education and scenario estimates only, not personal financial advice.</p>
+      <p className="mt-4 text-xs font-medium leading-relaxed text-text-muted">For general education and scenario estimates only, not personal financial advice.</p>
       {sources.length ? <div className="mt-4 flex flex-wrap gap-3">{sources.map((source) => <a key={source.href} href={source.href} target="_blank" rel="noreferrer" className="text-sm font-bold text-accent underline underline-offset-4">{source.label}</a>)}</div> : null}
     </aside>
   );
