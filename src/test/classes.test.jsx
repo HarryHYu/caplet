@@ -46,8 +46,11 @@ describe('Classes', () => {
   it('hides the join action for teachers and shows it for students', async () => {
     api.getClasses.mockResolvedValue({ teaching: [], student: [] });
     render(<MemoryRouter><Classes /></MemoryRouter>);
-    await waitFor(() => expect(screen.getByText('Classes You Teach')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Classes you teach')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /Join class/i })).not.toBeInTheDocument();
+    // …including inside the empty state, since the backend rejects a teacher
+    // joining by code.
+    expect(screen.queryByRole('button', { name: /Join a class/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Create class/i })).toBeInTheDocument();
     cleanup();
 

@@ -248,9 +248,11 @@ const Classes = () => {
           {classes.student.length === 0 ? (
             <InlineEmpty
               icon={UserGroupIcon}
-              title={isTeacher ? "You're not in any classes" : 'Join your first class'}
-              message="Ask your teacher for the class code — joining links your work to the class."
-              action={<button type="button" onClick={openJoin} className="btn-primary press">Join a class</button>}
+              title={isTeacher ? "You're not a member of any class" : 'Join your first class'}
+              message={isTeacher
+                ? 'Classes you teach appear above. Members join with your class code.'
+                : 'Ask your teacher for the class code — joining links your work to the class.'}
+              action={isTeacher ? null : <button type="button" onClick={openJoin} className="btn-primary press">Join a class</button>}
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal-stagger">
