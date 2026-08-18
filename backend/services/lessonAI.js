@@ -321,8 +321,12 @@ async function runStage1(client, notes, opts, slideCount) {
   });
 
   if (completion.choices?.[0]?.finish_reason === 'length') {
+    // 400 + expose: this is a user-correctable request size, not a provider
+    // fault, so publicAIError forwards the actionable message instead of the
+    // generic 502 fallback the author would otherwise retry against forever.
     const err = new Error('AI planning stage output was truncated. Ask for fewer slides and try again.');
-    err.status = 502;
+    err.status = 400;
+    err.expose = true;
     throw err;
   }
   return completion.choices?.[0]?.message?.content?.trim() || '';

@@ -26,6 +26,7 @@ const ReviewItem = require('../models/ReviewItem');
 const EssayContextDoc = require('../models/EssayContextDoc');
 const EssayAnnotation = require('../models/EssayAnnotation');
 const { requireAuth } = require('../middleware/auth');
+const { requireUuidParam } = require('../middleware/validateUuid');
 const {
   parseEssay, fallbackStructure, segmentEssay, firstSentence, extractQuotes,
 } = require('../services/essayParser');
@@ -37,6 +38,9 @@ const { publicAIError } = require('../utils/aiErrors');
 
 const router = express.Router();
 router.use(requireAuth);
+// A malformed id would otherwise reach a UUID column and raise a Postgres
+// 500; 404 is both correct and leaks nothing. Covers every :id route below.
+router.param('id', requireUuidParam('id', 'Essay not found'));
 
 const MAX_TITLE = 200;
 const MAX_TEXT = 100000; // generous cap for a long essay

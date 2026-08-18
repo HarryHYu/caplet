@@ -106,9 +106,25 @@ describe('Classes', () => {
     const dialog = screen.getByRole('dialog');
     expect(dialog).toHaveAttribute('aria-modal', 'true');
     expect(dialog).toHaveAttribute('aria-labelledby', 'create-class-heading');
-    await waitFor(() => expect(dialog).toHaveFocus());
+    // Focus lands on the first control inside the dialog, not the wrapper.
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
 
     fireEvent.keyDown(document, { key: 'Escape' });
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('keeps focus in the field while typing (the modal must not steal it back)', async () => {
+    api.getClasses.mockResolvedValue({ teaching: [], student: [] });
+    render(<MemoryRouter><Classes /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: /Create class/i }));
+
+    const input = screen.getByLabelText(/Class Name/i);
+    input.focus();
+    // Each keystroke re-renders the parent; a focus effect keyed on an inline
+    // onClose used to yank focus onto the dialog after every character.
+    fireEvent.change(input, { target: { value: 'Y' } });
+    await waitFor(() => expect(input).toHaveFocus());
+    fireEvent.change(input, { target: { value: 'Ye' } });
+    await waitFor(() => expect(input).toHaveFocus());
   });
 });

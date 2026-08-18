@@ -2092,6 +2092,9 @@ function EssayWorkspace({ essayId }) {
     const [explainingIndex, setExplainingIndex] = useState(null);
     // Select-and-fix: one pending AI proposal at a time; nothing touches the
     // essay text until the student explicitly accepts it.
+    // True while a speed run is live — collapses the workspace chrome so the
+    // word stream owns the screen (MonkeyType-style focus mode).
+    const [speedRunning, setSpeedRunning] = useState(false);
     const [proposal, setProposal] = useState(null);
     const [applyingFix, setApplyingFix] = useState(false);
     const [workspaceError, setWorkspaceError] = useState(null);
@@ -2434,14 +2437,16 @@ function EssayWorkspace({ essayId }) {
     const paragraphCount = structure?.bodyParagraphs?.length || 0;
 
     return (
-        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+        <div className={`min-h-screen bg-surface-body selection:bg-accent selection:text-accent-contrast ${speedRunning ? 'py-10' : 'py-32'}`}>
             <div className="container-custom">
-                <Link to="/essays"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent transition-colors mb-8">
-                    <ArrowLeftIcon className="w-4 h-4" /> All essays
-                </Link>
+                {!speedRunning && (
+                    <Link to="/essays"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent transition-colors mb-8">
+                        <ArrowLeftIcon className="w-4 h-4" /> All essays
+                    </Link>
+                )}
 
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-6">
+                <div className={`flex-col lg:flex-row lg:items-end justify-between gap-6 mb-6 ${speedRunning ? 'hidden' : 'flex'}`}>
                     <div className="min-w-0">
                         <span className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">essay</span>
                         <h1 className="text-4xl md:text-6xl break-words">{essay.title}</h1>
@@ -2472,8 +2477,8 @@ function EssayWorkspace({ essayId }) {
                     />
                 )}
 
-                {/* ── Workspace section tabs — always visible once the essay loads ── */}
-                <nav aria-label="Essay workspace sections" className="mb-6 flex items-center gap-1 border-b border-line-soft">
+                {/* ── Workspace section tabs — hidden only while a speed run owns the screen ── */}
+                <nav aria-label="Essay workspace sections" className={`mb-6 items-center gap-1 border-b border-line-soft ${speedRunning ? 'hidden' : 'flex'}`}>
                     {WORKSPACE_TABS.map((t) => {
                         const Icon = t.icon;
                         const active = tab === t.key;
@@ -2589,15 +2594,19 @@ function EssayWorkspace({ essayId }) {
 
                 {tab === 'practice' && structure && (
                     <div>
-                        <div className="mb-4 flex flex-wrap items-center gap-3">
-                            <ScopePicker allParagraphs={allParas} scope={scope} onChange={setScope} />
-                            {scope && (
-                                <span className="text-xs font-medium text-text-dim">
-                                    Every activity below runs on just your selection.
-                                </span>
-                            )}
-                        </div>
-                        <PracticeHub mode={mode} onChange={setMode} dueCount={dueCount} drills={drills} />
+                        {!speedRunning && (
+                            <>
+                                <div className="mb-4 flex flex-wrap items-center gap-3">
+                                    <ScopePicker allParagraphs={allParas} scope={scope} onChange={setScope} />
+                                    {scope && (
+                                        <span className="text-xs font-medium text-text-dim">
+                                            Every activity below runs on just your selection.
+                                        </span>
+                                    )}
+                                </div>
+                                <PracticeHub mode={mode} onChange={setMode} dueCount={dueCount} drills={drills} />
+                            </>
+                        )}
                         {mode && (
                             <div key={`${mode}-${scope ? scope.join('-') : 'all'}`} className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-card">
                                 {mode === 'wordbyword' && (
@@ -2619,7 +2628,7 @@ function EssayWorkspace({ essayId }) {
                                         onNext={drills.quotes ? () => setMode('quotes') : () => setMode(null)}
                                         nextLabel={drills.quotes ? modeLabel('quotes') : 'all activities'} />
                                 )}
-                                {mode === 'speed' && <SpeedTypeMode essay={essay} />}
+                                {mode === 'speed' && <SpeedTypeMode essay={essay} paragraphs={scoped} onRunningChange={setSpeedRunning} />}
                                 {mode === 'quotes' && (
                                     quoteCards
                                         ? <QuoteDrill slide={quoteCards}
@@ -2645,7 +2654,7 @@ function EssayWorkspace({ essayId }) {
             </div>
 
             {/* Assistant — available from every tab, never in the way. */}
-            {!chatOpen && (
+            {!chatOpen && !speedRunning && (
                 <button
                     type="button"
                     onClick={() => setChatOpen(true)}

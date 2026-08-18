@@ -30,6 +30,17 @@ const createTestApp = () => {
 };
 
 describe('Essay routes', () => {
+  describe('malformed :id', () => {
+    it('404s a non-UUID id instead of letting Postgres raise a 500', async () => {
+      Essay.findOne = jest.fn();
+      const res = await request(app).get('/api/essays/not-a-uuid');
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe('Essay not found');
+      // The guard short-circuits before any query is attempted.
+      expect(Essay.findOne).not.toHaveBeenCalled();
+    });
+  });
+
   let app;
 
   beforeEach(() => {
@@ -43,7 +54,7 @@ describe('Essay routes', () => {
   describe('POST /api/essays', () => {
     it('creates an essay (no AI key required) and returns 201', async () => {
       Essay.create = jest.fn().mockResolvedValue({
-        id: 'e1', title: 'Macbeth', originalText: 'Power corrupts.', parsedStructure: null,
+        id: '11111111-1111-4111-8111-111111111111', title: 'Macbeth', originalText: 'Power corrupts.', parsedStructure: null,
       });
 
       const res = await request(app)
@@ -51,7 +62,7 @@ describe('Essay routes', () => {
         .send({ title: 'Macbeth', text: 'Power corrupts.' });
 
       expect(res.status).toBe(201);
-      expect(res.body.essay.id).toBe('e1');
+      expect(res.body.essay.id).toBe('11111111-1111-4111-8111-111111111111');
       expect(Essay.create).toHaveBeenCalledWith(
         expect.objectContaining({ userId: 'test-user-1', title: 'Macbeth', parsedStructure: null }),
       );
@@ -74,7 +85,7 @@ describe('Essay routes', () => {
     it('lists essays with a parsed flag and paragraph count', async () => {
       Essay.findAll = jest.fn().mockResolvedValue([
         {
-          id: 'e1',
+          id: '11111111-1111-4111-8111-111111111111',
           title: 'Macbeth',
           parsedStructure: { bodyParagraphs: [{ topicSentence: 'a' }, { topicSentence: 'b' }] },
           createdAt: new Date('2026-01-01'),
@@ -95,7 +106,7 @@ describe('Essay routes', () => {
       const longText = `  ${'word '.repeat(60)}end.  `;
       Essay.findAll = jest.fn().mockResolvedValue([
         {
-          id: 'e1',
+          id: '11111111-1111-4111-8111-111111111111',
           title: 'Long essay',
           originalText: longText,
           parsedStructure: null,
@@ -117,7 +128,7 @@ describe('Essay routes', () => {
 
   describe('PUT /api/essays/:id', () => {
     const makeEssay = (overrides = {}) => ({
-      id: 'e1',
+      id: '11111111-1111-4111-8111-111111111111',
       title: 'Old title',
       originalText: 'Original essay text.',
       parsedStructure: { bodyParagraphs: [{ topicSentence: 'a' }] },
@@ -129,7 +140,7 @@ describe('Essay routes', () => {
       const essay = makeEssay();
       Essay.findOne = jest.fn().mockResolvedValue(essay);
 
-      const res = await request(app).put('/api/essays/e1').send({ title: '  New title  ' });
+      const res = await request(app).put('/api/essays/11111111-1111-4111-8111-111111111111').send({ title: '  New title  ' });
 
       expect(res.status).toBe(200);
       // Exact-args match: no originalText and no parsedStructure key in the update.
@@ -140,7 +151,7 @@ describe('Essay routes', () => {
       const essay = makeEssay();
       Essay.findOne = jest.fn().mockResolvedValue(essay);
 
-      const res = await request(app).put('/api/essays/e1').send({ text: 'Rewritten essay text.' });
+      const res = await request(app).put('/api/essays/11111111-1111-4111-8111-111111111111').send({ text: 'Rewritten essay text.' });
 
       expect(res.status).toBe(200);
       expect(essay.update).toHaveBeenCalledWith({
@@ -154,7 +165,7 @@ describe('Essay routes', () => {
       Essay.findOne = jest.fn().mockResolvedValue(essay);
 
       const res = await request(app)
-        .put('/api/essays/e1')
+        .put('/api/essays/11111111-1111-4111-8111-111111111111')
         .send({ text: 'Original essay text.' });
 
       expect(res.status).toBe(200);
@@ -162,7 +173,7 @@ describe('Essay routes', () => {
 
       // Same text alongside a title change: only the title is written.
       const res2 = await request(app)
-        .put('/api/essays/e1')
+        .put('/api/essays/11111111-1111-4111-8111-111111111111')
         .send({ title: 'Renamed', text: 'Original essay text.' });
       expect(res2.status).toBe(200);
       expect(essay.update).toHaveBeenCalledWith({ title: 'Renamed' });
@@ -172,14 +183,14 @@ describe('Essay routes', () => {
       const essay = makeEssay();
       Essay.findOne = jest.fn().mockResolvedValue(essay);
 
-      const emptyTitle = await request(app).put('/api/essays/e1').send({ title: '   ' });
+      const emptyTitle = await request(app).put('/api/essays/11111111-1111-4111-8111-111111111111').send({ title: '   ' });
       expect(emptyTitle.status).toBe(400);
 
-      const emptyText = await request(app).put('/api/essays/e1').send({ text: '   ' });
+      const emptyText = await request(app).put('/api/essays/11111111-1111-4111-8111-111111111111').send({ text: '   ' });
       expect(emptyText.status).toBe(400);
 
       const oversized = await request(app)
-        .put('/api/essays/e1')
+        .put('/api/essays/11111111-1111-4111-8111-111111111111')
         .send({ text: 'x'.repeat(100001) });
       expect(oversized.status).toBe(400);
       expect(oversized.body.message).toMatch(/too long/i);
@@ -190,18 +201,18 @@ describe('Essay routes', () => {
     it("404s for another user's essay (owner-scoped lookup)", async () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
 
-      const res = await request(app).put('/api/essays/someone-elses').send({ title: 'Steal' });
+      const res = await request(app).put('/api/essays/33333333-3333-4333-8333-333333333333').send({ title: 'Steal' });
 
       expect(res.status).toBe(404);
       expect(Essay.findOne).toHaveBeenCalledWith({
-        where: { id: 'someone-elses', userId: 'test-user-1' },
+        where: { id: '33333333-3333-4333-8333-333333333333', userId: 'test-user-1' },
       });
     });
   });
 
   describe('POST /api/essays/:id/parse', () => {
     it('parses and stores the structure via a text-conditional update (AI mocked, no key)', async () => {
-      const essay = { id: 'e1', title: 'Macbeth', originalText: 'Power corrupts. It always has.' };
+      const essay = { id: '11111111-1111-4111-8111-111111111111', title: 'Macbeth', originalText: 'Power corrupts. It always has.' };
       Essay.findOne = jest.fn().mockResolvedValue(essay);
       Essay.update = jest.fn().mockResolvedValue([1]);
       parseEssay.mockResolvedValue({
@@ -210,7 +221,7 @@ describe('Essay routes', () => {
         conclusion: '',
       });
 
-      const res = await request(app).post('/api/essays/e1/parse');
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/parse');
 
       expect(res.status).toBe(200);
       expect(parseEssay).toHaveBeenCalledWith(
@@ -220,23 +231,23 @@ describe('Essay routes', () => {
       // The write only lands when the text is still the text that was parsed.
       expect(Essay.update).toHaveBeenCalledWith(
         { parsedStructure: expect.objectContaining({ thesis: 'Power corrupts.' }) },
-        { where: { id: 'e1', userId: 'test-user-1', originalText: 'Power corrupts. It always has.' } },
+        { where: { id: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1', originalText: 'Power corrupts. It always has.' } },
       );
       // On success the essay is reloaded and returned.
-      expect(res.body.essay).toMatchObject({ id: 'e1' });
+      expect(res.body.essay).toMatchObject({ id: '11111111-1111-4111-8111-111111111111' });
       expect(recordAIInteractionSafely).toHaveBeenCalledWith(
         expect.objectContaining({ modelVersion: 'gpt-5.4-mini' }),
       );
     });
 
     it('degrades gracefully with a 503 when AI is not configured', async () => {
-      Essay.findOne = jest.fn().mockResolvedValue({ id: 'e1', originalText: 'x' });
+      Essay.findOne = jest.fn().mockResolvedValue({ id: '11111111-1111-4111-8111-111111111111', originalText: 'x' });
       Essay.update = jest.fn();
       const err = new Error('AI is not configured on the server.');
       err.status = 503;
       parseEssay.mockRejectedValue(err);
 
-      const res = await request(app).post('/api/essays/e1/parse');
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/parse');
 
       expect(res.status).toBe(503);
       expect(res.body.message).toMatch(/not configured/i);
@@ -245,18 +256,18 @@ describe('Essay routes', () => {
 
     it('404s when the essay does not belong to the user', async () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
-      const res = await request(app).post('/api/essays/missing/parse');
+      const res = await request(app).post('/api/essays/22222222-2222-4222-8222-222222222222/parse');
       expect(res.status).toBe(404);
       expect(parseEssay).not.toHaveBeenCalled();
     });
 
     it('passes an allowed model choice through to parseEssay', async () => {
-      const essay = { id: 'e1', title: 'T', originalText: 'Some essay text.' };
+      const essay = { id: '11111111-1111-4111-8111-111111111111', title: 'T', originalText: 'Some essay text.' };
       Essay.findOne = jest.fn().mockResolvedValue(essay);
       Essay.update = jest.fn().mockResolvedValue([1]);
       parseEssay.mockResolvedValue({ thesis: '', bodyParagraphs: [], conclusion: '' });
 
-      const res = await request(app).post('/api/essays/e1/parse').send({ model: 'gpt-5.5' });
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/parse').send({ model: 'gpt-5.5' });
 
       expect(res.status).toBe(200);
       expect(parseEssay).toHaveBeenCalledWith(
@@ -266,13 +277,13 @@ describe('Essay routes', () => {
     });
 
     it('falls back to gpt-5.4-mini when the requested model is not in the allowlist', async () => {
-      const essay = { id: 'e1', title: 'T', originalText: 'Some essay text.' };
+      const essay = { id: '11111111-1111-4111-8111-111111111111', title: 'T', originalText: 'Some essay text.' };
       Essay.findOne = jest.fn().mockResolvedValue(essay);
       Essay.update = jest.fn().mockResolvedValue([1]);
       parseEssay.mockResolvedValue({ thesis: '', bodyParagraphs: [], conclusion: '' });
 
       const res = await request(app)
-        .post('/api/essays/e1/parse')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/parse')
         .send({ model: 'gpt-4-totally-bogus' });
 
       expect(res.status).toBe(200);
@@ -284,14 +295,14 @@ describe('Essay routes', () => {
 
     it('returns the cached structure without calling parseEssay when already parsed', async () => {
       const essay = {
-        id: 'e1',
+        id: '11111111-1111-4111-8111-111111111111',
         originalText: 'Some essay text.',
         parsedStructure: { thesis: 'Cached thesis', bodyParagraphs: [] },
       };
       Essay.findOne = jest.fn().mockResolvedValue(essay);
       Essay.update = jest.fn();
 
-      const res = await request(app).post('/api/essays/e1/parse').send({});
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/parse').send({});
 
       expect(res.status).toBe(200);
       expect(res.body.cached).toBe(true);
@@ -302,7 +313,7 @@ describe('Essay routes', () => {
 
     it('serves the cached fast-path without consuming AI quota (never 429s)', async () => {
       const essay = {
-        id: 'e1',
+        id: '11111111-1111-4111-8111-111111111111',
         originalText: 'Some essay text.',
         parsedStructure: { thesis: 'Cached thesis', bodyParagraphs: [] },
       };
@@ -311,7 +322,7 @@ describe('Essay routes', () => {
       // 6 units per parse against a 40-unit window: the 7th reservation would
       // 429 if the cached path went through the quota middleware.
       for (let i = 0; i < 10; i += 1) {
-        const res = await request(app).post('/api/essays/e1/parse').send({});
+        const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/parse').send({});
         expect(res.status).toBe(200);
         expect(res.body.cached).toBe(true);
       }
@@ -320,7 +331,7 @@ describe('Essay routes', () => {
 
     it('re-parses an already-parsed essay when force is true', async () => {
       const essay = {
-        id: 'e1',
+        id: '11111111-1111-4111-8111-111111111111',
         title: 'T',
         originalText: 'Some essay text.',
         parsedStructure: { thesis: 'Stale thesis', bodyParagraphs: [] },
@@ -330,7 +341,7 @@ describe('Essay routes', () => {
       parseEssay.mockResolvedValue({ thesis: 'Fresh thesis', bodyParagraphs: [], conclusion: '' });
 
       const res = await request(app)
-        .post('/api/essays/e1/parse')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/parse')
         .send({ force: true, model: 'gpt-5.4' });
 
       expect(res.status).toBe(200);
@@ -341,13 +352,13 @@ describe('Essay routes', () => {
       );
       expect(Essay.update).toHaveBeenCalledWith(
         { parsedStructure: expect.objectContaining({ thesis: 'Fresh thesis' }) },
-        { where: { id: 'e1', userId: 'test-user-1', originalText: 'Some essay text.' } },
+        { where: { id: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1', originalText: 'Some essay text.' } },
       );
     });
 
     it('structures oversize essays deterministically without an AI call', async () => {
       const longText = 'x'.repeat(24001);
-      const essay = { id: 'e1', title: 'Long essay', originalText: longText };
+      const essay = { id: '11111111-1111-4111-8111-111111111111', title: 'Long essay', originalText: longText };
       Essay.findOne = jest.fn().mockResolvedValue(essay);
       Essay.update = jest.fn().mockResolvedValue([1]);
       const deterministic = {
@@ -359,16 +370,16 @@ describe('Essay routes', () => {
       segmentEssay.mockReturnValue([{ heading: '', notes: [], text: 'p1' }, { heading: '', notes: [], text: 'p2' }]);
       fallbackStructure.mockReturnValue(deterministic);
 
-      const res = await request(app).post('/api/essays/e1/parse');
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/parse');
 
       expect(res.status).toBe(200);
-      expect(res.body.essay).toMatchObject({ id: 'e1' });
+      expect(res.body.essay).toMatchObject({ id: '11111111-1111-4111-8111-111111111111' });
       expect(parseEssay).not.toHaveBeenCalled();
       expect(segmentEssay).toHaveBeenCalledWith(longText);
       expect(fallbackStructure).toHaveBeenCalledWith([{ heading: '', notes: [], text: 'p1' }, { heading: '', notes: [], text: 'p2' }]);
       expect(Essay.update).toHaveBeenCalledWith(
         { parsedStructure: deterministic },
-        { where: { id: 'e1', userId: 'test-user-1', originalText: longText } },
+        { where: { id: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1', originalText: longText } },
       );
       expect(recordAIInteractionSafely).toHaveBeenCalledWith(
         expect.objectContaining({ modelVersion: 'deterministic-fallback' }),
@@ -376,12 +387,12 @@ describe('Essay routes', () => {
     });
 
     it('responds 409 when the text changed while it was being parsed (conditional update misses)', async () => {
-      const essay = { id: 'e1', title: 'T', originalText: 'Original text at parse time.' };
+      const essay = { id: '11111111-1111-4111-8111-111111111111', title: 'T', originalText: 'Original text at parse time.' };
       Essay.findOne = jest.fn().mockResolvedValue(essay);
       Essay.update = jest.fn().mockResolvedValue([0]);
       parseEssay.mockResolvedValue({ thesis: '', bodyParagraphs: [], conclusion: '' });
 
-      const res = await request(app).post('/api/essays/e1/parse');
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/parse');
 
       expect(res.status).toBe(409);
       expect(res.body.message).toBe('The essay changed while it was being mapped. Rescan to update.');
@@ -389,7 +400,7 @@ describe('Essay routes', () => {
     });
 
     it("records the model as '<model> (fallback)' when parseEssay degrades", async () => {
-      const essay = { id: 'e1', title: 'T', originalText: 'Some essay text.' };
+      const essay = { id: '11111111-1111-4111-8111-111111111111', title: 'T', originalText: 'Some essay text.' };
       Essay.findOne = jest.fn().mockResolvedValue(essay);
       Essay.update = jest.fn().mockResolvedValue([1]);
       parseEssay.mockImplementation(async (_text, opts) => {
@@ -401,7 +412,7 @@ describe('Essay routes', () => {
         };
       });
 
-      const res = await request(app).post('/api/essays/e1/parse').send({ model: 'gpt-5.5' });
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/parse').send({ model: 'gpt-5.5' });
 
       expect(res.status).toBe(200);
       expect(recordAIInteractionSafely).toHaveBeenCalledWith(

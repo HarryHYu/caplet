@@ -9,20 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { FinancialAssumptions, FormField } from '../components/AccessibleUI';
 import api from '../services/api';
-import { MONEY_STORAGE_KEYS, writeMoneyStorage } from '../data/moneyPrototype';
-
-const CPI_SNAPSHOT = {
-  value: 4.0,
-  previousValue: 4.2,
-  referencePeriod: 'May 2026',
-  previousPeriod: 'April 2026',
-  released: '24 June 2026',
-  verified: '13 July 2026',
-  nextRelease: '29 July 2026',
-  sourceLabel: 'ABS Consumer Price Index, Australia',
-  sourceUrl: 'https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/consumer-price-index-australia/may-2026',
-  methodologyUrl: 'https://www.abs.gov.au/methodologies/consumer-price-index-australia-methodology/may-2026',
-};
+import { CPI_SNAPSHOT, MONEY_STORAGE_KEYS, writeMoneyStorage } from '../data/moneyPrototype';
 
 const money = (value) => new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
 const dateLabel = (value) => value ? new Intl.DateTimeFormat('en-AU', { dateStyle: 'medium' }).format(new Date(value)) : 'Not supplied';

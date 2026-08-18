@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import ClassIcon from '../components/ClassIcon';
 import { useReveal } from '../lib/useReveal';
+import useDialogFocus from '../lib/useDialogFocus';
 
 /** Small spinner for in-flight submit buttons. */
 const ButtonSpinner = () => (
@@ -19,21 +20,11 @@ const ButtonSpinner = () => (
  * moves focus into the dialog on open and restores it on close.
  */
 const ModalShell = ({ labelledBy, onClose, maxWidthClass = 'max-w-lg', children }) => {
-  const dialogRef = useRef(null);
-  useEffect(() => {
-    const previouslyFocused = document.activeElement;
-    dialogRef.current?.focus();
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
-        previouslyFocused.focus();
-      }
-    };
-  }, [onClose]);
+  // useDialogFocus keeps onClose in a ref with empty deps. A local effect
+  // keyed on [onClose] re-ran on every parent render (onClose is an inline
+  // arrow, and the inputs are parent state), yanking focus out of the field
+  // after every keystroke — these forms were untypeable.
+  const dialogRef = useDialogFocus({ onDismiss: onClose });
 
   return (
     <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-2xl flex items-center justify-center z-50 p-6">

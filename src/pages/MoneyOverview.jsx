@@ -4,15 +4,8 @@ import { ArrowRightIcon, BanknotesIcon, BookmarkSquareIcon, ChartBarSquareIcon, 
 import { useAuth } from '../contexts/AuthContext';
 import { useFeatureFlags } from '../contexts/FeatureFlagContext';
 import api from '../services/api';
-import { MONEY_INTENTS, MONEY_STORAGE_KEYS, inflationHeadline, readMoneyStorage, writeMoneyStorage } from '../data/moneyPrototype';
+import { CPI_SNAPSHOT, MONEY_INTENTS, MONEY_STORAGE_KEYS, inflationHeadline, readMoneyStorage, writeMoneyStorage } from '../data/moneyPrototype';
 import { useReveal } from '../lib/useReveal';
-
-const CPI_SNAPSHOT = {
-  value: 4.0,
-  referencePeriod: 'May 2026',
-  verified: '13 July 2026',
-  sourceUrl: 'https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/consumer-price-index-australia/may-2026',
-};
 
 function intentById(id, myMoneyAvailable) {
   const intent = MONEY_INTENTS.find((item) => item.id === id) || MONEY_INTENTS[2];

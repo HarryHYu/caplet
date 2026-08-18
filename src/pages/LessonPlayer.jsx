@@ -230,6 +230,9 @@ const LessonPlayer = () => {
   // Trailing debounce for per-slide progress saves: rapid arrow-key navigation
   // produces one API call ~800ms after the user settles, not one per slide.
   const slideProgressTimer = useRef(null);
+  // The save the debounce is holding, so leaving early flushes it instead of
+  // dropping it (otherwise a fast "back to course" loses the resume point).
+  const pendingSlideSave = useRef(null);
   const analyticsJourney = useRef({ lessonId: null, journeyId: null, startedAt: 0, viewed: new Set() });
 
 
@@ -382,8 +385,10 @@ const LessonPlayer = () => {
       if (isAuthenticated && lesson?.id) {
         const lessonId = lesson.id;
         if (slideProgressTimer.current) window.clearTimeout(slideProgressTimer.current);
+        pendingSlideSave.current = { lessonId, lastSlideIndex: newIndex };
         slideProgressTimer.current = window.setTimeout(() => {
           slideProgressTimer.current = null;
+          pendingSlideSave.current = null;
           api.updateLessonProgress(lessonId, { lastSlideIndex: newIndex }).catch(() => {});
         }, 800);
       }
@@ -391,9 +396,15 @@ const LessonPlayer = () => {
     [hasSlides, slides.length, isAuthenticated, lesson?.id],
   );
 
-  // Clear any pending (not yet fired) progress save when leaving the lesson.
+  // FLUSH (never drop) a pending progress save when leaving the lesson: the
+  // debounce must not cost the learner their resume position.
   useEffect(() => () => {
     if (slideProgressTimer.current) window.clearTimeout(slideProgressTimer.current);
+    const pending = pendingSlideSave.current;
+    pendingSlideSave.current = null;
+    if (pending) {
+      api.updateLessonProgress(pending.lessonId, { lastSlideIndex: pending.lastSlideIndex }).catch(() => {});
+    }
   }, []);
 
   const markComplete = useCallback(async () => {

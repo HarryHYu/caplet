@@ -37,7 +37,7 @@ const createTestApp = () => {
 };
 
 const ownedEssay = (overrides = {}) => ({
-  id: 'e1',
+  id: '11111111-1111-4111-8111-111111111111',
   title: 'Macbeth',
   originalText: 'Power corrupts. It always has.',
   parsedStructure: null,
@@ -61,11 +61,11 @@ describe('Essay workspace routes', () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
       EssayContextDoc.findAll = jest.fn();
 
-      const res = await request(app).get('/api/essays/someone-elses/context');
+      const res = await request(app).get('/api/essays/33333333-3333-4333-8333-333333333333/context');
 
       expect(res.status).toBe(404);
       expect(Essay.findOne).toHaveBeenCalledWith({
-        where: { id: 'someone-elses', userId: 'test-user-1' },
+        where: { id: '33333333-3333-4333-8333-333333333333', userId: 'test-user-1' },
       });
       expect(EssayContextDoc.findAll).not.toHaveBeenCalled();
     });
@@ -81,7 +81,7 @@ describe('Essay workspace routes', () => {
         },
       ]);
 
-      const res = await request(app).get('/api/essays/e1/context');
+      const res = await request(app).get('/api/essays/11111111-1111-4111-8111-111111111111/context');
 
       expect(res.status).toBe(200);
       expect(res.body.docs).toHaveLength(1);
@@ -91,7 +91,7 @@ describe('Essay workspace routes', () => {
       expect(res.body.docs[0].preview).toBe('c'.repeat(200));
       expect(res.body.docs[0].content).toBeUndefined();
       expect(EssayContextDoc.findAll).toHaveBeenCalledWith({
-        where: { essayId: 'e1', userId: 'test-user-1' },
+        where: { essayId: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1' },
         order: [['createdAt', 'ASC']],
       });
     });
@@ -107,12 +107,12 @@ describe('Essay workspace routes', () => {
 
     it('creates a doc and returns the list shape (no full content)', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: '  Sources  ', kind: 'pdf', content: 'The historical record of the play.' });
 
       expect(res.status).toBe(201);
       expect(EssayContextDoc.create).toHaveBeenCalledWith({
-        essayId: 'e1',
+        essayId: '11111111-1111-4111-8111-111111111111',
         userId: 'test-user-1',
         title: 'Sources',
         kind: 'pdf',
@@ -127,7 +127,7 @@ describe('Essay workspace routes', () => {
 
     it('defaults an unknown kind to text', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: 'Notes', kind: 'docx', content: 'Some notes.' });
 
       expect(res.status).toBe(201);
@@ -138,12 +138,12 @@ describe('Essay workspace routes', () => {
 
     it('rejects an empty or oversize (>160) title with 400', async () => {
       const empty = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: '   ', content: 'x' });
       expect(empty.status).toBe(400);
 
       const oversize = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: 't'.repeat(161), content: 'x' });
       expect(oversize.status).toBe(400);
 
@@ -152,12 +152,12 @@ describe('Essay workspace routes', () => {
 
     it('rejects empty content and content over 150k chars with 400', async () => {
       const empty = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: 'T', content: '   ' });
       expect(empty.status).toBe(400);
 
       const oversize = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: 'T', content: 'x'.repeat(150001) });
       expect(oversize.status).toBe(400);
 
@@ -170,7 +170,7 @@ describe('Essay workspace routes', () => {
       );
 
       const res = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: 'One more', content: 'y' });
 
       expect(res.status).toBe(400);
@@ -185,7 +185,7 @@ describe('Essay workspace routes', () => {
 
       // 420k existing + 90k new = 510k > 500k.
       const over = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: 'Over budget', content: 'y'.repeat(90000) });
       expect(over.status).toBe(400);
       expect(over.body.message).toBe('Context library is full.');
@@ -193,7 +193,7 @@ describe('Essay workspace routes', () => {
 
       // 420k existing + 70k new = 490k <= 500k: accepted.
       const within = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: 'Within budget', content: 'y'.repeat(70000) });
       expect(within.status).toBe(201);
       expect(EssayContextDoc.create).toHaveBeenCalledTimes(1);
@@ -203,7 +203,7 @@ describe('Essay workspace routes', () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
 
       const res = await request(app)
-        .post('/api/essays/e1/context')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/context')
         .send({ title: 'T', content: 'x' });
 
       expect(res.status).toBe(404);
@@ -215,24 +215,24 @@ describe('Essay workspace routes', () => {
     it('deletes an owned doc and returns 204', async () => {
       EssayContextDoc.destroy = jest.fn().mockResolvedValue(1);
 
-      const res = await request(app).delete('/api/essays/e1/context/d1');
+      const res = await request(app).delete('/api/essays/11111111-1111-4111-8111-111111111111/context/d1');
 
       expect(res.status).toBe(204);
       expect(EssayContextDoc.destroy).toHaveBeenCalledWith({
-        where: { id: 'd1', essayId: 'e1', userId: 'test-user-1' },
+        where: { id: 'd1', essayId: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1' },
       });
     });
 
     it('404s when the doc does not exist or is not owned', async () => {
       EssayContextDoc.destroy = jest.fn().mockResolvedValue(0);
-      const res = await request(app).delete('/api/essays/e1/context/missing');
+      const res = await request(app).delete('/api/essays/11111111-1111-4111-8111-111111111111/context/missing');
       expect(res.status).toBe(404);
     });
 
     it('404s when the essay is not owned', async () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
       EssayContextDoc.destroy = jest.fn();
-      const res = await request(app).delete('/api/essays/e1/context/d1');
+      const res = await request(app).delete('/api/essays/11111111-1111-4111-8111-111111111111/context/d1');
       expect(res.status).toBe(404);
       expect(EssayContextDoc.destroy).not.toHaveBeenCalled();
     });
@@ -246,20 +246,20 @@ describe('Essay workspace routes', () => {
       ];
       EssayAnnotation.findAll = jest.fn().mockResolvedValue(rows);
 
-      const res = await request(app).get('/api/essays/e1/annotations');
+      const res = await request(app).get('/api/essays/11111111-1111-4111-8111-111111111111/annotations');
 
       expect(res.status).toBe(200);
       expect(res.body.annotations).toHaveLength(2);
       expect(res.body.annotations[1]).toMatchObject({ id: 'a2', anchor: 'snippet', source: 'ai' });
       expect(EssayAnnotation.findAll).toHaveBeenCalledWith({
-        where: { essayId: 'e1', userId: 'test-user-1' },
+        where: { essayId: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1' },
         order: [['paragraphIndex', 'ASC'], ['createdAt', 'ASC']],
       });
     });
 
     it('404s when the essay is not owned', async () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
-      const res = await request(app).get('/api/essays/e1/annotations');
+      const res = await request(app).get('/api/essays/11111111-1111-4111-8111-111111111111/annotations');
       expect(res.status).toBe(404);
     });
   });
@@ -272,12 +272,12 @@ describe('Essay workspace routes', () => {
 
     it('creates a user-sourced annotation and returns it', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/annotations')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/annotations')
         .send({ paragraphIndex: 2, anchor: 'no spur', note: '  Doubt before the murder.  ', kind: 'note' });
 
       expect(res.status).toBe(201);
       expect(EssayAnnotation.create).toHaveBeenCalledWith({
-        essayId: 'e1',
+        essayId: '11111111-1111-4111-8111-111111111111',
         userId: 'test-user-1',
         paragraphIndex: 2,
         anchor: 'no spur',
@@ -290,7 +290,7 @@ describe('Essay workspace routes', () => {
 
     it("forces source to 'user' even when the body claims 'ai'", async () => {
       const res = await request(app)
-        .post('/api/essays/e1/annotations')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/annotations')
         .send({ paragraphIndex: 0, note: 'n', source: 'ai' });
 
       expect(res.status).toBe(201);
@@ -301,14 +301,14 @@ describe('Essay workspace routes', () => {
 
     it("accepts kind 'explanation' and defaults anything else to 'note'", async () => {
       await request(app)
-        .post('/api/essays/e1/annotations')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/annotations')
         .send({ paragraphIndex: 0, note: 'n', kind: 'explanation' });
       expect(EssayAnnotation.create).toHaveBeenLastCalledWith(
         expect.objectContaining({ kind: 'explanation' }),
       );
 
       await request(app)
-        .post('/api/essays/e1/annotations')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/annotations')
         .send({ paragraphIndex: 0, note: 'n', kind: 'shouty' });
       expect(EssayAnnotation.create).toHaveBeenLastCalledWith(
         expect.objectContaining({ kind: 'note' }),
@@ -318,7 +318,7 @@ describe('Essay workspace routes', () => {
     it('rejects a missing, negative, or non-integer paragraphIndex with 400', async () => {
       for (const paragraphIndex of [undefined, -1, 1.5, 'two']) {
         const res = await request(app)
-          .post('/api/essays/e1/annotations')
+          .post('/api/essays/11111111-1111-4111-8111-111111111111/annotations')
           .send({ paragraphIndex, note: 'n' });
         expect(res.status).toBe(400);
       }
@@ -327,7 +327,7 @@ describe('Essay workspace routes', () => {
 
     it('rejects an empty note with 400', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/annotations')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/annotations')
         .send({ paragraphIndex: 0, note: '   ' });
       expect(res.status).toBe(400);
       expect(EssayAnnotation.create).not.toHaveBeenCalled();
@@ -335,7 +335,7 @@ describe('Essay workspace routes', () => {
 
     it('clamps the note to 2000 chars and the anchor to 300 chars', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/annotations')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/annotations')
         .send({ paragraphIndex: 0, note: 'n'.repeat(2500), anchor: 'a'.repeat(400) });
 
       expect(res.status).toBe(201);
@@ -348,7 +348,7 @@ describe('Essay workspace routes', () => {
       EssayAnnotation.count = jest.fn().mockResolvedValue(300);
 
       const res = await request(app)
-        .post('/api/essays/e1/annotations')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/annotations')
         .send({ paragraphIndex: 0, note: 'n' });
 
       expect(res.status).toBe(400);
@@ -359,7 +359,7 @@ describe('Essay workspace routes', () => {
     it('404s when the essay is not owned', async () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
       const res = await request(app)
-        .post('/api/essays/e1/annotations')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/annotations')
         .send({ paragraphIndex: 0, note: 'n' });
       expect(res.status).toBe(404);
       expect(EssayAnnotation.create).not.toHaveBeenCalled();
@@ -382,12 +382,12 @@ describe('Essay workspace routes', () => {
       EssayAnnotation.findOne = jest.fn().mockResolvedValue(annotation);
 
       const res = await request(app)
-        .put('/api/essays/e1/annotations/a1')
+        .put('/api/essays/11111111-1111-4111-8111-111111111111/annotations/a1')
         .send({ note: `  fresh note ${'x'.repeat(2500)}`, anchor: 'b'.repeat(400) });
 
       expect(res.status).toBe(200);
       expect(EssayAnnotation.findOne).toHaveBeenCalledWith({
-        where: { id: 'a1', essayId: 'e1', userId: 'test-user-1' },
+        where: { id: 'a1', essayId: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1' },
       });
       const updates = annotation.update.mock.calls[0][0];
       expect(updates.note).toHaveLength(2000);
@@ -401,7 +401,7 @@ describe('Essay workspace routes', () => {
       EssayAnnotation.findOne = jest.fn().mockResolvedValue(annotation);
 
       const res = await request(app)
-        .put('/api/essays/e1/annotations/a1')
+        .put('/api/essays/11111111-1111-4111-8111-111111111111/annotations/a1')
         .send({ note: '   ' });
 
       expect(res.status).toBe(400);
@@ -411,7 +411,7 @@ describe('Essay workspace routes', () => {
     it('404s for a missing or unowned annotation', async () => {
       EssayAnnotation.findOne = jest.fn().mockResolvedValue(null);
       const res = await request(app)
-        .put('/api/essays/e1/annotations/missing')
+        .put('/api/essays/11111111-1111-4111-8111-111111111111/annotations/missing')
         .send({ note: 'n' });
       expect(res.status).toBe(404);
     });
@@ -421,17 +421,17 @@ describe('Essay workspace routes', () => {
     it('deletes an owned annotation and returns 204', async () => {
       EssayAnnotation.destroy = jest.fn().mockResolvedValue(1);
 
-      const res = await request(app).delete('/api/essays/e1/annotations/a1');
+      const res = await request(app).delete('/api/essays/11111111-1111-4111-8111-111111111111/annotations/a1');
 
       expect(res.status).toBe(204);
       expect(EssayAnnotation.destroy).toHaveBeenCalledWith({
-        where: { id: 'a1', essayId: 'e1', userId: 'test-user-1' },
+        where: { id: 'a1', essayId: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1' },
       });
     });
 
     it('404s when nothing was deleted', async () => {
       EssayAnnotation.destroy = jest.fn().mockResolvedValue(0);
-      const res = await request(app).delete('/api/essays/e1/annotations/missing');
+      const res = await request(app).delete('/api/essays/11111111-1111-4111-8111-111111111111/annotations/missing');
       expect(res.status).toBe(404);
     });
   });
@@ -448,7 +448,7 @@ describe('Essay workspace routes', () => {
       assistEssay.mockResolvedValue({ reply: 'Annotated.', annotations: proposals });
 
       const res = await request(app)
-        .post('/api/essays/e1/chat')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/chat')
         .send({ messages: [{ role: 'user', content: 'Annotate paragraph one.' }] });
 
       expect(res.status).toBe(200);
@@ -456,7 +456,7 @@ describe('Essay workspace routes', () => {
       // Proposals are NOT persisted by the chat route.
       expect(EssayAnnotation.create).not.toHaveBeenCalled();
       expect(assistEssay).toHaveBeenCalledWith({
-        essay: expect.objectContaining({ id: 'e1' }),
+        essay: expect.objectContaining({ id: '11111111-1111-4111-8111-111111111111' }),
         contextDocs: [],
         annotations: [],
         messages: [{ role: 'user', content: 'Annotate paragraph one.' }],
@@ -474,7 +474,7 @@ describe('Essay workspace routes', () => {
       EssayAnnotation.findAll = jest.fn().mockResolvedValue(notes);
 
       const res = await request(app)
-        .post('/api/essays/e1/chat')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/chat')
         .send({ messages: [{ role: 'user', content: 'Hi' }] });
 
       expect(res.status).toBe(200);
@@ -493,7 +493,7 @@ describe('Essay workspace routes', () => {
         { role: 'user', content: 'x'.repeat(9000) },
       ];
 
-      const res = await request(app).post('/api/essays/e1/chat').send({ messages: history });
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/chat').send({ messages: history });
 
       expect(res.status).toBe(200);
       const forwarded = assistEssay.mock.calls[0][0].messages;
@@ -506,11 +506,11 @@ describe('Essay workspace routes', () => {
     });
 
     it('400s when no valid message remains, without calling the service', async () => {
-      const empty = await request(app).post('/api/essays/e1/chat').send({});
+      const empty = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/chat').send({});
       expect(empty.status).toBe(400);
 
       const invalidOnly = await request(app)
-        .post('/api/essays/e1/chat')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/chat')
         .send({ messages: [{ role: 'system', content: 'x' }, { role: 'user', content: '   ' }] });
       expect(invalidOnly.status).toBe(400);
 
@@ -519,12 +519,12 @@ describe('Essay workspace routes', () => {
 
     it('allowlists the model and falls back to gpt-5.4-mini otherwise', async () => {
       await request(app)
-        .post('/api/essays/e1/chat')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/chat')
         .send({ messages: [{ role: 'user', content: 'Hi' }], model: 'gpt-5.5' });
       expect(assistEssay).toHaveBeenLastCalledWith(expect.objectContaining({ model: 'gpt-5.5' }));
 
       await request(app)
-        .post('/api/essays/e1/chat')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/chat')
         .send({ messages: [{ role: 'user', content: 'Hi' }], model: 'gpt-4-totally-bogus' });
       expect(assistEssay).toHaveBeenLastCalledWith(expect.objectContaining({ model: 'gpt-5.4-mini' }));
     });
@@ -533,7 +533,7 @@ describe('Essay workspace routes', () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
 
       const res = await request(app)
-        .post('/api/essays/e1/chat')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/chat')
         .send({ messages: [{ role: 'user', content: 'Hi' }] });
 
       expect(res.status).toBe(404);
@@ -546,7 +546,7 @@ describe('Essay workspace routes', () => {
       assistEssay.mockRejectedValue(err);
 
       const res = await request(app)
-        .post('/api/essays/e1/chat')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/chat')
         .send({ messages: [{ role: 'user', content: 'Hi' }] });
 
       expect(res.status).toBe(503);
@@ -557,7 +557,7 @@ describe('Essay workspace routes', () => {
       assistEssay.mockRejectedValue(new Error('upstream exploded: secret detail'));
 
       const res = await request(app)
-        .post('/api/essays/e1/chat')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/chat')
         .send({ messages: [{ role: 'user', content: 'Hi' }] });
 
       expect(res.status).toBe(502);
@@ -589,7 +589,7 @@ describe('Essay workspace routes', () => {
     it("400s with 'Set up practice first.' when the essay is unparsed", async () => {
       Essay.findOne = jest.fn().mockResolvedValue(ownedEssay({ parsedStructure: null }));
 
-      const res = await request(app).post('/api/essays/e1/explain');
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/explain');
 
       expect(res.status).toBe(400);
       expect(res.body.message).toBe('Set up practice first.');
@@ -599,7 +599,7 @@ describe('Essay workspace routes', () => {
     it('forwards a single paragraphIndex so one paragraph can be explained alone', async () => {
     explainEssay.mockResolvedValue([{ paragraphIndex: 1, note: 'Just this paragraph.' }]);
     const res = await request(app)
-      .post('/api/essays/e1/explain')
+      .post('/api/essays/11111111-1111-4111-8111-111111111111/explain')
       .send({ paragraphIndex: 1 });
 
     expect(res.status).toBe(200);
@@ -613,25 +613,25 @@ describe('Essay workspace routes', () => {
         { paragraphIndex: 1, note: 'Traces the blood imagery.' },
       ]);
 
-      const res = await request(app).post('/api/essays/e1/explain').send({ model: 'gpt-5.5' });
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/explain').send({ model: 'gpt-5.5' });
 
       expect(res.status).toBe(200);
       expect(explainEssay).toHaveBeenCalledWith({
-        essay: expect.objectContaining({ id: 'e1' }),
+        essay: expect.objectContaining({ id: '11111111-1111-4111-8111-111111111111' }),
         model: 'gpt-5.5',
         paragraphIndex: null, // whole-essay explain
       });
       // Old explanation for each returned paragraph is deleted first.
       expect(EssayAnnotation.destroy).toHaveBeenCalledTimes(2);
       expect(EssayAnnotation.destroy).toHaveBeenNthCalledWith(1, {
-        where: { essayId: 'e1', userId: 'test-user-1', paragraphIndex: 0, kind: 'explanation' },
+        where: { essayId: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1', paragraphIndex: 0, kind: 'explanation' },
       });
       expect(EssayAnnotation.destroy).toHaveBeenNthCalledWith(2, {
-        where: { essayId: 'e1', userId: 'test-user-1', paragraphIndex: 1, kind: 'explanation' },
+        where: { essayId: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1', paragraphIndex: 1, kind: 'explanation' },
       });
       expect(EssayAnnotation.create).toHaveBeenCalledTimes(2);
       expect(EssayAnnotation.create).toHaveBeenNthCalledWith(1, {
-        essayId: 'e1',
+        essayId: '11111111-1111-4111-8111-111111111111',
         userId: 'test-user-1',
         paragraphIndex: 0,
         anchor: '',
@@ -650,7 +650,7 @@ describe('Essay workspace routes', () => {
 
     it("404s for another user's essay without calling the service", async () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
-      const res = await request(app).post('/api/essays/e1/explain');
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/explain');
       expect(res.status).toBe(404);
       expect(explainEssay).not.toHaveBeenCalled();
     });
@@ -658,7 +658,7 @@ describe('Essay workspace routes', () => {
     it('maps opaque service failures to a 502 without persisting anything', async () => {
       explainEssay.mockRejectedValue(new Error('provider timeout'));
 
-      const res = await request(app).post('/api/essays/e1/explain');
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/explain');
 
       expect(res.status).toBe(502);
       expect(res.body.message).toBe('The essay could not be explained. Try again shortly.');
@@ -675,7 +675,7 @@ describe('Essay workspace routes', () => {
 
   const rewriteEssay = (overrides = {}) => {
     const essay = {
-      id: 'e1',
+      id: '11111111-1111-4111-8111-111111111111',
       title: 'Empire essays',
       originalText: `${INTRO}\n\n${PARA1}\n\n${PARA2}\n\n${CONCLUSION}`,
       parsedStructure: {
@@ -713,12 +713,12 @@ describe('Essay workspace routes', () => {
 
     it('400s without a selection or an instruction, before the service runs', async () => {
       const noAnchor = await request(app)
-        .post('/api/essays/e1/rewrite')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite')
         .send({ anchor: '  ', instruction: 'fix it' });
       expect(noAnchor.status).toBe(400);
 
       const noInstruction = await request(app)
-        .post('/api/essays/e1/rewrite')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite')
         .send({ anchor: 'for ever', instruction: '' });
       expect(noInstruction.status).toBe(400);
 
@@ -727,7 +727,7 @@ describe('Essay workspace routes', () => {
 
     it('409s when the selection is no longer in the essay text', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/rewrite')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite')
         .send({ anchor: 'this phrase was edited away', instruction: 'fix it' });
 
       expect(res.status).toBe(409);
@@ -742,7 +742,7 @@ describe('Essay workspace routes', () => {
       EssayAnnotation.findAll = jest.fn().mockResolvedValue(notes);
 
       const res = await request(app)
-        .post('/api/essays/e1/rewrite')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite')
         .send({ anchor: 'for ever', paragraphIndex: 1, instruction: 'I hate "for ever" — modernise it.' });
 
       expect(res.status).toBe(200);
@@ -753,7 +753,7 @@ describe('Essay workspace routes', () => {
         rationale: 'Tighter.',
       });
       expect(rewriteSelection).toHaveBeenCalledWith({
-        essay: expect.objectContaining({ id: 'e1' }),
+        essay: expect.objectContaining({ id: '11111111-1111-4111-8111-111111111111' }),
         contextDocs: docs,
         annotations: notes,
         anchor: 'for ever',
@@ -771,7 +771,7 @@ describe('Essay workspace routes', () => {
 
     it('normalises an out-of-bounds paragraphIndex to null via the global match', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/rewrite')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite')
         .send({ anchor: 'for ever', paragraphIndex: 99, instruction: 'modernise it' });
 
       expect(res.status).toBe(200);
@@ -785,7 +785,7 @@ describe('Essay workspace routes', () => {
       rewriteSelection.mockRejectedValue(new Error('provider exploded: secret'));
 
       const res = await request(app)
-        .post('/api/essays/e1/rewrite')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite')
         .send({ anchor: 'for ever', paragraphIndex: 1, instruction: 'modernise it' });
 
       expect(res.status).toBe(502);
@@ -807,18 +807,18 @@ describe('Essay workspace routes', () => {
     });
 
     it('400s on a missing anchor, missing replacement, or oversized replacement', async () => {
-      expect((await request(app).post('/api/essays/e1/rewrite/apply')
+      expect((await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: '', replacement: 'x' })).status).toBe(400);
-      expect((await request(app).post('/api/essays/e1/rewrite/apply')
+      expect((await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'for ever', replacement: '   ' })).status).toBe(400);
-      expect((await request(app).post('/api/essays/e1/rewrite/apply')
+      expect((await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'for ever', replacement: 'x'.repeat(5001) })).status).toBe(400);
       expect(essay.update).not.toHaveBeenCalled();
     });
 
     it('409s when the selection is no longer in the essay text', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/rewrite/apply')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'vanished words', replacement: 'anything' });
 
       expect(res.status).toBe(409);
@@ -829,7 +829,7 @@ describe('Essay workspace routes', () => {
       // "The record of empire" opens a sentence in BOTH body paragraphs; with
       // paragraphIndex 1 only the second paragraph's occurrence may change.
       const res = await request(app)
-        .post('/api/essays/e1/rewrite/apply')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'The record of empire', replacement: 'The imperial archive', paragraphIndex: 1 });
 
       expect(res.status).toBe(200);
@@ -846,7 +846,7 @@ describe('Essay workspace routes', () => {
 
     it('re-derives the topic sentence when the fix lands inside it', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/rewrite/apply')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'Walcott answers with the sea', replacement: 'Walcott replies with the sea', paragraphIndex: 1 });
 
       expect(res.status).toBe(200);
@@ -855,7 +855,7 @@ describe('Essay workspace routes', () => {
 
     it('rebuilds mark-paired quotes when the fix rewrites inside quotation marks', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/rewrite/apply')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'soldered by coral to bone', replacement: 'the sea is History itself', paragraphIndex: 1 });
 
       expect(res.status).toBe(200);
@@ -865,7 +865,7 @@ describe('Essay workspace routes', () => {
 
     it('patches the introduction (and thesis) when the fix is only there', async () => {
       const res = await request(app)
-        .post('/api/essays/e1/rewrite/apply')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'writes its own alibi', replacement: 'authors its own excuse' });
 
       expect(res.status).toBe(200);
@@ -884,7 +884,7 @@ describe('Essay workspace routes', () => {
       Essay.findOne = jest.fn().mockResolvedValue(essay);
 
       const res = await request(app)
-        .post('/api/essays/e1/rewrite/apply')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'stray unmapped opening', replacement: 'orphaned preamble' });
 
       expect(res.status).toBe(200);
@@ -897,7 +897,7 @@ describe('Essay workspace routes', () => {
       Essay.findOne = jest.fn().mockResolvedValue(essay);
 
       const res = await request(app)
-        .post('/api/essays/e1/rewrite/apply')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'for ever', replacement: 'for\n\never more' });
 
       expect(res.status).toBe(200);
@@ -908,7 +908,7 @@ describe('Essay workspace routes', () => {
     it("404s for another user's essay", async () => {
       Essay.findOne = jest.fn().mockResolvedValue(null);
       const res = await request(app)
-        .post('/api/essays/e1/rewrite/apply')
+        .post('/api/essays/11111111-1111-4111-8111-111111111111/rewrite/apply')
         .send({ anchor: 'for ever', replacement: 'forever' });
       expect(res.status).toBe(404);
     });

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext';
 import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
+import useDialogFocus from '../lib/useDialogFocus';
 import CapletLoader from '../components/CapletLoader';
 
 const TAB_NAMES = ['stream', 'classwork', 'people', 'moderation'];
@@ -12,21 +13,11 @@ const TAB_NAMES = ['stream', 'classwork', 'people', 'moderation'];
  * moves focus into the dialog on open and restores it on close.
  */
 const ModalShell = ({ labelledBy, onClose, maxWidthClass = 'max-w-lg', panelClass = 'p-10', children }) => {
-  const dialogRef = useRef(null);
-  useEffect(() => {
-    const previouslyFocused = document.activeElement;
-    dialogRef.current?.focus();
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
-        previouslyFocused.focus();
-      }
-    };
-  }, [onClose]);
+  // useDialogFocus keeps onClose in a ref with empty deps. A local effect
+  // keyed on [onClose] re-ran on every parent render (onClose is an inline
+  // arrow, and the inputs are parent state), yanking focus out of the field
+  // after every keystroke — these forms were untypeable.
+  const dialogRef = useDialogFocus({ onDismiss: onClose });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-body/80 p-6 backdrop-blur-md">
