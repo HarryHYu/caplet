@@ -153,8 +153,13 @@ export default function Sidebar() {
                     {!collapsed && <span className="font-display text-xl font-extrabold tracking-[-0.03em] text-text-primary">Caplet</span>}
                 </Link>
 
+                {/* Same destinations, same order as the top bar — Money is a
+                    sibling workspace, not a footer utility, so it sits in the
+                    primary nav behind a hairline rather than below Collapse. */}
                 <nav aria-label="Primary navigation" className="mt-8 flex flex-col gap-1">
                     {STUDY_NAV_ITEMS.map(renderLink)}
+                    <div className="my-2 border-t border-line-soft" />
+                    {renderLink(MONEY_NAV_ITEM)}
                 </nav>
 
                 {pinnedItems.length > 0 && (
@@ -202,7 +207,6 @@ export default function Sidebar() {
 
                     <div className="my-3 border-t border-line-soft" />
 
-                    {renderLink(MONEY_NAV_ITEM)}
                     {renderLink({ path: '/settings', label: 'Settings', icon: Cog6ToothIcon, end: false })}
 
                     <div className="my-3 border-t border-line-soft" />

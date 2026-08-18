@@ -23,10 +23,13 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Surfaces — quiet and deliberately flat. */
-  --surface-body: #FFFFFF;
-  --surface-base: #FFFFFF;
-  --surface-soft: #F5F6F7;
+  /* Surfaces — a real three-step ladder. The page ground is a warm off-white
+     so a raised card (pure white) actually reads as lifted: with body and
+     raised BOTH #FFFFFF, every card on every page was an invisible rectangle
+     and the whole product looked like unstyled text floating in space. */
+  --surface-body: #F6F4F0;
+  --surface-base: #F6F4F0;
+  --surface-soft: #EDEAE4;
   --surface-raised: #FFFFFF;
   --surface-inverse: #141413;
 
@@ -510,6 +513,24 @@
   .minimal-panel {
     @apply rounded-lg border border-line-soft bg-surface-body p-6;
     box-shadow: none;
+  }
+
+  /* ── The card ─────────────────────────────────────────────────────────
+     One container recipe for every page. Content used to sit as bare text
+     on hairline rules, which read as an unfinished wireframe; a card lifts
+     it off the (now warm off-white) page ground with a real edge. */
+  .surface-card {
+    @apply rounded-2xl border border-line-soft bg-surface-raised p-6 shadow-card;
+  }
+
+  /* Same card, but it is a link/button destination. */
+  .surface-card-interactive {
+    @apply surface-card card-lift focus-ring cursor-pointer;
+  }
+
+  /* A titled region inside a card or page — replaces ad-hoc hairline stacks. */
+  .card-section-title {
+    @apply mb-4 text-[11px] font-bold uppercase tracking-widest text-text-dim;
   }
 
   /* ── Shared micro-interaction kit ──────────────────────────────────────
