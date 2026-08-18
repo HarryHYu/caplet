@@ -1,3 +1,8 @@
+// CSS-var token with a working alpha channel: `<alpha-value>` is Tailwind's
+// literal opacity placeholder, so `bg-accent/40` compiles to a color-mix at
+// 40% and bare `bg-accent` to 100% (== var(--accent)).
+const tokenColor = (cssVar) => `color-mix(in srgb, var(${cssVar}) calc(<alpha-value> * 100%), transparent)`;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
@@ -22,29 +27,33 @@ export default {
         // Design system tokens — CSS variable backed (see src/index.css).
         // All colors used in the app go through these tokens so dark mode
         // is automatic and the palette can be changed in one place.
+        // Wrapped in color-mix so opacity modifiers work: a bare `var(--x)`
+        // gives Tailwind no alpha channel, which silently DROPPED every
+        // `bg-accent/40`-style class (334 call sites) from the build.
         accent: {
-          DEFAULT: 'var(--accent)',
-          strong: 'var(--accent-strong)',
-          soft: 'var(--accent-soft)',
+          DEFAULT: tokenColor('--accent'),
+          strong: tokenColor('--accent-strong'),
+          soft: tokenColor('--accent-soft'),
+          contrast: tokenColor('--accent-contrast'),
         },
         surface: {
-          body: 'var(--surface-body)',
-          soft: 'var(--surface-soft)',
-          raised: 'var(--surface-raised)',
-          inverse: 'var(--surface-inverse)',
-          error: 'var(--surface-error)',
+          body: tokenColor('--surface-body'),
+          soft: tokenColor('--surface-soft'),
+          raised: tokenColor('--surface-raised'),
+          inverse: tokenColor('--surface-inverse'),
+          error: tokenColor('--surface-error'),
         },
         text: {
-          primary: 'var(--text-primary)',
-          muted: 'var(--text-muted)',
-          dim: 'var(--text-dim)',
-          contrast: 'var(--text-contrast)',
-          error: 'var(--text-error)',
+          primary: tokenColor('--text-primary'),
+          muted: tokenColor('--text-muted'),
+          dim: tokenColor('--text-dim'),
+          contrast: tokenColor('--text-contrast'),
+          error: tokenColor('--text-error'),
         },
         line: {
-          soft: 'var(--line-soft)',
-          strong: 'var(--line-strong)',
-          error: 'var(--border-error)',
+          soft: tokenColor('--line-soft'),
+          strong: tokenColor('--line-strong'),
+          error: tokenColor('--border-error'),
         },
       },
       letterSpacing: {
@@ -54,6 +63,12 @@ export default {
         minimal: '0 1px 3px rgba(0, 0, 0, 0.05)',
         'minimal-lg': '0 4px 12px rgba(0, 0, 0, 0.08)',
         glow: '0 0 20px var(--accent-soft)',
+        // Canonical elevation trio — use these instead of arbitrary
+        // shadow-[…] literals (the audit found 72 distinct ones; `card`
+        // alone replaces a literal repeated 133 times).
+        card: '0 24px 50px -34px rgba(20, 20, 18, 0.3)',
+        'card-hover': '0 18px 40px -24px rgba(20, 20, 18, 0.35)',
+        pop: '0 8px 32px rgba(0, 0, 0, 0.12)',
       },
       borderRadius: {
         none: '0',
@@ -62,6 +77,10 @@ export default {
         md: '8px',
         lg: '12px',
         xl: '16px',
+        // Distinct ladder: without these, xl (16px) rendered identically to
+        // Tailwind's default 2xl (16px) — two class names, one radius.
+        '2xl': '20px',
+        '3xl': '24px',
       },
       animation: {
         'progress-indefinite': 'progress-indefinite 2s linear infinite',

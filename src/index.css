@@ -55,6 +55,10 @@
   --accent: #1351AA;
   --accent-strong: #0E3D82;
   --accent-soft: rgba(19, 81, 170, 0.1);
+  /* Ink for text sitting ON an accent fill. White on the light-mode blues,
+     near-black in dark mode where the accents flip to light pastels —
+     hardcoded text-white on accent fills was ~2.8:1 there. */
+  --accent-contrast: #FFFFFF;
 
   /* Error */
   --text-error: #B91C1C;
@@ -185,6 +189,7 @@
 
 .dark {
   /* Paper — the warm default dark palette */
+  --accent-contrast: #10151C;
   --surface-body: #141413;
   --surface-base: #141413;   /* alias for --surface-body used in Tour/demo */
   --surface-soft: #232220;
@@ -412,7 +417,8 @@
 
   /* Interactive elements — one clear action, no decorative lift. */
   .btn-primary {
-    @apply px-6 py-3 bg-accent text-white font-bold text-sm rounded-lg transition-colors duration-150 flex items-center justify-center gap-2 border border-transparent;
+    @apply px-6 py-3 bg-accent font-bold text-sm rounded-lg transition-colors duration-150 flex items-center justify-center gap-2 border border-transparent;
+    color: var(--accent-contrast);
     box-shadow: none;
   }
 
@@ -454,68 +460,12 @@
     color: var(--text-primary);
   }
 
-  .caplet-minimal :where(.font-hand) {
-    font-family: var(--font-body) !important;
-    font-size: 0.75rem !important;
-    font-weight: 800 !important;
-    line-height: 1rem !important;
-    letter-spacing: normal !important;
-    text-transform: none !important;
-    transform: none !important;
-  }
-
-  .caplet-minimal :where(.uppercase) {
-    letter-spacing: normal !important;
-    text-transform: none !important;
-  }
-
-  .caplet-minimal :where([class*='shadow-']) {
-    box-shadow: none !important;
-  }
-
-  .caplet-minimal :where([class*='bg-gradient-to-']) {
-    background-image: none !important;
-  }
-
-  .caplet-minimal :where([class*='blur-3xl'], [class*='blur-2xl']) {
-    display: none !important;
-  }
-
-  .caplet-minimal :where([class*='rounded-3xl']) {
-    border-radius: 0.75rem !important;
-  }
-
-  .caplet-minimal :where([class*='rounded-2xl']) {
-    border-radius: 0.5rem !important;
-  }
-
-  .caplet-minimal :where([class~='bg-surface-raised'][class*='rounded-'], [class~='bg-surface-soft'][class*='rounded-']) {
-    border: 1px solid var(--line-soft);
-  }
-
-  .caplet-minimal :where([class*='text-8xl'], [class*='text-7xl'], [class*='text-6xl']) {
-    font-size: 3rem !important;
-    line-height: 1.05 !important;
-  }
-
-  .caplet-minimal :where([class*='hover:-translate-y-']):hover,
-  .caplet-minimal :where([class*='group-hover:-translate-y-']):hover {
-    transform: none !important;
-  }
-
-  .caplet-minimal :where(.block-cream, .block-blue, .block-coral, .block-amber, .block-green) {
-    background: var(--surface-body) !important;
-    border: 1px solid var(--line-soft);
-  }
-
-  .caplet-minimal :where(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']) {
-    border-radius: 0.5rem !important;
-    box-shadow: none !important;
-  }
-
-  .caplet-minimal :where(dialog, [role='dialog']) {
-    box-shadow: none !important;
-  }
+  /* The old "minimal" compat layer used to live here: attribute-selector
+     rules that force-stripped every shadow, gradient, hover lift, blur blob,
+     color block, hero type size and the font-hand face with !important. It
+     was flattening the design the components still encode — retired so the
+     intended polish (and the shared motion kit) actually renders. The
+     .minimal-page/.minimal-panel layout helpers below remain in use. */
 
   .minimal-page {
     @apply min-h-screen bg-surface-body pb-28 pt-24 text-text-primary md:pt-28;
