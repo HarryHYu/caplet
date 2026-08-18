@@ -88,6 +88,7 @@ const TaxCalculator = () => {
                       value={income}
                       onChange={(e) => setIncome(e.target.value)}
                       placeholder="0.00"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary placeholder:text-text-dim/60"
                     />
                   </div>

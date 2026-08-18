@@ -63,18 +63,20 @@ const FIRENumber = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="fire-monthly-expenses" className="text-sm font-semibold text-text-dim mb-4 block italic">Monthly Expenses in Retirement</label>
-                    <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                       <input id="fire-monthly-expenses" type="number" min="0" step="100" value={monthlyExpenses} onChange={(e) => setMonthlyExpenses(e.target.value)} placeholder="0.00"
-                        className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
                     <label htmlFor="fire-withdrawal-rate" className="text-sm font-semibold text-text-dim mb-4 block italic">Safe Withdrawal Rate</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="fire-withdrawal-rate" type="number" min="1" max="10" step="0.1" value={withdrawalRate} onChange={(e) => setWithdrawalRate(e.target.value)} placeholder="4"
-                        className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
-                      <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                     </div>
                     <p className="text-xs text-text-dim mt-2 italic">The 4% rule is the standard benchmark</p>
                   </div>
@@ -85,26 +87,29 @@ const FIRENumber = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
                     <label htmlFor="fire-current-savings" className="text-sm font-semibold text-text-dim mb-4 block italic">Current Savings / Investments</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                       <input id="fire-current-savings" type="number" min="0" step="1000" value={currentSavings} onChange={(e) => setCurrentSavings(e.target.value)} placeholder="0"
-                        className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
                     <label htmlFor="fire-monthly-contribution" className="text-sm font-semibold text-text-dim mb-4 block italic">Monthly Contributions</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                       <input id="fire-monthly-contribution" type="number" min="0" step="100" value={monthlyContribution} onChange={(e) => setMonthlyContribution(e.target.value)} placeholder="0"
-                        className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
                     <label htmlFor="fire-annual-return" className="text-sm font-semibold text-text-dim mb-4 block italic">Expected Annual Return</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="fire-annual-return" type="number" min="0" max="30" step="0.1" value={annualReturn} onChange={(e) => setAnnualReturn(e.target.value)} placeholder="7"
-                        className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
-                      <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                     </div>
                     <p className="text-xs text-text-dim mt-2 italic">ASX 200 long-run average is about 7 to 8%</p>
                   </div>

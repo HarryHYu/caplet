@@ -45,8 +45,8 @@ const SalaryCalculator = () => {
                 <label htmlFor="gross-salary" className="text-sm font-semibold text-text-dim mb-4 block">
                   Gross Annual Salary (AUD)
                 </label>
-                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input
                     id="gross-salary"
                     type="number"
@@ -55,7 +55,8 @@ const SalaryCalculator = () => {
                     value={grossSalary}
                     onChange={(e) => setGrossSalary(e.target.value)}
                     placeholder="0.00"
-                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                    data-control-unstyled
+                    className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
               </div>
@@ -65,7 +66,7 @@ const SalaryCalculator = () => {
                   <label htmlFor="super-rate" className="text-sm font-semibold text-text-dim mb-4 block">
                     Superannuation Rate (%)
                   </label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
                       id="super-rate"
                       type="number"
@@ -74,9 +75,10 @@ const SalaryCalculator = () => {
                       step="0.5"
                       value={superRate}
                       onChange={(e) => setSuperRate(e.target.value)}
-                      className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none"
+                      data-control-unstyled
+                      className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none"
                     />
-                    <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                   </div>
                   <p className="text-xs font-semibold text-text-dim mt-4">Current SG baseline: 12% (from 1 July 2025)</p>
                 </div>

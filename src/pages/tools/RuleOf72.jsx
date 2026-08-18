@@ -73,8 +73,9 @@ const RuleOf72 = () => {
                   <label htmlFor="r72-rate" className="text-sm font-bold text-text-dim mb-4 block">Annual interest / growth rate</label>
                   <div className="relative bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors">
                     <input id="r72-rate" type="number" min="0.1" max="100" step="0.1" value={rateInput} onChange={(e) => setRateInput(e.target.value)} placeholder="0.0"
+                      data-control-unstyled
                       className="w-full bg-transparent px-5 pr-10 py-4 text-4xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
-                    <span className="absolute right-5 bottom-5 text-text-dim font-bold text-xl">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-xl">%</span>
                   </div>
                 </div>
               ) : (
@@ -82,6 +83,7 @@ const RuleOf72 = () => {
                   <label htmlFor="r72-years" className="text-sm font-bold text-text-dim mb-4 block">Years to double your money</label>
                   <div className="relative bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors">
                     <input id="r72-years" type="number" min="0.5" max="200" step="0.5" value={yearsInput} onChange={(e) => setYearsInput(e.target.value)} placeholder="0"
+                      data-control-unstyled
                       className="w-full bg-transparent px-5 py-4 text-4xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                 </div>

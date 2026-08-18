@@ -72,7 +72,7 @@ const BudgetPlanner = () => {
                   Net Monthly Income (AUD)
                 </label>
                 <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
-                  <span className="absolute left-4 bottom-4 text-text-dim font-bold">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input id="budget-net-monthly-income-aud"
                     type="number"
                     min="0"
@@ -80,6 +80,7 @@ const BudgetPlanner = () => {
                     value={income}
                     onChange={(e) => setIncome(e.target.value)}
                     placeholder="0.00"
+                    data-control-unstyled
                     className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
@@ -92,7 +93,7 @@ const BudgetPlanner = () => {
                       {key.charAt(0).toUpperCase() + key.slice(1)} Account
                     </label>
                     <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-3 bottom-2.5 text-text-dim font-bold text-sm">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                       <input id={`budget-${key}`}
                         type="number"
                         min="0"
@@ -100,7 +101,8 @@ const BudgetPlanner = () => {
                         value={expenses[key]}
                         onChange={(e) => setExpenses({ ...expenses, [key]: e.target.value })}
                         placeholder="0"
-                        className="w-full bg-transparent pl-8 pr-4 py-2.5 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                       />
                     </div>
                   </div>

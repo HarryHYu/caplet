@@ -71,6 +71,7 @@ const CompoundInterest = () => {
                       value={principal}
                       onChange={(e) => setPrincipal(e.target.value)}
                       placeholder="0.00"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-9 pr-4 py-3 text-xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>
@@ -90,6 +91,7 @@ const CompoundInterest = () => {
                       value={monthlyContribution}
                       onChange={(e) => setMonthlyContribution(e.target.value)}
                       placeholder="0.00"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-9 pr-4 py-3 text-xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>
@@ -111,6 +113,7 @@ const CompoundInterest = () => {
                       value={interestRate}
                       onChange={(e) => setInterestRate(e.target.value)}
                       placeholder="0.0"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-4 pr-9 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted font-bold text-sm">%</span>
@@ -131,6 +134,7 @@ const CompoundInterest = () => {
                       value={years}
                       onChange={(e) => setYears(e.target.value)}
                       placeholder="Years"
+                      data-control-unstyled
                       className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>

@@ -81,6 +81,7 @@ const MortgageCalculator = () => {
                     value={loanAmount}
                     onChange={(e) => setLoanAmount(e.target.value)}
                     placeholder="0.00"
+                    data-control-unstyled
                     className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                   />
                 </div>
@@ -100,6 +101,7 @@ const MortgageCalculator = () => {
                       value={interestRate}
                       onChange={(e) => setInterestRate(e.target.value)}
                       placeholder="0.0"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
@@ -119,6 +121,7 @@ const MortgageCalculator = () => {
                       value={loanTerm}
                       onChange={(e) => setLoanTerm(e.target.value)}
                       placeholder="Years"
+                      data-control-unstyled
                       className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>

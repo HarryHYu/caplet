@@ -70,51 +70,57 @@ const RentVsBuy = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
                     <label htmlFor="rvb-home-price" className="text-sm font-semibold text-text-dim mb-3 block">Home Purchase Price</label>
-                    <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                       <input id="rvb-home-price" type="number" min="0" step="10000" value={homePrice} onChange={(e) => setHomePrice(e.target.value)} placeholder="0.00"
-                        className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
                     <label htmlFor="rvb-down-payment" className="text-sm font-semibold text-text-dim mb-3 block">Down Payment</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-down-payment" type="number" min="0" max="100" step="1" value={downPaymentPct} onChange={(e) => setDownPaymentPct(e.target.value)} placeholder="20"
-                        className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
-                      <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
                     <label htmlFor="rvb-mortgage-rate" className="text-sm font-semibold text-text-dim mb-3 block">Mortgage Rate (% p.a.)</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-mortgage-rate" type="number" min="0" max="30" step="0.1" value={mortgageRate} onChange={(e) => setMortgageRate(e.target.value)} placeholder="6.5"
-                        className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
-                      <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                     </div>
                   </div>
                   <div>
                     <label htmlFor="rvb-loan-term" className="text-sm font-semibold text-text-dim mb-3 block">Loan Term</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-loan-term" type="number" min="1" max="40" step="1" value={loanTermYears} onChange={(e) => setLoanTermYears(e.target.value)} placeholder="30"
-                        className="w-full bg-transparent pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
                     <label htmlFor="rvb-appreciation" className="text-sm font-semibold text-text-dim mb-3 block">Expected Appreciation (% p.a.)</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-appreciation" type="number" min="0" max="30" step="0.1" value={homeAppreciation} onChange={(e) => setHomeAppreciation(e.target.value)} placeholder="4"
-                        className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
-                      <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                     </div>
                   </div>
                   <div>
                     <label htmlFor="rvb-transfer-tax" className="text-sm font-semibold text-text-dim mb-3 block">Transfer / Stamp Duty (%)</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-transfer-tax" type="number" min="0" max="20" step="0.1" value={transferTaxPct} onChange={(e) => setTransferTaxPct(e.target.value)} placeholder="4"
-                        className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
-                      <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                     </div>
                   </div>
                 </div>
@@ -124,17 +130,19 @@ const RentVsBuy = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
                     <label htmlFor="rvb-monthly-rent" className="text-sm font-semibold text-text-dim mb-3 block">Monthly Rent</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                       <input id="rvb-monthly-rent" type="number" min="0" step="50" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)} placeholder="0"
-                        className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
                     <label htmlFor="rvb-compare-years" className="text-sm font-semibold text-text-dim mb-3 block">Comparison Period</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-compare-years" type="number" min="1" max="40" step="1" value={compareYears} onChange={(e) => setCompareYears(e.target.value)} placeholder="10"
-                        className="w-full bg-transparent pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                     <p className="text-xs text-text-dim mt-2">Years to compare</p>
                   </div>

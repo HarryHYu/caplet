@@ -63,18 +63,20 @@ const CapitalGains = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="cgt-purchase-price" className="text-sm font-semibold text-text-dim mb-4 block">Purchase Price</label>
-                    <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                       <input id="cgt-purchase-price" type="number" min="0" step="100" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} placeholder="0.00"
-                        className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
                     <label htmlFor="cgt-sale-price" className="text-sm font-semibold text-text-dim mb-4 block">Sale Price</label>
-                    <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                       <input id="cgt-sale-price" type="number" min="0" step="100" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} placeholder="0.00"
-                        className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                 </div>
@@ -84,19 +86,21 @@ const CapitalGains = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
                     <label htmlFor="cgt-acquisition-costs" className="text-sm font-semibold text-text-dim mb-4 block">Acquisition Costs</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                       <input id="cgt-acquisition-costs" type="number" min="0" step="10" value={purchaseCosts} onChange={(e) => setPurchaseCosts(e.target.value)} placeholder="0"
-                        className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                     <p className="text-xs text-text-dim mt-2">Stamp duty, legal fees, brokerage</p>
                   </div>
                   <div>
                     <label htmlFor="cgt-disposal-costs" className="text-sm font-semibold text-text-dim mb-4 block">Disposal Costs</label>
-                    <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                      <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                    <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                       <input id="cgt-disposal-costs" type="number" min="0" step="10" value={saleCosts} onChange={(e) => setSaleCosts(e.target.value)} placeholder="0"
-                        className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                        data-control-unstyled
+                        className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                     <p className="text-xs text-text-dim mt-2">Agent fees, brokerage on sale</p>
                   </div>
@@ -105,10 +109,11 @@ const CapitalGains = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div>
                   <label htmlFor="cgt-other-income" className="text-sm font-semibold text-text-dim mb-4 block">Other Annual Income</label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                    <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input id="cgt-other-income" type="number" min="0" step="1000" value={otherIncome} onChange={(e) => setOtherIncome(e.target.value)} placeholder="0"
-                      className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      data-control-unstyled
+                      className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                   <p className="text-xs text-text-dim mt-2">Used to determine marginal tax rate</p>
                 </div>

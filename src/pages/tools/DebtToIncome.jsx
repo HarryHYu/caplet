@@ -75,6 +75,7 @@ const DebtToIncome = () => {
                     <div className="relative bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                       <input id="dti-amount-aud" type="number" min="0" step="100" value={grossIncome} onChange={(e) => setGrossIncome(e.target.value)} placeholder="0.00"
+                        data-control-unstyled
                         className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
@@ -101,6 +102,7 @@ const DebtToIncome = () => {
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                         <input id={`dti-${key}`} type="number" min="0" step="10" value={debts[key]}
                           onChange={(e) => setDebts(prev => ({ ...prev, [key]: e.target.value }))} placeholder="0"
+                          data-control-unstyled
                           className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                       </div>
                     </div>

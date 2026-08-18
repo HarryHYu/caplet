@@ -73,6 +73,7 @@ const EmergencyFund = () => {
                     value={monthlyExpenses}
                     onChange={(e) => setMonthlyExpenses(e.target.value)}
                     placeholder="0.00"
+                    data-control-unstyled
                     className="w-full bg-transparent pl-9 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                   />
                 </div>
@@ -110,6 +111,7 @@ const EmergencyFund = () => {
                     value={currentSavings}
                     onChange={(e) => setCurrentSavings(e.target.value)}
                     placeholder="0"
+                    data-control-unstyled
                     className="w-full bg-transparent pl-9 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                   />
                 </div>

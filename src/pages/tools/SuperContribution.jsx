@@ -72,6 +72,7 @@ const SuperContribution = () => {
                       value={currentBalance}
                       onChange={(e) => setCurrentBalance(e.target.value)}
                       placeholder="0.00"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-9 pr-4 py-3 text-xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>
@@ -91,6 +92,7 @@ const SuperContribution = () => {
                       value={salary}
                       onChange={(e) => setSalary(e.target.value)}
                       placeholder="0.00"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-9 pr-4 py-3 text-xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>
@@ -112,6 +114,7 @@ const SuperContribution = () => {
                       value={employerContribution}
                       onChange={(e) => setEmployerContribution(e.target.value)}
                       aria-describedby="super-employer-rate-hint"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-4 pr-9 py-3 text-lg font-bold text-text-primary outline-none"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
@@ -133,6 +136,7 @@ const SuperContribution = () => {
                       value={years}
                       onChange={(e) => setYears(e.target.value)}
                       placeholder="Years"
+                      data-control-unstyled
                       className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                     />
                   </div>
@@ -153,6 +157,7 @@ const SuperContribution = () => {
                     value={personalContribution}
                     onChange={(e) => setPersonalContribution(e.target.value)}
                     placeholder="0.00"
+                    data-control-unstyled
                     className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                   />
                 </div>

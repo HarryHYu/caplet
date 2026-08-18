@@ -79,6 +79,7 @@ const GSTCalculator = () => {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
+                    data-control-unstyled
                     className="w-full bg-transparent pl-3 pr-5 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/30"
                   />
                 </div>

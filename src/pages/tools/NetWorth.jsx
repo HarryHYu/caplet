@@ -39,12 +39,13 @@ const NetWorth = () => {
   const InputRow = ({ label, groupKey, field, values }) => (
     <div>
       <label htmlFor={`nw-${groupKey}-${field}`} className="text-sm font-semibold text-text-dim mb-4 block">{label}</label>
-      <div className="relative rounded-xl bg-surface-raised border border-line-soft focus-within:border-accent transition-colors">
-        <span className="absolute left-4 bottom-4 text-text-dim font-bold">$</span>
+      <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
         <input
           id={`nw-${groupKey}-${field}`}
           type="number" min="0" step="100" value={values[field]} placeholder="0.00"
           onChange={(e) => set(groupKey, field, e.target.value)}
+          data-control-unstyled
           className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
         />
       </div>

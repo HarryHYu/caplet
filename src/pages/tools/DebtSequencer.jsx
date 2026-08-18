@@ -226,6 +226,7 @@ const DebtSequencer = () => {
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors max-w-xs">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input id="ds-spare" type="number" min="0" step="10" value={extraMonthlyAmount} onChange={(e) => setExtraMonthlyAmount(e.target.value)} placeholder="0"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-8 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                 </section>

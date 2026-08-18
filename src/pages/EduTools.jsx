@@ -43,6 +43,10 @@ const eduTools = [
 
 const categories = ['Practice', 'Revision'];
 
+// A three-column grid holding one or two cards leaves a conspicuous empty
+// half-row, so a short group simply uses fewer columns and fills its panel.
+const gridColumns = (count) => (count === 1 ? 'grid-cols-1' : count === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3');
+
 const EduTools = () => {
   useReveal();
   const { isAuthenticated } = useAuth();
@@ -116,7 +120,7 @@ const EduTools = () => {
                   <h2 className="font-display font-bold tracking-tight text-lg text-text-primary">{cat}</h2>
                   <span className="block-blue text-xs font-bold text-blue rounded-full px-3 py-1">{group.length}</span>
                 </div>
-                <div className="reveal-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className={`reveal-stagger grid grid-cols-1 gap-4 ${gridColumns(group.length)}`}>
                   {group.map(tool => (
                     <ToolCard key={tool.path} tool={tool} badge={badges[tool.path]} />
                   ))}

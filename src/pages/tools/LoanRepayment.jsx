@@ -68,8 +68,8 @@ const LoanRepayment = () => {
                 <label htmlFor="loan-amount" className="text-sm font-semibold text-text-dim mb-4 block">
                   Loan Amount (AUD)
                 </label>
-                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input id="loan-amount"
                     type="number"
                     min="0"
@@ -77,7 +77,8 @@ const LoanRepayment = () => {
                     value={loanAmount}
                     onChange={(e) => setLoanAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                    data-control-unstyled
+                    className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
               </div>
@@ -87,7 +88,7 @@ const LoanRepayment = () => {
                   <label htmlFor="loan-rate" className="text-sm font-semibold text-text-dim mb-4 block">
                     Annual Rate (%)
                   </label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input id="loan-rate"
                       type="number"
                       min="0"
@@ -96,9 +97,10 @@ const LoanRepayment = () => {
                       value={interestRate}
                       onChange={(e) => setInterestRate(e.target.value)}
                       placeholder="0.0"
-                      className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      data-control-unstyled
+                      className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
-                    <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                   </div>
                 </div>
 
@@ -106,7 +108,7 @@ const LoanRepayment = () => {
                   <label htmlFor="loan-term" className="text-sm font-semibold text-text-dim mb-4 block">
                     Loan Term (Years)
                   </label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input id="loan-term"
                       type="number"
                       min="0.5"
@@ -115,7 +117,8 @@ const LoanRepayment = () => {
                       value={loanTerm}
                       onChange={(e) => setLoanTerm(e.target.value)}
                       placeholder="Years"
-                      className="w-full bg-transparent pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      data-control-unstyled
+                      className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                   </div>
                 </div>

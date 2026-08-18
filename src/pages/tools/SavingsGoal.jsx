@@ -73,8 +73,8 @@ const SavingsGoal = () => {
                   <label htmlFor="savings-goal-target" className="text-sm font-semibold text-text-dim mb-4 block">
                     Target Amount (AUD)
                   </label>
-                  <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                    <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                     <input
                       id="savings-goal-target"
                       type="number"
@@ -83,7 +83,8 @@ const SavingsGoal = () => {
                       value={goal}
                       onChange={(e) => setGoal(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      data-control-unstyled
+                      className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                   </div>
                 </div>
@@ -92,8 +93,8 @@ const SavingsGoal = () => {
                   <label htmlFor="savings-goal-current" className="text-sm font-semibold text-text-dim mb-4 block">
                     Current Savings
                   </label>
-                  <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                    <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                     <input
                       id="savings-goal-current"
                       type="number"
@@ -102,7 +103,8 @@ const SavingsGoal = () => {
                       value={currentSavings}
                       onChange={(e) => setCurrentSavings(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      data-control-unstyled
+                      className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                   </div>
                 </div>
@@ -113,7 +115,7 @@ const SavingsGoal = () => {
                   <label htmlFor="savings-goal-monthly" className="text-sm font-semibold text-text-dim mb-4 block">
                     Monthly Contribution
                   </label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
                       id="savings-goal-monthly"
                       type="number"
@@ -122,7 +124,8 @@ const SavingsGoal = () => {
                       value={monthlyContribution}
                       onChange={(e) => setMonthlyContribution(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-transparent pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      data-control-unstyled
+                      className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                   </div>
                 </div>
@@ -131,7 +134,7 @@ const SavingsGoal = () => {
                   <label htmlFor="savings-goal-rate" className="text-sm font-semibold text-text-dim mb-4 block">
                     Interest Rate (%)
                   </label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
                       id="savings-goal-rate"
                       type="number"
@@ -141,9 +144,10 @@ const SavingsGoal = () => {
                       value={interestRate}
                       onChange={(e) => setInterestRate(e.target.value)}
                       placeholder="0.0"
-                      className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
+                      data-control-unstyled
+                      className="w-full bg-transparent pl-4 pr-10 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
-                    <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                   </div>
                 </div>
               </div>

@@ -58,6 +58,7 @@ const ROICalculator = () => {
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                     <input id="roi-initial"
                       type="number" min="0" step="100" value={initialInvestment} onChange={(e) => setInitialInvestment(e.target.value)} placeholder="0.00"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-9 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                   </div>
@@ -68,6 +69,7 @@ const ROICalculator = () => {
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                     <input id="roi-final"
                       type="number" min="0" step="100" value={finalValue} onChange={(e) => setFinalValue(e.target.value)} placeholder="0.00"
+                      data-control-unstyled
                       className="w-full bg-transparent pl-9 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                   </div>
@@ -78,6 +80,7 @@ const ROICalculator = () => {
                 <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                   <input id="roi-years"
                     type="number" min="0" step="0.5" value={years} onChange={(e) => setYears(e.target.value)} placeholder="Years"
+                    data-control-unstyled
                     className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>

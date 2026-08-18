@@ -62,38 +62,42 @@ const BreakEven = () => {
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="be-fixed-costs-per-period" className="text-sm font-semibold text-text-dim mb-4 block">Fixed Costs (per period)</label>
-                <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
-                  <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
+                <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input id="be-fixed-costs-per-period" type="number" min="0" step="100" value={fixedCosts} onChange={(e) => setFixedCosts(e.target.value)} placeholder="0.00"
-                    className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                    data-control-unstyled
+                    className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                 </div>
                 <p className="text-xs text-text-dim mt-2">Rent, salaries, software, insurance. Costs that don't change with output.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div>
                   <label htmlFor="be-variable-cost-per-unit" className="text-sm font-semibold text-text-dim mb-4 block">Variable Cost per Unit</label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                    <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input id="be-variable-cost-per-unit" type="number" min="0" step="0.01" value={variableCost} onChange={(e) => setVariableCost(e.target.value)} placeholder="0.00"
-                      className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      data-control-unstyled
+                      className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                   <p className="text-xs text-text-dim mt-2">Materials, packaging, commissions per unit.</p>
                 </div>
                 <div>
                   <label htmlFor="be-selling-price-per-unit" className="text-sm font-semibold text-text-dim mb-4 block">Selling Price per Unit</label>
-                  <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                    <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                  <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input id="be-selling-price-per-unit" type="number" min="0" step="0.01" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} placeholder="0.00"
-                      className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                      data-control-unstyled
+                      className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                 </div>
               </div>
               <div className="max-w-xs">
                 <label htmlFor="be-target-profit-optional" className="text-sm font-semibold text-text-dim mb-4 block">Target Profit (optional)</label>
-                <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                  <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
+                <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                   <input id="be-target-profit-optional" type="number" min="0" step="100" value={targetProfit} onChange={(e) => setTargetProfit(e.target.value)} placeholder="0"
-                    className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
+                    data-control-unstyled
+                    className="w-full bg-transparent pl-9 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                 </div>
                 <p className="text-xs text-text-dim mt-2">Shows units needed for this profit.</p>
               </div>
