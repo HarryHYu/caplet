@@ -460,16 +460,16 @@ function ImportSubjectPack({ onCreated, onCancel }) {
   };
 
   return (
-    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-accent-contrast">
+    <main className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-6xl">
-        <header className="max-w-4xl">
+        <header className="minimal-page-header">
           {onCancel && <button type="button" onClick={onCancel} className="btn-secondary mb-8"><ArrowRightIcon className="h-4 w-4 rotate-180" /> Back to subject packs</button>}
-          <span className="font-hand text-2xl text-accent -rotate-2 inline-block">turn a syllabus into learning</span>
-          <h1 className="mt-3 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">Build a subject pack.</h1>
-          <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">Import a trusted syllabus, review only the decisions that need human judgement, then publish adaptive practice and mastery tracking.</p>
+          <span className="section-kicker">turn a syllabus into learning</span>
+          <h1 className="minimal-page-title">Build a subject pack.</h1>
+          <p className="minimal-page-description">Import a trusted syllabus, review only the decisions that need human judgement, then publish adaptive practice and mastery tracking.</p>
         </header>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
           <button type="button" onClick={() => setMode('template')} className={`rounded-3xl border p-7 text-left transition-colors ${mode === 'template' ? 'border-accent bg-accent-soft' : 'border-line-soft bg-surface-raised'}`}>
             <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-raised text-accent"><SparklesIcon className="h-6 w-6" /></span>
             <span className="mt-5 block font-display text-2xl font-extrabold text-text-primary">HSC Business Studies</span>
@@ -485,7 +485,7 @@ function ImportSubjectPack({ onCreated, onCancel }) {
         {error && <div role="alert" className="mt-6 rounded-2xl bg-surface-error p-5 text-sm font-bold text-text-error">{error}</div>}
 
         {mode === 'template' ? (
-          <section className="mt-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-accent-contrast shadow-card-hover md:flex-row md:items-center md:justify-between">
+          <section className="mt-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-accent-contrast shadow-card md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-accent-contrast/65">Production-ready vertical slice</p>
               <h2 className="mt-2 font-display text-3xl font-extrabold">Build Business Studies from the official source.</h2>

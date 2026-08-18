@@ -26,6 +26,11 @@ const isDemoSandboxRequest = () => (
   typeof window !== 'undefined' && window.location.pathname === '/demo'
 );
 
+// Boot-path network guard: the session refresh runs before the app renders,
+// so it must always settle. Long enough for a Railway cold start, short
+// enough that a blackholed network doesn't strand the user on a spinner.
+const REFRESH_TIMEOUT_MS = 12000;
+
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
@@ -67,10 +72,18 @@ class ApiService {
     if (this.refreshPromise) return this.refreshPromise;
     const generationAtStart = this.authGeneration;
     this.refreshPromise = (async () => {
+      // A network that HANGS rather than fails (captive portal, school or
+      // corporate wifi blackholing the API host, a dead mobile connection)
+      // would otherwise leave this promise pending for ever — and the app
+      // boots behind it, so the user stares at a full-page spinner with no
+      // way forward. Time it out and fall through to the signed-out UI.
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
       try {
         const response = await fetch(`${this.baseURL}/auth/refresh`, {
           method: 'POST',
           credentials: 'include',
+          signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
             'X-Caplet-Client': 'web',
@@ -99,9 +112,11 @@ class ApiService {
         this.setToken(data.token);
         return data.token;
       } catch {
-        // A local backend being offline must never trigger a production request.
+        // A local backend being offline (or the timeout above firing) must
+        // never trigger a production request.
         return null;
       } finally {
+        clearTimeout(timer);
         this.refreshPromise = null;
       }
     })();

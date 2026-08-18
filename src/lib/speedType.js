@@ -189,10 +189,25 @@ export const speedBestKey = (essayId, signature) => `caplet:speedbest:${essayId}
 export const VERDICT_CLASS = {
   correct: 'text-[color:var(--mark-green)]',
   correctBg: 'block-green text-[color:var(--mark-green)]',
+  correctFill: 'bg-[color:var(--mark-green)]',
+  partial: 'text-text-warning',
+  partialFill: 'bg-[color:var(--mark-amber)]',
   wrong: 'text-text-error',
   wrongBg: 'bg-surface-error text-text-error',
+  wrongFill: 'bg-[color:var(--text-error)]',
   pending: 'text-text-dim',
 };
+
+/**
+ * The shared pass/partial/fail read on an accuracy percentage. 75 is the same
+ * threshold the review scheduler treats as a pass, so a green bar and a
+ * scheduled "pass" always agree.
+ */
+export function accuracyVerdict(accuracy) {
+  if (accuracy >= 75) return 'correct';
+  if (accuracy >= 50) return 'partial';
+  return 'wrong';
+}
 
 /** The typeable sections of a parsed essay, in reading order. */
 export function buildSpeedSections(essay) {

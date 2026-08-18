@@ -1,6 +1,7 @@
 const express = require('express');
 const { Op } = require('sequelize');
 const { requireAuth } = require('../middleware/auth');
+const { requireUuidParam } = require('../middleware/validateUuid');
 const { getNextRecommendation } = require('../services/recommendationEngine');
 const {
   acknowledgePracticeFeedback,
@@ -13,6 +14,9 @@ const {
 
 const router = express.Router();
 router.use(requireAuth);
+// The only param here is the PracticeSession id (a UUID primary key); a
+// malformed value would otherwise reach Postgres and raise a 500.
+router.param('id', requireUuidParam('id', 'Practice session not found.'));
 
 router.get('/learning/today', async (req, res) => {
   try {

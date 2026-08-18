@@ -5,11 +5,17 @@ const UserProgress = require('../models/UserProgress');
 const Course = require('../models/Course');
 const ClassMembership = require('../models/ClassMembership');
 const { Op } = require('sequelize');
+const { requireUuidParam } = require('../middleware/validateUuid');
+const { normalizeEmailInput, normalizeEmailForStorage, findUserByEmailVariants } = require('../utils/emailIdentity');
 
 const router = express.Router();
 
 // JWT Secret
 const { requireAuth } = require('../middleware/auth');
+
+// :userId keys a UUID column. A malformed value would otherwise reach Postgres
+// and raise a 500; 404 is both correct and leaks nothing.
+router.param('userId', requireUuidParam('userId', 'User not found'));
 
 // Get current user's own profile (full)
 router.get('/profile', requireAuth, async (req, res) => {
@@ -45,11 +51,19 @@ router.put('/profile', requireAuth, [
       return res.status(409).json({ message: 'Date of birth is locked after it is set. Contact support if it needs correcting.' });
     }
 
-    // If changing email, ensure it's not taken by another user
-    if (email && email !== req.user.email) {
-      const existing = await User.findOne({ where: { email } });
-      if (existing) {
-        return res.status(400).json({ message: 'That email is already in use' });
+    // If changing email, ensure it's not taken by another user. The check must
+    // use the SAME Gmail canonicalisation as /api/auth/register — an exact
+    // match would happily let this account claim a.b@gmail.com while
+    // ab@gmail.com exists, leaving two accounts that a later login or password
+    // reset cannot tell apart.
+    let storageEmail;
+    if (email !== undefined) {
+      storageEmail = normalizeEmailForStorage(email);
+      if (storageEmail !== normalizeEmailInput(req.user.email)) {
+        const existing = await findUserByEmailVariants(storageEmail);
+        if (existing && String(existing.id) !== String(req.user.id)) {
+          return res.status(400).json({ message: 'That email is already in use' });
+        }
       }
     }
 
@@ -62,9 +76,19 @@ router.put('/profile', requireAuth, [
       bio: bio !== undefined ? bio : req.user.bio,
       preferences: preferences || req.user.preferences
     };
-    if (email !== undefined) updates.email = email;
+    if (storageEmail !== undefined) updates.email = storageEmail;
     if (dateOfBirth !== undefined) updates.dateOfBirth = dateOfBirth === '' ? null : dateOfBirth;
-    await req.user.update(updates);
+    // The check above is advisory: a concurrent signup or profile edit can
+    // claim the address between the lookup and the write. The unique index is
+    // the arbiter, and losing it is bad input, not a server fault.
+    try {
+      await req.user.update(updates);
+    } catch (updateError) {
+      if (updateError?.name === 'SequelizeUniqueConstraintError') {
+        return res.status(400).json({ message: 'That email is already in use' });
+      }
+      throw updateError;
+    }
 
     res.json({
       message: 'Profile updated successfully',

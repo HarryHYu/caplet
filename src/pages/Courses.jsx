@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { useCourses } from '../contexts/CoursesContext';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { ArrowRightIcon, AcademicCapIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
+import { ArrowRightIcon, AcademicCapIcon, ClipboardDocumentCheckIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import CapletLoader from '../components/CapletLoader';
 import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
+import { LearningEmpty } from '../components/learning/LearningStates';
 import { useReveal } from '../lib/useReveal';
 
 const Courses = () => {
@@ -154,10 +155,13 @@ const Courses = () => {
         </div>
 
         {showNoMatches && (
-          <div className="reveal rounded-3xl border border-dashed border-line-soft bg-surface-soft px-8 py-12 text-center">
-            <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">No courses match those filters.</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm font-medium text-text-muted">Clear the level or search filters to see every published path.</p>
-            <button type="button" onClick={() => setFilters({ level: '', search: '' })} className="btn-primary mx-auto mt-6">Clear filters</button>
+          <div className="reveal">
+            <LearningEmpty
+              icon={MagnifyingGlassIcon}
+              title="No courses match those filters."
+              message="Clear the level or search filters to see every published path."
+              action={<button type="button" onClick={() => setFilters({ level: '', search: '' })} className="btn-primary">Clear filters</button>}
+            />
           </div>
         )}
 

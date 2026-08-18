@@ -319,7 +319,7 @@ function CompletionSummary({ data, session, onRestart }) {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <section className="animate-rise overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 text-accent-contrast shadow-card-hover md:p-12">
+      <section className="animate-rise overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 text-accent-contrast shadow-card md:p-12">
         <span className="grid h-14 w-14 animate-tada place-items-center rounded-2xl bg-accent-contrast/10">
           <TrophyIcon className="h-8 w-8" aria-hidden="true" />
         </span>

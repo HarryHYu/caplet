@@ -102,6 +102,46 @@ describe('Auth Routes', () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toMatch(/already exists/i);
     });
+
+    // Regression: the existence check and the insert are not atomic, so two
+    // concurrent signups for the same address both pass the check and one
+    // loses the unique index. It used to fall through to the generic catch and
+    // answer 500 "Internal server error".
+    it('returns the same 400 when a concurrent signup wins the unique index', async () => {
+      User.findOne = jest.fn().mockResolvedValue(null);
+      const uniqueError = new Error('Validation error');
+      uniqueError.name = 'SequelizeUniqueConstraintError';
+      User.create = jest.fn().mockRejectedValue(uniqueError);
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'race@example.com',
+          password: 'secret123',
+          firstName: 'A',
+          lastName: 'B',
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('User already exists with this email');
+    });
+
+    it('still returns 500 for an unrelated create failure', async () => {
+      User.findOne = jest.fn().mockResolvedValue(null);
+      User.create = jest.fn().mockRejectedValue(new Error('connection reset'));
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'boom@example.com',
+          password: 'secret123',
+          firstName: 'A',
+          lastName: 'B',
+        });
+
+      expect(response.status).toBe(500);
+      expect(response.body.message).toBe('Internal server error');
+    });
   });
 
   describe('POST /api/auth/login', () => {

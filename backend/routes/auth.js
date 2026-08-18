@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
-const { Op, fn, col, where } = require('sequelize');
+const { Op } = require('sequelize');
 const User = require('../models/User');
 const { JWT_SECRET, requireAuth } = require('../middleware/auth');
 const { createRateLimiter } = require('../middleware/rateLimit');
@@ -53,63 +53,14 @@ const normalizeGoogleNames = (payload = {}) => {
   return { firstName, lastName };
 };
 
-const normalizeEmailInput = (email = '') => String(email).trim().toLowerCase();
-
-const splitEmail = (normalizedEmail) => {
-  const [local, domain] = normalizedEmail.split('@');
-  return {
-    local,
-    domain: domain?.toLowerCase()
-  };
-};
-
-const isGmailDomain = (domain) => domain === 'gmail.com' || domain === 'googlemail.com';
-
-const toCanonicalEmail = (normalizedEmail) => {
-  const { local, domain } = splitEmail(normalizedEmail);
-  if (!local || !domain) return normalizedEmail;
-
-  // Gmail addresses ignore dots and "+" subaddressing in the local part.
-  if (isGmailDomain(domain)) {
-    const baseLocal = local.split('+')[0];
-    const compactLocal = baseLocal.replace(/\./g, '');
-    return `${compactLocal}@gmail.com`;
-  }
-
-  return normalizedEmail;
-};
-
-const normalizeEmailForStorage = (email) => toCanonicalEmail(normalizeEmailInput(email));
-
-const findUserByEmailVariants = async (email) => {
-  const normalizedEmail = normalizeEmailInput(email);
-  if (!normalizedEmail.includes('@')) return null;
-
-  const exactUser = await User.findOne({
-    where: where(fn('LOWER', col('email')), normalizedEmail)
-  });
-  if (exactUser) {
-    return exactUser;
-  }
-
-  const { domain } = splitEmail(normalizedEmail);
-  if (!isGmailDomain(domain)) return null;
-
-  const canonicalEmail = toCanonicalEmail(normalizedEmail);
-  const gmailUsers = await User.findAll({
-    where: {
-      [Op.or]: [
-        where(fn('LOWER', col('email')), { [Op.like]: '%@gmail.com' }),
-        where(fn('LOWER', col('email')), { [Op.like]: '%@googlemail.com' })
-      ]
-    }
-  });
-
-  return gmailUsers.find((candidate) => {
-    const candidateCanonical = toCanonicalEmail(normalizeEmailInput(candidate.email));
-    return candidateCanonical === canonicalEmail;
-  }) || null;
-};
+// Gmail canonicalisation lives in utils/emailIdentity so that /register,
+// /login, password reset and PUT /api/users/profile all resolve an address to
+// the same account. See that module for why raw string comparison is unsafe.
+const {
+  normalizeEmailInput,
+  normalizeEmailForStorage,
+  findUserByEmailVariants,
+} = require('../utils/emailIdentity');
 
 // Register (email + password)
 router.post('/register', [
@@ -143,15 +94,28 @@ router.post('/register', [
     // Role is NOT accepted from the request body — every new account is
     // a student. Elevation to instructor / admin happens through
     // /api/admin/promote, never through self-service signup.
-    const user = await User.create({
-      email: storageEmail,
-      password,
-      firstName,
-      lastName,
-      dateOfBirth,
-      role: 'student',
-      passwordLoginEnabled: true,
-    });
+    //
+    // The existence check above is advisory only: two signups for the same
+    // address can both pass it and race into create(). The database unique
+    // index is the real arbiter, so the loser is translated back into the
+    // same 400 the pre-check would have produced rather than a 500.
+    let user;
+    try {
+      user = await User.create({
+        email: storageEmail,
+        password,
+        firstName,
+        lastName,
+        dateOfBirth,
+        role: 'student',
+        passwordLoginEnabled: true,
+      });
+    } catch (createError) {
+      if (createError?.name === 'SequelizeUniqueConstraintError') {
+        return res.status(400).json({ message: 'User already exists with this email' });
+      }
+      throw createError;
+    }
 
     const token = issueSession(res, user);
 

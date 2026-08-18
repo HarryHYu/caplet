@@ -66,7 +66,7 @@ const LibrarySubject = () => {
             </div>
             <div>
               <p className="section-kicker">{faculty.name} · Published curriculum pack</p>
-              <h1 className="mt-2 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">{subject.name}.</h1>
+              <h1 className="minimal-page-title">{subject.name}.</h1>
               <p className="mt-4 max-w-2xl text-base font-medium leading-relaxed text-text-muted">{pack.description || `${pack.syllabusName} outcomes, diagnostic practice, and mastery evidence in one learning loop.`}</p>
             </div>
           </div>

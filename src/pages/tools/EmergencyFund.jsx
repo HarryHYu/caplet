@@ -39,16 +39,14 @@ const EmergencyFund = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="mb-16 reveal">
+        <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Tools / Risk management</span>
-              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-6">
-                Emergency <br />Fund.
-              </h1>
-              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+              <span className="section-kicker">Tools / Risk management</span>
+              <h1 className="minimal-page-title">Emergency Fund.</h1>
+              <p className="minimal-page-description">
                 Analyze your capital resilience and define the liquidity buffer you need for unexpected transitions.
               </p>
             </div>

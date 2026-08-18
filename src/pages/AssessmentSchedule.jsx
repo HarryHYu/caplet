@@ -9,6 +9,7 @@ import {
   TrashIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { InlineEmpty } from '../components/learning/LearningStates';
 import useDialogFocus from '../lib/useDialogFocus';
 import { useAssessmentTasks } from '../lib/useAssessmentTasks';
 import { useMySubjects } from '../lib/useMySubjects';
@@ -258,7 +259,7 @@ export default function AssessmentSchedule() {
           {filteredTasks.length > 0 ? (
             <div className="relative mt-7"><div className="absolute bottom-0 left-[5rem] top-0 w-px bg-line-soft sm:left-[6.15rem]" aria-hidden="true" /><ol className="space-y-5" aria-label="Upcoming assessment tasks">{filteredTasks.map((task) => <TimelineTask key={task.id} task={task} onEdit={openEdit} onRemove={setDeleteTask} />)}</ol></div>
           ) : (
-            <div className="mt-7 rounded-xl border border-dashed border-line-soft bg-surface-soft p-8 text-center"><p className="font-display text-xl font-extrabold">No tasks match those filters.</p><p className="mt-2 text-sm font-medium text-text-muted">Try viewing all subjects or all tasks.</p></div>
+            <InlineEmpty className="mt-7" icon={FunnelIcon} title="No tasks match those filters." message="Try viewing all subjects or all tasks." action={<button type="button" onClick={() => { setSubjectFilter('all'); setGroupFilter('all'); }} className="btn-secondary">Clear filters</button>} />
           )}
         </section>
       </div>

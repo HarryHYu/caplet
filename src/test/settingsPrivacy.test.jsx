@@ -113,7 +113,7 @@ describe('SettingsPrivacy', () => {
   it('loads preferences, consent state, AI history, and processor disclosures', async () => {
     renderPage();
 
-    expect(screen.getByRole('status', { name: 'Loading privacy controls' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading your privacy controls…' })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Privacy & data' })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Keep my AI activity history' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.queryByRole('switch', { name: 'AI-assisted learning' })).not.toBeInTheDocument();

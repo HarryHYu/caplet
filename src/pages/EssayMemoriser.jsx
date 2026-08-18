@@ -7,7 +7,8 @@ import SlideRenderer from '../components/lesson/SlideRenderer';
 import { extractPdfText } from '../lib/pdfExtract';
 import AnnotatedDocument from '../components/essay/AnnotatedDocument';
 import SpeedTypeMode from '../components/essay/SpeedTypeMode';
-import { foldAccents, foldGerman, alignWords, splitSentences, VERDICT_CLASS } from '../lib/speedType';
+import AccuracyRing from '../components/essay/AccuracyRing';
+import { foldAccents, foldGerman, alignWords, splitSentences, VERDICT_CLASS, accuracyVerdict } from '../lib/speedType';
 import EssayChat from '../components/essay/EssayChat';
 import ContextLibrary, { AddContextForm, ContextDocRow } from '../components/essay/ContextLibrary';
 import { MAX_CONTEXT_DOCS } from '../lib/essayContext';
@@ -118,7 +119,7 @@ function EssayModelPicker({ model, onChange, disabled = false }) {
                         >
                             <span>
                                 <span className="block text-xs font-bold text-text-primary">{opt.short}</span>
-                                <span className="block text-[10px] font-medium text-text-dim">{opt.desc}</span>
+                                <span className="block text-xs font-medium text-text-dim">{opt.desc}</span>
                             </span>
                             {opt.id === model && <CheckIcon className="w-3.5 h-3.5 text-accent shrink-0" />}
                         </button>
@@ -974,13 +975,13 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
                                     className="flex-1 px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif"
                                     autoComplete="off" autoCorrect="off" spellCheck={false}
                                 />
-                                <button type="button" onClick={commitWord} disabled={!current.trim()}
+                                <button type="button" onClick={commitWord} disabled={!current.trim()} aria-label="Confirm word"
                                     className="btn-primary px-5 py-3 inline-flex press disabled:opacity-40">
-                                    <ArrowRightIcon className="w-4 h-4" />
+                                    <ArrowRightIcon className="w-4 h-4" aria-hidden="true" />
                                 </button>
                             </div>
                             <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
-                                <p className="text-[10px] text-text-dim">Space or Enter to confirm</p>
+                                <p className="text-xs text-text-dim">Space or Enter to confirm</p>
                                 <div className="flex items-center gap-2">
                                     <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} onReveal={revealCurrentWord} />
                                     <SneakPeek text={currentSentence} label="Peek sentence" autoHideMs={3500} onReveal={revealCurrentWord} />
@@ -1233,7 +1234,7 @@ function OpeningsMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
                             {pIndex + 1 < paras.length ? 'Next opening →' : 'Finish'}
                         </button>
                     </div>
-                    <p className="text-[10px] text-text-dim mt-2">Transitions win marks: cue → opening, again and again.</p>
+                    <p className="text-xs text-text-dim mt-2">Transitions win marks: cue → opening, again and again.</p>
                 </div>
                 <div className="lg:sticky lg:top-24 self-start">
                     <LiveCheck target={target} typed={typed} currentHint="dashes" showRemaining title="Live check" />
@@ -1362,7 +1363,7 @@ function SentenceMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
                                 </button>
                             </div>
                         </div>
-                        <p className="text-[10px] text-text-dim mt-2">Checks live as you type · Cmd/Ctrl+Enter for next</p>
+                        <p className="text-xs text-text-dim mt-2">Checks live as you type · Cmd/Ctrl+Enter for next</p>
                     </div>
 
                     {/* Right — live check, always beside your typing */}
@@ -1463,26 +1464,33 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
     if (phase === 'report') {
         return (
             <div>
-                <div className="flex flex-wrap items-baseline justify-between gap-3 mb-6">
-                    <div className="flex items-baseline gap-4">
-                        <span className="text-4xl font-display font-extrabold text-text-primary tabular-nums animate-pop">{overall}%</span>
-                        <span className="text-sm text-text-dim">{typedWords}/{targetWords} words · {formatDuration(elapsed)}</span>
+                <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+                    <div className="flex items-center gap-5">
+                        <AccuracyRing value={overall} size={80} label={`Overall accuracy ${overall} percent`} />
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Exam run complete</p>
                     </div>
+                    <dl className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                        <div><dt className="inline text-text-dim">Written </dt><dd className="inline font-bold text-text-primary tabular-nums">{typedWords}/{targetWords} words</dd></div>
+                        <div><dt className="inline text-text-dim">Time </dt><dd className="inline font-bold text-text-primary tabular-nums">{formatDuration(elapsed)}</dd></div>
+                    </dl>
                 </div>
                 {!aligned && paras.length > 1 && (
                     <p className="text-xs text-text-dim mb-4">Tip: separate paragraphs with a blank line next time for a per-paragraph report.</p>
                 )}
                 {aligned && (
                     <div className="space-y-2 mb-6">
-                        {paraResults.map((r, i) => (
-                            <div key={i} className="flex items-center gap-3">
-                                <span className="text-xs font-bold text-text-dim w-10 shrink-0">¶{(r.para.sourceIndex ?? i) + 1}</span>
-                                <div className="h-2 flex-1 bg-line-soft rounded-full overflow-hidden">
-                                    <div className={`h-full rounded-full transition-all duration-500 ${r.accuracy >= 75 ? 'bg-[color:var(--mark-green)]' : r.accuracy >= 50 ? 'bg-surface-warning' : 'bg-[color:var(--text-error)]'}`} style={{ width: `${r.accuracy}%` }} />
+                        {paraResults.map((r, i) => {
+                            const verdict = accuracyVerdict(r.accuracy);
+                            return (
+                                <div key={i} className="flex items-center gap-3">
+                                    <span className="text-xs font-bold text-text-dim w-10 shrink-0">¶{(r.para.sourceIndex ?? i) + 1}</span>
+                                    <div className="h-2 flex-1 bg-line-soft rounded-full overflow-hidden">
+                                        <div className={`h-full rounded-full transition-all duration-500 ${VERDICT_CLASS[`${verdict}Fill`]}`} style={{ width: `${r.accuracy}%` }} />
+                                    </div>
+                                    <span className={`text-xs font-bold tabular-nums w-10 text-right ${VERDICT_CLASS[verdict]}`}>{r.accuracy}%</span>
                                 </div>
-                                <span className="text-xs font-bold text-text-primary tabular-nums w-10 text-right">{r.accuracy}%</span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
                 <details className="mb-6">
@@ -2437,7 +2445,7 @@ function EssayWorkspace({ essayId }) {
     const paragraphCount = structure?.bodyParagraphs?.length || 0;
 
     return (
-        <div className={`min-h-screen bg-surface-body selection:bg-accent selection:text-accent-contrast ${speedRunning ? 'py-10' : 'py-32'}`}>
+        <div className={`selection:bg-accent selection:text-accent-contrast ${speedRunning ? 'min-h-screen bg-surface-body py-10' : 'minimal-page'}`}>
             <div className="container-custom">
                 {!speedRunning && (
                     <Link to="/essays"
@@ -2448,8 +2456,8 @@ function EssayWorkspace({ essayId }) {
 
                 <div className={`flex-col lg:flex-row lg:items-end justify-between gap-6 mb-6 ${speedRunning ? 'hidden' : 'flex'}`}>
                     <div className="min-w-0">
-                        <span className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">essay</span>
-                        <h1 className="text-4xl md:text-6xl break-words">{essay.title}</h1>
+                        <span className="section-kicker">essay</span>
+                        <h1 className="minimal-page-title break-words">{essay.title}</h1>
                         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-text-dim">
                             <span>{wordCountOf(essay.originalText)} words</span>
                             {structure && <span>{paragraphCount} body paragraph{paragraphCount === 1 ? '' : 's'}</span>}
@@ -2737,12 +2745,12 @@ function EssayLibrary() {
     }
 
     return (
-        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+        <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
             <div className="container-custom">
-                <header className="mb-10 reveal">
-                    <span className="mb-3 font-hand text-2xl text-accent -rotate-2 inline-block">essay memoriser</span>
-                    <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl">Learn it by heart.</h1>
-                    <p className="mt-6 text-xl text-text-muted font-medium max-w-xl">
+                <header className="minimal-page-header reveal">
+                    <span className="section-kicker">essay memoriser</span>
+                    <h1 className="minimal-page-title">Learn it by heart.</h1>
+                    <p className="minimal-page-description">
                         Every essay is its own workspace: read it, edit it, and practise it until it is word-perfect and exam-ready.
                     </p>
                 </header>

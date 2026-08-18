@@ -40,14 +40,14 @@ const CapitalGains = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="mb-20 reveal">
+        <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-2xl text-accent -rotate-2 inline-block">Tax &amp; income</span>
-              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-3 mb-8">Capital Gains<br />Estimator.</h1>
-              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+              <span className="section-kicker">Tax &amp; income</span>
+              <h1 className="minimal-page-title">Capital Gains Estimator.</h1>
+              <p className="minimal-page-description">
                 Estimate CGT on the sale of shares, property, or other assets under Australian tax rules.
               </p>
             </div>

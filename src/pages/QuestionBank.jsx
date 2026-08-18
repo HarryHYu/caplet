@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import QuestionEditorForm from '../components/editor/QuestionEditorForm';
 import CapletLoader from '../components/CapletLoader';
+import { InlineEmpty } from '../components/learning/LearningStates';
 import {
   LIFECYCLE_LABELS,
   emptyQuestion,
@@ -124,13 +125,13 @@ function FilterPanel({ filters, searchDraft, setSearchDraft, outcomes, subjects,
   );
 }
 
-function QuestionList({ questions, loading, error, selectedId, onSelect, onRetry }) {
-  if (loading) return <div className="grid min-h-80 place-items-center" role="status"><CapletLoader message="Loading questions…" /></div>;
+function QuestionList({ questions, loading, error, selectedId, onSelect, onRetry, onCreate }) {
+  if (loading) return <div className="grid min-h-80 place-items-center"><CapletLoader message="Loading questions…" /></div>;
   if (error) {
     return <div className="p-6 text-center"><ExclamationTriangleIcon className="mx-auto h-7 w-7 text-text-error" aria-hidden="true" /><p role="alert" className="mt-3 text-sm font-bold text-text-error">{error}</p><button type="button" onClick={onRetry} className="btn-secondary mx-auto mt-4 px-4 py-2 text-xs"><ArrowPathIcon className="h-4 w-4" aria-hidden="true" /> Try again</button></div>;
   }
   if (!questions.length) {
-    return <div className="p-8 text-center"><DocumentTextIcon className="mx-auto h-8 w-8 text-text-dim" aria-hidden="true" /><h2 className="mt-3 text-lg font-display font-extrabold text-text-primary">No matching questions</h2><p className="mt-1 text-xs font-medium text-text-muted">Adjust the filters or create a new draft.</p></div>;
+    return <InlineEmpty className="m-4 border-0 bg-transparent" icon={DocumentTextIcon} title="No matching questions" message="Adjust the filters or create a new draft." action={onCreate ? <button type="button" onClick={onCreate} className="btn-secondary"><PlusIcon className="h-4 w-4" aria-hidden="true" /> New question</button> : null} />;
   }
 
   return (
@@ -373,7 +374,7 @@ function QuestionBankWorkspace({ onUnauthorized }) {
         <aside className={`${draft ? 'hidden lg:block' : 'block'} animate-rise overflow-hidden rounded-3xl bg-surface-raised shadow-card`} aria-label="Question bank navigation">
           <FilterPanel filters={filters} searchDraft={searchDraft} setSearchDraft={setSearchDraft} outcomes={outcomes} subjects={subjects} onFilter={(key, value) => setFilters((current) => ({ ...current, [key]: value, ...(key === 'subject' ? { outcomeId: '' } : {}) }))} onSearch={(event) => { event.preventDefault(); setFilters((current) => ({ ...current, search: searchDraft.trim() })); }} />
           <div className="flex items-center justify-between border-b border-line-soft px-4 py-3"><p className="text-xs font-bold text-text-muted">{questions.length} {questions.length === 1 ? 'question' : 'questions'}</p><button type="button" onClick={loadQuestions} disabled={loading} className="press focus-ring rounded-xl p-2 text-accent hover:bg-accent-soft disabled:opacity-40" aria-label="Refresh question bank"><ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /></button></div>
-          <div className="max-h-[calc(100vh-25rem)] min-h-80 overflow-y-auto"><QuestionList questions={questions} loading={loading} error={listError} selectedId={currentId} onSelect={(question) => navigateWithGuard({ type: 'open', question })} onRetry={loadQuestions} /></div>
+          <div className="max-h-[calc(100vh-25rem)] min-h-80 overflow-y-auto"><QuestionList questions={questions} loading={loading} error={listError} selectedId={currentId} onSelect={(question) => navigateWithGuard({ type: 'open', question })} onRetry={loadQuestions} onCreate={() => navigateWithGuard({ type: 'new' })} /></div>
         </aside>
 
         <section className="min-w-0">

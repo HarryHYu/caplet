@@ -100,11 +100,11 @@ export default function TeacherClassLearning() {
         <Link to={`/classes/${classId}`} className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-accent hover:text-accent-strong">
           <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Back to class
         </Link>
-        <header className="mb-10 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+        <header className="minimal-page-header flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <span className="font-hand text-xl text-accent -rotate-2 inline-block">teach from evidence</span>
-            <h1 className="mt-2 text-5xl font-display font-extrabold tracking-tight text-text-primary md:text-7xl">Class learning.</h1>
-            <p className="mt-4 text-lg font-medium text-text-muted">{state.data?.classroom?.name || 'Economics class'} · Outcome-level signals and next actions</p>
+            <span className="section-kicker">teach from evidence</span>
+            <h1 className="minimal-page-title">Class learning.</h1>
+            <p className="minimal-page-description">{state.data?.classroom?.name || 'Economics class'} · Outcome-level signals and next actions</p>
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <label htmlFor="learning-subject" className="text-xs font-bold text-text-muted">

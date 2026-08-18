@@ -96,7 +96,7 @@ function NextAction({ recommendation, subject }) {
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-7 text-accent-contrast shadow-card-hover md:p-9">
+    <section className="overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-7 text-accent-contrast shadow-card md:p-9">
       <div className="flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-accent-contrast/70">

@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import LearningNextAction from '../components/learning/LearningNextAction';
 import ResumeLearningCard from '../components/learning/ResumeLearningCard';
 import { LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
+import { InlineEmpty } from '../components/learning/LearningStates';
 import { faculties } from '../data/hscSubjects';
 
 /**
@@ -168,20 +169,16 @@ const Library = () => {
           )}
 
           {filterActive && mySubjects.length === 0 ? (
-            <div className="animate-rise rounded-2xl border border-dashed border-line-soft bg-surface-soft p-12 text-center">
-              <p className="font-display text-xl font-bold text-text-primary">No subjects selected</p>
-              <p className="mx-auto mt-2 max-w-sm text-sm text-text-muted">Choose subjects to filter this list.</p>
-              <button
-                type="button"
-                onClick={() => setPickerOpen(true)}
-                className="focus-ring press mt-6 rounded-full bg-accent px-5 py-2 text-sm font-bold text-accent-contrast transition-opacity hover:opacity-90"
-              >
-                Choose subjects
-              </button>
-            </div>
+            <InlineEmpty
+              className="animate-rise"
+              icon={CheckIcon}
+              title="No subjects selected"
+              message="Choose subjects to filter this list."
+              action={<button type="button" onClick={() => setPickerOpen(true)} className="btn-primary">Choose subjects</button>}
+            />
           ) : (
             <div>
-              {visibleSubjects.length ? <div className="reveal-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{visibleSubjects.map((subject) => <LibrarySubjectCard key={subject.name} subject={subject} />)}</div> : <div className="animate-rise rounded-2xl border border-dashed border-line-soft bg-surface-soft p-8"><p className="font-display text-xl font-bold text-text-primary">No matching subjects</p><button type="button" onClick={() => { setFilterActive(false); setSubjectQuery(''); }} className="btn-secondary focus-ring mt-5">Show all</button></div>}
+              {visibleSubjects.length ? <div className="reveal-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{visibleSubjects.map((subject) => <LibrarySubjectCard key={subject.name} subject={subject} />)}</div> : <InlineEmpty className="animate-rise" icon={MagnifyingGlassIcon} title="No matching subjects" message="Nothing on your shelf matches this filter yet." action={<button type="button" onClick={() => { setFilterActive(false); setSubjectQuery(''); }} className="btn-secondary focus-ring">Show all</button>} />}
             </div>
           )}
         </LearningSection>

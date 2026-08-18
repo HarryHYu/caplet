@@ -4,10 +4,10 @@ const STUDENT_ID = 'student-1';
 const PEER_ID = 'student-2';
 const TEACHER_ID = 'teacher-1';
 const ADMIN_ID = 'admin-1';
-const CLASSROOM_ID = 'class-1';
-const ASSIGNMENT_ID = 'assignment-1';
-const ANNOUNCEMENT_ID = 'announcement-1';
-const COMMENT_ID = 'comment-1';
+const CLASSROOM_ID = '11111111-1111-4111-8111-111111111111';
+const ASSIGNMENT_ID = '22222222-2222-4222-8222-222222222222';
+const ANNOUNCEMENT_ID = '33333333-3333-4333-8333-333333333333';
+const COMMENT_ID = '44444444-4444-4444-8444-444444444444';
 
 jest.mock('../config/database', () => ({
   sequelize: {
@@ -396,7 +396,7 @@ describe('classroom child-safety boundaries', () => {
 
   test('owner cannot action a report about their own content, while admin action is audited', async () => {
     const report = {
-      id: 'report-1',
+      id: '55555555-5555-4555-8555-555555555555',
       classroomId: CLASSROOM_ID,
       commentAuthorId: TEACHER_ID,
       reviewQueue: 'admin',

@@ -29,6 +29,22 @@ const {
 const router = express.Router();
 
 const { requireAuth } = require('../middleware/auth');
+const { requireUuidParam, isUuid } = require('../middleware/validateUuid');
+
+// Every route param in this router keys a UUID primary key (Classroom,
+// Assignment, ClassAnnouncement, Comment, CommentModerationRecord, User,
+// Lesson). A malformed value would otherwise reach Postgres and surface as a
+// 500; 404 is both correct and leaks nothing. `:id` is a classroom id on most
+// routes and an assignment id on /assignments/:id/*, so it uses the generic
+// message.
+router.param('id', requireUuidParam('id', 'Not found'));
+router.param('classId', requireUuidParam('classId', 'Class not found'));
+router.param('assignmentId', requireUuidParam('assignmentId', 'Assignment not found'));
+router.param('announcementId', requireUuidParam('announcementId', 'Announcement not found'));
+router.param('commentId', requireUuidParam('commentId', 'Comment not found'));
+router.param('reportId', requireUuidParam('reportId', 'Report not found'));
+router.param('userId', requireUuidParam('userId', 'Member not found'));
+router.param('lessonId', requireUuidParam('lessonId', 'Lesson not found'));
 
 const COMMENT_MAX_LENGTH = 2000;
 const COMMENT_REPORT_REASONS = ['bullying', 'harassment', 'inappropriate', 'privacy', 'spam', 'other'];
@@ -837,6 +853,21 @@ router.post(
 
       const { title, description, dueDate, courseId, lessonId } = req.body;
 
+      // courseId / lessonId are UUID foreign keys. Passing a malformed or
+      // unknown id straight into create() raises a DatabaseError (Postgres
+      // rejects the UUID cast) or an FK violation, both of which surface as a
+      // 500 for what is simply a bad request body.
+      if (courseId) {
+        if (!isUuid(courseId) || !(await Course.findByPk(courseId))) {
+          return res.status(400).json({ message: 'Linked course not found' });
+        }
+      }
+      if (lessonId) {
+        if (!isUuid(lessonId) || !(await Lesson.findByPk(lessonId))) {
+          return res.status(400).json({ message: 'Linked lesson not found' });
+        }
+      }
+
       const assignment = await Assignment.create({
         classroomId: classroom.id,
         title,
@@ -903,6 +934,12 @@ router.post('/assignments/:id/complete', requireAuth, async (req, res) => {
     });
     if (!membership) {
       return res.status(403).json({ message: 'You are not a member of this class' });
+    }
+    // Submissions belong to students. A teacher filing one for themselves
+    // would land in the class's own submissions list and skew every
+    // completion count shown back to them.
+    if (membership.role !== 'student') {
+      return res.status(403).json({ message: 'Only students can complete assignments' });
     }
 
     const [submission] = await AssignmentSubmission.findOrCreate({

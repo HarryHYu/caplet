@@ -19,7 +19,7 @@ function statusTone(ok) {
 function HealthCard({ label, check }) {
   const ok = Boolean(check?.ok);
   return (
-    <article className="rounded-2xl bg-surface-raised p-5">
+    <article className="rounded-2xl bg-surface-raised p-5 shadow-card">
       <div className="flex items-center justify-between gap-3">
         <h3 className="font-display text-lg font-extrabold text-text-primary">{label}</h3>
         <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${statusTone(ok)}`}>{check?.status || 'unknown'}</span>
@@ -33,7 +33,7 @@ function HealthCard({ label, check }) {
 
 function SignalCard({ label, value, detail }) {
   return (
-    <article className="rounded-2xl bg-surface-raised p-5">
+    <article className="rounded-2xl bg-surface-raised p-5 shadow-card">
       <p className="text-xs font-bold uppercase tracking-wide text-text-dim">{label}</p>
       <p className="mt-3 font-display text-3xl font-extrabold text-text-primary">{value}</p>
       <p className="mt-2 text-xs font-medium leading-relaxed text-text-muted">{detail}</p>
@@ -156,18 +156,18 @@ export default function AdminOperations() {
   const openAlerts = (alertSignals?.alerts || []).filter((alert) => alert.status === 'open');
 
   if (loading && !health && !flags.length) {
-    return <main className="grid min-h-screen place-items-center bg-surface-body" role="status"><CapletLoader message="Checking platform readiness…" /></main>;
+    return <main className="grid min-h-screen place-items-center bg-surface-body"><CapletLoader message="Checking platform readiness…" /></main>;
   }
 
   return (
-    <main className="min-h-screen bg-surface-body py-28">
+    <main className="minimal-page">
       <div className="container-custom max-w-6xl">
-        <header className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <header className="minimal-page-header flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <Link to="/metrics" className="text-xs font-bold text-accent">← Platform metrics</Link>
-            <p className="mt-4 font-hand text-xl text-accent -rotate-2 inline-block">release with evidence</p>
-            <h1 className="mt-1 text-5xl font-display font-extrabold tracking-tight text-text-primary">Operations.</h1>
-            <p className="mt-4 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">Database, migration, backup, and controlled-rollout evidence for administrators.</p>
+            <p className="section-kicker mt-4">release with evidence</p>
+            <h1 className="minimal-page-title">Operations.</h1>
+            <p className="minimal-page-description">Database, migration, backup, and controlled-rollout evidence for administrators.</p>
           </div>
           <button type="button" onClick={load} disabled={loading} className="btn-secondary"><ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /> Refresh</button>
         </header>
@@ -203,7 +203,7 @@ export default function AdminOperations() {
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <article className="rounded-2xl bg-surface-raised p-5">
+            <article className="rounded-2xl bg-surface-raised p-5 shadow-card">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="font-display text-lg font-extrabold text-text-primary">AI budget and circuits</h3>
                 <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${aiSignals?.circuits?.length ? 'bg-surface-error text-text-error' : 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]'}`}>{aiSignals?.circuits?.length || 0} open</span>
@@ -218,7 +218,7 @@ export default function AdminOperations() {
               </p>
             </article>
 
-            <article className="rounded-2xl bg-surface-raised p-5">
+            <article className="rounded-2xl bg-surface-raised p-5 shadow-card">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="font-display text-lg font-extrabold text-text-primary">Durable alert delivery</h3>
                 <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${alertSignals?.delivery?.configured ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-text-warning'}`}>{alertSignals?.delivery?.configured ? 'Configured' : 'Needs setup'}</span>
@@ -271,7 +271,7 @@ export default function AdminOperations() {
               const notificationStatus = report.notification?.status || 'pending';
               const busy = busyKey === `moderation:${report.id}`;
               return (
-                <article key={report.id} className={`rounded-3xl border bg-surface-raised p-6 ${report.overdue ? 'border-[color:var(--mark-amber)]' : 'border-line-soft'}`}>
+                <article key={report.id} className={`rounded-3xl border bg-surface-raised p-6 shadow-card ${report.overdue ? 'border-[color:var(--mark-amber)]' : 'border-line-soft'}`}>
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -302,7 +302,7 @@ export default function AdminOperations() {
                   </div>
                 </article>
               );
-            }) : <p className="rounded-2xl bg-surface-raised p-6 text-sm font-medium text-text-muted">No independent reports are waiting for review.</p>}
+            }) : <p className="rounded-2xl bg-surface-raised p-6 text-sm font-medium text-text-muted shadow-card">No independent reports are waiting for review.</p>}
           </div>
         </section>
 
@@ -310,7 +310,7 @@ export default function AdminOperations() {
           <div className="flex items-center gap-3"><FlagIcon className="h-6 w-6 text-accent" aria-hidden="true" /><h2 id="flags-heading" className="text-3xl font-display font-extrabold text-text-primary">Feature rollouts</h2></div>
           <p className="mt-2 text-sm font-medium text-text-muted">Flags use deterministic cohorts, optimistic version checks, and an append-only audit history. They never replace authorisation.</p>
 
-          <form onSubmit={createFlag} className="mt-6 grid gap-4 rounded-3xl bg-surface-raised p-6 md:grid-cols-[1fr_1.5fr_140px_auto] md:items-end">
+          <form onSubmit={createFlag} className="mt-6 grid gap-4 rounded-3xl bg-surface-raised p-6 shadow-card md:grid-cols-[1fr_1.5fr_140px_auto] md:items-end">
             <label className="text-xs font-bold text-text-muted">Flag key<input required pattern="[a-z][a-z0-9._-]+" value={form.key} onChange={(event) => setForm((current) => ({ ...current, key: event.target.value }))} placeholder="learning.new-flow" className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 font-mono text-sm text-text-primary outline-none focus:border-accent" /></label>
             <label className="text-xs font-bold text-text-muted">Description<input value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent" /></label>
             <label className="text-xs font-bold text-text-muted">Initial rollout<input type="number" min="0" max="100" value={form.rolloutPercentage} onChange={(event) => setForm((current) => ({ ...current, rolloutPercentage: event.target.value }))} className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent" /></label>
@@ -319,7 +319,7 @@ export default function AdminOperations() {
 
           <div className="mt-5 space-y-3">
             {flags.length ? flags.map((flag) => (
-              <article key={flag.key} className="rounded-2xl bg-surface-raised p-5">
+              <article key={flag.key} className="rounded-2xl bg-surface-raised p-5 shadow-card">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-mono text-sm font-bold text-text-primary">{flag.key}</h3><span className="rounded-full bg-surface-soft px-2.5 py-1 text-[10px] font-bold text-text-muted">v{flag.version}</span>{flag.archivedAt && <span className="rounded-full bg-[color:var(--block-amber)] px-2.5 py-1 text-[10px] font-bold text-[color:var(--mark-amber)]">Archived</span>}</div><p className="mt-2 text-xs font-medium text-text-muted">{flag.description || 'No description'} · {flag.rolloutPercentage}% rollout</p></div>
                   <div className="flex flex-wrap gap-2">
@@ -330,7 +330,7 @@ export default function AdminOperations() {
                 </div>
               </article>
             )) : (
-              <div className="rounded-2xl bg-surface-raised p-6 text-center">
+              <div className="rounded-2xl bg-surface-raised p-6 text-center shadow-card">
                 <FlagIcon className="mx-auto mb-3 h-7 w-7 text-text-dim" aria-hidden="true" />
                 <p className="text-sm font-bold text-text-primary">No feature flags yet.</p>
                 <p className="mt-1 text-sm font-medium text-text-muted">Core Caplet behaviour is unchanged.</p>

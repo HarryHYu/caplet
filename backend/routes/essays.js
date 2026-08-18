@@ -27,6 +27,7 @@ const EssayContextDoc = require('../models/EssayContextDoc');
 const EssayAnnotation = require('../models/EssayAnnotation');
 const { requireAuth } = require('../middleware/auth');
 const { requireUuidParam } = require('../middleware/validateUuid');
+const { sequelize } = require('../config/database');
 const {
   parseEssay, fallbackStructure, segmentEssay, firstSentence, extractQuotes,
 } = require('../services/essayParser');
@@ -559,26 +560,33 @@ router.post('/:id/explain', requireAIConsent, loadOwnedEssay, requireParsedStruc
     const paragraphIndex = Number.isInteger(req.body?.paragraphIndex) ? req.body.paragraphIndex : null;
     const explanations = await explainEssay({ essay, model, paragraphIndex });
 
-    const created = [];
-    for (const item of explanations) {
-      await EssayAnnotation.destroy({
-        where: {
+    // Replace-in-place must be atomic. Outside a transaction two concurrent
+    // explain calls interleave their destroy/create pairs and the essay is
+    // left with duplicate kind:'explanation' rows for the same paragraph.
+    const created = await sequelize.transaction(async (transaction) => {
+      const rows = [];
+      for (const item of explanations) {
+        await EssayAnnotation.destroy({
+          where: {
+            essayId: essay.id,
+            userId: req.user.id,
+            paragraphIndex: item.paragraphIndex,
+            kind: 'explanation',
+          },
+          transaction,
+        });
+        rows.push(await EssayAnnotation.create({
           essayId: essay.id,
           userId: req.user.id,
           paragraphIndex: item.paragraphIndex,
+          anchor: '',
+          note: item.note,
           kind: 'explanation',
-        },
-      });
-      created.push(await EssayAnnotation.create({
-        essayId: essay.id,
-        userId: req.user.id,
-        paragraphIndex: item.paragraphIndex,
-        anchor: '',
-        note: item.note,
-        kind: 'explanation',
-        source: 'ai',
-      }));
-    }
+          source: 'ai',
+        }, { transaction }));
+      }
+      return rows;
+    });
     await recordAIInteractionSafely({
       userId: req.user.id,
       feature: 'essay_explain',

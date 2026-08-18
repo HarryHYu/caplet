@@ -46,7 +46,7 @@ export default function GuardianConsent() {
         <Link to="/" className="font-display text-xl font-extrabold text-text-primary focus-ring rounded-md">Caplet</Link>
         <section className="mt-8 animate-rise rounded-3xl bg-surface-raised p-7 shadow-card md:p-10" aria-labelledby="guardian-consent-title">
           {!request && !loadError ? (
-            <div className="grid min-h-64 place-items-center" role="status"><CapletLoader message="Checking this consent request…" /></div>
+            <div className="grid min-h-64 place-items-center"><CapletLoader message="Checking this consent request…" /></div>
           ) : loadError ? (
             <div className="text-center">
               <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-surface-error text-text-error"><ExclamationTriangleIcon className="h-7 w-7" aria-hidden="true" /></span>

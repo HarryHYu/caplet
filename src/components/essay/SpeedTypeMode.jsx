@@ -19,6 +19,7 @@ import {
     VERDICT_CLASS,
 } from '../../lib/speedType';
 import useCountUp from '../../lib/useCountUp';
+import AccuracyRing from './AccuracyRing';
 
 /**
  * Speed run — MonkeyType, but the text is YOUR essay. Type against the clock
@@ -90,32 +91,6 @@ function BigWpm({ value }) {
     useEffect(() => { setTarget(value); }, [value]);
     const shown = useCountUp(target, 700);
     return <span className="tabular-nums">{shown}</span>;
-}
-
-/** SVG accuracy ring — the dash offset animates in on mount. */
-function AccuracyRing({ value }) {
-    const R = 26;
-    const C = 2 * Math.PI * R;
-    const [drawn, setDrawn] = useState(false);
-    useEffect(() => {
-        const raf = requestAnimationFrame(() => setDrawn(true));
-        return () => cancelAnimationFrame(raf);
-    }, []);
-    const offset = C * (1 - Math.min(100, Math.max(0, drawn ? value : 0)) / 100);
-    return (
-        <svg viewBox="0 0 64 64" className="h-16 w-16 shrink-0" role="img" aria-label={`Accuracy ${value} percent`}>
-            <circle cx="32" cy="32" r={R} fill="none" strokeWidth="5" stroke="var(--line-soft)" />
-            <circle
-                cx="32" cy="32" r={R} fill="none" strokeWidth="5" strokeLinecap="round"
-                stroke="var(--mark-green)"
-                strokeDasharray={C}
-                strokeDashoffset={offset}
-                style={{ transition: 'stroke-dashoffset 0.7s cubic-bezier(0.16, 1, 0.3, 1)' }}
-                transform="rotate(-90 32 32)"
-            />
-            <text x="32" y="37" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--text-primary)">{value}%</text>
-        </svg>
-    );
 }
 
 /** wpm-over-time sparkline from per-word commit timestamps (10 buckets). */

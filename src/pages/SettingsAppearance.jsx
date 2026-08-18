@@ -61,7 +61,7 @@ export default function SettingsAppearance() {
                 className={`card-lift press focus-ring rounded-2xl border p-4 text-left ${selected ? 'border-accent bg-accent-soft shadow-card' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
               >
                 <span className="flex items-center justify-between gap-3">
-                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${selected ? 'bg-accent text-text-contrast' : 'bg-surface-raised text-text-muted'}`}>
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${selected ? 'bg-accent text-accent-contrast' : 'bg-surface-raised text-text-muted'}`}>
                     <ModeIcon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   {selected && <CheckIcon className="h-5 w-5 text-accent" aria-hidden="true" />}
@@ -92,7 +92,7 @@ export default function SettingsAppearance() {
                 className={`card-lift press focus-ring rounded-2xl border p-4 text-left ${selected ? 'border-accent bg-accent-soft shadow-card' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
               >
                 <span className="flex items-center justify-between gap-3">
-                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${selected ? 'bg-accent text-text-contrast' : 'bg-surface-raised text-text-muted'}`}>
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${selected ? 'bg-accent text-accent-contrast' : 'bg-surface-raised text-text-muted'}`}>
                     <NavigationIcon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   {selected && <CheckIcon className="h-5 w-5 text-accent" aria-hidden="true" />}

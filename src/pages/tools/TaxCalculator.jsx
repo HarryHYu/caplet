@@ -47,16 +47,14 @@ const TaxCalculator = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="mb-16 reveal">
+        <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-2xl text-accent -rotate-2 inline-block">Tools, compliance</span>
-              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-3 mb-6">
-                Tax <br />Architecture
-              </h1>
-              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+              <span className="section-kicker">Tools, compliance</span>
+              <h1 className="minimal-page-title">Tax Architecture</h1>
+              <p className="minimal-page-description">
                 Work out your fiscal obligation and net outcome based on residency brackets.
               </p>
             </div>

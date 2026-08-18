@@ -84,7 +84,7 @@ function StatusNotice({ notice, onDismiss }) {
     >
       {isError ? <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" /> : <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--mark-green)]" aria-hidden="true" />}
       <span className="min-w-0 flex-1">{notice.text}</span>
-      <button type="button" onClick={onDismiss} className="shrink-0 rounded-lg p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Dismiss message">
+      <button type="button" onClick={onDismiss} className="press grid h-10 w-10 shrink-0 place-items-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Dismiss message">
         <XMarkIcon className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
@@ -629,7 +629,7 @@ export default function SettingsPrivacy() {
   };
 
   if (loading) {
-    return <div className="grid min-h-[28rem] place-items-center" role="status" aria-label="Loading privacy controls"><CapletLoader message="Loading your privacy controls…" /></div>;
+    return <div className="grid min-h-[28rem] place-items-center"><CapletLoader message="Loading your privacy controls…" /></div>;
   }
 
   if (loadError || !preference) {

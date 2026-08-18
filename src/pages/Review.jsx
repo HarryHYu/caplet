@@ -107,15 +107,15 @@ function QueueScreen({ queue, onStart }) {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <header>
-        <span className="font-hand text-xl text-accent -rotate-2 inline-block">ready when memory is</span>
-        <h1 className="mt-2 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">Your review is lined up.</h1>
-        <p className="mt-5 max-w-3xl text-lg font-medium leading-relaxed text-text-muted">
+      <header className="minimal-page-header">
+        <span className="section-kicker">ready when memory is</span>
+        <h1 className="minimal-page-title">Your review is lined up.</h1>
+        <p className="minimal-page-description">
           Caplet has combined what is most likely to fade, so your time is focused where it matters.
         </p>
       </header>
 
-      <section className="mt-12" aria-labelledby="review-queue-heading">
+      <section aria-labelledby="review-queue-heading">
         <p id="review-queue-heading" className="text-xs font-bold uppercase tracking-[0.14em] text-text-dim">Your review queue</p>
         <div className="mt-4 border-y border-line-soft">
           {activeGroups.map((group) => {
@@ -229,10 +229,10 @@ function RepairScreen({ item, previousAnswer, value, setValue, submitted, onSubm
   useEffect(() => { window.setTimeout(() => inputRef.current?.focus(), 0); }, [item.id]);
   return (
     <div>
-      <header>
-        <span className="font-hand text-xl text-accent -rotate-2 inline-block">mistake-led replay</span>
-        <h1 className="mt-2 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-6xl">Fix what slipped.</h1>
-        <p className="mt-3 text-lg font-medium text-text-muted">Let’s repair this idea and make it stick.</p>
+      <header className="minimal-page-header">
+        <span className="section-kicker">mistake-led replay</span>
+        <h1 className="minimal-page-title">Fix what slipped.</h1>
+        <p className="minimal-page-description">Let’s repair this idea and make it stick.</p>
       </header>
 
       <section className="mt-6 border-y border-line-soft py-4" aria-labelledby="recent-mistake-heading">

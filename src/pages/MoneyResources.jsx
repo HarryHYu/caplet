@@ -156,12 +156,12 @@ export default function MoneyResources() {
           Money overview
         </Link>
 
-        <header className="mt-8 max-w-4xl">
-          <span className="font-hand text-xl text-accent -rotate-2 inline-block">Money · research, clearly sorted</span>
-          <div className="mt-3 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <header className="minimal-page-header mt-8">
+          <span className="section-kicker">Money · research, clearly sorted</span>
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">The Money resource hub.</h1>
-              <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">A growing shelf of useful websites for data, markets, investing, work and everyday money. Search one place instead of starting from scratch.</p>
+              <h1 className="minimal-page-title">The Money resource hub.</h1>
+              <p className="minimal-page-description">A growing shelf of useful websites for data, markets, investing, work and everyday money. Search one place instead of starting from scratch.</p>
             </div>
             <div className="flex shrink-0 items-center gap-2 rounded-2xl bg-surface-raised px-4 py-3 text-sm font-bold text-text-primary shadow-pop">
               <BookmarkSquareIcon className="h-5 w-5 text-accent" aria-hidden="true" />

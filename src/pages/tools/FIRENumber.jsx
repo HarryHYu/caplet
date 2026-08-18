@@ -40,14 +40,14 @@ const FIRENumber = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="mb-20 reveal">
+        <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Wealth and investing</span>
-              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8">FIRE<br />Number.</h1>
-              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+              <span className="section-kicker">Wealth and investing</span>
+              <h1 className="minimal-page-title">FIRE Number.</h1>
+              <p className="minimal-page-description">
                 Calculate how much you need to retire, and how long until you get there.
               </p>
             </div>

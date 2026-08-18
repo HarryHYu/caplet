@@ -35,27 +35,28 @@ const DebtToIncome = () => {
     setResult({ dti, totalDebt, monthlyIncome, maxRecommended });
   };
 
-  // Five-step risk scale, read like a chart legend: green through red encodes
-  // severity, so these stay literal rather than following the accent token.
+  // Five-step risk scale, read like a chart legend. Severity is spoken in the
+  // shared semantic tokens (mark-green / warning / error) so it stays in step
+  // with every other verdict in the app across all palettes.
   const getDTIBand = (dti) => {
-    if (dti < 28) return { label: 'Excellent', color: 'text-green-600 dark:text-green-400' };
+    if (dti < 28) return { label: 'Excellent', color: 'text-[color:var(--mark-green)]' };
     if (dti < 36) return { label: 'Good', color: 'text-accent' };
-    if (dti < 43) return { label: 'Manageable', color: 'text-yellow-600 dark:text-yellow-400' };
-    if (dti < 50) return { label: 'High — lenders may hesitate', color: 'text-orange-500' };
-    return { label: 'Risky — seek advice', color: 'text-red-500' };
+    if (dti < 43) return { label: 'Manageable', color: 'text-text-warning' };
+    if (dti < 50) return { label: 'High — lenders may hesitate', color: 'text-text-warning' };
+    return { label: 'Risky — seek advice', color: 'text-text-error' };
   };
 
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="mb-16 reveal">
+        <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-xl text-accent -rotate-2 inline-block">Tools, Debt & Loans</span>
-              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8 mt-2">Debt-to-Income<br />Ratio.</h1>
-              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+              <span className="section-kicker">Tools, Debt & Loans</span>
+              <h1 className="minimal-page-title">Debt-to-Income Ratio.</h1>
+              <p className="minimal-page-description">
                 Your DTI is the first thing lenders check. Know yours before they do.
               </p>
             </div>

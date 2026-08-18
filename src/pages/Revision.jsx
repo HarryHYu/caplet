@@ -366,13 +366,13 @@ export default function Revision() {
     }
 
     return (
-        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+        <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
             <div className="container-custom">
-                <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 reveal">
+                <header className="minimal-page-header flex flex-col md:flex-row md:items-end justify-between gap-8 reveal">
                     <div>
-                        <span className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your revision</span>
-                        <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight">Archived slides.</h1>
-                        <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
+                        <span className="section-kicker">your revision</span>
+                        <h1 className="minimal-page-title">Archived slides.</h1>
+                        <p className="minimal-page-description">
                             Every slide you've flagged, organized into topics by AI.
                         </p>
                     </div>

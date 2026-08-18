@@ -18,6 +18,29 @@ const makeService = () => {
 };
 
 describe('session refresh resilience', () => {
+  it('gives up on a network that hangs instead of stranding the app on a spinner', async () => {
+    vi.useFakeTimers();
+    const service = makeService();
+    // A blackholed host (captive portal, school wifi swallowing the API):
+    // fetch neither resolves nor rejects — it only settles when aborted.
+    vi.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        const err = new Error('The operation was aborted.');
+        err.name = 'AbortError';
+        reject(err);
+      });
+    }));
+
+    const pending = service.refreshAccessToken();
+    await vi.advanceTimersByTimeAsync(13000);
+    // Resolves (null = no session) rather than hanging for ever, so the app
+    // boots to the signed-out UI instead of an endless full-page loader.
+    await expect(pending).resolves.toBeNull();
+    // A hang is not proof the session is gone — the user is not signed out.
+    expect(service.sessionDead).toBe(false);
+    vi.useRealTimers();
+  });
+
   it('shares one in-flight refresh across concurrent callers', async () => {
     const service = makeService();
     let resolveRefresh;

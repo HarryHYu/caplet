@@ -87,13 +87,13 @@ function FeedbackResult({ attempt, onNew, returnTo }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div>
           <h3 className="flex items-center gap-2 text-sm font-bold text-text-primary mb-3">
-            <CheckCircleIcon className="w-4 h-4 text-emerald-500" /> What you did well
+            <CheckCircleIcon className="w-4 h-4 text-[color:var(--mark-green)]" /> What you did well
           </h3>
           {attempt.strengths?.length ? (
             <ul className="space-y-2">
               {attempt.strengths.map((s, i) => (
                 <li key={i} className="text-sm text-text-muted leading-relaxed flex gap-2">
-                  <span className="text-emerald-500 mt-0.5">&bull;</span><span>{s}</span>
+                  <span className="text-[color:var(--mark-green)] mt-0.5">&bull;</span><span>{s}</span>
                 </li>
               ))}
             </ul>
@@ -141,7 +141,7 @@ function FeedbackResult({ attempt, onNew, returnTo }) {
       )}
 
       {attempt.improvement ? (
-        <div className={`mb-8 rounded-2xl border p-5 ${attempt.improvement.change > 0 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-line-soft bg-surface-soft'}`}>
+        <div className={`mb-8 rounded-2xl border p-5 ${attempt.improvement.change > 0 ? 'border-transparent block-green' : 'border-line-soft bg-surface-soft'}`}>
           <p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Compared with your last try</p>
           <p className="mt-2 text-sm font-bold leading-relaxed text-text-primary">{attempt.improvement.message}</p>
         </div>
@@ -373,7 +373,7 @@ export default function EconomicsMarker() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-4xl">
         {active ? (
           <div>
@@ -387,12 +387,10 @@ export default function EconomicsMarker() {
           </div>
         ) : (
           <>
-            <header className="mb-12 reveal">
-              <span className="mb-3 font-hand text-2xl text-accent -rotate-2 inline-block">capletmark</span>
-              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl">
-                Mark my HSC <br />Economics answer.
-              </h1>
-              <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
+            <header className="minimal-page-header reveal">
+              <span className="section-kicker">capletmark</span>
+              <h1 className="minimal-page-title">Mark my HSC Economics answer.</h1>
+              <p className="minimal-page-description">
                 Paste an answer, get an estimated mark, what it did well, what was missing, and a stronger model answer — instantly.
               </p>
             </header>

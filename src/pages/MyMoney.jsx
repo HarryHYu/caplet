@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { InlineEmpty } from '../components/learning/LearningStates';
 import api from '../services/api';
 import { FormField } from '../components/AccessibleUI';
 import useDialogFocus from '../lib/useDialogFocus';
@@ -159,14 +160,14 @@ export default function MyMoney() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body pb-32 pt-28 selection:bg-accent selection:text-accent-contrast md:pt-32 lg:pb-20">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-6xl">
         <Link to="/money" className="reveal inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-bold text-text-muted transition-colors hover:text-accent"><ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Money overview</Link>
 
-        <header className="reveal mt-6 max-w-4xl">
-          <span className="font-hand text-xl text-accent -rotate-2 inline-block">your private space</span>
-          <h1 className="mt-3 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">My Money.</h1>
-          <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">Try a savings scenario with sample numbers or deliberately choose to use your own.</p>
+        <header className="reveal minimal-page-header mt-6">
+          <span className="section-kicker">your private space</span>
+          <h1 className="minimal-page-title">My Money.</h1>
+          <p className="minimal-page-description">Try a savings scenario with sample numbers or deliberately choose to use your own.</p>
         </header>
 
         <section className="reveal mt-10 rounded-3xl bg-[color:var(--block-blue)] p-7 md:p-9" aria-labelledby="my-money-privacy-title">
@@ -209,7 +210,12 @@ export default function MyMoney() {
         )}
 
         {!savedScenario && !profileLoading && (
-          <p className="reveal mt-6 rounded-2xl border border-dashed border-line-soft px-5 py-4 text-sm font-medium text-text-muted">No saved scenario yet. The sample below is ready to try, and nothing is saved until you choose Save.</p>
+          <InlineEmpty
+            className="reveal mt-6"
+            icon={LockClosedIcon}
+            title="No saved scenario yet."
+            message="The sample below is ready to try, and nothing is saved until you choose Save."
+          />
         )}
 
         <section className="reveal mt-8" aria-labelledby="number-choice-title">

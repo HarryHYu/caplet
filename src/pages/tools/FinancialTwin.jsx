@@ -174,14 +174,14 @@ const FinancialTwin = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="mb-16 reveal">
+        <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-lg text-accent -rotate-2 inline-block">Tools &rarr; Savings &amp; Growth</span>
-              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-4 mb-8">Financial<br />Twin.</h1>
-              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+              <span className="section-kicker">Tools &rarr; Savings &amp; Growth</span>
+              <h1 className="minimal-page-title">Financial Twin.</h1>
+              <p className="minimal-page-description">
                 A simulation of your finances built from your real (for now, sample) transaction data &mdash;
                 projected forward as a <em>range</em> of scenarios, because nobody&rsquo;s future is a single line.
                 HECS stays income-contingent and indexed; it is never treated as a credit card.

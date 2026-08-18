@@ -74,18 +74,16 @@ const EduTools = () => {
   const badges = { '/revision': dueCount, '/essays': essayCount };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
 
         {/* Header */}
-        <header className="mb-16 reveal">
-          <span className="mb-6 font-hand text-xl text-accent -rotate-2 inline-block">Learn it, then keep it</span>
+        <header className="minimal-page-header reveal">
+          <span className="section-kicker">Learn it, then keep it</span>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <h1 className="font-display font-extrabold tracking-tight text-6xl lg:text-8xl mb-8">
-                Education <br />tools.
-              </h1>
-              <p className="text-xl text-text-muted max-w-xl leading-relaxed">
+              <h1 className="minimal-page-title">Education tools.</h1>
+              <p className="minimal-page-description">
                 Free tools for practising and reviewing what you've learned — AI-marked answers, flagged slides, and essay practice.
               </p>
             </div>

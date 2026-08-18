@@ -43,17 +43,15 @@ const BudgetPlanner = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         {/* Header */}
-        <header className="mb-20 reveal">
+        <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-2xl text-accent -rotate-2 inline-block">Plan your money</span>
-              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-4 mb-8">
-                Budget<br />Planner.
-              </h1>
-              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+              <span className="section-kicker">Plan your money</span>
+              <h1 className="minimal-page-title">Budget Planner.</h1>
+              <p className="minimal-page-description">
                 See your monthly cash flow at a glance and track how you allocate across your main cost centers.
               </p>
             </div>

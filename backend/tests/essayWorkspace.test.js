@@ -26,6 +26,7 @@ const { assistEssay, explainEssay, rewriteSelection } = require('../services/ess
 const { firstSentence, extractQuotes } = require('../services/essayParser');
 const { recordAIInteractionSafely } = require('../services/aiHistory');
 const { resetAIQuotaForTests } = require('../middleware/aiQuota');
+const { sequelize } = require('../config/database');
 const essaysRouter = require('../routes/essays');
 
 const createTestApp = () => {
@@ -53,6 +54,9 @@ describe('Essay workspace routes', () => {
     // AI routes reserve shared in-memory quota units per request; reset
     // between tests so later chat/explain tests never hit the window limit.
     resetAIQuotaForTests();
+    // /explain replaces annotations inside one transaction; run the callback
+    // inline against a stub so no test touches the real database.
+    jest.spyOn(sequelize, 'transaction').mockImplementation(async (callback) => callback({ id: 'transaction' }));
     Essay.findOne = jest.fn().mockResolvedValue(ownedEssay());
   });
 
@@ -625,9 +629,11 @@ describe('Essay workspace routes', () => {
       expect(EssayAnnotation.destroy).toHaveBeenCalledTimes(2);
       expect(EssayAnnotation.destroy).toHaveBeenNthCalledWith(1, {
         where: { essayId: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1', paragraphIndex: 0, kind: 'explanation' },
+        transaction: { id: 'transaction' },
       });
       expect(EssayAnnotation.destroy).toHaveBeenNthCalledWith(2, {
         where: { essayId: '11111111-1111-4111-8111-111111111111', userId: 'test-user-1', paragraphIndex: 1, kind: 'explanation' },
+        transaction: { id: 'transaction' },
       });
       expect(EssayAnnotation.create).toHaveBeenCalledTimes(2);
       expect(EssayAnnotation.create).toHaveBeenNthCalledWith(1, {
@@ -638,7 +644,7 @@ describe('Essay workspace routes', () => {
         note: 'Argues ambition drives the fall.',
         kind: 'explanation',
         source: 'ai',
-      });
+      }, { transaction: { id: 'transaction' } });
       expect(res.body.annotations).toHaveLength(2);
       expect(res.body.annotations[1]).toMatchObject({
         id: 'a-1', paragraphIndex: 1, kind: 'explanation', source: 'ai',
@@ -646,6 +652,38 @@ describe('Essay workspace routes', () => {
       expect(recordAIInteractionSafely).toHaveBeenCalledWith(
         expect.objectContaining({ feature: 'essay_explain', modelVersion: 'gpt-5.5' }),
       );
+    });
+
+    // Regression: the destroy-then-create replacement used to run outside any
+    // transaction, so two concurrent explain calls interleaved their pairs and
+    // left duplicate kind:'explanation' rows for the same paragraph.
+    it('runs the whole replace loop inside ONE transaction', async () => {
+      explainEssay.mockResolvedValue([
+        { paragraphIndex: 0, note: 'One.' },
+        { paragraphIndex: 1, note: 'Two.' },
+      ]);
+      const openDuring = [];
+      let inTransaction = false;
+      sequelize.transaction.mockImplementation(async (callback) => {
+        inTransaction = true;
+        try {
+          return await callback({ id: 'transaction' });
+        } finally {
+          inTransaction = false;
+        }
+      });
+      EssayAnnotation.destroy.mockImplementation(async () => { openDuring.push(inTransaction); return 0; });
+      EssayAnnotation.create.mockImplementation(async (values) => {
+        openDuring.push(inTransaction);
+        return { id: `a-${values.paragraphIndex}`, ...values };
+      });
+
+      const res = await request(app).post('/api/essays/11111111-1111-4111-8111-111111111111/explain');
+
+      expect(res.status).toBe(200);
+      // One transaction for both paragraphs, not one per iteration.
+      expect(sequelize.transaction).toHaveBeenCalledTimes(1);
+      expect(openDuring).toEqual([true, true, true, true]);
     });
 
     it("404s for another user's essay without calling the service", async () => {

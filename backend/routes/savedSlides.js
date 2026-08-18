@@ -4,6 +4,7 @@ const Lesson = require('../models/Lesson');
 const Course = require('../models/Course');
 const ReviewItem = require('../models/ReviewItem');
 const { requireAuth } = require('../middleware/auth');
+const { requireUuidParam } = require('../middleware/validateUuid');
 const { categorizeSlides, slideToText } = require('../services/slideCategorizer');
 const { summarizeSlides } = require('../services/slideSummarizer');
 const { generateRecallQuestion } = require('../services/recallQuestion');
@@ -14,6 +15,8 @@ const { publicAIError } = require('../utils/aiErrors');
 
 const router = express.Router();
 router.use(requireAuth);
+// :id is the SavedSlide UUID primary key on every route that uses it.
+router.param('id', requireUuidParam('id', 'Saved slide not found'));
 
 const recallQuota = reserveAIQuota({ scope: 'saved-slide-recall', units: 1 });
 const categorizeQuota = reserveAIQuota({ scope: 'saved-slide-categorize', units: 4 });

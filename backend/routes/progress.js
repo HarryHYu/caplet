@@ -5,9 +5,15 @@ const Course = require('../models/Course');
 const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
 const { requireAuth } = require('../middleware/auth');
+const { requireUuidParam } = require('../middleware/validateUuid');
+const { sequelize } = require('../config/database');
 const { lessonHasContent, summarizeCourseProgress } = require('../services/courseProgressService');
 
 const router = express.Router();
+// Both params key UUID columns (Lesson.id / Course.id). A malformed value
+// would otherwise reach Postgres and raise a 500 instead of a plain 404.
+router.param('lessonId', requireUuidParam('lessonId', 'Lesson not found'));
+router.param('courseId', requireUuidParam('courseId', 'Course not found'));
 
 // Update lesson progress
 router.put('/lesson/:lessonId', requireAuth, [
@@ -39,45 +45,57 @@ router.put('/lesson/:lessonId', requireAuth, [
     }
     const courseId = lesson.module.courseId;
 
-    // Find or create progress record
-    let progress = await UserProgress.findOne({
-      where: { 
-        userId: req.user.id, 
-        courseId,
-        lessonId: lessonId
-      }
-    });
-
-    if (!progress) {
-      progress = await UserProgress.create({
-        userId: req.user.id,
-        courseId,
-        lessonId: lessonId,
-        status: 'not_started'
+    // quizScores is a serialized column merged from a snapshot, so the whole
+    // read-modify-write has to be one atomic step: a learner answering two
+    // quiz slides in quick succession puts two requests in flight, and without
+    // the lock each merges from a stale copy and the later write silently
+    // drops the earlier slide's score. findOrCreate (rather than
+    // findOne-then-create) stops two concurrent first requests inserting
+    // duplicate rows, after which findOne would return an arbitrary one and
+    // progress counts would double. The row lock is enforced on Postgres and
+    // tolerated as a no-op on SQLite.
+    let progress;
+    let previousStatus;
+    await sequelize.transaction(async (t) => {
+      const [record] = await UserProgress.findOrCreate({
+        where: {
+          userId: req.user.id,
+          courseId,
+          lessonId: lessonId
+        },
+        defaults: {
+          userId: req.user.id,
+          courseId,
+          lessonId: lessonId,
+          status: 'not_started'
+        },
+        transaction: t,
+        lock: t.LOCK.UPDATE
       });
-    }
-    const previousStatus = progress.status;
+      progress = record;
+      previousStatus = progress.status;
 
-    // Update progress
-    const updateData = {};
-    if (status) updateData.status = status;
-    if (timeSpent !== undefined) updateData.timeSpent = timeSpent;
-    if (notes !== undefined) updateData.notes = notes;
-    if (lastSlideIndex !== undefined) updateData.lastSlideIndex = lastSlideIndex;
-    if (quizScores !== undefined && typeof quizScores === 'object') {
-      const merged = { ...(progress.quizScores || {}), ...quizScores };
-      updateData.quizScores = merged;
-    }
+      // Update progress
+      const updateData = {};
+      if (status) updateData.status = status;
+      if (timeSpent !== undefined) updateData.timeSpent = timeSpent;
+      if (notes !== undefined) updateData.notes = notes;
+      if (lastSlideIndex !== undefined) updateData.lastSlideIndex = lastSlideIndex;
+      if (quizScores !== undefined && typeof quizScores === 'object') {
+        const merged = { ...(progress.quizScores || {}), ...quizScores };
+        updateData.quizScores = merged;
+      }
 
-    if (status === 'completed' && (previousStatus !== 'completed' || !progress.completedAt)) {
-      updateData.completedAt = new Date();
-    } else if (status && status !== 'completed' && previousStatus === 'completed') {
-      updateData.completedAt = null;
-    }
-    
-    updateData.lastAccessedAt = new Date();
+      if (status === 'completed' && (previousStatus !== 'completed' || !progress.completedAt)) {
+        updateData.completedAt = new Date();
+      } else if (status && status !== 'completed' && previousStatus === 'completed') {
+        updateData.completedAt = null;
+      }
 
-    await progress.update(updateData);
+      updateData.lastAccessedAt = new Date();
+
+      await progress.update(updateData, { transaction: t });
+    });
 
     if (status && status !== previousStatus && ['in_progress', 'completed'].includes(status)) {
       const eventType = status === 'completed' ? 'lesson_completed' : 'lesson_started';
@@ -324,30 +342,36 @@ router.post('/bookmark/:lessonId', requireAuth, async (req, res) => {
     }
     const courseId = lesson.module.courseId;
 
-    // Find or create progress record
-    let progress = await UserProgress.findOne({
-      where: { 
-        userId: req.user.id, 
-        courseId,
-        lessonId: lessonId
+    // Same lost-update race as the quizScores merge: two concurrent bookmark
+    // requests both read the array, both push onto their own stale copy, and
+    // the later write drops the earlier push. Read under a row lock inside one
+    // transaction so the read-modify-write is atomic.
+    let progress;
+    await sequelize.transaction(async (t) => {
+      const [record] = await UserProgress.findOrCreate({
+        where: {
+          userId: req.user.id,
+          courseId,
+          lessonId: lessonId
+        },
+        defaults: {
+          userId: req.user.id,
+          courseId,
+          lessonId: lessonId,
+          status: 'not_started'
+        },
+        transaction: t,
+        lock: t.LOCK.UPDATE
+      });
+      progress = record;
+
+      // Add bookmark if not already bookmarked
+      const bookmarks = Array.isArray(progress.bookmarks) ? [...progress.bookmarks] : [];
+      if (!bookmarks.includes(lessonId)) {
+        bookmarks.push(lessonId);
+        await progress.update({ bookmarks }, { transaction: t });
       }
     });
-
-    if (!progress) {
-      progress = await UserProgress.create({
-        userId: req.user.id,
-        courseId,
-        lessonId: lessonId,
-        status: 'not_started'
-      });
-    }
-
-    // Add bookmark if not already bookmarked
-    const bookmarks = progress.bookmarks || [];
-    if (!bookmarks.includes(lessonId)) {
-      bookmarks.push(lessonId);
-      await progress.update({ bookmarks });
-    }
 
     res.json({
       message: 'Lesson bookmarked successfully',
@@ -364,17 +388,22 @@ router.delete('/bookmark/:lessonId', requireAuth, async (req, res) => {
   try {
     const { lessonId } = req.params;
 
-    const progress = await UserProgress.findOne({
-      where: { 
-        userId: req.user.id, 
-        lessonId: lessonId
+    // Mirror of the add path: filter-then-write is a read-modify-write too.
+    await sequelize.transaction(async (t) => {
+      const progress = await UserProgress.findOne({
+        where: {
+          userId: req.user.id,
+          lessonId: lessonId
+        },
+        transaction: t,
+        lock: t.LOCK.UPDATE
+      });
+
+      if (progress && progress.bookmarks) {
+        const bookmarks = progress.bookmarks.filter(id => id !== lessonId);
+        await progress.update({ bookmarks }, { transaction: t });
       }
     });
-
-    if (progress && progress.bookmarks) {
-      const bookmarks = progress.bookmarks.filter(id => id !== lessonId);
-      await progress.update({ bookmarks });
-    }
 
     res.json({ message: 'Bookmark removed successfully' });
   } catch (error) {
@@ -401,21 +430,25 @@ router.post('/:lessonId/score', requireAuth, async (req, res) => {
     }
     const courseId = lesson.module.courseId;
 
-    let progress = await UserProgress.findOne({
-      where: { userId: req.user.id, courseId, lessonId },
-    });
-    if (!progress) {
-      progress = await UserProgress.create({
-        userId: req.user.id,
-        courseId,
-        lessonId,
-        status: 'in_progress',
-      });
-    }
-
     const scoredAt = new Date();
-    const merged = { ...(progress.quizScores || {}), _score: { score, answers, scoredAt: scoredAt.toISOString() } };
-    await progress.update({ quizScores: merged, lastAccessedAt: new Date() });
+    // Same serialized-column merge as PUT /lesson/:lessonId — lock the row so
+    // a concurrent per-slide write cannot be merged away by this one.
+    await sequelize.transaction(async (t) => {
+      const [progress] = await UserProgress.findOrCreate({
+        where: { userId: req.user.id, courseId, lessonId },
+        defaults: {
+          userId: req.user.id,
+          courseId,
+          lessonId,
+          status: 'in_progress',
+        },
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      const merged = { ...(progress.quizScores || {}), _score: { score, answers, scoredAt: scoredAt.toISOString() } };
+      await progress.update({ quizScores: merged, lastAccessedAt: new Date() }, { transaction: t });
+    });
 
     // Mastery evidence is additive to the legacy lesson-progress record. A
     // content author must map the lesson to outcomes before it contributes.

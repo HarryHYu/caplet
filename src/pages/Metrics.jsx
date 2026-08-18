@@ -155,16 +155,15 @@ export default function Metrics() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-surface-body text-text-primary py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
 
         {/* ── header ── */}
-        <header className="reveal mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <header className="reveal minimal-page-header flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div>
-            <span className="font-hand text-lg text-accent -rotate-2 inline-block">Platform analytics</span>
-            <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight">
-              Caplet<br />
-              <span className="text-accent">Metrics.</span>
+            <span className="section-kicker">Platform analytics</span>
+            <h1 className="minimal-page-title">
+              Caplet <span className="text-accent">Metrics.</span>
             </h1>
           </div>
           <div className="text-right">

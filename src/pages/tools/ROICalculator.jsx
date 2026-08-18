@@ -32,14 +32,14 @@ const ROICalculator = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="mb-16 reveal">
+        <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-xl text-accent -rotate-2 inline-block">Tools, wealth and investing</span>
-              <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-2 mb-6">Return on<br />Investment.</h1>
-              <p className="text-xl text-text-muted leading-relaxed max-w-xl">
+              <span className="section-kicker">Tools, wealth and investing</span>
+              <h1 className="minimal-page-title">Return on Investment.</h1>
+              <p className="minimal-page-description">
                 Calculate total ROI and annualised return on any investment (shares, property, business, or otherwise).
               </p>
             </div>
