@@ -371,6 +371,44 @@ describe('EssayMemoriser', () => {
     }));
   });
 
+  // Scoping is expressed in body-paragraph indices, so the scoped list can
+  // never name the introduction or conclusion. Handing that list to the speed
+  // run unconditionally silently dropped both from EVERY run — the whole essay
+  // was never typeable and the intro/conclusion presets never appeared.
+  it('offers the introduction and conclusion to the speed run when nothing is scoped', async () => {
+    api.getEssay.mockResolvedValue({ essay: parsedEssay });
+    renderAt('/essays/essay-1?tab=practice&mode=speed');
+
+    expect(await screen.findByRole('button', { name: 'Introduction' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Conclusion' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Just the intro/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Just the conclusion/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Last BP \+ conclusion/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Scoped to your selected paragraph/i)).not.toBeInTheDocument();
+  });
+
+  it('narrows the speed run to the selected paragraphs once a scope is set', async () => {
+    api.getEssay.mockResolvedValue({
+      ...{},
+      essay: {
+        ...parsedEssay,
+        parsedStructure: {
+          ...parsedEssay.parsedStructure,
+          bodyParagraphs: [
+            { topicSentence: 'Macbeth chooses ambition over loyalty.', text: 'Macbeth chooses ambition over loyalty.', quotes: [], techniques: [] },
+            { topicSentence: 'Lady Macbeth drives the plan.', text: 'Lady Macbeth drives the plan.', quotes: [], techniques: [] },
+          ],
+        },
+      },
+    });
+    renderAt('/essays/essay-1?tab=practice&mode=speed&scope=1');
+
+    expect(await screen.findByRole('button', { name: 'Body ¶2' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Introduction' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Body ¶1' })).not.toBeInTheDocument();
+    expect(screen.getByText(/Scoped to your selected paragraph/i)).toBeInTheDocument();
+  });
+
   it('generates paragraph explanations on demand', async () => {
     api.getEssay.mockResolvedValue({ essay: parsedEssay });
     api.explainEssay.mockResolvedValueOnce({

@@ -13,7 +13,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
-export default function MathText({ children, className }) {
+export default function MathText({ children, className, inline = false }) {
   if (children == null) return null;
   const text = String(children);
 
@@ -24,8 +24,11 @@ export default function MathText({ children, className }) {
         rehypePlugins={[rehypeKatex]}
         components={{
           // MathText is used inline — avoid block-level <p> wrappers.
-          // Use span.block so multiple paragraphs still stack visually.
-          p: ({ children: c }) => <span className="block">{c}</span>,
+          // Use span.block so multiple paragraphs still stack visually…
+          // …except with `inline`, where the text is one run inside a flowing
+          // line (a fill-in-the-blank template around its input boxes). A
+          // block span there breaks the sentence onto its own line.
+          p: ({ children: c }) => (inline ? <span>{c}</span> : <span className="block">{c}</span>),
         }}
       >
         {text}

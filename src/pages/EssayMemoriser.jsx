@@ -786,7 +786,7 @@ function RecallChunks({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
                 <div className="mt-6">
                     {!revealed ? (
                         <button type="button" onClick={() => setRevealed(true)}
-                            className="text-sm font-medium text-accent hover:opacity-70 transition-opacity">
+                            className="block w-fit text-sm font-medium text-accent hover:opacity-70 transition-opacity">
                             Show full paragraph
                         </button>
                     ) : (
@@ -2636,7 +2636,12 @@ function EssayWorkspace({ essayId }) {
                                         onNext={drills.quotes ? () => setMode('quotes') : () => setMode(null)}
                                         nextLabel={drills.quotes ? modeLabel('quotes') : 'all activities'} />
                                 )}
-                                {mode === 'speed' && <SpeedTypeMode essay={essay} paragraphs={scoped} onRunningChange={setSpeedRunning} />}
+                                {/* The speed run types the WHOLE essay — intro and conclusion
+                                    included — unless the scope was actually narrowed. Passing
+                                    the (always non-null) scoped list unconditionally would drop
+                                    intro/conclusion from every run, since scoping is expressed
+                                    in body-paragraph indices only. */}
+                                {mode === 'speed' && <SpeedTypeMode essay={essay} paragraphs={scope ? scoped : null} onRunningChange={setSpeedRunning} />}
                                 {mode === 'quotes' && (
                                     quoteCards
                                         ? <QuoteDrill slide={quoteCards}

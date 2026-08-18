@@ -408,7 +408,9 @@ function FillBlankSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
       <Kicker>Fill the blanks</Kicker>
       <div className="text-lg md:text-xl leading-loose text-text-primary font-serif mb-5">
         {parts.map((p, i) => {
-          if (p.text) return <MathText key={i}>{p.text}</MathText>;
+          // `inline` keeps each run of template prose on the same line as the
+          // blanks it surrounds — a block wrapper stacks them vertically.
+          if (p.text) return <MathText key={i} inline>{p.text}</MathText>;
           const idx = p.blank;
           const blank = slide.blanks[idx];
           if (!blank) return null;
@@ -471,7 +473,7 @@ function FillBlankSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
             {slide.blanks.map((b, i) => (
               <li key={i}>
                 <span className="font-mono text-text-dim mr-2">{i + 1}.</span>
-                <MathText>{b.answers.join(' / ')}</MathText>
+                <MathText inline>{b.answers.join(' / ')}</MathText>
               </li>
             ))}
           </ul>
@@ -1460,7 +1462,7 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
           <ol className="flex flex-wrap gap-2">
             {correctOrder.map((i) => (
               <li key={i} className="px-2 py-1 rounded-lg bg-surface-raised border border-line-soft text-xs">
-                {i + 1}. <MathText>{events[i].label}</MathText>
+                {i + 1}. <MathText inline>{events[i].label}</MathText>
                 {events[i].year ? ` (${String(events[i].year).replace(/^\$+|\$+$/g, '')})` : ''}
               </li>
             ))}
