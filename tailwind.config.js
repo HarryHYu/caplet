@@ -72,6 +72,17 @@ export default {
         'dot-wave': 'dot-wave 1.3s ease-in-out infinite',
         'status-pulse': 'status-pulse 2.4s ease-in-out infinite',
         'slide-card-enter': 'slide-card-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both',
+        // Shared micro-interaction kit — use these instead of ad-hoc
+        // animate-[…] literals so motion feels consistent site-wide.
+        rise: 'rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'rise-slow': 'rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both',
+        pop: 'pop 0.25s ease-out both',
+        tada: 'tada 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'shake-x': 'shake-x 0.3s ease-in-out',
+        'streak-pop': 'streak-pop 0.25s ease-out both',
+        'caret-blink': 'caret-blink 1.1s ease-in-out infinite',
+        'bar-fill': 'bar-fill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
+        shimmer: 'shimmer 1.6s linear infinite',
       },
       keyframes: {
         'progress-indefinite': {
@@ -108,6 +119,44 @@ export default {
         'slide-card-enter': {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        rise: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        pop: {
+          '0%': { opacity: '0', transform: 'scale(0.9)' },
+          '60%': { transform: 'scale(1.04)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        tada: {
+          '0%': { transform: 'scale(0.8) rotate(-4deg)', opacity: '0' },
+          '40%': { transform: 'scale(1.12) rotate(3deg)', opacity: '1' },
+          '65%': { transform: 'scale(0.96) rotate(-1deg)' },
+          '100%': { transform: 'scale(1) rotate(0deg)', opacity: '1' },
+        },
+        'shake-x': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '25%': { transform: 'translateX(-4px)' },
+          '75%': { transform: 'translateX(4px)' },
+        },
+        'streak-pop': {
+          '0%': { opacity: '0', transform: 'scale(0.7)' },
+          '60%': { transform: 'scale(1.15)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'caret-blink': {
+          '0%, 45%': { opacity: '1' },
+          '55%, 95%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'bar-fill': {
+          '0%': { transform: 'scaleX(0)' },
+          '100%': { transform: 'scaleX(1)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
         },
       },
     },

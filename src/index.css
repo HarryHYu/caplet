@@ -542,6 +542,71 @@
     box-shadow: none;
   }
 
+  /* ── Shared micro-interaction kit ──────────────────────────────────────
+     Use these (plus the animate-rise/pop/tada/… utilities from the Tailwind
+     config) instead of ad-hoc transitions so motion feels like one hand
+     built the whole site. All of it collapses under reduced-motion. */
+
+  .card-lift {
+    @apply transition-all duration-200;
+  }
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px -24px rgba(20, 20, 18, 0.35);
+  }
+
+  .press {
+    @apply transition-transform duration-100;
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-body;
+  }
+
+  /* Skeleton shimmer for loading placeholders. */
+  .skeleton {
+    @apply animate-shimmer rounded-lg bg-surface-soft;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.35) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+  }
+  .dark .skeleton {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 100%
+    );
+  }
+
+  /* The typing caret for essay drills — a thin accent bar that blinks only
+     while idle (add .caret-idle) and glides between letters via transition. */
+  .type-caret {
+    @apply inline-block w-[2px] self-stretch rounded-full bg-accent align-middle;
+    transition: transform 0.08s ease-out;
+  }
+  .caret-idle {
+    @apply animate-caret-blink;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-lift:hover,
+    .press:active {
+      transform: none;
+    }
+    .skeleton,
+    .caret-idle {
+      animation: none;
+    }
+  }
+
   /* Chat-sized markdown — the essay assistant's replies. Same voice as
      prose-lesson, scaled down to fit a side panel. */
   .prose-chat {
