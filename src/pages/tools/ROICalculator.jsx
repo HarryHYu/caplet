@@ -32,7 +32,7 @@ const ROICalculator = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -48,7 +48,7 @@ const ROICalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Investment Parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -83,15 +83,15 @@ const ROICalculator = () => {
                 </div>
                 <p className="text-xs text-text-dim mt-2">Required for annualised return.</p>
               </div>
-              <button type="submit" className="btn-primary w-full py-5 hover:-translate-y-0.5 transition-transform">Calculate ROI</button>
+              <button type="submit" className="btn-primary press w-full py-5 hover:-translate-y-0.5 transition-transform">Calculate ROI</button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Return Analysis</h2>
             {result ? (
               result.error ? (
-                <p className="text-sm font-semibold text-accent">{result.error}</p>
+                <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
                 <div className="space-y-10">
                   <div>

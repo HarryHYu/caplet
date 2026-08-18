@@ -19,7 +19,7 @@ import { faculties } from '../data/hscSubjects';
 const LibrarySubjectCard = ({ subject }) => {
   const isAvailable = subject.available === true;
   const classes = `group flex min-h-36 flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 transition-colors ${
-    isAvailable ? 'hover:border-accent/50 hover:bg-surface-soft' : 'opacity-75'
+    isAvailable ? 'card-lift focus-ring hover:border-accent/50 hover:bg-surface-soft' : 'opacity-75'
   }`;
   const content = (
     <>
@@ -44,7 +44,7 @@ const LibraryCourseCard = ({ path }) => {
   const actionLabel = path.status === 'in_progress' ? 'Continue' : 'Open';
 
   return (
-    <Link to={path.href} className="group flex min-h-full flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 transition-colors hover:border-accent/50 hover:bg-surface-soft">
+    <Link to={path.href} className="card-lift focus-ring group flex min-h-full flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 transition-colors hover:border-accent/50 hover:bg-surface-soft">
       <div>
         <h3 className="font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{path.title}</h3>
         {path.description && <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{path.description}</p>}
@@ -84,7 +84,7 @@ const Library = () => {
   const continueItems = hubData.continueItems.filter((item) => item.href !== hubData.nextAction.resume?.href);
 
   return (
-    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
+    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-accent-contrast md:pt-28">
       <div className="container-custom">
         <LearningPageHeader
           title="Resource library"
@@ -123,14 +123,14 @@ const Library = () => {
               <button
                 type="button"
                 onClick={() => setFilterActive(false)}
-                className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${!filterActive ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'}`}
+                className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${!filterActive ? 'bg-accent text-accent-contrast' : 'text-text-muted hover:text-text-primary'}`}
               >
                 All
               </button>
               <button
                 type="button"
                 onClick={() => setFilterActive(true)}
-                className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${filterActive ? 'bg-accent text-white' : 'text-text-muted hover:text-text-primary'}`}
+                className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${filterActive ? 'bg-accent text-accent-contrast' : 'text-text-muted hover:text-text-primary'}`}
               >
                 My subjects
               </button>
@@ -147,7 +147,7 @@ const Library = () => {
           </div>
 
           {pickerOpen && (
-            <div id="subject-picker" className="mb-8 max-w-2xl rounded-2xl border border-line-soft bg-surface-raised p-4 shadow-[0_24px_60px_-42px_rgba(20,20,18,0.55)]">
+            <div id="subject-picker" className="mb-8 max-w-2xl rounded-2xl border border-line-soft bg-surface-raised p-4 shadow-pop">
               <label htmlFor="subject-search" className="sr-only">Search subjects</label>
               <div className="relative">
                 <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-dim" />
@@ -172,7 +172,7 @@ const Library = () => {
               <button
                 type="button"
                 onClick={() => setPickerOpen(true)}
-                className="mt-6 rounded-full bg-accent px-5 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                className="focus-ring press mt-6 rounded-full bg-accent px-5 py-2 text-sm font-bold text-accent-contrast transition-opacity hover:opacity-90"
               >
                 Choose subjects
               </button>

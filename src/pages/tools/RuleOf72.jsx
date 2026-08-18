@@ -35,7 +35,7 @@ const RuleOf72 = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-20 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -51,7 +51,7 @@ const RuleOf72 = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-card card-lift reveal">
             <div className="mb-16">
               <h2 className="font-display font-bold tracking-tight text-sm text-text-muted mb-6">Mode</h2>
               <div className="flex gap-3">
@@ -60,7 +60,7 @@ const RuleOf72 = () => {
                   { val: 'years-to-rate', label: 'Years to required rate' },
                 ].map(({ val, label }) => (
                   <button key={val} type="button" onClick={() => { setMode(val); setResult(null); }}
-                    className={`flex-1 py-3 px-4 text-sm font-bold rounded-xl transition-transform hover:-translate-y-0.5 ${mode === val ? 'bg-accent text-white' : 'bg-surface-body text-text-muted'}`}>
+                    className={`flex-1 py-3 px-4 text-sm font-bold rounded-xl transition-transform hover:-translate-y-0.5 ${mode === val ? 'bg-accent text-accent-contrast' : 'bg-surface-body text-text-muted'}`}>
                     {label}
                   </button>
                 ))}
@@ -86,7 +86,7 @@ const RuleOf72 = () => {
                   </div>
                 </div>
               )}
-              <button type="submit" className="btn-primary w-full py-6 text-sm hover:-translate-y-0.5 transition-transform">Calculate</button>
+              <button type="submit" className="btn-primary press w-full py-6 text-sm hover:-translate-y-0.5 transition-transform">Calculate</button>
             </form>
 
             <div className="mt-16">
@@ -102,13 +102,13 @@ const RuleOf72 = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-sm text-text-muted mb-12 relative z-10">Result</h2>
             {result ? (
               result.error ? (
-                <p className="text-sm font-medium text-accent relative z-10">{result.error}</p>
+                <p role="alert" className="text-sm font-medium text-text-error relative z-10">{result.error}</p>
               ) : (
-                <div className="space-y-12 relative z-10">
+                <div className="animate-rise space-y-12 relative z-10">
                   {result.mode === 'rate-to-years' ? (
                     <>
                       <div>
@@ -145,7 +145,7 @@ const RuleOf72 = () => {
               )
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-accent text-white flex items-center justify-center text-2xl font-display font-extrabold mb-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">72</div>
+                <div className="w-16 h-16 rounded-2xl bg-accent text-accent-contrast flex items-center justify-center text-2xl font-display font-extrabold mb-8 shadow-card">72</div>
                 <p className="text-sm font-medium text-text-dim">Enter a rate or time period above</p>
               </div>
             )}

@@ -174,7 +174,7 @@ const FinancialTwin = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -196,7 +196,7 @@ const FinancialTwin = () => {
             <CapletLoader message="Waking your twin…" />
           </div>
         ) : !isAuthenticated ? (
-          <div className="max-w-xl block-cream rounded-3xl p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="max-w-xl block-cream rounded-3xl p-12 shadow-card">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-4">Sign in to build your Financial Twin</h2>
             <p className="text-text-muted leading-relaxed mb-8">
               The twin runs on data you consent to share and the figures saved on your Caplet profile.
@@ -207,7 +207,7 @@ const FinancialTwin = () => {
         ) : (
           <div className="space-y-8">
             {/* ---------------- Consent / connection card ---------------- */}
-            <div className="block-cream rounded-3xl p-8 lg:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+            <div className="block-cream rounded-3xl p-8 lg:p-10 shadow-card card-lift reveal">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="max-w-2xl">
                   <h2 className="font-display font-bold tracking-tight text-2xl mb-2">Connected data</h2>
@@ -247,7 +247,7 @@ const FinancialTwin = () => {
 
             {/* ---------------- Trajectory fan chart ---------------- */}
             {projection && (
-              <div className="bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+              <div className="bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
                   <div>
                     <h2 className="font-display font-bold tracking-tight text-2xl mb-1">Simulated trajectory</h2>
@@ -262,7 +262,7 @@ const FinancialTwin = () => {
                           key={s.key}
                           type="button"
                           onClick={() => setActiveSeries(s.key)}
-                          className={`px-4 py-2.5 text-xs font-bold transition-colors ${activeSeries === s.key ? 'bg-accent text-white' : 'bg-surface-body text-text-muted hover:text-text-primary'}`}
+                          className={`px-4 py-2.5 text-xs font-bold transition-colors ${activeSeries === s.key ? 'bg-accent text-accent-contrast' : 'bg-surface-body text-text-muted hover:text-text-primary'}`}
                         >
                           {s.label}
                         </button>
@@ -337,7 +337,7 @@ const FinancialTwin = () => {
                           key={h}
                           type="button"
                           onClick={() => setYears(h)}
-                          className={`px-5 py-2.5 text-xs font-bold transition-colors ${years === h ? 'bg-accent text-white' : 'bg-surface-body text-text-muted hover:text-text-primary'}`}
+                          className={`px-5 py-2.5 text-xs font-bold transition-colors ${years === h ? 'bg-accent text-accent-contrast' : 'bg-surface-body text-text-muted hover:text-text-primary'}`}
                         >
                           {h} years
                         </button>
@@ -363,7 +363,7 @@ const FinancialTwin = () => {
                   transition={{ duration: 0.25 }}
                   className="grid grid-cols-1 lg:grid-cols-12 gap-8"
                 >
-                  <div className="lg:col-span-7 block-green rounded-3xl p-8 lg:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                  <div className="lg:col-span-7 block-green rounded-3xl p-8 lg:p-10 shadow-card">
                     <h2 className="font-display font-bold tracking-tight text-2xl mb-2">What the data shows</h2>
                     <p className="text-xs text-text-dim mb-8">
                       {categorized.summary.transactionCount} transactions, categorized deterministically &mdash; no black box.
@@ -388,7 +388,7 @@ const FinancialTwin = () => {
                     </p>
                   </div>
 
-                  <div className="lg:col-span-5 block-amber rounded-3xl p-8 lg:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                  <div aria-live="polite" className="lg:col-span-5 block-amber rounded-3xl p-8 lg:p-10 shadow-card">
                     <h2 className="font-display font-bold tracking-tight text-2xl mb-2">Needs a human</h2>
                     <p className="text-xs text-text-dim mb-6">
                       Anything ambiguous is flagged rather than guessed, and is <strong>not counted</strong> in any total.
@@ -420,7 +420,7 @@ const FinancialTwin = () => {
 
             {/* ---------------- Assumptions provenance ---------------- */}
             {projection && (
-              <div className="bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+              <div className="bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
                 <h2 className="font-display font-bold tracking-tight text-2xl mb-2">Every assumption, on the table</h2>
                 <p className="text-xs text-text-dim mb-8">
                   Version {projection.assumptionsVersion}. Each figure carries the date it was true and where it came from.

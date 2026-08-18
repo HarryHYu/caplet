@@ -86,7 +86,7 @@ function ResourceCard({ resource }) {
       href={resource.url}
       target="_blank"
       rel="noreferrer"
-      className="group flex min-w-0 h-full flex-col rounded-3xl border border-line-soft bg-surface-raised p-5 shadow-[0_24px_50px_-42px_rgba(20,20,18,0.42)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-[0_26px_50px_-34px_rgba(19,81,170,0.45)]"
+      className="group flex min-w-0 h-full flex-col rounded-3xl border border-line-soft bg-surface-raised p-5 shadow-card transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-glow"
     >
       <div className="flex items-start justify-between gap-4">
         <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${categoryTones[resource.categoryId] || 'bg-surface-soft text-accent'}`}>
@@ -138,7 +138,7 @@ export default function MoneyResources() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body pb-32 pt-28 selection:bg-accent selection:text-white md:pt-32 lg:pb-20">
+    <div className="min-h-screen bg-surface-body pb-32 pt-28 selection:bg-accent selection:text-accent-contrast md:pt-32 lg:pb-20">
       <div className="container-custom">
         <Link to="/money" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-text-muted transition-colors hover:text-accent">
           <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
@@ -152,7 +152,7 @@ export default function MoneyResources() {
               <h1 className="font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">The Money resource hub.</h1>
               <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">A growing shelf of useful websites for data, markets, investing, work and everyday money. Search one place instead of starting from scratch.</p>
             </div>
-            <div className="flex shrink-0 items-center gap-2 rounded-2xl bg-surface-raised px-4 py-3 text-sm font-bold text-text-primary shadow-[0_18px_42px_-34px_rgba(20,20,18,0.4)]">
+            <div className="flex shrink-0 items-center gap-2 rounded-2xl bg-surface-raised px-4 py-3 text-sm font-bold text-text-primary shadow-pop">
               <BookmarkSquareIcon className="h-5 w-5 text-accent" aria-hidden="true" />
               <span>{MONEY_RESOURCES.length} bookmarks · {MONEY_RESOURCE_CATEGORIES.length} categories</span>
             </div>
@@ -218,7 +218,7 @@ export default function MoneyResources() {
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line-soft pt-3">
             <p className="text-sm font-bold text-text-muted" aria-live="polite">{isFiltering ? `${filteredResources.length} matching resource${filteredResources.length === 1 ? '' : 's'}` : `Showing ${Math.min(displayedResources.length, RESOURCE_PAGE_SIZE)} of ${displayedResources.length} catalogue resources`}</p>
-            {isFiltering ? <button type="button" onClick={clearFilters} className="inline-flex min-h-10 items-center rounded-full bg-accent-soft px-4 text-sm font-extrabold text-accent transition-colors hover:bg-accent hover:text-white">Clear filters</button> : <p className="text-xs font-semibold text-text-dim">Open any card to visit the source website.</p>}
+            {isFiltering ? <button type="button" onClick={clearFilters} className="inline-flex min-h-10 items-center rounded-full bg-accent-soft px-4 text-sm font-extrabold text-accent transition-colors hover:bg-accent hover:text-accent-contrast">Clear filters</button> : <p className="text-xs font-semibold text-text-dim">Open any card to visit the source website.</p>}
           </div>
         </section>
 

@@ -45,6 +45,7 @@ async function generateRecallQuestion(slideText, opts = {}) {
   if (!text) {
     const err = new Error('This slide has no text to build a question from.');
     err.status = 400;
+    err.expose = true;
     throw err;
   }
 
@@ -60,7 +61,13 @@ async function generateRecallQuestion(slideText, opts = {}) {
     ],
   });
 
-  const raw = completion.choices?.[0]?.message?.content || '{}';
+  const choice = completion.choices?.[0];
+  if (choice?.finish_reason === 'length') {
+    const err = new Error('AI output truncated');
+    err.status = 502;
+    throw err;
+  }
+  const raw = choice?.message?.content || '{}';
   let parsed;
   try {
     parsed = JSON.parse(raw);

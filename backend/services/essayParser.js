@@ -214,6 +214,25 @@ const QUOTE_PAIRS = [
   ['„', '“'],
 ];
 
+// '“' is BOTH the English opener of “…” and the German closer of „…“. When a
+// paragraph mixes the two styles, the English-pair scan must not treat a '“'
+// that closes an unmatched preceding '„' as an opener — that would capture
+// prose between the German quote and the next real English quote. Returns the
+// set of '“' positions consumed as German closers.
+function germanCloserPositions(text) {
+  const closers = new Set();
+  let from = 0;
+  for (;;) {
+    const start = text.indexOf('„', from);
+    if (start === -1) break;
+    const end = text.indexOf('“', start + 1);
+    if (end === -1) break;
+    closers.add(end);
+    from = end + 1;
+  }
+  return closers;
+}
+
 function extractQuotes(paragraph) {
   const text = str(paragraph);
   const found = [];
@@ -227,10 +246,15 @@ function extractQuotes(paragraph) {
       const count = text.split(open).length - 1;
       if (count % 2 !== 0) continue;
     }
+    const skipOpens = open === '“' ? germanCloserPositions(text) : null;
     let from = 0;
     for (;;) {
       const start = text.indexOf(open, from);
       if (start === -1) break;
+      if (skipOpens && skipOpens.has(start)) {
+        from = start + 1;
+        continue;
+      }
       const end = text.indexOf(close, start + 1);
       if (end === -1) break;
       const content = text.slice(start + 1, end).trim();
@@ -559,6 +583,7 @@ async function parseEssay(essayText, opts = {}) {
   if (!text) {
     const err = new Error('The essay has no text to parse.');
     err.status = 400;
+    err.expose = true;
     throw err;
   }
   // Cap BEFORE labelling so nothing the AI (or the fallback) sees can later be
@@ -567,6 +592,7 @@ async function parseEssay(essayText, opts = {}) {
   if (!segments.length) {
     const err = new Error('The essay has no text to parse.');
     err.status = 400;
+    err.expose = true;
     throw err;
   }
 

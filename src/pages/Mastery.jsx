@@ -63,7 +63,7 @@ function Stat(props) {
   const { label, value, detail } = props;
   const Icon = props.icon;
   return (
-    <div className="rounded-3xl bg-surface-raised p-5 shadow-[0_18px_42px_-34px_rgba(20,20,18,0.4)]">
+    <div className="animate-rise rounded-3xl bg-surface-raised p-5 shadow-card" style={{ animationDelay: `${(props.index || 0) * 70}ms` }}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-text-dim">{label}</p>
@@ -128,13 +128,16 @@ export default function Mastery() {
   const subject = searchParams.get('subject') || 'economics';
   const [state, setState] = useState({ loading: true, error: '', data: null, recommendation: null });
 
-  const load = useCallback(async () => {
+  // Single loader used by both the mount/subject effect (with cancellation)
+  // and the error-state retry button.
+  const load = useCallback(async (signal) => {
     setState((current) => ({ ...current, loading: true, error: '' }));
     try {
       const [masteryData, recommendationData] = await Promise.all([
         api.getMastery(subject),
         api.getNextRecommendation(subject).catch(() => ({ recommendation: null })),
       ]);
+      if (signal?.aborted) return;
       setState({
         loading: false,
         error: '',
@@ -142,30 +145,16 @@ export default function Mastery() {
         recommendation: recommendationData?.recommendation || null,
       });
     } catch (error) {
+      if (signal?.aborted) return;
       setState({ loading: false, error: error.message || 'Could not load your mastery map.', data: null, recommendation: null });
     }
   }, [subject]);
 
   useEffect(() => {
-    let active = true;
-    setState((current) => ({ ...current, loading: true, error: '' }));
-    Promise.all([
-      api.getMastery(subject),
-      api.getNextRecommendation(subject).catch(() => ({ recommendation: null })),
-    ]).then(([masteryData, recommendationData]) => {
-      if (!active) return;
-      setState({
-        loading: false,
-        error: '',
-        data: masteryData?.mastery || masteryData,
-        recommendation: recommendationData?.recommendation || null,
-      });
-    }).catch((error) => {
-      if (!active) return;
-      setState({ loading: false, error: error.message || 'Could not load your mastery map.', data: null, recommendation: null });
-    });
-    return () => { active = false; };
-  }, [subject]);
+    const controller = new AbortController();
+    load(controller.signal);
+    return () => controller.abort();
+  }, [load]);
 
   const hierarchy = useMemo(
     () => buildOutcomeHierarchy(state.data?.outcomes || [], subject),
@@ -176,7 +165,7 @@ export default function Mastery() {
     return <main className="min-h-screen bg-surface-body pt-24"><LearningLoader message="Building your mastery map…" /></main>;
   }
   if (state.error) {
-    return <main className="min-h-screen bg-surface-body pt-24"><LearningError message={state.error} onRetry={load} /></main>;
+    return <main className="min-h-screen bg-surface-body pt-24"><LearningError message={state.error} onRetry={() => load()} /></main>;
   }
 
   const summary = state.data?.summary || {};
@@ -194,9 +183,9 @@ export default function Mastery() {
   const averagePercent = probabilityPercent(averageProbability);
 
   return (
-    <main className="minimal-page selection:bg-accent selection:text-white">
+    <main className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="mb-12 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+        <header className="animate-rise mb-12 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span className="section-kicker">Progress</span>
             <h1 className="minimal-page-title">Mastery</h1>
@@ -208,10 +197,10 @@ export default function Mastery() {
         </header>
 
         <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Mastery summary">
-          <Stat icon={ChartBarSquareIcon} label="Overall mastery" value={`${averagePercent}%`} detail="Across mapped outcomes" />
-          <Stat icon={CheckBadgeIcon} label="Mastered" value={mastered} detail={`of ${totalOutcomes} outcomes`} />
-          <Stat icon={CalendarDaysIcon} label="Due for review" value={dueForReview} detail={dueForReview ? 'Ready to strengthen' : 'Nothing overdue'} />
-          <Stat icon={BoltIcon} label="Learning evidence" value={flatOutcomes.reduce((sum, outcome) => sum + (Number(outcome.evidenceCount ?? outcome.mastery?.evidenceCount) || 0), 0)} detail="Recorded attempts" />
+          <Stat icon={ChartBarSquareIcon} index={0} label="Overall mastery" value={`${averagePercent}%`} detail="Across mapped outcomes" />
+          <Stat icon={CheckBadgeIcon} index={1} label="Mastered" value={mastered} detail={`of ${totalOutcomes} outcomes`} />
+          <Stat icon={CalendarDaysIcon} index={2} label="Due for review" value={dueForReview} detail={dueForReview ? 'Ready to strengthen' : 'Nothing overdue'} />
+          <Stat icon={BoltIcon} index={3} label="Learning evidence" value={flatOutcomes.reduce((sum, outcome) => sum + (Number(outcome.evidenceCount ?? outcome.mastery?.evidenceCount) || 0), 0)} detail="Recorded attempts" />
         </section>
 
         <NextAction recommendation={state.recommendation} subject={subject} />

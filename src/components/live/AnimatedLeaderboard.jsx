@@ -6,7 +6,7 @@ function RankDelta({ delta }) {
   if (!delta) return <span className="w-8 shrink-0" />;
   const up = delta > 0;
   return (
-    <span className={`w-8 shrink-0 text-[11px] font-bold flex items-center gap-0.5 ${up ? 'text-emerald-500' : 'text-rose-500'}`}>
+    <span className={`w-8 shrink-0 text-[11px] font-bold flex items-center gap-0.5 ${up ? 'text-[var(--mark-green)]' : 'text-text-error'}`}>
       {up ? '▲' : '▼'}{Math.abs(delta)}
     </span>
   );

@@ -49,18 +49,10 @@ export default function TeacherOnboarding() {
     }
   }, []);
 
+  // Single load path — the mount effect shares the same code as "Try again".
   useEffect(() => {
-    let active = true;
-    api.request('/teacher-learning/onboarding/status').then((data) => {
-      if (!active) return;
-      setState({ loading: false, error: '', data });
-      setEditing(data.status === 'not_requested' || data.status === 'rejected');
-    }).catch((error) => {
-      if (!active) return;
-      setState({ loading: false, error: error.message || 'Could not load teacher verification.', data: null });
-    });
-    return () => { active = false; };
-  }, []);
+    load();
+  }, [load]);
 
   const submit = async (affiliation) => {
     setSubmitting(true);
@@ -112,7 +104,7 @@ export default function TeacherOnboarding() {
   const affiliation = state.data?.profile?.schoolAffiliation;
 
   return (
-    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-5xl">
         <Link to="/classes" className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-accent hover:text-accent-strong">
           <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Back to classes

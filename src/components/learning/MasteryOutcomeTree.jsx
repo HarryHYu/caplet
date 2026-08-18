@@ -153,7 +153,7 @@ function OutcomeNode({ outcome, depth = 0 }) {
 
   return (
     <li className={depth ? 'ml-3 border-l border-line-soft pl-4 md:ml-6 md:pl-6' : ''}>
-      <article className="rounded-3xl bg-surface-raised p-5 shadow-[0_18px_44px_-36px_rgba(20,20,18,0.45)] md:p-6">
+      <article className="rounded-3xl bg-surface-raised p-5 shadow-card md:p-6">
         {children.length ? (
           <details open={depth === 0}>
             <summary className="cursor-pointer list-none rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-surface-raised [&::-webkit-details-marker]:hidden">

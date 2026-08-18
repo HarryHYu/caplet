@@ -67,7 +67,7 @@ function subjectPath(subject) {
 
 function TodayRow({ href, icon, title, detail }) {
     return (
-        <Link to={href} className="group flex min-h-20 items-center gap-4 border-b border-line-soft py-4 last:border-b-0">
+        <Link to={href} className="focus-ring group flex min-h-20 items-center gap-4 rounded-lg border-b border-line-soft py-4 last:border-b-0">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
                 {createElement(icon, { className: 'h-5 w-5', 'aria-hidden': true })}
             </span>
@@ -93,7 +93,7 @@ function ResourceLink({ id, path, icon, title, detail, pinned, onToggle }) {
             onDragStart={handleDragStart}
             className="group flex min-h-20 items-center gap-3 border-b border-line-soft py-4"
         >
-            <Link to={path} className="flex min-w-0 flex-1 items-center gap-4" aria-label={`${title}. ${detail}`}>
+            <Link to={path} className="focus-ring flex min-w-0 flex-1 items-center gap-4 rounded-lg" aria-label={`${title}. ${detail}`}>
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
                     {createElement(icon, { className: 'h-5 w-5', 'aria-hidden': true })}
                 </span>
@@ -108,7 +108,7 @@ function ResourceLink({ id, path, icon, title, detail, pinned, onToggle }) {
                 aria-pressed={pinned}
                 aria-label={pinned ? `Remove ${title} from sidebar` : `Add ${title} to sidebar`}
                 title={pinned ? 'Remove from sidebar' : 'Add to sidebar'}
-                className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-colors hover:bg-surface-soft hover:text-accent ${pinned ? 'text-accent' : 'text-text-dim'}`}
+                className={`focus-ring press grid h-9 w-9 shrink-0 place-items-center rounded-lg transition-colors hover:bg-surface-soft hover:text-accent ${pinned ? 'text-accent' : 'text-text-dim'}`}
             >
                 <BookmarkIcon className={`h-4 w-4 ${pinned ? 'fill-current' : ''}`} aria-hidden="true" />
             </button>
@@ -186,7 +186,37 @@ export default function Dashboard() {
             <div className="min-h-screen bg-surface-body px-6 py-28" role="status" aria-live="polite">
                 <div className="mx-auto max-w-6xl">
                     <CapletLoader message="Loading today…" />
-                    <div className="mt-12 h-96 animate-pulse border-y border-line-soft" aria-hidden="true" />
+                    {/* Skeleton mirrors the loaded layout: header, then the
+                        subjects / primary action / weekly columns, then rows. */}
+                    <div className="mt-12 space-y-10" aria-hidden="true">
+                        <div className="space-y-3">
+                            <div className="skeleton h-10 w-48" />
+                            <div className="skeleton h-4 w-64" />
+                        </div>
+                        <div className="grid gap-10 lg:grid-cols-[220px_minmax(320px,1fr)_minmax(280px,0.95fr)]">
+                            <div className="space-y-3">
+                                <div className="skeleton h-4 w-24" />
+                                <div className="skeleton h-4 w-32" />
+                                <div className="skeleton h-4 w-28" />
+                            </div>
+                            <div className="space-y-4">
+                                <div className="skeleton h-4 w-24" />
+                                <div className="skeleton h-8 w-3/4" />
+                                <div className="skeleton h-4 w-1/2" />
+                                <div className="skeleton h-12 w-48 rounded-lg" />
+                            </div>
+                            <div className="space-y-4">
+                                <div className="skeleton h-6 w-28" />
+                                <div className="skeleton h-16 w-full" />
+                                <div className="skeleton h-16 w-full" />
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="skeleton h-6 w-56" />
+                            <div className="skeleton h-16 w-full" />
+                            <div className="skeleton h-16 w-full" />
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -246,7 +276,7 @@ export default function Dashboard() {
             : 'Start a focused question set';
 
     return (
-        <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28 lg:pt-24">
+        <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-accent-contrast md:pt-28 lg:pt-24">
             <div className="mx-auto w-full max-w-[1220px] px-6 md:px-10 lg:px-12">
                 <header className="mb-12 reveal">
                     <h1 className="font-display text-4xl font-extrabold tracking-[-0.035em] text-text-primary md:text-5xl">Today</h1>
@@ -268,14 +298,12 @@ export default function Dashboard() {
                             <Link to="/library" className="text-sm font-bold text-accent hover:text-accent-strong">Edit</Link>
                         </div>
                         <nav aria-label="Your subjects" className="mt-5 space-y-1">
-                            {dashboardSubjects.length > 0 ? dashboardSubjects.map((subject, index) => (
+                            {dashboardSubjects.length > 0 ? dashboardSubjects.map((subject) => (
                                 <Link
                                     key={subject}
                                     to={subjectPath(subject)}
-                                    aria-current={index === 0 ? 'page' : undefined}
-                                    className={`relative block min-h-11 py-3 pl-5 text-sm font-bold transition-colors ${index === 0 ? 'text-accent' : 'text-text-primary hover:text-accent'}`}
+                                    className="focus-ring relative block min-h-11 rounded-lg py-3 pl-5 text-sm font-bold text-text-primary transition-colors hover:text-accent"
                                 >
-                                    {index === 0 && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
                                     {subject}
                                 </Link>
                             )) : (
@@ -299,19 +327,19 @@ export default function Dashboard() {
                                 entityId: dashboardAction.type,
                                 metadata: { source: 'dashboard', actionType: dashboardAction.type, mode: dashboardAction.mode || '' },
                             })}
-                            className="mt-7 inline-flex min-h-12 min-w-48 items-center justify-center rounded-lg bg-accent px-6 text-sm font-bold text-white transition-colors hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                            className="press focus-ring mt-7 inline-flex min-h-12 min-w-48 items-center justify-center rounded-lg bg-accent px-6 text-sm font-bold text-accent-contrast transition-colors hover:bg-accent-strong"
                         >
                             {primaryLabel}
                         </Link>
 
                         <div className="mt-8 border-y border-line-soft py-5">
                             <h3 className="text-sm font-extrabold text-text-primary">After that</h3>
-                            <Link to="/revision" className="group mt-3 flex min-h-11 items-center gap-3 text-sm font-medium text-text-primary hover:text-accent">
+                            <Link to="/review" className="focus-ring group mt-3 flex min-h-11 items-center gap-3 rounded-lg text-sm font-medium text-text-primary hover:text-accent">
                                 <span className="grid h-7 w-7 place-items-center rounded-full border border-line-soft text-xs font-bold">1</span>
                                 <span className="flex-1">{dueCount > 0 ? `Review ${dueCount} ${dueCount === 1 ? 'item' : 'items'}` : 'Review one item'}</span>
                                 <ChevronRightIcon className="h-4 w-4 text-text-dim group-hover:text-accent" aria-hidden="true" />
                             </Link>
-                            <Link to="/study-plan" className="group flex min-h-11 items-center gap-3 text-sm font-medium text-text-primary hover:text-accent">
+                            <Link to="/study-plan" className="focus-ring group flex min-h-11 items-center gap-3 rounded-lg text-sm font-medium text-text-primary hover:text-accent">
                                 <span className="grid h-7 w-7 place-items-center rounded-full border border-line-soft text-xs font-bold">2</span>
                                 <span className="flex-1">Update study plan</span>
                                 <ChevronRightIcon className="h-4 w-4 text-text-dim group-hover:text-accent" aria-hidden="true" />
@@ -333,7 +361,11 @@ export default function Dashboard() {
                         <div className="mt-7">
                             <div className="flex items-center justify-between gap-4">
                                 <h3 className="text-sm font-extrabold text-text-primary">Weekly activity</h3>
-                                <span className="text-xs font-medium text-text-muted">{weekActiveDays} of 7 days</span>
+                                {Number(studyMomentum?.currentStreak) > 0 && (
+                                    <span className="inline-flex animate-streak-pop items-center gap-1 rounded-full bg-[color:var(--block-green)] px-2.5 py-1 text-xs font-bold text-[color:var(--mark-green)]">
+                                        🔥 {studyMomentum.currentStreak}-day streak
+                                    </span>
+                                )}
                             </div>
                             <div className="mt-5 grid grid-cols-7 gap-2" aria-label={`${weekActiveDays} active study days this week`}>
                                 {week.map((day) => (
@@ -401,30 +433,8 @@ export default function Dashboard() {
                     </div>
                 </section>
 
-                <section aria-labelledby="your-subjects-heading" className="py-10">
-                    <div className="flex items-end justify-between gap-4">
-                        <h2 id="your-subjects-heading" className="text-lg font-extrabold text-text-primary">My subjects</h2>
-                        <Link to="/library" className="text-sm font-bold text-accent hover:text-accent-strong">View all</Link>
-                    </div>
-                    {dashboardSubjects.length > 0 ? (
-                      <div className="mt-5 grid gap-x-10 border-y border-line-soft md:grid-cols-2">
-                        {dashboardSubjects.map((subject) => (
-                            <article key={subject} className="flex min-h-20 items-center gap-4 border-b border-line-soft py-4">
-                                <BookOpenIcon className="h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
-                                <div className="min-w-0 flex-1">
-                                    <h3 className="truncate text-sm font-bold text-text-primary">{subject}</h3>
-                                    <div className="mt-2 flex flex-wrap gap-4 text-sm font-bold"><Link to={subjectPath(subject)} className="text-accent hover:text-accent-strong">Open subject</Link><Link to={`/notes?subject=${encodeURIComponent(subject)}`} className="text-text-muted hover:text-accent">Notes</Link></div>
-                                </div>
-                            </article>
-                        ))}
-                      </div>
-                    ) : (
-                      <Link to="/library" className="mt-6 block border-y border-line-soft py-5 text-sm font-bold text-accent">Choose your subjects</Link>
-                    )}
-                </section>
-
                 {classes.length > 0 && (
-                    <section aria-labelledby="classes-heading" className="border-t border-line-soft py-10">
+                    <section aria-labelledby="classes-heading" className="py-10">
                         <div className="flex items-end justify-between gap-4">
                             <h2 id="classes-heading" className="text-lg font-extrabold text-text-primary">Classes</h2>
                             <Link to="/classes" className="text-sm font-bold text-accent hover:text-accent-strong">View all</Link>

@@ -3,11 +3,11 @@ import {
   Line, Bar, Scatter,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
+import { CHART_COLORS as BASE_CHART_COLORS } from '../../../utils/chartColors';
 
 // Forum tokens first (cohesive with the rest of the section), a couple of
-// neutral extras for series beyond four — same pattern SlideRenderer.jsx
-// already uses for lesson charts.
-const CHART_COLORS = ['var(--forum-accent)', 'var(--forum-blue)', 'var(--forum-green)', 'var(--forum-amber)', '#8b5cf6', '#06b6d4'];
+// extras from the canonical chart palette for series beyond four.
+const CHART_COLORS = ['var(--forum-accent)', 'var(--forum-blue)', 'var(--forum-green)', 'var(--forum-amber)', BASE_CHART_COLORS[4], BASE_CHART_COLORS[5]];
 
 /** Live, interactive charts a user defines from their own data (Recharts — already a project dependency). */
 export default function ForumChartBlock({ data }) {

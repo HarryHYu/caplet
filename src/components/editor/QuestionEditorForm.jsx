@@ -34,7 +34,7 @@ const inputClass = 'w-full rounded-2xl border border-line-soft bg-surface-soft p
 
 function Section({ title, description, children }) {
   return (
-    <section className="rounded-3xl bg-surface-raised p-6 shadow-[0_20px_50px_-40px_rgba(20,20,18,0.45)] md:p-8">
+    <section className="rounded-3xl bg-surface-raised p-6 shadow-card md:p-8">
       <h2 className="text-xl font-display font-extrabold tracking-tight text-text-primary">{title}</h2>
       {description && <p className="mt-1 text-sm font-medium leading-relaxed text-text-muted">{description}</p>}
       <div className="mt-6">{children}</div>
@@ -236,7 +236,7 @@ export default function QuestionEditorForm({
 
   return (
     <form onSubmit={onSave} className="min-w-0">
-      <header className="mb-6 flex flex-col gap-5 rounded-3xl bg-surface-raised p-6 shadow-[0_20px_50px_-40px_rgba(20,20,18,0.45)] sm:flex-row sm:items-start sm:justify-between">
+      <header className="mb-6 flex flex-col gap-5 rounded-3xl bg-surface-raised p-6 shadow-card sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <button type="button" onClick={onCancel} className="inline-flex items-center gap-2 text-xs font-bold text-text-muted hover:text-text-primary"><ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Question bank</button>
           <h1 className="mt-3 truncate text-3xl font-display font-extrabold tracking-tight text-text-primary">{draft.id ? 'Edit question' : 'New question'}</h1>

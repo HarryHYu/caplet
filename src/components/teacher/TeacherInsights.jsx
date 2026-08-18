@@ -51,7 +51,7 @@ export function MisconceptionList({ items = [], outcomeById = new Map() }) {
 
 export function InterventionQueue({ items = [], onSelectStudent }) {
   return (
-    <section className="rounded-3xl bg-surface-raised p-7 shadow-[0_22px_50px_-38px_rgba(20,20,18,0.4)]" aria-labelledby="intervention-heading">
+    <section className="rounded-3xl bg-surface-raised p-7 shadow-card" aria-labelledby="intervention-heading">
       <ExclamationCircleIcon className="h-7 w-7 text-accent" aria-hidden="true" />
       <h2 id="intervention-heading" className="mt-4 text-2xl font-display font-extrabold text-text-primary">
         Intervention queue

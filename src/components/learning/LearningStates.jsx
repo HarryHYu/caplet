@@ -16,7 +16,7 @@ export function LearningLoader({ message = 'Loading your learning data…' }) {
 export function LearningError({ title = 'This could not load', message, onRetry }) {
   return (
     <div className="min-h-[55vh] grid place-items-center px-6">
-      <div className="w-full max-w-lg rounded-3xl bg-surface-raised p-8 text-center shadow-[0_24px_60px_-42px_rgba(20,20,18,0.45)]">
+      <div className="w-full max-w-lg rounded-3xl bg-surface-raised p-8 text-center shadow-card">
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-surface-error text-text-error">
           <ExclamationTriangleIcon className="h-7 w-7" aria-hidden="true" />
         </span>

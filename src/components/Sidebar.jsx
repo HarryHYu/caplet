@@ -1,40 +1,26 @@
 import { createElement, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-    ArrowPathIcon,
-    BanknotesIcon,
+    ArrowRightStartOnRectangleIcon,
     BookOpenIcon,
     CalendarDaysIcon,
-    ClipboardDocumentListIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
-    ChatBubbleLeftRightIcon,
     Cog6ToothIcon,
     CalculatorIcon,
     DocumentTextIcon,
     EllipsisVerticalIcon,
-    HomeIcon,
-    PencilSquareIcon,
-    UserGroupIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../contexts/AuthContext';
 import { useLayout } from '../contexts/LayoutContext';
-import { usePinnedNavItems } from '../lib/usePinnedNavItems';
-
-const primaryItems = [
-    { path: '/dashboard', label: 'Today', icon: HomeIcon, end: true },
-    { path: '/classes', label: 'Classes', icon: UserGroupIcon },
-    { path: '/library', label: 'Subjects', icon: BookOpenIcon },
-    { path: '/notes', label: 'Notes', icon: DocumentTextIcon },
-    { path: '/assessment-log', label: 'Results', icon: ClipboardDocumentListIcon },
-    { path: '/practice', label: 'Practice', icon: ArrowPathIcon },
-    { path: '/study-plan', label: 'Plan', icon: CalendarDaysIcon },
-    { path: '/essays', label: 'Essays', icon: PencilSquareIcon },
-    { path: '/forum', label: 'Forum', icon: ChatBubbleLeftRightIcon },
-];
+import { usePinnedNavItems, RESOURCE_SHORTCUTS } from '../lib/usePinnedNavItems';
+import { STUDY_NAV_ITEMS, MONEY_NAV_ITEM } from '../config/navigation';
+import UserAvatar from './UserAvatar';
 
 export default function Sidebar() {
     const location = useLocation();
+    const { user, logout } = useAuth();
     const {
         sidebarCollapsed: collapsed,
         toggleSidebar,
@@ -60,7 +46,7 @@ export default function Sidebar() {
         ? location.pathname === path
         : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-    const rowClass = (active) => `group relative flex min-h-11 items-center gap-3 text-sm font-medium transition-[color,background-color,transform] duration-150 ${
+    const rowClass = (active) => `focus-ring group relative flex min-h-11 items-center gap-3 text-sm font-medium transition-[color,background-color,transform] duration-150 ${
         collapsed
             ? 'mx-auto aspect-square h-11 w-11 justify-center rounded-full p-0 active:scale-95'
             : 'rounded-lg px-3 py-2 active:scale-[0.99]'
@@ -131,10 +117,17 @@ export default function Sidebar() {
     const handleDrop = (event) => {
         event.preventDefault();
         const id = event.dataTransfer.getData('application/x-caplet-shortcut') || event.dataTransfer.getData('text/plain');
-        const item = pinnedItems.find((shortcut) => shortcut.id === id);
-        pin(id);
+        const result = pin(id);
         setIsDropTarget(false);
-        setShortcutNotice(item ? `${item.label} is already in the sidebar.` : 'Shortcut added to the sidebar.');
+        if (result === 'invalid') {
+            // Nothing was added — never announce success for an unknown drop.
+            setShortcutNotice('');
+            return;
+        }
+        const item = RESOURCE_SHORTCUTS.find((shortcut) => shortcut.id === id);
+        setShortcutNotice(result === 'duplicate'
+            ? `${item.label} is already in the sidebar.`
+            : `${item.label} added to the sidebar.`);
     };
 
     return (
@@ -161,7 +154,7 @@ export default function Sidebar() {
                 </Link>
 
                 <nav aria-label="Primary navigation" className="mt-8 flex flex-col gap-1">
-                    {primaryItems.map(renderLink)}
+                    {STUDY_NAV_ITEMS.map(renderLink)}
                 </nav>
 
                 {pinnedItems.length > 0 && (
@@ -179,7 +172,7 @@ export default function Sidebar() {
                                             {!collapsed && <span className="min-w-0 flex-1 truncate">{item.navLabel || item.label}</span>}
                                         </Link>
                                         {!collapsed && (
-                                            <button type="button" onClick={() => unpin(item.id)} aria-label={`Remove ${item.label} from sidebar`} title="Remove shortcut" className="absolute right-1 grid h-8 w-8 place-items-center rounded-md text-text-dim opacity-0 transition-opacity hover:bg-surface-soft hover:text-text-primary focus:opacity-100 group-hover/shortcut:opacity-100">
+                                            <button type="button" onClick={() => unpin(item.id)} aria-label={`Remove ${item.label} from sidebar`} title="Remove shortcut" className="focus-ring absolute right-1 grid h-8 w-8 place-items-center rounded-md text-text-dim opacity-0 transition-opacity hover:bg-surface-soft hover:text-text-primary focus:opacity-100 group-hover/shortcut:opacity-100">
                                                 <XMarkIcon className="h-4 w-4" aria-hidden="true" />
                                             </button>
                                         )}
@@ -209,8 +202,30 @@ export default function Sidebar() {
 
                     <div className="my-3 border-t border-line-soft" />
 
-                    {renderLink({ path: '/money', label: 'Money', icon: BanknotesIcon, end: false })}
+                    {renderLink(MONEY_NAV_ITEM)}
                     {renderLink({ path: '/settings', label: 'Settings', icon: Cog6ToothIcon, end: false })}
+
+                    <div className="my-3 border-t border-line-soft" />
+
+                    {/* Account footer — the vertical rail is the only chrome on
+                        desktop, so it must carry a sign-out of its own. */}
+                    <div className={`flex items-center gap-2.5 ${collapsed ? 'flex-col' : 'px-1.5'}`}>
+                        <UserAvatar user={user} size="sm" showStatus={false} />
+                        {!collapsed && (
+                            <span className="min-w-0 flex-1 truncate text-xs font-bold text-text-primary">
+                                {[user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'Account'}
+                            </span>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => logout?.()}
+                            aria-label="Sign out"
+                            title="Sign out"
+                            className="focus-ring press grid h-9 w-9 shrink-0 place-items-center rounded-lg text-text-muted transition-colors hover:bg-surface-error hover:text-text-error"
+                        >
+                            <ArrowRightStartOnRectangleIcon className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                    </div>
                 </div>
             </div>
 

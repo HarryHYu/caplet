@@ -49,7 +49,9 @@ export default function StudyPlan() {
   const [error, setError] = useState('');
   const [recommendation, setRecommendation] = useState(null);
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
-  const [taskNotice, setTaskNotice] = useState('');
+  // { text } for plain notices, { streak } when a completed task extended the
+  // learner's study streak (the day count gets its own celebratory pop).
+  const [taskNotice, setTaskNotice] = useState(null);
 
   useReveal(undefined, [loading, plan, editing, step, recommendation]);
 
@@ -132,7 +134,7 @@ export default function StudyPlan() {
     const completed = !task.completed;
     setUpdatingTaskId(task.id);
     setError('');
-    setTaskNotice('');
+    setTaskNotice(null);
     setPlan((current) => ({
       ...current,
       tasks: current.tasks.map((item) => item.id === task.id ? { ...item, completed } : item),
@@ -142,16 +144,16 @@ export default function StudyPlan() {
       setPlan(data.studyPlan);
       setTaskNotice(completed
         ? data.momentum?.currentStreak
-          ? `Nice work — today counts. Your meaningful study streak is ${data.momentum.currentStreak} ${data.momentum.currentStreak === 1 ? 'day' : 'days'}.`
-          : 'Nice work — task marked complete.'
-        : 'Task reopened for this week.');
+          ? { streak: Number(data.momentum.currentStreak) }
+          : { text: 'Nice work — task marked complete.' }
+        : { text: 'Task reopened for this week.' });
     } catch (err) {
       setPlan((current) => ({
         ...current,
         tasks: current.tasks.map((item) => item.id === task.id ? { ...item, completed: task.completed } : item),
       }));
       setError(err.message || 'Could not update that task.');
-      setTaskNotice('');
+      setTaskNotice(null);
     } finally {
       setUpdatingTaskId(null);
     }
@@ -161,7 +163,7 @@ export default function StudyPlan() {
     if (saving || updatingTaskId) return;
     setSaving(true);
     setError('');
-    setTaskNotice('');
+    setTaskNotice(null);
     try {
       const data = await api.regenerateStudyPlan();
       setPlan(data.studyPlan);
@@ -205,7 +207,7 @@ export default function StudyPlan() {
   const weakTopics = Array.isArray(plan.weakTopics) ? plan.weakTopics : [];
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-white">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="reveal mb-14 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -221,8 +223,20 @@ export default function StudyPlan() {
           </div>
         </header>
 
-        {error && <div role="alert" className="animate-slide-up mb-8 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{error}</div>}
-        {taskNotice && <div role="status" className="animate-slide-up mb-8 flex items-center gap-2 rounded-2xl bg-[color:var(--block-green)] px-5 py-4 text-sm font-bold text-text-primary"><CheckCircleIcon className="h-5 w-5 text-[color:var(--mark-green)]" aria-hidden="true" />{taskNotice}</div>}
+        {error && <div role="alert" className="animate-shake-x mb-8 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{error}</div>}
+        {taskNotice && (
+          <div role="status" className="animate-slide-up mb-8 flex items-center gap-2 rounded-2xl bg-[color:var(--block-green)] px-5 py-4 text-sm font-bold text-text-primary">
+            <CheckCircleIcon className="h-5 w-5 text-[color:var(--mark-green)]" aria-hidden="true" />
+            {taskNotice.streak ? (
+              <span>
+                Nice work — today counts. Your meaningful study streak is{' '}
+                <span className="inline-block animate-streak-pop font-extrabold text-[color:var(--mark-green)]">
+                  {taskNotice.streak} {taskNotice.streak === 1 ? 'day' : 'days'}
+                </span>.
+              </span>
+            ) : taskNotice.text}
+          </div>
+        )}
 
         {recommendation?.outcome?.id && Array.isArray(plan.subjects) && plan.subjects.includes(recommendation.subject || 'economics') && (
           <section className="reveal mb-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--block-green)] p-7 md:flex-row md:items-center md:justify-between">
@@ -246,14 +260,14 @@ export default function StudyPlan() {
         </div>
 
         {nextTask && (
-          <section className="reveal mb-14 overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 md:p-10 text-white shadow-[0_30px_60px_-38px_rgba(19,81,170,0.7)]">
+          <section className="reveal mb-14 overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 md:p-10 text-white shadow-card">
             <div className="flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">{taskStatusLabel(nextTask, today)}</p>
                 <h2 className="mt-3 text-3xl md:text-4xl font-display font-extrabold tracking-tight">{nextTask.title}</h2>
                 <p className="mt-3 text-white/80">{nextTask.subjectLabel} · {nextTask.estimatedMinutes} minutes · {nextTask.priority} priority</p>
               </div>
-              <Link to={nextTask.resourcePath} className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent transition-transform hover:-translate-y-0.5">
+              <Link to={nextTask.resourcePath} className="focus-ring card-lift group inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent">
                 {taskActionLabel(nextTask.resourceLabel)} <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
@@ -270,7 +284,7 @@ export default function StudyPlan() {
             </div>
             <div className="space-y-4">
               {taskGroups.length ? taskGroups.map(([date, tasks]) => (
-                <div key={date} className="rounded-3xl bg-surface-raised p-5 md:p-6 shadow-[0_18px_40px_-32px_rgba(20,20,18,0.3)]">
+                <div key={date} className="rounded-3xl bg-surface-raised p-5 md:p-6 shadow-card">
                   <p className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-text-dim">{date === today ? `Today · ${formatDate(date)}` : formatDate(date)}</p>
                   <div className="space-y-3">
                     {tasks.map((task) => (
@@ -340,7 +354,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
   }));
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-white">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-5xl">
         <header className="reveal minimal-page-header">
           <span className="section-kicker">Three steps</span>
@@ -351,7 +365,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
         <div className="reveal mx-auto mb-8 flex max-w-xl items-center gap-3">
           {STEPS.map((label, index) => (
             <div key={label} className="flex flex-1 items-center gap-2">
-              <button type="button" onClick={() => index < step && setStep(index)} disabled={index >= step} aria-label={`${index === step ? 'Current' : index < step ? 'Go back to' : 'Upcoming'} ${label} step`} aria-current={index === step ? 'step' : undefined} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold transition-transform active:scale-95 disabled:cursor-default ${index <= step ? 'bg-accent text-white' : 'bg-surface-soft text-text-dim'}`}>{index + 1}</button>
+              <button type="button" onClick={() => index < step && setStep(index)} disabled={index >= step} aria-label={`${index === step ? 'Current' : index < step ? 'Go back to' : 'Upcoming'} ${label} step`} aria-current={index === step ? 'step' : undefined} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold transition-transform active:scale-95 disabled:cursor-default ${index <= step ? 'bg-accent text-accent-contrast' : 'bg-surface-soft text-text-dim'}`}>{index + 1}</button>
               <span className={`hidden text-xs font-bold sm:block ${index <= step ? 'text-text-primary' : 'text-text-dim'}`}>{label}</span>
               {index < 2 && <span className="h-px flex-1 bg-line-soft" />}
             </div>
@@ -375,7 +389,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {visibleSubjects.map((subject) => {
                     const selected = form.subjects.includes(subject.value);
-                    return <button key={subject.value} type="button" aria-label={`${subject.label}${subject.placeholder ? ', library coming soon' : ''}`} aria-pressed={selected} onClick={() => toggleSubject(subject.value)} className={`flex items-center justify-between gap-3 rounded-lg border p-4 text-left text-sm font-bold transition-colors duration-150 ${selected ? 'border-accent bg-accent text-white' : 'border-line-soft bg-surface-body text-text-primary hover:border-accent/60'}`}><span>{subject.label}</span></button>;
+                    return <button key={subject.value} type="button" aria-label={`${subject.label}${subject.placeholder ? ', library coming soon' : ''}`} aria-pressed={selected} onClick={() => toggleSubject(subject.value)} className={`flex items-center justify-between gap-3 rounded-lg border p-4 text-left text-sm font-bold transition-colors duration-150 ${selected ? 'border-accent bg-accent text-accent-contrast' : 'border-line-soft bg-surface-body text-text-primary hover:border-accent/60'}`}><span>{subject.label}</span></button>;
                   })}
                 </div>
                 {!visibleSubjects.length && <p className="mt-3 rounded-2xl bg-surface-soft px-4 py-3 text-sm font-medium text-text-muted">No subjects match “{subjectQuery}”. Try a different search.</p>}
@@ -391,7 +405,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
               <fieldset className="mt-8">
                 <legend className="text-sm font-bold text-text-muted">Available days</legend>
                 <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-7">
-                  {DAY_OPTIONS.map((day) => <button key={day.value} type="button" aria-pressed={form.availableDays.includes(day.value)} onClick={() => toggleDay(day.value)} className={`rounded-xl px-3 py-3 text-xs font-bold transition-[background-color,transform] duration-200 active:scale-95 ${form.availableDays.includes(day.value) ? 'bg-accent text-white' : 'bg-surface-soft text-text-muted'}`}>{day.label}</button>)}
+                  {DAY_OPTIONS.map((day) => <button key={day.value} type="button" aria-pressed={form.availableDays.includes(day.value)} onClick={() => toggleDay(day.value)} className={`rounded-xl px-3 py-3 text-xs font-bold transition-[background-color,transform] duration-200 active:scale-95 ${form.availableDays.includes(day.value) ? 'bg-accent text-accent-contrast' : 'bg-surface-soft text-text-muted'}`}>{day.label}</button>)}
                 </div>
               </fieldset>
               <label htmlFor="minutes-per-study-day" className="mt-8 block text-sm font-bold text-text-muted">Minutes per study day</label>
@@ -419,7 +433,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
                     <legend className="text-base font-display font-bold text-text-primary"><span className="text-accent">{subject.label}:</span> {subject.diagnostic.question}</legend>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {subject.diagnostic.options.map((answer, index) => (
-                        <button key={answer} type="button" aria-pressed={form.diagnosticAnswers[subject.value] === index} onClick={() => setForm((current) => ({ ...current, diagnosticAnswers: { ...current.diagnosticAnswers, [subject.value]: index } }))} className={`rounded-2xl p-4 text-left text-sm font-semibold transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 ${form.diagnosticAnswers[subject.value] === index ? 'bg-accent text-white shadow-[0_16px_32px_-24px_rgba(19,81,170,0.75)]' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{answer}</button>
+                        <button key={answer} type="button" aria-pressed={form.diagnosticAnswers[subject.value] === index} onClick={() => setForm((current) => ({ ...current, diagnosticAnswers: { ...current.diagnosticAnswers, [subject.value]: index } }))} className={`rounded-2xl p-4 text-left text-sm font-semibold transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 ${form.diagnosticAnswers[subject.value] === index ? 'bg-accent text-accent-contrast shadow-pop' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{answer}</button>
                       ))}
                     </div>
                   </fieldset>
@@ -430,7 +444,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
           )}
           </div>
 
-          {error && <div role="alert" className="animate-slide-up mt-7 flex items-center gap-3 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error"><ExclamationTriangleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />{error}</div>}
+          {error && <div role="alert" className="animate-shake-x mt-7 flex items-center gap-3 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error"><ExclamationTriangleIcon className="h-5 w-5 shrink-0" aria-hidden="true" />{error}</div>}
 
           <div className="mt-9 flex items-center justify-between gap-3 border-t border-line-soft pt-6">
             <div>
@@ -450,7 +464,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
 }
 
 function Stat({ label, value, detail }) {
-  return <div className="rounded-3xl bg-surface-raised p-7 shadow-[0_18px_40px_-32px_rgba(20,20,18,0.3)]"><p className="text-xs font-bold uppercase tracking-[0.12em] text-text-dim">{label}</p><p className="mt-3 text-4xl font-display font-extrabold tracking-tight text-text-primary">{value}</p><p className="mt-2 text-sm font-medium text-text-muted">{detail}</p></div>;
+  return <div className="rounded-3xl bg-surface-raised p-7 shadow-card"><p className="text-xs font-bold uppercase tracking-[0.12em] text-text-dim">{label}</p><p className="mt-3 text-4xl font-display font-extrabold tracking-tight text-text-primary">{value}</p><p className="mt-2 text-sm font-medium text-text-muted">{detail}</p></div>;
 }
 
 function findNextTask(tasks) {

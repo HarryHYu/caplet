@@ -61,8 +61,8 @@ function EditorAccessGate({ onEntered }) {
   };
 
   return (
-    <main className="min-h-screen bg-surface-body px-6 py-28 selection:bg-accent selection:text-text-contrast">
-      <div className="mx-auto max-w-lg rounded-3xl bg-surface-raised p-8 shadow-[0_30px_70px_-42px_rgba(20,20,18,0.5)] md:p-10">
+    <main className="min-h-screen bg-surface-body px-6 py-28 selection:bg-accent selection:text-accent-contrast">
+      <div className="mx-auto max-w-lg rounded-3xl bg-surface-raised p-8 shadow-card md:p-10">
         <p className="font-hand text-xl text-accent -rotate-2 inline-block">curriculum workspace</p>
         <h1 className="mt-3 text-4xl font-display font-extrabold tracking-tight text-text-primary">Enter the question bank.</h1>
         <p className="mt-4 text-sm font-medium leading-relaxed text-text-muted">Use your private editor code. Question authoring sessions stay on this device and expire automatically.</p>
@@ -161,7 +161,7 @@ function ConfirmDialog({ status, busy, onCancel, onConfirm }) {
   const dialogRef = useDialogFocus({ onDismiss: onCancel, dismissDisabled: busy });
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-surface-inverse/50 p-4" role="presentation">
-      <section ref={dialogRef} tabIndex="-1" role="alertdialog" aria-modal="true" aria-labelledby="question-lifecycle-dialog-title" className="w-full max-w-md rounded-3xl bg-surface-raised p-7 shadow-2xl">
+      <section ref={dialogRef} tabIndex="-1" role="alertdialog" aria-modal="true" aria-labelledby="question-lifecycle-dialog-title" className="w-full max-w-md animate-pop rounded-3xl bg-surface-raised p-7 shadow-pop">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]"><ShieldCheckIcon className="h-6 w-6" aria-hidden="true" /></span>
         <h2 id="question-lifecycle-dialog-title" className="mt-5 text-2xl font-display font-extrabold text-text-primary">Move this question to {label}?</h2>
         <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{status === 'published' ? 'Publishing makes this version available to learner practice. Confirm its outcomes, rubric, answers, source, and human review are correct.' : 'This closes the current published version. Historical evidence remains linked to it.'}</p>
@@ -175,7 +175,7 @@ function DiscardDialog({ onCancel, onDiscard }) {
   const dialogRef = useDialogFocus({ onDismiss: onCancel });
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-surface-inverse/50 p-4" role="presentation">
-      <section ref={dialogRef} tabIndex="-1" role="alertdialog" aria-modal="true" aria-labelledby="discard-question-title" className="w-full max-w-md rounded-3xl bg-surface-raised p-7 shadow-2xl">
+      <section ref={dialogRef} tabIndex="-1" role="alertdialog" aria-modal="true" aria-labelledby="discard-question-title" className="w-full max-w-md animate-pop rounded-3xl bg-surface-raised p-7 shadow-pop">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-error text-text-error"><ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" /></span>
         <h2 id="discard-question-title" className="mt-5 text-2xl font-display font-extrabold text-text-primary">Discard unsaved changes?</h2>
         <p className="mt-2 text-sm font-medium text-text-muted">The latest edits to this question have not been saved.</p>
@@ -354,11 +354,11 @@ function QuestionBankWorkspace({ onUnauthorized }) {
   const currentId = draft?.id;
 
   return (
-    <main className="min-h-screen bg-surface-body pb-20 pt-20 selection:bg-accent selection:text-text-contrast">
+    <main className="min-h-screen bg-surface-body pb-20 pt-20 selection:bg-accent selection:text-accent-contrast">
       <header className="border-b border-line-soft bg-surface-body/95 px-5 py-5 backdrop-blur-md md:px-8">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <Link to="/editor" className="inline-flex items-center gap-2 text-xs font-bold text-text-muted hover:text-text-primary"><ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Lesson editor</Link>
+            <Link to="/editor" className="focus-ring inline-flex items-center gap-2 rounded-lg text-xs font-bold text-text-muted hover:text-text-primary"><ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Lesson editor</Link>
             <p className="mt-4 font-hand text-lg text-accent -rotate-2 inline-block">assessment workspace</p>
             <h1 className="mt-1 text-4xl font-display font-extrabold tracking-tight text-text-primary md:text-5xl">Question bank.</h1>
           </div>
@@ -370,9 +370,9 @@ function QuestionBankWorkspace({ onUnauthorized }) {
       </header>
 
       <div className="mx-auto mt-6 grid max-w-[1600px] gap-6 px-5 md:px-8 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <aside className={`${draft ? 'hidden lg:block' : 'block'} overflow-hidden rounded-3xl bg-surface-raised shadow-[0_24px_60px_-44px_rgba(20,20,18,0.45)]`} aria-label="Question bank navigation">
+        <aside className={`${draft ? 'hidden lg:block' : 'block'} animate-rise overflow-hidden rounded-3xl bg-surface-raised shadow-card`} aria-label="Question bank navigation">
           <FilterPanel filters={filters} searchDraft={searchDraft} setSearchDraft={setSearchDraft} outcomes={outcomes} subjects={subjects} onFilter={(key, value) => setFilters((current) => ({ ...current, [key]: value, ...(key === 'subject' ? { outcomeId: '' } : {}) }))} onSearch={(event) => { event.preventDefault(); setFilters((current) => ({ ...current, search: searchDraft.trim() })); }} />
-          <div className="flex items-center justify-between border-b border-line-soft px-4 py-3"><p className="text-xs font-bold text-text-muted">{questions.length} {questions.length === 1 ? 'question' : 'questions'}</p><button type="button" onClick={loadQuestions} disabled={loading} className="rounded-xl p-2 text-accent hover:bg-accent-soft disabled:opacity-40" aria-label="Refresh question bank"><ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /></button></div>
+          <div className="flex items-center justify-between border-b border-line-soft px-4 py-3"><p className="text-xs font-bold text-text-muted">{questions.length} {questions.length === 1 ? 'question' : 'questions'}</p><button type="button" onClick={loadQuestions} disabled={loading} className="press focus-ring rounded-xl p-2 text-accent hover:bg-accent-soft disabled:opacity-40" aria-label="Refresh question bank"><ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /></button></div>
           <div className="max-h-[calc(100vh-25rem)] min-h-80 overflow-y-auto"><QuestionList questions={questions} loading={loading} error={listError} selectedId={currentId} onSelect={(question) => navigateWithGuard({ type: 'open', question })} onRetry={loadQuestions} /></div>
         </aside>
 
@@ -380,7 +380,7 @@ function QuestionBankWorkspace({ onUnauthorized }) {
           {draft ? (
             <QuestionEditorForm draft={draft} setDraft={setDraft} outcomes={outcomes} originalSignature={originalSignature} errors={formErrors} notice={notice} saving={saving} lifecycleBusy={lifecycleBusy} humanReviewed={humanReviewed} setHumanReviewed={setHumanReviewed} history={history} historyLoading={historyLoading} onSave={saveDraft} onCancel={() => navigateWithGuard({ type: 'close' })} onTransition={requestLifecycle} onRefreshHistory={() => loadHistory(draft.id)} />
           ) : (
-            <div className="grid min-h-[36rem] place-items-center rounded-3xl bg-surface-raised p-8 text-center shadow-[0_24px_60px_-44px_rgba(20,20,18,0.45)]">
+            <div className="grid min-h-[36rem] animate-rise place-items-center rounded-3xl bg-surface-raised p-8 text-center shadow-card">
               <div className="max-w-lg"><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-accent-soft text-accent"><AcademicCapIcon className="h-7 w-7" aria-hidden="true" /></span><h2 className="mt-5 text-3xl font-display font-extrabold text-text-primary">Build evidence students can trust.</h2><p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">Choose a question to edit, or create a syllabus-mapped draft with a rubric, model answer, misconceptions, and source provenance.</p><button type="button" onClick={createQuestion} className="btn-primary mx-auto mt-6"><PlusIcon className="h-4 w-4" aria-hidden="true" /> Create question</button></div>
             </div>
           )}

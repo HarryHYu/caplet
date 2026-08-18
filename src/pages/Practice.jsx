@@ -7,11 +7,9 @@ import {
   ArrowRightIcon,
   BoltIcon,
   CalendarDaysIcon,
-  CheckBadgeIcon,
   ClipboardDocumentCheckIcon,
   ClockIcon,
   FireIcon,
-  LightBulbIcon,
   ListBulletIcon,
   PlayIcon,
   SparklesIcon,
@@ -276,7 +274,7 @@ function SessionHeader({ session, secondsRemaining, onExit }) {
         </button>
       </div>
 
-      <div className="mt-6 rounded-[2rem] border border-line-soft bg-surface-raised p-5 shadow-[0_24px_60px_-44px_rgba(20,20,18,0.5)] sm:p-7">
+      <div className="mt-6 rounded-[2rem] border border-line-soft bg-surface-raised p-5 shadow-card sm:p-7">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">{mode.label} · Practice session</p>
@@ -285,7 +283,7 @@ function SessionHeader({ session, secondsRemaining, onExit }) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            {session.mode === 'timed-exam' && (
+            {session.mode === 'timed-exam' && secondsRemaining != null && (
               <span className={`inline-flex min-h-10 items-center gap-2 rounded-2xl px-3.5 font-mono text-sm font-bold ${secondsRemaining <= 300 ? 'bg-surface-error text-text-error' : 'bg-surface-soft text-text-primary'}`} aria-label={`${formatTimer(secondsRemaining)} remaining`}>
                 <ClockIcon className="h-4 w-4" aria-hidden="true" /> {formatTimer(secondsRemaining)}
               </span>
@@ -321,23 +319,23 @@ function CompletionSummary({ data, session, onRestart }) {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <section className="overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 text-white shadow-[0_32px_70px_-40px_rgba(19,81,170,0.75)] md:p-12">
-        <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10">
+      <section className="animate-rise overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 text-white shadow-[0_32px_70px_-40px_rgba(19,81,170,0.75)] md:p-12">
+        <span className="grid h-14 w-14 animate-tada place-items-center rounded-2xl bg-white/10">
           <TrophyIcon className="h-8 w-8" aria-hidden="true" />
         </span>
         <p className="mt-7 text-xs font-bold uppercase tracking-[0.14em] text-white/65">Session complete</p>
         <h1 className="mt-2 text-4xl font-display font-extrabold tracking-tight text-white md:text-6xl">Evidence earned.</h1>
         <p className="mt-4 max-w-xl text-base font-medium leading-relaxed text-white/80">Every attempt has updated your learning profile and sharpened what Caplet recommends next.</p>
         <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryMetric term="Score" value={maxScore ? `${score}/${maxScore}` : score} />
-          <SummaryMetric term="Accuracy" value={`${accuracy}%`} />
-          <SummaryMetric term="Evidence" value={summary.evidenceCreated ?? completedSession?.totalQuestions ?? 0} />
-          <SummaryMetric term="Outcomes moved" value={masteryChanges.length} />
+          <SummaryMetric term="Score" value={maxScore ? `${score}/${maxScore}` : score} delayMs={80} />
+          <SummaryMetric term="Accuracy" value={`${accuracy}%`} delayMs={140} />
+          <SummaryMetric term="Evidence" value={summary.evidenceCreated ?? completedSession?.totalQuestions ?? 0} delayMs={200} />
+          <SummaryMetric term="Outcomes moved" value={masteryChanges.length} delayMs={260} />
         </dl>
       </section>
 
       {masteryChanges.length > 0 && (
-        <section className="mt-6 rounded-3xl bg-surface-raised p-6 md:p-8">
+        <section className="mt-6 animate-rise-slow rounded-3xl bg-surface-raised p-6 md:p-8">
           <h2 className="text-2xl font-display font-extrabold text-text-primary">Mastery changes</h2>
           <ul className="mt-5 space-y-3">
             {masteryChanges.map((change, index) => {
@@ -345,12 +343,20 @@ function CompletionSummary({ data, session, onRestart }) {
               const before = accuracyPercent(change.before ?? change.previousProbability ?? 0);
               const after = accuracyPercent(change.after ?? change.probability ?? change.newProbability ?? 0);
               return (
-                <li key={change.outcome?.id || change.outcomeId || label} className="flex items-center justify-between gap-4 rounded-2xl bg-surface-soft p-4">
-                  <div>
-                    <p className="text-sm font-bold text-text-primary">{label}</p>
-                    {change.reason && <p className="mt-1 text-xs font-medium text-text-muted">{change.reason}</p>}
+                <li key={change.outcome?.id || change.outcomeId || label} className="rounded-2xl bg-surface-soft p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-bold text-text-primary">{label}</p>
+                      {change.reason && <p className="mt-1 text-xs font-medium text-text-muted">{change.reason}</p>}
+                    </div>
+                    <span className="shrink-0 font-mono text-xs font-bold text-accent">{before}% → {after}%</span>
                   </div>
-                  <span className="shrink-0 font-mono text-xs font-bold text-accent">{before}% → {after}%</span>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-raised" role="progressbar" aria-label={`${label} mastery: ${after}%`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={after}>
+                    <div
+                      className="h-full origin-left animate-bar-fill rounded-full bg-[color:var(--mark-green)]"
+                      style={{ width: `${after}%`, animationDelay: `${180 + index * 90}ms` }}
+                    />
+                  </div>
                 </li>
               );
             })}
@@ -368,9 +374,9 @@ function CompletionSummary({ data, session, onRestart }) {
   );
 }
 
-function SummaryMetric({ term, value }) {
+function SummaryMetric({ term, value, delayMs = 0 }) {
   return (
-    <div className="rounded-2xl bg-white/10 p-4">
+    <div className="animate-rise rounded-2xl bg-white/10 p-4" style={{ animationDelay: `${delayMs}ms` }}>
       <dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/60">{term}</dt>
       <dd className="mt-2 font-display text-2xl font-extrabold text-white">{value}</dd>
     </div>
@@ -671,7 +677,7 @@ export default function Practice() {
 
   if (phase === 'complete') {
     return (
-      <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+      <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-accent-contrast">
         <div className="container-custom"><CompletionSummary data={completion} session={session} onRestart={returnHome} /></div>
       </main>
     );
@@ -679,7 +685,7 @@ export default function Practice() {
 
   if (phase === 'session') {
     return (
-      <main className="min-h-screen bg-surface-body px-5 pb-16 pt-20 selection:bg-accent selection:text-white sm:px-8 sm:pt-24 lg:px-12 lg:pb-20 lg:pt-12 xl:px-16">
+      <main className="min-h-screen bg-surface-body px-5 pb-16 pt-20 selection:bg-accent selection:text-accent-contrast sm:px-8 sm:pt-24 lg:px-12 lg:pb-20 lg:pt-12 xl:px-16">
         <div className="mx-auto w-full max-w-6xl">
           <SessionHeader session={session} secondsRemaining={secondsRemaining} onExit={returnHome} />
           {actionError && <div role="alert" className="mb-6 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{actionError}</div>}
@@ -706,7 +712,7 @@ export default function Practice() {
   }
 
   return (
-    <main className="minimal-page selection:bg-accent selection:text-white">
+    <main className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-12 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div>

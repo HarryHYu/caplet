@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { Link } from 'react-router-dom';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 
 const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
@@ -14,6 +15,8 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
   });
   const [googleLoading, setGoogleLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const { register, loginWithGoogle, error: authError } = useAuth();
   const [error, setError] = useState('');
 
@@ -93,7 +96,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
 
       {/* Error */}
       {error && (
-        <div role="alert" className="mb-6 rounded-2xl bg-surface-error p-4 shadow-[0_16px_36px_-28px_rgba(20,20,18,0.3)]">
+        <div role="alert" className="mb-6 rounded-2xl bg-surface-error p-4 shadow-card animate-rise">
           <p className="text-sm font-medium text-text-error">{error}</p>
         </div>
       )}
@@ -180,32 +183,54 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
         </div>
         <div className="space-y-1.5">
           <label htmlFor="reg-password" className="block text-sm font-medium text-text-muted">Password (at least 8 characters)</label>
-          <input
-            type="password"
-            id="reg-password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            minLength={8}
-            autoComplete="new-password"
-            placeholder="••••••••"
-            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              id="reg-password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              minLength={8}
+              autoComplete="new-password"
+              placeholder="••••••••"
+              className="w-full px-4 py-3 pr-12 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-pressed={showPassword}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-text-dim hover:text-text-primary focus-ring press"
+            >
+              {showPassword ? <EyeSlashIcon className="h-5 w-5" aria-hidden="true" /> : <EyeIcon className="h-5 w-5" aria-hidden="true" />}
+            </button>
+          </div>
         </div>
         <div className="space-y-1.5">
           <label htmlFor="reg-confirm" className="block text-sm font-medium text-text-muted">Confirm password</label>
-          <input
-            type="password"
-            id="reg-confirm"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            autoComplete="new-password"
-            placeholder="••••••••"
-            className="w-full px-4 py-3 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
-          />
+          <div className="relative">
+            <input
+              type={showConfirm ? 'text' : 'password'}
+              id="reg-confirm"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              autoComplete="new-password"
+              placeholder="••••••••"
+              className="w-full px-4 py-3 pr-12 bg-surface-soft border border-line-soft focus:border-accent focus:bg-surface-raised outline-none transition-all text-text-primary rounded-xl text-sm placeholder:text-text-dim"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((current) => !current)}
+              aria-pressed={showConfirm}
+              aria-label={showConfirm ? 'Hide confirmed password' : 'Show confirmed password'}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-text-dim hover:text-text-primary focus-ring press"
+            >
+              {showConfirm ? <EyeSlashIcon className="h-5 w-5" aria-hidden="true" /> : <EyeIcon className="h-5 w-5" aria-hidden="true" />}
+            </button>
+          </div>
         </div>
         <button
           type="submit"
@@ -224,7 +249,9 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
         </button>
         <p className="text-center text-xs font-medium leading-relaxed text-text-dim">
           By creating an account, you agree to Caplet&apos;s{' '}
-          <Link to="/trust" className="font-bold text-accent hover:text-accent-strong">trust, privacy and terms information</Link>.
+          <Link to="/terms" className="font-bold text-accent hover:text-accent-strong focus-ring rounded-md">terms of use</Link>
+          {' '}and{' '}
+          <Link to="/trust" className="font-bold text-accent hover:text-accent-strong focus-ring rounded-md">trust and privacy information</Link>.
         </p>
       </form>
     </div>

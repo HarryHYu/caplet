@@ -9,7 +9,7 @@ export default function TeacherEvidenceOverride() {
   const student = location.state?.student || null;
 
   return (
-    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-4xl">
         <Link to={`/classes/${classId}/learning`} className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-accent hover:text-accent-strong">
           <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Back to class learning

@@ -44,10 +44,14 @@ export const AuthProvider = ({ children }) => {
         }
 
         if (token) {
-          setIsAuthenticated(true);
           api.setToken(token);
+          // Only flip isAuthenticated once the user has actually loaded —
+          // otherwise a transient /auth/me failure leaves the app
+          // "authenticated" with a null user and route guards render
+          // protected pages that immediately crash on user fields.
           const userData = await api.getCurrentUser();
           setUser(userData.user);
+          setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
         }
@@ -55,9 +59,9 @@ export const AuthProvider = ({ children }) => {
         console.error('Auth initialization error:', error);
         if (error.status === 401) {
           api.clearToken();
-          setUser(null);
-          setIsAuthenticated(false);
         }
+        setUser(null);
+        setIsAuthenticated(false);
       } finally {
         setLoading(false);
       }

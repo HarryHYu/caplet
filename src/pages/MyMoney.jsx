@@ -159,7 +159,7 @@ export default function MyMoney() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body pb-32 pt-28 selection:bg-accent selection:text-white md:pt-32 lg:pb-20">
+    <div className="min-h-screen bg-surface-body pb-32 pt-28 selection:bg-accent selection:text-accent-contrast md:pt-32 lg:pb-20">
       <div className="container-custom max-w-6xl">
         <Link to="/money" className="reveal inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-bold text-text-muted transition-colors hover:text-accent"><ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Money overview</Link>
 
@@ -185,7 +185,7 @@ export default function MyMoney() {
         {notice && <div role="status" className="animate-slide-up mt-6 flex items-start gap-3 rounded-2xl bg-[color:var(--block-green)] px-5 py-4 text-sm font-bold text-text-primary"><CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--mark-green)]" aria-hidden="true" />{notice}</div>}
 
         {savedScenario && (
-          <section className="reveal mt-6 rounded-3xl bg-surface-raised p-7 shadow-[0_24px_60px_-42px_rgba(20,20,18,0.45)]" aria-busy={saving || deleting} aria-labelledby="saved-scenario-title">
+          <section className="reveal mt-6 rounded-3xl bg-surface-raised p-7 shadow-card" aria-busy={saving || deleting} aria-labelledby="saved-scenario-title">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <span className="section-kicker">Saved scenario</span>
@@ -216,20 +216,20 @@ export default function MyMoney() {
           <span className="section-kicker">Choose your data</span>
           <h2 id="number-choice-title" className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Start safely with an example.</h2>
           <div className="reveal-stagger mt-5 grid gap-4 md:grid-cols-2">
-            <button type="button" aria-pressed={inputMode === 'sample'} onClick={() => chooseMode('sample')} className={`min-h-32 rounded-3xl p-6 text-left transition-[background-color,box-shadow,transform] duration-300 hover:-translate-y-1 ${inputMode === 'sample' ? 'bg-accent text-white shadow-[0_24px_48px_-30px_rgba(19,81,170,0.7)]' : 'bg-surface-raised text-text-primary shadow-[0_20px_46px_-38px_rgba(20,20,18,0.4)]'}`}>
+            <button type="button" aria-pressed={inputMode === 'sample'} onClick={() => chooseMode('sample')} className={`min-h-32 rounded-3xl p-6 text-left transition-[background-color,box-shadow,transform] duration-300 hover:-translate-y-1 ${inputMode === 'sample' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
               <span className="block font-display text-xl font-extrabold">Use sample numbers</span>
-              <span className={`mt-2 block text-sm font-medium ${inputMode === 'sample' ? 'text-white/80' : 'text-text-muted'}`}>Recommended for trying the prototype. Nothing is added to your financial profile.</span>
+              <span className={`mt-2 block text-sm font-medium ${inputMode === 'sample' ? 'text-accent-contrast/80' : 'text-text-muted'}`}>Recommended for trying the prototype. Nothing is added to your financial profile.</span>
             </button>
-            <button type="button" aria-pressed={inputMode === 'own'} onClick={() => chooseMode('own')} className={`min-h-32 rounded-3xl p-6 text-left transition-[background-color,box-shadow,transform] duration-300 hover:-translate-y-1 ${inputMode === 'own' ? 'bg-accent text-white shadow-[0_24px_48px_-30px_rgba(19,81,170,0.7)]' : 'bg-surface-raised text-text-primary shadow-[0_20px_46px_-38px_rgba(20,20,18,0.4)]'}`}>
+            <button type="button" aria-pressed={inputMode === 'own'} onClick={() => chooseMode('own')} className={`min-h-32 rounded-3xl p-6 text-left transition-[background-color,box-shadow,transform] duration-300 hover:-translate-y-1 ${inputMode === 'own' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
               <span className="block font-display text-xl font-extrabold">Use my own numbers</span>
-              <span className={`mt-2 block text-sm font-medium ${inputMode === 'own' ? 'text-white/80' : 'text-text-muted'}`}>Only saved after you press Save. Existing savings can be loaded from your private profile.</span>
+              <span className={`mt-2 block text-sm font-medium ${inputMode === 'own' ? 'text-accent-contrast/80' : 'text-text-muted'}`}>Only saved after you press Save. Existing savings can be loaded from your private profile.</span>
             </button>
           </div>
           {!profileAvailable && inputMode === 'own' && <p role="alert" className="mt-3 text-sm font-bold text-text-error">Your account profile is unavailable. You can still try and save this prototype on this device.</p>}
         </section>
 
         <section className="reveal mt-8 grid gap-6 lg:grid-cols-12" aria-labelledby="savings-scenario-title">
-          <div className="rounded-3xl bg-surface-raised p-7 shadow-[0_24px_60px_-42px_rgba(20,20,18,0.45)] lg:col-span-7 md:p-10">
+          <div className="rounded-3xl bg-surface-raised p-7 shadow-card lg:col-span-7 md:p-10">
             <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-accent-soft text-accent"><LockClosedIcon className="h-5 w-5" aria-hidden="true" /></span><p className="text-xs font-bold uppercase tracking-[0.12em] text-text-muted">{inputMode === 'sample' ? 'Sample scenario' : 'Your optional figures'}</p></div>
             <h2 id="savings-scenario-title" className="mt-5 font-display text-3xl font-extrabold tracking-tight text-text-primary">Compare a savings timeline.</h2>
             <div className="mt-8 grid gap-6 sm:grid-cols-2">

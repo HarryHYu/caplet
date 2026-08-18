@@ -111,7 +111,7 @@ export default function ForumNewThread() {
                   key={tag.value}
                   type="button"
                   onClick={() => toggleTag(tag.value)}
-                  className={`forum-pill transition-colors ${active ? 'text-white' : 'text-text-muted hover:bg-surface-soft'}`}
+                  className={`forum-pill transition-colors ${active ? 'text-accent-contrast' : 'text-text-muted hover:bg-surface-soft'}`}
                   style={active ? { background: 'var(--forum-accent)', borderColor: 'transparent' } : undefined}
                 >
                   {tag.label}
@@ -190,7 +190,7 @@ export default function ForumNewThread() {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-2xl px-6 py-2.5 text-sm font-bold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-50"
+            className="rounded-2xl px-6 py-2.5 text-sm font-bold text-accent-contrast card-lift disabled:opacity-50"
             style={{ background: 'var(--forum-accent)' }}
           >
             {submitting ? 'Submitting…' : 'Submit for review'}

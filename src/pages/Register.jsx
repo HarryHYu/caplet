@@ -14,7 +14,7 @@ const Register = () => {
 
         {/* Wordmark */}
         <div className="relative z-10 p-12 xl:p-16">
-          <Link to="/" className="group inline-flex items-center">
+          <Link to="/" className="group inline-flex items-center focus-ring rounded-md">
             <span className="font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-contrast group-hover:text-accent transition-colors duration-200">
               Caplet
             </span>
@@ -23,7 +23,7 @@ const Register = () => {
 
         {/* Vertically centered headline */}
         <div className="relative z-10 flex-1 flex items-center px-12 xl:px-20 pb-40">
-          <div className="max-w-lg">
+          <div className="max-w-lg animate-rise-slow">
             <span className="font-hand text-2xl text-accent mb-6 block -rotate-2">
               free, open, and a little playful
             </span>
@@ -43,17 +43,17 @@ const Register = () => {
 
         {/* Top bar: mobile wordmark + back to home */}
         <div className="flex items-center justify-between px-8 lg:px-16 xl:px-24 pt-10">
-          <Link to="/" className="lg:hidden font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors">
+          <Link to="/" className="lg:hidden font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors focus-ring rounded-md">
             Caplet
           </Link>
-          <Link to="/" className="ml-auto text-sm font-bold text-text-dim hover:text-accent transition-colors">
+          <Link to="/" className="ml-auto text-sm font-bold text-text-dim hover:text-accent transition-colors focus-ring rounded-md">
             Back to home
           </Link>
         </div>
 
         {/* Form centered in remaining space */}
         <div className="flex-1 flex items-center justify-center px-8 lg:px-16 xl:px-24 py-12">
-          <div className="w-full max-w-sm">
+          <div className="w-full max-w-sm animate-rise">
             <RegisterForm
               onSuccess={() => navigate('/dashboard', { replace: true })}
               onSwitchToLogin={() => navigate('/login')}

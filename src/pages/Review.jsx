@@ -141,7 +141,7 @@ function QueueScreen({ queue, onStart }) {
         <button type="button" onClick={onStart} className="btn-primary mt-8 w-full justify-center py-4 text-base">
           Start {queue.estimatedMinutes}-minute review <ArrowRightIcon className="h-5 w-5" aria-hidden="true" />
         </button>
-        <Link to="/saved-slides" className="mx-auto mt-5 flex w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-accent hover:bg-accent-soft">
+        <Link to="/revision" className="focus-ring mx-auto mt-5 flex w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-accent hover:bg-accent-soft">
           Adjust this session <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
         </Link>
       </section>
@@ -176,7 +176,7 @@ function RecallScreen({ item, answer, setAnswer, revealed, setRevealed, busy, on
   useEffect(() => { window.setTimeout(() => inputRef.current?.focus(), 0); }, [item.id]);
 
   return (
-    <section className="rounded-3xl border border-line-soft bg-surface-raised p-6 shadow-[0_26px_64px_-44px_rgba(20,20,18,0.5)] md:p-10">
+    <section className="animate-rise rounded-3xl border border-line-soft bg-surface-raised p-6 shadow-card md:p-10">
       <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
         <span className="text-[color:var(--mark-coral)]">{item.recentMiss ? 'Recent miss' : 'Due review'}</span>
         <span className="text-text-dim">·</span>
@@ -288,11 +288,11 @@ function RepairScreen({ item, previousAnswer, value, setValue, submitted, onSubm
 function CompletionScreen({ reviewed, repaired, onRestart }) {
   return (
     <div className="mx-auto max-w-4xl text-center">
-      <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[color:var(--block-green)] text-[color:var(--mark-green)]">
+      <span className="mx-auto grid h-16 w-16 animate-pop place-items-center rounded-2xl bg-[color:var(--block-green)] text-[color:var(--mark-green)]">
         <CheckCircleIcon className="h-9 w-9" aria-hidden="true" />
       </span>
-      <p className="mt-7 text-xs font-bold uppercase tracking-[0.14em] text-accent">Review complete</p>
-      <h1 className="mt-2 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">Memory strengthened.</h1>
+      <p className="mt-7 animate-rise text-xs font-bold uppercase tracking-[0.14em] text-accent">Review complete</p>
+      <h1 className="mt-2 animate-rise font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl" style={{ animationDelay: '80ms' }}>Memory strengthened.</h1>
       <p className="mx-auto mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">
         You retrieved {reviewed} {reviewed === 1 ? 'item' : 'items'} and repaired {repaired} {repaired === 1 ? 'miss' : 'misses'}. Caplet has scheduled each idea for the right next interval.
       </p>
@@ -387,7 +387,7 @@ export default function Review() {
   }
 
   return (
-    <main className={`min-h-screen bg-surface-body ${phase === 'queue' || phase === 'complete' ? 'py-28' : 'py-4'} selection:bg-accent selection:text-white`}>
+    <main className={`min-h-screen bg-surface-body ${phase === 'queue' || phase === 'complete' ? 'py-28' : 'py-4'} selection:bg-accent selection:text-accent-contrast`}>
       <div className="container-custom">
         {state.error && (
           <p role="alert" className="mb-6 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">{state.error}</p>

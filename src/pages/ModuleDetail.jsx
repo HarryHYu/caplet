@@ -6,7 +6,7 @@ import CapletLoader from '../components/CapletLoader';
 import { useReveal } from '../lib/useReveal';
 import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
 import LearningProgressSummary from '../components/learning/LearningProgressSummary';
-import { BookOpenIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, BookOpenIcon, BuildingLibraryIcon } from '@heroicons/react/24/outline';
 
 const ModuleDetail = () => {
   const { courseId, moduleId } = useParams();
@@ -101,7 +101,7 @@ const ModuleDetail = () => {
   const completedInModule = lessons.filter(isLessonComplete).length;
   const totalInModule = lessons.length;
   return (
-    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
+    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-accent-contrast md:pt-28">
       <div className="container-custom">
         <nav aria-label="Breadcrumb" className="mb-7 flex flex-wrap items-center gap-2 text-sm font-bold text-text-muted">
           <Link to="/library" className="min-h-11 content-center transition-colors hover:text-accent">Learn</Link><span aria-hidden="true">/</span><Link to="/courses" className="min-h-11 content-center transition-colors hover:text-accent">Courses</Link><span aria-hidden="true">/</span><Link to={`/courses/${courseId}`} className="min-h-11 content-center transition-colors hover:text-accent">{course.title}</Link>
@@ -121,10 +121,18 @@ const ModuleDetail = () => {
           </div>
 
           {lessons.length === 0 && (
-            <div className="py-20 text-center rounded-3xl block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="animate-rise py-20 text-center rounded-3xl block-cream shadow-card">
               <p className="text-lg text-text-muted">
                 No lessons available yet.
               </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Link to={`/courses/${courseId}`} className="btn-primary focus-ring">
+                  <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> See other modules
+                </Link>
+                <Link to="/library" className="btn-secondary focus-ring">
+                  <BuildingLibraryIcon className="h-4 w-4" aria-hidden="true" /> Browse the library
+                </Link>
+              </div>
             </div>
           )}
         </LearningSection>

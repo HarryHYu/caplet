@@ -12,6 +12,9 @@ import {
   presetIds,
   buildRun,
   computeStats,
+  runSignature,
+  speedBestKey,
+  alignWords,
 } from '../lib/speedType';
 
 afterEach(() => {
@@ -112,6 +115,27 @@ describe('speed run helpers', () => {
     expect(splitSentences('One. Two! Three?')).toHaveLength(3);
   });
 
+  it('aligns a dropped word instead of cascading every later word to wrong', () => {
+    const target = 'the sea keeps the whole imperial record for ever'.split(' ');
+    const typed = 'the sea keeps whole imperial record for ever'.split(' '); // dropped "the"
+    const eq = (a, b) => a === b;
+    const { entries, extras } = alignWords(target, typed, eq);
+    expect(entries).toHaveLength(target.length);
+    expect(entries.filter((e) => e.status === 'correct')).toHaveLength(8); // only the dropped word is lost
+    expect(entries.filter((e) => e.status === 'missed')).toHaveLength(1);
+    expect(extras).toBe(0);
+  });
+
+  it('reports what was typed for a substituted word, and counts extras', () => {
+    const eq = (a, b) => a === b;
+    const sub = alignWords(['keep', 'the', 'record'], ['keep', 'thy', 'record'], eq);
+    expect(sub.entries[1]).toEqual({ word: 'the', status: 'wrong', typed: 'thy' });
+
+    const extra = alignWords(['keep', 'record'], ['keep', 'the', 'whole', 'record'], eq);
+    expect(extra.entries.filter((e) => e.status === 'correct')).toHaveLength(2);
+    expect(extra.extras).toBe(2);
+  });
+
   it('computes MonkeyType-style stats from word records', () => {
     const records = [
       { target: 'Empire', typed: 'Empire', correct: true },
@@ -193,10 +217,22 @@ describe('SpeedTypeMode', () => {
     // No live wpm/accuracy in the stats bar during a blind run.
     expect(screen.queryByText(/% acc/)).not.toBeInTheDocument();
     typeWord('Poets');
-    fireEvent.change(screen.getByLabelText('Type the essay here'), { target: { value: 'answer.' } });
+    // Blind runs need the trailing space even on the last word: auto-finishing
+    // on an exact match would itself reveal that the word was right.
+    typeWord('answer.');
 
     expect(screen.getByText('75%')).toBeInTheDocument();
     expect(screen.getByText(/✗ wrong\./)).toBeInTheDocument();
+  });
+
+  it('blind mode does not auto-finish on the last word (no leaked verdict)', () => {
+    startIntroRun(() => fireEvent.click(screen.getByRole('button', { name: 'Blind — review only' })));
+    typeWord('Empire');
+    typeWord('lies.');
+    typeWord('Poets');
+    // Exactly right, but with no trailing space the run must stay live.
+    fireEvent.change(screen.getByLabelText('Type the essay here'), { target: { value: 'answer.' } });
+    expect(screen.queryByText('Run complete')).not.toBeInTheDocument();
   });
 
   it('strict stop refuses to advance past a wrong word', () => {
@@ -289,10 +325,34 @@ describe('SpeedTypeMode', () => {
     expect(screen.getByText('100%')).toBeInTheDocument();
   });
 
-  it('stores a personal best (10+ words) and shows it back in setup', () => {
-    localStorage.setItem('caplet:speedbest:e-speed', JSON.stringify({ wpm: 87, accuracy: 98, at: '2026-08-01' }));
+  it('shows the personal best for THIS run configuration', () => {
+    // Bests are keyed by essay + configuration signature, so an easy forgiving
+    // sprint can never claim the strict whole-essay record.
+    const defaultSetup = runSignature({
+      sectionIds: ['intro', 'bp0', 'bp1', 'conclusion'],
+      flow: 'full',
+      ignoreCase: false,
+      ignorePunct: false,
+      ignoreAccents: true, // the drill's default
+    });
+    localStorage.setItem(speedBestKey('e-speed', defaultSetup), JSON.stringify({ wpm: 87, accuracy: 98, at: '2026-08-01' }));
     render(<SpeedTypeMode essay={essay} />);
-    expect(screen.getByText(/Personal best:/)).toBeInTheDocument();
+    expect(screen.getByText(/Personal best/)).toBeInTheDocument();
     expect(screen.getByText(/87 wpm/)).toBeInTheDocument();
+  });
+
+  it('does not show another configuration’s best', () => {
+    const otherSetup = runSignature({ sectionIds: ['intro'], flow: 'full', ignoreCase: true, ignorePunct: true, ignoreAccents: true });
+    localStorage.setItem(speedBestKey('e-speed', otherSetup), JSON.stringify({ wpm: 140, accuracy: 99, at: '2026-08-01' }));
+    render(<SpeedTypeMode essay={essay} />);
+    expect(screen.queryByText(/140 wpm/)).not.toBeInTheDocument();
+  });
+
+  it('narrows the sections offered to the practice scope', () => {
+    // Scope = body ¶2 only (sourceIndex 1) → intro/conclusion are not offered.
+    render(<SpeedTypeMode essay={essay} paragraphs={[{ ...essay.parsedStructure.bodyParagraphs[1], sourceIndex: 1 }]} />);
+    expect(screen.getByRole('button', { name: 'Body ¶2' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Introduction' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Body ¶1' })).not.toBeInTheDocument();
   });
 });

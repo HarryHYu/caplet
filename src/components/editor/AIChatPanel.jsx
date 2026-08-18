@@ -21,8 +21,7 @@ export function AIAvatar({ size = 'sm', className = '' }) {
   const imgSize = size === 'lg' ? 'w-6 h-6' : 'w-[15px] h-[15px]';
   return (
     <div
-      className={`${dim} rounded-full bg-white border border-line-soft flex items-center justify-center shrink-0 ${className}`}
-      style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.10)' }}
+      className={`${dim} rounded-full bg-surface-raised border border-line-soft shadow-minimal flex items-center justify-center shrink-0 ${className}`}
     >
       <img src="/logo.png" alt="Caplet AI" className={`${imgSize} object-contain`} />
     </div>
@@ -57,10 +56,7 @@ export function Bubble({ msg }) {
               {msg.text.trim()}
             </span>
           ) : (
-            <div
-              className="text-white text-[15px] px-4 py-2.5 rounded-[18px] rounded-br-[5px] leading-[1.65]"
-              style={{ background: 'var(--accent)', boxShadow: '0 2px 14px rgba(0, 80, 255, 0.2)' }}
-            >
+            <div className="bg-accent text-accent-contrast shadow-glow text-[15px] px-4 py-2.5 rounded-[18px] rounded-br-[5px] leading-[1.65]">
               {msg.text}
             </div>
           )}
@@ -76,9 +72,8 @@ export function Bubble({ msg }) {
         className={`flex-1 min-w-0 rounded-[18px] rounded-tl-[5px] px-3.5 py-3 ${
           msg.isError
             ? 'bg-surface-error border border-line-error'
-            : 'bg-surface-raised border border-line-soft/70'
+            : 'bg-surface-raised border border-line-soft/70 shadow-minimal'
         }`}
-        style={msg.isError ? {} : { boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
       >
         <p className={`text-[15px] leading-[1.72] ${msg.isError ? 'text-text-error' : 'text-text-primary'}`}>
           {msg.text}
@@ -117,8 +112,7 @@ export function LoadingBubble() {
     <div className="flex items-start gap-2.5 animate-msg-in">
       <AIAvatar className="mt-0.5 shrink-0" />
       <div
-        className="bg-surface-raised border border-line-soft/70 rounded-[18px] rounded-tl-[5px] px-3.5 py-3"
-        style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+        className="bg-surface-raised border border-line-soft/70 shadow-minimal rounded-[18px] rounded-tl-[5px] px-3.5 py-3"
       >
         <p className="text-[13px] text-text-muted mb-2">{LOADING_STAGES[stage]}</p>
         <div className="flex items-end gap-[4px] h-[12px]">
@@ -145,15 +139,14 @@ function SlashMenu({ filter, onSelect, activeIndex }) {
 
   return (
     <div
-      className="absolute bottom-full left-0 right-0 mb-2 bg-surface-raised border border-line-soft rounded-2xl overflow-hidden z-20"
-      style={{ boxShadow: '0 -20px 60px rgba(0,0,0,0.1), 0 -2px 10px rgba(0,0,0,0.06)' }}
+      className="absolute bottom-full left-0 right-0 mb-2 bg-surface-raised border border-line-soft shadow-pop rounded-2xl overflow-hidden z-20"
     >
       <div className="flex items-center gap-2.5 px-4 pt-3 pb-2.5 border-b border-line-soft/60 bg-surface-soft/60">
         <div
           className="w-5 h-5 rounded-md flex items-center justify-center shrink-0"
           style={{ background: 'var(--accent)' }}
         >
-          <span className="font-mono font-bold text-white text-[11px] leading-none">/</span>
+          <span className="font-mono font-bold text-accent-contrast text-[11px] leading-none">/</span>
         </div>
         <p className="text-[10px] font-bold text-text-dim uppercase tracking-[0.12em]">Slide commands</p>
         <div className="ml-auto hidden sm:flex items-center gap-1.5 text-[9px] text-text-dim/50 font-mono">
@@ -242,8 +235,7 @@ function ModelPicker({ model, onChange, formatterModel, onFormatterChange }) {
 
       {open && (
         <div
-          className="absolute bottom-full left-0 mb-1.5 w-52 bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30"
-          style={{ boxShadow: '0 -8px 32px rgba(0,0,0,0.12), 0 -1px 8px rgba(0,0,0,0.06)' }}
+          className="absolute bottom-full left-0 mb-1.5 w-52 bg-surface-raised border border-line-soft shadow-pop rounded-xl overflow-hidden z-30"
         >
           {/* Stage 1 */}
           <p className="px-3 pt-2.5 pb-1 text-[9px] font-bold text-text-dim uppercase tracking-[0.1em]">Stage 1 — Planning</p>
@@ -326,8 +318,7 @@ function SlideCountPicker({ slideCount, onChange }) {
 
       {open && (
         <div
-          className="absolute bottom-full right-0 mb-1.5 w-44 bg-surface-raised border border-line-soft rounded-xl z-30 p-3"
-          style={{ boxShadow: '0 -8px 32px rgba(0,0,0,0.12), 0 -1px 8px rgba(0,0,0,0.06)' }}
+          className="absolute bottom-full right-0 mb-1.5 w-44 bg-surface-raised border border-line-soft shadow-pop rounded-xl z-30 p-3"
         >
           <div className="flex items-center justify-between mb-2">
             <p className="text-[9px] font-bold text-text-dim uppercase tracking-[0.1em]">Slide count</p>
@@ -493,7 +484,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
 
       {/* PDF / validation error */}
       {pdfError && (
-        <div className="mb-1.5 px-3 py-2 rounded-xl border border-rose-400/30 bg-rose-500/[0.05] text-[12px] text-rose-500 flex items-start gap-2">
+        <div className="mb-1.5 px-3 py-2 rounded-xl border border-line-error/40 bg-surface-error text-[12px] text-text-error flex items-start gap-2">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0 mt-[1px]">
             <circle cx="6" cy="6" r="5.25" stroke="currentColor" strokeWidth="1.3"/>
             <path d="M6 4v3M6 8.5v.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
@@ -502,18 +493,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
         </div>
       )}
 
-      <div
-        className="bg-surface-raised border border-line-soft rounded-[20px] transition-all duration-200 focus-within:border-accent/40"
-        style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}
-        onFocusCapture={(e) => {
-          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,80,255,0.07), 0 2px 14px rgba(0,80,255,0.07)';
-        }}
-        onBlurCapture={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget)) {
-            e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)';
-          }
-        }}
-      >
+      <div className="bg-surface-raised border border-line-soft shadow-minimal rounded-[20px] transition-all duration-200 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent">
         {/* Attachment chip */}
         {(attachedContent || isPdfLoading) && (
           <div className="px-3 pt-2.5">
@@ -542,7 +522,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
                 <button
                   type="button"
                   onClick={removeAttachment}
-                  className="shrink-0 text-text-dim hover:text-rose-500 transition-colors duration-150 text-base leading-none ml-0.5"
+                  className="shrink-0 text-text-dim hover:text-text-error transition-colors duration-150 text-base leading-none ml-0.5"
                 >×</button>
               </div>
             )}
@@ -602,7 +582,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
 
           {/* Char counter — shows when approaching limit */}
           {totalChars > 20000 && (
-            <span className={`text-[10px] tabular-nums font-medium ${overLimit ? 'text-rose-500' : 'text-amber-500'}`}>
+            <span className={`text-[10px] tabular-nums font-medium ${overLimit ? 'text-text-error' : 'text-amber-600 dark:text-amber-400'}`}>
               {totalChars.toLocaleString()}/30k
             </span>
           )}
@@ -626,16 +606,13 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
             type="button"
             onClick={handleSend}
             disabled={!canSend}
-            className="w-[30px] h-[30px] rounded-[13px] text-white flex items-center justify-center transition-all duration-150 active:scale-[0.92]"
-            style={{
-              background: 'var(--accent)',
-              opacity: canSend ? 1 : 0.2,
-              boxShadow: canSend ? '0 2px 10px rgba(0,80,255,0.25)' : 'none',
-            }}
+            className={`w-[30px] h-[30px] rounded-[13px] bg-accent text-accent-contrast flex items-center justify-center transition-all duration-150 press ${
+              canSend ? 'shadow-glow' : 'opacity-20 shadow-none'
+            }`}
             aria-label="Send"
           >
             {loading ? (
-              <span className="w-3.5 h-3.5 border-[1.5px] border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="w-3.5 h-3.5 border-[1.5px] border-accent-contrast/30 border-t-accent-contrast rounded-full animate-spin" />
             ) : (
               <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
                 <path d="M6.5 11V2M2.5 5.5l4-3.5 4 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />

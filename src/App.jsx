@@ -74,6 +74,9 @@ const Notes = lazy(() => import('./pages/Notes'));
 const AssessmentLog = lazy(() => import('./pages/AssessmentLog'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Review = lazy(() => import('./pages/Review'));
 const Classes = lazy(() => import('./pages/Classes'));
 const ClassDetail = lazy(() => import('./pages/ClassDetail'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -208,6 +211,15 @@ function ScrollToTop() {
   return null;
 }
 
+// Full-page reload into the standalone /demo entry. The redirect is a side
+// effect, so it belongs in an effect — never in the render path.
+function DemoHardLoad() {
+  useEffect(() => {
+    window.location.replace('/demo');
+  }, []);
+  return <FullPageSpinner />;
+}
+
 function HomeOrRedirect() {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return <FullPageSpinner />;
@@ -240,12 +252,6 @@ function RequireAdmin({ children }) {
   return children;
 }
 
-// The approved prototype routes stay directly accessible. Higher-risk future
-// surfaces, such as Financial Twin, retain their own explicit feature gate.
-function MoneyPilot({ children }) {
-  return children;
-}
-
 function AppRoutes() {
   return (
     <Routes>
@@ -264,11 +270,14 @@ function AppRoutes() {
           <Route path="/library/economics/exam-practice/:packId/session" element={<RequireAuth><EconomicsExam /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/review" element={<RequireAuth><Review /></RequireAuth>} />
           <Route path="/money" element={<MoneyRouteGate><MoneyOverview /></MoneyRouteGate>} />
           <Route path="/money/economy" element={<MoneyRouteGate><Navigate to="/money/economy/inflation" replace /></MoneyRouteGate>} />
           <Route path="/money/economy/inflation" element={<MoneyRouteGate><MoneyInflation /></MoneyRouteGate>} />
           <Route path="/money/resources" element={<MoneyRouteGate><MoneyResources /></MoneyRouteGate>} />
-          <Route path="/money/my-money" element={<MoneyPilot><MoneyRouteGate flagKey="money.private.persistence" fallbackPath="/money" unavailableMessage="My Money is not available for this account yet. You can still use Money learning and calculators without saving private figures."><RequireAuth><MyMoney /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
+          <Route path="/money/my-money" element={<MoneyRouteGate flagKey="money.private.persistence" fallbackPath="/money" unavailableMessage="My Money is not available for this account yet. You can still use Money learning and calculators without saving private figures."><RequireAuth><MyMoney /></RequireAuth></MoneyRouteGate>} />
           <Route path="/money/tools" element={<MoneyRouteGate><FinancialTools /></MoneyRouteGate>} />
           <Route path="/fintools" element={<LegacyMoneyRedirect prefix="/fintools" />} />
           <Route path="/fintools/*" element={<LegacyMoneyRedirect prefix="/fintools" />} />
@@ -278,28 +287,28 @@ function AppRoutes() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/pitch" element={<DemoPitch />} />
-          <Route path="/money/tools/tax-calculator" element={<MoneyPilot><TaxCalculator /></MoneyPilot>} />
-          <Route path="/money/tools/budget-planner" element={<MoneyPilot><BudgetPlanner /></MoneyPilot>} />
-          <Route path="/money/tools/savings-goal" element={<MoneyPilot><SavingsGoal /></MoneyPilot>} />
-          <Route path="/money/tools/loan-repayment" element={<MoneyPilot><LoanRepayment /></MoneyPilot>} />
-          <Route path="/money/tools/compound-interest" element={<MoneyPilot><CompoundInterest /></MoneyPilot>} />
-          <Route path="/money/tools/mortgage" element={<MoneyPilot><MortgageCalculator /></MoneyPilot>} />
-          <Route path="/money/tools/super-contribution" element={<MoneyPilot><SuperContribution /></MoneyPilot>} />
-          <Route path="/money/tools/gst" element={<MoneyPilot><GSTCalculator /></MoneyPilot>} />
-          <Route path="/money/tools/salary" element={<MoneyPilot><SalaryCalculator /></MoneyPilot>} />
-          <Route path="/money/tools/emergency-fund" element={<MoneyPilot><EmergencyFund /></MoneyPilot>} />
-          <Route path="/money/tools/net-worth" element={<MoneyPilot><NetWorth /></MoneyPilot>} />
-          <Route path="/money/tools/inflation" element={<MoneyPilot><InflationCalculator /></MoneyPilot>} />
-          <Route path="/money/tools/credit-card-payoff" element={<MoneyPilot><CreditCardPayoff /></MoneyPilot>} />
-          <Route path="/money/tools/debt-sequencer" element={<MoneyPilot><MoneyRouteGate flagKey="money.private.persistence" fallbackPath="/money/tools"><RequireAuth><DebtSequencer /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
-          <Route path="/money/tools/roi" element={<MoneyPilot><ROICalculator /></MoneyPilot>} />
-          <Route path="/money/tools/rent-vs-buy" element={<MoneyPilot><RentVsBuy /></MoneyPilot>} />
-          <Route path="/money/tools/debt-to-income" element={<MoneyPilot><DebtToIncome /></MoneyPilot>} />
-          <Route path="/money/tools/break-even" element={<MoneyPilot><BreakEven /></MoneyPilot>} />
-          <Route path="/money/tools/fire-number" element={<MoneyPilot><FIRENumber /></MoneyPilot>} />
-          <Route path="/money/tools/rule-of-72" element={<MoneyPilot><RuleOf72 /></MoneyPilot>} />
-          <Route path="/money/tools/capital-gains" element={<MoneyPilot><CapitalGains /></MoneyPilot>} />
-          <Route path="/money/tools/financial-twin" element={<MoneyPilot><MoneyRouteGate flagKey="money.financial_twin.enabled" fallbackPath="/money/tools"><RequireAuth><FinancialTwin /></RequireAuth></MoneyRouteGate></MoneyPilot>} />
+          <Route path="/money/tools/tax-calculator" element={<TaxCalculator />} />
+          <Route path="/money/tools/budget-planner" element={<BudgetPlanner />} />
+          <Route path="/money/tools/savings-goal" element={<SavingsGoal />} />
+          <Route path="/money/tools/loan-repayment" element={<LoanRepayment />} />
+          <Route path="/money/tools/compound-interest" element={<CompoundInterest />} />
+          <Route path="/money/tools/mortgage" element={<MortgageCalculator />} />
+          <Route path="/money/tools/super-contribution" element={<SuperContribution />} />
+          <Route path="/money/tools/gst" element={<GSTCalculator />} />
+          <Route path="/money/tools/salary" element={<SalaryCalculator />} />
+          <Route path="/money/tools/emergency-fund" element={<EmergencyFund />} />
+          <Route path="/money/tools/net-worth" element={<NetWorth />} />
+          <Route path="/money/tools/inflation" element={<InflationCalculator />} />
+          <Route path="/money/tools/credit-card-payoff" element={<CreditCardPayoff />} />
+          <Route path="/money/tools/debt-sequencer" element={<MoneyRouteGate flagKey="money.private.persistence" fallbackPath="/money/tools"><RequireAuth><DebtSequencer /></RequireAuth></MoneyRouteGate>} />
+          <Route path="/money/tools/roi" element={<ROICalculator />} />
+          <Route path="/money/tools/rent-vs-buy" element={<RentVsBuy />} />
+          <Route path="/money/tools/debt-to-income" element={<DebtToIncome />} />
+          <Route path="/money/tools/break-even" element={<BreakEven />} />
+          <Route path="/money/tools/fire-number" element={<FIRENumber />} />
+          <Route path="/money/tools/rule-of-72" element={<RuleOf72 />} />
+          <Route path="/money/tools/capital-gains" element={<CapitalGains />} />
+          <Route path="/money/tools/financial-twin" element={<MoneyRouteGate flagKey="money.financial_twin.enabled" fallbackPath="/money/tools"><RequireAuth><FinancialTwin /></RequireAuth></MoneyRouteGate>} />
           <Route path="/library" element={<Library />} />
           <Route path="/assessments" element={<AssessmentSchedule />} />
           <Route path="/library/economics/:section/:focusId" element={<ResourceLibrary />} />
@@ -361,14 +370,14 @@ function AppShell() {
   // and having both on screen at once looks like a bug).
   // Reached only via in-app (SPA) navigation to /demo. DemoApp must own the
   // router, so hard-load it — the App-level branch above then renders it.
+  // The reload lives in DemoHardLoad's effect, never in render.
   if (pathname === '/demo') {
-    window.location.replace('/demo');
-    return null;
+    return <DemoHardLoad />;
   }
 
   // Pages that suppress all chrome (their own full-bleed layouts).
   const bareChrome =
-    ['/login', '/register', '/play'].includes(pathname) ||
+    ['/login', '/register', '/forgot-password', '/reset-password', '/play'].includes(pathname) ||
     pathname.startsWith('/guardian-consent/') ||
     pathname.startsWith('/live/host') ||
     pathname.startsWith('/forum');
@@ -382,6 +391,8 @@ function AppShell() {
     pathname === '/trust' ||
     pathname === '/terms' ||
     pathname === '/pitch' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password' ||
     pathname === '/operations' ||
     pathname === '/editor' ||
     pathname === '/editor/questions' ||
@@ -395,6 +406,12 @@ function AppShell() {
     (pathname.startsWith('/library/economics') && !['/library/economics', '/library/economics/assessment'].includes(pathname)) ||
     /^\/courses\/[^/]+\/lessons\//.test(pathname);
   const ContentLandmark = pageOwnsMain ? 'div' : 'main';
+  // /terms renders its own <main id="main-content">, so the shell wrapper must
+  // not repeat the id (duplicate ids break the skip link and axe checks). The
+  // other pageOwnsMain pages don't claim the id, so the wrapper keeps carrying
+  // the skip-link target for them.
+  const pageOwnsMainId = pathname === '/terms';
+  const landmarkProps = pageOwnsMainId ? {} : { id: 'main-content', tabIndex: '-1' };
 
   if (vertical) {
     return (
@@ -406,7 +423,7 @@ function AppShell() {
           <Navbar mobileOnly hideOnTablet />
           <TabletPublicNavbar />
           <TabletDashboardNavbar />
-          <ContentLandmark id="main-content" tabIndex="-1" className="flex-grow">
+          <ContentLandmark {...landmarkProps} className="flex-grow">
             <Suspense fallback={<FullPageSpinner />}>
               <AppRoutes />
             </Suspense>
@@ -426,7 +443,7 @@ function AppShell() {
       <Navbar hideOnTablet />
       <TabletPublicNavbar />
       <TabletDashboardNavbar />
-      <ContentLandmark id="main-content" tabIndex="-1" className="flex-grow">
+      <ContentLandmark {...landmarkProps} className="flex-grow">
         <Suspense fallback={<FullPageSpinner />}>
           <AppRoutes />
         </Suspense>

@@ -1,51 +1,13 @@
-/* eslint-disable react-refresh/only-export-components -- calculator configuration and pure helpers are exported for regression tests */
+/* eslint-disable react-refresh/only-export-components -- calculator configuration and pure helpers are re-exported for regression tests */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../../lib/useReveal';
 import { FinancialAssumptions, FormField } from '../../components/AccessibleUI';
+import { TAX_YEARS, DEFAULT_TAX_YEAR, calculateTax, formatCurrencyAUD as formatCurrency } from './toolMath';
 
-export const TAX_YEARS = {
-  '2025-26': {
-    label: '2025–26',
-    brackets: [
-      { threshold: 0, rate: 0, base: 0 },
-      { threshold: 18200, rate: 0.16, base: 0 },
-      { threshold: 45000, rate: 0.30, base: 4288 },
-      { threshold: 135000, rate: 0.37, base: 31288 },
-      { threshold: 190000, rate: 0.45, base: 51638 },
-    ],
-  },
-  '2026-27': {
-    label: '2026–27',
-    brackets: [
-      { threshold: 0, rate: 0, base: 0 },
-      { threshold: 18200, rate: 0.15, base: 0 },
-      { threshold: 45000, rate: 0.30, base: 4020 },
-      { threshold: 135000, rate: 0.37, base: 31020 },
-      { threshold: 190000, rate: 0.45, base: 51370 },
-    ],
-  },
-};
-
-export const DEFAULT_TAX_YEAR = '2026-27';
-
-const formatCurrency = (value) =>
-  new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
-
-export const calculateTax = (income, year = DEFAULT_TAX_YEAR) => {
-  if (!income || income <= 0) return 0;
-
-  const brackets = TAX_YEARS[year]?.brackets || TAX_YEARS[DEFAULT_TAX_YEAR].brackets;
-  let tax = 0;
-  for (let i = brackets.length - 1; i >= 0; i -= 1) {
-    const bracket = brackets[i];
-    if (income > bracket.threshold) {
-      tax = bracket.base + (income - bracket.threshold) * bracket.rate;
-      break;
-    }
-  }
-  return tax;
-};
+// The bracket table and calculation now live in ./toolMath so other tools
+// (e.g. the Capital Gains estimator) reuse the same current-year figures.
+export { TAX_YEARS, DEFAULT_TAX_YEAR, calculateTax } from './toolMath';
 
 const TaxCalculator = () => {
   const [income, setIncome] = useState('');
@@ -85,7 +47,7 @@ const TaxCalculator = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -105,7 +67,7 @@ const TaxCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Assessment Parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-10">
               <FormField id="tax-year" label="Financial year">
@@ -149,13 +111,13 @@ const TaxCalculator = () => {
                 <p id="medicare-hint" className="sr-only">This simplified estimate excludes low-income thresholds, reductions, exemptions, and the Medicare levy surcharge.</p>
               </div>
 
-              <button type="submit" className="btn-primary w-full py-5 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-5 hover:-translate-y-0.5 transition-transform">
                 Calculate Tax
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Fiscal Summary</h2>
 
             <div aria-live="polite" aria-atomic="true" className="flex-1">
@@ -181,8 +143,8 @@ const TaxCalculator = () => {
                     </div>
                   </div>
 
-                  <div className="bg-accent text-white rounded-2xl p-8">
-                    <p className="text-xs font-medium text-white/70 mb-4">Net liquidity (annual)</p>
+                  <div className="bg-accent text-accent-contrast rounded-2xl p-8">
+                    <p className="text-xs font-medium text-accent-contrast/70 mb-4">Net liquidity (annual)</p>
                     <p className="font-display text-3xl font-extrabold tracking-tight">{formatCurrency(result.netIncome)}</p>
                   </div>
 

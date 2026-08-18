@@ -10,6 +10,8 @@ import api from '../services/api';
 import TeacherClassLearning from '../pages/TeacherClassLearning';
 import TeacherEvidenceOverride from '../pages/TeacherEvidenceOverride';
 import TeacherOnboarding from '../pages/TeacherOnboarding';
+import AdaptiveAssignmentForm from '../components/teacher/AdaptiveAssignmentForm';
+import EvidenceOverrideForm from '../components/teacher/EvidenceOverrideForm';
 
 const CLASS_ID = '30000000-0000-4000-8000-000000000001';
 const STUDENT_ONE = '20000000-0000-4000-8000-000000000001';
@@ -240,5 +242,74 @@ describe('teacher product frontend', () => {
       idempotencyKey: expect.stringMatching(/^teacher-ui-/),
     }));
     expect(await screen.findByText('The corrected evidence and mastery profile are saved.')).toBeInTheDocument();
+  });
+
+  it('mints a fresh idempotency key after each saved override so a second correction is not discarded', async () => {
+    api.request.mockResolvedValue({ evidence: { id: 'revision-1' }, masteryRefresh: 'updated' });
+    render(
+      <EvidenceOverrideForm
+        classroomId={CLASS_ID}
+        studentId={STUDENT_ONE}
+        evidenceId={EVIDENCE_ID}
+        evidence={{ score: 4, maxScore: 10, feedback: 'AI feedback' }}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Correct mark'), { target: { value: '6' } });
+    fireEvent.change(screen.getByLabelText('Audit reason'), { target: { value: 'First correction.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save teacher override' }));
+    await waitFor(() => expect(api.request).toHaveBeenCalledTimes(1));
+
+    fireEvent.change(screen.getByLabelText('Correct mark'), { target: { value: '7' } });
+    fireEvent.change(screen.getByLabelText('Audit reason'), { target: { value: 'Second correction.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save teacher override' }));
+    await waitFor(() => expect(api.request).toHaveBeenCalledTimes(2));
+
+    const firstKey = JSON.parse(api.request.mock.calls[0][1].body).idempotencyKey;
+    const secondKey = JSON.parse(api.request.mock.calls[1][1].body).idempotencyKey;
+    expect(firstKey).toMatch(/^teacher-ui-/);
+    expect(secondKey).toMatch(/^teacher-ui-/);
+    expect(secondKey).not.toBe(firstKey);
+  });
+
+  it('keeps "Clear selection" cleared when the parent re-renders with a fresh students array', async () => {
+    const students = () => [
+      { id: STUDENT_ONE, name: 'Ada Lovelace' },
+      { id: STUDENT_TWO, name: 'Charles Babbage' },
+    ];
+    const outcomes = [{ id: OUTCOME_ONE, code: 'E12.1', title: 'Market operations' }];
+    const { rerender } = render(
+      <AdaptiveAssignmentForm classroomId={CLASS_ID} outcomes={outcomes} students={students()} />,
+    );
+    // Whole class auto-selected once.
+    expect(screen.getByLabelText('Ada Lovelace')).toBeChecked();
+    expect(screen.getByLabelText('Charles Babbage')).toBeChecked();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }));
+    expect(screen.getByLabelText('Ada Lovelace')).not.toBeChecked();
+
+    // A new array instance with the same ids must not re-select the class.
+    rerender(<AdaptiveAssignmentForm classroomId={CLASS_ID} outcomes={outcomes} students={students()} />);
+    expect(screen.getByLabelText('Ada Lovelace')).not.toBeChecked();
+    expect(screen.getByLabelText('Charles Babbage')).not.toBeChecked();
+  });
+
+  it('rejects an empty question count instead of submitting count 0', async () => {
+    const outcomes = [{ id: OUTCOME_ONE, code: 'E12.1', title: 'Market operations' }];
+    render(
+      <AdaptiveAssignmentForm
+        classroomId={CLASS_ID}
+        outcomes={outcomes}
+        students={[{ id: STUDENT_ONE, name: 'Ada Lovelace' }]}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Assignment title'), { target: { value: 'Practice set' } });
+    fireEvent.click(screen.getByLabelText(/Market operations/i));
+    fireEvent.change(screen.getByLabelText('Questions'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create assignment' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Set the number of questions to at least 1.');
+    expect(api.request).not.toHaveBeenCalled();
   });
 });

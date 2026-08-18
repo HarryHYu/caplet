@@ -12,6 +12,15 @@ const STATUS_CLASSES = {
   no_evidence: 'bg-surface-soft text-text-dim',
 };
 
+// Legend swatches need solid ink — the 7–15% alpha block tokens used for the
+// large cells are invisible at 12px.
+const LEGEND_DOT_CLASSES = {
+  secure: 'bg-[color:var(--mark-green)]',
+  developing: 'bg-[color:var(--mark-amber)]',
+  needs_support: 'bg-[color:var(--mark-coral)]',
+  no_evidence: 'bg-surface-soft border border-line-strong',
+};
+
 function percent(value) {
   if (value == null || Number.isNaN(Number(value))) return null;
   const numeric = Number(value);
@@ -42,7 +51,7 @@ export default function MasteryHeatmap({ heatmap, onSelectStudent }) {
       <div className="mb-5 flex flex-wrap gap-3 text-xs font-bold text-text-muted" aria-label="Mastery status legend">
         {Object.entries(STATUS_LABELS).map(([status, label]) => (
           <span key={status} className="inline-flex items-center gap-2">
-            <span className={`h-3 w-3 rounded-full ${STATUS_CLASSES[status]}`} aria-hidden="true" />
+            <span className={`h-3 w-3 rounded-full ${LEGEND_DOT_CLASSES[status]}`} aria-hidden="true" />
             {label}
           </span>
         ))}

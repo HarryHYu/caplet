@@ -9,7 +9,7 @@ import { ArrowUpRightIcon } from '@heroicons/react/24/outline';
 const ToolCard = ({ tool, badge }) => (
   <Link
     to={tool.path}
-    className="group flex min-h-full flex-col gap-4 rounded-lg border border-line-soft bg-surface-body p-6 transition-colors duration-150 hover:border-accent/60"
+    className="group flex min-h-full flex-col gap-4 rounded-lg border border-line-soft bg-surface-body p-6 card-lift focus-ring hover:border-accent/60"
   >
     <div className="flex items-start justify-between">
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">
@@ -17,7 +17,7 @@ const ToolCard = ({ tool, badge }) => (
       </div>
       <div className="flex items-center gap-2">
         {badge > 0 && (
-          <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold leading-none text-white">
+          <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold leading-none text-accent-contrast">
             {badge > 99 ? '99+' : badge}
           </span>
         )}

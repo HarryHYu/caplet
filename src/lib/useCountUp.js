@@ -8,6 +8,10 @@ import { useEffect, useRef, useState } from 'react';
 export default function useCountUp(value, duration = 700) {
   const [display, setDisplay] = useState(value);
   const fromRef = useRef(value);
+  // Tracks the number currently on screen so an interrupted animation can
+  // resume from where it visibly is, instead of snapping back to the value
+  // the previous run started from.
+  const displayRef = useRef(value);
 
   useEffect(() => {
     const from = fromRef.current;
@@ -19,7 +23,9 @@ export default function useCountUp(value, duration = 700) {
     const tick = (now) => {
       const t = Math.min(1, (now - start) / duration);
       const eased = 1 - (1 - t) ** 3; // ease-out cubic
-      setDisplay(Math.round(from + (to - from) * eased));
+      const next = Math.round(from + (to - from) * eased);
+      displayRef.current = next;
+      setDisplay(next);
       if (t < 1) {
         raf = requestAnimationFrame(tick);
       } else {
@@ -27,7 +33,12 @@ export default function useCountUp(value, duration = 700) {
       }
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      // If the value changes mid-animation, the next run starts from the
+      // currently displayed number rather than the stale starting point.
+      fromRef.current = displayRef.current;
+    };
   }, [value, duration]);
 
   return display;

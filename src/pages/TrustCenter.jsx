@@ -28,7 +28,7 @@ const TrustCenter = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="reveal max-w-5xl mb-16">
           <span className="font-hand text-accent text-xl -rotate-2 inline-block mb-5">clear answers, in one place</span>
@@ -47,9 +47,9 @@ const TrustCenter = () => {
 
         <div className="grid gap-12 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="reveal lg:sticky lg:top-28 lg:self-start">
-            <nav aria-label="Trust centre sections" className="rounded-3xl bg-surface-raised p-4 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <nav aria-label="Trust centre sections" className="rounded-3xl bg-surface-raised p-4 shadow-card">
               {sections.map((section) => (
-                <a key={section.id} href={`#${section.id}`} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-text-muted hover:bg-surface-soft hover:text-accent transition-colors">
+                <a key={section.id} href={`#${section.id}`} className="focus-ring flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-text-muted hover:bg-surface-soft hover:text-accent transition-colors">
                   {createElement(section.icon, { className: 'h-5 w-5 shrink-0' })}
                   {section.label}
                 </a>
@@ -115,13 +115,13 @@ const TrustCenter = () => {
               <p className="mt-4">Email <a className="font-bold text-accent" href="mailto:contact@caplet.org?subject=Privacy%20complaint">contact@caplet.org</a> with the account, issue and preferred outcome. We will acknowledge the complaint, investigate it, explain the result and provide any available review path. If it is not resolved, you may contact the <a className="font-bold text-accent" href="https://www.oaic.gov.au/privacy/privacy-complaints" target="_blank" rel="noreferrer">Office of the Australian Information Commissioner</a>. Online-safety concerns can also be raised with the <a className="font-bold text-accent" href="https://www.esafety.gov.au/report" target="_blank" rel="noreferrer">eSafety Commissioner</a>.</p>
             </section>
 
-            <section id="contact" className="scroll-mt-28 rounded-3xl bg-[color:var(--mark-blue)] p-8 md:p-12 text-white shadow-[0_30px_60px_-38px_rgba(19,81,170,0.7)]">
-              <p className="font-hand text-xl text-white/80 -rotate-2 inline-block mb-3">need a human?</p>
+            <section id="contact" className="scroll-mt-28 rounded-3xl bg-[color:var(--mark-blue)] p-8 md:p-12 text-accent-contrast shadow-card">
+              <p className="font-hand text-xl text-accent-contrast/80 -rotate-2 inline-block mb-3">need a human?</p>
               <h2 className="font-display text-3xl md:text-4xl font-extrabold tracking-tight">Contact and escalation</h2>
-              <p className="mt-4 max-w-2xl text-white/85 leading-relaxed">For privacy, safety, security, school-readiness or account-data questions, contact us directly. Include the account email and enough detail to route the request, but do not send passwords or financial records.</p>
+              <p className="mt-4 max-w-2xl text-accent-contrast/85 leading-relaxed">For privacy, safety, security, school-readiness or account-data questions, contact us directly. Include the account email and enough detail to route the request, but do not send passwords or financial records.</p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <a href="mailto:contact@caplet.org" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">contact@caplet.org</a>
-                <Link to="/contact" className="rounded-2xl bg-white/10 px-5 py-3 text-sm font-bold text-white hover:bg-white/20 transition-colors">Contact page</Link>
+                <a href="mailto:contact@caplet.org" className="press focus-ring rounded-2xl bg-surface-raised px-5 py-3 text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">contact@caplet.org</a>
+                <Link to="/contact" className="press focus-ring rounded-2xl bg-accent-contrast/10 px-5 py-3 text-sm font-bold text-accent-contrast hover:bg-accent-contrast/20 transition-colors">Contact page</Link>
               </div>
             </section>
 
@@ -138,9 +138,9 @@ const TrustCenter = () => {
 
 function TrustSection({ id, title, icon, tone, children }) {
   return (
-    <section id={id} className={`scroll-mt-28 rounded-3xl p-8 md:p-10 ${tone} shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]`}>
+    <section id={id} className={`scroll-mt-28 rounded-3xl p-8 md:p-10 ${tone} shadow-card`}>
       <div className="mb-6 flex items-center gap-4">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-raised shadow-[0_12px_28px_-22px_rgba(20,20,18,0.5)]">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-raised shadow-pop">
           {createElement(icon, { className: 'h-6 w-6 text-accent' })}
         </span>
         <h2 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-text-primary">{title}</h2>

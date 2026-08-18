@@ -17,6 +17,7 @@ const CourseComplete = () => {
   const [course, setCourse] = useState(null);
   const [progress, setProgress] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [momentum, setMomentum] = useState(null);
 
   // Inline "fill 2-3 fields" form (only shown when the profile is sparse).
   const [quick, setQuick] = useState({ annualIncome: '', savingsBalance: '', superBalance: '' });
@@ -29,16 +30,19 @@ const CourseComplete = () => {
   useEffect(() => {
     let active = true;
     (async () => {
-      const [courseData, progressData, profileData] = await Promise.all([
+      const [courseData, progressData, profileData, momentumData] = await Promise.all([
         api.getCourse(courseId).catch(() => null),
         api.getCourseProgress(courseId).catch(() => null),
         // Never block the celebration on a financial-profile failure.
         api.getFinancialProfile().then((r) => r.financialProfile).catch(() => null),
+        // Streak chip is a bonus — never block on it either.
+        api.getStudyStreak?.().then((r) => r?.momentum || null).catch(() => null) ?? Promise.resolve(null),
       ]);
       if (!active) return;
       setCourse(courseData);
       setProgress(progressData);
       setProfile(profileData);
+      setMomentum(momentumData);
       setLoading(false);
     })();
     return () => {
@@ -78,7 +82,7 @@ const CourseComplete = () => {
   const cp = progress?.courseProgress;
   if (cp && cp.status !== 'completed') {
     return (
-      <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+      <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
         <div className="container-custom max-w-2xl reveal">
           <span className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">almost there</span>
           <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8">Not quite<br />finished.</h1>
@@ -86,7 +90,7 @@ const CourseComplete = () => {
             You&apos;ve completed {cp.completedLessons} of {cp.totalLessons} lessons in
             {course?.title ? ` ${course.title}` : ' this course'}. Finish the rest to unlock your next step.
           </p>
-          <Link to={`/courses/${courseId}`} className="btn-primary py-4 px-10 text-sm hover:-translate-y-0.5 transition-transform">
+          <Link to={`/courses/${courseId}`} className="btn-primary focus-ring card-lift py-4 px-10 text-sm">
             Back to Course
           </Link>
         </div>
@@ -98,31 +102,47 @@ const CourseComplete = () => {
   const sparse = profileIsSparse(profile);
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-3xl">
-        {/* Acknowledgement */}
-        <header className="mb-16 reveal">
-          <p className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">nice work</p>
-          <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8">
+        {/* Acknowledgement — the site's biggest reward moment gets one
+            deliberate burst of motion: tada on the kicker, then a short
+            rise stagger down the page. */}
+        <header className="mb-16">
+          <p className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3 animate-tada">nice work</p>
+          <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8 animate-rise" style={{ animationDelay: '120ms' }}>
             {course?.title ? course.title : 'Course'}<br />complete.
           </h1>
-          <p className="text-xl text-text-muted max-w-xl leading-relaxed">
+          <p className="text-xl text-text-muted max-w-xl leading-relaxed animate-rise" style={{ animationDelay: '200ms' }}>
             {cp
               ? `You finished all ${cp.totalLessons} lesson${cp.totalLessons === 1 ? '' : 's'}. That's real progress, now let's put it to work.`
               : "That's real progress, now let's put it to work."}
           </p>
+          {(cp?.totalLessons || Number(momentum?.currentStreak) > 0) && (
+            <div className="mt-7 flex flex-wrap gap-3">
+              {cp?.totalLessons ? (
+                <span className="inline-flex animate-streak-pop items-center gap-1.5 rounded-full bg-[color:var(--block-green)] px-3.5 py-1.5 text-sm font-bold text-[color:var(--mark-green)]" style={{ animationDelay: '280ms' }}>
+                  ✓ {cp.totalLessons} lesson{cp.totalLessons === 1 ? '' : 's'} done
+                </span>
+              ) : null}
+              {Number(momentum?.currentStreak) > 0 && (
+                <span className="inline-flex animate-streak-pop items-center gap-1.5 rounded-full bg-[color:var(--block-amber)] px-3.5 py-1.5 text-sm font-bold text-[color:var(--mark-amber)]" style={{ animationDelay: '360ms' }}>
+                  🔥 {momentum.currentStreak}-day streak
+                </span>
+              )}
+            </div>
+          )}
         </header>
 
         {/* Inline profile prompt (only when sparse) */}
         {sparse && !quickSaved && (
-          <div className="mb-16 block-cream rounded-3xl p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="mb-16 block-cream rounded-3xl p-10 shadow-card animate-rise" style={{ animationDelay: '300ms' }}>
             <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-2">Make the Tools Yours</h2>
             <p className="text-sm font-medium text-text-dim mb-8">
               Add a few numbers and we&apos;ll tailor your next step. Private to you, and you can change it anytime.
             </p>
             <form onSubmit={handleQuickSave} className="space-y-8">
               {quickError && (
-                <div className="px-6 py-4 rounded-xl bg-red-500/10 text-red-500 font-medium text-sm">{quickError}</div>
+                <div role="alert" className="animate-shake-x px-6 py-4 rounded-xl bg-surface-error text-text-error font-medium text-sm">{quickError}</div>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                 <div className="space-y-3">
@@ -144,7 +164,7 @@ const CourseComplete = () => {
                     placeholder="e.g. 15000" className={inputClass} />
                 </div>
               </div>
-              <button type="submit" disabled={savingQuick} className="btn-primary py-4 px-10 text-sm disabled:opacity-30 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" disabled={savingQuick} className="btn-primary focus-ring card-lift py-4 px-10 text-sm disabled:opacity-30">
                 {savingQuick ? 'Saving...' : 'Save and Personalize'}
               </button>
             </form>
@@ -152,12 +172,12 @@ const CourseComplete = () => {
         )}
 
         {/* One concrete next action */}
-        <div className="block-blue rounded-3xl p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+        <div className="block-blue rounded-3xl p-10 shadow-card animate-rise" style={{ animationDelay: '380ms' }}>
           <p className="text-xs font-semibold text-accent mb-3">Your Next Step</p>
           <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-3">{action.title}</h2>
           <p className="text-sm font-medium text-text-muted leading-relaxed mb-8 max-w-xl">{action.rationale}</p>
           <div className="flex flex-wrap items-center gap-6">
-            <Link to={action.to} className="btn-primary py-4 px-10 text-sm hover:-translate-y-0.5 transition-transform">
+            <Link to={action.to} className="btn-primary focus-ring card-lift py-4 px-10 text-sm">
               Let&apos;s Go
             </Link>
             {!sparse && (
@@ -169,7 +189,7 @@ const CourseComplete = () => {
         </div>
 
         {/* Secondary nav */}
-        <div className="mt-12 flex flex-wrap gap-8 reveal">
+        <div className="mt-12 flex flex-wrap gap-8 animate-rise" style={{ animationDelay: '460ms' }}>
           <Link to={`/courses/${courseId}`} className="text-sm font-medium text-text-dim hover:text-accent transition-colors">
             ← Back to Course
           </Link>

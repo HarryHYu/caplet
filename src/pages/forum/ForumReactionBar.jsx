@@ -13,7 +13,7 @@ export default function ForumReactionBar({ counts = {}, myReactions = [], onTogg
             type="button"
             onClick={() => onToggle(r.value, !active)}
             title={r.label}
-            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold transition-colors duration-150 ${active ? 'text-white' : 'text-text-muted hover:bg-surface-soft'}`}
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold transition-colors duration-150 ${active ? 'text-accent-contrast' : 'text-text-muted hover:bg-surface-soft'}`}
             style={active ? { background: 'var(--forum-accent)', borderColor: 'var(--forum-accent)' } : { borderColor: 'var(--line-soft)' }}
           >
             <span aria-hidden="true">{r.emoji}</span>

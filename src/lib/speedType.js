@@ -21,7 +21,7 @@ export const typeable = (s) => String(s || '').replace(
   (c) => SMART_TYPE_MAP[c] || c,
 );
 
-const stripPunct = (w) => String(w || '').replace(/[^\p{L}\p{N}']/gu, '');
+export const stripPunct = (w) => String(w || '').replace(/[^\p{L}\p{N}']/gu, '');
 
 // Accent folding: é/è/ê → e, ç → c, œ → oe… — what lets a plain keyboard
 // type a French (or any accented) essay. Without it, "École" typed as
@@ -90,6 +90,109 @@ export function charStatuses(target, typed, opts = {}) {
 export function splitSentences(text) {
   return String(text || '').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
 }
+
+/**
+ * LCS-based word alignment for grading a typed attempt against a target.
+ * Strictly positional diffing cascades: one dropped or extra word marks every
+ * later word wrong even when the rest is perfect. Aligning on the longest
+ * common subsequence of equal words keeps the attempt anchored:
+ *   - matched words           → 'correct'
+ *   - unmatched target words  → 'missed' (paired positionally with unmatched
+ *     typed words where possible, surfaced as 'wrong' + what was typed)
+ *   - leftover typed words    → extras, counted as errors
+ *
+ * @param {string[]} targetWords
+ * @param {string[]} typedWords
+ * @param {(a:string,b:string)=>boolean} equals word-equality predicate
+ * @returns {{entries:Array<{word:string,status:'correct'|'wrong'|'missed',typed?:string}>, extras:number}}
+ */
+export function alignWords(targetWords, typedWords, equals) {
+  const a = targetWords || [];
+  const b = typedWords || [];
+  const n = a.length;
+  const m = b.length;
+  // DP table of LCS lengths; small essays (a few hundred words) keep n*m cheap.
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i -= 1) {
+    for (let j = m - 1; j >= 0; j -= 1) {
+      dp[i][j] = equals(a[i], b[j])
+        ? dp[i + 1][j + 1] + 1
+        : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  const entries = [];
+  let extras = 0;
+  let i = 0;
+  let j = 0;
+  // Between matches, pair unmatched target/typed words positionally so a
+  // substituted word still reports what was typed for it.
+  let pendingTargets = [];
+  let pendingTyped = [];
+  const flush = () => {
+    const paired = Math.min(pendingTargets.length, pendingTyped.length);
+    for (let k = 0; k < pendingTargets.length; k += 1) {
+      if (k < paired) entries.push({ word: pendingTargets[k], status: 'wrong', typed: pendingTyped[k] });
+      else entries.push({ word: pendingTargets[k], status: 'missed' });
+    }
+    extras += Math.max(0, pendingTyped.length - paired);
+    pendingTargets = [];
+    pendingTyped = [];
+  };
+  while (i < n && j < m) {
+    if (equals(a[i], b[j]) && dp[i][j] === dp[i + 1][j + 1] + 1) {
+      flush();
+      entries.push({ word: a[i], status: 'correct' });
+      i += 1;
+      j += 1;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+      pendingTargets.push(a[i]);
+      i += 1;
+    } else {
+      pendingTyped.push(b[j]);
+      j += 1;
+    }
+  }
+  while (i < n) { pendingTargets.push(a[i]); i += 1; }
+  while (j < m) { pendingTyped.push(b[j]); j += 1; }
+  flush();
+  return { entries, extras };
+}
+
+/**
+ * Signature of one speed-run configuration, so personal bests are kept per
+ * scope + forgiveness combination: a forgiving 10-word sprint must never
+ * claim the strict whole-essay best.
+ */
+export function runSignature({ sectionIds = [], customText = null, flow = 'full', ignoreCase = false, ignorePunct = false, ignoreAccents = false } = {}) {
+  const scope = customText != null
+    ? `custom:${hashString(String(customText))}`
+    : [...sectionIds].sort().join('+');
+  const flags = [flow, ignoreCase ? 'c' : '', ignorePunct ? 'p' : '', ignoreAccents ? 'a' : ''].filter(Boolean).join('.');
+  return `${scope}|${flags}`;
+}
+
+function hashString(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i += 1) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; // djb2
+  return h.toString(36);
+}
+
+/** localStorage key for one essay + run-configuration personal best. */
+export const speedBestKey = (essayId, signature) => `caplet:speedbest:${essayId}:${signature}`;
+
+/**
+ * The one semantic verdict trio every essay drill colours with — design
+ * tokens only, defined once so "correct" looks the same in every mode:
+ *   correct → --mark-green ink (block-green fill), wrong → the error tokens,
+ *   hint/pending → dim text.
+ */
+export const VERDICT_CLASS = {
+  correct: 'text-[color:var(--mark-green)]',
+  correctBg: 'block-green text-[color:var(--mark-green)]',
+  wrong: 'text-text-error',
+  wrongBg: 'bg-surface-error text-text-error',
+  pending: 'text-text-dim',
+};
 
 /** The typeable sections of a parsed essay, in reading order. */
 export function buildSpeedSections(essay) {

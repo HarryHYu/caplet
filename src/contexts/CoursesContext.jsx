@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import api from '../services/api';
 
 const CoursesContext = createContext();
@@ -26,20 +26,28 @@ export const CoursesProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasFetched, setHasFetched] = useState(false);
+  // Monotonically increasing request id: only the most recent fetch is allowed
+  // to write state, so a slow earlier response can never overwrite the results
+  // of a newer one (e.g. while typing in the course search).
+  const requestIdRef = useRef(0);
 
   const fetchCourses = useCallback(async (params = {}) => {
+    const requestId = ++requestIdRef.current;
+    const isCurrent = () => requestId === requestIdRef.current;
     try {
       setLoading(true);
       setError(null);
       const response = await api.getCourses(params);
-      setCourses(extractCourses(response));
+      if (isCurrent()) setCourses(extractCourses(response));
       return response;
     } catch (error) {
-      setError(error.message);
+      if (isCurrent()) setError(error.message);
       throw error;
     } finally {
-      setLoading(false);
-      setHasFetched(true);
+      if (isCurrent()) {
+        setLoading(false);
+        setHasFetched(true);
+      }
     }
   }, []);
 

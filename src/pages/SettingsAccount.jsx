@@ -7,16 +7,16 @@ const SettingsAccount = () => {
 
   return (
     <div>
-      <div className="mb-12">
+      <div className="mb-10">
         <p className="font-hand text-accent text-lg -rotate-2 inline-block mb-1">your account</p>
-        <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Account Settings</h2>
-        <p className="text-sm font-medium text-text-dim mt-2">
+        <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Account settings</h2>
+        <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">
           Manage your account type and sign-in session.
         </p>
       </div>
-      <div className="space-y-12">
-        <div>
-          <h3 className="text-sm font-display font-bold tracking-tight text-text-primary mb-6">Account type</h3>
+      <div>
+        <section className="border-b border-line-soft pb-10" aria-labelledby="account-type-heading">
+          <h3 id="account-type-heading" className="mb-6 text-xl font-display font-extrabold tracking-tight text-text-primary">Account type</h3>
           <div className="rounded-3xl bg-surface-soft p-6 sm:p-8">
             <p className="text-sm font-medium text-text-dim mb-4">
               Current role
@@ -32,14 +32,14 @@ const SettingsAccount = () => {
               </p>
             )}
             {user?.role !== 'admin' && (
-              <Link to="/teacher/onboarding" className="btn-primary w-fit px-8 py-3">
+              <Link to="/teacher/onboarding" className="btn-primary press w-fit px-8 py-3">
                 {user?.role === 'instructor' ? 'Manage teacher affiliation' : 'Request teacher access'}
               </Link>
             )}
           </div>
-        </div>
-        <section aria-labelledby="account-session-heading">
-          <h3 id="account-session-heading" className="mb-6 text-sm font-display font-bold tracking-tight text-text-primary">Session</h3>
+        </section>
+        <section className="pt-10" aria-labelledby="account-session-heading">
+          <h3 id="account-session-heading" className="mb-6 text-xl font-display font-extrabold tracking-tight text-text-primary">Session</h3>
           <div className="flex flex-col gap-5 rounded-3xl bg-surface-soft p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div>
               <h4 className="text-xl font-display font-extrabold text-text-primary">Sign out of Caplet</h4>
@@ -47,7 +47,7 @@ const SettingsAccount = () => {
                 End your session on this device. Your courses, progress, and preferences will remain saved.
               </p>
             </div>
-            <button type="button" onClick={logout} className="btn-secondary shrink-0 text-text-error hover:bg-surface-error">
+            <button type="button" onClick={logout} className="btn-secondary press shrink-0 text-text-error hover:bg-surface-error">
               <ArrowRightOnRectangleIcon className="h-5 w-5" aria-hidden="true" /> Sign out
             </button>
           </div>

@@ -16,14 +16,25 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const getSystemPreference = () => window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+  // All localStorage access is guarded: privacy modes and blocked storage
+  // throw on any touch, and the theme boots before everything else — an
+  // unguarded read here crashes the whole app at startup.
   const [theme, setTheme] = useState(() => {
-    const stored = localStorage.getItem('theme');
-    return ['light', 'dark', 'system'].includes(stored) ? stored : DEFAULT_THEME;
+    try {
+      const stored = localStorage.getItem('theme');
+      return ['light', 'dark', 'system'].includes(stored) ? stored : DEFAULT_THEME;
+    } catch {
+      return DEFAULT_THEME;
+    }
   });
   const [systemIsDark, setSystemIsDark] = useState(getSystemPreference);
   const [palette, setPalette] = useState(() => {
-    const stored = localStorage.getItem('palette');
-    return palettes.includes(stored) ? stored : 'paper';
+    try {
+      const stored = localStorage.getItem('palette');
+      return palettes.includes(stored) ? stored : 'paper';
+    } catch {
+      return 'paper';
+    }
   });
   const isDark = theme === 'dark' || (theme === 'system' && systemIsDark);
 
@@ -37,12 +48,20 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch {
+      // Non-fatal: the choice just won't persist.
+    }
   }, [isDark, theme]);
 
   useEffect(() => {
     document.documentElement.dataset.palette = palette;
-    localStorage.setItem('palette', palette);
+    try {
+      localStorage.setItem('palette', palette);
+    } catch {
+      // Non-fatal: the choice just won't persist.
+    }
   }, [palette]);
 
   const toggleTheme = () => {

@@ -15,7 +15,7 @@ export default function ForumSidebarLeft({ categories, isModerator }) {
           to="/forum"
           end
           className={({ isActive }) =>
-            `flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-bold transition-colors duration-150 ${isActive ? 'text-white' : 'text-text-primary hover:bg-surface-soft'}`
+            `flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-bold transition-colors duration-150 ${isActive ? 'text-accent-contrast' : 'text-text-primary hover:bg-surface-soft'}`
           }
           style={({ isActive }) => (isActive ? { background: 'var(--forum-accent)' } : undefined)}
         >
@@ -25,7 +25,7 @@ export default function ForumSidebarLeft({ categories, isModerator }) {
         <NavLink
           to="/forum/saved"
           className={({ isActive }) =>
-            `flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-bold transition-colors duration-150 ${isActive ? 'text-white' : 'text-text-primary hover:bg-surface-soft'}`
+            `flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-bold transition-colors duration-150 ${isActive ? 'text-accent-contrast' : 'text-text-primary hover:bg-surface-soft'}`
           }
           style={({ isActive }) => (isActive ? { background: 'var(--forum-accent)' } : undefined)}
         >

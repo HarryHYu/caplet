@@ -12,6 +12,7 @@ import { normalizeSlide } from '../../lib/slideSchema';
 import { isAllowedEmbedUrl } from '../../lib/embedPolicy';
 import MathText from '../MathText';
 import DesmosCalculator from './DesmosCalculator';
+import { CHART_COLORS } from '../../utils/chartColors';
 import DOMPurify from 'dompurify';
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -87,18 +88,29 @@ function setsEqual(a, b) {
   return true;
 }
 
+/* Semantic quiz-feedback classes — every interactive slide type shares these.
+   Correct = --mark-green (the site-wide "right answer" green, palette- and
+   dark-mode-aware); incorrect = the error tokens. mark-green is a CSS var,
+   not a Tailwind color, hence the color-mix arbitrary values for alpha. */
+const OK_TEXT = 'text-[var(--mark-green)]';
+const OK_BORDER = 'border-[color-mix(in_srgb,var(--mark-green)_55%,transparent)]';
+const OK_BORDER_STRONG = 'border-[var(--mark-green)]';
+const OK_BG = 'bg-[color-mix(in_srgb,var(--mark-green)_8%,transparent)]';
+const BAD_TEXT = 'text-text-error';
+const BAD_BORDER = 'border-text-error/50';
+const BAD_BORDER_STRONG = 'border-text-error/70';
+const BAD_BG = 'bg-surface-error';
+
 function FeedbackBanner({ correct, explanation }) {
   return (
     <div
       className={`mt-5 p-4 rounded-xl border ${
-        correct
-          ? 'bg-emerald-500/[0.06] border-emerald-500/30'
-          : 'bg-rose-500/[0.05] border-rose-400/30'
+        correct ? `${OK_BG} ${OK_BORDER}` : `${BAD_BG} border-line-error`
       }`}
     >
       <p
         className={`text-xs font-bold mb-1.5 ${
-          correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
+          correct ? `${OK_TEXT} animate-pop` : BAD_TEXT
         }`}
       >
         {correct ? 'Correct' : 'Not quite'}
@@ -126,7 +138,7 @@ function Kicker({ children }) {
 const TEXT_TONE_STYLES = {
   neutral: '',
   info: 'border-l-4 border-l-accent/60 pl-5 md:pl-6',
-  tip: 'border-l-4 border-l-emerald-400/70 pl-5 md:pl-6',
+  tip: 'border-l-4 border-l-[color-mix(in_srgb,var(--mark-green)_70%,transparent)] pl-5 md:pl-6',
   warning: 'border-l-4 border-l-amber-500/70 pl-5 md:pl-6',
   example: 'border-l-4 border-l-violet-400/70 pl-5 md:pl-6',
   quote: 'border-l-4 border-l-line-soft pl-5 md:pl-6 italic font-serif',
@@ -274,9 +286,9 @@ function ChoiceSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
           const trulyCorrect = correctSet.has(optIdx);
           let classes = 'border-line-soft hover:border-accent/60 hover:bg-accent/5';
           if (showFeedback && trulyCorrect) {
-            classes = 'border-emerald-500/60 bg-emerald-500/[0.07] text-text-primary';
+            classes = `${OK_BORDER} ${OK_BG} text-text-primary`;
           } else if (showFeedback && chosen && !trulyCorrect) {
-            classes = 'border-rose-400/60 bg-rose-500/[0.06] text-text-primary';
+            classes = `${BAD_BORDER} ${BAD_BG} text-text-primary`;
           } else if (showFeedback) {
             classes = 'border-line-soft opacity-50';
           } else if (chosen) {
@@ -297,9 +309,9 @@ function ChoiceSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
               <span
                 className={`w-8 h-8 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold tracking-wide ${
                   showFeedback && trulyCorrect
-                    ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                    ? `${OK_BORDER_STRONG} ${OK_TEXT} ${OK_BG}`
                     : showFeedback && chosen && !trulyCorrect
-                      ? 'border-rose-400 text-rose-500 bg-rose-500/10'
+                      ? `${BAD_BORDER_STRONG} ${BAD_TEXT} ${BAD_BG}`
                       : chosen
                         ? 'border-accent text-accent bg-accent/10'
                         : 'border-line-soft text-text-dim group-hover:border-accent group-hover:text-accent'
@@ -403,8 +415,8 @@ function FillBlankSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
           const correct = isBlankCorrect(idx);
           const stateClasses = showFeedback
             ? correct
-              ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
-              : 'border-rose-400 text-rose-500 bg-rose-500/10'
+              ? `${OK_BORDER_STRONG} ${OK_TEXT} ${OK_BG}`
+              : `${BAD_BORDER_STRONG} ${BAD_TEXT} ${BAD_BG}`
             : 'border-accent/40 focus:border-accent focus:ring-2 focus:ring-accent/20';
 
           if (slide.mode === 'dropdown' && blank.options?.length) {
@@ -454,7 +466,7 @@ function FillBlankSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
 
       {showFeedback && !allCorrect && (
         <div className="text-sm text-text-muted mb-4">
-          <p className="font-medium text-xs mb-1.5 text-rose-500">Answers</p>
+          <p className="font-medium text-xs mb-1.5 text-text-error">Answers</p>
           <ul className="space-y-0.5">
             {slide.blanks.map((b, i) => (
               <li key={i}>
@@ -576,7 +588,7 @@ function FlipCard({ card }) {
       type="button"
       onClick={() => flippable && setFlipped((v) => !v)}
       className={`group min-h-[180px] rounded-2xl border border-line-soft bg-surface-raised p-5 text-left flex flex-col transition-all ${
-        flippable ? 'cursor-pointer hover:border-accent/60 hover:-translate-y-0.5' : ''
+        flippable ? 'cursor-pointer hover:border-accent/60 card-lift' : ''
       }`}
     >
       <p className="text-xs font-medium text-text-dim mb-2">
@@ -685,11 +697,11 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
           let rightCls = 'border-line-soft bg-surface-raised';
 
           if (showFeedback && correct) {
-            leftCls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
-            rightCls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
+            leftCls = `${OK_BORDER} ${OK_BG}`;
+            rightCls = `${OK_BORDER} ${OK_BG}`;
           } else if (showFeedback && !correct) {
-            leftCls = 'border-rose-400/60 bg-rose-500/[0.06]';
-            rightCls = 'border-rose-400/60 bg-rose-500/[0.06]';
+            leftCls = `${BAD_BORDER} ${BAD_BG}`;
+            rightCls = `${BAD_BORDER} ${BAD_BG}`;
           } else if (isDraggingThisRow) {
             rightCls = 'border-accent/50 bg-accent/10 opacity-50';
           } else if (isOverThisRow) {
@@ -733,15 +745,15 @@ function MatchSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
       )}
       {showFeedback && !allCorrect && (
         <div className="mt-4 text-sm text-text-muted">
-          <p className="font-medium text-xs mb-2 text-rose-500">Correct matches</p>
+          <p className="font-medium text-xs mb-2 text-text-error">Correct matches</p>
           <div className="space-y-1.5">
             {pairs.map((p, i) => (
               <div key={i} className="flex items-center gap-2 text-xs">
-                <span className="flex-1 px-2 py-1.5 rounded-lg bg-surface-soft border border-emerald-500/30 text-text-primary">
+                <span className={`flex-1 px-2 py-1.5 rounded-lg bg-surface-soft border ${OK_BORDER} text-text-primary`}>
                   <MathText>{p.left}</MathText>
                 </span>
                 <span className="text-text-dim shrink-0">→</span>
-                <span className="flex-1 px-2 py-1.5 rounded-lg bg-surface-soft border border-emerald-500/30 text-text-primary">
+                <span className={`flex-1 px-2 py-1.5 rounded-lg bg-surface-soft border ${OK_BORDER} text-text-primary`}>
                   <MathText>{p.right}</MathText>
                 </span>
               </div>
@@ -813,8 +825,8 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
           const isDragging = dragging === pos;
           const isOver = dragOver === pos && dragging !== pos;
           let cls = 'border-line-soft bg-surface-raised';
-          if (showFeedback && inRightSpot) cls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
-          else if (showFeedback) cls = 'border-rose-400/60 bg-rose-500/[0.06]';
+          if (showFeedback && inRightSpot) cls = `${OK_BORDER} ${OK_BG}`;
+          else if (showFeedback) cls = `${BAD_BORDER} ${BAD_BG}`;
           else if (isDragging) cls = 'border-accent bg-accent/10 opacity-50';
           else if (isOver) cls = 'border-accent bg-accent/[0.04] scale-[1.01]';
 
@@ -850,7 +862,7 @@ function OrderSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
       )}
       {showFeedback && !allCorrect && (
         <div className="mt-4 text-sm text-text-muted">
-          <p className="font-medium text-xs mb-1.5 text-rose-500">Correct order</p>
+          <p className="font-medium text-xs mb-1.5 text-text-error">Correct order</p>
           <ol className="list-decimal list-inside space-y-0.5">
             {correctOrder.map((i) => <li key={i}><MathText>{items[i]}</MathText></li>)}
           </ol>
@@ -941,14 +953,14 @@ function DividerSlide({ slide }) {
 
 function CheckIcon() {
   return (
-    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className={`w-4 h-4 ${OK_TEXT} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
     </svg>
   );
 }
 function XIcon() {
   return (
-    <svg className="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className={`w-4 h-4 ${BAD_TEXT} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
     </svg>
   );
@@ -1030,8 +1042,6 @@ export default function SlideRenderer({ slide, variant = '', alreadyAnswered = f
 /* ──────────────────────────────────────────────────────────────────────────
    Chart
    ────────────────────────────────────────────────────────────────────────── */
-
-const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 // Strip $...$ and $$...$$ LaTeX delimiters from a string.
 // Used for chart axis labels which are rendered as SVG text nodes (no KaTeX support).
@@ -1168,7 +1178,7 @@ function DiagramSlide({ slide }) {
           overflow-auto allows panning wide/tall diagrams without outer scroll. */}
       <div className="flex-1 min-h-0 relative rounded-2xl border border-line-soft bg-surface-raised p-4 md:p-6 overflow-auto flex items-center justify-center">
         {error ? (
-          <p className="text-sm text-rose-500 font-mono">{error}</p>
+          <p className="text-sm text-text-error font-mono">{error}</p>
         ) : (
           <>
             {status === 'loading' && (
@@ -1289,10 +1299,12 @@ function HotspotSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
         {slide.regions.map((region) => {
           const isSelected = selected === region.id;
           const isThisCorrect = region.correct;
+          // Fixed white (not tokens) is intentional: this outline sits over an
+          // arbitrary user-supplied image, not a themed surface.
           let borderCls = 'border-white/50 hover:border-accent hover:bg-accent/10';
-          if (showFeedback && isSelected && isThisCorrect) borderCls = 'border-emerald-400 bg-emerald-400/20';
-          else if (showFeedback && isSelected && !isThisCorrect) borderCls = 'border-rose-400 bg-rose-400/20';
-          else if (showFeedback && isThisCorrect) borderCls = 'border-emerald-400/70 bg-emerald-400/10';
+          if (showFeedback && isSelected && isThisCorrect) borderCls = `${OK_BORDER_STRONG} ${OK_BG}`;
+          else if (showFeedback && isSelected && !isThisCorrect) borderCls = `${BAD_BORDER_STRONG} ${BAD_BG}`;
+          else if (showFeedback && isThisCorrect) borderCls = `${OK_BORDER} ${OK_BG}`;
           else if (isSelected) borderCls = 'border-accent bg-accent/10';
 
           return (
@@ -1305,10 +1317,10 @@ function HotspotSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
               title={showFeedback ? region.label : undefined}
             >
               {showFeedback && isThisCorrect && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-bold">✓</span>
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[var(--mark-green)] text-accent-contrast text-xs flex items-center justify-center font-bold">✓</span>
               )}
               {showFeedback && isSelected && !isThisCorrect && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-rose-500 text-white text-xs flex items-center justify-center font-bold">✗</span>
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-text-error text-accent-contrast text-xs flex items-center justify-center font-bold">✗</span>
               )}
             </button>
           );
@@ -1394,8 +1406,8 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
             const isOver = dragOver === pos && dragging !== pos;
 
             let cardCls = 'border-line-soft bg-surface-raised';
-            if (showFeedback && inRightSpot) cardCls = 'border-emerald-500/60 bg-emerald-500/[0.07]';
-            else if (showFeedback) cardCls = 'border-rose-400/60 bg-rose-500/[0.06]';
+            if (showFeedback && inRightSpot) cardCls = `${OK_BORDER} ${OK_BG}`;
+            else if (showFeedback) cardCls = `${BAD_BORDER} ${BAD_BG}`;
             else if (isDraggingThis) cardCls = 'border-accent bg-accent/10 opacity-50';
             else if (isOver) cardCls = 'border-accent bg-accent/[0.05] scale-105';
 
@@ -1417,7 +1429,7 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
                   {!showFeedback && <span className="block text-text-dim/30 text-xs mb-1">⠿</span>}
                   <p className="text-sm font-medium text-text-primary leading-snug"><MathText>{event.label}</MathText></p>
                   {showFeedback && event.year && (
-                    <p className={`mt-1.5 text-xs font-mono font-bold ${inRightSpot ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
+                    <p className={`mt-1.5 text-xs font-mono font-bold ${inRightSpot ? OK_TEXT : BAD_TEXT}`}>
                       {String(event.year).replace(/^\$+|\$+$/g, '')}
                     </p>
                   )}
@@ -1444,7 +1456,7 @@ function TimelineSlide({ slide, alreadyAnswered, alreadyCorrect, onSubmit }) {
       )}
       {showFeedback && !allCorrect && (
         <div className="mt-4 text-sm text-text-muted">
-          <p className="font-medium text-xs mb-2 text-rose-500">Correct order</p>
+          <p className="font-medium text-xs mb-2 text-text-error">Correct order</p>
           <ol className="flex flex-wrap gap-2">
             {correctOrder.map((i) => (
               <li key={i} className="px-2 py-1 rounded-lg bg-surface-raised border border-line-soft text-xs">

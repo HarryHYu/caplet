@@ -30,7 +30,7 @@ export function IconButton({ label, className = '', children, ...props }) {
       type="button"
       aria-label={label}
       title={label}
-      className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg ${className}`}
+      className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg press focus-ring ${className}`}
       {...props}
     >
       {children}

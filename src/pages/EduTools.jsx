@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import ToolCard from '../components/ToolCard';
@@ -44,10 +45,18 @@ const categories = ['Practice', 'Revision'];
 
 const EduTools = () => {
   useReveal();
+  const { isAuthenticated } = useAuth();
   const [dueCount, setDueCount] = useState(0);
   const [essayCount, setEssayCount] = useState(0);
 
   useEffect(() => {
+    // This page is public — only fetch personal counts once signed in,
+    // otherwise every visit produces guaranteed 401s.
+    if (!isAuthenticated) {
+      setDueCount(0);
+      setEssayCount(0);
+      return undefined;
+    }
     let cancelled = false;
     Promise.all([
       api.getDueReviewItems().catch(() => null),
@@ -60,12 +69,12 @@ const EduTools = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const badges = { '/revision': dueCount, '/essays': essayCount };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
 
         {/* Header */}
@@ -81,7 +90,7 @@ const EduTools = () => {
               </p>
             </div>
             <div className="shrink-0 hidden md:block">
-              <div className="block-blue rounded-3xl px-8 py-6 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <div className="block-blue rounded-3xl px-8 py-6 text-center shadow-card">
                 <span className="text-5xl font-display font-extrabold tracking-tight text-blue">{eduTools.length}</span>
                 <p className="text-xs font-bold text-text-muted mt-1 uppercase tracking-wide">Tools</p>
               </div>
@@ -93,7 +102,7 @@ const EduTools = () => {
           <p className="max-w-3xl text-sm font-semibold leading-relaxed text-text-muted">
             AI feedback is practice guidance, not an official result. Check important feedback with a teacher and the original source.
           </p>
-          <Link to="/trust#ai" className="shrink-0 text-sm font-bold text-accent hover:text-accent-strong">
+          <Link to="/trust#ai" className="focus-ring press shrink-0 rounded-lg text-sm font-bold text-accent hover:text-accent-strong">
             Understand AI limitations →
           </Link>
         </div>

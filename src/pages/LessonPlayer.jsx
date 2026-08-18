@@ -27,7 +27,7 @@ class SlideErrorBoundary extends Component {
           <p className="text-text-muted text-sm">This slide ran into an error.</p>
           <button
             type="button"
-            className="btn-secondary px-5 py-2.5 rounded-xl text-sm hover:-translate-y-0.5 transition-transform"
+            className="btn-secondary focus-ring press px-5 py-2.5 rounded-xl text-sm"
             onClick={() => this.setState({ error: null })}
           >
             Try Again
@@ -95,15 +95,15 @@ function SlideTicker({ slides, currentIndex, quizScores, visited, onJump }) {
         let bar = 'bg-line-soft';
         if (wasVisited) bar = 'bg-accent';
         if (isCurrent) bar = 'bg-accent';
-        if (isInteractive && answered === true) bar = 'bg-emerald-500';
-        if (isInteractive && answered === false) bar = 'bg-rose-400';
+        if (isInteractive && answered === true) bar = 'bg-[color:var(--mark-green)]';
+        if (isInteractive && answered === false) bar = 'bg-[color:var(--mark-coral)]';
         return (
           <button
             key={i}
             type="button"
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => onJump(i)}
-            className="group relative flex-1 py-2"
+            className="focus-ring group relative flex-1 rounded py-2"
           >
             <span
               className={`block rounded-full transition-all duration-300 ${bar} ${
@@ -129,7 +129,7 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 w-8 h-8 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors flex items-center justify-center"
+            className="focus-ring shrink-0 w-8 h-8 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors flex items-center justify-center"
             aria-label="Close outline"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,7 +172,7 @@ function OutlinePanel({ course, lesson, completedLessonIds, onClose }) {
                         >
                           <span className="inline-flex items-center gap-2">
                             {done && (
-                              <svg className="w-3.5 h-3.5 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3.5 h-3.5 shrink-0 text-[color:var(--mark-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                               </svg>
                             )}
@@ -227,6 +227,9 @@ const LessonPlayer = () => {
   const [startingLive, setStartingLive] = useState(false);
   const lessonRootRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Trailing debounce for per-slide progress saves: rapid arrow-key navigation
+  // produces one API call ~800ms after the user settles, not one per slide.
+  const slideProgressTimer = useRef(null);
   const analyticsJourney = useRef({ lessonId: null, journeyId: null, startedAt: 0, viewed: new Set() });
 
 
@@ -377,11 +380,21 @@ const LessonPlayer = () => {
         return next;
       });
       if (isAuthenticated && lesson?.id) {
-        api.updateLessonProgress(lesson.id, { lastSlideIndex: newIndex }).catch(() => {});
+        const lessonId = lesson.id;
+        if (slideProgressTimer.current) window.clearTimeout(slideProgressTimer.current);
+        slideProgressTimer.current = window.setTimeout(() => {
+          slideProgressTimer.current = null;
+          api.updateLessonProgress(lessonId, { lastSlideIndex: newIndex }).catch(() => {});
+        }, 800);
       }
     },
     [hasSlides, slides.length, isAuthenticated, lesson?.id],
   );
+
+  // Clear any pending (not yet fired) progress save when leaving the lesson.
+  useEffect(() => () => {
+    if (slideProgressTimer.current) window.clearTimeout(slideProgressTimer.current);
+  }, []);
 
   const markComplete = useCallback(async () => {
     if (!isAuthenticated) {
@@ -531,12 +544,12 @@ const LessonPlayer = () => {
     return (
       <div className="min-h-[100dvh] pt-14 md:pt-16 bg-surface-body flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="block-cream rounded-3xl px-8 py-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="block-cream rounded-3xl px-8 py-10 shadow-card">
             <p className="text-2xl font-display font-extrabold tracking-tight mb-4">{error || 'Lesson not found'}</p>
             <p className="text-text-muted mb-8">
               The lesson you're looking for doesn't exist or may have been moved.
             </p>
-            <Link to={`/courses/${courseId}`} className="btn-primary py-3 px-8 hover:-translate-y-0.5 transition-transform">
+            <Link to={`/courses/${courseId}`} className="btn-primary focus-ring py-3 px-8 card-lift">
               Back to Course
             </Link>
           </div>
@@ -555,7 +568,7 @@ const LessonPlayer = () => {
     <div ref={lessonRootRef} className={`h-[100dvh] bg-surface-body text-text-primary flex flex-col overflow-hidden ${isFullscreen ? 'pt-0' : 'pt-14 md:pt-16'}`}>
       {/* ─────── Save-error toast ─────── */}
       {saveError && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] bg-red-600 text-white text-sm px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 max-w-sm">
+        <div role="alert" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] animate-shake-x bg-surface-error text-text-error border border-[color:var(--border-error)] text-sm font-semibold px-5 py-3 rounded-2xl shadow-pop flex items-center gap-3 max-w-sm">
           <span>{saveError}</span>
           <button onClick={() => setSaveError(null)} className="ml-1 opacity-70 hover:opacity-100 text-lg leading-none">&times;</button>
         </div>
@@ -568,7 +581,7 @@ const LessonPlayer = () => {
             <div className="flex items-center gap-3 md:gap-5 min-w-0">
               <Link
                 to={`/courses/${course.id}${containingModule ? `/modules/${containingModule.id}` : ''}`}
-                className="shrink-0 w-9 h-9 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-all duration-200 flex items-center justify-center group"
+                className="focus-ring shrink-0 w-9 h-9 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-all duration-200 flex items-center justify-center group"
                 aria-label={containingModule ? 'Back to module' : 'Back to course'}
               >
                 <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -622,7 +635,7 @@ const LessonPlayer = () => {
               </div>
 
               {completed && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-[color:var(--mark-green)] bg-[color:var(--block-green)] px-3 py-1.5 rounded-full">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
@@ -636,7 +649,7 @@ const LessonPlayer = () => {
                   type="button"
                   onClick={hostLive}
                   disabled={startingLive}
-                  className="hidden sm:inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-accent hover:border-accent/60 transition-colors disabled:opacity-50"
+                  className="focus-ring hidden sm:inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-accent hover:border-accent/60 transition-colors disabled:opacity-50"
                   aria-label="Host a live session"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -649,7 +662,7 @@ const LessonPlayer = () => {
               <button
                 type="button"
                 onClick={toggleFullscreen}
-                className="inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors"
+                className="focus-ring inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors"
                 aria-label={isFullscreen ? 'Exit lesson fullscreen' : 'Open lesson fullscreen'}
                 aria-pressed={isFullscreen}
               >
@@ -673,7 +686,7 @@ const LessonPlayer = () => {
                   if (!calcOpen) setCalcEverOpened(true);
                   setCalcOpen((v) => !v);
                 }}
-                className={`inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border transition-colors ${
+                className={`focus-ring inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border transition-colors ${
                   calcOpen
                     ? 'border-accent bg-accent/10 text-accent'
                     : 'border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim'
@@ -689,7 +702,7 @@ const LessonPlayer = () => {
               <button
                 type="button"
                 onClick={() => setOutlineOpen(true)}
-                className="inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors"
+                className="focus-ring inline-flex items-center gap-2 h-9 px-3 md:px-4 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim transition-colors"
                 aria-label="Open course outline"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -740,7 +753,7 @@ const LessonPlayer = () => {
                   onClick={toggleSaveSlide}
                   disabled={savingSlide}
                   aria-label={savedSlides.has(currentSlideIndex) ? 'Remove saved slide' : 'Save slide'}
-                  className={`shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-full border transition-colors text-xs font-medium ${
+                  className={`focus-ring shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-full border transition-colors text-xs font-medium ${
                     savedSlides.has(currentSlideIndex)
                       ? 'border-accent text-accent bg-accent/10 hover:bg-accent/20'
                       : 'border-line-soft text-text-muted hover:border-text-dim hover:text-text-primary'
@@ -815,7 +828,7 @@ const LessonPlayer = () => {
                 type="button"
                 onClick={() => goToSlide(currentSlideIndex - 1)}
                 disabled={currentSlideIndex <= 0}
-                className="group inline-flex items-center gap-3 h-11 md:h-12 px-4 md:px-5 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="focus-ring group inline-flex items-center gap-3 h-11 md:h-12 px-4 md:px-5 rounded-full border border-line-soft text-text-muted hover:text-text-primary hover:border-text-dim disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
                 <svg className="w-4 h-4 transition-transform group-enabled:group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -830,27 +843,34 @@ const LessonPlayer = () => {
               </div>
 
               {isLastSlide ? (
-                <button
-                  type="button"
-                  onClick={markComplete}
-                  disabled={saving || completed}
-                  className="btn-primary h-11 md:h-12 px-6 md:px-8 rounded-2xl hover:-translate-y-0.5 transition-transform"
-                >
-                  {completed
-                    ? nextLesson
-                      ? 'Next Lesson →'
-                      : 'Lesson Completed'
-                    : saving
-                      ? 'Saving…'
-                      : nextLesson
-                        ? 'Complete & Continue'
-                        : 'Complete Lesson'}
-                </button>
+                completed && nextLesson ? (
+                  <Link
+                    to={`/courses/${course.id}/lessons/${nextLesson.id}`}
+                    className="btn-primary focus-ring h-11 md:h-12 px-6 md:px-8 rounded-2xl card-lift inline-flex items-center"
+                  >
+                    Next Lesson →
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={markComplete}
+                    disabled={saving || completed}
+                    className="btn-primary focus-ring h-11 md:h-12 px-6 md:px-8 rounded-2xl card-lift"
+                  >
+                    {completed
+                      ? 'Lesson Completed'
+                      : saving
+                        ? 'Saving…'
+                        : nextLesson
+                          ? 'Complete & Continue'
+                          : 'Complete Lesson'}
+                  </button>
+                )
               ) : (
                 <button
                   type="button"
                   onClick={() => goToSlide(currentSlideIndex + 1)}
-                  className="group inline-flex items-center gap-3 h-11 md:h-12 px-5 md:px-6 rounded-full bg-text-primary text-surface-body hover:opacity-90 active:opacity-100 transition-opacity"
+                  className="focus-ring group inline-flex items-center gap-3 h-11 md:h-12 px-5 md:px-6 rounded-full bg-text-primary text-surface-body hover:opacity-90 active:opacity-100 transition-opacity"
                 >
                   <span className="text-xs font-medium">Next</span>
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -879,14 +899,23 @@ const LessonPlayer = () => {
               </div>
 
               <div className="mt-16 pt-8 flex justify-end">
-                <button
-                  type="button"
-                  onClick={markComplete}
-                  disabled={saving || completed}
-                  className="btn-primary h-12 px-8 rounded-2xl hover:-translate-y-0.5 transition-transform"
-                >
-                  {completed ? 'Lesson Completed' : saving ? 'Saving…' : 'Mark as Complete'}
-                </button>
+                {completed && nextLesson ? (
+                  <Link
+                    to={`/courses/${course.id}/lessons/${nextLesson.id}`}
+                    className="btn-primary focus-ring h-12 px-8 rounded-2xl card-lift inline-flex items-center"
+                  >
+                    Next Lesson →
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={markComplete}
+                    disabled={saving || completed}
+                    className="btn-primary focus-ring h-12 px-8 rounded-2xl card-lift"
+                  >
+                    {completed ? 'Lesson Completed' : saving ? 'Saving…' : 'Mark as Complete'}
+                  </button>
+                )}
               </div>
             </article>
           </div>
@@ -990,7 +1019,7 @@ const LessonPlayer = () => {
           <button
             type="button"
             onClick={() => setCalcOpen(false)}
-            className="w-7 h-7 rounded-full border border-line-soft text-text-muted hover:text-text-primary flex items-center justify-center transition-colors"
+            className="focus-ring w-7 h-7 rounded-full border border-line-soft text-text-muted hover:text-text-primary flex items-center justify-center transition-colors"
             aria-label="Close calculator"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

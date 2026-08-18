@@ -91,22 +91,26 @@ async function markEconomicsAnswer(input) {
   if (!question || question.length < 5) {
     const err = new Error('A question is required (at least 5 characters).');
     err.status = 400;
+    err.expose = true;
     throw err;
   }
   if (!Number.isFinite(rawMarkValue) || rawMarkValue < 1) {
     const err = new Error('markValue must be a positive number of marks.');
     err.status = 400;
+    err.expose = true;
     throw err;
   }
   const markValue = clampInt(rawMarkValue, 1, 50, 1);
   if (!studentAnswer || studentAnswer.length < 15) {
     const err = new Error('Your answer looks too short to mark — write at least a couple of sentences.');
     err.status = 400;
+    err.expose = true;
     throw err;
   }
   if (studentAnswer.length > 8000) {
     const err = new Error('Your answer is too long (max 8,000 characters).');
     err.status = 400;
+    err.expose = true;
     throw err;
   }
 

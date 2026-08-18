@@ -197,7 +197,7 @@ export default function HostLive() {
         </div>
 
         {actionError && (
-          <div className="mb-6 px-4 py-3 rounded-xl border border-rose-400/40 bg-rose-500/[0.06] text-sm text-rose-500">
+          <div className="mb-6 px-4 py-3 rounded-xl border border-line-error bg-surface-error text-sm text-text-error">
             {actionError}
           </div>
         )}
@@ -242,7 +242,7 @@ export default function HostLive() {
                   key={Math.ceil(remainingMs / 1000)}
                   initial={{ scale: remainingMs < 5000 ? 1.4 : 1.1, opacity: 0.6 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className={`font-mono font-bold ${remainingMs < 5000 ? 'text-rose-500' : ''}`}
+                  className={`font-mono font-bold ${remainingMs < 5000 ? 'text-text-error' : ''}`}
                 >
                   {Math.ceil(remainingMs / 1000)}s remaining
                 </Motion.span>

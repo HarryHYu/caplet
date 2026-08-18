@@ -31,6 +31,14 @@ const s = (v, d = '') => (v == null ? d : String(v));
 const arr = (v) => (Array.isArray(v) ? v : []);
 const bool = (v) => v === true || v === 'true';
 const int = (v) => (Number.isInteger(v) ? v : null);
+// Finite-number coercion: null/undefined and anything non-finite (NaN,
+// Infinity, unparseable strings) fall back to the default instead of
+// passing NaN through to the renderer.
+const finite = (v, d) => {
+  if (v == null) return d;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : d;
+};
 
 function normalizeSlide(slide) {
   if (!slide || typeof slide !== 'object') return null;
@@ -164,9 +172,15 @@ function normalizeSlide(slide) {
     case 'ordering':
     case 'order': {
       const items = arr(slide.items).map(s);
-      const correctOrder = Array.isArray(slide.correctOrder) && slide.correctOrder.length === items.length
-        ? slide.correctOrder.filter((n) => Number.isInteger(n) && n >= 0 && n < items.length)
-        : items.map((_, i) => i);
+      // correctOrder must be a full permutation of 0..items.length-1 —
+      // filtering out bad entries could leave a short or duplicated order
+      // that breaks the player. Anything else falls back to identity.
+      const rawOrder = Array.isArray(slide.correctOrder) ? slide.correctOrder : null;
+      const isPermutation = rawOrder
+        && rawOrder.length === items.length
+        && rawOrder.every((n) => Number.isInteger(n) && n >= 0 && n < items.length)
+        && new Set(rawOrder).size === items.length;
+      const correctOrder = isPermutation ? rawOrder : items.map((_, i) => i);
       return {
         type: 'order',
         prompt: s(slide.prompt),
@@ -228,12 +242,12 @@ function normalizeSlide(slide) {
         image: s(slide.image || slide.url),
         question: s(slide.question),
         regions: arr(slide.regions).map((r) => ({
-          id: Number(r.id ?? 0),
+          id: finite(r.id, 0),
           label: s(r.label),
-          x: Number(r.x ?? 0),
-          y: Number(r.y ?? 0),
-          w: Number(r.w ?? 10),
-          h: Number(r.h ?? 10),
+          x: finite(r.x, 0),
+          y: finite(r.y, 0),
+          w: finite(r.w, 10),
+          h: finite(r.h, 10),
           correct: bool(r.correct),
         })),
         explanation: slide.explanation || undefined,
@@ -267,10 +281,10 @@ function normalizeSlide(slide) {
         })),
         bounds: slide.bounds
           ? {
-              left: Number(slide.bounds.left ?? -10),
-              right: Number(slide.bounds.right ?? 10),
-              bottom: Number(slide.bounds.bottom ?? -10),
-              top: Number(slide.bounds.top ?? 10),
+              left: finite(slide.bounds.left, -10),
+              right: finite(slide.bounds.right, 10),
+              bottom: finite(slide.bounds.bottom, -10),
+              top: finite(slide.bounds.top, 10),
             }
           : undefined,
         caption: slide.caption || undefined,
@@ -308,13 +322,18 @@ function validateSlide(slide, index) {
         if (i < 0 || i >= n.options.length) errors.push(`slide ${index} (choice): correct index ${i} out of range`);
       });
       break;
-    case 'fillblank':
+    case 'fillblank': {
       if (!n.template) errors.push(`slide ${index} (fillblank): template is required`);
       if (!n.blanks.length) errors.push(`slide ${index} (fillblank): at least one blank required`);
       n.blanks.forEach((b, i) => {
         if (!b.answers || !b.answers.length) errors.push(`slide ${index} (fillblank): blank ${i} has no answers`);
       });
+      const placeholderCount = (n.template.match(/\{\{\d+\}\}/g) || []).length;
+      if (n.template && n.blanks.length && placeholderCount !== n.blanks.length) {
+        errors.push(`slide ${index} (fillblank): template has ${placeholderCount} {{N}} placeholder(s) but ${n.blanks.length} blank(s)`);
+      }
       break;
+    }
     case 'cards':
       if (!n.cards.length) errors.push(`slide ${index} (cards): at least one card required`);
       n.cards.forEach((c, i) => {

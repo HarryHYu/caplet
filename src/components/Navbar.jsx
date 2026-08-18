@@ -6,6 +6,7 @@ import { useLayout } from '../contexts/LayoutContext';
 import UserAvatar from './UserAvatar';
 import ProductModeSwitch from './ProductModeSwitch';
 import { isProductNavItemActive, moneyNavigation } from '../config/productNavigation';
+import { STUDY_NAV_ITEMS, MONEY_NAV_ITEM, PUBLIC_NAV_ITEMS } from '../config/navigation';
 
 // `mobileOnly` is set when the vertical rail owns navigation on large screens —
 // the top bar then only appears on mobile, so the two never overlap.
@@ -62,22 +63,16 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
     return () => { document.body.style.overflow = previousOverflow; };
   }, [isOpen]);
 
-  const studyCoreItems = [
-    { path: '/dashboard', label: 'Today', privateOnly: true },
-    { path: '/classes', label: 'Classes', privateOnly: true },
-    { path: '/library', label: 'Subjects' },
-    { path: '/practice', label: 'Practice', privateOnly: true },
-    { path: '/study-plan', label: 'Plan', privateOnly: true },
-    { path: '/essays', label: 'Essays', privateOnly: true },
-    { path: '/money', label: 'Money' },
-  ];
+  // One shared study set (config/navigation.js) so the top bar, hamburger,
+  // sidebar and tablet bar all expose the same destinations.
+  const studyCoreItems = [...STUDY_NAV_ITEMS, MONEY_NAV_ITEM];
   const visibleItems = (items) => items.filter((item) => {
     if (item.flagKey && (featureFlagsLoading || !isEnabled(item.flagKey))) return false;
     if (isAuthenticated) return !item.publicOnly;
     return !item.privateOnly;
   });
   const visibleCoreItems = !isAuthenticated
-    ? []
+    ? visibleItems(PUBLIC_NAV_ITEMS)
     : effectiveProductMode === 'money'
       ? visibleItems(moneyNavigation)
       : visibleItems(studyCoreItems);
@@ -93,7 +88,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
     ? isProductNavItemActive(item, location)
     : isActive(item.path);
 
-  const hidePaths = ['/login', '/register', '/play'];
+  const hidePaths = ['/login', '/register', '/forgot-password', '/reset-password', '/play'];
   if (hidePaths.includes(location.pathname)) return null;
   if (location.pathname.startsWith('/guardian-consent/')) return null;
   if (location.pathname.startsWith('/live/host')) return null;
@@ -105,7 +100,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
       } ${
         hideOnTablet ? 'md:max-lg:hidden' : ''
       } ${
-        scrolled ? 'shadow-[0_6px_24px_-16px_rgba(0,0,0,0.4)]' : ''
+        scrolled ? 'shadow-pop' : ''
       }`}
     >
       <div className="mx-auto max-w-[1400px] px-3 md:px-6 lg:px-8">
@@ -113,7 +108,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
 
           <div className="flex min-w-0 items-center gap-1.5 md:gap-3">
             {/* Logo */}
-            <Link to={homePath} className="flex items-center gap-2 group relative z-10 shrink-0">
+            <Link to={homePath} className="focus-ring flex items-center gap-2 group relative z-10 shrink-0 rounded-lg">
               <div className="grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft transition-all duration-300 group-hover:scale-105 group-hover:ring-accent">
                 <img
                   src="/logo.png"
@@ -138,7 +133,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                 to={item.path}
                 {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
                 aria-current={isItemActive(item) ? 'page' : undefined}
-                className={`inline-flex min-h-9 items-center rounded-lg px-2 text-xs font-bold tracking-[0.02em] transition-colors ${
+                className={`focus-ring press inline-flex min-h-9 items-center rounded-lg px-2 text-xs font-bold tracking-[0.02em] transition-colors ${
                   isItemActive(item) ? 'text-accent bg-accent-soft' : 'text-text-muted hover:text-text-primary hover:bg-surface-soft'
                 }`}
               >
@@ -165,7 +160,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                   aria-expanded={showUserMenu}
                   aria-haspopup="true"
                   aria-controls="account-navigation"
-                  className={`flex h-9 w-9 items-center justify-center gap-1.5 rounded-full border p-1 transition-all duration-200 active:scale-95 sm:w-auto sm:justify-start sm:pr-2.5 ${
+                  className={`focus-ring flex h-9 w-9 items-center justify-center gap-1.5 rounded-full border p-1 transition-all duration-200 active:scale-95 sm:w-auto sm:justify-start sm:pr-2.5 ${
                     showUserMenu
                       ? 'border-accent bg-accent-soft'
                       : 'border-line-soft hover:border-text-dim hover:bg-surface-soft'
@@ -184,11 +179,11 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                 </button>
 
                 {showUserMenu && (
-                  <div id="account-navigation" className="absolute right-0 top-full mt-2 w-44 overflow-hidden rounded-xl border border-line-soft bg-surface-raised py-1 shadow-[0_8px_32px_rgba(0,0,0,0.12)] animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div id="account-navigation" className="absolute right-0 top-full mt-2 w-44 overflow-hidden rounded-xl border border-line-soft bg-surface-raised py-1 shadow-pop animate-pop">
                     <Link
                       to="/settings"
                       onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-text-primary transition-colors hover:bg-surface-soft"
+                      className="focus-ring flex items-center gap-2 px-3 py-1.5 text-xs text-text-primary transition-colors hover:bg-surface-soft"
                     >
                       <svg className="h-3 w-3 text-text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -200,7 +195,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                     <button
                       type="button"
                       onClick={logout}
-                      className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                      className="focus-ring flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-error transition-colors hover:bg-surface-error"
                     >
                       <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -212,16 +207,17 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
               </div>
             ) : (
               <div className="flex items-center gap-1">
-                <Link to="/login" className="inline-flex min-h-9 items-center rounded-lg px-2.5 text-xs font-bold tracking-[0.02em] text-text-muted transition-colors hover:bg-surface-soft hover:text-text-primary">Sign in</Link>
-                <Link to="/register" className="inline-flex min-h-9 items-center justify-center rounded-lg bg-accent px-3 text-xs font-bold tracking-[0.02em] text-white transition-colors hover:bg-accent-strong">Get started</Link>
+                <Link to="/login" className="focus-ring press inline-flex min-h-9 items-center rounded-lg px-2.5 text-xs font-bold tracking-[0.02em] text-text-muted transition-colors hover:bg-surface-soft hover:text-text-primary">Sign in</Link>
+                <Link to="/register" className="focus-ring press inline-flex min-h-9 items-center justify-center rounded-lg bg-accent px-3 text-xs font-bold tracking-[0.02em] text-accent-contrast transition-colors hover:bg-accent-strong">Get started</Link>
               </div>
             )}
 
-            {/* Mobile hamburger */}
-            {isAuthenticated && effectiveProductMode === 'study' && <button
+            {/* Mobile hamburger — signed-in study nav AND the guest menu.
+                Money mode keeps it hidden: MoneyMobileNav owns mobile nav there. */}
+            {effectiveProductMode === 'study' && <button
               ref={mobileButtonRef}
               type="button"
-              className={`relative h-9 w-9 rounded-full text-text-muted transition-[color,background-color,transform] duration-200 hover:bg-surface-soft hover:text-text-primary active:scale-95 lg:hidden ${isOpen ? 'bg-surface-soft text-text-primary' : ''}`}
+              className={`focus-ring relative h-9 w-9 rounded-full text-text-muted transition-[color,background-color,transform] duration-200 hover:bg-surface-soft hover:text-text-primary active:scale-95 lg:hidden ${isOpen ? 'bg-surface-soft text-text-primary' : ''}`}
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? 'close menu' : 'open menu'}
               aria-expanded={isOpen}
@@ -235,8 +231,8 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
           </div>
         </div>
 
-        {/* Mobile menu */}
-        {isAuthenticated && effectiveProductMode === 'study' && isOpen && (
+        {/* Mobile menu — study items when signed in, public items for guests */}
+        {effectiveProductMode === 'study' && isOpen && (
           <div id="mobile-navigation" className="mobile-nav-panel nav-scrollbar-hidden max-h-[calc(100dvh-3.25rem)] overflow-y-auto overscroll-contain border-t border-line-soft px-1.5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
             <div className="mb-2 flex items-center justify-between px-3 py-1">
               <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-text-dim">Navigate</span>
@@ -251,7 +247,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                   onClick={() => setIsOpen(false)}
                   {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
                   aria-current={active ? 'page' : undefined}
-                  className={`mobile-nav-item mb-1 flex min-h-10 items-center justify-between rounded-xl px-3 text-xs font-bold tracking-[0.02em] transition-[color,background-color,transform] active:scale-[0.98] ${
+                  className={`focus-ring mobile-nav-item mb-1 flex min-h-10 items-center justify-between rounded-xl px-3 text-xs font-bold tracking-[0.02em] transition-[color,background-color,transform] active:scale-[0.98] ${
                     active
                       ? 'bg-accent-soft text-accent'
                       : 'text-text-primary hover:bg-surface-soft'

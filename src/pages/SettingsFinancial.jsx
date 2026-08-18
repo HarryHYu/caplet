@@ -234,14 +234,14 @@ const SettingsFinancial = () => {
         </div>
 
         {/* Net worth snapshot */}
-        <div className="block-blue rounded-3xl px-7 py-6 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+        <div className="block-blue rounded-3xl px-7 py-6 shadow-card">
           <p className="text-xs font-semibold text-blue mb-1">Estimated net worth</p>
           <p className="font-display text-3xl font-extrabold tracking-tight text-text-primary">{fmtMoney(netWorth)}</p>
           <p className="text-xs font-medium text-text-dim mt-1">Savings plus super, minus total debt. A snapshot, not advice.</p>
         </div>
 
         <div className="pt-2">
-          <button type="submit" disabled={saving} className="btn-primary py-4 px-10 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-40 disabled:hover:translate-y-0">
+          <button type="submit" disabled={saving} className="btn-primary press py-4 px-10 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-40 disabled:hover:translate-y-0">
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>

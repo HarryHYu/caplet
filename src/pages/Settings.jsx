@@ -22,7 +22,7 @@ const Settings = () => {
   ];
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-white">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <div className="minimal-page-header reveal">
           <span className="section-kicker">Your space</span>

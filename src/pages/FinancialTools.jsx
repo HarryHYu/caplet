@@ -282,7 +282,7 @@ const FinancialTools = () => {
   };
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-white">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
 
         {/* Header */}
@@ -319,7 +319,7 @@ const FinancialTools = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search calculators…"
-              className="w-full pl-11 pr-10 py-3.5 bg-surface-raised border border-line-soft text-text-primary text-sm focus:border-accent outline-none transition-all rounded-xl placeholder:text-text-dim shadow-[0_12px_30px_-26px_rgba(20,20,18,0.4)]"
+              className="w-full pl-11 pr-10 py-3.5 bg-surface-raised border border-line-soft text-text-primary text-sm focus:border-accent outline-none transition-all rounded-xl placeholder:text-text-dim shadow-pop"
             />
             {searchQuery && (
               <button
@@ -343,7 +343,7 @@ const FinancialTools = () => {
                   type="button"
                   aria-pressed={selected}
                   onClick={() => setSelectedCategory(category)}
-                  className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-bold transition-colors ${selected ? 'bg-accent text-white' : 'border border-line-soft bg-surface-raised text-text-muted hover:text-text-primary'}`}
+                  className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-bold transition-colors ${selected ? 'bg-accent text-accent-contrast' : 'border border-line-soft bg-surface-raised text-text-muted hover:text-text-primary'}`}
                 >
                   {category}
                 </button>
@@ -364,7 +364,7 @@ const FinancialTools = () => {
               </div>
             </div>
           ) : (
-            <div className="py-24 text-center block-cream rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="py-24 text-center block-cream rounded-3xl shadow-card">
               <p className="text-text-primary font-display font-bold text-xl mb-3">No match found.</p>
               <button
                 onClick={clearFilters}

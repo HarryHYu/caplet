@@ -34,7 +34,7 @@ const InflationCalculator = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -50,7 +50,7 @@ const InflationCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-6">Mode</h2>
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               {[
@@ -60,7 +60,7 @@ const InflationCalculator = () => {
                 <button
                   key={val} type="button"
                   onClick={() => { setMode(val); setResult(null); }}
-                  className={`flex-1 py-3 px-4 text-sm font-bold rounded-xl transition-colors ${mode === val ? 'bg-accent text-white' : 'bg-block-cream text-text-muted hover:text-text-primary'}`}
+                  className={`flex-1 py-3 px-4 text-sm font-bold rounded-xl transition-colors ${mode === val ? 'bg-accent text-accent-contrast' : 'block-cream text-text-muted hover:text-text-primary'}`}
                 >
                   {label}
                 </button>
@@ -72,7 +72,7 @@ const InflationCalculator = () => {
                 <label className="text-sm font-bold text-text-dim mb-3 block">
                   {mode === 'cost' ? 'Current Cost (AUD)' : 'Current Savings (AUD)'}
                 </label>
-                <div className="relative rounded-xl bg-block-cream border border-line-soft focus-within:border-accent transition-colors">
+                <div className="relative rounded-xl block-cream border border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input
                     type="number" min="0" step="100" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00"
@@ -83,7 +83,7 @@ const InflationCalculator = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
                 <div>
                   <label className="text-sm font-bold text-text-dim mb-3 block">Annual Inflation Rate (%)</label>
-                  <div className="relative rounded-xl bg-block-cream border border-line-soft focus-within:border-accent transition-colors">
+                  <div className="relative rounded-xl block-cream border border-line-soft focus-within:border-accent transition-colors">
                     <input
                       type="number" min="0" max="50" step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="3.0"
                       className="w-full bg-transparent pl-4 pr-9 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/40"
@@ -94,7 +94,7 @@ const InflationCalculator = () => {
                 </div>
                 <div>
                   <label className="text-sm font-bold text-text-dim mb-3 block">Time Period</label>
-                  <div className="relative rounded-xl bg-block-cream border border-line-soft focus-within:border-accent transition-colors">
+                  <div className="relative rounded-xl block-cream border border-line-soft focus-within:border-accent transition-colors">
                     <input
                       type="number" min="1" max="100" step="1" value={years} onChange={(e) => setYears(e.target.value)} placeholder="Years"
                       className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/40"
@@ -102,17 +102,17 @@ const InflationCalculator = () => {
                   </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary w-full py-4 hover:-translate-y-0.5 transition-transform">Calculate</button>
+              <button type="submit" className="btn-primary press w-full py-4 hover:-translate-y-0.5 transition-transform">Calculate</button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 bg-block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-12 relative z-10">Inflation Impact</h2>
             {result ? (
               result.error ? (
-                <p className="text-sm font-bold text-accent relative z-10">{result.error}</p>
+                <p role="alert" className="text-sm font-bold text-text-error relative z-10">{result.error}</p>
               ) : (
-                <div className="space-y-10 relative z-10">
+                <div className="animate-rise space-y-10 relative z-10">
                   <div>
                     <p className="text-xs font-bold text-text-dim mb-3">
                       {result.mode === 'cost' ? `Cost in ${result.n} years` : `Purchasing power in ${result.n} years`}

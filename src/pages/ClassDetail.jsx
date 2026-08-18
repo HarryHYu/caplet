@@ -1,14 +1,64 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useReveal } from '../lib/useReveal';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 
+const TAB_NAMES = ['stream', 'classwork', 'people', 'moderation'];
+
+/**
+ * Accessible modal shell: role="dialog" + aria-modal, closes on Escape,
+ * moves focus into the dialog on open and restores it on close.
+ */
+const ModalShell = ({ labelledBy, onClose, maxWidthClass = 'max-w-lg', panelClass = 'p-10', children }) => {
+  const dialogRef = useRef(null);
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+    dialogRef.current?.focus();
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+        previouslyFocused.focus();
+      }
+    };
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-body/80 p-6 backdrop-blur-md">
+      <div
+        ref={dialogRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={labelledBy}
+        className={`bg-surface-raised rounded-3xl shadow-pop animate-pop outline-none ${maxWidthClass} w-full ${panelClass}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const ClassDetail = ({ initialTab = 'stream' }) => {
   const { classId } = useParams();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  // Active tab lives in the URL (?tab=…) so views are linkable and the back
+  // button walks through them.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  // …falling back to the route's own default (the demo tour opens a class
+  // straight on Classwork) before the plain Stream default.
+  const fallbackTab = TAB_NAMES.includes(initialTab) ? initialTab : 'stream';
+  const activeTab = TAB_NAMES.includes(tabParam) ? tabParam : fallbackTab;
+  const setActiveTab = (tab) => {
+    setSearchParams(tab === 'stream' ? {} : { tab });
+  };
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -28,13 +78,11 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
     content: '',
     attachmentUrl: '',
   });
-  const [activeTab, setActiveTab] = useState(initialTab); // 'stream' | 'classwork' | 'people' | 'moderation'
   const [announcementComments, setAnnouncementComments] = useState({});
   const [assignmentComments, setAssignmentComments] = useState({});
   const [openCommentSections, setOpenCommentSections] = useState({ announcement: new Set(), assignment: new Set() });
   const [commentDrafts, setCommentDrafts] = useState({ announcement: {}, assignmentClass: {}, assignmentPrivate: {} });
   const [assignmentPrivateTarget, setAssignmentPrivateTarget] = useState({}); // teacher: assignmentId -> student userId for private reply
-  const [loadingComments, setLoadingComments] = useState({ announcement: null, assignment: null });
   const [postingComment, setPostingComment] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState(null);
   const [reportTarget, setReportTarget] = useState(null);
@@ -49,9 +97,12 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
   const [addingTeacher, setAddingTeacher] = useState(false);
   const initialCommentOpenDone = useRef(false);
 
-  const load = async () => {
+  // Refetches class data. Only the first load (or a class switch) shows the
+  // full-screen loader — mutations refresh in place, keeping the rendered
+  // page while fresh data arrives.
+  const load = async ({ showLoader = false } = {}) => {
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const res = await api.getClassDetail(classId);
       setData(res);
       if (res?.membership?.isOwner || res?.membership?.role === 'admin') {
@@ -102,7 +153,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
       setLoading(false);
       return;
     }
-    load();
+    load({ showLoader: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, classId]);
 
@@ -126,27 +177,21 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
       assignment: new Set([...prev.assignment, ...toOpenAssignment]),
     }));
     toOpenAnnouncement.forEach(async (announcementId) => {
-      setLoadingComments((prev) => ({ ...prev, announcement: announcementId }));
       try {
         const list = await api.getAnnouncementComments(classId, announcementId);
         setAnnouncementComments((prev) => ({ ...prev, [announcementId]: Array.isArray(list) ? list : [] }));
       } catch (e) {
         console.warn('Failed to load announcement comments', e);
         setAnnouncementComments((prev) => ({ ...prev, [announcementId]: [] }));
-      } finally {
-        setLoadingComments((prev) => ({ ...prev, announcement: null }));
       }
     });
     toOpenAssignment.forEach(async (assignmentId) => {
-      setLoadingComments((prev) => ({ ...prev, assignment: assignmentId }));
       try {
         const list = await api.getAssignmentComments(classId, assignmentId);
         setAssignmentComments((prev) => ({ ...prev, [assignmentId]: Array.isArray(list) ? list : [] }));
       } catch (e) {
         console.warn('Failed to load assignment comments', e);
         setAssignmentComments((prev) => ({ ...prev, [assignmentId]: [] }));
-      } finally {
-        setLoadingComments((prev) => ({ ...prev, assignment: null }));
       }
     });
   }, [data]);
@@ -182,7 +227,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-body">
         <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-6 text-red-500">Error</span>
+          <span className="section-kicker mb-6 text-text-error">Error</span>
           <h2 className="text-3xl font-semibold text-text-primary mb-6">
             Something Went <br />Wrong.
           </h2>
@@ -388,55 +433,54 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
     return author.email?.charAt(0)?.toUpperCase() || '?';
   };
 
-  const fetchAnnouncementComments = async (announcementId) => {
-    if (announcementComments[announcementId]) return;
-    setLoadingComments((prev) => ({ ...prev, announcement: announcementId }));
+  const fetchAnnouncementComments = async (announcementId, { force = false } = {}) => {
+    if (!force && announcementComments[announcementId]) return;
     try {
       const list = await api.getAnnouncementComments(classroom.id, announcementId);
       setAnnouncementComments((prev) => ({ ...prev, [announcementId]: Array.isArray(list) ? list : [] }));
     } catch (e) {
       console.warn('Failed to load announcement comments', e);
       setAnnouncementComments((prev) => ({ ...prev, [announcementId]: [] }));
-    } finally {
-      setLoadingComments((prev) => ({ ...prev, announcement: null }));
     }
   };
 
-  const fetchAssignmentComments = async (assignmentId) => {
-    if (assignmentComments[assignmentId]) return;
-    setLoadingComments((prev) => ({ ...prev, assignment: assignmentId }));
+  const fetchAssignmentComments = async (assignmentId, { force = false } = {}) => {
+    if (!force && assignmentComments[assignmentId]) return;
     try {
       const list = await api.getAssignmentComments(classroom.id, assignmentId);
       setAssignmentComments((prev) => ({ ...prev, [assignmentId]: Array.isArray(list) ? list : [] }));
     } catch (e) {
       console.warn('Failed to load assignment comments', e);
       setAssignmentComments((prev) => ({ ...prev, [assignmentId]: [] }));
-    } finally {
-      setLoadingComments((prev) => ({ ...prev, assignment: null }));
     }
   };
 
   const toggleAnnouncementComments = (announcementId) => {
+    const isOpening = !openCommentSections.announcement.has(announcementId);
     setOpenCommentSections((prev) => {
       const next = new Set(prev.announcement);
       if (next.has(announcementId)) next.delete(announcementId);
       else next.add(announcementId);
       return { ...prev, announcement: next };
     });
-    fetchAnnouncementComments(announcementId);
+    // Refetch on every re-open (keeping any cached list rendered meanwhile)
+    // so counts and comments don't stay permanently stale.
+    if (isOpening) fetchAnnouncementComments(announcementId, { force: true });
   };
 
   const toggleAssignmentComments = (assignmentId) => {
+    const isOpening = !openCommentSections.assignment.has(assignmentId);
     setOpenCommentSections((prev) => {
       const next = new Set(prev.assignment);
       if (next.has(assignmentId)) next.delete(assignmentId);
       else next.add(assignmentId);
       return { ...prev, assignment: next };
     });
-    fetchAssignmentComments(assignmentId);
+    if (isOpening) fetchAssignmentComments(assignmentId, { force: true });
   };
 
   const handlePostAnnouncementComment = async (announcementId) => {
+    if (postingComment) return; // in-flight guard: Enter twice must not double-post
     const draft = commentDrafts.announcement[announcementId];
     if (!draft || !draft.trim()) return;
     setPostingComment(true);
@@ -456,6 +500,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
   };
 
   const handlePostAssignmentComment = async (assignmentId, { isPrivate, targetUserId }) => {
+    if (postingComment) return; // in-flight guard: Enter twice must not double-post
     const key = isPrivate ? 'assignmentPrivate' : 'assignmentClass';
     const draft = commentDrafts[key][assignmentId];
     if (!draft || !draft.trim()) return;
@@ -541,26 +586,26 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
     }
   };
 
+  // Token-based avatar tones (background + matching ink) so avatars follow
+  // the active theme instead of a raw Tailwind palette.
   const getAvatarColor = (name) => {
-    if (!name) return 'bg-gradient-to-br from-gray-400 to-gray-600';
-    const colors = [
-      'bg-gradient-to-br from-blue-400 to-blue-600',
-      'bg-gradient-to-br from-purple-400 to-purple-600',
-      'bg-gradient-to-br from-pink-400 to-pink-600',
-      'bg-gradient-to-br from-indigo-400 to-indigo-600',
-      'bg-gradient-to-br from-cyan-400 to-cyan-600',
-      'bg-gradient-to-br from-emerald-400 to-emerald-600',
-      'bg-gradient-to-br from-orange-400 to-orange-600',
-      'bg-gradient-to-br from-rose-400 to-rose-600',
+    const tones = [
+      'bg-accent text-accent-contrast',
+      'bg-surface-inverse text-text-contrast',
+      'block-blue text-blue',
+      'block-amber text-amber',
+      'block-green text-green',
+      'block-coral text-coral',
     ];
-    const hash = (name || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return colors[hash % colors.length];
+    if (!name) return tones[1];
+    const hash = String(name).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return tones[hash % tones.length];
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 px-6 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 px-6 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom space-y-12 reveal-stagger">
-        <div className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-10">
+        <div className="bg-surface-raised rounded-3xl shadow-card p-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
             <div className="flex-1">
               <button
@@ -585,7 +630,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
             </div>
             <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-6">
               <div className="flex items-center gap-4 px-6 py-4 bg-surface-soft rounded-2xl min-w-[240px]">
-                <div className={`w-10 h-10 rounded-sm bg-text-primary dark:bg-surface-raised flex items-center justify-center text-surface-body text-xs font-bold`}>
+                <div className="w-10 h-10 rounded-sm bg-surface-inverse flex items-center justify-center text-text-contrast text-xs font-bold">
                   {getInitials(user)}
                 </div>
                 <div>
@@ -602,7 +647,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
               </div>
               <div className="flex gap-4">
                 {isTeacher && (
-                  <Link to={`/classes/${classroom.id}/learning`} className="btn-primary">
+                  <Link to={`/classes/${classroom.id}/learning`} className="btn-primary press">
                     Learning insights
                   </Link>
                 )}
@@ -610,7 +655,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                   <button
                     type="button"
                     onClick={handleLeaveClass}
-                    className="btn-secondary"
+                    className="btn-secondary press"
                   >
                     Leave Class
                   </button>
@@ -619,7 +664,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                   <button
                     type="button"
                     onClick={handleDeleteClass}
-                    className="px-6 py-3 bg-red-500 text-white text-sm font-bold rounded-2xl hover:bg-red-600 hover:-translate-y-0.5 shadow-sm transition-transform"
+                    className="press focus-ring px-6 py-3 bg-text-error text-text-contrast text-sm font-bold rounded-2xl hover:opacity-90 shadow-sm transition-opacity"
                   >
                     Delete Class
                   </button>
@@ -630,7 +675,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
         </div>
 
         {error && (
-          <div className="p-6 rounded-2xl text-red-600 text-sm font-medium bg-red-50 dark:bg-red-900/20 animate-fade-in">
+          <div key={error} role="alert" className="p-6 rounded-2xl bg-surface-error text-text-error text-sm font-medium animate-shake-x">
             Error: {error}
           </div>
         )}
@@ -645,8 +690,8 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
           <button
             type="button"
             onClick={() => setActiveTab('stream')}
-            className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${activeTab === 'stream'
-              ? 'bg-accent text-white shadow-sm'
+            className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 focus-ring press ${activeTab === 'stream'
+              ? 'bg-accent text-accent-contrast shadow-sm'
               : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'
               }`}
           >
@@ -655,8 +700,8 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
           <button
             type="button"
             onClick={() => setActiveTab('classwork')}
-            className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${activeTab === 'classwork'
-              ? 'bg-accent text-white shadow-sm'
+            className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 focus-ring press ${activeTab === 'classwork'
+              ? 'bg-accent text-accent-contrast shadow-sm'
               : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'
               }`}
           >
@@ -665,8 +710,8 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
           <button
             type="button"
             onClick={() => setActiveTab('people')}
-            className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${activeTab === 'people'
-              ? 'bg-accent text-white shadow-sm'
+            className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 focus-ring press ${activeTab === 'people'
+              ? 'bg-accent text-accent-contrast shadow-sm'
               : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'
               }`}
           >
@@ -676,8 +721,8 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
             <button
               type="button"
               onClick={() => setActiveTab('moderation')}
-              className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${activeTab === 'moderation'
-                ? 'bg-accent text-white shadow-sm'
+              className={`px-8 py-3 text-sm font-bold rounded-xl transition-all duration-200 focus-ring press ${activeTab === 'moderation'
+                ? 'bg-accent text-accent-contrast shadow-sm'
                 : 'text-text-dim hover:text-text-primary hover:bg-surface-raised'
                 }`}
             >
@@ -691,11 +736,11 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
             <div className="space-y-5">
               {/* Composer: teachers only (like Google Classroom) */}
               {isTeacher && (
-                <div className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-8 hover:-translate-y-0.5 transition-transform mb-12">
+                <div className="bg-surface-raised rounded-3xl shadow-card p-8 card-lift mb-12">
                   <form onSubmit={handlePostAnnouncement}>
                     <div className="flex gap-6">
                       <div
-                        className={`flex-shrink-0 w-12 h-12 rounded-sm bg-text-primary dark:bg-surface-raised flex items-center justify-center text-surface-body text-xs font-bold ring-4 ring-line-soft dark:ring-line-strong`}
+                        className={"flex-shrink-0 w-12 h-12 rounded-sm bg-surface-inverse flex items-center justify-center text-text-contrast text-xs font-bold ring-4 ring-line-soft"}
                         aria-hidden
                       >
                         {getInitials(user)}
@@ -708,7 +753,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                           }
                           placeholder="Post an announcement..."
                           rows={3}
-                          className="w-full px-5 py-4 bg-surface-soft rounded-xl border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium leading-relaxed resize-none focus:border-accent outline-none transition-all"
+                          className="w-full px-5 py-4 bg-surface-soft rounded-xl border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium leading-relaxed resize-none outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                         />
                         <input
                           type="url"
@@ -717,13 +762,13 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                             setAnnouncementForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))
                           }
                           placeholder="Attachment URL (optional)..."
-                          className="mt-4 w-full px-5 py-3 bg-surface-soft rounded-xl border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium focus:border-accent outline-none transition-all"
+                          className="mt-4 w-full px-5 py-3 bg-surface-soft rounded-xl border border-line-soft text-text-primary placeholder-text-dim text-sm font-medium outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                         />
                         <div className="flex justify-end mt-6">
                           <button
                             type="submit"
                             disabled={postingAnnouncement || !announcementForm.content.trim()}
-                            className="btn-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="btn-primary press disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             {postingAnnouncement ? 'Posting...' : 'Post Announcement'}
                           </button>
@@ -745,7 +790,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {announcements.map((a) => {
+                  {announcements.map((a, index) => {
                     if (!a || !a.id) return null;
                     const isAuthor = a.author?.id === user?.id;
                     const canDelete = isTeacher || isAuthor;
@@ -753,11 +798,12 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                     return (
                       <div
                         key={a.id}
-                        className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-8 hover:-translate-y-0.5 transition-transform animate-slide-up group"
+                        className="bg-surface-raised rounded-3xl shadow-card p-8 card-lift animate-rise group"
+                        style={{ animationDelay: `${Math.min(index, 8) * 50}ms` }}
                       >
                         <div className="flex items-center justify-between gap-4 mb-4">
                           <div className="flex items-center gap-4 min-w-0">
-                            <div className={`w-10 h-10 rounded-sm bg-text-primary dark:bg-surface-raised flex items-center justify-center text-surface-body text-xs font-bold shadow-sm`}>
+                            <div className={"w-10 h-10 rounded-sm bg-surface-inverse flex items-center justify-center text-text-contrast text-xs font-bold shadow-sm"}>
                               {getInitials(a.author)}
                             </div>
                             <div className="flex flex-col">
@@ -779,7 +825,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                             <button
                               type="button"
                               onClick={() => handleDeleteAnnouncement(a.id)}
-                              className="text-text-muted hover:text-red-500 transition-colors p-2"
+                              className="text-text-muted hover:text-text-error transition-colors p-2"
                               title="Delete announcement"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -801,7 +847,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                     key={idx}
                                     src={att.url}
                                     alt=""
-                                    className="max-h-72 w-full object-contain rounded-lg border border-gray-200 dark:border-line-soft"
+                                    className="max-h-72 w-full object-contain rounded-lg border border-line-soft"
                                     onError={(e) => {
                                       e.target.style.display = 'none';
                                     }}
@@ -816,7 +862,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                   return (
                                     <div
                                       key={idx}
-                                      className="relative pt-[56.25%] rounded-lg overflow-hidden border border-gray-200 dark:border-line-soft bg-text-primary"
+                                      className="relative pt-[56.25%] rounded-lg overflow-hidden border border-line-soft bg-surface-inverse"
                                     >
                                       <iframe
                                         src={`https://www.youtube.com/embed/${videoId}`}
@@ -838,9 +884,9 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                   href={safeLinkUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
+                                  className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline break-all"
                                 >
-                                  <span className="flex-shrink-0 text-gray-400 dark:text-gray-500">
+                                  <span className="flex-shrink-0 text-text-dim">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                                   </span>
                                   {att.url}
@@ -850,19 +896,21 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                           </div>
                         )}
                         {/* Comments on announcement (all public) */}
-                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="mt-4 pt-4 border-t border-line-soft">
                           <button
                             type="button"
                             onClick={() => toggleAnnouncementComments(a.id)}
-                            className="text-sm font-medium text-gray-600 dark:text-text-dim hover:text-blue-600 dark:hover:text-accent"
+                            className="text-sm font-medium text-text-dim hover:text-accent"
                           >
                             {openCommentSections.announcement.has(a.id) ? 'Hide comments' : 'Comments'}
-                            {(announcementComments[a.id]?.length ?? 0) > 0 && ` (${announcementComments[a.id].length})`}
+                            {/* Seed the count from the server's commentCount until comments load */}
+                            {(announcementComments[a.id]?.length ?? a.commentCount ?? 0) > 0 &&
+                              ` (${announcementComments[a.id]?.length ?? a.commentCount})`}
                           </button>
                           {openCommentSections.announcement.has(a.id) && (
                             <div className="mt-3 space-y-2 min-h-[2rem]">
-                              {loadingComments.announcement === a.id || announcementComments[a.id] === undefined ? (
-                                <p className="text-sm text-gray-500 dark:text-text-dim py-1">Loading comments…</p>
+                              {announcementComments[a.id] === undefined ? (
+                                <p className="text-sm text-text-dim py-1">Loading comments…</p>
                               ) : (
                                 <>
                                   {(announcementComments[a.id] || []).map((c) => (
@@ -870,15 +918,15 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                       <div className="flex-1 min-w-0">
                                         <span className="shrink-0">
                                           {c.author?.id ? (
-                                            <Link to={`/profile/${c.author.id}`} className="font-medium text-gray-900 dark:text-text-primary hover:text-blue-600 dark:hover:text-accent">
+                                            <Link to={`/profile/${c.author.id}`} className="font-medium text-text-primary hover:text-accent">
                                               {c.author.firstName} {c.author.lastName}
                                             </Link>
                                           ) : (
-                                            <span className="font-medium text-gray-900 dark:text-text-primary">Unknown</span>
+                                            <span className="font-medium text-text-primary">Unknown</span>
                                           )}:
                                         </span>
-                                        <span className="text-gray-700 dark:text-gray-300"> {c.content}</span>
-                                        <span className="text-xs text-gray-400 shrink-0 ml-1">{formatRelativeTime(c.createdAt)}</span>
+                                        <span className="text-text-muted"> {c.content}</span>
+                                        <span className="text-xs text-text-dim shrink-0 ml-1">{formatRelativeTime(c.createdAt)}</span>
                                       </div>
                                       <div className="flex shrink-0 items-center gap-2">
                                         {c.author?.id !== user?.id && (
@@ -891,7 +939,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                             type="button"
                                             onClick={() => handleDeleteAnnouncementComment(a.id, c.id)}
                                             disabled={deletingCommentId === c.id}
-                                            className="p-1 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                                            className="p-1 text-text-dim hover:text-text-error transition-colors disabled:opacity-50"
                                             title="Delete comment"
                                           >
                                             <span className="sr-only">Delete your comment</span>
@@ -915,7 +963,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                         }))
                                       }
                                       placeholder="Add a class comment..."
-                                      className="flex-1 px-3 py-2 border border-gray-200 dark:border-line-soft rounded-lg bg-surface-raised dark:bg-gray-900 text-sm text-gray-900 dark:text-text-primary placeholder-gray-500"
+                                      className="flex-1 px-3 py-2 border border-line-soft rounded-lg bg-surface-soft text-sm text-text-primary placeholder-text-dim outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent"
                                       onKeyDown={(e) => {
                                         if (e.key === 'Enter' && !e.shiftKey) {
                                           e.preventDefault();
@@ -927,7 +975,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                       type="button"
                                       disabled={postingComment || !(commentDrafts.announcement[a.id] || '').trim()}
                                       onClick={() => handlePostAnnouncementComment(a.id)}
-                                      className="px-3 py-2 rounded-lg text-sm font-medium bg-accent text-white hover:bg-accent-strong disabled:opacity-50"
+                                      className="px-3 py-2 rounded-lg text-sm font-medium bg-accent text-accent-contrast hover:bg-accent-strong disabled:opacity-50"
                                     >
                                       Post
                                     </button>
@@ -948,7 +996,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
 
         {/* Classwork page — only this or Stream or People is visible */}
         {activeTab === 'classwork' && (
-          <div className="min-h-[50vh] pt-6 animate-slide-up" role="region" aria-label="Classwork page">
+          <div className="min-h-[50vh] pt-6 animate-rise" role="region" aria-label="Classwork page">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-12">
               <div>
                 <span className="section-kicker mb-4">Assignments</span>
@@ -958,8 +1006,9 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
               </div>
               {isTeacher && (
                 <button
+                  type="button"
                   onClick={() => setShowNewAssignment(true)}
-                  className="btn-primary"
+                  className="btn-primary press"
                 >
                   Create Assignment
                 </button>
@@ -969,7 +1018,9 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
             {assignments.length === 0 ? (
               <div className="p-20 rounded-3xl text-center bg-surface-soft">
                 <p className="text-sm font-medium text-text-muted">
-                  No assignments yet. Create one to get started.
+                  {isTeacher
+                    ? 'No assignments yet. Create one to get started.'
+                    : 'No assignments yet.'}
                 </p>
               </div>
             ) : (
@@ -983,11 +1034,11 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                   const commentsList = assignmentComments[a.id] || [];
                   const classComments = commentsList.filter((c) => !c.isPrivate);
                   const privateComments = commentsList.filter((c) => c.isPrivate);
-                  const totalComments = commentsList.length;
+                  const totalComments = assignmentComments[a.id]?.length ?? a.commentCount ?? 0;
                   return (
                     <div
                       key={a.id}
-                      className="bg-surface-raised rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] p-8 hover:-translate-y-0.5 transition-transform animate-slide-up group"
+                      className="bg-surface-raised rounded-3xl shadow-card p-8 card-lift animate-rise group"
                     >
                       <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
                         <div className="flex-1 min-w-0">
@@ -1008,14 +1059,19 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                 })}
                               </span>
                             )}
-                            {a.lesson && (
+                            {/* Only link when the course id exists — otherwise the URL is broken (/courses//lessons/:id) */}
+                            {a.lesson && a.course?.id ? (
                               <Link
-                                to={`/courses/${a.course?.id || ''}/lessons/${a.lesson.id}`}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-white rounded-xl text-xs font-semibold hover:bg-accent-strong transition-colors"
+                                to={`/courses/${a.course.id}/lessons/${a.lesson.id}`}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-accent text-accent-contrast rounded-xl text-xs font-semibold hover:bg-accent-strong transition-colors focus-ring"
                               >
                                 📖 Linked Lesson: {a.lesson.title}
                               </Link>
-                            )}
+                            ) : a.lesson ? (
+                              <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-surface-soft text-text-dim rounded-xl text-xs font-semibold">
+                                📖 Linked Lesson: {a.lesson.title}
+                              </span>
+                            ) : null}
                           </div>
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4 min-w-[120px]">
@@ -1031,7 +1087,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteAssignment(a.id)}
-                                className="w-full px-6 py-2 rounded-xl text-sm font-medium text-text-dim hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                                className="w-full px-6 py-2 rounded-xl text-sm font-medium text-text-dim hover:text-text-error hover:bg-surface-error transition-all"
                               >
                                 Delete
                               </button>
@@ -1048,8 +1104,9 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                           )}
                           {!isTeacher && !isCompleted && (
                             <button
+                              type="button"
                               onClick={() => handleCompleteAssignment(a.id)}
-                              className="btn-primary w-full"
+                              className="btn-primary press w-full"
                             >
                               Mark Complete
                             </button>
@@ -1077,7 +1134,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                         </button>
                         {openCommentSections.assignment.has(a.id) && (
                           <div className="mt-6 space-y-6 min-h-[2rem]">
-                            {loadingComments.assignment === a.id || assignmentComments[a.id] === undefined ? (
+                            {assignmentComments[a.id] === undefined ? (
                               <p className="text-sm font-medium text-text-dim py-1">Loading comments...</p>
                             ) : (
                               <>
@@ -1110,7 +1167,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                             type="button"
                                             onClick={() => handleDeleteAssignmentComment(a.id, c.id)}
                                             disabled={deletingCommentId === c.id}
-                                            className="p-1 text-text-dim hover:text-red-500 transition-colors disabled:opacity-50"
+                                            className="p-1 text-text-dim hover:text-text-error transition-colors disabled:opacity-50"
                                             title="Delete comment"
                                           >
                                             <span className="sr-only">Delete your comment</span>
@@ -1134,7 +1191,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                         }))
                                       }
                                       placeholder="Add a class comment..."
-                                      className="flex-1 px-4 py-3 bg-surface-soft border border-line-soft text-sm font-medium placeholder-text-dim focus:border-accent outline-none transition-all"
+                                      className="flex-1 px-4 py-3 bg-surface-soft border border-line-soft text-sm font-medium placeholder-text-dim outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                                       onKeyDown={(e) => {
                                         if (e.key === 'Enter' && !e.shiftKey) {
                                           e.preventDefault();
@@ -1146,7 +1203,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                       type="button"
                                       disabled={postingComment || !(commentDrafts.assignmentClass[a.id] || '').trim()}
                                       onClick={() => handlePostAssignmentComment(a.id, { isPrivate: false })}
-                                      className="px-6 py-2 bg-accent text-white rounded-xl text-sm font-bold hover:bg-accent-strong disabled:opacity-30 transition-all"
+                                      className="px-6 py-2 bg-accent text-accent-contrast rounded-xl text-sm font-bold hover:bg-accent-strong disabled:opacity-30 transition-all"
                                     >
                                       Post
                                     </button>
@@ -1192,7 +1249,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                             type="button"
                                             onClick={() => handleDeleteAssignmentComment(a.id, c.id)}
                                             disabled={deletingCommentId === c.id}
-                                            className="p-1 text-text-dim hover:text-red-500 transition-colors disabled:opacity-50"
+                                            className="p-1 text-text-dim hover:text-text-error transition-colors disabled:opacity-50"
                                             title="Delete comment"
                                           >
                                             <span className="sr-only">Delete your comment</span>
@@ -1214,7 +1271,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                             [a.id]: e.target.value || undefined,
                                           }))
                                         }
-                                        className="w-full px-4 py-2 bg-surface-raised dark:bg-text-primary border border-line-soft text-sm font-medium focus:border-accent outline-none transition-all"
+                                        className="w-full px-4 py-2 bg-surface-raised border border-line-soft text-sm font-medium outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                                       >
                                         <option value="">Select student...</option>
                                         {students.map((s) => (
@@ -1235,7 +1292,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                             }))
                                           }
                                           placeholder="Send private message..."
-                                          className="flex-1 px-4 py-3 bg-surface-raised dark:bg-text-primary border border-line-soft text-sm font-medium placeholder-text-dim focus:border-accent outline-none transition-all"
+                                          className="flex-1 px-4 py-3 bg-surface-raised border border-line-soft text-sm font-medium placeholder-text-dim outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                                           onKeyDown={(e) => {
                                             if (e.key === 'Enter' && !e.shiftKey) {
                                               e.preventDefault();
@@ -1259,7 +1316,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                               targetUserId: assignmentPrivateTarget[a.id] || undefined,
                                             })
                                           }
-                                          className="px-6 py-2 bg-accent text-white rounded-xl text-sm font-bold hover:bg-accent-strong disabled:opacity-30 transition-all"
+                                          className="px-6 py-2 bg-accent text-accent-contrast rounded-xl text-sm font-bold hover:bg-accent-strong disabled:opacity-30 transition-all"
                                         >
                                           Send
                                         </button>
@@ -1278,7 +1335,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                           }))
                                         }
                                         placeholder="Send private message to teacher..."
-                                        className="flex-1 px-4 py-3 bg-surface-soft border border-line-soft text-sm font-medium placeholder-text-dim focus:border-accent outline-none transition-all"
+                                        className="flex-1 px-4 py-3 bg-surface-soft border border-line-soft text-sm font-medium placeholder-text-dim outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                                         onKeyDown={(e) => {
                                           if (e.key === 'Enter' && !e.shiftKey) {
                                             e.preventDefault();
@@ -1290,7 +1347,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                                         type="button"
                                         disabled={postingComment || !(commentDrafts.assignmentPrivate[a.id] || '').trim()}
                                         onClick={() => handlePostAssignmentComment(a.id, { isPrivate: true })}
-                                        className="px-6 py-2 bg-accent text-white rounded-xl text-sm font-bold hover:bg-accent-strong disabled:opacity-30 transition-all"
+                                        className="px-6 py-2 bg-accent text-accent-contrast rounded-xl text-sm font-bold hover:bg-accent-strong disabled:opacity-30 transition-all"
                                       >
                                         Send
                                       </button>
@@ -1312,7 +1369,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
 
         {/* People page — only this or Stream or Classwork is visible */}
         {activeTab === 'people' && (
-          <div className="min-h-[50vh] pt-6 animate-slide-up" role="region" aria-label="People page">
+          <div className="min-h-[50vh] pt-6 animate-rise" role="region" aria-label="People page">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10 mb-12">
               <div>
                 <span className="section-kicker mb-4">People</span>
@@ -1324,7 +1381,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                 <button
                   type="button"
                   onClick={() => setShowAddTeacher(true)}
-                  className="btn-primary"
+                  className="btn-primary press"
                 >
                   Add Teacher
                 </button>
@@ -1333,7 +1390,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
 
             {/* Leaderboard: most assignments completed */}
             {!isTeacher && leaderboardSummary && (
-              <div className="mb-12 rounded-3xl bg-surface-raised p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <div className="mb-12 rounded-3xl bg-surface-raised p-8 shadow-card">
                 <p className="section-kicker mb-3">Your progress</p>
                 <h3 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">
                   Position {leaderboardSummary.position} of {leaderboardSummary.totalStudents}
@@ -1344,7 +1401,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
               </div>
             )}
             {Array.isArray(leaderboard) && leaderboard.length > 0 && (
-              <div className="mb-12 p-8 bg-block-blue rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <div className="mb-12 p-8 block-blue rounded-3xl shadow-card">
                 <h3 className="font-display text-base font-extrabold tracking-tight text-blue mb-8">
                   Leaderboard, Most Assignments Completed
                 </h3>
@@ -1352,13 +1409,13 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                   {leaderboard.map((entry, index) => (
                     <div
                       key={entry.userId}
-                      className="flex items-center gap-4 p-4 bg-surface-raised rounded-2xl shadow-[0_16px_36px_-30px_rgba(20,20,18,0.4)] hover:-translate-y-0.5 transition-transform group"
+                      className="flex items-center gap-4 p-4 bg-surface-raised rounded-2xl shadow-card card-lift group"
                     >
                       <span
                         className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-black ${index === 0
-                          ? 'bg-accent text-white'
+                          ? 'bg-accent text-accent-contrast'
                           : index === 1
-                            ? 'bg-text-primary text-white dark:bg-surface-soft dark:text-text-primary'
+                            ? 'bg-surface-inverse text-text-contrast'
                             : index === 2
                               ? 'bg-surface-soft text-text-primary'
                               : 'bg-surface-soft/60 text-text-dim'
@@ -1367,7 +1424,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                         {String(index + 1).padStart(2, '0')}
                       </span>
                       <Link to={`/profile/${entry.userId}`} className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className={`w-8 h-8 rounded-full ${getAvatarColor(entry.firstName + entry.lastName)} flex items-center justify-center text-[10px] font-bold text-white shadow-sm flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity`}>
+                        <div className={`w-8 h-8 rounded-full ${getAvatarColor(entry.firstName + entry.lastName)} flex items-center justify-center text-[10px] font-bold shadow-sm flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity`}>
                           {getInitials(entry)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1398,9 +1455,9 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                 ) : (
                   <div className="space-y-3">
                     {teachers.map((t) => (
-                      <div key={t.id} className="flex items-center gap-4 p-4 bg-surface-raised rounded-2xl shadow-[0_16px_36px_-30px_rgba(20,20,18,0.4)] hover:-translate-y-0.5 transition-transform group">
+                      <div key={t.id} className="flex items-center gap-4 p-4 bg-surface-raised rounded-2xl shadow-card card-lift group">
                         <Link to={`/profile/${t.id}`} className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className={`w-10 h-10 rounded-full ${getAvatarColor(t.firstName + t.lastName)} flex items-center justify-center text-[10px] font-bold text-white shadow-sm flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity`}>
+                          <div className={`w-10 h-10 rounded-full ${getAvatarColor(t.firstName + t.lastName)} flex items-center justify-center text-[10px] font-bold shadow-sm flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity`}>
                             {getInitials(t)}
                           </div>
                           <div className="min-w-0">
@@ -1414,7 +1471,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                           <button
                             type="button"
                             onClick={() => handleRemoveMember(t.id, `${t.firstName} ${t.lastName}`)}
-                            className="text-xs font-medium text-red-500 hover:text-red-600 flex-shrink-0"
+                            className="text-xs font-medium text-text-error hover:text-text-error/80 flex-shrink-0"
                           >
                             Remove
                           </button>
@@ -1435,11 +1492,11 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                     No students in this class yet.
                   </p>
                 ) : (
-                  <div className="grid grid-cols-1 gap-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="grid grid-cols-1 gap-2 max-h-[600px] overflow-y-auto pr-2">
                     {students.map((s) => (
                       <div key={s.id} className="flex items-center gap-4 p-3 bg-surface-soft rounded-2xl hover:bg-surface-raised transition-colors group">
                         <Link to={`/profile/${s.id}`} className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className={`w-8 h-8 rounded-full ${getAvatarColor(s.firstName + s.lastName)} flex items-center justify-center text-[10px] font-bold text-white shadow-sm flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity`}>
+                          <div className={`w-8 h-8 rounded-full ${getAvatarColor(s.firstName + s.lastName)} flex items-center justify-center text-[10px] font-bold shadow-sm flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity`}>
                             {getInitials(s)}
                           </div>
                           <div className="min-w-0">
@@ -1453,7 +1510,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                           <button
                             type="button"
                             onClick={() => handleRemoveMember(s.id, `${s.firstName} ${s.lastName}`)}
-                            className="text-xs font-medium text-red-500 hover:text-red-600 flex-shrink-0"
+                            className="text-xs font-medium text-text-error hover:text-text-error/80 flex-shrink-0"
                           >
                             Remove
                           </button>
@@ -1468,8 +1525,8 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
         )}
 
         {canModerate && activeTab === 'moderation' && (
-          <section className="min-h-[50vh] pt-6 animate-slide-up" aria-labelledby="moderation-heading">
-            <div className="rounded-3xl bg-surface-raised p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <section className="min-h-[50vh] pt-6 animate-rise" aria-labelledby="moderation-heading">
+            <div className="rounded-3xl bg-surface-raised p-8 shadow-card">
               <span className="section-kicker mb-3">Class safety</span>
               <h2 id="moderation-heading" className="font-display text-3xl font-extrabold tracking-tight text-text-primary">
                 Moderation queue
@@ -1514,8 +1571,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
         )}
 
         {reportTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-raised/80 p-6 backdrop-blur-md">
-            <div role="dialog" aria-modal="true" aria-labelledby="report-comment-heading" className="w-full max-w-lg rounded-3xl bg-surface-raised p-8 shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)]">
+          <ModalShell labelledBy="report-comment-heading" onClose={() => setReportTarget(null)} panelClass="p-8">
               <h2 id="report-comment-heading" className="font-display text-2xl font-extrabold text-text-primary">Report comment</h2>
               <p className="mt-2 text-sm text-text-muted">
                 Tell the class owner what needs attention. The target review time is within 24 hours.
@@ -1553,30 +1609,34 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                   />
                 </div>
                 <div className="flex justify-end gap-3">
-                  <button type="button" onClick={() => setReportTarget(null)} className="btn-secondary" disabled={reportingComment}>Cancel</button>
-                  <button type="submit" className="btn-primary" disabled={reportingComment}>{reportingComment ? 'Sending…' : 'Send report'}</button>
+                  <button type="button" onClick={() => setReportTarget(null)} className="btn-secondary press" disabled={reportingComment}>Cancel</button>
+                  <button type="submit" className="btn-primary press" disabled={reportingComment}>{reportingComment ? 'Sending…' : 'Send report'}</button>
                 </div>
               </form>
-            </div>
-          </div>
+          </ModalShell>
         )}
 
         {/* New assignment modal — overlay, not a tab */}
         {isTeacher && showNewAssignment && (
-          <div className="fixed inset-0 bg-surface-raised/80 dark:bg-text-primary/80 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
-            <div className="bg-surface-raised rounded-3xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-lg w-full max-h-[90vh] overflow-y-auto p-10 animate-in zoom-in-95 duration-300">
+          <ModalShell
+            labelledBy="new-assignment-heading"
+            onClose={() => setShowNewAssignment(false)}
+            panelClass="max-h-[90vh] overflow-y-auto p-10"
+          >
               <div className="flex items-start justify-between mb-10">
                 <div>
                   <span className="section-kicker mb-2">Create Assignment</span>
-                  <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">
+                  <h2 id="new-assignment-heading" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">
                     New Assignment
                   </h2>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowNewAssignment(false)}
-                  className="p-2 text-text-dim hover:text-text-primary transition-colors"
+                  className="p-2 text-text-dim hover:text-text-primary transition-colors focus-ring rounded-lg"
+                  aria-label="Close"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -1594,7 +1654,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                       setAssignmentForm((prev) => ({ ...prev, title: e.target.value }))
                     }
                     required
-                    className="block w-full px-0 py-3 bg-transparent border-b border-line-soft text-text-primary text-lg font-bold placeholder-text-dim focus:border-accent outline-none transition-all"
+                    className="block w-full px-0 py-3 bg-transparent border-b border-line-soft text-text-primary text-lg font-bold placeholder-text-dim outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                     placeholder="Enter assignment title..."
                   />
                 </div>
@@ -1609,7 +1669,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                       setAssignmentForm((prev) => ({ ...prev, description: e.target.value }))
                     }
                     rows={4}
-                    className="block w-full px-4 py-4 bg-surface-soft border border-line-soft text-text-primary text-xs font-medium placeholder-text-dim focus:border-accent outline-none transition-all resize-none"
+                    className="block w-full px-4 py-4 bg-surface-soft border border-line-soft text-text-primary text-xs font-medium placeholder-text-dim outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all resize-none"
                     placeholder="Enter assignment description..."
                   />
                 </div>
@@ -1625,7 +1685,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                       onChange={(e) =>
                         setAssignmentForm((prev) => ({ ...prev, dueDate: e.target.value }))
                       }
-                      className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-sm font-medium focus:border-accent outline-none transition-all"
+                      className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-sm font-medium outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                     />
                   </div>
 
@@ -1644,7 +1704,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                           courseId: lesson ? lesson.courseId : '',
                         }));
                       }}
-                      className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-sm font-medium focus:border-accent outline-none transition-all"
+                      className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-sm font-medium outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                     >
                       <option value="">None</option>
                       {availableLessons.map((l) => (
@@ -1668,24 +1728,26 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="btn-primary disabled:opacity-30 order-1 sm:order-2"
+                    className="btn-primary press disabled:opacity-30 order-1 sm:order-2"
                   >
                     {submitting ? 'Creating...' : 'Create Assignment'}
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
+          </ModalShell>
         )}
 
         {/* Add teacher modal — owner only */}
         {isOwner && showAddTeacher && (
-          <div className="fixed inset-0 bg-surface-raised/80 dark:bg-text-primary/80 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
-            <div className="bg-surface-raised rounded-3xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.3)] max-w-md w-full p-10 animate-in zoom-in-95 duration-300">
+          <ModalShell
+            labelledBy="add-teacher-heading"
+            onClose={() => { setShowAddTeacher(false); setAddTeacherEmail(''); setError(''); }}
+            maxWidthClass="max-w-md"
+          >
               <div className="flex items-start justify-between mb-8">
                 <div>
                   <span className="section-kicker mb-2">Add Teacher</span>
-                  <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">
+                  <h2 id="add-teacher-heading" className="font-display text-xl font-extrabold tracking-tight text-text-primary">
                     Add Teacher
                   </h2>
                   <p className="text-[10px] text-text-muted mt-2">
@@ -1693,10 +1755,12 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => { setShowAddTeacher(false); setAddTeacherEmail(''); setError(''); }}
-                  className="p-2 text-text-dim hover:text-text-primary transition-colors"
+                  className="p-2 text-text-dim hover:text-text-primary transition-colors focus-ring rounded-lg"
+                  aria-label="Close"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -1709,7 +1773,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                     value={addTeacherEmail}
                     onChange={(e) => setAddTeacherEmail(e.target.value)}
                     required
-                    className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-sm font-medium placeholder-text-dim focus:border-accent outline-none transition-all"
+                    className="block w-full px-4 py-3 bg-surface-soft border border-line-soft text-text-primary text-sm font-medium placeholder-text-dim outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-all"
                     placeholder="instructor@example.com"
                   />
                 </div>
@@ -1724,14 +1788,13 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
                   <button
                     type="submit"
                     disabled={addingTeacher}
-                    className="btn-primary disabled:opacity-50"
+                    className="btn-primary press disabled:opacity-50"
                   >
                     {addingTeacher ? 'Adding...' : 'Add Teacher'}
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
+          </ModalShell>
         )}
       </div>
     </div>

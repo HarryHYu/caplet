@@ -129,7 +129,7 @@ export default function DesmosCalculator({
       )}
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-surface-raised z-10">
-          <p className="text-sm text-rose-500 text-center px-4">{error}</p>
+          <p className="text-sm text-text-error text-center px-4">{error}</p>
         </div>
       )}
       {/* Fill the entire allocated box so Desmos measures correct dimensions */}

@@ -7,7 +7,7 @@ import { useReveal } from '../lib/useReveal';
 import EconomicsNextAction from '../components/learning/EconomicsNextAction';
 import LearningProgressSummary from '../components/learning/LearningProgressSummary';
 import { LearningCard, LearningPageHeader, LearningSection } from '../components/learning/LearningChrome';
-import { BookOpenIcon } from '@heroicons/react/24/outline';
+import { BookOpenIcon, BuildingLibraryIcon } from '@heroicons/react/24/outline';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -54,7 +54,7 @@ const CourseDetail = () => {
   if (error || !course) {
     return (
       <div className="min-h-screen bg-surface-body flex items-center justify-center px-6">
-        <div className="text-center max-w-md mx-auto bg-surface-raised rounded-3xl p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+        <div className="text-center max-w-md mx-auto bg-surface-raised rounded-3xl p-10 shadow-card">
           <h2 className="font-display text-3xl font-extrabold tracking-tight mb-4">
             {error || 'Course not found'}
           </h2>
@@ -87,7 +87,7 @@ const CourseDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
+    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-accent-contrast md:pt-28">
       <div className="container-custom">
         <nav aria-label="Breadcrumb" className="mb-7 flex flex-wrap items-center gap-2 text-sm font-bold text-text-muted">
           <Link to="/library" className="min-h-11 content-center transition-colors hover:text-accent">Learn</Link><span aria-hidden="true">/</span><Link to="/courses" className="min-h-11 content-center transition-colors hover:text-accent">Courses</Link>
@@ -97,7 +97,7 @@ const CourseDetail = () => {
           <LearningPageHeader eyebrow="Course" title={course.title} description={course.description || course.shortDescription} />
           <div className="mt-8">
             {course.thumbnail && (
-              <div className="aspect-[21/8] w-full max-w-4xl overflow-hidden rounded-3xl bg-surface-soft shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <div className="aspect-[21/8] w-full max-w-4xl overflow-hidden rounded-3xl bg-surface-soft shadow-card">
                 <img
                   src={course.thumbnail}
                   alt={course.title}
@@ -111,7 +111,7 @@ const CourseDetail = () => {
         {/* Course info card */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16 reveal-stagger">
           <div className="lg:col-span-8">
-            <div className="bg-surface-raised rounded-3xl p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="bg-surface-raised rounded-3xl p-8 shadow-card">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div className="rounded-2xl block-cream p-5">
                   <p className="text-xs font-bold text-text-muted mb-1">Duration</p>
@@ -131,7 +131,7 @@ const CourseDetail = () => {
 
               <button
                 onClick={startCourse}
-                className="btn-primary py-3 px-10 hover:-translate-y-0.5 transition-transform"
+                className="btn-primary focus-ring card-lift py-3 px-10"
               >
                 {progress?.courseProgress?.status === 'in_progress' ? `Continue ${progress.courseProgress.nextLesson?.title || 'learning'}` : 'Start course'}
               </button>
@@ -140,7 +140,7 @@ const CourseDetail = () => {
 
           {/* Learning outcomes or metadata sidebar */}
           {course.learningOutcomes && course.learningOutcomes.length > 0 ? (
-            <aside className="lg:col-span-4 block-blue rounded-3xl p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <aside className="lg:col-span-4 block-blue rounded-3xl p-8 shadow-card">
               <h3 className="font-display text-lg font-bold tracking-tight mb-4">What You'll Learn</h3>
               <ul className="space-y-3">
                 {course.learningOutcomes.map((outcome, i) => (
@@ -152,7 +152,7 @@ const CourseDetail = () => {
               </ul>
             </aside>
           ) : (
-            <aside className="lg:col-span-4 block-blue rounded-3xl p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] flex flex-col justify-center">
+            <aside className="lg:col-span-4 block-blue rounded-3xl p-8 shadow-card flex flex-col justify-center">
               <h3 className="font-display text-lg font-bold tracking-tight mb-2">About This Course</h3>
               <p className="text-sm text-text-primary leading-relaxed">
                 This course is part of Caplet's free financial education program. Every module is built for clarity and practical understanding.
@@ -178,10 +178,15 @@ const CourseDetail = () => {
           </div>
 
           {sortedModules.length === 0 && (
-            <div className="py-20 text-center rounded-3xl block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="animate-rise py-20 text-center rounded-3xl block-cream shadow-card">
               <p className="text-lg text-text-muted">
                 No modules available yet.
               </p>
+              <div className="mt-8 flex justify-center">
+                <Link to="/library" className="btn-primary focus-ring">
+                  <BuildingLibraryIcon className="h-4 w-4" aria-hidden="true" /> Browse the library
+                </Link>
+              </div>
             </div>
           )}
         </LearningSection>

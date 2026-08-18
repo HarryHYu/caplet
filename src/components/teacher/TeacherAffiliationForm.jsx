@@ -36,7 +36,7 @@ export default function TeacherAffiliationForm({ initialValue, submitting, onSub
   };
 
   return (
-    <form onSubmit={submit} className="rounded-3xl bg-surface-raised p-7 shadow-[0_24px_54px_-40px_rgba(20,20,18,0.45)] md:p-9">
+    <form onSubmit={submit} className="rounded-3xl bg-surface-raised p-7 shadow-card md:p-9">
       <h2 className="text-2xl font-display font-extrabold text-text-primary">School affiliation</h2>
       <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">
         Use your school details so Caplet can verify teacher access safely.

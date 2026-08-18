@@ -25,7 +25,7 @@ const SUBJECTS = [
 ];
 
 function barColor(pct) {
-  if (pct >= 80) return 'bg-emerald-500';
+  if (pct >= 80) return 'bg-[var(--mark-green)]';
   if (pct >= 50) return 'bg-accent';
   if (pct >= 25) return 'bg-amber-500';
   return 'bg-line-strong';
@@ -131,7 +131,7 @@ export default function SyllabusProgress() {
               type="button"
               onClick={() => setSubject(s)}
               className={`whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-bold transition-colors ${
-                s === subject ? 'bg-accent text-white' : 'border border-line-soft text-text-muted hover:border-accent hover:text-accent'
+                s === subject ? 'bg-accent text-accent-contrast' : 'border border-line-soft text-text-muted hover:border-accent hover:text-accent'
               }`}
             >
               {s}
@@ -141,18 +141,18 @@ export default function SyllabusProgress() {
       </div>
 
       {/* overall readiness */}
-      <div className="mb-5 flex flex-wrap items-center gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-6 text-white shadow-[0_28px_58px_-40px_rgba(19,81,170,0.7)]">
+      <div className="mb-5 flex flex-wrap items-center gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-6 text-accent-contrast shadow-glow">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">HSC readiness (Year 12)</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent-contrast/65">HSC readiness (Year 12)</p>
           <p className="mt-1 font-display text-5xl font-extrabold tracking-tight">{data?.overallHscReadiness ?? 0}%</p>
         </div>
         {typeof data?.year11Readiness === 'number' && (
-          <div className="border-l border-white/20 pl-6">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">Year 11 foundation</p>
-            <p className="mt-1 font-display text-3xl font-extrabold tracking-tight text-white/90">{data.year11Readiness}%</p>
+          <div className="border-l border-accent-contrast/20 pl-6">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent-contrast/65">Year 11 foundation</p>
+            <p className="mt-1 font-display text-3xl font-extrabold tracking-tight text-accent-contrast/90">{data.year11Readiness}%</p>
           </div>
         )}
-        <p className="min-w-0 flex-1 text-sm font-medium leading-relaxed text-white/75">
+        <p className="min-w-0 flex-1 text-sm font-medium leading-relaxed text-accent-contrast/75">
           Weighted across every {subject} dot point. Mastery is earned through sustained correct practice — reading a lesson barely moves it.
         </p>
       </div>

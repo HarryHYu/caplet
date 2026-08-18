@@ -30,7 +30,10 @@ Return only JSON with this shape:
 const clamp = (value, max) => String(value ?? '').trim().slice(0, max);
 
 function normaliseTerm(value) {
-  const match = clamp(value, 20).match(/(?:term\s*)?([123])/i);
+  // Anchored: only "Term N" (or a bare "N") may become Term N. An unanchored
+  // digit match turned "Semester 2" into Term 2.
+  const raw = clamp(value, 20);
+  const match = raw.match(/^term\s*([123])$/i) || raw.match(/^([123])$/);
   return match ? `Term ${match[1]}` : '';
 }
 
@@ -43,7 +46,10 @@ function normaliseDate(value) {
   const date = clamp(value, 20);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return '';
   const parsed = new Date(`${date}T00:00:00Z`);
-  return Number.isNaN(parsed.getTime()) ? '' : date;
+  if (Number.isNaN(parsed.getTime())) return '';
+  // Round-trip check: Date silently rolls impossible dates over (2026-02-31
+  // becomes March 3rd), so only a date that survives the round trip is real.
+  return parsed.toISOString().slice(0, 10) === date ? date : '';
 }
 
 function sanitizeAssessmentReport(parsed, allowedSubjects = []) {
@@ -89,12 +95,14 @@ async function parseAssessmentReport(text, allowedSubjects, options = {}) {
   if (!reportText) {
     const error = new Error('The report has no readable text.');
     error.status = 400;
+    error.expose = true;
     throw error;
   }
   const subjects = Array.isArray(allowedSubjects) ? allowedSubjects.map((subject) => clamp(subject, 160)).filter(Boolean).slice(0, 30) : [];
   if (!subjects.length) {
     const error = new Error('Choose your subjects before importing a report.');
     error.status = 400;
+    error.expose = true;
     throw error;
   }
 
@@ -104,13 +112,21 @@ async function parseAssessmentReport(text, allowedSubjects, options = {}) {
     ...samplingParams(options.model || 'gpt-5.4-mini', 0),
     messages: [
       { role: 'system', content: SYSTEM },
-      { role: 'user', content: `Allowed subjects:\n${subjects.join('\n')}\n\nReport text:\n${reportText.slice(0, 50000)}\n\nReturn only the required JSON.` },
+      // 100k matches the route's MAX_TEXT so accepted reports are never
+      // silently half-analysed.
+      { role: 'user', content: `Allowed subjects:\n${subjects.join('\n')}\n\nReport text:\n${reportText.slice(0, 100000)}\n\nReturn only the required JSON.` },
     ],
   });
 
+  const choice = completion.choices?.[0];
+  if (choice?.finish_reason === 'length') {
+    const error = new Error('AI output truncated');
+    error.status = 502;
+    throw error;
+  }
   let parsed;
   try {
-    parsed = JSON.parse(completion.choices?.[0]?.message?.content || '{}');
+    parsed = JSON.parse(choice?.message?.content || '{}');
   } catch {
     const error = new Error('AI returned non-JSON output.');
     error.status = 502;

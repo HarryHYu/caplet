@@ -37,7 +37,7 @@ const Check = ({ className = '', pathClass = '', stroke = 'stroke-green', width 
 
 const Widget = ({ className = '', tilt = '0deg', delay = '0s', block = 'block-cream', children }) => (
   <div className={`widget absolute ${className}`}>
-    <div className={`animate-soft-float rounded-2xl ${block} p-4 shadow-[0_26px_50px_-30px_rgba(20,20,18,0.4)]`} style={{ '--tilt': tilt, animationDelay: delay }}>
+    <div className={`animate-soft-float rounded-2xl ${block} p-4 shadow-card`} style={{ '--tilt': tilt, animationDelay: delay }}>
       {children}
     </div>
   </div>
@@ -156,14 +156,14 @@ export default function Home() {
   };
 
   return (
-    <div ref={rootRef} className="home-root relative overflow-x-clip bg-surface-body text-text-primary selection:bg-[color:var(--mark-blue)] selection:text-white">
+    <div ref={rootRef} className="home-root relative overflow-x-clip bg-surface-body text-text-primary selection:bg-[color:var(--mark-blue)] selection:text-accent-contrast">
       <section ref={heroRef} className="relative flex min-h-screen items-center justify-center overflow-hidden pb-16 pt-24">
         <div className="pointer-events-none absolute left-1/2 top-[22%] h-[58vw] max-h-[720px] w-[58vw] max-w-[720px] -translate-x-1/2 rounded-full bg-[color:var(--block-blue)] opacity-80 blur-[130px]" />
         <div className="pointer-events-none absolute bottom-[8%] right-[12%] h-[28vw] max-h-[360px] w-[28vw] max-w-[360px] rounded-full bg-[color:var(--block-amber)] opacity-70 blur-[120px]" />
 
         <div className="hero-widgets pointer-events-none absolute inset-0 hidden xl:block">
           <Widget className="left-[12vw] top-[15vh] w-auto" tilt="-4deg" block="block-blue">
-            <div className="flex items-center gap-2 px-1"><span className="h-2 w-2 animate-pulse rounded-full bg-[color:var(--mark-green)]" /><span className="text-sm font-bold text-text-primary">1,240 learning now</span></div>
+            <div className="flex items-center gap-2 px-1"><span className="h-2 w-2 animate-pulse rounded-full bg-[color:var(--mark-green)]" /><span className="text-sm font-bold text-text-primary">learning together right now</span></div>
           </Widget>
           <Widget className="left-[4vw] top-[24vh] w-56" tilt="3deg" delay="0.5s">
             <p className="mb-2 font-hand text-base text-blue">ask anything</p><p className="mb-1.5 rounded-lg rounded-tl-sm bg-[color:var(--block-blue)] p-2 text-[11px] text-text-primary">How does compound interest work?</p><p className="rounded-lg rounded-tr-sm bg-[color:var(--block-green)] p-2 text-[11px] text-text-primary">It is interest earned on interest. Let us plot it.</p>
@@ -171,6 +171,10 @@ export default function Home() {
           <Widget className="right-[5vw] top-[13vh] w-60" tilt="-2deg" delay="0.3s">
             <p className="mb-2 font-hand text-base text-blue">drag &amp; drop</p><div className="mb-2.5 flex gap-1.5">{['Text', 'Code', 'Quiz'].map((item) => <span key={item} className="rounded-md bg-[color:var(--block-blue)] px-2 py-1 text-[11px] font-bold text-text-primary">{item}</span>)}</div><div className="space-y-1.5"><div className="h-2.5 w-3/4 rounded bg-line-soft" /><div className="h-2 w-full rounded bg-surface-soft" /><div className="flex h-10 items-center justify-center rounded-lg bg-[color:var(--block-amber)] text-[11px] font-bold text-text-primary">Live preview</div></div>
           </Widget>
+          {/* Token exemption: the raw hex below is a deliberate mock of a code
+              editor/terminal chrome (macOS traffic lights + VS Code syntax
+              colours). It stays theme-independent by design, so these literals
+              intentionally bypass the surface/text token system. */}
           <Widget className="left-[5vw] top-[50vh] w-56" tilt="-3deg" delay="0.9s" block="block-cream">
             <div className="overflow-hidden rounded-lg bg-[#1b1b1b] font-mono text-[10px] text-[#d4d4d4]"><div className="flex gap-1 bg-[#262626] px-2.5 py-1.5"><span className="h-2 w-2 rounded-full bg-[#ff5f56]" /><span className="h-2 w-2 rounded-full bg-[#ffbd2e]" /><span className="h-2 w-2 rounded-full bg-[#27c93f]" /></div><div className="p-2.5 leading-relaxed"><div><span className="text-[#569cd6]">def</span> <span className="text-[#dcdcaa]">value</span>(x):</div><div className="pl-3"><span className="text-[#c586c0]">return</span> x ** <span className="text-[#b5cea8]">2</span></div><div className="mt-1 text-white">&gt; 2.56</div></div></div>
           </Widget>
@@ -193,8 +197,8 @@ export default function Home() {
           </h1>
           <p className="hero-sub body-text mx-auto mt-8 max-w-xl">Keep your subjects, notes, practice, study plan and upcoming assessments together—so you always know what to do next.</p>
           <div className="relative mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/register" className="hero-cta inline-flex items-center gap-2 rounded-2xl bg-[color:var(--mark-blue)] px-7 py-4 text-base font-bold text-white shadow-[0_12px_30px_-10px_rgba(19,81,170,0.5)] transition-transform duration-200 hover:-translate-y-0.5">Start learning <ArrowRightIcon className="h-5 w-5" aria-hidden="true" /></Link>
-            <button type="button" onClick={() => goTo('#features')} className="hero-cta block-blue inline-flex items-center gap-2 rounded-2xl px-6 py-4 text-base font-bold text-text-primary transition-transform duration-200 hover:-translate-y-0.5">See how it works</button>
+            <Link to="/register" className="hero-cta focus-ring press inline-flex items-center gap-2 rounded-2xl bg-[color:var(--mark-blue)] px-7 py-4 text-base font-bold text-accent-contrast shadow-pop transition-transform duration-200 hover:-translate-y-0.5">Start learning <ArrowRightIcon className="h-5 w-5" aria-hidden="true" /></Link>
+            <button type="button" onClick={() => goTo('#features')} className="hero-cta focus-ring press block-blue inline-flex items-center gap-2 rounded-2xl px-6 py-4 text-base font-bold text-text-primary transition-transform duration-200 hover:-translate-y-0.5">See how it works</button>
             <div className="hero-note pointer-events-none absolute -bottom-16 left-1/2 hidden -translate-x-[9rem] -rotate-6 sm:block"><span className="font-hand text-xl text-mark">it’s genuinely free</span><Arrow className="absolute -top-11 left-2 h-12 w-16 rotate-180" pathClass="hero-arrow hero-mark" stroke="stroke-mark" /></div>
           </div>
         </div>
@@ -215,7 +219,7 @@ export default function Home() {
                 <Link
                   key={item.title}
                   to={item.href}
-                  className={`group flex min-h-52 flex-col px-1 py-8 md:px-6 ${index > 0 ? 'border-t border-line-soft md:border-t-0 md:border-l' : ''} ${index === 2 ? 'md:border-l-0 xl:border-l' : ''}`}
+                  className={`group focus-ring flex min-h-52 flex-col px-1 py-8 md:px-6 ${index > 0 ? 'border-t border-line-soft md:border-t-0 md:border-l' : ''} ${index === 2 ? 'md:border-l-0 xl:border-l' : ''}`}
                 >
                   <span className="grid h-10 w-10 place-items-center rounded-full bg-accent-soft text-accent">
                     <Icon className="h-5 w-5" aria-hidden="true" />
@@ -241,7 +245,7 @@ export default function Home() {
           </div>
           <div className="reveal-stagger mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {featureHighlights.map((feature) => (
-              <Link key={feature.title} to={feature.to} className={`group min-h-64 rounded-3xl ${feature.block} p-7 transition-transform duration-200 hover:-translate-y-1`}>
+              <Link key={feature.title} to={feature.to} className={`group card-lift focus-ring min-h-64 rounded-3xl ${feature.block} p-7`}>
                 <span className="font-hand text-xl text-mark opacity-70">{feature.tag}</span>
                 <h3 className="mt-2 font-bricolage text-2xl font-bold text-text-primary group-hover:text-accent">{feature.title}</h3>
                 <p className="body-text mt-3 !text-[1rem] !leading-[1.65]">{feature.body}</p>
@@ -278,8 +282,8 @@ export default function Home() {
             {faqItems.map((item, index) => {
               const isOpen = activeFaq === index;
               return (
-                <div key={item.question} className={`overflow-hidden rounded-3xl border border-line-soft bg-surface-raised transition-shadow duration-300 ${isOpen ? 'shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]' : ''}`}>
-                  <button type="button" onClick={() => setActiveFaq(isOpen ? null : index)} className="flex w-full items-center justify-between gap-4 p-6 text-left" aria-expanded={isOpen} aria-controls={`faq-answer-${index}`}>
+                <div key={item.question} className={`overflow-hidden rounded-3xl border border-line-soft bg-surface-raised transition-shadow duration-300 ${isOpen ? 'shadow-card' : ''}`}>
+                  <button type="button" onClick={() => setActiveFaq(isOpen ? null : index)} className="focus-ring flex w-full items-center justify-between gap-4 rounded-3xl p-6 text-left" aria-expanded={isOpen} aria-controls={`faq-answer-${index}`}>
                     <span className="font-bricolage text-lg font-bold text-text-primary md:text-xl">{item.question}</span>
                     <PlusIcon className={`h-6 w-6 shrink-0 text-accent transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`} aria-hidden="true" />
                   </button>
@@ -308,7 +312,7 @@ export default function Home() {
                 No ads and no complicated setup. Sign in, choose your subjects and continue from Today.
               </p>
             </div>
-            <Link to="/register" className="btn-primary min-h-12 px-8">Create an account</Link>
+            <Link to="/register" className="btn-primary press focus-ring min-h-12 px-8">Create an account</Link>
           </div>
         </div>
       </section>

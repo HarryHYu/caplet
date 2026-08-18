@@ -41,13 +41,16 @@ export function usePinnedNavItems() {
     };
   }, []);
 
+  // Returns what actually happened so callers can announce honestly:
+  // 'added' | 'duplicate' | 'invalid'.
   const pin = useCallback((id) => {
-    if (!validIds.has(id)) return;
+    if (!validIds.has(id)) return 'invalid';
     const current = readStored();
-    if (current.includes(id)) return;
+    if (current.includes(id)) return 'duplicate';
     const next = [...current, id];
     setPinnedIds(next);
     try { persist(next); } catch { /* Keep the mounted state when storage is unavailable. */ }
+    return 'added';
   }, []);
 
   const unpin = useCallback((id) => {

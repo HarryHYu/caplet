@@ -1,3 +1,19 @@
+// Shared dated CPI fixture used whenever the live indicator feed is
+// unavailable. Kept in one place so the Money overview and inflation pages
+// can never drift apart.
+export const CPI_SNAPSHOT = {
+  value: 4.0,
+  previousValue: 4.2,
+  referencePeriod: 'May 2026',
+  previousPeriod: 'April 2026',
+  released: '24 June 2026',
+  verified: '13 July 2026',
+  nextRelease: '29 July 2026',
+  sourceLabel: 'ABS Consumer Price Index, Australia',
+  sourceUrl: 'https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/consumer-price-index-australia/may-2026',
+  methodologyUrl: 'https://www.abs.gov.au/methodologies/consumer-price-index-australia-methodology/may-2026',
+};
+
 export const MONEY_STORAGE_KEYS = {
   onboarded: 'caplet:money:onboarded',
   intent: 'caplet:money:intent',

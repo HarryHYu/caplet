@@ -15,7 +15,7 @@ export default function ForumSortTabs({ value, onChange }) {
             key={tab.value}
             type="button"
             onClick={() => onChange(tab.value)}
-            className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-colors duration-150 ${active ? 'text-white' : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'}`}
+            className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-colors duration-150 ${active ? 'text-accent-contrast' : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'}`}
             style={active ? { background: 'var(--forum-accent)' } : undefined}
           >
             {tab.label}

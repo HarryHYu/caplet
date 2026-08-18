@@ -53,9 +53,9 @@ const LibrarySubject = () => {
   if (!groups.length) groups.push({ title: 'Syllabus outcomes', outcomes });
 
   return (
-    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
+    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-accent-contrast md:pt-28">
       <div className="container-custom">
-        <Link to="/library" className="reveal inline-flex min-h-11 items-center gap-2 text-sm font-bold text-text-muted hover:text-accent">
+        <Link to="/library" className="focus-ring reveal inline-flex min-h-11 items-center gap-2 rounded-lg text-sm font-bold text-text-muted hover:text-accent">
           <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Back to Learn
         </Link>
 
@@ -79,7 +79,7 @@ const LibrarySubject = () => {
         <section className="reveal mt-8 grid gap-4 md:grid-cols-3">
           <div className="rounded-3xl bg-surface-raised p-6"><CheckBadgeIcon className="h-7 w-7 text-accent" /><p className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-text-dim">Published syllabus</p><p className="mt-2 font-display text-xl font-extrabold">{pack.syllabusName || pack.title}</p></div>
           <div className="rounded-3xl bg-surface-raised p-6"><BookOpenIcon className="h-7 w-7 text-accent" /><p className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-text-dim">Mapped outcomes</p><p className="mt-2 font-display text-3xl font-extrabold">{outcomes.length}</p></div>
-          <Link to={pack.studentLinks.practice} className="group rounded-3xl block-green p-6"><ClipboardDocumentCheckIcon className="h-7 w-7 text-accent" /><p className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-text-dim">Daily practice</p><p className="mt-2 font-display text-xl font-extrabold">Get questions chosen from your evidence</p><span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-accent">Practise now <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span></Link>
+          <Link to={pack.studentLinks.practice} className="card-lift focus-ring group rounded-3xl block-green p-6"><ClipboardDocumentCheckIcon className="h-7 w-7 text-accent" /><p className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-text-dim">Daily practice</p><p className="mt-2 font-display text-xl font-extrabold">Get questions chosen from your evidence</p><span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-accent">Practise now <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span></Link>
         </section>
 
         <section className="reveal mt-14">

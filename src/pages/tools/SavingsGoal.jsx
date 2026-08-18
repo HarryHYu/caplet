@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../../lib/useReveal';
-
-const formatCurrency = (value) =>
-  new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+import { formatCurrencyAUD as formatCurrency, savingsGoalTimeline } from './toolMath';
 
 const SavingsGoal = () => {
   const [goal, setGoal] = useState('');
@@ -29,39 +27,27 @@ const SavingsGoal = () => {
       return;
     }
 
-    const monthlyRate = rate / 100 / 12;
-    const needed = goalNum - currentNum;
-    let months = 0;
+    const timeline = savingsGoalTimeline({
+      goal: goalNum,
+      current: currentNum,
+      monthly: monthlyNum,
+      annualRate: rate,
+    });
 
-    if (monthlyNum > 0) {
-      if (rate > 0) {
-        const numerator = Math.log((goalNum * monthlyRate + monthlyNum) / (currentNum * monthlyRate + monthlyNum));
-        const denominator = Math.log(1 + monthlyRate);
-        months = Math.ceil(numerator / denominator);
-      } else {
-        months = Math.ceil(needed / monthlyNum);
-      }
-    } else {
-      months = Math.ceil(Math.log(goalNum / currentNum) / Math.log(1 + monthlyRate));
+    if (!timeline.reachable) {
+      // e.g. $0 saved and no contributions — interest alone can never get
+      // there, so never print "Infinity months".
+      setResult({ error: 'With no savings yet and no monthly contribution, interest alone cannot reach this goal. Add a regular contribution.' });
+      return;
     }
 
-    const years = months / 12;
-    const totalContributed = monthlyNum * months;
-    const interestEarned = goalNum - currentNum - totalContributed;
-
-    setResult({
-      months,
-      years,
-      totalContributed,
-      interestEarned,
-      finalBalance: goalNum,
-    });
+    setResult(timeline);
   };
 
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -81,12 +67,12 @@ const SavingsGoal = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-lg mb-10">Your numbers</h2>
             <form onSubmit={handleSubmit} className="space-y-16">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">
+                  <label htmlFor="savings-goal-target" className="text-sm font-semibold text-text-dim mb-4 block">
                     Target Amount (AUD)
                   </label>
                   <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
@@ -104,7 +90,7 @@ const SavingsGoal = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">
+                  <label htmlFor="savings-goal-current" className="text-sm font-semibold text-text-dim mb-4 block">
                     Current Savings
                   </label>
                   <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
@@ -124,7 +110,7 @@ const SavingsGoal = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">
+                  <label htmlFor="savings-goal-monthly" className="text-sm font-semibold text-text-dim mb-4 block">
                     Monthly Contribution
                   </label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
@@ -141,7 +127,7 @@ const SavingsGoal = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">
+                  <label htmlFor="savings-goal-rate" className="text-sm font-semibold text-text-dim mb-4 block">
                     Interest Rate (%)
                   </label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
@@ -160,20 +146,20 @@ const SavingsGoal = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full py-5 text-base mt-4 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-5 text-base mt-4 hover:-translate-y-0.5 transition-transform">
                 Calculate Timeline
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-lg mb-10">Your projection</h2>
 
             {result ? (
               result.error ? (
-                <p className="text-sm font-semibold text-accent">{result.error}</p>
+                <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
-                <div className="space-y-10">
+                <div className="animate-rise space-y-10">
                   <div>
                     <p className="text-xs font-semibold text-text-dim mb-3">Time to reach your goal</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
@@ -194,7 +180,7 @@ const SavingsGoal = () => {
                       </div>
                     </div>
 
-                    <div className="bg-surface-raised rounded-2xl p-7 shadow-[0_16px_36px_-28px_rgba(20,20,18,0.3)]">
+                    <div className="bg-surface-raised rounded-2xl p-7 shadow-pop">
                       <p className="text-xs font-semibold text-text-dim mb-3">Final balance</p>
                       <p className="font-display text-3xl font-extrabold tracking-tight">{formatCurrency(result.finalBalance)}</p>
                       <p className="font-hand text-lg text-accent mt-2">Goal reached.</p>
@@ -208,7 +194,7 @@ const SavingsGoal = () => {
               )
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 rounded-2xl bg-surface-raised flex items-center justify-center text-sm font-display font-bold text-accent mb-6 shadow-[0_16px_36px_-28px_rgba(20,20,18,0.3)]">Goal</div>
+                <div className="w-16 h-16 rounded-2xl bg-surface-raised flex items-center justify-center text-sm font-display font-bold text-accent mb-6 shadow-pop">Goal</div>
                 <p className="text-sm font-semibold text-text-muted">Enter your goal to see results.</p>
               </div>
             )}

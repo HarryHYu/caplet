@@ -22,7 +22,7 @@ export default function ForumFilterBar({ tag, onTagChange, solved, onSolvedChang
               key={opt.label}
               type="button"
               onClick={() => onSolvedChange(opt.value)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-colors ${active ? 'text-white' : 'text-text-muted hover:bg-surface-soft'}`}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-colors ${active ? 'text-accent-contrast' : 'text-text-muted hover:bg-surface-soft'}`}
               style={active ? { background: 'var(--forum-accent)' } : undefined}
             >
               {opt.label}

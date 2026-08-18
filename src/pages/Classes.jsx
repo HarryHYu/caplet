@@ -1,10 +1,55 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import ClassIcon from '../components/ClassIcon';
 import { useReveal } from '../lib/useReveal';
+
+/** Small spinner for in-flight submit buttons. */
+const ButtonSpinner = () => (
+  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+  </svg>
+);
+
+/**
+ * Accessible modal shell: role="dialog" + aria-modal, closes on Escape,
+ * moves focus into the dialog on open and restores it on close.
+ */
+const ModalShell = ({ labelledBy, onClose, maxWidthClass = 'max-w-lg', children }) => {
+  const dialogRef = useRef(null);
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+    dialogRef.current?.focus();
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+        previouslyFocused.focus();
+      }
+    };
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-2xl flex items-center justify-center z-50 p-6">
+      <div
+        ref={dialogRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={labelledBy}
+        className={`bg-surface-raised rounded-3xl ${maxWidthClass} w-full p-12 shadow-pop animate-pop outline-none`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const Classes = () => {
   const { user, isAuthenticated } = useAuth();
@@ -17,6 +62,8 @@ const Classes = () => {
   const [joinCode, setJoinCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [joinError, setJoinError] = useState('');
 
   // Re-run once content renders (past the loading gate), else there are no
   // .reveal elements on mount and nothing animates.
@@ -51,9 +98,9 @@ const Classes = () => {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!createForm.name.trim()) return;
+    if (submitting || !createForm.name.trim()) return;
     setSubmitting(true);
-    setError('');
+    setCreateError('');
     try {
       await api.createClass({
         name: createForm.name.trim(),
@@ -64,7 +111,7 @@ const Classes = () => {
       await refreshClasses();
     } catch (err) {
       console.error('Create class error:', err);
-      setError(err.message || 'Failed to create class');
+      setCreateError(err.message || 'Failed to create class');
     } finally {
       setSubmitting(false);
     }
@@ -72,9 +119,9 @@ const Classes = () => {
 
   const handleJoin = async (e) => {
     e.preventDefault();
-    if (!joinCode.trim()) return;
+    if (submitting || !joinCode.trim()) return;
     setSubmitting(true);
-    setError('');
+    setJoinError('');
     try {
       const res = await api.joinClass(joinCode.trim());
       setShowJoin(false);
@@ -83,10 +130,21 @@ const Classes = () => {
       navigate(`/classes/${res.classroom.id}`);
     } catch (err) {
       console.error('Join class error:', err);
-      setError(err.message || 'Failed to join class');
+      setJoinError(err.message || 'Failed to join class');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const openCreate = () => {
+    setCreateError('');
+    setShowCreate(true);
+  };
+
+  const openJoin = () => {
+    if (!isAuthenticated) return navigate('/login');
+    setJoinError('');
+    setShowJoin(true);
   };
 
   if (loading) {
@@ -98,50 +156,56 @@ const Classes = () => {
   }
 
   return (
-    <div className="minimal-page selection:bg-accent selection:text-white">
+    <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         {/* Header Section */}
         <header data-tour-id="academy-header" className="minimal-page-header flex flex-col justify-between gap-8 md:max-w-none md:flex-row md:items-end reveal">
           <div>
             <span className="section-kicker">Learn together</span>
             <h1 className="minimal-page-title">Classes</h1>
-            <p className="minimal-page-description">Join a class or manage one you teach.</p>
+            <p className="minimal-page-description">
+              {isTeacher ? 'Manage the classes you teach.' : 'Join a class or manage one you teach.'}
+            </p>
           </div>
           <div data-tour-id="academy-actions" className="flex items-center gap-3">
             {isTeacher && (
               <Link
                 to="/curriculum-studio"
-                className="btn-secondary px-6 py-2.5 text-sm"
+                className="btn-secondary press px-6 py-2.5 text-sm"
               >
                 Curriculum Studio
               </Link>
             )}
             {isTeacher && (
               <button
-                onClick={() => setShowCreate(true)}
-                className="btn-secondary px-6 py-2.5 text-sm"
+                onClick={openCreate}
+                className="btn-primary press px-6 py-2.5 text-sm gap-2"
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
                 Create class
               </button>
             )}
-            <button
-              onClick={() => {
-                if (!isAuthenticated) return navigate('/login');
-                setShowJoin(true);
-              }}
-              className="btn-primary px-6 py-2.5 text-sm gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Join class
-            </button>
+            {/* Teachers cannot join classes as students (the server rejects the
+                request), so the join action is student-only. */}
+            {!isTeacher && (
+              <button
+                onClick={openJoin}
+                className="btn-primary press px-6 py-2.5 text-sm gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Join class
+              </button>
+            )}
           </div>
         </header>
 
         {error && (
-          <div className="mb-20 p-6 rounded-2xl bg-red-50 text-red-800 text-sm font-medium flex items-center gap-4 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
-            <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+          <div role="alert" className="mb-20 p-6 rounded-2xl bg-surface-error text-text-error text-sm font-medium flex items-center gap-4 shadow-card animate-shake-x reveal">
+            <span className="w-2 h-2 bg-text-error rounded-full animate-pulse" aria-hidden="true" />
             Something went wrong: {error}
           </div>
         )}
@@ -152,7 +216,7 @@ const Classes = () => {
               Classes You Teach
             </h2>
             {classes.teaching.length === 0 ? (
-              <div className="p-16 rounded-3xl text-center block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <div className="p-16 rounded-3xl text-center block-cream shadow-card">
                 <p className="text-sm font-medium text-text-dim">
                   You don't manage any classes yet.
                 </p>
@@ -160,14 +224,14 @@ const Classes = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal-stagger">
                 {classes.teaching.map((cls) => (
-                  <Link key={cls.id} to={`/classes/${cls.id}`} className="block-blue rounded-3xl p-10 group flex flex-col justify-between shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
+                  <Link key={cls.id} to={`/classes/${cls.id}`} className="block-blue rounded-3xl p-10 group flex flex-col justify-between shadow-card card-lift focus-ring">
                     <div>
                       <div className="flex justify-between items-start mb-12 gap-4">
                         <div className="flex min-w-0 items-start gap-4">
                           <ClassIcon name={cls.name} size="lg" />
                           <h3 className="min-w-0 font-display font-bold tracking-tight text-3xl">{cls.name}</h3>
                         </div>
-                        <span className="text-xs font-bold px-3 py-1 rounded-xl bg-accent text-white shrink-0">Owner</span>
+                        <span className="text-xs font-bold px-3 py-1 rounded-xl bg-accent text-accent-contrast shrink-0">Owner</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between pt-8">
@@ -188,15 +252,17 @@ const Classes = () => {
             Classes You're In
           </h2>
           {classes.student.length === 0 ? (
-            <div className="p-16 rounded-3xl text-center block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="p-16 rounded-3xl text-center block-cream shadow-card">
               <p className="text-sm font-medium text-text-dim">
-                Join your first class to get started.
+                {isTeacher
+                  ? "You're not a member of any classes."
+                  : 'Join your first class to get started.'}
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal-stagger">
               {classes.student.map((cls) => (
-                <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-raised rounded-3xl p-10 group flex flex-col justify-between shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
+                <Link key={cls.id} to={`/classes/${cls.id}`} className="bg-surface-raised rounded-3xl p-10 group flex flex-col justify-between shadow-card card-lift focus-ring">
                   <div>
                       <div className="flex justify-between items-start mb-12 gap-4">
                         <div className="flex min-w-0 items-start gap-4">
@@ -220,66 +286,89 @@ const Classes = () => {
 
         {/* Modals */}
         {showCreate && (
-          <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-2xl flex items-center justify-center z-50 p-6">
-            <div className="bg-surface-raised rounded-3xl max-w-lg w-full p-12 shadow-[0_30px_60px_-30px_rgba(20,20,18,0.45)]">
-              <div className="flex items-center justify-between mb-16">
-                <h2 className="font-display font-bold tracking-tight text-4xl">Create a Class</h2>
-                <button onClick={() => setShowCreate(false)} className="text-text-dim hover:text-accent transition-colors">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          <ModalShell labelledBy="create-class-heading" onClose={() => setShowCreate(false)}>
+            <div className="flex items-center justify-between mb-16">
+              <h2 id="create-class-heading" className="font-display font-bold tracking-tight text-4xl">Create a Class</h2>
+              <button type="button" onClick={() => setShowCreate(false)} className="text-text-dim hover:text-accent transition-colors focus-ring rounded-lg" aria-label="Close">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            {createError && (
+              <div key={createError} role="alert" className="mb-8 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error animate-shake-x">
+                {createError}
+              </div>
+            )}
+            <form onSubmit={handleCreate} className="space-y-12">
+              <div>
+                <label htmlFor="create-class-name" className="text-sm font-semibold text-text-dim mb-4 block">Class Name</label>
+                <input
+                  id="create-class-name"
+                  type="text"
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  className="w-full bg-surface-soft border border-line-soft rounded-xl px-6 py-4 text-sm font-medium outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-colors"
+                />
+              </div>
+              <div>
+                <label htmlFor="create-class-description" className="text-sm font-semibold text-text-dim mb-4 block">Description (Optional)</label>
+                <textarea
+                  id="create-class-description"
+                  rows={4}
+                  value={createForm.description}
+                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                  className="w-full bg-surface-soft border border-line-soft rounded-xl px-6 py-4 text-sm font-medium outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-colors resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary press py-3 text-sm" disabled={submitting}>Cancel</button>
+                <button
+                  type="submit"
+                  disabled={submitting || !createForm.name.trim()}
+                  className="btn-primary press py-3 text-sm inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {submitting && <ButtonSpinner />}
+                  {submitting ? 'Creating...' : 'Create Class'}
                 </button>
               </div>
-              <form onSubmit={handleCreate} className="space-y-12">
-                <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">Class Name</label>
-                  <input
-                    type="text"
-                    value={createForm.name}
-                    onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                    className="w-full bg-surface-soft border border-line-soft rounded-xl px-6 py-4 text-sm font-medium outline-none focus:border-accent transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">Description (Optional)</label>
-                  <textarea
-                    rows={4}
-                    value={createForm.description}
-                    onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                    className="w-full bg-surface-soft border border-line-soft rounded-xl px-6 py-4 text-sm font-medium outline-none focus:border-accent transition-colors resize-none"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary py-3 text-sm">Cancel</button>
-                  <button type="submit" className="btn-primary py-3 text-sm">{submitting ? 'Creating...' : 'Create Class'}</button>
-                </div>
-              </form>
-            </div>
-          </div>
+            </form>
+          </ModalShell>
         )}
 
         {showJoin && (
-          <div className="fixed inset-0 bg-surface-body/95 backdrop-blur-3xl flex items-center justify-center z-50 p-6">
-            <div className="bg-surface-raised rounded-3xl max-w-sm w-full p-12 shadow-[0_30px_60px_-30px_rgba(20,20,18,0.45)]">
-              <div className="flex items-center justify-between mb-16">
-                <h2 className="font-display font-bold tracking-tight text-4xl">Join a Class</h2>
-                <button onClick={() => setShowJoin(false)} className="text-text-dim hover:text-accent transition-colors">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-              <form onSubmit={handleJoin} className="space-y-20">
-                <div className="text-center">
-                  <label className="text-sm font-semibold text-text-dim mb-8 block">Enter Your Class Code</label>
-                  <input
-                    type="text"
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    className="w-full bg-surface-soft rounded-xl text-center text-5xl font-display font-extrabold tracking-tight outline-none border border-line-soft focus:border-accent py-6 transition-all"
-                    placeholder="CODE"
-                  />
-                </div>
-                <button type="submit" className="w-full btn-primary py-3 text-sm">{submitting ? 'Verifying...' : 'Join Class'}</button>
-              </form>
+          <ModalShell labelledBy="join-class-heading" onClose={() => setShowJoin(false)} maxWidthClass="max-w-sm">
+            <div className="flex items-center justify-between mb-16">
+              <h2 id="join-class-heading" className="font-display font-bold tracking-tight text-4xl">Join a Class</h2>
+              <button type="button" onClick={() => setShowJoin(false)} className="text-text-dim hover:text-accent transition-colors focus-ring rounded-lg" aria-label="Close">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
             </div>
-          </div>
+            {joinError && (
+              <div key={joinError} role="alert" className="mb-8 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error animate-shake-x">
+                {joinError}
+              </div>
+            )}
+            <form onSubmit={handleJoin} className="space-y-20">
+              <div className="text-center">
+                <label htmlFor="join-class-code" className="text-sm font-semibold text-text-dim mb-8 block">Enter Your Class Code</label>
+                <input
+                  id="join-class-code"
+                  type="text"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  className="w-full bg-surface-soft rounded-xl text-center text-5xl font-display font-extrabold tracking-tight outline-none border border-line-soft focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent py-6 transition-all"
+                  placeholder="CODE"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={submitting || !joinCode.trim()}
+                className="w-full btn-primary press py-3 text-sm inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {submitting && <ButtonSpinner />}
+                {submitting ? 'Verifying...' : 'Join Class'}
+              </button>
+            </form>
+          </ModalShell>
         )}
       </div>
     </div>

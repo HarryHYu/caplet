@@ -48,13 +48,13 @@ export default function ForumNotificationBell() {
       <button type="button" onClick={() => setOpen((v) => !v)} className="relative rounded-full p-2 text-text-muted transition-colors hover:bg-surface-soft hover:text-text-primary">
         <BellIcon className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white" style={{ background: 'var(--forum-accent)' }}>
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-accent-contrast" style={{ background: 'var(--forum-accent)' }}>
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-80 rounded-2xl border border-line-soft bg-surface-raised shadow-[0_28px_64px_-38px_rgba(20,20,18,0.32)]">
+        <div className="absolute right-0 z-40 mt-2 w-80 rounded-2xl border border-line-soft bg-surface-raised shadow-card">
           <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
             <p className="text-sm font-bold text-text-primary">Notifications</p>
             {unreadCount > 0 && <button type="button" onClick={markAll} className="text-xs font-bold text-[color:var(--forum-accent)]">Mark all read</button>}

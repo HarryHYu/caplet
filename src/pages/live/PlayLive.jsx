@@ -39,7 +39,7 @@ function TimerBar({ opensAt, windowMs }) {
     <div>
       <div className="h-2.5 w-full rounded-full bg-surface-soft overflow-hidden">
         <Motion.div
-          className={`h-full rounded-full ${low ? 'bg-rose-500' : pct < 55 ? 'bg-amber-400' : 'bg-accent'}`}
+          className={`h-full rounded-full ${low ? 'bg-text-error' : pct < 55 ? 'bg-amber-400' : 'bg-accent'}`}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.12, ease: 'linear' }}
         />
@@ -48,7 +48,7 @@ function TimerBar({ opensAt, windowMs }) {
         key={seconds}
         initial={{ scale: low ? 1.35 : 1.1, opacity: 0.6 }}
         animate={{ scale: 1, opacity: 1 }}
-        className={`text-center text-xs font-bold mt-1.5 tabular-nums ${low ? 'text-rose-500' : 'text-text-dim'}`}
+        className={`text-center text-xs font-bold mt-1.5 tabular-nums ${low ? 'text-text-error' : 'text-text-dim'}`}
       >
         {seconds}s
       </Motion.p>
@@ -75,7 +75,7 @@ function AnswerCelebration({ correct, pointsAwarded, streakBonus, streak, rank }
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 320, damping: 16 }}
         className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center text-4xl mb-4 ${
-          correct ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'
+          correct ? 'bg-[color-mix(in_srgb,var(--mark-green)_15%,transparent)] text-[var(--mark-green)]' : 'bg-surface-error text-text-error'
         }`}
       >
         {correct ? '✓' : '✕'}
@@ -84,7 +84,7 @@ function AnswerCelebration({ correct, pointsAwarded, streakBonus, streak, rank }
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.12 }}
-        className={`text-3xl font-display font-extrabold mb-2 ${correct ? 'text-emerald-500' : 'text-rose-500'}`}
+        className={`text-3xl font-display font-extrabold mb-2 ${correct ? 'text-[var(--mark-green)]' : 'text-text-error'}`}
       >
         {correct ? 'Correct!' : 'Not quite'}
       </Motion.p>
@@ -469,6 +469,8 @@ function LiveHotspot({ slide, onAnswer, locked }) {
             onClick={() => setSelected(r.id)}
             style={{ left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` }}
             className={`absolute border-2 rounded-lg transition-colors ${
+              // Fixed white (not tokens) is intentional here: these outlines sit
+              // on top of an arbitrary user-supplied image, not a themed surface.
               selected === r.id ? 'border-accent bg-accent/20' : 'border-white/60 bg-white/5 hover:bg-accent/10'
             }`}
             aria-label={r.label}
@@ -526,7 +528,7 @@ function JoinScreen({ onJoin, joining, joinError, initialCode }) {
     <div className="min-h-[100dvh] flex items-center justify-center px-4 bg-surface-body text-text-primary">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <p className="font-bricolage font-extrabold text-2xl text-accent mb-1">Caplet</p>
+          <p className="font-display font-extrabold text-2xl text-accent mb-1">Caplet</p>
           <h1 className="text-2xl font-display font-extrabold tracking-tight">Join a live session</h1>
         </div>
 
@@ -546,7 +548,7 @@ function JoinScreen({ onJoin, joining, joinError, initialCode }) {
               className="w-full px-4 py-4 text-center text-2xl font-mono tracking-[0.2em] rounded-2xl border border-line-soft bg-surface-raised text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
             />
             {preview && (
-              <p className="text-center text-sm text-emerald-500 mt-2">Joining: {preview.lessonTitle}</p>
+              <p className="text-center text-sm text-[var(--mark-green)] mt-2">Joining: {preview.lessonTitle}</p>
             )}
           </div>
           <div>
@@ -561,7 +563,7 @@ function JoinScreen({ onJoin, joining, joinError, initialCode }) {
             />
           </div>
 
-          {joinError && <p className="text-sm text-rose-500 text-center">{joinError}</p>}
+          {joinError && <p className="text-sm text-text-error text-center">{joinError}</p>}
 
           <button
             type="submit"
@@ -719,10 +721,10 @@ export default function PlayLive() {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center px-4 bg-surface-body text-text-primary">
         <div className="w-full max-w-sm text-center">
-          <p className="font-bricolage font-extrabold text-xl text-accent mb-1">Caplet</p>
+          <p className="font-display font-extrabold text-xl text-accent mb-1">Caplet</p>
           <h1 className="text-xl font-display font-bold mb-2">You're in, {participant.nickname}!</h1>
           <p className="text-text-muted mb-6">Waiting for the host to start…</p>
-          {connError && <p className="text-sm text-rose-500 mb-4">{connError}</p>}
+          {connError && <p className="text-sm text-text-error mb-4">{connError}</p>}
           <div className="flex flex-wrap justify-center gap-2">
             <AnimatePresence initial={false}>
               {roster.map((p) => (
@@ -769,7 +771,7 @@ export default function PlayLive() {
 
           {current.status === 'question_open' && !myAnswer && !isReveal && LiveComp && (
             <div>
-              {answerError && <p className="text-sm text-rose-500 text-center mb-3">{answerError}</p>}
+              {answerError && <p className="text-sm text-text-error text-center mb-3">{answerError}</p>}
               <LiveComp slide={current.slide} onAnswer={submitAnswer} locked={false} />
             </div>
           )}

@@ -61,7 +61,7 @@ export default function ForumSearchPage() {
             className="w-full border-0 bg-transparent p-0 text-sm shadow-none focus:ring-0"
           />
         </div>
-        <button type="submit" className="rounded-2xl px-4 py-2.5 text-sm font-bold text-white" style={{ background: 'var(--forum-accent)' }}>Search</button>
+        <button type="submit" className="rounded-2xl px-4 py-2.5 text-sm font-bold text-accent-contrast" style={{ background: 'var(--forum-accent)' }}>Search</button>
       </form>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">

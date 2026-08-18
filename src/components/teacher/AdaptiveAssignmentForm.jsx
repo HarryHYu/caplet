@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AdjustmentsHorizontalIcon,
   CheckCircleIcon,
@@ -55,12 +55,18 @@ export default function AdaptiveAssignmentForm({
     setMessage({ type: '', text: '' });
   }, [initialDraft]);
 
+  // Auto-select the whole class only when the roster itself changes (keyed on
+  // the joined ids, not the array reference) — otherwise every parent render
+  // re-ran this effect and silently undid "Clear selection".
+  const studentIdsKey = students.map((student) => student.id).join(',');
+  const autoFilledRosterRef = useRef('');
   useEffect(() => {
-    if (!students.length) return;
+    if (!studentIdsKey || autoFilledRosterRef.current === studentIdsKey) return;
+    autoFilledRosterRef.current = studentIdsKey;
     setForm((current) => current.studentIds.length
       ? current
-      : { ...current, studentIds: students.map((student) => student.id) });
-  }, [students]);
+      : { ...current, studentIds: studentIdsKey.split(',') });
+  }, [studentIdsKey]);
 
   const allStudentsSelected = students.length > 0 && form.studentIds.length === students.length;
   const selectedOutcomeLabels = useMemo(() => new Map(outcomes.map((outcome) => [String(outcome.id), outcome])), [outcomes]);
@@ -101,6 +107,13 @@ export default function AdaptiveAssignmentForm({
       setMessage({ type: 'error', text: 'Add at least one question ID for manual selection.' });
       return;
     }
+    if (form.strategy !== 'manual') {
+      const count = Number(form.questionCount);
+      if (!Number.isFinite(count) || count < 1) {
+        setMessage({ type: 'error', text: 'Set the number of questions to at least 1.' });
+        return;
+      }
+    }
 
     const questionSelection = {
       strategy: form.strategy,
@@ -138,7 +151,10 @@ export default function AdaptiveAssignmentForm({
   };
 
   return (
-    <form onSubmit={submit} className="rounded-3xl bg-surface-raised p-7 shadow-[0_24px_54px_-40px_rgba(20,20,18,0.45)] md:p-9">
+    // noValidate: this form does its own validation, which produces specific
+    // messages wired to aria-invalid/aria-describedby. Native constraint
+    // popups would pre-empt those with generic browser text.
+    <form onSubmit={submit} noValidate className="rounded-3xl bg-surface-raised p-7 shadow-card md:p-9">
       <div className="flex items-start gap-4">
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent">
           <SparklesIcon className="h-6 w-6" aria-hidden="true" />
@@ -157,7 +173,7 @@ export default function AdaptiveAssignmentForm({
           id="adaptive-assignment-message"
           role={message.type === 'error' ? 'alert' : 'status'}
           aria-live="polite"
-          className={`mt-6 rounded-2xl px-5 py-4 text-sm font-bold ${message.type === 'error' ? 'bg-surface-error text-text-error' : 'bg-[color:var(--block-green)] text-text-primary'}`}
+          className={`mt-6 rounded-2xl px-5 py-4 text-sm font-bold ${message.type === 'error' ? 'bg-surface-error text-text-error animate-shake-x' : 'bg-[color:var(--block-green)] text-text-primary'}`}
         >
           {message.type === 'success' && <CheckCircleIcon className="mr-2 inline h-5 w-5 text-accent" aria-hidden="true" />}
           {message.text}
@@ -220,7 +236,7 @@ export default function AdaptiveAssignmentForm({
         <p id="assignment-outcomes-help" className="mt-1 text-xs font-medium text-text-muted">At least one outcome is required.</p>
         <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto rounded-2xl bg-surface-soft p-3 sm:grid-cols-2">
           {outcomes.map((outcome) => (
-            <label key={outcome.id} className={`flex cursor-pointer gap-3 rounded-xl p-3 transition-colors ${form.outcomeIds.includes(outcome.id) ? 'bg-accent text-white' : 'bg-surface-raised text-text-primary hover:bg-accent-soft'}`}>
+            <label key={outcome.id} className={`flex cursor-pointer gap-3 rounded-xl p-3 transition-colors ${form.outcomeIds.includes(outcome.id) ? 'bg-accent text-accent-contrast' : 'bg-surface-raised text-text-primary hover:bg-accent-soft'}`}>
               <input
                 id={`assignment-outcome-${outcome.id}`}
                 type="checkbox"
@@ -230,7 +246,7 @@ export default function AdaptiveAssignmentForm({
                 className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
               />
               <span>
-                <span className={`block font-mono text-[11px] font-bold ${form.outcomeIds.includes(outcome.id) ? 'text-white/75' : 'text-accent'}`}>{outcome.code}</span>
+                <span className={`block font-mono text-[11px] font-bold ${form.outcomeIds.includes(outcome.id) ? 'text-accent-contrast/75' : 'text-accent'}`}>{outcome.code}</span>
                 <span className="mt-0.5 block text-xs font-bold leading-snug">{outcome.title}</span>
               </span>
             </label>
@@ -286,7 +302,7 @@ export default function AdaptiveAssignmentForm({
           {form.strategy !== 'manual' && (
             <label htmlFor="assignment-question-count" className="text-xs font-bold text-text-muted">
               Questions
-              <input id="assignment-question-count" type="number" min="1" max="50" value={form.questionCount} onChange={(event) => setForm((current) => ({ ...current, questionCount: event.target.value }))} className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-text-primary outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent" />
+              <input id="assignment-question-count" type="number" min="1" max="50" required value={form.questionCount} onChange={(event) => setForm((current) => ({ ...current, questionCount: event.target.value }))} aria-invalid={message.type === 'error' && message.text.includes('number of questions')} aria-describedby={message.type === 'error' ? 'adaptive-assignment-message' : undefined} className="mt-2 w-full rounded-xl border border-line-soft bg-surface-soft px-3 py-2.5 text-text-primary outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent" />
             </label>
           )}
           <label htmlFor="assignment-difficulty" className="text-xs font-bold text-text-muted">
@@ -319,7 +335,7 @@ export default function AdaptiveAssignmentForm({
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs font-medium text-text-dim">Only approved or published questions can be assigned.</p>
-        <button type="submit" disabled={submitting} className="btn-primary sm:min-w-52">
+        <button type="submit" disabled={submitting} className="btn-primary press sm:min-w-52">
           {submitting ? 'Creating assignment…' : 'Create assignment'}
         </button>
       </div>

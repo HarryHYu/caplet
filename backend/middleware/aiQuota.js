@@ -1,14 +1,21 @@
 const crypto = require('crypto');
 const { createRedisLimitStore } = require('../services/distributedLimitStore');
 
-const WINDOW_MS = Number(process.env.AI_USER_QUOTA_WINDOW_MS || 15 * 60 * 1000);
-const MAX_UNITS = Number(process.env.AI_USER_QUOTA_UNITS || 40);
-const MAX_CONCURRENT = Number(process.env.AI_USER_MAX_CONCURRENT || 2);
-const DAILY_MAX_UNITS = Number(process.env.AI_DAILY_UNIT_BUDGET || 10000);
-const RESERVATION_LEASE_MS = Number(process.env.AI_RESERVATION_LEASE_MS || 10 * 60 * 1000);
-const MAX_TRACKED_IDENTITIES = Number.isInteger(Number(process.env.AI_MAX_TRACKED_IDENTITIES))
-  ? Math.max(100, Number(process.env.AI_MAX_TRACKED_IDENTITIES))
-  : 10000;
+// Every env-derived constant is parsed defensively: a missing, empty, or
+// garbage value (NaN, negative, zero) falls back to the default instead of
+// silently disabling the quota (NaN comparisons are always false).
+function envPositiveNumber(value, fallback) {
+  if (value === undefined || value === null || value === '') return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const WINDOW_MS = envPositiveNumber(process.env.AI_USER_QUOTA_WINDOW_MS, 15 * 60 * 1000);
+const MAX_UNITS = envPositiveNumber(process.env.AI_USER_QUOTA_UNITS, 40);
+const MAX_CONCURRENT = envPositiveNumber(process.env.AI_USER_MAX_CONCURRENT, 2);
+const DAILY_MAX_UNITS = envPositiveNumber(process.env.AI_DAILY_UNIT_BUDGET, 10000);
+const RESERVATION_LEASE_MS = envPositiveNumber(process.env.AI_RESERVATION_LEASE_MS, 10 * 60 * 1000);
+const MAX_TRACKED_IDENTITIES = Math.max(100, Math.floor(envPositiveNumber(process.env.AI_MAX_TRACKED_IDENTITIES, 10000)));
 const {
   isAICircuitOpen,
   recordAIEvent,
@@ -23,20 +30,31 @@ function validPositiveInteger(value, fallback) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+// Returns the live state for an identity, or null when the tracker is full of
+// LIVE identities and cannot safely admit a new one (resetting a live state
+// would drop its in-flight concurrency count).
 function quotaState(userId, now = Date.now()) {
   const current = usage.get(userId);
-  if (!current || current.resetAt <= now) {
-    if (usage.size >= MAX_TRACKED_IDENTITIES) {
-      for (const [key, state] of usage) {
-        if (state.resetAt <= now) usage.delete(key);
-      }
-      while (usage.size >= MAX_TRACKED_IDENTITIES) usage.delete(usage.keys().next().value);
-    }
-    const fresh = { units: 0, active: 0, resetAt: now + WINDOW_MS };
-    usage.set(userId, fresh);
-    return fresh;
+  if (current && current.resetAt > now) return current;
+  if (current) {
+    // Window rollover: reset the unit budget but carry the in-flight
+    // concurrency count, mutating IN PLACE so pending release() closures
+    // still decrement the same object.
+    current.units = 0;
+    current.resetAt = now + WINDOW_MS;
+    return current;
   }
-  return current;
+  if (usage.size >= MAX_TRACKED_IDENTITIES) {
+    for (const [key, state] of usage) {
+      if (state.resetAt <= now) usage.delete(key);
+    }
+    // Every tracked identity is still live: refuse to track a new one rather
+    // than resetting someone's live window/concurrency.
+    if (usage.size >= MAX_TRACKED_IDENTITIES) return null;
+  }
+  const fresh = { units: 0, active: 0, resetAt: now + WINDOW_MS };
+  usage.set(userId, fresh);
+  return fresh;
 }
 
 function utcDate(now = Date.now()) {
@@ -73,6 +91,10 @@ function identityForAIRequest(req) {
 function consumeAIUnits(identity, requestedUnits = 1, now = Date.now()) {
   if (!identity) return { ok: false, reason: 'identity', retryAfterSeconds: 0 };
   const state = quotaState(identity, now);
+  if (!state) {
+    // Tracker full of live identities — refuse rather than reset a live one.
+    return { ok: false, reason: 'quota', retryAfterSeconds: Math.max(1, Math.ceil(WINDOW_MS / 1000)) };
+  }
   const daily = dailyState(now);
   const units = Math.min(MAX_UNITS, validPositiveInteger(requestedUnits, 1));
   const retryAfterSeconds = Math.max(1, Math.ceil((state.resetAt - now) / 1000));
@@ -180,9 +202,11 @@ function reserveAIQuota(options = {}) {
           leaseMs: RESERVATION_LEASE_MS,
           now: new Date(now),
         })
-        : state.active >= MAX_CONCURRENT
-          ? { ok: false, reason: 'concurrency', retryAfterMs: 5000 }
-          : consumeAIUnits(identity, units, now);
+        : !state
+          ? { ok: false, reason: 'quota', retryAfterMs: WINDOW_MS }
+          : state.active >= MAX_CONCURRENT
+            ? { ok: false, reason: 'concurrency', retryAfterMs: 5000 }
+            : consumeAIUnits(identity, units, now);
     } catch (error) {
       recordAIEvent({ scope, units, outcome: 'rejected_quota' });
       console.error(JSON.stringify({

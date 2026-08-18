@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useCourses } from '../contexts/CoursesContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,7 +9,7 @@ import { LearningCard, LearningPageHeader, LearningSection } from '../components
 import { useReveal } from '../lib/useReveal';
 
 const Courses = () => {
-  const { courses, loading, error, fetchCourses } = useCourses();
+  const { courses, loading, error, hasFetched, fetchCourses } = useCourses();
   const { isAuthenticated } = useAuth();
   const [filters, setFilters] = useState({
     level: '',
@@ -19,8 +19,20 @@ const Courses = () => {
 
   useReveal(undefined, [courses, loading]);
 
+  // First fetch runs immediately; filter changes are debounced so typing in
+  // the search box doesn't fire a request (and a loading flash) per keystroke.
+  const hasRequestedRef = useRef(false);
   useEffect(() => {
-    fetchCourses(filters);
+    // Errors are surfaced through the CoursesContext `error` value; catching
+    // here just prevents an unhandled rejection.
+    const request = () => Promise.resolve(fetchCourses(filters)).catch(() => {});
+    if (!hasRequestedRef.current) {
+      hasRequestedRef.current = true;
+      request();
+      return undefined;
+    }
+    const timer = window.setTimeout(request, 300);
+    return () => window.clearTimeout(timer);
   }, [fetchCourses, filters]);
 
   useEffect(() => {
@@ -73,8 +85,12 @@ const Courses = () => {
   const hasActiveFilters = Boolean(filters.level || filters.search.trim());
   const showNoMatches = courses.length === 0 && !loading && !error && hasActiveFilters;
   const showCatalogEmpty = courses.length === 0 && !loading && !error && !hasActiveFilters;
+  const refetching = loading && hasFetched;
 
-  if (loading) {
+  // The full-screen loader only appears before anything has ever been fetched.
+  // Filter-driven refetches keep the page (and the search input's focus)
+  // mounted and show skeleton cards in place of the grid instead.
+  if (loading && !hasFetched) {
     return (
       <div className="min-h-screen bg-surface-body flex items-center justify-center">
         <CapletLoader message="Loading the curriculum" />
@@ -83,7 +99,7 @@ const Courses = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-white md:pt-28">
+    <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-accent-contrast md:pt-28">
       <div className="container-custom">
         {error && (
           <div role="alert" className="reveal mb-10 rounded-2xl bg-surface-error p-5 text-sm font-semibold text-text-error">
@@ -91,7 +107,7 @@ const Courses = () => {
           </div>
         )}
 
-        <Link to="/library" className="mb-7 inline-flex min-h-11 items-center text-sm font-bold text-text-muted transition-colors hover:text-accent">← Learn</Link>
+        <Link to="/library" className="focus-ring mb-7 inline-flex min-h-11 items-center rounded-lg text-sm font-bold text-text-muted transition-colors hover:text-accent">← Learn</Link>
         <LearningPageHeader eyebrow="Structured study" title="Courses" description="Follow lessons in order, resume exactly where you stopped, or begin with a quick Economics diagnostic." className="reveal mb-12" />
 
         {/* Filters */}
@@ -123,10 +139,18 @@ const Courses = () => {
           </div>
         </div>
 
-        {inProgressCourses.length > 0 && <LearningSection eyebrow="Saved progress" title="Continue learning" description="Pick up at the exact lesson and slide you last reached." className="reveal mb-16"><div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{inProgressCourses.map(renderCourseCard)}</div></LearningSection>}
+        {!refetching && inProgressCourses.length > 0 && <LearningSection eyebrow="Saved progress" title="Continue learning" description="Pick up at the exact lesson and slide you last reached." className="reveal mb-16"><div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{inProgressCourses.map(renderCourseCard)}</div></LearningSection>}
 
-        <div data-tour-id="courses-grid" className="space-y-14">
-          {Object.entries(groupedCourses).map(([label, group]) => <LearningSection key={label} title={label} className="capitalize"><div className="reveal-stagger grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">{group.map(renderCourseCard)}</div></LearningSection>)}
+        <div data-tour-id="courses-grid" className="space-y-14" aria-busy={refetching}>
+          {refetching ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+              {Array.from({ length: 6 }, (_, index) => (
+                <div key={index} className="skeleton h-52 rounded-2xl" />
+              ))}
+            </div>
+          ) : (
+            Object.entries(groupedCourses).map(([label, group]) => <LearningSection key={label} title={label} className="capitalize"><div className="reveal-stagger grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">{group.map(renderCourseCard)}</div></LearningSection>)
+          )}
         </div>
 
         {showNoMatches && (
@@ -138,7 +162,7 @@ const Courses = () => {
         )}
 
         {(showCatalogEmpty || error) && (
-          <div className="reveal rounded-3xl block-blue px-8 py-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] md:px-12">
+          <div className="reveal rounded-3xl block-blue px-8 py-14 shadow-card md:px-12">
             <AcademicCapIcon className="h-10 w-10 text-accent" />
             <h3 className="mt-6 font-display text-3xl font-bold tracking-tight text-text-primary">Start with Economics while new paths are being prepared.</h3>
             <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">The Economics library already includes Year 11 and Year 12 topics, saved adaptive practice, feedback, and a mastery map.</p>

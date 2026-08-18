@@ -61,7 +61,7 @@ export default function ForumHome() {
           return (
             <Link
               to={`/forum/c/${defaultCategory.slug}/new`}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-bold text-white lg:hidden"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-bold text-accent-contrast lg:hidden"
               style={{ background: 'var(--forum-accent)' }}
             >
               <PlusIcon className="h-4 w-4" /> Post

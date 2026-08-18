@@ -67,6 +67,9 @@ export default function EvidenceOverrideForm({
           ? 'The corrected evidence is saved. Mastery will refresh shortly.'
           : 'The corrected evidence and mastery profile are saved.',
       });
+      // A fresh key per saved revision: reusing the old key would make the
+      // server treat a second correction as a replay and silently discard it.
+      idempotencyKey.current = makeIdempotencyKey();
       onSaved?.(result);
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Could not save the teacher override.' });
@@ -76,7 +79,7 @@ export default function EvidenceOverrideForm({
   };
 
   return (
-    <form onSubmit={submit} className="rounded-3xl bg-surface-raised p-7 shadow-[0_24px_54px_-40px_rgba(20,20,18,0.45)] md:p-9">
+    <form onSubmit={submit} className="rounded-3xl bg-surface-raised p-7 shadow-card md:p-9">
       <div className="flex items-start gap-4">
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent">
           <ShieldCheckIcon className="h-6 w-6" aria-hidden="true" />
@@ -91,7 +94,7 @@ export default function EvidenceOverrideForm({
       </div>
 
       {message.text && (
-        <div id="teacher-override-message" role={message.type === 'error' ? 'alert' : 'status'} aria-live="polite" className={`mt-6 rounded-2xl px-5 py-4 text-sm font-bold ${message.type === 'error' ? 'bg-surface-error text-text-error' : 'bg-[color:var(--block-green)] text-text-primary'}`}>
+        <div id="teacher-override-message" role={message.type === 'error' ? 'alert' : 'status'} aria-live="polite" className={`mt-6 rounded-2xl px-5 py-4 text-sm font-bold ${message.type === 'error' ? 'bg-surface-error text-text-error animate-shake-x' : 'bg-[color:var(--block-green)] text-text-primary'}`}>
           {message.type === 'success' && <CheckBadgeIcon className="mr-2 inline h-5 w-5 text-accent" aria-hidden="true" />}
           {message.text}
         </div>
@@ -128,7 +131,7 @@ export default function EvidenceOverrideForm({
         <span id="override-reason-help" className="mt-2 block text-xs font-medium text-text-dim">This reason is stored with your name, class, and timestamp.</span>
       </div>
       <div className="mt-8 flex justify-end">
-        <button type="submit" disabled={submitting} className="btn-primary sm:min-w-48">
+        <button type="submit" disabled={submitting} className="btn-primary press sm:min-w-48">
           {submitting ? 'Saving revision…' : 'Save teacher override'}
         </button>
       </div>

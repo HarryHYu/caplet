@@ -7,7 +7,7 @@ import SlideRenderer from '../components/lesson/SlideRenderer';
 import { extractPdfText } from '../lib/pdfExtract';
 import AnnotatedDocument from '../components/essay/AnnotatedDocument';
 import SpeedTypeMode from '../components/essay/SpeedTypeMode';
-import { foldAccents, foldGerman } from '../lib/speedType';
+import { foldAccents, foldGerman, alignWords, splitSentences, VERDICT_CLASS } from '../lib/speedType';
 import EssayChat from '../components/essay/EssayChat';
 import ContextLibrary, { AddContextForm, ContextDocRow } from '../components/essay/ContextLibrary';
 import { MAX_CONTEXT_DOCS } from '../lib/essayContext';
@@ -135,10 +135,12 @@ function EssayModelPicker({ model, onChange, disabled = false }) {
 // "it’s" and a typed "it's" compare equal, and accents are FOLDED, not
 // deleted: the old [^a-z0-9'] strip turned "café" into "caf" while the typed
 // "cafe" stayed "cafe", so an accented word could never be typed correctly
-// in any drill.
+// in any drill. The strip is Unicode-aware — the old ASCII-only pattern
+// normalised every non-Latin word (Cyrillic, Greek…) to '' so ANY typed word
+// "matched" it.
 const canonWord = (s, fold) => fold(String(s || '').replace(/[‘’‚‛′]/g, "'"))
     .toLowerCase()
-    .replace(/[^a-z0-9']/g, '');
+    .replace(/[^\p{L}\p{N}']/gu, '');
 const normalise = (s) => canonWord(s, foldAccents);
 
 // Equal under accent folding (für→fur) OR German transliteration (für→fuer),
@@ -146,19 +148,23 @@ const normalise = (s) => canonWord(s, foldAccents);
 const wordsEqual = (a, b) => normalise(a) === normalise(b)
     || canonWord(a, foldGerman) === canonWord(b, foldGerman);
 
+/**
+ * LCS-aligned word diff (see alignWords): one dropped or extra word no longer
+ * cascades every later word to wrong. Returns one entry per TARGET word plus
+ * a count of extra typed words, which count as errors in `diffAccuracy`.
+ */
 function diffWords(original, typed) {
     const origWords = String(original || '').trim().split(/\s+/).filter(Boolean);
     const typedWords = String(typed || '').trim().split(/\s+/).filter(Boolean);
-    return origWords.map((word, i) => {
-        const t = typedWords[i] || '';
-        if (!t) return { word, status: 'missed' };
-        if (wordsEqual(t, word)) return { word, status: 'correct' };
-        return { word, status: 'wrong', typed: t };
-    });
+    return alignWords(origWords, typedWords, wordsEqual);
 }
 
-function splitSentences(text) {
-    return String(text || '').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+/** Percentage accuracy of an aligned diff — extras count against you. */
+function diffAccuracy(diff) {
+    const total = diff.entries.length + diff.extras;
+    if (!total) return 0;
+    const correct = diff.entries.filter((d) => d.status === 'correct').length;
+    return Math.round((correct / total) * 100);
 }
 
 function buildSpotlightSegments(structure) {
@@ -1188,7 +1194,7 @@ function OpeningsMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
         : `The previous paragraph ended: "${lastSentence(prevInEssay.text)}" — write the next opening.`;
 
     const diff = diffWords(target, typed);
-    const accuracy = diff.length ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
+    const accuracy = diffAccuracy(diff);
 
     const goNext = async () => {
         setBusy(true);
@@ -1290,7 +1296,7 @@ function SentenceMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
     const targetText = hintStyle === 'firstWord' ? rest : sentence;
 
     const graded = diffWords(targetText, typed);
-    const accuracy = graded.length ? Math.round((graded.filter((d) => d.status === 'correct').length / graded.length) * 100) : 0;
+    const accuracy = diffAccuracy(graded);
 
     const goNext = async () => {
         const recall = accuracy >= 70 ? 'pass' : 'fail';
@@ -1433,12 +1439,11 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
         const target = p.text;
         const attempt = aligned ? typedParas[i] : typed;
         const diff = diffWords(target, attempt);
-        const accuracy = diff.length ? Math.round((diff.filter((d) => d.status === 'correct').length / diff.length) * 100) : 0;
-        return { para: p, accuracy };
+        return { para: p, accuracy: diffAccuracy(diff) };
     });
     const overall = aligned
         ? Math.round(paraResults.reduce((sum, r) => sum + r.accuracy * wordCountOf(r.para.text), 0) / Math.max(1, targetWords))
-        : (() => { const d = diffWords(targetJoined, typed); return d.length ? Math.round((d.filter((x) => x.status === 'correct').length / d.length) * 100) : 0; })();
+        : diffAccuracy(diffWords(targetJoined, typed));
 
     const saveResults = async () => {
         setBusy(true);

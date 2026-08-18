@@ -47,6 +47,13 @@ describe('public homepage', () => {
     expect(screen.getByText('AI lesson generation')).toBeInTheDocument();
   });
 
+  it('does not fabricate a live learner count', () => {
+    render(<MemoryRouter><Home /></MemoryRouter>);
+
+    expect(screen.queryByText(/1,240/)).not.toBeInTheDocument();
+    expect(screen.getByText(/learning together right now/i)).toBeInTheDocument();
+  });
+
   it('restores an interactive FAQ', async () => {
     const user = userEvent.setup();
     render(<MemoryRouter><Home /></MemoryRouter>);

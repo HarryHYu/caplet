@@ -66,6 +66,7 @@ async function categorizeSlides(items, opts = {}) {
   if (items.length > 60) {
     const err = new Error('Too many slides to categorise in one request.');
     err.status = 413;
+    err.expose = true;
     throw err;
   }
 
@@ -87,7 +88,13 @@ async function categorizeSlides(items, opts = {}) {
     ],
   });
 
-  const text = completion.choices?.[0]?.message?.content || '{}';
+  const choice = completion.choices?.[0];
+  if (choice?.finish_reason === 'length') {
+    const err = new Error('AI output truncated');
+    err.status = 502;
+    throw err;
+  }
+  const text = choice?.message?.content || '{}';
   let parsed;
   try {
     parsed = JSON.parse(text);

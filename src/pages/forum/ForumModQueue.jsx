@@ -71,7 +71,7 @@ function PendingTab() {
                 <ForumBlockRenderer blocks={t.contentBlocks} fallbackText={t.body} className="text-sm" />
               </div>
               <div className="mt-3 flex items-center gap-2">
-                <button type="button" onClick={() => act(() => api.approveForumThread(t.id))} className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-white" style={{ background: 'var(--forum-green)' }}>
+                <button type="button" onClick={() => act(() => api.approveForumThread(t.id))} className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-accent-contrast" style={{ background: 'var(--forum-green)' }}>
                   <CheckIcon className="h-3.5 w-3.5" /> Approve
                 </button>
                 <RejectButton onReject={(note) => act(() => api.rejectForumThread(t.id, note))} />
@@ -102,7 +102,7 @@ function PendingTab() {
                 <ForumBlockRenderer blocks={p.contentBlocks} fallbackText={p.content} className="text-sm" />
               </div>
               <div className="mt-3 flex items-center gap-2">
-                <button type="button" onClick={() => act(() => api.approveForumPost(p.id))} className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-white" style={{ background: 'var(--forum-green)' }}>
+                <button type="button" onClick={() => act(() => api.approveForumPost(p.id))} className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-accent-contrast" style={{ background: 'var(--forum-green)' }}>
                   <CheckIcon className="h-3.5 w-3.5" /> Approve
                 </button>
                 <RejectButton onReject={(note) => act(() => api.rejectForumPost(p.id, note))} />
@@ -155,7 +155,7 @@ function ReportsTab() {
           <p className="forum-meta mt-1">Author: {authorName(r.contentAuthor)}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => resolve(r.id, 'dismissed')} className="forum-pill text-text-muted">Dismiss</button>
-            <button type="button" onClick={() => resolve(r.id, 'actioned')} className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-white" style={{ background: 'var(--forum-accent)' }}>
+            <button type="button" onClick={() => resolve(r.id, 'actioned')} className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-accent-contrast" style={{ background: 'var(--forum-accent)' }}>
               Mark actioned
             </button>
             {r.contentAuthor && (
@@ -216,7 +216,7 @@ function SanctionsTab() {
         </div>
         <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason" required className="rounded-lg px-3 py-2 text-sm" />
         {error && <p className="text-xs font-semibold text-text-error">{error}</p>}
-        <button type="submit" disabled={submitting} className="self-start rounded-xl px-4 py-2 text-sm font-bold text-white" style={{ background: 'var(--forum-accent)' }}>
+        <button type="submit" disabled={submitting} className="self-start rounded-xl px-4 py-2 text-sm font-bold text-accent-contrast" style={{ background: 'var(--forum-accent)' }}>
           {submitting ? 'Applying…' : 'Apply sanction'}
         </button>
       </form>

@@ -45,7 +45,7 @@ const GSTCalculator = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -65,7 +65,7 @@ const GSTCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised p-10 lg:p-14 rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised p-10 lg:p-14 rounded-3xl shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Transaction Details</h2>
             <form onSubmit={handleSubmit} className="space-y-12">
               <div>
@@ -95,8 +95,8 @@ const GSTCalculator = () => {
                     { id: 'add', label: 'Add GST' },
                     { id: 'remove', label: 'Remove GST' }
                   ].map((type) => (
-                    <label key={type.id} className={`flex-1 flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all ${calculationType === type.id ? 'bg-accent text-white shadow-[0_16px_30px_-22px_rgba(20,20,18,0.4)]' : 'bg-surface-body hover:-translate-y-0.5 transition-transform'}`}>
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${calculationType === type.id ? 'bg-white' : 'border-2 border-line-soft'}`}>
+                    <label key={type.id} className={`flex-1 flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all ${calculationType === type.id ? 'bg-accent text-accent-contrast shadow-pop' : 'bg-surface-body hover:-translate-y-0.5 transition-transform'}`}>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${calculationType === type.id ? 'bg-accent-contrast' : 'border-2 border-line-soft'}`}>
                         {calculationType === type.id && <div className="w-2 h-2 bg-accent rounded-full" />}
                       </div>
                       <input
@@ -107,7 +107,7 @@ const GSTCalculator = () => {
                         onChange={(e) => setCalculationType(e.target.value)}
                         className="hidden"
                       />
-                      <span className={`text-sm font-bold ${calculationType === type.id ? 'text-white' : 'text-text-dim'}`}>
+                      <span className={`text-sm font-bold ${calculationType === type.id ? 'text-accent-contrast' : 'text-text-dim'}`}>
                         {type.label}
                       </span>
                     </label>
@@ -115,20 +115,20 @@ const GSTCalculator = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full py-5 text-base mt-2 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-5 text-base mt-2 hover:-translate-y-0.5 transition-transform">
                 Calculate GST
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue p-10 lg:p-14 flex flex-col min-h-full rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div aria-live="polite" className="lg:col-span-5 block-blue p-10 lg:p-14 flex flex-col min-h-full rounded-3xl shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Results</h2>
 
             {result ? (
               result.error ? (
-                <p className="text-sm font-semibold text-accent">{result.error}</p>
+                <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
-                <div className="space-y-10">
+                <div className="animate-rise space-y-10">
                   <div className="space-y-6">
                     <div>
                       <p className="text-sm font-medium text-text-muted mb-1">Original amount</p>
@@ -140,7 +140,7 @@ const GSTCalculator = () => {
                     </div>
                   </div>
 
-                  <div className="bg-surface-raised rounded-2xl px-6 py-5 shadow-[0_16px_30px_-26px_rgba(20,20,18,0.35)]">
+                  <div className="bg-surface-raised rounded-2xl px-6 py-5 shadow-pop">
                     <p className="text-sm font-bold text-accent mb-2">
                       {result.type === 'add' ? 'Total with GST' : 'Amount before GST'}
                     </p>
@@ -152,7 +152,7 @@ const GSTCalculator = () => {
               )
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 rounded-2xl bg-surface-raised flex items-center justify-center text-base font-display font-extrabold text-accent mb-6 shadow-[0_16px_30px_-26px_rgba(20,20,18,0.35)]">GST</div>
+                <div className="w-16 h-16 rounded-2xl bg-surface-raised flex items-center justify-center text-base font-display font-extrabold text-accent mb-6 shadow-pop">GST</div>
                 <p className="text-sm font-medium text-text-muted">Enter an amount to see your results.</p>
               </div>
             )}

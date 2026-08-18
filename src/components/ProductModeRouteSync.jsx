@@ -18,9 +18,15 @@ export default function ProductModeRouteSync() {
       if (canAccessMoneyRoute(fullPath, { isAuthenticated, featureFlagsLoading, isFeatureEnabled: isEnabled })) {
         rememberProductRoute?.('money', fullPath);
       }
-    } else if (isStudyPath(location.pathname)) {
+    } else {
+      // Any non-Money path — including neutral surfaces like /settings and
+      // /profile — restores study mode so the top bar recovers its study
+      // links. Only genuine study destinations are remembered for the
+      // mode-switch "return to where I was" behaviour.
       setProductMode?.('study');
-      rememberProductRoute?.('study', fullPath);
+      if (isStudyPath(location.pathname)) {
+        rememberProductRoute?.('study', fullPath);
+      }
     }
   }, [featureFlagsLoading, isAuthenticated, isEnabled, location.hash, location.pathname, location.search, rememberProductRoute, setProductMode]);
 

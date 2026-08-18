@@ -84,7 +84,7 @@ export default function Terms() {
   return (
     <main id="main-content" className="min-h-screen bg-surface-body py-28 text-text-primary">
       <div className="container-custom max-w-4xl">
-        <header className="reveal rounded-3xl bg-surface-raised p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] md:p-12">
+        <header className="reveal rounded-3xl bg-surface-raised p-8 shadow-card md:p-12">
           <p className="font-hand text-xl text-accent">the rules, in plain language</p>
           <h1 className="mt-3 font-display text-5xl font-extrabold tracking-tight md:text-7xl">Terms of use</h1>
           <p className="mt-6 max-w-3xl text-lg font-medium leading-relaxed text-text-muted">
@@ -98,7 +98,7 @@ export default function Terms() {
 
         <div className="reveal-stagger mt-8 space-y-5">
           {TERMS.map((section) => (
-            <section key={section.title} className="rounded-3xl border border-line-soft bg-surface-raised p-7 md:p-9">
+            <section key={section.title} className="rounded-3xl border border-line-soft bg-surface-raised p-7 shadow-card md:p-9">
               <h2 className="font-display text-2xl font-extrabold tracking-tight">{section.title}</h2>
               <div className="mt-4 space-y-4 text-base font-medium leading-relaxed text-text-muted">
                 {section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
@@ -107,10 +107,10 @@ export default function Terms() {
           ))}
         </div>
 
-        <section className="mt-8 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-white md:p-10">
+        <section className="mt-8 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-accent-contrast shadow-card md:p-10">
           <h2 className="font-display text-3xl font-extrabold">Privacy is a separate promise.</h2>
-          <p className="mt-3 max-w-2xl text-white/85">Read how Caplet collects, uses, shares, retains and deletes information, including the additional controls for children and AI features.</p>
-          <Link to="/trust" className="mt-6 inline-flex rounded-2xl bg-white px-5 py-3 text-sm font-bold text-accent">Open the Trust Centre</Link>
+          <p className="mt-3 max-w-2xl text-accent-contrast/85">Read how Caplet collects, uses, shares, retains and deletes information, including the additional controls for children and AI features.</p>
+          <Link to="/trust" className="press focus-ring mt-6 inline-flex rounded-2xl bg-surface-raised px-5 py-3 text-sm font-bold text-accent">Open the Trust Centre</Link>
         </section>
       </div>
     </main>

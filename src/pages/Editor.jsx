@@ -83,7 +83,7 @@ function InlineRename({ value, onSave, className = '' }) {
           if (e.key === 'Enter') commit();
           if (e.key === 'Escape') { setDraft(value); setEditing(false); }
         }}
-        className={`bg-transparent border-b border-accent focus:outline-none ${className}`}
+        className={`bg-transparent border-b border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm ${className}`}
       />
     );
   }
@@ -214,7 +214,7 @@ function WorkspaceOverview({
                         title={c.isPublished ? 'Published — click to unpublish' : 'Draft — click to publish'}
                         className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors duration-150 ${
                           c.isPublished
-                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600'
+                            ? 'border-[color-mix(in_srgb,var(--mark-green)_30%,transparent)] bg-[color-mix(in_srgb,var(--mark-green)_10%,transparent)] text-[var(--mark-green)]'
                             : 'border-line-soft text-text-dim hover:border-text-dim'
                         }`}
                       >
@@ -230,7 +230,7 @@ function WorkspaceOverview({
                       <button
                         type="button"
                         onClick={() => onDeleteCourse(c.id, c.title)}
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-text-dim hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-400/40 border border-transparent transition-colors duration-150"
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-text-dim hover:text-text-error hover:bg-surface-error hover:border-line-error border border-transparent transition-colors duration-150"
                         title="Delete course"
                       >
                         <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 1.5L7.5 7.5M7.5 1.5L1.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -272,7 +272,7 @@ function WorkspaceOverview({
                             <button
                               type="button"
                               onClick={() => onDeleteModule(m.id, m.title)}
-                              className="w-6 h-6 rounded-full flex items-center justify-center text-text-dim hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-400/40 border border-transparent transition-colors duration-150"
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-text-dim hover:text-text-error hover:bg-surface-error hover:border-line-error border border-transparent transition-colors duration-150"
                               title="Delete module"
                             >
                               <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 1.5L6.5 6.5M6.5 1.5L1.5 6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
@@ -415,7 +415,7 @@ function SlideCard({
           <button
             type="button"
             onClick={onDelete}
-            className="w-8 h-8 rounded-full border border-line-soft text-text-dim hover:text-rose-500 hover:border-rose-400/60 transition-colors duration-150 flex items-center justify-center"
+            className="w-8 h-8 rounded-full border border-line-soft text-text-dim hover:text-text-error hover:border-text-error/50 transition-colors duration-150 flex items-center justify-center"
             aria-label="Delete"
             title="Delete"
           >
@@ -571,7 +571,7 @@ function LessonBuilder({ lessonId, draft, setDraft, saveMsg, onNewSlide, onAddSl
         <input
           value={draft.title}
           onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-          className="w-full bg-transparent text-[2.5rem] md:text-5xl font-display font-bold text-text-primary tracking-tight focus:outline-none leading-none pb-3 border-b border-transparent focus:border-line-soft/50 transition-colors duration-200"
+          className="w-full bg-transparent text-[2.5rem] md:text-5xl font-display font-bold text-text-primary tracking-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm leading-none pb-3 border-b border-transparent focus:border-line-soft/50 transition-colors duration-200"
           placeholder="Untitled lesson"
         />
 
@@ -587,9 +587,9 @@ function LessonBuilder({ lessonId, draft, setDraft, saveMsg, onNewSlide, onAddSl
 
         {saveMsg && (
           <div className={`mb-6 flex items-start gap-2.5 px-4 py-3 rounded-xl border text-sm animate-slide-card-enter ${
-            saveMsg.tone === 'error' ? 'bg-rose-500/[0.05] border-rose-400/30 text-rose-600 dark:text-rose-400'
+            saveMsg.tone === 'error' ? 'bg-surface-error border-line-error text-text-error'
             : saveMsg.tone === 'warn' ? 'bg-amber-400/[0.06] border-amber-400/30 text-amber-700 dark:text-amber-400'
-            : 'bg-emerald-500/[0.05] border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+            : 'bg-[color-mix(in_srgb,var(--mark-green)_8%,transparent)] border-[color-mix(in_srgb,var(--mark-green)_30%,transparent)] text-[var(--mark-green)]'
           }`}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 mt-[1px]">
               {saveMsg.tone === 'ok' ? (
@@ -803,8 +803,8 @@ function EditorAccessGate({ onEntered }) {
   };
 
   return (
-    <main className="min-h-screen bg-surface-body px-6 py-28 selection:bg-accent selection:text-white">
-      <div className="mx-auto max-w-lg rounded-3xl bg-surface-raised p-8 shadow-[0_30px_70px_-42px_rgba(20,20,18,0.5)] md:p-10">
+    <main className="min-h-screen bg-surface-body px-6 py-28 selection:bg-accent selection:text-accent-contrast">
+      <div className="mx-auto max-w-lg rounded-3xl bg-surface-raised p-8 shadow-card md:p-10">
         <p className="font-hand text-xl text-accent -rotate-2 inline-block">author workspace</p>
         <h1 className="mt-3 text-4xl font-display font-extrabold tracking-tight text-text-primary">Enter the lesson editor.</h1>
         <p className="mt-4 text-sm font-medium leading-relaxed text-text-muted">Use the private code provided for your curriculum workspace. Sessions stay on this device and expire automatically.</p>
@@ -1307,7 +1307,7 @@ function EditorWorkspace({ onUnauthorized, initialLessonId = '', demoAccess = fa
                   type="button"
                   onClick={deleteLesson}
                   disabled={draft?.lifecycleStatus === 'published'}
-                  className="h-8 w-8 rounded-full border border-line-soft text-text-dim hover:text-rose-500 hover:border-rose-400/60 flex items-center justify-center text-base transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-35"
+                  className="h-8 w-8 rounded-full border border-line-soft text-text-dim hover:text-text-error hover:border-text-error/50 flex items-center justify-center text-base transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-35"
                   title="Delete lesson"
                 >
                   ×
@@ -1349,7 +1349,7 @@ function EditorWorkspace({ onUnauthorized, initialLessonId = '', demoAccess = fa
         </div>
 
         {globalError && (
-          <p className="px-4 md:px-6 pb-2 text-sm text-rose-500">{globalError}</p>
+          <p className="px-4 md:px-6 pb-2 text-sm text-text-error">{globalError}</p>
         )}
       </header>
 

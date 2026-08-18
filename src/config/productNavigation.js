@@ -61,10 +61,14 @@ export function availableMoneyNavigation(options) {
   return moneyNavigation.filter((item) => canAccessMoneyRoute(item.path, options));
 }
 
+// Hashes that belong to a dedicated nav item (e.g. '#learn'). Any other hash
+// on /money is just an in-page anchor, so Overview stays the active item.
+const NAV_ITEM_HASHES = new Set(moneyNavigation.filter((item) => item.hash).map((item) => item.hash));
+
 export function isProductNavItemActive(item, location) {
   const { pathname, hash } = location;
   if (item.hash) return pathname === '/money' && hash === item.hash;
-  if (item.end) return pathname === item.path && !hash;
+  if (item.end) return pathname === item.path && !NAV_ITEM_HASHES.has(hash);
   const prefix = item.activePrefix || item.path;
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }

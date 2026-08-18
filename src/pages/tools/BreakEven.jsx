@@ -41,7 +41,7 @@ const BreakEven = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-20 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -57,7 +57,7 @@ const BreakEven = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-16 shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-12">Cost and Revenue Structure</h2>
             <form onSubmit={handleSubmit} className="space-y-16">
               <div>
@@ -97,17 +97,17 @@ const BreakEven = () => {
                 </div>
                 <p className="text-xs text-text-dim mt-2">Shows units needed for this profit.</p>
               </div>
-              <button type="submit" className="btn-primary w-full py-5 text-sm">Calculate Break-Even</button>
+              <button type="submit" className="btn-primary press w-full py-5 text-sm">Calculate Break-Even</button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-12 relative z-10">Break-Even Analysis</h2>
             {result ? (
               result.error ? (
-                <p className="text-sm font-medium text-accent relative z-10">{result.error}</p>
+                <p role="alert" className="text-sm font-medium text-text-error relative z-10">{result.error}</p>
               ) : (
-                <div className="space-y-12 relative z-10">
+                <div className="animate-rise space-y-12 relative z-10">
                   <div>
                     <p className="text-xs font-semibold text-text-dim mb-4">Break-Even Units</p>
                     <p className="text-5xl font-black tracking-tighter text-text-primary">

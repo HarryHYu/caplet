@@ -43,8 +43,8 @@ export default function GuardianConsent() {
   return (
     <main className="min-h-screen bg-surface-soft px-5 py-12">
       <div className="mx-auto w-full max-w-xl">
-        <Link to="/" className="font-display text-xl font-extrabold text-text-primary">Caplet</Link>
-        <section className="mt-8 rounded-3xl bg-surface-raised p-7 shadow-sm md:p-10" aria-labelledby="guardian-consent-title">
+        <Link to="/" className="font-display text-xl font-extrabold text-text-primary focus-ring rounded-md">Caplet</Link>
+        <section className="mt-8 animate-rise rounded-3xl bg-surface-raised p-7 shadow-card md:p-10" aria-labelledby="guardian-consent-title">
           {!request && !loadError ? (
             <div className="grid min-h-64 place-items-center" role="status"><CapletLoader message="Checking this consent request…" /></div>
           ) : loadError ? (
@@ -86,9 +86,12 @@ export default function GuardianConsent() {
                 <span>I confirm that I am this learner’s parent or legal guardian and am authorised to make this decision.</span>
               </label>
               {submitError && <p role="alert" className="mt-4 text-sm font-bold text-text-error">{submitError}</p>}
-              <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                <button type="button" disabled={Boolean(busy) || guardianName.trim().length < 2 || !affirmed} onClick={() => respond('granted')} className="btn-primary">{busy === 'granted' ? 'Recording…' : 'Approve safeguards'}</button>
-                <button type="button" disabled={Boolean(busy) || guardianName.trim().length < 2 || !affirmed} onClick={() => respond('declined')} className="btn-secondary">{busy === 'declined' ? 'Recording…' : 'Decline'}</button>
+              <p id="guardian-consent-requirements" className="mt-6 text-xs font-medium leading-relaxed text-text-dim">
+                To approve or decline, first enter your full name and tick the box confirming you are this learner&apos;s parent or legal guardian.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <button type="button" disabled={Boolean(busy) || guardianName.trim().length < 2 || !affirmed} aria-describedby="guardian-consent-requirements" onClick={() => respond('granted')} className="btn-primary press focus-ring">{busy === 'granted' ? 'Recording…' : 'Approve safeguards'}</button>
+                <button type="button" disabled={Boolean(busy) || guardianName.trim().length < 2 || !affirmed} aria-describedby="guardian-consent-requirements" onClick={() => respond('declined')} className="btn-secondary press focus-ring">{busy === 'declined' ? 'Recording…' : 'Decline'}</button>
               </div>
             </>
           )}

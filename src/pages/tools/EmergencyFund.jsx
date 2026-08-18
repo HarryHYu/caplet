@@ -39,7 +39,7 @@ const EmergencyFund = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -59,7 +59,7 @@ const EmergencyFund = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-10 lg:p-14 shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Reserve Parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-12">
               <div>
@@ -117,20 +117,20 @@ const EmergencyFund = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full py-4 mt-2 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-4 mt-2 hover:-translate-y-0.5 transition-transform">
                 Analyze Resilience
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-10 lg:p-14 flex flex-col min-h-full shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Resilience Analysis</h2>
 
             {result ? (
               result.error ? (
-                <p className="text-sm font-bold text-accent">{result.error}</p>
+                <p role="alert" className="text-sm font-bold text-text-error">{result.error}</p>
               ) : (
-                <div className="space-y-10">
+                <div className="animate-rise space-y-10">
                   <div>
                     <p className="text-xs font-bold text-text-dim mb-3">Target Liquid Reserve</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
@@ -142,7 +142,7 @@ const EmergencyFund = () => {
                   </div>
 
                   {result.current > 0 && (
-                    <div className="rounded-2xl bg-surface-raised p-6 space-y-8 shadow-[0_18px_40px_-30px_rgba(20,20,18,0.25)]">
+                    <div className="rounded-2xl bg-surface-raised p-6 space-y-8 shadow-pop">
                       <div>
                         <p className="text-xs font-bold text-text-dim mb-4">Saturation Level</p>
                         <div className="flex items-end justify-between mb-3">
@@ -172,7 +172,7 @@ const EmergencyFund = () => {
                     </div>
                   )}
 
-                  <div className="rounded-2xl bg-surface-raised p-6 space-y-4 shadow-[0_18px_40px_-30px_rgba(20,20,18,0.25)]">
+                  <div className="rounded-2xl bg-surface-raised p-6 space-y-4 shadow-pop">
                     {[
                       'Prioritize immediate liquidity',
                       'Exclude non-essential consumption',
@@ -188,7 +188,7 @@ const EmergencyFund = () => {
               )
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40">
-                <div className="w-14 h-14 rounded-2xl bg-surface-raised flex items-center justify-center text-3xl font-display font-extrabold text-accent mb-6 shadow-[0_18px_40px_-30px_rgba(20,20,18,0.25)]">!</div>
+                <div className="w-14 h-14 rounded-2xl bg-surface-raised flex items-center justify-center text-3xl font-display font-extrabold text-accent mb-6 shadow-pop">!</div>
                 <p className="text-sm font-bold">Enter your figures to begin</p>
               </div>
             )}

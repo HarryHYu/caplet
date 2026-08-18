@@ -15,7 +15,7 @@ export default function UserAvatar({ user, size = 'md', className = '', showStat
         : 'U';
 
     return (
-        <span className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent font-display font-extrabold leading-none text-white shadow-[0_8px_18px_-12px_rgba(19,81,170,0.7)] ring-1 ring-accent/20 ${sizing.shell} ${className}`}>
+        <span className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent font-display font-extrabold leading-none text-accent-contrast shadow-glow ring-1 ring-accent/20 ${sizing.shell} ${className}`}>
             {profilePicture && !imageFailed ? (
                 <img src={profilePicture} alt="" className="h-full w-full object-cover" onError={() => setImageFailed(true)} />
             ) : (

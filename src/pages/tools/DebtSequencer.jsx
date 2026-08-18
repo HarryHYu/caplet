@@ -113,7 +113,7 @@ const DebtSequencer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -134,7 +134,7 @@ const DebtSequencer = () => {
             <CapletLoader message="Loading your saved profile…" />
           </div>
         ) : !isAuthenticated ? (
-          <div className="max-w-xl block-cream rounded-3xl p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="max-w-xl block-cream rounded-3xl p-12 shadow-card">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-4">Sign in to use the Debt Sequencer</h2>
             <p className="text-text-muted leading-relaxed mb-8">
               This tool reads the debts saved on your Caplet profile so you don&apos;t have to re-enter them, and
@@ -145,7 +145,7 @@ const DebtSequencer = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* ---------------- Form panel ---------------- */}
-            <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+            <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
               <form onSubmit={handleRun} className="space-y-12">
                 {/* Ordinary debts */}
                 <section>
@@ -230,19 +230,19 @@ const DebtSequencer = () => {
                   </div>
                 </section>
 
-                {error && <p className="text-sm font-semibold text-accent">{error}</p>}
-                <button type="submit" disabled={running} className="btn-primary w-full py-5 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-60 disabled:hover:translate-y-0">
+                {error && <p role="alert" className="text-sm font-semibold text-text-error">{error}</p>}
+                <button type="submit" disabled={running} className="btn-primary press w-full py-5 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-60 disabled:hover:translate-y-0">
                   {running ? 'Calculating…' : 'Save & Recalculate'}
                 </button>
               </form>
             </div>
 
             {/* ---------------- Results panel ---------------- */}
-            <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+            <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-card card-lift reveal">
               <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Cost ranking</h2>
               {!result ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-accent text-white flex items-center justify-center text-sm font-display font-extrabold mb-6">1·2·3</div>
+                  <div className="w-14 h-14 rounded-2xl bg-accent text-accent-contrast flex items-center justify-center text-sm font-display font-extrabold mb-6">1·2·3</div>
                   <p className="text-sm font-medium text-text-muted">Add your debts and press Save &amp; Recalculate.</p>
                 </div>
               ) : (
@@ -257,7 +257,7 @@ const DebtSequencer = () => {
                           className={`rounded-2xl p-5 ${item.kind === 'hecs' ? 'bg-surface-raised border-2 border-accent-soft' : 'bg-surface-raised'}`}
                         >
                           <div className="flex items-start gap-3">
-                            <span className="shrink-0 w-7 h-7 rounded-lg bg-accent text-white flex items-center justify-center text-xs font-display font-extrabold">{i + 1}</span>
+                            <span className="shrink-0 w-7 h-7 rounded-lg bg-accent text-accent-contrast flex items-center justify-center text-xs font-display font-extrabold">{i + 1}</span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2 mb-1">
                                 <p className="font-display font-bold text-sm text-text-primary truncate">{item.label}</p>

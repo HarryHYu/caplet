@@ -5,7 +5,13 @@ import AnimatedLeaderboard from './AnimatedLeaderboard';
 
 // Keyed by rank index (0 = 1st place), not visual left-to-right position.
 const HEIGHTS = { 0: 'h-40', 1: 'h-28', 2: 'h-20' }; // 1st place gets the tallest bar
-const MEDAL_COLORS = { 0: 'bg-amber-400 text-amber-950', 1: 'bg-slate-300 text-slate-900', 2: 'bg-orange-300 text-orange-950' };
+// Gold / silver / bronze stay literal (medal semantics, not theme colors),
+// but each gets a toned-down dark variant so the bars don't glare on dark.
+const MEDAL_COLORS = {
+  0: 'bg-amber-400 text-amber-950 dark:bg-amber-500/80 dark:text-amber-50',
+  1: 'bg-slate-300 text-slate-900 dark:bg-slate-400/70 dark:text-slate-950',
+  2: 'bg-orange-300 text-orange-950 dark:bg-orange-400/70 dark:text-orange-50',
+};
 const REVEAL_STEP = { 2: 0, 1: 1, 0: 2 }; // 3rd place revealed first, 1st place last — drum-roll toward the winner
 
 /** Final-results screen: a confetti-popping top-3 podium plus the rest as an animated list. */
@@ -49,6 +55,8 @@ export default function Podium({ leaderboard, highlightId }) {
                 transition={{ delay: step * 0.35, type: 'spring', stiffness: 120, damping: 14 }}
                 style={{ transformOrigin: 'bottom' }}
                 className={`relative w-full rounded-t-xl flex items-center justify-center font-display font-extrabold text-lg ${HEIGHTS[i]} ${MEDAL_COLORS[i]} ${
+                  // Gold-tinted winner glow — deliberately literal (medal
+                  // semantics, like MEDAL_COLORS), not an elevation token.
                   i === 0 ? 'shadow-[0_0_30px_-5px_rgba(245,158,11,0.6)]' : ''
                 }`}
               >

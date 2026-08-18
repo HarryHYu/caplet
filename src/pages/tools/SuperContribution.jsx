@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../../lib/useReveal';
-
-const formatCurrency = (value) =>
-  new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+import { SG_EMPLOYER_RATE, formatCurrencyAUD as formatCurrency, projectSuperBalance } from './toolMath';
 
 const SuperContribution = () => {
   const [currentBalance, setCurrentBalance] = useState('');
   const [salary, setSalary] = useState('');
-  const [employerContribution, setEmployerContribution] = useState('11');
+  const [employerContribution, setEmployerContribution] = useState(String(SG_EMPLOYER_RATE));
   const [personalContribution, setPersonalContribution] = useState('');
   const [years, setYears] = useState('');
   const [result, setResult] = useState(null);
@@ -26,35 +24,19 @@ const SuperContribution = () => {
       return;
     }
 
-    const annualReturn = 0.07;
-    const monthlyReturn = annualReturn / 12;
-    const numMonths = yearsNum * 12;
-
-    const employerMonthly = (salaryNum * employerRate / 100) / 12;
-    const totalMonthlyContribution = employerMonthly + (personalNum / 12);
-
-    let futureBalance = balance;
-    for (let i = 0; i < numMonths; i++) {
-      futureBalance = futureBalance * (1 + monthlyReturn) + totalMonthlyContribution;
-    }
-
-    const totalContributions = balance + (employerMonthly * numMonths * 12) + (personalNum * yearsNum);
-    const growth = futureBalance - totalContributions;
-
-    setResult({
-      futureBalance,
-      totalContributions,
-      growth,
-      employerTotal: employerMonthly * numMonths * 12,
-      personalTotal: personalNum * yearsNum,
+    setResult(projectSuperBalance({
+      currentBalance: balance,
+      salary: salaryNum,
+      employerRate,
+      personalAnnual: personalNum,
       years: yearsNum,
-    });
+    }));
   };
 
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -74,17 +56,18 @@ const SuperContribution = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Contribution Inputs</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-2 block">
+                  <label htmlFor="super-opening-balance" className="text-sm font-semibold text-text-dim mb-2 block">
                     Opening Balance (AUD)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                     <input
+                      id="super-opening-balance"
                       type="number"
                       min="0"
                       step="1000"
@@ -97,12 +80,13 @@ const SuperContribution = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-2 block">
+                  <label htmlFor="super-annual-salary" className="text-sm font-semibold text-text-dim mb-2 block">
                     Annual Salary
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                     <input
+                      id="super-annual-salary"
                       type="number"
                       min="0"
                       step="1000"
@@ -117,29 +101,33 @@ const SuperContribution = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-2 block">
+                  <label htmlFor="super-employer-rate" className="text-sm font-semibold text-text-dim mb-2 block">
                     Employer Rate (%)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
+                      id="super-employer-rate"
                       type="number"
                       min="0"
                       max="20"
                       step="0.5"
                       value={employerContribution}
                       onChange={(e) => setEmployerContribution(e.target.value)}
+                      aria-describedby="super-employer-rate-hint"
                       className="w-full bg-transparent pl-4 pr-9 py-3 text-lg font-bold text-text-primary outline-none"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                   </div>
+                  <p id="super-employer-rate-hint" className="text-xs text-text-dim mt-2">Superannuation guarantee rate: 12% from 1 July 2025.</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-2 block">
+                  <label htmlFor="super-time-horizon" className="text-sm font-semibold text-text-dim mb-2 block">
                     Time Horizon
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
+                      id="super-time-horizon"
                       type="number"
                       min="1"
                       max="50"
@@ -154,12 +142,13 @@ const SuperContribution = () => {
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-2 block">
+                <label htmlFor="super-personal-topup" className="text-sm font-semibold text-text-dim mb-2 block">
                   Annual Personal Top-up (Optional)
                 </label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                   <input
+                    id="super-personal-topup"
                     type="number"
                     min="0"
                     step="1000"
@@ -171,20 +160,20 @@ const SuperContribution = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full py-4 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-4 hover:-translate-y-0.5 transition-transform">
                 Calculate Projection
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Maturity Projection</h2>
 
             {result ? (
               result.error ? (
-                <p className="text-sm font-semibold text-accent">{result.error}</p>
+                <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
-                <div className="space-y-10">
+                <div className="animate-rise space-y-10">
                   <div>
                     <p className="text-xs font-semibold text-text-dim mb-3">Projected Portfolio Value</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">

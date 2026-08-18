@@ -4,7 +4,7 @@ import api from '../services/api';
 import CapletLoader from '../components/CapletLoader';
 import SlideRenderer from '../components/lesson/SlideRenderer';
 import { slideKindLabel, normalizeSlide } from '../lib/slideSchema';
-import { BookmarkIcon, ArrowRightIcon, SparklesIcon, XMarkIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
+import { BookmarkIcon, ArrowRightIcon, SparklesIcon, XMarkIcon, AcademicCapIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useReveal } from '../lib/useReveal';
 
 // Modal slideshow showing an AI-generated summary of a category's slides.
@@ -38,7 +38,7 @@ function SummaryModal({ open, loading, error, category, slides, onClose }) {
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 min-h-[260px] flex flex-col justify-center">
                     {loading && <CapletLoader message="Summarizing with AI…" />}
                     {!loading && error && (
-                        <p className="text-center text-rose-400 text-sm font-medium">{error}</p>
+                        <p className="text-center text-text-error text-sm font-medium">{error}</p>
                     )}
                     {!loading && !error && current && <SlideRenderer slide={current} onSubmit={() => {}} />}
                 </div>
@@ -73,16 +73,24 @@ function ReviewSession({ open, slides, onClose, onFinished }) {
     const [qa, setQa] = useState(null);
     const [qError, setQError] = useState(null);
     const [grading, setGrading] = useState(false);
+    // Completion state: shown in-modal after the last slide is graded, before
+    // the learner chooses to close. Tracks how the session went so the copy
+    // can be honest about the next interval.
+    const [finished, setFinished] = useState(false);
+    const [missCount, setMissCount] = useState(0);
+    // Captured at finish time: onFinished() refreshes the parent's due list,
+    // which empties `slides`, so the live length can't be used in the copy.
+    const [reviewedCount, setReviewedCount] = useState(0);
 
     const total = slides.length;
     const current = slides[idx];
 
     // Restart at the top whenever the session is (re)opened.
-    useEffect(() => { if (open) { setIdx(0); } }, [open]);
+    useEffect(() => { if (open) { setIdx(0); setFinished(false); setMissCount(0); setReviewedCount(0); } }, [open]);
 
     // Fetch a fresh recall question whenever the current slide changes.
     useEffect(() => {
-        if (!open || !current) return;
+        if (!open || !current || finished) return;
         let active = true;
         setRevealed(false);
         setQa(null);
@@ -98,7 +106,45 @@ function ReviewSession({ open, slides, onClose, onFinished }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, current?.id]);
 
-    if (!open || !current) return null;
+    if (!open) return null;
+
+    // Missed slides come back tomorrow; a clean session moves everything to
+    // the next rung of the 1 · 3 · 7 · 14-day ladder.
+    const nextReviewDays = missCount > 0 ? 1 : 3;
+
+    // The completion state renders even after onFinished() refreshes the due
+    // list (which can empty `slides` and therefore `current`).
+    if (finished) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+                <div
+                    className="relative w-full max-w-xl overflow-hidden bg-surface-body border border-line-soft flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="flex flex-col items-center px-8 py-12 text-center">
+                        <span className="grid h-14 w-14 animate-pop place-items-center rounded-2xl bg-[color:var(--block-green)] text-[color:var(--mark-green)]">
+                            <CheckCircleIcon className="h-8 w-8" aria-hidden="true" />
+                        </span>
+                        <p className="mt-6 animate-rise text-xl font-display font-extrabold tracking-tight text-text-primary">
+                            {reviewedCount} slide{reviewedCount === 1 ? '' : 's'} reviewed
+                        </p>
+                        <p className="mt-2 animate-rise text-sm font-medium text-text-muted" style={{ animationDelay: '80ms' }}>
+                            Next review in {nextReviewDays} day{nextReviewDays === 1 ? '' : 's'} — each slide has been rescheduled on the 1 · 3 · 7 · 14-day ladder.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="btn-primary focus-ring mt-8"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!current) return null;
 
     const fallbackSlide = qError ? getSlidePreview(current) : null;
 
@@ -111,11 +157,15 @@ function ReviewSession({ open, slides, onClose, onFinished }) {
         } finally {
             setGrading(false);
         }
+        const missed = missCount + (recall === 'fail' ? 1 : 0);
+        setMissCount(missed);
         if (idx + 1 < total) {
             setIdx((i) => i + 1);
         } else {
+            // Stay in the modal and celebrate before closing.
+            setReviewedCount(total);
+            setFinished(true);
             onFinished?.();
-            onClose();
         }
     };
 
@@ -155,7 +205,7 @@ function ReviewSession({ open, slides, onClose, onFinished }) {
                                 <button
                                     type="button"
                                     onClick={() => setRevealed(true)}
-                                    className="mt-6 self-start text-sm font-medium text-accent border border-accent px-5 py-2.5 hover:bg-accent hover:text-white transition-colors"
+                                    className="mt-6 self-start text-sm font-medium text-accent border border-accent px-5 py-2.5 hover:bg-accent hover:text-accent-contrast transition-colors"
                                 >
                                     Reveal answer
                                 </button>
@@ -190,7 +240,7 @@ function ReviewSession({ open, slides, onClose, onFinished }) {
                             type="button"
                             disabled={grading}
                             onClick={() => grade('fail')}
-                            className="text-sm font-medium text-rose-500 border border-rose-400/60 px-5 py-2.5 hover:bg-rose-500 hover:text-white transition-colors disabled:opacity-40"
+                            className="focus-ring press text-sm font-medium text-text-error border border-[color:var(--border-error)] px-5 py-2.5 hover:bg-surface-error transition-colors disabled:opacity-40"
                         >
                             Missed it
                         </button>
@@ -198,7 +248,7 @@ function ReviewSession({ open, slides, onClose, onFinished }) {
                             type="button"
                             disabled={grading}
                             onClick={() => grade('pass')}
-                            className="text-sm font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/60 px-5 py-2.5 hover:bg-emerald-500 hover:text-white transition-colors disabled:opacity-40"
+                            className="focus-ring press text-sm font-medium text-[color:var(--mark-green)] border border-[color:var(--mark-green)] px-5 py-2.5 hover:bg-[color:var(--block-green)] transition-colors disabled:opacity-40"
                         >
                             Got it
                         </button>
@@ -316,7 +366,7 @@ export default function Revision() {
     }
 
     return (
-        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
             <div className="container-custom">
                 <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 reveal">
                     <div>
@@ -331,7 +381,7 @@ export default function Revision() {
                             type="button"
                             onClick={handleOrganize}
                             disabled={organizing}
-                            className="btn-secondary flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40"
+                            className="btn-secondary focus-ring card-lift flex items-center gap-2 disabled:opacity-40"
                         >
                             <BookmarkIcon className="w-4 h-4" />
                             {organizing ? 'Organizing…' : 'Organize with AI'}
@@ -340,11 +390,11 @@ export default function Revision() {
                 </header>
 
                 {organizeError && (
-                    <p className="text-sm text-rose-400 mb-8 font-medium">{organizeError}</p>
+                    <p role="alert" className="text-sm text-text-error mb-8 font-medium animate-shake-x">{organizeError}</p>
                 )}
 
                 {due.length > 0 && (
-                    <div className="reveal mb-12 block-blue rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                    <div className="reveal mb-12 block-blue rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-card">
                         <div className="flex items-start gap-4">
                             <AcademicCapIcon className="w-7 h-7 text-blue shrink-0" />
                             <div>
@@ -359,7 +409,7 @@ export default function Revision() {
                         <button
                             type="button"
                             onClick={() => setReviewOpen(true)}
-                            className="btn-primary shrink-0 flex items-center gap-2 hover:-translate-y-0.5 transition-transform"
+                            className="btn-primary focus-ring card-lift shrink-0 flex items-center gap-2"
                         >
                             Start review
                             <ArrowRightIcon className="w-4 h-4" />
@@ -368,12 +418,12 @@ export default function Revision() {
                 )}
 
                 {savedSlides.length === 0 ? (
-                    <div className="reveal bg-surface-raised rounded-3xl p-16 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                    <div className="reveal bg-surface-raised rounded-3xl p-16 text-center shadow-card">
                         <BookmarkIcon className="w-8 h-8 text-blue mx-auto mb-6" />
                         <p className="text-text-muted text-base font-medium mb-8">
                             No flagged slides yet.
                         </p>
-                        <Link to="/courses" className="btn-primary inline-flex items-center hover:-translate-y-0.5 transition-transform">
+                        <Link to="/courses" className="btn-primary focus-ring card-lift inline-flex items-center">
                             Browse courses
                         </Link>
                     </div>
@@ -402,7 +452,7 @@ export default function Revision() {
                                             ? String(slide.content).replace(/[#*`_[\]]/g, '').slice(0, 120)
                                             : null;
                                         return (
-                                            <div key={s.id} className="bg-surface-raised rounded-2xl p-6 flex items-start justify-between gap-4 group shadow-[0_24px_50px_-40px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
+                                            <div key={s.id} className="bg-surface-raised rounded-2xl p-6 flex items-start justify-between gap-4 group shadow-card card-lift">
                                                 <Link
                                                     to={`/courses/${s.courseId}/lessons/${s.lessonId}?slide=${s.slideIndex}`}
                                                     className="flex-1 min-w-0"
@@ -425,7 +475,7 @@ export default function Revision() {
                                                     onClick={() => handleUnsave(s.id)}
                                                     disabled={removingId === s.id}
                                                     aria-label="Remove saved slide"
-                                                    className="shrink-0 w-7 h-7 rounded-full bg-surface-body text-text-dim hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors disabled:opacity-40"
+                                                    className="focus-ring shrink-0 w-7 h-7 rounded-full bg-surface-body text-text-dim hover:bg-surface-error hover:text-text-error flex items-center justify-center transition-colors disabled:opacity-40"
                                                 >
                                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

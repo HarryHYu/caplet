@@ -31,7 +31,7 @@ function FollowButton({ categoryId }) {
     <button
       type="button"
       onClick={toggle}
-      className={`flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition-colors duration-150 ${following ? 'text-white' : 'text-text-primary hover:bg-surface-soft'}`}
+      className={`flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition-colors duration-150 ${following ? 'text-accent-contrast' : 'text-text-primary hover:bg-surface-soft'}`}
       style={following ? { background: 'var(--forum-accent)' } : { border: '1px solid var(--line-soft)' }}
     >
       {following ? <BellSolid className="h-4 w-4" /> : <BellIcon className="h-4 w-4" />} {following ? 'Following' : 'Follow subject'}
@@ -73,7 +73,7 @@ function CreatePostCta({ href, disabled, disabledLabel }) {
   return (
     <Link
       to={href}
-      className="flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
+      className="flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-accent-contrast card-lift"
       style={{ background: 'var(--forum-accent)', boxShadow: '0 12px 28px -14px color-mix(in srgb, var(--forum-accent) 60%, transparent)' }}
     >
       <PlusIcon className="h-4 w-4" /> Create post

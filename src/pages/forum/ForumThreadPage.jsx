@@ -86,7 +86,7 @@ function ReportPanel({ onSubmit, onCancel }) {
             setSubmitting(true); setError('');
             try { await onSubmit({ reason, details }); setDone(true); } catch (err) { setError(err.message || 'Could not submit report.'); } finally { setSubmitting(false); }
           }}
-          className="rounded-full px-3 py-1.5 text-xs font-bold text-white"
+          className="rounded-full px-3 py-1.5 text-xs font-bold text-accent-contrast"
           style={{ background: 'var(--forum-accent)' }}
         >
           Submit report
@@ -177,7 +177,7 @@ function CommentComposer({ onSubmit, placeholder = 'Write a helpful reply...', a
         <button
           type="submit"
           disabled={submitting}
-          className={`rounded-2xl font-bold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-50 ${compact ? 'px-4 py-1.5 text-xs' : 'px-5 py-2 text-sm'}`}
+          className={`rounded-2xl font-bold text-accent-contrast card-lift disabled:opacity-50 ${compact ? 'px-4 py-1.5 text-xs' : 'px-5 py-2 text-sm'}`}
           style={{ background: 'var(--forum-accent)' }}
         >
           {submitting ? 'Submitting…' : submitLabel}
@@ -528,7 +528,7 @@ function ThreadEditForm({ thread, onCancel, onSaved }) {
       {error && <p className="text-xs font-semibold text-text-error">{error}</p>}
       <p className="forum-meta">Saving re-submits this thread for moderator review.</p>
       <div className="flex gap-2">
-        <button type="submit" disabled={saving} className="rounded-xl px-4 py-2 text-sm font-bold text-white" style={{ background: 'var(--forum-accent)' }}>{saving ? 'Saving…' : 'Save & resubmit'}</button>
+        <button type="submit" disabled={saving} className="rounded-xl px-4 py-2 text-sm font-bold text-accent-contrast" style={{ background: 'var(--forum-accent)' }}>{saving ? 'Saving…' : 'Save & resubmit'}</button>
         <button type="button" onClick={onCancel} className="forum-pill text-text-muted">Cancel</button>
       </div>
     </form>
@@ -552,7 +552,7 @@ function PostEditForm({ post, onCancel, onSaved }) {
       {error && <p className="text-xs font-semibold text-text-error">{error}</p>}
       <p className="forum-meta">Saving re-submits this reply for moderator review.</p>
       <div className="flex gap-2">
-        <button type="submit" disabled={saving} className="rounded-xl px-4 py-1.5 text-xs font-bold text-white" style={{ background: 'var(--forum-accent)' }}>{saving ? 'Saving…' : 'Save & resubmit'}</button>
+        <button type="submit" disabled={saving} className="rounded-xl px-4 py-1.5 text-xs font-bold text-accent-contrast" style={{ background: 'var(--forum-accent)' }}>{saving ? 'Saving…' : 'Save & resubmit'}</button>
         <button type="button" onClick={onCancel} className="forum-pill text-text-muted">Cancel</button>
       </div>
     </form>

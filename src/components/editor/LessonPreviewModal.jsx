@@ -92,7 +92,7 @@ export default function LessonPreviewModal({ open, onClose, title, slides }) {
 
             <div
               key={index}
-              className="animate-lesson-slide-in flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
+              className="animate-lesson-slide-in flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-pop overflow-hidden flex flex-col"
             >
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none" />
               <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none">

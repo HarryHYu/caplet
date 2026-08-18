@@ -123,6 +123,8 @@ describe('Economics marker routes', () => {
     it('returns the service validation error (e.g. too-short answer) without persisting', async () => {
       const err = new Error('Your answer looks too short to mark — write at least a couple of sentences.');
       err.status = 400;
+      // Our own validation throws mark themselves safe to show the student.
+      err.expose = true;
       markEconomicsAnswer.mockRejectedValue(err);
       MarkedAttempt.create = jest.fn();
 
@@ -133,6 +135,23 @@ describe('Economics marker routes', () => {
       expect(res.status).toBe(400);
       expect(res.body.message).toMatch(/too short/i);
       expect(MarkedAttempt.create).not.toHaveBeenCalled();
+    });
+
+    it('never leaks an unmarked provider 400 to the client', async () => {
+      // OpenAI SDK errors carry 4xx statuses and request/response detail; with
+      // no `expose` flag they must collapse to the public fallback.
+      const providerErr = new Error('400 invalid_prompt: content policy — {"messages":[{"role":"system"...');
+      providerErr.status = 400;
+      markEconomicsAnswer.mockRejectedValue(providerErr);
+      MarkedAttempt.create = jest.fn();
+
+      const res = await request(app)
+        .post('/api/economics-marker')
+        .send({ question: 'Q', markValue: 6, responseType: 'short_answer', studentAnswer: 'a genuine attempt at an answer here' });
+
+      expect(res.status).toBe(502);
+      expect(res.body.message).toBe('Marking failed. Try again shortly.');
+      expect(res.body.message).not.toMatch(/invalid_prompt|content policy|role/i);
     });
 
     it('rate-limits after 15 submissions in the window', async () => {

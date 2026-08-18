@@ -46,7 +46,7 @@ export default function ForumLayout() {
       <header className="sticky top-0 z-30 border-b border-line-soft bg-surface-body/95 backdrop-blur-xl">
         <div className="container-custom flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
           <Link to="/forum" className="flex shrink-0 items-center gap-2">
-            <span className="font-bricolage text-lg font-extrabold tracking-[-0.03em] text-text-primary">Caplet.</span>
+            <span className="font-display text-lg font-extrabold tracking-[-0.03em] text-text-primary">Caplet.</span>
             <span
               className="forum-pill"
               style={{ color: 'var(--forum-accent)', borderColor: 'color-mix(in srgb, var(--forum-accent) 45%, var(--line-soft))', background: 'var(--forum-accent-soft)' }}

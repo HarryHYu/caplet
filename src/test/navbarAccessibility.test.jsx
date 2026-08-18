@@ -86,18 +86,20 @@ describe('Navbar accessibility', () => {
     expect(screen.queryByText('ray@example.com')).not.toBeInTheDocument();
   });
 
-  it('keeps the guest header focused on authentication', () => {
+  it('gives guests the public entry points plus the auth calls to action', () => {
     mockAuth.isAuthenticated = false;
     render(<MemoryRouter initialEntries={['/']}><Navbar /></MemoryRouter>);
 
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: 'Get started' })).toHaveAttribute('href', '/register');
-    expect(screen.queryByRole('link', { name: 'Resource library' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Courses' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Assessment dates' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Financial tools' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Team' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'open menu' })).not.toBeInTheDocument();
+    // Guests used to get a logo and two buttons, leaving every public page a
+    // dead end. They now get the public product entry points.
+    expect(screen.getByRole('link', { name: 'Courses' })).toHaveAttribute('href', '/courses');
+    expect(screen.getByRole('link', { name: 'Money' })).toHaveAttribute('href', '/money');
+    // …but never the signed-in workspace destinations.
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Results' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Essays' })).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Product mode' })).not.toBeInTheDocument();
   });
 });

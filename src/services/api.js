@@ -163,7 +163,9 @@ class ApiService {
       // Handle empty responses (e.g. 204 No Content from delete endpoints)
       if (response.status === 204 || response.headers.get('content-length') === '0') {
         if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
+          const error = new Error(`Error ${response.status}: ${response.statusText}`);
+          error.status = response.status;
+          throw error;
         }
         return null;
       }
@@ -173,7 +175,12 @@ class ApiService {
         data = await response.json();
       } catch {
         if (!response.ok) {
-          throw new Error(response.statusText || 'Something went wrong');
+          // Keep .status on non-JSON failures too — the 401 refresh-and-retry
+          // below keys off error.status, and an HTML error page from a proxy
+          // must not silently disable it.
+          const error = new Error(response.statusText || 'Something went wrong');
+          error.status = response.status;
+          throw error;
         }
         return null;
       }

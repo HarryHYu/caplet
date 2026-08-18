@@ -56,12 +56,13 @@ export function useSubjectNotes() {
     };
   }, []);
 
+  // Compute the next state outside the setState updater and persist after —
+  // updaters must be pure (StrictMode replays them, which double-fired the
+  // storage write and change event). Same pattern as useAssessmentTasks.
   const change = useCallback((updater) => {
-    setData((current) => {
-      const next = updater(current);
-      try { persist(next); } catch { /* Keep this tab usable if storage is unavailable. */ }
-      return next;
-    });
+    const next = updater(readStored());
+    setData(next);
+    try { persist(next); } catch { /* Keep this tab usable if storage is unavailable. */ }
   }, []);
 
   const saveNote = useCallback((note) => change((current) => {

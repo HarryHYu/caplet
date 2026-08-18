@@ -68,10 +68,17 @@ function humanise(value) {
 }
 
 function StatusNotice({ notice, onDismiss }) {
+  const containerRef = useRef(null);
+  // The notice renders above a long page — bring it into view when it is set
+  // so feedback for actions triggered far down the page is never missed.
+  useEffect(() => {
+    if (notice?.text) containerRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+  }, [notice]);
   if (!notice?.text) return null;
   const isError = notice.type === 'error';
   return (
     <div
+      ref={containerRef}
       role={isError ? 'alert' : 'status'}
       className={`mb-8 flex items-start gap-3 rounded-2xl px-5 py-4 text-sm font-bold ${isError ? 'bg-surface-error text-text-error' : 'bg-[color:var(--block-green)] text-text-primary'}`}
     >
@@ -198,6 +205,18 @@ function PreferenceControls({ preference, consents, savingKey, ageVerificationRe
   const [guardianBusy, setGuardianBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Reset the "Copied" affordance whenever a new link arrives, and let it
+  // fall back to "Copy link" after a short pause.
+  useEffect(() => {
+    setCopied(false);
+  }, [guardianShareUrl]);
+
+  useEffect(() => {
+    if (!copied) return undefined;
+    const timer = setTimeout(() => setCopied(false), 2500);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
   const requestGuardianConsent = async (event) => {
     event.preventDefault();
     setGuardianBusy(true);
@@ -210,8 +229,13 @@ function PreferenceControls({ preference, consents, savingKey, ageVerificationRe
   };
 
   const copyGuardianLink = async () => {
-    await navigator.clipboard?.writeText(guardianShareUrl);
-    setCopied(true);
+    if (!navigator.clipboard?.writeText) return;
+    try {
+      await navigator.clipboard.writeText(guardianShareUrl);
+      setCopied(true);
+    } catch {
+      // Clipboard access can be denied — leave the link selectable instead.
+    }
   };
 
   return (

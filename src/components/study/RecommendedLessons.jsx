@@ -35,7 +35,7 @@ function targetFor(rec) {
 }
 
 function urgencyRing(urgency) {
-  if (urgency === 'high') return 'border-red-400/40';
+  if (urgency === 'high') return 'border-text-error/40';
   if (urgency === 'medium') return 'border-accent/40';
   return 'border-line-soft';
 }
@@ -48,7 +48,7 @@ function RecCard({ rec, index }) {
       to={to}
       onClick={() => api.logRecEvents([{ recId: rec.id, recType: rec.type, action: 'clicked', subject: rec.action?.subject }])}
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
-      className={`group flex w-[19rem] shrink-0 snap-start flex-col justify-between rounded-3xl border ${urgencyRing(rec.urgency)} bg-surface-raised p-6 shadow-[0_22px_44px_-30px_rgba(20,20,18,0.35)] transition-transform duration-200 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-2`}
+      className={`group flex w-[19rem] shrink-0 snap-start flex-col justify-between rounded-3xl border ${urgencyRing(rec.urgency)} bg-surface-raised p-6 shadow-card card-lift animate-rise`}
     >
       <div>
         <div className="flex items-center justify-between gap-2">

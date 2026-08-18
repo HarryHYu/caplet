@@ -20,7 +20,7 @@ const SalaryCalculator = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -40,7 +40,7 @@ const SalaryCalculator = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-8 lg:p-12 shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Compensation Inputs</h2>
             <form onSubmit={handleSubmit} className="space-y-12">
               <div>
@@ -91,27 +91,27 @@ const SalaryCalculator = () => {
                     aria-label={`Include simplified Medicare levy estimate: ${includeMedicare ? 'on' : 'off'}`}
                     className={`w-12 h-6 rounded-full transition-all relative ${includeMedicare ? 'bg-accent' : 'bg-surface-soft'}`}
                   >
-                    <div className={`absolute top-1 bottom-1 w-4 rounded-full transition-all ${includeMedicare ? 'right-1 bg-white' : 'left-1 bg-text-dim'}`} />
+                    <div className={`absolute top-1 bottom-1 w-4 rounded-full transition-all ${includeMedicare ? 'right-1 bg-accent-contrast' : 'left-1 bg-text-dim'}`} />
                   </button>
                   <span className="text-sm font-semibold text-text-primary">Medicare Levy (2%)</span>
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full py-4 mt-4 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-4 mt-4 hover:-translate-y-0.5 transition-transform">
                 Calculate Breakdown
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-5 block-blue rounded-3xl p-8 lg:p-12 flex flex-col min-h-full shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Net Projection</h2>
 
             <div aria-live="polite" aria-atomic="true" className="flex-1">
             {result ? (
               result.error ? (
-                <p className="text-sm font-semibold text-accent">{result.error}</p>
+                <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
-                <div className="space-y-10">
+                <div className="animate-rise space-y-10">
                   <div>
                     <p className="text-xs font-semibold text-text-muted mb-3">Annual Net Pay</p>
                     <p className="text-5xl font-black tracking-tight text-text-primary">

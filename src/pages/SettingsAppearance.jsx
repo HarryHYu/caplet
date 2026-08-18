@@ -13,6 +13,9 @@ const navigationOptions = [
   { value: 'horizontal', label: 'Top bar', description: 'A compact navigation bar across the page', icon: ViewColumnsIcon },
 ];
 
+// Preview swatch hexes only. The palettes themselves are defined as CSS custom
+// properties in src/index.css ([data-palette="…"] blocks) — that file is the
+// source of truth; keep these preview colours in sync with it.
 const paletteOptions = [
   { value: 'paper', label: 'Paper', description: 'Warm and familiar', lightColours: ['#F8F5EF', '#ECE5D6', '#1351AA'], darkColours: ['#141413', '#232220', '#5B9BF0'] },
   { value: 'white', label: 'Pure white', description: 'Clean and crisp', lightColours: ['#FFFFFF', '#F0F2F5', '#2856A3'], darkColours: ['#141413', '#232220', '#5B9BF0'] },
@@ -34,17 +37,17 @@ export default function SettingsAppearance() {
       <div className="mb-10">
         <p className="mb-1 inline-block -rotate-2 font-hand text-lg text-accent">make it yours</p>
         <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Appearance</h2>
-        <p className="mt-2 max-w-xl text-sm font-medium leading-relaxed text-text-dim">
+        <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">
           Choose how Caplet feels across every page. Your preference is saved on this device.
         </p>
       </div>
 
       <section aria-labelledby="appearance-mode-heading">
         <div className="mb-4">
-          <h3 id="appearance-mode-heading" className="font-display text-lg font-bold tracking-tight text-text-primary">Display mode</h3>
+          <h3 id="appearance-mode-heading" className="font-display text-xl font-extrabold tracking-tight text-text-primary">Display mode</h3>
           <p className="mt-1 text-sm font-medium text-text-dim">Set the overall brightness of the interface.</p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Display mode">
+        <div className="grid gap-3 sm:grid-cols-3" aria-label="Display mode">
           {appearanceOptions.map((option) => {
             const { value, label, description } = option;
             const ModeIcon = option.icon;
@@ -53,10 +56,9 @@ export default function SettingsAppearance() {
               <button
                 key={value}
                 type="button"
-                role="radio"
-                aria-checked={selected}
+                aria-pressed={selected}
                 onClick={() => setTheme(value)}
-                className={`rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 ${selected ? 'border-accent bg-accent-soft shadow-sm' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
+                className={`card-lift press focus-ring rounded-2xl border p-4 text-left ${selected ? 'border-accent bg-accent-soft shadow-card' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
               >
                 <span className="flex items-center justify-between gap-3">
                   <span className={`grid h-10 w-10 place-items-center rounded-xl ${selected ? 'bg-accent text-text-contrast' : 'bg-surface-raised text-text-muted'}`}>
@@ -74,10 +76,10 @@ export default function SettingsAppearance() {
 
       <section className="mt-12 border-t border-line-soft pt-10" aria-labelledby="navigation-mode-heading">
         <div className="mb-4">
-          <h3 id="navigation-mode-heading" className="font-display text-lg font-bold tracking-tight text-text-primary">Navigation layout</h3>
+          <h3 id="navigation-mode-heading" className="font-display text-xl font-extrabold tracking-tight text-text-primary">Navigation layout</h3>
           <p className="mt-1 text-sm font-medium text-text-dim">Choose where your main workspace navigation lives.</p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Navigation layout">
+        <div className="grid gap-3 sm:grid-cols-2" aria-label="Navigation layout">
           {navigationOptions.map((option) => {
             const NavigationIcon = option.icon;
             const selected = navMode === option.value;
@@ -85,10 +87,9 @@ export default function SettingsAppearance() {
               <button
                 key={option.value}
                 type="button"
-                role="radio"
-                aria-checked={selected}
+                aria-pressed={selected}
                 onClick={() => setNavMode(option.value)}
-                className={`rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 ${selected ? 'border-accent bg-accent-soft shadow-sm' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
+                className={`card-lift press focus-ring rounded-2xl border p-4 text-left ${selected ? 'border-accent bg-accent-soft shadow-card' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
               >
                 <span className="flex items-center justify-between gap-3">
                   <span className={`grid h-10 w-10 place-items-center rounded-xl ${selected ? 'bg-accent text-text-contrast' : 'bg-surface-raised text-text-muted'}`}>
@@ -107,13 +108,13 @@ export default function SettingsAppearance() {
       <section className="mt-12 border-t border-line-soft pt-10" aria-labelledby="background-palette-heading">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h3 id="background-palette-heading" className="font-display text-lg font-bold tracking-tight text-text-primary">Background colour</h3>
+            <h3 id="background-palette-heading" className="font-display text-xl font-extrabold tracking-tight text-text-primary">Background colour</h3>
             <p className="mt-1 text-sm font-medium text-text-dim">Updates backgrounds, cards, borders, and highlights throughout Caplet in both light and dark mode.</p>
           </div>
           <span className="rounded-full bg-surface-soft px-3 py-1.5 text-xs font-bold text-text-muted">Previewing {isDark ? 'dark' : 'light'} colours</span>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="radiogroup" aria-label="Background colour">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Background colour">
           {paletteOptions.map(({ value, label, description, lightColours, darkColours }) => {
             const selected = palette === value;
             const colours = isDark ? darkColours : lightColours;
@@ -121,10 +122,9 @@ export default function SettingsAppearance() {
               <button
                 key={value}
                 type="button"
-                role="radio"
-                aria-checked={selected}
+                aria-pressed={selected}
                 onClick={() => choosePalette(value)}
-                className={`group rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 ${selected ? 'border-accent bg-accent-soft shadow-sm' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
+                className={`card-lift press focus-ring group rounded-2xl border p-3 text-left ${selected ? 'border-accent bg-accent-soft shadow-card' : 'border-line-soft bg-surface-soft hover:border-accent/40'}`}
               >
                 <span className="relative block h-24 overflow-hidden rounded-xl border border-black/5" style={{ backgroundColor: colours[0] }}>
                   <span className="absolute inset-x-3 bottom-3 top-5 rounded-lg border border-black/5 shadow-sm" style={{ backgroundColor: colours[1] }} />

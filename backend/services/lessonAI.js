@@ -310,12 +310,21 @@ async function runStage1(client, notes, opts, slideCount) {
 
   const completion = await client.chat.completions.create({
     model: opts.model || 'gpt-5.4-mini',
+    // A 50-slide plan is large but bounded; a generous cap guards against
+    // runaway output while the finish_reason check below surfaces (rather
+    // than silently truncates) a plan that hits it.
+    max_completion_tokens: 16000,
     messages: [
       { role: 'system', content: PLANNER_SYSTEM },
       { role: 'user',   content: userMsg },
     ],
   });
 
+  if (completion.choices?.[0]?.finish_reason === 'length') {
+    const err = new Error('AI planning stage output was truncated. Ask for fewer slides and try again.');
+    err.status = 502;
+    throw err;
+  }
   return completion.choices?.[0]?.message?.content?.trim() || '';
 }
 

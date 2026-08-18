@@ -21,7 +21,7 @@ import api from '../services/api';
 function SummaryCard(props) {
   const Icon = props.icon;
   return (
-    <div className="rounded-3xl bg-surface-raised p-5 shadow-[0_18px_42px_-34px_rgba(20,20,18,0.4)]">
+    <div className="rounded-3xl bg-surface-raised p-5 shadow-card">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-text-dim">{props.label}</p>
@@ -54,16 +54,11 @@ export default function TeacherClassLearning() {
     }
   }, [classId, subject, threshold]);
 
+  // Initial load + reload on class/subject/threshold change — one code path,
+  // shared with the Refresh button, instead of a duplicated request body.
   useEffect(() => {
-    let active = true;
-    setState((current) => ({ ...current, loading: true, error: '' }));
-    api.request(`/teacher-learning/classes/${classId}/analytics?subject=${encodeURIComponent(subject)}&threshold=${threshold}`).then((data) => {
-      if (active) setState({ loading: false, error: '', data });
-    }).catch((error) => {
-      if (active) setState({ loading: false, error: error.message || 'Could not load class learning data.', data: null });
-    });
-    return () => { active = false; };
-  }, [classId, subject, threshold]);
+    load();
+  }, [load]);
 
   const analytics = state.data?.analytics;
   const outcomes = analytics?.heatmap?.outcomes || [];
@@ -100,7 +95,7 @@ export default function TeacherClassLearning() {
   const summary = analytics?.summary || {};
 
   return (
-    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <Link to={`/classes/${classId}`} className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-accent hover:text-accent-strong">
           <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Back to class

@@ -43,7 +43,7 @@ const BudgetPlanner = () => {
   useReveal();
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         {/* Header */}
         <header className="mb-20 reveal">
@@ -65,7 +65,7 @@ const BudgetPlanner = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Input Panel */}
-          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div className="lg:col-span-7 bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-12">Your budget</h2>
 
             <form onSubmit={handleSubmit} className="space-y-16">
@@ -109,18 +109,18 @@ const BudgetPlanner = () => {
                 ))}
               </div>
 
-              <button type="submit" className="btn-primary w-full py-5 mt-12 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-5 mt-12 hover:-translate-y-0.5 transition-transform">
                 Calculate Budget
               </button>
             </form>
           </div>
 
           {/* Results Panel */}
-          <div className="lg:col-span-5 block-blue rounded-3xl p-12 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] reveal">
+          <div aria-live="polite" className="lg:col-span-5 block-blue rounded-3xl p-12 lg:p-16 flex flex-col min-h-full relative overflow-hidden shadow-card card-lift reveal">
             <h2 className="font-display font-bold tracking-tight text-2xl mb-12 relative z-10">Summary</h2>
 
             {result ? (
-              <div className="space-y-12 relative z-10">
+              <div className="animate-rise space-y-12 relative z-10">
                 <div className="grid grid-cols-2 gap-8">
                   <div>
                     <p className="text-xs font-medium text-text-dim mb-2">Total Income</p>
@@ -132,7 +132,7 @@ const BudgetPlanner = () => {
                   </div>
                 </div>
 
-                <div className="bg-surface-raised rounded-2xl p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                <div className="bg-surface-raised rounded-2xl p-10 shadow-card">
                   <p className="text-xs font-bold text-accent mb-4">
                     {result.remaining >= 0 ? 'Surplus' : 'Deficit'}
                   </p>
@@ -167,7 +167,7 @@ const BudgetPlanner = () => {
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-surface-raised flex items-center justify-center text-3xl font-display font-bold mb-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">?</div>
+                <div className="w-14 h-14 rounded-2xl bg-surface-raised flex items-center justify-center text-3xl font-display font-bold mb-8 shadow-card">?</div>
                 <p className="text-sm font-medium">Add your income and expenses to see results.</p>
               </div>
             )}

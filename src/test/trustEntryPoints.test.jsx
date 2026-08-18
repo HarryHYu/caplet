@@ -30,7 +30,8 @@ describe('Trust Center entry points', () => {
   it('links from the footer, signup, contact, finance and AI surfaces', () => {
     const views = [
       { element: <Footer />, route: '/', name: /Trust center/i, href: '/trust' },
-      { element: <RegisterForm />, route: '/register', name: /trust, privacy and terms information/i, href: '/trust' },
+      { element: <RegisterForm />, route: '/register', name: /trust and privacy information/i, href: '/trust' },
+      { element: <RegisterForm />, route: '/register', name: /terms of use/i, href: '/terms' },
       { element: <Contact />, route: '/contact', name: /Read the Trust Center/i, href: '/trust' },
       { element: <FinancialTools />, route: '/fintools', name: /How financial tools are framed/i, href: '/trust#financial-education' },
       { element: <EduTools />, route: '/edutools', name: /Understand AI limitations/i, href: '/trust#ai' },

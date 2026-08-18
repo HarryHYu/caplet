@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import api from '../../services/api';
 import { PHET_SUBJECTS, getPhetEmbedUrl } from '../../lib/phetSims';
+import { CHART_COLORS as EXPR_COLORS } from '../../utils/chartColors';
 
 /* ──────────────────────────────────────────────────────────────────────────
    Shared inputs
@@ -22,7 +23,7 @@ function TextInput(props) {
   return (
     <input
       {...props}
-      className={`w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-[border-color,box-shadow] duration-150 ${props.className || ''}`}
+      className={`w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent transition-colors duration-150 ${props.className || ''}`}
     />
   );
 }
@@ -31,7 +32,7 @@ function TextArea(props) {
   return (
     <textarea
       {...props}
-      className={`w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-[border-color,box-shadow] duration-150 ${props.className || ''}`}
+      className={`w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent transition-colors duration-150 ${props.className || ''}`}
     />
   );
 }
@@ -42,7 +43,7 @@ function Select({ value, onChange, options, ...rest }) {
       value={value}
       onChange={onChange}
       {...rest}
-      className="w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-[border-color,box-shadow] duration-150 cursor-pointer"
+      className="w-full rounded-xl border border-line-soft bg-surface-raised px-4 py-2.5 text-base text-text-primary focus:border-accent transition-colors duration-150 cursor-pointer"
     >
       {options.map((o) =>
         typeof o === 'string' ? (
@@ -58,7 +59,7 @@ function Select({ value, onChange, options, ...rest }) {
 function PillButton({ children, onClick, disabled, tone = 'default', type = 'button' }) {
   const cls =
     tone === 'danger'
-      ? 'text-rose-500 hover:bg-rose-500/10 border-rose-400/40'
+      ? 'text-text-error hover:bg-surface-error border-line-error'
       : tone === 'primary'
         ? 'text-accent hover:bg-accent/10 border-accent/40'
         : 'text-text-muted hover:text-text-primary border-line-soft hover:border-text-dim';
@@ -107,7 +108,7 @@ export function ImagePicker({ value, onChange, lessonId }) {
           type="button"
           onClick={() => setTab('url')}
           className={`px-3 py-1 rounded-full text-sm font-medium ${
-            tab === 'url' ? 'bg-accent text-white' : 'text-text-muted border border-line-soft'
+            tab === 'url' ? 'bg-accent text-accent-contrast' : 'text-text-muted border border-line-soft'
           }`}
         >
           URL
@@ -116,7 +117,7 @@ export function ImagePicker({ value, onChange, lessonId }) {
           type="button"
           onClick={() => setTab('upload')}
           className={`px-3 py-1 rounded-full text-sm font-medium ${
-            tab === 'upload' ? 'bg-accent text-white' : 'text-text-muted border border-line-soft'
+            tab === 'upload' ? 'bg-accent text-accent-contrast' : 'text-text-muted border border-line-soft'
           }`}
         >
           Upload
@@ -136,13 +137,13 @@ export function ImagePicker({ value, onChange, lessonId }) {
             accept="image/jpeg,image/png,image/webp,image/gif"
             disabled={uploading || !lessonId}
             onChange={onFile}
-            className="block w-full text-sm text-text-muted file:mr-3 file:px-3 file:py-1.5 file:rounded-full file:border-0 file:bg-accent file:text-white file:text-xs file:font-bold file:uppercase file:tracking-[0.2em] file:cursor-pointer disabled:opacity-50"
+            className="block w-full text-sm text-text-muted file:mr-3 file:px-3 file:py-1.5 file:rounded-full file:border-0 file:bg-accent file:text-accent-contrast file:text-xs file:font-bold file:uppercase file:tracking-[0.2em] file:cursor-pointer disabled:opacity-50"
           />
           {!lessonId && (
             <p className="mt-1 text-xs text-text-dim">Save the lesson once before uploading.</p>
           )}
           {uploading && <p className="mt-1 text-xs text-text-dim">Uploading…</p>}
-          {error && <p className="mt-1 text-xs text-rose-500">{error}</p>}
+          {error && <p className="mt-1 text-xs text-text-error">{error}</p>}
         </div>
       )}
       {value && tab === 'url' && (
@@ -313,7 +314,7 @@ function ChoiceForm({ slide, onChange }) {
                   title={isCorrect ? 'Marked correct' : 'Mark as correct'}
                   className={`shrink-0 w-7 h-7 rounded-full border flex items-center justify-center text-xs font-bold ${
                     isCorrect
-                      ? 'border-emerald-500 bg-emerald-500/15 text-emerald-600'
+                      ? 'border-[var(--mark-green)] bg-[color-mix(in_srgb,var(--mark-green)_15%,transparent)] text-[var(--mark-green)]'
                       : 'border-line-soft text-text-dim hover:border-text-dim'
                   }`}
                 >
@@ -328,7 +329,7 @@ function ChoiceForm({ slide, onChange }) {
                   type="button"
                   onClick={() => removeOption(i)}
                   disabled={options.length <= 2}
-                  className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-rose-500 hover:border-rose-400/60 disabled:opacity-30"
+                  className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-text-error hover:border-text-error/50 disabled:opacity-30"
                   aria-label="Remove option"
                 >
                   ×
@@ -376,7 +377,7 @@ function TrueFalseForm({ slide, onChange }) {
                 onClick={() => onChange({ options: ['True', 'False'], correctIndices: [i], mode: 'truefalse' })}
                 className={`flex-1 py-2 rounded-lg border text-sm font-bold ${
                   active
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600'
+                    ? 'border-[var(--mark-green)] bg-[color-mix(in_srgb,var(--mark-green)_10%,transparent)] text-[var(--mark-green)]'
                     : 'border-line-soft text-text-muted hover:border-text-dim'
                 }`}
               >
@@ -521,8 +522,8 @@ function FillBlankForm({ slide, onChange }) {
                         title="Mark as correct answer"
                         className={`shrink-0 w-7 h-7 rounded-full border flex items-center justify-center text-xs font-bold transition-colors ${
                           isCorrect
-                            ? 'border-emerald-500 bg-emerald-500/15 text-emerald-600'
-                            : 'border-line-soft text-text-dim hover:border-emerald-400 hover:text-emerald-500'
+                            ? 'border-[var(--mark-green)] bg-[color-mix(in_srgb,var(--mark-green)_15%,transparent)] text-[var(--mark-green)]'
+                            : 'border-line-soft text-text-dim hover:border-[var(--mark-green)] hover:text-[var(--mark-green)]'
                         }`}
                       >
                         ✓
@@ -536,7 +537,7 @@ function FillBlankForm({ slide, onChange }) {
                         type="button"
                         onClick={() => removeOption(i, j)}
                         disabled={(b.options || []).length <= 1}
-                        className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-rose-500 disabled:opacity-30"
+                        className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-text-error disabled:opacity-30"
                       >
                         ×
                       </button>
@@ -567,7 +568,7 @@ function FillBlankForm({ slide, onChange }) {
                       type="button"
                       onClick={() => removeAnswer(i, j)}
                       disabled={(b.answers || []).length <= 1}
-                      className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-rose-500 disabled:opacity-30"
+                      className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-text-error disabled:opacity-30"
                     >
                       ×
                     </button>
@@ -634,7 +635,7 @@ function CardsForm({ slide, onChange, lessonId }) {
                   type="button"
                   onClick={() => removeCard(i)}
                   disabled={cards.length <= 1}
-                  className="text-xs text-text-dim hover:text-rose-500 disabled:opacity-30"
+                  className="text-xs text-text-dim hover:text-text-error disabled:opacity-30"
                 >
                   Remove
                 </button>
@@ -705,7 +706,7 @@ function MatchForm({ slide, onChange }) {
                 type="button"
                 onClick={() => removePair(i)}
                 disabled={pairs.length <= 2}
-                className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-rose-500 disabled:opacity-30"
+                className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-text-error disabled:opacity-30"
               >
                 ×
               </button>
@@ -786,7 +787,7 @@ function OrderForm({ slide, onChange }) {
                 type="button"
                 onClick={() => removeItem(i)}
                 disabled={items.length <= 2}
-                className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-rose-500 disabled:opacity-30"
+                className="shrink-0 w-7 h-7 rounded-full border border-line-soft text-text-dim hover:text-text-error disabled:opacity-30"
               >
                 ×
               </button>
@@ -854,7 +855,7 @@ function TableForm({ slide, onChange }) {
                     type="button"
                     onClick={() => removeRow(r)}
                     disabled={rows.length <= 1}
-                    className="text-xs text-text-dim hover:text-rose-500 disabled:opacity-30"
+                    className="text-xs text-text-dim hover:text-text-error disabled:opacity-30"
                   >
                     Remove row
                   </button>
@@ -868,7 +869,7 @@ function TableForm({ slide, onChange }) {
                     type="button"
                     onClick={() => removeCol(c)}
                     disabled={cols <= 1}
-                    className="text-xs text-text-dim hover:text-rose-500 disabled:opacity-30"
+                    className="text-xs text-text-dim hover:text-text-error disabled:opacity-30"
                   >
                     Remove col
                   </button>
@@ -974,7 +975,7 @@ function ChartForm({ slide, onChange }) {
                   <TextInput className="w-24" placeholder="Y" type="number" value={row.y ?? ''} onChange={(e) => setCell(i, 'y', Number(e.target.value))} />
                 </>
               )}
-              <button type="button" onClick={() => removeRow(i)} disabled={data.length <= 1} className="text-text-dim hover:text-rose-500 disabled:opacity-30 text-sm px-1">×</button>
+              <button type="button" onClick={() => removeRow(i)} disabled={data.length <= 1} className="text-text-dim hover:text-text-error disabled:opacity-30 text-sm px-1">×</button>
             </div>
           ))}
         </div>
@@ -1067,7 +1068,7 @@ function PhETPickerModal({ onSelect, onClose }) {
             placeholder="Search simulations…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-lg border border-line-soft bg-surface-soft px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="w-full rounded-lg border border-line-soft bg-surface-soft px-3 py-2 text-sm focus:border-accent"
           />
           <div className="flex flex-wrap gap-1.5">
             {subjects.map((s) => (
@@ -1077,7 +1078,7 @@ function PhETPickerModal({ onSelect, onClose }) {
                 onClick={() => setActiveSubject(s)}
                 className={`px-2.5 py-1 rounded-full text-sm font-medium transition-colors ${
                   activeSubject === s
-                    ? 'bg-accent text-white'
+                    ? 'bg-accent text-accent-contrast'
                     : 'border border-line-soft text-text-muted hover:border-accent hover:text-accent'
                 }`}
               >
@@ -1172,7 +1173,7 @@ function MapsBuilder({ onApply, onClose }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && query && apply()}
-            className="w-full rounded-lg border border-line-soft bg-surface-soft px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="w-full rounded-lg border border-line-soft bg-surface-soft px-3 py-2 text-sm focus:border-accent"
           />
         </div>
 
@@ -1344,7 +1345,7 @@ function HotspotForm({ slide, onChange, lessonId }) {
               <div
                 key={r.id}
                 style={{ left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` }}
-                className={`absolute border-2 rounded-lg flex items-center justify-center text-xs font-bold text-white ${r.correct ? 'border-emerald-400 bg-emerald-400/30' : 'border-accent bg-accent/20'}`}
+                className={`absolute border-2 rounded-lg flex items-center justify-center text-xs font-bold text-white ${r.correct ? 'border-[var(--mark-green)] bg-[color-mix(in_srgb,var(--mark-green)_30%,transparent)]' : 'border-accent bg-accent/20'}`}
               >
                 {r.id + 1}
               </div>
@@ -1367,7 +1368,7 @@ function HotspotForm({ slide, onChange, lessonId }) {
                       <input type="checkbox" checked={!!r.correct} onChange={(e) => updateRegion(r.id, { correct: e.target.checked })} className="accent-accent" />
                       Correct
                     </label>
-                    <button type="button" onClick={() => removeRegion(r.id)} className="text-text-dim hover:text-rose-500 text-sm px-1">×</button>
+                    <button type="button" onClick={() => removeRegion(r.id)} className="text-text-dim hover:text-text-error text-sm px-1">×</button>
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {['x', 'y', 'w', 'h'].map((k) => (
@@ -1380,7 +1381,7 @@ function HotspotForm({ slide, onChange, lessonId }) {
                           step={0.5}
                           value={r[k] ?? 0}
                           onChange={(e) => updateRegion(r.id, { [k]: Number(e.target.value) })}
-                          className="w-full rounded-md border border-line-soft bg-surface-raised px-2 py-1 text-xs focus:border-accent focus:outline-none"
+                          className="w-full rounded-md border border-line-soft bg-surface-raised px-2 py-1 text-xs focus:border-accent"
                         />
                       </label>
                     ))}
@@ -1450,7 +1451,7 @@ function TimelineForm({ slide, onChange }) {
                 value={ev.year || ''}
                 onChange={(e) => updateEvent(i, { year: e.target.value })}
               />
-              <button type="button" onClick={() => removeEvent(i)} disabled={events.length <= 2} className="text-text-dim hover:text-rose-500 disabled:opacity-30 text-sm px-1">×</button>
+              <button type="button" onClick={() => removeEvent(i)} disabled={events.length <= 2} className="text-text-dim hover:text-text-error disabled:opacity-30 text-sm px-1">×</button>
             </div>
           ))}
         </div>
@@ -1469,8 +1470,6 @@ function TimelineForm({ slide, onChange }) {
 /* ──────────────────────────────────────────────────────────────────────────
    Desmos
    ────────────────────────────────────────────────────────────────────────── */
-
-const EXPR_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
 
 function DesmosForm({ slide, onChange }) {
   const expressions = slide.expressions || [];
@@ -1522,13 +1521,13 @@ function DesmosForm({ slide, onChange }) {
                 value={expr.latex || ''}
                 onChange={(e) => updateExpr(i, { latex: e.target.value, id: expr.id || `e${i + 1}` })}
                 placeholder="LaTeX expression"
-                className="flex-1 rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm font-mono text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="flex-1 rounded-lg border border-line-soft bg-surface-raised px-3 py-2 text-sm font-mono text-text-primary focus:border-accent"
               />
               <button
                 type="button"
                 onClick={() => removeExpr(i)}
                 disabled={expressions.length <= 1}
-                className="text-text-dim hover:text-rose-500 disabled:opacity-30 text-sm px-1 shrink-0"
+                className="text-text-dim hover:text-text-error disabled:opacity-30 text-sm px-1 shrink-0"
               >
                 ×
               </button>
