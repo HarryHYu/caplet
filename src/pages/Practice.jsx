@@ -147,7 +147,7 @@ function makeIdempotencyKey(sessionId, questionId) {
 }
 
 function modeTone(tone) {
-  if (tone === 'amber') return 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]';
+  if (tone === 'amber') return 'bg-[color:var(--block-amber)] text-text-warning';
   if (tone === 'coral') return 'bg-[color:var(--block-coral)] text-[color:var(--mark-coral)]';
   if (tone === 'green') return 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]';
   return 'bg-[color:var(--block-blue)] text-accent';

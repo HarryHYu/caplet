@@ -125,7 +125,7 @@ function DeleteTaskDialog({ task, onCancel, onConfirm }) {
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" onClick={onCancel} className="btn-secondary">Cancel</button>
           {/* Destructive confirm — semantic danger fill, dark in both themes, so the ink is literal white. */}
-          <button data-initial-focus type="button" onClick={onConfirm} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-red-600 px-5 text-sm font-bold text-white hover:bg-red-700">Remove</button>
+          <button data-initial-focus type="button" onClick={onConfirm} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-text-error px-5 text-sm font-bold text-text-contrast hover:opacity-90">Remove</button>
         </div>
       </section>
     </div>

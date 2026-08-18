@@ -18,7 +18,7 @@ function NoteDialog({ note, subjects, initialSubject, onCancel, onSave }) {
   const dialogRef = useDialogFocus({ onDismiss: onCancel });
   const update = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-surface-inverse/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
       <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="note-dialog-title" className="max-h-[92vh] w-full max-w-2xl animate-pop overflow-y-auto rounded-xl border border-line-soft bg-surface-body p-6 shadow-pop">
         <div className="flex items-start justify-between gap-4">
           <div><h2 id="note-dialog-title" className="font-display text-2xl font-extrabold">{note ? 'Edit note' : 'New note'}</h2><p className="mt-1 text-sm text-text-muted">Keep the useful part close to your subject.</p></div>
@@ -46,7 +46,7 @@ function LinkDialog({ link, subjects, initialSubject, onCancel, onSave }) {
     onSave({ ...form, title: form.title.trim(), url: form.url.trim() });
   };
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-surface-inverse/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
       <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="link-dialog-title" className="w-full max-w-xl animate-pop rounded-xl border border-line-soft bg-surface-body p-6 shadow-pop">
         <div className="flex items-start justify-between gap-4">
           <div><h2 id="link-dialog-title" className="font-display text-2xl font-extrabold">{link ? 'Edit Google Doc' : 'Add Google Doc'}</h2><p className="mt-1 text-sm text-text-muted">The document opens in Google Docs with its existing sharing permissions.</p></div>
@@ -75,7 +75,7 @@ function ResourceDialog({ resource, subjects, initialSubject, onCancel, onSave }
     onSave({ ...form, title: form.title.trim(), url: form.url.trim(), description: form.description.trim() });
   };
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-surface-inverse/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
       <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="resource-dialog-title" className="w-full max-w-xl animate-pop rounded-xl border border-line-soft bg-surface-body p-6 shadow-pop">
         <div className="flex items-start justify-between gap-4">
           <div><h2 id="resource-dialog-title" className="font-display text-2xl font-extrabold">{resource ? 'Edit resource' : 'Add link or resource'}</h2><p className="mt-1 text-sm text-text-muted">Save a useful website, video, worksheet or reference.</p></div>
@@ -97,7 +97,7 @@ function ResourceDialog({ resource, subjects, initialSubject, onCancel, onSave }
 function RemoveDialog({ title, onCancel, onConfirm }) {
   const dialogRef = useDialogFocus({ onDismiss: onCancel });
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-surface-inverse/50 p-4" role="presentation">
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/50 p-4" role="presentation">
       <section ref={dialogRef} tabIndex="-1" role="alertdialog" aria-modal="true" aria-labelledby="notes-remove-title" className="w-full max-w-md animate-pop rounded-3xl bg-surface-raised p-7 shadow-pop">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-error text-text-error"><TrashIcon className="h-6 w-6" aria-hidden="true" /></span>
         <h2 id="notes-remove-title" className="mt-5 text-2xl font-display font-extrabold text-text-primary">Remove “{title}”?</h2>

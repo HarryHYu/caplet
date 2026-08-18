@@ -27,7 +27,7 @@ const SUBJECTS = [
 function barColor(pct) {
   if (pct >= 80) return 'bg-[var(--mark-green)]';
   if (pct >= 50) return 'bg-accent';
-  if (pct >= 25) return 'bg-amber-500';
+  if (pct >= 25) return 'bg-[color:var(--mark-amber)]';
   return 'bg-line-strong';
 }
 

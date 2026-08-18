@@ -36,7 +36,7 @@ export function LearningError({ title = 'This could not load', message, onRetry 
 
 export function LearningEmpty({ title, message, action }) {
   return (
-    <div className="rounded-3xl bg-surface-raised p-8 text-center md:p-12">
+    <div className="rounded-3xl bg-surface-raised p-8 text-center shadow-card md:p-12">
       <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-accent-soft text-accent">
         <SparklesIcon className="h-7 w-7" aria-hidden="true" />
       </span>

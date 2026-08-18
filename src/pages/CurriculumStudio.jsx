@@ -40,7 +40,7 @@ const REVIEW_LABELS = {
 };
 
 const PACK_STATUS = {
-  in_review: { label: 'In review', className: 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]' },
+  in_review: { label: 'In review', className: 'bg-[color:var(--block-amber)] text-text-warning' },
   ready: { label: 'Ready to publish', className: 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' },
   published: { label: 'Published', className: 'bg-accent-soft text-accent' },
   archived: { label: 'Archived', className: 'bg-surface-soft text-text-muted' },
@@ -83,7 +83,7 @@ function Metric(props) {
   const { label, ready, total, detail, tone = 'blue' } = props;
   const Icon = props.icon;
   const toneClass = tone === 'amber'
-    ? 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]'
+    ? 'bg-[color:var(--block-amber)] text-text-warning'
     : tone === 'green'
       ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]'
       : 'bg-accent-soft text-accent';
@@ -116,14 +116,14 @@ function ReviewDecision({ item, index, expanded, selectedOption, busy, locked, o
         className="flex w-full items-center gap-4 px-6 py-5 text-left transition-colors hover:bg-surface-soft/55 md:px-8"
         aria-expanded={expanded}
       >
-        <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-extrabold ${resolved ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]'}`}>
+        <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-extrabold ${resolved ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-text-warning'}`}>
           {resolved ? <CheckCircleIcon className="h-5 w-5" aria-hidden="true" /> : index + 1}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block font-display text-lg font-extrabold text-text-primary">{item.title}</span>
           <span className="mt-0.5 block text-sm font-medium text-text-muted">{item.summary}</span>
         </span>
-        <span className={`hidden rounded-full px-3 py-1 text-xs font-bold sm:inline-flex ${resolved ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]'}`}>
+        <span className={`hidden rounded-full px-3 py-1 text-xs font-bold sm:inline-flex ${resolved ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-text-warning'}`}>
           {resolved ? 'Resolved' : blocked ? 'Changes required' : 'Decision needed'}
         </span>
         {expanded ? <ChevronDownIcon className="h-5 w-5 shrink-0" /> : <ChevronRightIcon className="h-5 w-5 shrink-0" />}
@@ -279,7 +279,7 @@ function OutcomeWorkspace({ pack, onPack, onNotice, onError, onNext }) {
           return (
             <article key={outcome.id} className="flex flex-col gap-3 border-b border-line-soft bg-surface-body px-5 py-4 last:border-b-0 sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><span className="font-mono text-xs font-extrabold text-accent">{outcome.code}</span>{outcome.yearLevel && <span className="rounded-full bg-surface-soft px-2 py-1 text-[10px] font-bold text-text-muted">{outcome.yearLevel}</span>}{outcome.isAssessable === false && <span className="rounded-full bg-surface-soft px-2 py-1 text-[10px] font-bold text-text-muted">Grouping only</span>}</div><h3 className="mt-1 text-sm font-extrabold text-text-primary">{outcome.title}</h3><p className="mt-1 line-clamp-2 text-xs font-medium text-text-muted">{outcome.description}</p></div>
-              {outcome.isAssessable !== false && <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ${coverage?.ready ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]'}`}>{coverage?.questionCount || 0} approved {coverage?.questionCount === 1 ? 'question' : 'questions'}</span>}
+              {outcome.isAssessable !== false && <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ${coverage?.ready ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-text-warning'}`}>{coverage?.questionCount || 0} approved {coverage?.questionCount === 1 ? 'question' : 'questions'}</span>}
               {!locked && <div className="flex gap-1"><button type="button" onClick={() => begin(outcome)} className="rounded-xl p-2.5 text-text-muted hover:bg-surface-soft hover:text-accent" aria-label={`Edit ${outcome.code}`}><PencilSquareIcon className="h-4 w-4" /></button><button type="button" onClick={() => archive(outcome)} disabled={busy} className="rounded-xl p-2.5 text-text-muted hover:bg-surface-error hover:text-text-error" aria-label={`Remove ${outcome.code}`}><ArchiveBoxIcon className="h-4 w-4" /></button></div>}
             </article>
           );
@@ -394,7 +394,7 @@ function QuestionWorkspace({ pack, onPack, onNotice, onError, onNext }) {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         {questions.length ? questions.map((question) => {
-          const statusTone = ['approved', 'published'].includes(question.lifecycleStatus) ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : question.lifecycleStatus === 'in_review' ? 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]' : 'bg-surface-soft text-text-muted';
+          const statusTone = ['approved', 'published'].includes(question.lifecycleStatus) ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : question.lifecycleStatus === 'in_review' ? 'bg-[color:var(--block-amber)] text-text-warning' : 'bg-surface-soft text-text-muted';
           return (
             <button key={question.id} type="button" onClick={() => open(question)} className="rounded-2xl border border-line-soft bg-surface-body p-5 text-left transition-colors hover:border-accent hover:bg-accent-soft/30">
               <div className="flex items-start justify-between gap-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide ${statusTone}`}>{question.lifecycleStatus}</span><span className="text-xs font-bold text-text-dim">{question.marks || 1} {Number(question.marks || 1) === 1 ? 'mark' : 'marks'}</span></div>
@@ -491,7 +491,7 @@ function ImportSubjectPack({ onCreated, onCancel }) {
               <h2 className="mt-2 font-display text-3xl font-extrabold">Build Business Studies from the official source.</h2>
               <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-accent-contrast/75">Creates the versioned pack in review. Nothing reaches students until every decision is resolved and the pack is published.</p>
             </div>
-            <button type="button" onClick={createTemplate} disabled={busy} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-extrabold text-accent disabled:opacity-60">
+            <button type="button" onClick={createTemplate} disabled={busy} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-accent-contrast px-6 py-3 text-sm font-extrabold text-accent disabled:opacity-60">
               {busy ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <SparklesIcon className="h-5 w-5" />}
               Create subject pack
             </button>

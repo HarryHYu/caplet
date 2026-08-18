@@ -163,9 +163,9 @@ function ConfirmationDialog({ title, description, confirmLabel, busy, confirmDis
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-surface-inverse/50 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onCancel(); }}>
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/50 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onCancel(); }}>
       <section ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId} className="w-full max-w-lg rounded-3xl bg-surface-raised p-7 shadow-pop md:p-8">
-        <span className={`grid h-12 w-12 place-items-center rounded-2xl ${danger ? 'bg-surface-error text-text-error' : 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]'}`}>
+        <span className={`grid h-12 w-12 place-items-center rounded-2xl ${danger ? 'bg-surface-error text-text-error' : 'bg-[color:var(--block-amber)] text-text-warning'}`}>
           <ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" />
         </span>
         <h2 id={titleId} className="mt-5 text-2xl font-display font-extrabold text-text-primary">{title}</h2>

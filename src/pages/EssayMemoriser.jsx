@@ -272,12 +272,12 @@ function LiveCheck({ target, typed, currentHint = 'none', showRemaining = false,
                 {targetWords.map((w, i) => {
                     if (i < committed) {
                         const ok = wordsEqual(typedWords[i], w);
-                        if (ok) return <MaskedWord key={i} word={w} animate className="text-emerald-600 dark:text-emerald-400" />;
+                        if (ok) return <MaskedWord key={i} word={w} animate className="text-[color:var(--mark-green)]" />;
                         return (
                             <MaskedWord key={i} word={w} animate
                                 title={`You typed “${typedWords[i]}”`}
                                 ariaLabel={`${w} — you typed ${typedWords[i]}`}
-                                className="rounded-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 underline decoration-wavy decoration-amber-400/70" />
+                                className="rounded-sm bg-surface-warning text-text-warning underline decoration-wavy decoration-[color:var(--mark-amber)]" />
                         );
                     }
                     if (i === committed && !complete) {
@@ -298,7 +298,7 @@ function LiveCheck({ target, typed, currentHint = 'none', showRemaining = false,
                     }
                     return null;
                 })}
-                {complete && <span className="ml-1 text-emerald-500 font-bold">✓</span>}
+                {complete && <span className="ml-1 text-[color:var(--mark-green)] font-bold">✓</span>}
             </div>
         </div>
     );
@@ -311,11 +311,11 @@ function GradeButtons({ busy, onPass, onFail, passLabel = 'Got it', passDisabled
     return (
         <div className="flex items-center gap-3 mt-5">
             <button type="button" disabled={busy} onClick={onFail}
-                className="text-sm font-semibold text-rose-500 border border-rose-400/60 rounded-xl px-5 py-2.5 hover:bg-rose-500 hover:text-white transition-colors disabled:opacity-40">
+                className="text-sm font-semibold text-text-error border border-line-error rounded-xl px-5 py-2.5 hover:bg-[color:var(--text-error)] hover:text-white transition-colors disabled:opacity-40">
                 Missed it
             </button>
             <button type="button" disabled={busy || passDisabled} onClick={onPass}
-                className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/60 rounded-xl px-5 py-2.5 hover:bg-emerald-500 hover:text-white transition-colors disabled:opacity-40">
+                className="text-sm font-semibold text-[color:var(--mark-green)] border border-[color:var(--mark-green)] rounded-xl px-5 py-2.5 hover:bg-[color:var(--mark-green)] hover:text-white transition-colors disabled:opacity-40">
                 {passLabel}
             </button>
         </div>
@@ -411,14 +411,14 @@ function ProgressBar({ value, total }) {
 function SessionDone({ onRestart, nextLabel, onNext, saveOk = true }) {
     return (
         <div className="text-center py-14">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-5 animate-pop-in">
-                <AcademicCapIcon className="w-7 h-7 text-emerald-500" />
+            <div className="w-14 h-14 rounded-full block-green flex items-center justify-center mx-auto mb-5 animate-pop-in">
+                <AcademicCapIcon className="w-7 h-7 text-[color:var(--mark-green)]" />
             </div>
             <p className="font-display text-xl font-extrabold tracking-tight text-text-primary">Session complete</p>
             {saveOk ? (
                 <p className="text-sm text-text-muted mt-2">Items rescheduled on the 1, 3, 7, 14 day ladder.</p>
             ) : (
-                <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">Progress could not be saved this time — your review schedule is unchanged.</p>
+                <p className="text-sm text-text-warning mt-2">Progress could not be saved this time — your review schedule is unchanged.</p>
             )}
             <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
                 <button type="button" onClick={onRestart}
@@ -541,10 +541,10 @@ function AnnotatedLegend() {
     // sentence, quote, conclusion), the way a chart legend does, so they must
     // stay stable across every theme rather than follow the accent token.
     const items = [
-        { swatch: 'bg-blue-200 dark:bg-blue-500/30', label: 'Thesis' },
-        { swatch: 'bg-amber-200 dark:bg-amber-500/30', label: 'Topic sentence' },
-        { swatch: 'bg-emerald-200 dark:bg-emerald-500/30', label: 'Quote' },
-        { swatch: 'bg-violet-200 dark:bg-violet-500/30', label: 'Conclusion' },
+        { swatch: 'bg-[color:var(--block-blue)]', label: 'Thesis' },
+        { swatch: 'bg-surface-warning', label: 'Topic sentence' },
+        { swatch: 'bg-[color:var(--mark-green)]', label: 'Quote' },
+        { swatch: 'bg-[color:var(--block-coral)]', label: 'Conclusion' },
     ];
     return (
         <div className="flex flex-wrap gap-x-5 gap-y-2 mb-8 p-4 rounded-2xl bg-surface-body border border-line-soft">
@@ -581,14 +581,14 @@ function AnnotatedParagraphBlock({ paragraph, index }) {
                 {segments.map((seg, i) => {
                     if (seg.type === 'topic') {
                         return (
-                            <span key={i} className="bg-amber-200 dark:bg-amber-500/30 rounded px-0.5">
+                            <span key={i} className="bg-surface-warning rounded px-0.5">
                                 {seg.text}
                             </span>
                         );
                     }
                     if (seg.type === 'quote') {
                         return (
-                            <span key={i} className="rounded px-0.5 bg-emerald-200 dark:bg-emerald-500/30">
+                            <span key={i} className="rounded px-0.5 bg-[color:var(--mark-green)]">
                                 {seg.text}
                             </span>
                         );
@@ -599,7 +599,7 @@ function AnnotatedParagraphBlock({ paragraph, index }) {
             {(paragraph.techniques || []).length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                     {paragraph.techniques.map((t, i) => (
-                        <span key={i} className="text-[11px] font-semibold px-2.5 py-1 bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 rounded-full">
+                        <span key={i} className="text-[11px] font-semibold px-2.5 py-1 block-coral text-[color:var(--mark-coral)] rounded-full">
                             {t}
                         </span>
                     ))}
@@ -614,8 +614,8 @@ function FramingParagraphBlock({ label, text, thesis, tone }) {
     // Same annotation series as AnnotatedLegend — blue marks the intro, violet
     // the conclusion. Literal by design, not a missing token.
     const palette = tone === 'violet'
-        ? { box: 'bg-violet-50 dark:bg-violet-500/10 border-violet-200/60 dark:border-violet-500/20', tag: 'text-violet-500', mark: 'bg-violet-200 dark:bg-violet-500/30' }
-        : { box: 'bg-blue-50 dark:bg-blue-500/10 border-blue-200/60 dark:border-blue-500/20', tag: 'text-blue-500', mark: 'bg-blue-200 dark:bg-blue-500/30' };
+        ? { box: 'block-coral border-line-soft', tag: 'text-[color:var(--mark-coral)]', mark: 'bg-[color:var(--block-coral)]' }
+        : { box: 'block-blue border-line-soft', tag: 'text-[color:var(--mark-blue)]', mark: 'bg-[color:var(--block-blue)]' };
     let content = <span>{text}</span>;
     if (thesis) {
         const at = text.indexOf(thesis);
@@ -927,13 +927,13 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
                                 <MaskedWord key={i} word={w} animate
                                     ariaLabel={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
                                     title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
-                                    className={peekedWords.has(i) ? 'rounded-sm block-amber text-amber' : 'text-emerald-600 dark:text-emerald-400'} />
+                                    className={peekedWords.has(i) ? 'rounded-sm block-amber text-amber' : 'text-[color:var(--mark-green)]'} />
                             );
                             return (
                                 <MaskedWord key={i} word={w} animate
                                     title={`You typed “${h.typed}”`}
                                     ariaLabel={`${w} — you typed ${h.typed}`}
-                                    className="rounded-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 underline decoration-wavy decoration-amber-400/70" />
+                                    className="rounded-sm bg-surface-warning text-text-warning underline decoration-wavy decoration-[color:var(--mark-amber)]" />
                             );
                         }
                         if (i === wordIdx && !paraDone) {
@@ -958,7 +958,7 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
                 {/* Right — input + running score, pinned so it never scrolls away */}
                 <div className="lg:sticky lg:top-24 self-start">
                     {!paraDone ? (
-                        <div className={`p-5 rounded-2xl bg-surface-body border transition-colors ${shake ? 'animate-shake-x border-rose-400/70' : 'border-line-soft'}`}>
+                        <div className={`p-5 rounded-2xl bg-surface-body border transition-colors ${shake ? 'animate-shake-x border-line-error' : 'border-line-soft'}`}>
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Next word</span>
                                 <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
@@ -1127,14 +1127,14 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
                         if (i < results.length) {
                             return (
                                 <MaskedWord key={i} word={w} animate
-                                    className={results[i] === 'hit' ? 'text-text-primary' : 'rounded-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'} />
+                                    className={results[i] === 'hit' ? 'text-text-primary' : 'rounded-sm bg-surface-warning text-text-warning'} />
                             );
                         }
                         if (i === wordIdx) {
                             return (
                                 <MaskedWord key={i} word={w} hidden refEl={currentRef}
-                                    className={`border-b-2 ${missCount > 0 ? 'border-rose-400' : 'border-accent'}`}
-                                    overlayClassName={missCount > 0 ? 'text-rose-500' : 'text-accent'}
+                                    className={`border-b-2 ${missCount > 0 ? 'border-line-error' : 'border-accent'}`}
+                                    overlayClassName={missCount > 0 ? 'text-text-error' : 'text-accent'}
                                     overlay={<>{missCount > 0 ? w[0] : '?'}<Caret /></>} />
                             );
                         }
@@ -1478,7 +1478,7 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
                             <div key={i} className="flex items-center gap-3">
                                 <span className="text-xs font-bold text-text-dim w-10 shrink-0">¶{(r.para.sourceIndex ?? i) + 1}</span>
                                 <div className="h-2 flex-1 bg-line-soft rounded-full overflow-hidden">
-                                    <div className={`h-full rounded-full transition-all duration-500 ${r.accuracy >= 75 ? 'bg-emerald-500' : r.accuracy >= 50 ? 'bg-amber-400' : 'bg-rose-400'}`} style={{ width: `${r.accuracy}%` }} />
+                                    <div className={`h-full rounded-full transition-all duration-500 ${r.accuracy >= 75 ? 'bg-[color:var(--mark-green)]' : r.accuracy >= 50 ? 'bg-surface-warning' : 'bg-[color:var(--text-error)]'}`} style={{ width: `${r.accuracy}%` }} />
                                 </div>
                                 <span className="text-xs font-bold text-text-primary tabular-nums w-10 text-right">{r.accuracy}%</span>
                             </div>
@@ -2049,7 +2049,7 @@ function DeleteConfirm({ title, busy, error, onConfirm, onCancel }) {
                 {/* Destructive confirm — rose is a semantic danger fill that stays
                     dark in both themes, so the ink is literal white. */}
                 <button type="button" disabled={busy} onClick={onConfirm}
-                    className="text-sm font-semibold text-white bg-rose-500 rounded-xl px-5 py-2.5 hover:bg-rose-600 transition-colors disabled:opacity-40">
+                    className="text-sm font-semibold text-white bg-[color:var(--text-error)] rounded-xl px-5 py-2.5 hover:bg-[color:var(--text-error)] transition-colors disabled:opacity-40">
                     {busy ? 'Deleting…' : 'Delete essay'}
                 </button>
                 <button type="button" disabled={busy} onClick={onCancel}
@@ -2769,10 +2769,10 @@ function EssayLibrary() {
                                             className="bg-surface-raised rounded-2xl p-5 flex items-center justify-between gap-4 group shadow-card press">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                                    e.parsed ? 'bg-emerald-500/10' : 'bg-accent-soft'
+                                                    e.parsed ? 'block-green' : 'bg-accent-soft'
                                                 }`}>
                                                     {e.parsed
-                                                        ? <BookOpenIcon className="w-4 h-4 text-emerald-500" />
+                                                        ? <BookOpenIcon className="w-4 h-4 text-[color:var(--mark-green)]" />
                                                         : <SparklesIcon className="w-4 h-4 text-accent" />}
                                                 </div>
                                                 <div className="min-w-0">

@@ -28,10 +28,10 @@ const noteAccent = (annotation) => (annotation.kind === 'explanation'
     // Annotation series palette (violet = conclusion, amber = topic sentence,
     // emerald = quote, rose = deletion). Literal like a chart legend so the roles
     // read the same in every theme; see AnnotatedLegend in EssayMemoriser.
-    ? 'border-l-violet-400 dark:border-l-violet-500/70'
+    ? 'border-l-[color:var(--mark-coral)]'
     : annotation.source === 'ai'
         ? 'border-l-accent'
-        : 'border-l-amber-400');
+        : 'border-l-[color:var(--mark-amber)]');
 
 function NoteCard({ annotation, active, onSelect, onDelete, onEdit }) {
     const [editing, setEditing] = useState(false);
@@ -226,18 +226,18 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI, onFix, initialKind = 
  */
 function ProposalCard({ proposal, applying, onAccept, onDiscard }) {
     return (
-        <div className="rounded-2xl border border-emerald-400/60 bg-surface-raised p-3 shadow-pop">
+        <div className="rounded-2xl border border-[color:var(--mark-green)] bg-surface-raised p-3 shadow-pop">
             <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Proposed fix</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--mark-green)]">Proposed fix</span>
                 <button type="button" aria-label="Discard fix" onClick={onDiscard} disabled={applying}
                     className="rounded p-1 text-text-dim hover:text-text-primary disabled:opacity-40">
                     <XMarkIcon className="h-3.5 w-3.5" />
                 </button>
             </div>
-            <p className="mt-1.5 font-serif text-xs leading-snug text-text-dim line-through decoration-rose-400/70">
+            <p className="mt-1.5 font-serif text-xs leading-snug text-text-dim line-through decoration-[color:var(--text-error)]">
                 {proposal.anchor}
             </p>
-            <p className="mt-1 rounded-lg bg-emerald-100/70 px-2 py-1.5 font-serif text-xs leading-snug text-text-primary dark:bg-emerald-500/15">
+            <p className="mt-1 rounded-lg block-green px-2 py-1.5 font-serif text-xs leading-snug text-text-primary ">
                 {proposal.replacement}
             </p>
             {proposal.rationale && (
@@ -245,7 +245,7 @@ function ProposalCard({ proposal, applying, onAccept, onDiscard }) {
             )}
             <div className="mt-2 flex items-center gap-2">
                 <button type="button" onClick={onAccept} disabled={applying}
-                    className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-accent-contrast disabled:opacity-40">
+                    className="rounded-lg bg-[color:var(--mark-green)] px-2.5 py-1 text-[11px] font-bold text-accent-contrast disabled:opacity-40">
                     {applying ? 'Applying…' : 'Accept'}
                 </button>
                 <button type="button" onClick={onDiscard} disabled={applying}
@@ -348,13 +348,13 @@ function ParagraphBlock({
                 >
                     {segments.map((seg, i) => {
                         if (seg.type === 'fix') {
-                            return <span key={i} className="rounded-sm bg-rose-200/70 px-0.5 line-through decoration-rose-500/60 dark:bg-rose-500/25">{seg.text}</span>;
+                            return <span key={i} className="rounded-sm bg-surface-error px-0.5 line-through decoration-[color:var(--text-error)]">{seg.text}</span>;
                         }
                         if (seg.type === 'quote') {
-                            return <span key={i} className="rounded-sm bg-emerald-200 px-0.5 dark:bg-emerald-500/30">{seg.text}</span>;
+                            return <span key={i} className="rounded-sm bg-[color:var(--block-green)] px-0.5">{seg.text}</span>;
                         }
                         if (seg.type === 'topic') {
-                            return <span key={i} className="rounded-sm bg-amber-200/70 px-0.5 dark:bg-amber-500/25">{seg.text}</span>;
+                            return <span key={i} className="rounded-sm bg-[color:var(--block-amber)] px-0.5">{seg.text}</span>;
                         }
                         if (typeof seg.type === 'string' && seg.type.startsWith('anchor:')) {
                             const id = seg.type.slice(7);
@@ -378,7 +378,7 @@ function ParagraphBlock({
                         <PlusIcon className="h-3 w-3" /> Note
                     </button>
                     <button type="button" onClick={() => onStartNote(index, '', 'explanation')}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-text-dim hover:text-violet-500">
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-text-dim hover:text-[color:var(--mark-coral)]">
                         <PlusIcon className="h-3 w-3" /> Explain
                     </button>
                     <span className="text-[11px] text-text-dim">Select text to note a phrase</span>
@@ -433,7 +433,7 @@ function ParagraphBlock({
                         </button>
                         {!hasExplanation && (
                             <button type="button" onClick={() => onStartNote(index, '', 'explanation')}
-                                className="flex-1 rounded-xl border border-dashed border-line-soft px-2.5 py-2 text-left text-[11px] font-medium text-text-dim transition-colors hover:border-violet-400 hover:text-violet-500">
+                                className="flex-1 rounded-xl border border-dashed border-line-soft px-2.5 py-2 text-left text-[11px] font-medium text-text-dim transition-colors hover:border-[color:var(--mark-coral)] hover:text-[color:var(--mark-coral)]">
                                 + Explain
                             </button>
                         )}
@@ -517,8 +517,8 @@ export default function AnnotatedDocument({
         <div>
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-line-soft pb-4">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-medium text-text-dim">
-                    <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-amber-200 dark:bg-amber-500/30" /> Topic sentence</span>
-                    <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-emerald-200 dark:bg-emerald-500/30" /> Quote</span>
+                    <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[color:var(--block-amber)]" /> Topic sentence</span>
+                    <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-[color:var(--block-green)]" /> Quote</span>
                     <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-accent/20" /> Has a note</span>
                 </div>
                 {onExplain && (
@@ -531,8 +531,8 @@ export default function AnnotatedDocument({
             </div>
 
             {structure.introduction && (
-                <div className="mb-8 rounded-2xl border border-blue-200/60 bg-blue-50 p-5 dark:border-blue-500/20 dark:bg-blue-500/10 lg:mr-[19rem]">
-                    <span className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-blue-500">Introduction</span>
+                <div className="mb-8 rounded-2xl border border-line-soft block-blue p-5 lg:mr-[19rem]">
+                    <span className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-[color:var(--mark-blue)]">Introduction</span>
                     <p className="whitespace-pre-wrap font-serif text-base leading-relaxed text-text-primary">{structure.introduction}</p>
                 </div>
             )}
@@ -565,8 +565,8 @@ export default function AnnotatedDocument({
             </div>
 
             {structure.conclusion && (
-                <div className="mt-8 rounded-2xl border border-violet-200/60 bg-violet-50 p-5 dark:border-violet-500/20 dark:bg-violet-500/10 lg:mr-[19rem]">
-                    <span className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-violet-500">Conclusion</span>
+                <div className="mt-8 rounded-2xl border border-line-soft block-coral p-5 lg:mr-[19rem]">
+                    <span className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-[color:var(--mark-coral)]">Conclusion</span>
                     <p className="whitespace-pre-wrap font-serif text-base leading-relaxed text-text-primary">{structure.conclusion}</p>
                 </div>
             )}

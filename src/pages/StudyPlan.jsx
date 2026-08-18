@@ -267,7 +267,7 @@ export default function StudyPlan() {
                 <h2 className="mt-3 text-3xl md:text-4xl font-display font-extrabold tracking-tight">{nextTask.title}</h2>
                 <p className="mt-3 text-accent-contrast/80">{nextTask.subjectLabel} · {nextTask.estimatedMinutes} minutes · {nextTask.priority} priority</p>
               </div>
-              <Link to={nextTask.resourcePath} className="focus-ring card-lift group inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent">
+              <Link to={nextTask.resourcePath} className="focus-ring card-lift group inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-accent-contrast px-6 py-3 text-sm font-bold text-accent">
                 {taskActionLabel(nextTask.resourceLabel)} <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>

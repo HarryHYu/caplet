@@ -115,7 +115,7 @@ function NextAction({ recommendation, subject }) {
             </span>
           )}
         </div>
-        <Link to={href} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent press">
+        <Link to={href} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-accent-contrast px-6 py-3 text-sm font-bold text-accent press">
           Start now <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>

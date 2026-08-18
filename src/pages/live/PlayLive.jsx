@@ -39,7 +39,7 @@ function TimerBar({ opensAt, windowMs }) {
     <div>
       <div className="h-2.5 w-full rounded-full bg-surface-soft overflow-hidden">
         <Motion.div
-          className={`h-full rounded-full ${low ? 'bg-text-error' : pct < 55 ? 'bg-amber-400' : 'bg-accent'}`}
+          className={`h-full rounded-full ${low ? 'bg-text-error' : pct < 55 ? 'bg-[color:var(--mark-amber)]' : 'bg-accent'}`}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.12, ease: 'linear' }}
         />

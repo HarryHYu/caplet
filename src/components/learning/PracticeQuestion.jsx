@@ -63,7 +63,7 @@ export function FeedbackPanel({ result, question, onRetry, onNext, nextLabel, co
     <section className="mt-6 rounded-3xl border border-line-soft bg-surface-raised p-5 shadow-card sm:p-8 lg:p-10" aria-live="polite" aria-labelledby="practice-feedback-heading">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${isCorrect ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]'}`}>
+          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${isCorrect ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-text-warning'}`}>
             {isCorrect ? <CheckCircleIcon className="h-6 w-6" aria-hidden="true" /> : <LightBulbIcon className="h-6 w-6" aria-hidden="true" />}
           </span>
           <div>

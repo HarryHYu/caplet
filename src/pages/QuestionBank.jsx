@@ -80,7 +80,7 @@ function EditorAccessGate({ onEntered }) {
 function statusTone(status) {
   if (status === 'published') return 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]';
   if (status === 'approved') return 'bg-accent-soft text-accent';
-  if (status === 'in_review') return 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]';
+  if (status === 'in_review') return 'bg-[color:var(--block-amber)] text-text-warning';
   if (['superseded', 'archived'].includes(status)) return 'bg-surface-soft text-text-dim';
   return 'bg-surface-soft text-text-muted';
 }
@@ -160,9 +160,9 @@ function ConfirmDialog({ status, busy, onCancel, onConfirm }) {
   const label = LIFECYCLE_LABELS[status] || status;
   const dialogRef = useDialogFocus({ onDismiss: onCancel, dismissDisabled: busy });
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-surface-inverse/50 p-4" role="presentation">
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/50 p-4" role="presentation">
       <section ref={dialogRef} tabIndex="-1" role="alertdialog" aria-modal="true" aria-labelledby="question-lifecycle-dialog-title" className="w-full max-w-md animate-pop rounded-3xl bg-surface-raised p-7 shadow-pop">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]"><ShieldCheckIcon className="h-6 w-6" aria-hidden="true" /></span>
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[color:var(--block-amber)] text-text-warning"><ShieldCheckIcon className="h-6 w-6" aria-hidden="true" /></span>
         <h2 id="question-lifecycle-dialog-title" className="mt-5 text-2xl font-display font-extrabold text-text-primary">Move this question to {label}?</h2>
         <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{status === 'published' ? 'Publishing makes this version available to learner practice. Confirm its outcomes, rubric, answers, source, and human review are correct.' : 'This closes the current published version. Historical evidence remains linked to it.'}</p>
         <div className="mt-7 flex justify-end gap-3"><button type="button" data-initial-focus onClick={onCancel} disabled={busy} className="btn-secondary">Cancel</button><button type="button" onClick={onConfirm} disabled={busy} className="btn-primary">{busy ? 'Updating…' : `Confirm ${label.toLowerCase()}`}</button></div>
@@ -174,7 +174,7 @@ function ConfirmDialog({ status, busy, onCancel, onConfirm }) {
 function DiscardDialog({ onCancel, onDiscard }) {
   const dialogRef = useDialogFocus({ onDismiss: onCancel });
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-surface-inverse/50 p-4" role="presentation">
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/50 p-4" role="presentation">
       <section ref={dialogRef} tabIndex="-1" role="alertdialog" aria-modal="true" aria-labelledby="discard-question-title" className="w-full max-w-md animate-pop rounded-3xl bg-surface-raised p-7 shadow-pop">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-error text-text-error"><ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" /></span>
         <h2 id="discard-question-title" className="mt-5 text-2xl font-display font-extrabold text-text-primary">Discard unsaved changes?</h2>

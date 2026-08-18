@@ -13,7 +13,7 @@ import CapletLoader from '../components/CapletLoader';
 import api from '../services/api';
 
 function statusTone(ok) {
-  return ok ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]';
+  return ok ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-text-warning';
 }
 
 function HealthCard({ label, check }) {
@@ -221,7 +221,7 @@ export default function AdminOperations() {
             <article className="rounded-2xl bg-surface-raised p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="font-display text-lg font-extrabold text-text-primary">Durable alert delivery</h3>
-                <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${alertSignals?.delivery?.configured ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]'}`}>{alertSignals?.delivery?.configured ? 'Configured' : 'Needs setup'}</span>
+                <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${alertSignals?.delivery?.configured ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-text-warning'}`}>{alertSignals?.delivery?.configured ? 'Configured' : 'Needs setup'}</span>
               </div>
               <p className="mt-3 text-sm font-medium text-text-muted">
                 {alertSignals?.counts?.open || 0} readiness or backup incidents open · {alertSignals?.counts?.failedDelivery || 0} delivery failures retrying.
