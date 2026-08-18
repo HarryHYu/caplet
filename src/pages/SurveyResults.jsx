@@ -39,7 +39,7 @@ const SurveyResults = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-body">
         <div className="text-center max-w-md mx-auto px-6 reveal">
-          <span className="font-hand text-accent text-lg block mb-3">Hmm, something went sideways</span>
+          <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Hmm, something went sideways</span>
           <h2 className="font-display text-2xl font-extrabold tracking-tight mb-3">Unable to Load Results</h2>
           <p className="text-base font-medium text-text-muted">
             {error}
@@ -51,10 +51,10 @@ const SurveyResults = () => {
 
   if (!stats || stats.total === 0) {
     return (
-      <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+      <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto bg-surface-raised rounded-3xl p-20 text-center reveal shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
-            <span className="font-hand text-accent text-lg block mb-3">Nothing here yet</span>
+          <div className="max-w-4xl mx-auto bg-surface-raised rounded-3xl p-20 text-center reveal shadow-card">
+            <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Nothing here yet</span>
             <h1 className="font-display text-4xl font-extrabold tracking-tight mb-6">No Responses Yet</h1>
             <p className="text-base font-medium text-text-muted">
               No survey responses have been logged in the current cycle.
@@ -93,12 +93,12 @@ const SurveyResults = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-20 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-xl block mb-3">Survey results</span>
+              <span className="mb-3 font-hand text-xl text-accent -rotate-2 inline-block">Survey results</span>
               <h1 className="font-display text-6xl md:text-8xl mb-8 font-extrabold tracking-tight">
                 Literacy <br />Spectrum
               </h1>
@@ -106,7 +106,7 @@ const SurveyResults = () => {
                 A synthesis of crowd-sourced financial knowledge and perceived competency across our community.
               </p>
             </div>
-            <div className="block-blue rounded-3xl px-8 py-7 text-center shrink-0 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="block-blue rounded-3xl px-8 py-7 text-center shrink-0 shadow-card">
               <span className="text-sm font-semibold text-text-dim block mb-2">Total responses</span>
               <span className="font-display text-6xl font-extrabold text-accent leading-none tracking-tight">{stats.total}</span>
             </div>
@@ -114,7 +114,7 @@ const SurveyResults = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 reveal mb-6">
-          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-card">
             <h2 className="font-display text-lg font-extrabold tracking-tight mb-10">Demographic Breakdown</h2>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -139,7 +139,7 @@ const SurveyResults = () => {
             </div>
           </div>
 
-          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-card">
             <h2 className="font-display text-lg font-extrabold tracking-tight mb-10">Tracks Their Spending</h2>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -166,7 +166,7 @@ const SurveyResults = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 reveal mb-6">
-          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-card">
             <h2 className="font-display text-lg font-extrabold tracking-tight mb-10">Learned It at School</h2>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -191,7 +191,7 @@ const SurveyResults = () => {
             </div>
           </div>
 
-          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-card">
             <h2 className="font-display text-lg font-extrabold tracking-tight mb-10">Finds the Terms Confusing</h2>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -218,7 +218,7 @@ const SurveyResults = () => {
         </div>
 
         {/* Confidence Level */}
-        <div className="bg-surface-raised rounded-3xl p-12 lg:p-20 reveal mb-6 relative overflow-hidden shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+        <div className="bg-surface-raised rounded-3xl p-12 lg:p-20 reveal mb-6 relative overflow-hidden shadow-card">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 relative z-10">
             <div>
               <h2 className="font-display text-lg font-extrabold tracking-tight mb-2">Confidence Self-Assessment</h2>
@@ -252,7 +252,7 @@ const SurveyResults = () => {
         </div>
 
         {/* Helpful Explanations */}
-        <div className="bg-surface-raised rounded-3xl p-12 lg:p-20 reveal shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+        <div className="bg-surface-raised rounded-3xl p-12 lg:p-20 reveal shadow-card">
           <h2 className="font-display text-lg font-extrabold tracking-tight mb-14">What Helps People Learn</h2>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">

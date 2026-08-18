@@ -278,7 +278,7 @@ function LiveFillBlank({ slide, onAnswer, locked }) {
               disabled={locked}
               value={answers[idx] || ''}
               onChange={(e) => setAnswers((prev) => { const n = [...prev]; n[idx] = e.target.value; return n; })}
-              className="inline-block mx-1 w-32 px-2 py-1 rounded-lg border border-accent/40 bg-surface-raised text-text-primary text-base focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="inline-block mx-1 w-32 px-2 py-1 rounded-lg border border-accent/40 bg-surface-raised text-text-primary text-base focus-ring"
             />
           );
         })}
@@ -471,7 +471,7 @@ function LiveHotspot({ slide, onAnswer, locked }) {
             className={`absolute border-2 rounded-lg transition-colors ${
               // Fixed white (not tokens) is intentional here: these outlines sit
               // on top of an arbitrary user-supplied image, not a themed surface.
-              selected === r.id ? 'border-accent bg-accent/20' : 'border-white/60 bg-white/5 hover:bg-accent/10'
+              selected === r.id ? 'border-accent bg-accent/20' : 'border-white/60 bg-accent-contrast/5 hover:bg-accent/10'
             }`}
             aria-label={r.label}
           />
@@ -545,7 +545,7 @@ function JoinScreen({ onJoin, joining, joinError, initialCode }) {
               placeholder="ABC123"
               maxLength={16}
               autoFocus
-              className="w-full px-4 py-4 text-center text-2xl font-mono tracking-[0.2em] rounded-2xl border border-line-soft bg-surface-raised text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+              className="w-full px-4 py-4 text-center text-2xl font-mono tracking-[0.2em] rounded-2xl border border-line-soft bg-surface-raised text-text-primary focus-ring focus:border-accent"
             />
             {preview && (
               <p className="text-center text-sm text-[var(--mark-green)] mt-2">Joining: {preview.lessonTitle}</p>
@@ -559,7 +559,7 @@ function JoinScreen({ onJoin, joining, joinError, initialCode }) {
               onChange={(e) => setNickname(e.target.value)}
               placeholder="Your name"
               maxLength={40}
-              className="w-full px-4 py-3 rounded-2xl border border-line-soft bg-surface-raised text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+              className="w-full px-4 py-3 rounded-2xl border border-line-soft bg-surface-raised text-text-primary focus-ring focus:border-accent"
             />
           </div>
 

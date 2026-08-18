@@ -73,8 +73,8 @@ function CreatePostCta({ href, disabled, disabledLabel }) {
   return (
     <Link
       to={href}
-      className="flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-accent-contrast card-lift"
-      style={{ background: 'var(--forum-accent)', boxShadow: '0 12px 28px -14px color-mix(in srgb, var(--forum-accent) 60%, transparent)' }}
+      className="flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-accent-contrast shadow-card press focus-ring"
+      style={{ background: 'var(--forum-accent)' }}
     >
       <PlusIcon className="h-4 w-4" /> Create post
     </Link>

@@ -96,26 +96,26 @@ function NextAction({ recommendation, subject }) {
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-7 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] md:p-9">
+    <section className="overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-7 text-accent-contrast shadow-card-hover md:p-9">
       <div className="flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-white/70">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-accent-contrast/70">
             <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Next best action
             {recommendation.estimatedMinutes && <span>· {recommendation.estimatedMinutes} min</span>}
           </div>
-          <h2 className="mt-3 text-3xl font-display font-extrabold tracking-tight text-white">
+          <h2 className="mt-3 text-3xl font-display font-extrabold tracking-tight text-accent-contrast">
             {recommendation.studentTitle || 'Continue your recommended practice'}
           </h2>
-          <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/80">
+          <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-accent-contrast/80">
             {recommendation.reason || 'This activity is the strongest next step from your recent learning evidence.'}
           </p>
           {recommendation.outcome?.code && (
-            <span className="mt-4 inline-flex rounded-full bg-white/10 px-3 py-1.5 font-mono text-xs font-bold text-white">
+            <span className="mt-4 inline-flex rounded-full bg-accent-contrast/10 px-3 py-1.5 font-mono text-xs font-bold text-accent-contrast">
               {recommendation.outcome.code}
             </span>
           )}
         </div>
-        <Link to={href} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent transition-transform hover:-translate-y-0.5">
+        <Link to={href} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent press">
           Start now <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
@@ -185,7 +185,7 @@ export default function Mastery() {
   return (
     <main className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="animate-rise mb-12 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+        <header className="minimal-page-header animate-rise flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span className="section-kicker">Progress</span>
             <h1 className="minimal-page-title">Mastery</h1>

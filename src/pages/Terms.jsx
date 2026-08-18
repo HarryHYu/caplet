@@ -85,7 +85,7 @@ export default function Terms() {
     <main id="main-content" className="min-h-screen bg-surface-body py-28 text-text-primary">
       <div className="container-custom max-w-4xl">
         <header className="reveal rounded-3xl bg-surface-raised p-8 shadow-card md:p-12">
-          <p className="font-hand text-xl text-accent">the rules, in plain language</p>
+          <p className="font-hand text-xl text-accent -rotate-2 inline-block">the rules, in plain language</p>
           <h1 className="mt-3 font-display text-5xl font-extrabold tracking-tight md:text-7xl">Terms of use</h1>
           <p className="mt-6 max-w-3xl text-lg font-medium leading-relaxed text-text-muted">
             These terms set the boundaries that keep Caplet useful, fair and safe for learners, families and schools.

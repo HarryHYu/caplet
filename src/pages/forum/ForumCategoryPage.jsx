@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftRightIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
 import api from '../../services/api';
 import CapletLoader from '../../components/CapletLoader';
@@ -109,7 +109,11 @@ export default function ForumCategoryPage() {
       <ForumFilterBar tag={tag} onTagChange={(v) => setFilter('tag', v)} solved={solved} onSolvedChange={(v) => setFilter('solved', v)} />
 
       {threads.length === 0 ? (
-        <div className="forum-card p-10 text-center text-text-muted">No threads match these filters yet.</div>
+        <div className="forum-card p-10 text-center">
+          <ChatBubbleLeftRightIcon className="mx-auto mb-3 h-7 w-7 text-text-dim" aria-hidden="true" />
+          <p className="text-sm font-bold text-text-primary">No threads match these filters yet.</p>
+          <Link to="/forum/new" className="focus-ring mt-3 inline-block rounded-lg text-sm font-bold text-accent">Start the first one</Link>
+        </div>
       ) : (
         <ul className="flex flex-col gap-2">
           {threads.map((t) => (

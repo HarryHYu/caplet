@@ -278,9 +278,9 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen bg-surface-body pb-28 pt-24 selection:bg-accent selection:text-accent-contrast md:pt-28 lg:pt-24">
             <div className="mx-auto w-full max-w-[1220px] px-6 md:px-10 lg:px-12">
-                <header className="mb-12 reveal">
-                    <h1 className="font-display text-4xl font-extrabold tracking-[-0.035em] text-text-primary md:text-5xl">Today</h1>
-                    <p className="mt-2 text-base font-medium text-text-muted">{dateLabel}</p>
+                <header className="minimal-page-header reveal">
+                    <h1 className="minimal-page-title">Today</h1>
+                    <p className="minimal-page-description">{dateLabel}</p>
                     <span className="sr-only">{`Welcome, ${user?.firstName || 'Student'}.`}</span>
                 </header>
 

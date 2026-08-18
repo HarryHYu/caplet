@@ -209,7 +209,7 @@ export default function StudyPlan() {
   return (
     <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="reveal mb-14 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <header className="minimal-page-header reveal flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span className="section-kicker">This week</span>
             <h1 className="minimal-page-title">Study plan</h1>
@@ -260,12 +260,12 @@ export default function StudyPlan() {
         </div>
 
         {nextTask && (
-          <section className="reveal mb-14 overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 md:p-10 text-white shadow-card">
+          <section className="reveal mb-14 overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 md:p-10 text-accent-contrast shadow-card">
             <div className="flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/65">{taskStatusLabel(nextTask, today)}</p>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent-contrast/65">{taskStatusLabel(nextTask, today)}</p>
                 <h2 className="mt-3 text-3xl md:text-4xl font-display font-extrabold tracking-tight">{nextTask.title}</h2>
-                <p className="mt-3 text-white/80">{nextTask.subjectLabel} · {nextTask.estimatedMinutes} minutes · {nextTask.priority} priority</p>
+                <p className="mt-3 text-accent-contrast/80">{nextTask.subjectLabel} · {nextTask.estimatedMinutes} minutes · {nextTask.priority} priority</p>
               </div>
               <Link to={nextTask.resourcePath} className="focus-ring card-lift group inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-accent">
                 {taskActionLabel(nextTask.resourceLabel)} <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -278,7 +278,7 @@ export default function StudyPlan() {
           <section className="reveal">
             <div className="mb-6 flex items-end justify-between">
               <div>
-                <span className="font-hand text-accent text-lg -rotate-2 inline-block">your next seven days</span>
+                <span className="font-hand text-lg text-accent -rotate-2 inline-block">your next seven days</span>
                 <h2 className="mt-1 text-3xl font-display font-extrabold tracking-tight">Weekly plan</h2>
               </div>
             </div>
@@ -289,7 +289,7 @@ export default function StudyPlan() {
                   <div className="space-y-3">
                     {tasks.map((task) => (
                       <div key={task.id} className={`flex gap-4 rounded-2xl p-4 transition-[background-color,transform,box-shadow] ${task.completed ? 'bg-[color:var(--block-green)]' : 'bg-surface-soft'} ${updatingTaskId === task.id ? 'opacity-70' : ''}`}>
-                        <button type="button" onClick={() => toggleTask(task)} aria-label={`${task.completed ? 'Mark incomplete' : 'Mark complete'}: ${task.title}`} aria-pressed={task.completed} aria-busy={updatingTaskId === task.id} disabled={Boolean(updatingTaskId || saving)} className="mt-0.5 shrink-0 rounded-xl transition-transform hover:scale-105 active:scale-95 disabled:cursor-wait disabled:opacity-70">
+                        <button type="button" onClick={() => toggleTask(task)} aria-label={`${task.completed ? 'Mark incomplete' : 'Mark complete'}: ${task.title}`} aria-pressed={task.completed} aria-busy={updatingTaskId === task.id} disabled={Boolean(updatingTaskId || saving)} className="mt-0.5 shrink-0 rounded-xl transition-transform hover:scale-105 press disabled:cursor-wait disabled:opacity-70">
                           <CheckCircleIcon className={`h-7 w-7 ${task.completed ? 'animate-pop-in text-accent' : 'text-text-dim'}`} aria-hidden="true" />
                         </button>
                         <div className="min-w-0 flex-1">
@@ -365,7 +365,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
         <div className="reveal mx-auto mb-8 flex max-w-xl items-center gap-3">
           {STEPS.map((label, index) => (
             <div key={label} className="flex flex-1 items-center gap-2">
-              <button type="button" onClick={() => index < step && setStep(index)} disabled={index >= step} aria-label={`${index === step ? 'Current' : index < step ? 'Go back to' : 'Upcoming'} ${label} step`} aria-current={index === step ? 'step' : undefined} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold transition-transform active:scale-95 disabled:cursor-default ${index <= step ? 'bg-accent text-accent-contrast' : 'bg-surface-soft text-text-dim'}`}>{index + 1}</button>
+              <button type="button" onClick={() => index < step && setStep(index)} disabled={index >= step} aria-label={`${index === step ? 'Current' : index < step ? 'Go back to' : 'Upcoming'} ${label} step`} aria-current={index === step ? 'step' : undefined} className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold transition-transform press disabled:cursor-default ${index <= step ? 'bg-accent text-accent-contrast' : 'bg-surface-soft text-text-dim'}`}>{index + 1}</button>
               <span className={`hidden text-xs font-bold sm:block ${index <= step ? 'text-text-primary' : 'text-text-dim'}`}>{label}</span>
               {index < 2 && <span className="h-px flex-1 bg-line-soft" />}
             </div>
@@ -405,7 +405,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
               <fieldset className="mt-8">
                 <legend className="text-sm font-bold text-text-muted">Available days</legend>
                 <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-7">
-                  {DAY_OPTIONS.map((day) => <button key={day.value} type="button" aria-pressed={form.availableDays.includes(day.value)} onClick={() => toggleDay(day.value)} className={`rounded-xl px-3 py-3 text-xs font-bold transition-[background-color,transform] duration-200 active:scale-95 ${form.availableDays.includes(day.value) ? 'bg-accent text-accent-contrast' : 'bg-surface-soft text-text-muted'}`}>{day.label}</button>)}
+                  {DAY_OPTIONS.map((day) => <button key={day.value} type="button" aria-pressed={form.availableDays.includes(day.value)} onClick={() => toggleDay(day.value)} className={`rounded-xl px-3 py-3 text-xs font-bold transition-[background-color,transform] duration-200 press ${form.availableDays.includes(day.value) ? 'bg-accent text-accent-contrast' : 'bg-surface-soft text-text-muted'}`}>{day.label}</button>)}
                 </div>
               </fieldset>
               <label htmlFor="minutes-per-study-day" className="mt-8 block text-sm font-bold text-text-muted">Minutes per study day</label>
@@ -433,7 +433,7 @@ function StudyPlanOnboarding({ form, setForm, options, selectedSubjects, step, s
                     <legend className="text-base font-display font-bold text-text-primary"><span className="text-accent">{subject.label}:</span> {subject.diagnostic.question}</legend>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {subject.diagnostic.options.map((answer, index) => (
-                        <button key={answer} type="button" aria-pressed={form.diagnosticAnswers[subject.value] === index} onClick={() => setForm((current) => ({ ...current, diagnosticAnswers: { ...current.diagnosticAnswers, [subject.value]: index } }))} className={`rounded-2xl p-4 text-left text-sm font-semibold transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 ${form.diagnosticAnswers[subject.value] === index ? 'bg-accent text-accent-contrast shadow-pop' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{answer}</button>
+                        <button key={answer} type="button" aria-pressed={form.diagnosticAnswers[subject.value] === index} onClick={() => setForm((current) => ({ ...current, diagnosticAnswers: { ...current.diagnosticAnswers, [subject.value]: index } }))} className={`rounded-2xl p-4 text-left text-sm font-semibold transition-[background-color,box-shadow,transform] duration-200 press ${form.diagnosticAnswers[subject.value] === index ? 'bg-accent text-accent-contrast shadow-pop' : 'bg-surface-soft text-text-primary hover:bg-accent-soft'}`}>{answer}</button>
                       ))}
                     </div>
                   </fieldset>

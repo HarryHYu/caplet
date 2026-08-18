@@ -21,7 +21,7 @@ export function AIAvatar({ size = 'sm', className = '' }) {
   const imgSize = size === 'lg' ? 'w-6 h-6' : 'w-[15px] h-[15px]';
   return (
     <div
-      className={`${dim} rounded-full bg-surface-raised border border-line-soft shadow-minimal flex items-center justify-center shrink-0 ${className}`}
+      className={`${dim} rounded-full bg-surface-raised border border-line-soft shadow-card flex items-center justify-center shrink-0 ${className}`}
     >
       <img src="/logo.png" alt="Caplet AI" className={`${imgSize} object-contain`} />
     </div>
@@ -72,7 +72,7 @@ export function Bubble({ msg }) {
         className={`flex-1 min-w-0 rounded-[18px] rounded-tl-[5px] px-3.5 py-3 ${
           msg.isError
             ? 'bg-surface-error border border-line-error'
-            : 'bg-surface-raised border border-line-soft/70 shadow-minimal'
+            : 'bg-surface-raised border border-line-soft/70 shadow-card'
         }`}
       >
         <p className={`text-[15px] leading-[1.72] ${msg.isError ? 'text-text-error' : 'text-text-primary'}`}>
@@ -112,7 +112,7 @@ export function LoadingBubble() {
     <div className="flex items-start gap-2.5 animate-msg-in">
       <AIAvatar className="mt-0.5 shrink-0" />
       <div
-        className="bg-surface-raised border border-line-soft/70 shadow-minimal rounded-[18px] rounded-tl-[5px] px-3.5 py-3"
+        className="bg-surface-raised border border-line-soft/70 shadow-card rounded-[18px] rounded-tl-[5px] px-3.5 py-3"
       >
         <p className="text-[13px] text-text-muted mb-2">{LOADING_STAGES[stage]}</p>
         <div className="flex items-end gap-[4px] h-[12px]">
@@ -493,7 +493,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
         </div>
       )}
 
-      <div className="bg-surface-raised border border-line-soft shadow-minimal rounded-[20px] transition-all duration-200 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent">
+      <div className="bg-surface-raised border border-line-soft shadow-card rounded-2xl transition-all duration-200 focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent">
         {/* Attachment chip */}
         {(attachedContent || isPdfLoading) && (
           <div className="px-3 pt-2.5">
@@ -539,7 +539,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             placeholder={placeholder || 'Ask AI or describe what to add…'}
-            className="w-full bg-transparent text-[15px] text-text-primary placeholder:text-text-dim/50 resize-none focus:outline-none leading-[1.6] overflow-hidden"
+            className="w-full bg-transparent text-[15px] text-text-primary placeholder:text-text-dim/50 resize-none focus-ring rounded-lg leading-[1.6] overflow-hidden"
             style={{ minHeight: '22px', maxHeight: '128px' }}
             disabled={loading || isPdfLoading}
           />
@@ -582,7 +582,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
 
           {/* Char counter — shows when approaching limit */}
           {totalChars > 20000 && (
-            <span className={`text-[10px] tabular-nums font-medium ${overLimit ? 'text-text-error' : 'text-amber-600 dark:text-amber-400'}`}>
+            <span className={`text-[10px] tabular-nums font-medium ${overLimit ? 'text-text-error' : 'text-text-warning '}`}>
               {totalChars.toLocaleString()}/30k
             </span>
           )}
@@ -606,7 +606,7 @@ export function ChatInput({ onSubmit, onAddSlide, onClear, loading, model, onMod
             type="button"
             onClick={handleSend}
             disabled={!canSend}
-            className={`w-[30px] h-[30px] rounded-[13px] bg-accent text-accent-contrast flex items-center justify-center transition-all duration-150 press ${
+            className={`w-[30px] h-[30px] rounded-xl bg-accent text-accent-contrast flex items-center justify-center transition-all duration-150 press ${
               canSend ? 'shadow-glow' : 'opacity-20 shadow-none'
             }`}
             aria-label="Send"

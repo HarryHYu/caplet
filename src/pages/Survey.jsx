@@ -79,15 +79,15 @@ const Survey = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+      <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
         <div className="container-custom">
-          <div className="max-w-2xl mx-auto bg-surface-raised rounded-3xl p-12 lg:p-20 text-center reveal shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="max-w-2xl mx-auto bg-surface-raised rounded-3xl p-12 lg:p-20 text-center reveal shadow-card">
             <div className="w-20 h-20 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-12">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 text-accent-contrast" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <span className="font-hand text-accent text-lg block mb-3">Thank you</span>
+            <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Thank you</span>
             <h2 className="font-display text-4xl font-extrabold tracking-tight mb-8">Response submitted.</h2>
             <p className="text-text-muted mb-12 leading-relaxed">
               Your answers help us improve Caplet for students and teachers.
@@ -109,10 +109,10 @@ const Survey = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="mb-24 reveal max-w-4xl mx-auto">
-          <span className="font-hand text-accent text-lg block mb-3">Research survey</span>
+          <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Research survey</span>
           <h1 className="font-display text-6xl md:text-8xl font-extrabold tracking-tight mb-8">
             Financial literacy<br />survey.
           </h1>
@@ -122,7 +122,7 @@ const Survey = () => {
         </header>
 
         <div className="max-w-2xl mx-auto reveal">
-          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="bg-surface-raised rounded-3xl p-12 lg:p-16 shadow-card">
             {error && (
               <div className="mb-12 p-6 rounded-2xl bg-accent/10 text-accent text-sm font-medium">
                 {error}
@@ -265,7 +265,7 @@ const Survey = () => {
                 </label>
                 <div className="grid grid-cols-1 gap-4">
                   {explanationOptions.map(option => (
-                    <label key={option} className="group flex items-center justify-between p-5 rounded-2xl bg-block-cream hover:-translate-y-0.5 transition-transform cursor-pointer">
+                    <label key={option} className="group flex items-center justify-between p-5 rounded-2xl block-cream press cursor-pointer">
                       <span className="text-sm font-medium text-text-primary">{option}</span>
                       <div className="relative w-5 h-5 border border-line-soft group-hover:border-accent flex items-center justify-center transition-colors">
                         {formData.helpfulExplanations.includes(option) && <div className="w-2 h-2 bg-accent" />}
@@ -286,7 +286,7 @@ const Survey = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-primary w-full py-6 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-30 disabled:grayscale"
+                  className="btn-primary w-full py-6 text-sm press disabled:opacity-30 disabled:grayscale"
                 >
                   {loading ? 'Submitting...' : 'Submit Survey'}
                 </button>

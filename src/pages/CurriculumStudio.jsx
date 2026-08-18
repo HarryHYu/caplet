@@ -63,7 +63,7 @@ function SubjectPackCard({ pack }) {
         : `${blockerCount || openDecisionCount} ${blockerCount === 1 || (!blockerCount && openDecisionCount === 1) ? 'check' : 'checks'} to finish`;
 
   return (
-    <Link to={`/curriculum-studio/${pack.id}`} className="group flex min-h-56 flex-col rounded-3xl border border-line-soft bg-surface-raised p-7 shadow-[0_24px_50px_-38px_rgba(20,20,18,0.28)] transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_30px_60px_-36px_rgba(19,81,170,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-surface-body">
+    <Link to={`/curriculum-studio/${pack.id}`} className="group flex min-h-56 flex-col rounded-3xl border border-line-soft bg-surface-raised p-7 shadow-card card-lift hover:border-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-surface-body">
       <div className="flex items-start justify-between gap-4">
         <span className={`rounded-full px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.1em] ${status.className}`}>{status.label}</span>
         <span className="font-mono text-xs font-bold text-text-dim">v{pack.version || 1}</span>
@@ -149,7 +149,7 @@ function ReviewDecision({ item, index, expanded, selectedOption, busy, locked, o
               {options.map((option) => {
                 const active = String(chosen || '') === String(option.id);
                 return (
-                  <label key={option.id} className={`cursor-pointer rounded-2xl border p-5 transition-colors ${active ? 'border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]' : 'border-line-soft bg-surface-body hover:border-accent/50'}`}>
+                  <label key={option.id} className={`cursor-pointer rounded-2xl border p-5 transition-colors ${active ? 'border-accent bg-accent-soft ring-1 ring-accent' : 'border-line-soft bg-surface-body hover:border-accent/50'}`}>
                     <span className="flex items-start gap-3">
                       <input type="radio" name={`decision-${item.id}`} value={option.id} checked={active} onChange={() => onSelect(option.id)} className="mt-1 h-4 w-4 accent-[color:var(--accent)]" />
                       <span>
@@ -203,9 +203,9 @@ function WorkflowNav({ active, onChange, pack }) {
         const Icon = step.icon;
         const selected = active === step.id;
         return (
-          <button key={step.id} type="button" onClick={() => onChange(step.id)} aria-current={selected ? 'step' : undefined} className={`flex min-h-16 items-center gap-3 rounded-2xl px-4 text-left transition-colors ${selected ? 'bg-accent text-white shadow-sm' : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'}`}>
+          <button key={step.id} type="button" onClick={() => onChange(step.id)} aria-current={selected ? 'step' : undefined} className={`flex min-h-16 items-center gap-3 rounded-2xl px-4 text-left transition-colors ${selected ? 'bg-accent text-accent-contrast shadow-sm' : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'}`}>
             <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-            <span><span className="block text-sm font-extrabold">{step.label}</span><span className={`mt-0.5 block text-xs font-semibold ${selected ? 'text-white/75' : 'text-text-dim'}`}>{details[step.id]}</span></span>
+            <span><span className="block text-sm font-extrabold">{step.label}</span><span className={`mt-0.5 block text-xs font-semibold ${selected ? 'text-accent-contrast/75' : 'text-text-dim'}`}>{details[step.id]}</span></span>
           </button>
         );
       })}
@@ -254,7 +254,7 @@ function OutcomeWorkspace({ pack, onPack, onNotice, onError, onNext }) {
   };
 
   return (
-    <section className="rounded-3xl border border-line-soft bg-surface-raised p-6 shadow-[0_24px_50px_-38px_rgba(20,20,18,0.28)] md:p-8" aria-labelledby="structure-heading">
+    <section className="rounded-3xl border border-line-soft bg-surface-raised p-6 shadow-card md:p-8" aria-labelledby="structure-heading">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div><p className="text-xs font-extrabold uppercase tracking-[0.13em] text-accent">Syllabus structure</p><h2 id="structure-heading" className="mt-2 font-display text-3xl font-extrabold text-text-primary">Check what students will master.</h2><p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-text-muted">Correct extraction mistakes here. Every assessable outcome must eventually have at least one approved question.</p></div>
         {!locked && <button type="button" onClick={() => begin()} className="btn-primary shrink-0"><PlusIcon className="h-4 w-4" /> Add outcome</button>}
@@ -283,7 +283,13 @@ function OutcomeWorkspace({ pack, onPack, onNotice, onError, onNext }) {
               {!locked && <div className="flex gap-1"><button type="button" onClick={() => begin(outcome)} className="rounded-xl p-2.5 text-text-muted hover:bg-surface-soft hover:text-accent" aria-label={`Edit ${outcome.code}`}><PencilSquareIcon className="h-4 w-4" /></button><button type="button" onClick={() => archive(outcome)} disabled={busy} className="rounded-xl p-2.5 text-text-muted hover:bg-surface-error hover:text-text-error" aria-label={`Remove ${outcome.code}`}><ArchiveBoxIcon className="h-4 w-4" /></button></div>}
             </article>
           );
-        }) : <p className="p-8 text-center text-sm font-medium text-text-muted">No outcomes yet. Add the first assessable outcome to begin.</p>}
+        }) : (
+          <div className="p-8 text-center">
+            <AcademicCapIcon className="mx-auto mb-3 h-7 w-7 text-text-dim" aria-hidden="true" />
+            <p className="text-sm font-bold text-text-primary">No outcomes yet.</p>
+            <p className="mt-1 text-sm font-medium text-text-muted">Add the first assessable outcome to begin.</p>
+          </div>
+        )}
       </div>
       <div className="mt-6 flex justify-end"><button type="button" onClick={onNext} className="btn-primary">Continue to questions <ArrowRightIcon className="h-4 w-4" /></button></div>
     </section>
@@ -379,7 +385,7 @@ function QuestionWorkspace({ pack, onPack, onNotice, onError, onNext }) {
   }
 
   return (
-    <section className="rounded-3xl border border-line-soft bg-surface-raised p-6 shadow-[0_24px_50px_-38px_rgba(20,20,18,0.28)] md:p-8" aria-labelledby="questions-heading">
+    <section className="rounded-3xl border border-line-soft bg-surface-raised p-6 shadow-card md:p-8" aria-labelledby="questions-heading">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-extrabold uppercase tracking-[0.13em] text-accent">Assessment coverage</p><h2 id="questions-heading" className="mt-2 font-display text-3xl font-extrabold text-text-primary">Build trustworthy evidence.</h2><p className="mt-2 max-w-3xl text-sm font-medium leading-relaxed text-text-muted">Draft, map and human-review questions here. Approved questions count only when their required answer, feedback, source and marking checks pass.</p></div>{!locked && <button type="button" onClick={() => create()} className="btn-primary shrink-0"><PlusIcon className="h-4 w-4" /> New question</button>}</div>
 
       {pack.readiness?.coverage?.gaps?.length > 0 && (
@@ -454,11 +460,11 @@ function ImportSubjectPack({ onCreated, onCancel }) {
   };
 
   return (
-    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-white">
+    <main className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-6xl">
         <header className="max-w-4xl">
           {onCancel && <button type="button" onClick={onCancel} className="btn-secondary mb-8"><ArrowRightIcon className="h-4 w-4 rotate-180" /> Back to subject packs</button>}
-          <span className="font-hand text-2xl text-accent">turn a syllabus into learning</span>
+          <span className="font-hand text-2xl text-accent -rotate-2 inline-block">turn a syllabus into learning</span>
           <h1 className="mt-3 font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">Build a subject pack.</h1>
           <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-text-muted">Import a trusted syllabus, review only the decisions that need human judgement, then publish adaptive practice and mastery tracking.</p>
         </header>
@@ -479,11 +485,11 @@ function ImportSubjectPack({ onCreated, onCancel }) {
         {error && <div role="alert" className="mt-6 rounded-2xl bg-surface-error p-5 text-sm font-bold text-text-error">{error}</div>}
 
         {mode === 'template' ? (
-          <section className="mt-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-white shadow-[0_28px_58px_-38px_rgba(19,81,170,0.7)] md:flex-row md:items-center md:justify-between">
+          <section className="mt-8 flex flex-col gap-6 rounded-3xl bg-[color:var(--mark-blue)] p-8 text-accent-contrast shadow-card-hover md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-white/65">Production-ready vertical slice</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-accent-contrast/65">Production-ready vertical slice</p>
               <h2 className="mt-2 font-display text-3xl font-extrabold">Build Business Studies from the official source.</h2>
-              <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/75">Creates the versioned pack in review. Nothing reaches students until every decision is resolved and the pack is published.</p>
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-accent-contrast/75">Creates the versioned pack in review. Nothing reaches students until every decision is resolved and the pack is published.</p>
             </div>
             <button type="button" onClick={createTemplate} disabled={busy} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-extrabold text-accent disabled:opacity-60">
               {busy ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <SparklesIcon className="h-5 w-5" />}
@@ -491,7 +497,7 @@ function ImportSubjectPack({ onCreated, onCancel }) {
             </button>
           </section>
         ) : (
-          <form onSubmit={importFile} className="mt-8 rounded-3xl bg-surface-raised p-7 shadow-[0_24px_50px_-38px_rgba(20,20,18,0.28)] md:p-9">
+          <form onSubmit={importFile} className="mt-8 rounded-3xl bg-surface-raised p-7 shadow-card md:p-9">
             <div className="grid gap-5 md:grid-cols-2">
               <label className="text-sm font-bold text-text-primary">Pack title<input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="mt-2 min-h-12 w-full rounded-xl border border-[color:var(--input-line)] bg-[color:var(--surface-input)] px-4 text-sm font-semibold outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent-soft" placeholder="HSC Legal Studies" /></label>
               <label className="text-sm font-bold text-text-primary">Subject key<input required value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="mt-2 min-h-12 w-full rounded-xl border border-[color:var(--input-line)] bg-[color:var(--surface-input)] px-4 text-sm font-semibold outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent-soft" placeholder="legal-studies" /></label>
@@ -638,7 +644,7 @@ export default function CurriculumStudio() {
   if (!packId && state.packs.length) {
     return (
       <main className="min-h-screen bg-surface-body py-28"><div className="container-custom">
-        <span className="font-hand text-2xl text-accent">curriculum studio</span>
+        <span className="font-hand text-2xl text-accent -rotate-2 inline-block">curriculum studio</span>
         <div className="mt-2 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="font-display text-5xl font-extrabold tracking-tight sm:text-6xl">Subject packs.</h1><p className="mt-3 max-w-2xl text-base font-medium text-text-muted">Manage every curriculum version from import through student practice.</p></div>{canAuthor && <button type="button" onClick={() => setShowImporter(true)} className="btn-primary shrink-0"><PlusIcon className="h-4 w-4" /> New subject pack</button>}</div>
         <div className="mt-10 grid gap-5 lg:grid-cols-2">{state.packs.map((item) => <SubjectPackCard key={item.id} pack={item} />)}</div>
       </div></main>
@@ -652,15 +658,15 @@ export default function CurriculumStudio() {
   const readyToPublish = !published && !archived && Boolean(readiness.canPublish);
   const displayTitle = pack.title.replace(/^HSC\s+/i, '');
   return (
-    <main className="min-h-screen bg-surface-body py-24 selection:bg-accent selection:text-white">
+    <main className="min-h-screen bg-surface-body py-24 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-[1380px]">
-        <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <header className="minimal-page-header flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <span className="font-hand text-xl text-accent">human judgement, where it matters</span>
-            <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight text-text-primary md:text-5xl">
+            <span className="font-hand text-xl text-accent -rotate-2 inline-block">human judgement, where it matters</span>
+            <h1 className="minimal-page-title mt-2">
               {published ? `${displayTitle} is live` : archived ? `${displayTitle} is archived` : readyToPublish ? `${displayTitle} is ready to publish` : `${displayTitle} is in review`}
             </h1>
-            <p className="mt-4 max-w-3xl text-lg font-medium text-text-muted">
+            <p className="minimal-page-description max-w-3xl">
               {published ? 'Students can now build evidence against this versioned curriculum.' : archived ? 'This historical version is locked. Existing evidence remains intact, but no new practice sessions will use it.' : readyToPublish ? 'Every readiness gate has passed. Publish this version when you are ready to make it available to students.' : 'Work through the structure, question and source checks that still need your judgement.'}
             </p>
           </div>
@@ -680,7 +686,7 @@ export default function CurriculumStudio() {
         <div className="mt-9 grid gap-7 xl:grid-cols-[minmax(0,1fr)_320px]">
           {workspaceTab === 'structure' && canAuthor ? <OutcomeWorkspace pack={pack} onPack={updatePack} onNotice={setNotice} onError={setError} onNext={() => setWorkspaceTab('questions')} /> : null}
           {workspaceTab === 'questions' && canAuthor ? <QuestionWorkspace pack={pack} onPack={updatePack} onNotice={setNotice} onError={setError} onNext={() => setWorkspaceTab('review')} /> : null}
-          {(workspaceTab === 'review' || !canAuthor) && <section aria-labelledby="review-heading" className="overflow-hidden rounded-3xl border border-line-soft bg-surface-raised shadow-[0_24px_50px_-38px_rgba(20,20,18,0.28)]">
+          {(workspaceTab === 'review' || !canAuthor) && <section aria-labelledby="review-heading" className="overflow-hidden rounded-3xl border border-line-soft bg-surface-raised shadow-card">
             <div className={`flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between md:px-8 ${openItems.length ? 'bg-[color:var(--block-amber)]' : 'bg-[color:var(--block-green)]'}`}>
               <div>
                 <h2 id="review-heading" className="font-display text-2xl font-extrabold text-text-primary">{openItems.length ? `${openItems.length} ${openItems.length === 1 ? 'decision' : 'decisions'} before publishing` : 'Review complete'}</h2>
@@ -705,7 +711,7 @@ export default function CurriculumStudio() {
             )) : <div className="p-8"><CheckCircleIcon className="h-8 w-8 text-[color:var(--mark-green)]" /><h3 className="mt-3 font-display text-xl font-extrabold text-text-primary">No exception decisions remain.</h3><p className="mt-2 text-sm font-medium text-text-muted">Use the readiness panel to finish any remaining content or source checks.</p></div>}
           </section>}
 
-          <aside aria-labelledby="readiness-heading" className="h-fit rounded-3xl border border-line-soft bg-surface-raised p-6 shadow-[0_24px_50px_-38px_rgba(20,20,18,0.28)] xl:sticky xl:top-24">
+          <aside aria-labelledby="readiness-heading" className="h-fit rounded-3xl border border-line-soft bg-surface-raised p-6 shadow-card xl:sticky xl:top-24">
             <h2 id="readiness-heading" className="font-display text-2xl font-extrabold text-accent">Readiness</h2>
             <div className="mt-3">
               <Metric icon={CheckCircleIcon} label="Outcomes" ready={readiness.outcomes?.ready || 0} total={readiness.outcomes?.total || 0} detail={readiness.outcomes?.ready === readiness.outcomes?.total ? 'All outcomes ready' : `${(readiness.outcomes?.total || 0) - (readiness.outcomes?.ready || 0)} outcomes need evidence`} tone={readiness.outcomes?.ready === readiness.outcomes?.total ? 'green' : 'amber'} />

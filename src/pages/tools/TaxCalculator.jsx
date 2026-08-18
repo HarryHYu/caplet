@@ -52,7 +52,7 @@ const TaxCalculator = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-2xl text-accent">Tools, compliance</span>
+              <span className="font-hand text-2xl text-accent -rotate-2 inline-block">Tools, compliance</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-3 mb-6">
                 Tax <br />Architecture
               </h1>
@@ -60,7 +60,7 @@ const TaxCalculator = () => {
                 Work out your fiscal obligation and net outcome based on residency brackets.
               </p>
             </div>
-            <Link to="/money/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
+            <Link to="/money/tools" className="btn-secondary text-sm px-8 press">
               &larr; Back to Tools
             </Link>
           </div>
@@ -111,7 +111,7 @@ const TaxCalculator = () => {
                 <p id="medicare-hint" className="sr-only">This simplified estimate excludes low-income thresholds, reductions, exemptions, and the Medicare levy surcharge.</p>
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-5 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-5 press">
                 Calculate Tax
               </button>
             </form>

@@ -27,7 +27,7 @@ export default function TabletPublicNavbar() {
                     <span className="grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-surface-soft ring-1 ring-line-soft transition-transform duration-300 group-hover:scale-105">
                         <img src="/logo.png" alt="Caplet logo" className="h-full w-full scale-105 rounded-full object-cover" />
                     </span>
-                    <span className="font-bricolage text-lg font-extrabold tracking-[-0.02em] text-text-primary">Caplet</span>
+                    <span className="font-display text-lg font-extrabold tracking-[-0.02em] text-text-primary">Caplet</span>
                 </Link>
 
                 <nav aria-label="Public navigation" className="ml-auto flex items-center gap-1">

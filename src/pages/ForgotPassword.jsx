@@ -32,7 +32,7 @@ export default function ForgotPassword() {
   return (
     <main className="min-h-[100dvh] bg-surface-body px-5 py-20">
       <div className="mx-auto max-w-md animate-rise rounded-3xl border border-line-soft bg-surface-raised p-7 shadow-card sm:p-9">
-        <p className="font-hand text-lg text-accent">password help</p>
+        <p className="font-hand text-lg text-accent -rotate-2 inline-block">password help</p>
         <h1 className="mt-1 font-display text-4xl font-extrabold tracking-tight text-text-primary">Reset your password</h1>
         <p className="mt-3 text-sm leading-relaxed text-text-muted">Enter your email. If it can be used for password sign-in, Caplet will send a private one-hour reset link.</p>
         {sent ? (

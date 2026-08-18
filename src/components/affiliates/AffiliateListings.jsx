@@ -38,11 +38,11 @@ function SkeletonGrid() {
       aria-hidden="true"
     >
       {[0, 1, 2].map((i) => (
-        <div key={i} className="bg-surface-body p-6 flex flex-col gap-4 animate-pulse">
-          <div className="aspect-[4/3] bg-surface-soft" />
-          <div className="h-3 w-1/3 bg-surface-soft" />
-          <div className="h-4 w-3/4 bg-surface-soft" />
-          <div className="h-5 w-1/2 bg-surface-soft" />
+        <div key={i} className="bg-surface-body p-6 flex flex-col gap-4">
+          <div className="skeleton aspect-[4/3]" />
+          <div className="skeleton h-3 w-1/3" />
+          <div className="skeleton h-4 w-3/4" />
+          <div className="skeleton h-5 w-1/2" />
         </div>
       ))}
     </div>

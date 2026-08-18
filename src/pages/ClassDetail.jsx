@@ -614,8 +614,8 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
               >
                 Back to Classes
               </button>
-              <p className="font-hand text-accent text-lg mb-2">Your classroom</p>
-              <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-text-primary mb-4">
+              <p className="mb-2 font-hand text-lg text-accent -rotate-2 inline-block">Your classroom</p>
+              <h1 className="minimal-page-title mb-4">
                 {classroom.name}
               </h1>
               {classroom.description ? (

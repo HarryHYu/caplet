@@ -771,7 +771,7 @@ const LessonPlayer = () => {
             {/* Slide canvas — pre-renders adjacent lightweight slides for smooth nav.
                 Heavy embeds (Desmos/PhET/iframes/diagram) only mount when active to
                 avoid browser/frame crashes from hidden pre-render instances. */}
-            <div data-tour-id="slide-canvas" className="flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-[28px] shadow-[0_30px_60px_-30px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)] overflow-hidden">
+            <div data-tour-id="slide-canvas" className="flex-1 min-h-0 relative bg-surface-raised border border-line-soft rounded-3xl shadow-card overflow-hidden">
               {/* Decorative top notch */}
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent pointer-events-none z-10" />
               <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none z-10">
@@ -885,8 +885,8 @@ const LessonPlayer = () => {
           <div className="flex-1 min-h-0 overflow-y-auto">
             <article className="max-w-3xl mx-auto px-6 md:px-12 py-12">
               <header className="mb-12">
-                <p className="font-hand text-lg text-accent mb-3">Lesson</p>
-                <h1 className="text-4xl md:text-5xl font-display font-extrabold tracking-tight leading-[1.05] mb-6">{lesson.title}</h1>
+                <p className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Lesson</p>
+                <h1 className="minimal-page-title mb-6 leading-[1.05]">{lesson.title}</h1>
                 {lesson.description && (
                   <p className="text-xl text-text-muted leading-relaxed font-serif italic max-w-2xl">
                     {lesson.description}
@@ -948,7 +948,7 @@ const LessonPlayer = () => {
       >
         {/* Header — drag handle + mode toggle + close */}
         <div
-          className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-surface-raised border border-b-0 border-line-soft rounded-t-2xl shadow-2xl select-none cursor-grab active:cursor-grabbing"
+          className="shrink-0 flex items-center justify-between gap-3 px-4 py-2.5 bg-surface-raised border border-b-0 border-line-soft rounded-t-2xl shadow-pop select-none cursor-grab active:cursor-grabbing"
           onMouseDown={(e) => {
             if (e.target.closest('button')) return;
             e.preventDefault();
@@ -1028,7 +1028,7 @@ const LessonPlayer = () => {
           </button>
         </div>
         {/* Calculator itself */}
-        <div className="flex-1 min-h-0 border border-t-0 border-line-soft rounded-b-2xl overflow-hidden shadow-2xl">
+        <div className="flex-1 min-h-0 border border-t-0 border-line-soft rounded-b-2xl overflow-hidden shadow-pop">
           <DesmosCalculator mode={calcMode} className="h-full bg-white" />
         </div>
       </div>
@@ -1043,7 +1043,7 @@ const LessonPlayer = () => {
             onClick={() => setOutlineOpen(false)}
             className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-slide-up"
           />
-          <aside className="absolute top-0 right-0 h-full w-full sm:w-[420px] bg-surface-raised border-l border-line-soft shadow-2xl animate-card-in">
+          <aside className="absolute top-0 right-0 h-full w-full sm:w-[420px] bg-surface-raised border-l border-line-soft shadow-pop animate-card-in">
             <OutlinePanel
               course={course}
               lesson={lesson}

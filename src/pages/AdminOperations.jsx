@@ -329,7 +329,13 @@ export default function AdminOperations() {
                   </div>
                 </div>
               </article>
-            )) : <p className="rounded-2xl bg-surface-raised p-6 text-sm font-medium text-text-muted">No feature flags yet. Core Caplet behaviour is unchanged.</p>}
+            )) : (
+              <div className="rounded-2xl bg-surface-raised p-6 text-center">
+                <FlagIcon className="mx-auto mb-3 h-7 w-7 text-text-dim" aria-hidden="true" />
+                <p className="text-sm font-bold text-text-primary">No feature flags yet.</p>
+                <p className="mt-1 text-sm font-medium text-text-muted">Core Caplet behaviour is unchanged.</p>
+              </div>
+            )}
           </div>
         </section>
       </div>

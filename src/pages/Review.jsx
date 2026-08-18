@@ -141,7 +141,7 @@ function QueueScreen({ queue, onStart }) {
         <button type="button" onClick={onStart} className="btn-primary mt-8 w-full justify-center py-4 text-base">
           Start {queue.estimatedMinutes}-minute review <ArrowRightIcon className="h-5 w-5" aria-hidden="true" />
         </button>
-        <Link to="/revision" className="focus-ring mx-auto mt-5 flex w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-accent hover:bg-accent-soft">
+        <Link to="/revision" className="press focus-ring mx-auto mt-5 flex w-fit items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-accent hover:bg-accent-soft">
           Adjust this session <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
         </Link>
       </section>

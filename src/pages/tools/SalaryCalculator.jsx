@@ -25,7 +25,7 @@ const SalaryCalculator = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-xl block mb-4">Tools, compensation</span>
+              <span className="mb-4 font-hand text-xl text-accent -rotate-2 inline-block">Tools, compensation</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-6">
                 Salary Calculator
               </h1>
@@ -97,7 +97,7 @@ const SalaryCalculator = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-4 mt-4 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-4 mt-4 press">
                 Calculate Breakdown
               </button>
             </form>

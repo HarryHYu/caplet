@@ -68,7 +68,7 @@ function PillButton({ children, onClick, disabled, tone = 'default', type = 'but
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-all duration-150 active:scale-[0.95] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 ${cls}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium press transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${cls}`}
     >
       {children}
     </button>
@@ -547,7 +547,7 @@ function FillBlankForm({ slide, onChange }) {
               </div>
               <PillButton onClick={() => addOption(i)} tone="primary">+ Add choice</PillButton>
               {!(b.answers || [])[0] && (
-                <p className="text-xs text-amber-600">No correct answer marked — click ✓ next to the right choice.</p>
+                <p className="text-xs text-text-warning">No correct answer marked — click ✓ next to the right choice.</p>
               )}
             </>
           ) : (
@@ -1046,7 +1046,7 @@ function PhETPickerModal({ onSelect, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button type="button" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-label="Close" />
-      <div className="relative z-10 bg-surface-raised border border-line-soft rounded-2xl shadow-2xl flex flex-col w-full max-w-3xl max-h-[85vh]">
+      <div className="relative z-10 bg-surface-raised border border-line-soft rounded-2xl shadow-pop flex flex-col w-full max-w-3xl max-h-[85vh]">
         {/* Header */}
         <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-line-soft">
           <div>
@@ -1144,7 +1144,7 @@ function MapsBuilder({ onApply, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button type="button" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-label="Close" />
-      <div className="relative z-10 bg-surface-raised border border-line-soft rounded-2xl shadow-2xl w-full max-w-md p-5 space-y-4">
+      <div className="relative z-10 bg-surface-raised border border-line-soft rounded-2xl shadow-pop w-full max-w-md p-5 space-y-4">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-semibold text-accent mb-0.5">Google Maps</p>
@@ -1158,7 +1158,7 @@ function MapsBuilder({ onApply, onClose }) {
         </div>
 
         {!MAPS_KEY && (
-          <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-sm text-amber-700 dark:text-amber-400">
+          <div className="rounded-xl bg-surface-warning border border-line-warning p-3 text-sm text-text-warning ">
             <p className="font-bold mb-1">Maps API key not configured</p>
             <p className="text-[12px]">Add <code className="font-mono bg-black/10 px-1 rounded">VITE_GOOGLE_MAPS_KEY</code> to your environment variables. Get a key from <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="underline">Google Cloud Console</a> → Maps Embed API.</p>
           </div>
@@ -1345,6 +1345,8 @@ function HotspotForm({ slide, onChange, lessonId }) {
               <div
                 key={r.id}
                 style={{ left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` }}
+                // Hotspot index sits over the author's uploaded image, not a themed
+                // surface, so the ink is literal white for legibility on any photo.
                 className={`absolute border-2 rounded-lg flex items-center justify-center text-xs font-bold text-white ${r.correct ? 'border-[var(--mark-green)] bg-[color-mix(in_srgb,var(--mark-green)_30%,transparent)]' : 'border-accent bg-accent/20'}`}
               >
                 {r.id + 1}

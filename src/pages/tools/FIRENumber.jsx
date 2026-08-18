@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../../lib/useReveal';
-
-const formatCurrency = (value) =>
-  new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+import { fireProjection, formatCurrencyAUD as formatCurrency, parseNonNegative, parsePositive } from './toolMath';
 
 const FIRENumber = () => {
   const [monthlyExpenses, setMonthlyExpenses] = useState('');
@@ -15,40 +13,28 @@ const FIRENumber = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const ME = parseFloat(monthlyExpenses) || 0;
-    const WR = parseFloat(withdrawalRate) / 100;
-    const CS = parseFloat(currentSavings) || 0;
-    const MC = parseFloat(monthlyContribution) || 0;
-    const AR = parseFloat(annualReturn) / 100;
+    // Every field goes through a Number.isFinite parse. An empty withdrawal
+    // rate used to become NaN, slip past the `<= 0` guard and render "$NaN".
+    const ME = parsePositive(monthlyExpenses);
+    const WR = parsePositive(withdrawalRate);
+    const CS = parseNonNegative(currentSavings) ?? 0;
+    const MC = parseNonNegative(monthlyContribution) ?? 0;
+    const AR = parseNonNegative(annualReturn) ?? 0;
 
-    if (ME <= 0 || WR <= 0) {
+    if (ME === null || WR === null) {
       setResult({ error: 'Please enter valid monthly expenses and withdrawal rate.' });
       return;
     }
 
-    const annualExpenses = ME * 12;
-    const fireNumber = annualExpenses / WR;
-    const remaining = Math.max(0, fireNumber - CS);
+    const projection = fireProjection({
+      monthlyExpenses: ME,
+      withdrawalRate: WR,
+      currentSavings: CS,
+      monthlyContribution: MC,
+      annualReturn: AR / 100,
+    });
 
-    let yearsToFIRE = null;
-    if (MC > 0 && AR > 0 && remaining > 0) {
-      const monthlyRate = AR / 12;
-      // FV = CS*(1+r)^n + MC*((1+r)^n - 1)/r = fireNumber
-      // Solve numerically (binary search)
-      let lo = 0, hi = 1200;
-      for (let i = 0; i < 100; i++) {
-        const mid = (lo + hi) / 2;
-        const fv = CS * Math.pow(1 + monthlyRate, mid) + MC * (Math.pow(1 + monthlyRate, mid) - 1) / monthlyRate;
-        if (fv < fireNumber) lo = mid; else hi = mid;
-      }
-      yearsToFIRE = hi / 12;
-    } else if (CS >= fireNumber) {
-      yearsToFIRE = 0;
-    }
-
-    const savingsRate = MC > 0 && (ME + MC) > 0 ? (MC / (ME + MC)) * 100 : null;
-
-    setResult({ annualExpenses, fireNumber, remaining, yearsToFIRE, WR, savingsRate });
+    setResult({ ...projection, WR: WR / 100 });
   };
 
   useReveal();
@@ -59,13 +45,13 @@ const FIRENumber = () => {
         <header className="mb-20 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-lg block mb-3">Wealth and investing</span>
+              <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Wealth and investing</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8">FIRE<br />Number.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 Calculate how much you need to retire, and how long until you get there.
               </p>
             </div>
-            <Link to="/money/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">&larr; Back to tools</Link>
+            <Link to="/money/tools" className="btn-secondary text-sm px-8 press">&larr; Back to tools</Link>
           </div>
         </header>
 
@@ -76,17 +62,17 @@ const FIRENumber = () => {
                 <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-10">Retirement Target</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div>
-                    <label className="text-sm font-semibold text-text-dim mb-4 block italic">Monthly Expenses in Retirement</label>
+                    <label htmlFor="fire-monthly-expenses" className="text-sm font-semibold text-text-dim mb-4 block italic">Monthly Expenses in Retirement</label>
                     <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
                       <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
-                      <input type="number" min="0" step="100" value={monthlyExpenses} onChange={(e) => setMonthlyExpenses(e.target.value)} placeholder="0.00"
+                      <input id="fire-monthly-expenses" type="number" min="0" step="100" value={monthlyExpenses} onChange={(e) => setMonthlyExpenses(e.target.value)} placeholder="0.00"
                         className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-text-dim mb-4 block italic">Safe Withdrawal Rate</label>
+                    <label htmlFor="fire-withdrawal-rate" className="text-sm font-semibold text-text-dim mb-4 block italic">Safe Withdrawal Rate</label>
                     <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                      <input type="number" min="1" max="10" step="0.1" value={withdrawalRate} onChange={(e) => setWithdrawalRate(e.target.value)} placeholder="4"
+                      <input id="fire-withdrawal-rate" type="number" min="1" max="10" step="0.1" value={withdrawalRate} onChange={(e) => setWithdrawalRate(e.target.value)} placeholder="4"
                         className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                       <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
                     </div>
@@ -98,25 +84,25 @@ const FIRENumber = () => {
                 <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-10">Your Current Situation (optional)</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                   <div>
-                    <label className="text-sm font-semibold text-text-dim mb-4 block italic">Current Savings / Investments</label>
+                    <label htmlFor="fire-current-savings" className="text-sm font-semibold text-text-dim mb-4 block italic">Current Savings / Investments</label>
                     <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                       <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
-                      <input type="number" min="0" step="1000" value={currentSavings} onChange={(e) => setCurrentSavings(e.target.value)} placeholder="0"
+                      <input id="fire-current-savings" type="number" min="0" step="1000" value={currentSavings} onChange={(e) => setCurrentSavings(e.target.value)} placeholder="0"
                         className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-text-dim mb-4 block italic">Monthly Contributions</label>
+                    <label htmlFor="fire-monthly-contribution" className="text-sm font-semibold text-text-dim mb-4 block italic">Monthly Contributions</label>
                     <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                       <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
-                      <input type="number" min="0" step="100" value={monthlyContribution} onChange={(e) => setMonthlyContribution(e.target.value)} placeholder="0"
+                      <input id="fire-monthly-contribution" type="number" min="0" step="100" value={monthlyContribution} onChange={(e) => setMonthlyContribution(e.target.value)} placeholder="0"
                         className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-text-dim mb-4 block italic">Expected Annual Return</label>
+                    <label htmlFor="fire-annual-return" className="text-sm font-semibold text-text-dim mb-4 block italic">Expected Annual Return</label>
                     <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                      <input type="number" min="0" max="30" step="0.1" value={annualReturn} onChange={(e) => setAnnualReturn(e.target.value)} placeholder="7"
+                      <input id="fire-annual-return" type="number" min="0" max="30" step="0.1" value={annualReturn} onChange={(e) => setAnnualReturn(e.target.value)} placeholder="7"
                         className="w-full bg-transparent pr-8 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                       <span className="absolute right-0 bottom-2 text-text-dim font-bold text-sm">%</span>
                     </div>
@@ -124,7 +110,7 @@ const FIRENumber = () => {
                   </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-6 text-sm hover:-translate-y-0.5 transition-transform">Calculate FIRE Number</button>
+              <button type="submit" className="btn-primary press w-full py-6 text-sm press">Calculate FIRE Number</button>
             </form>
           </div>
 

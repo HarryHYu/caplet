@@ -136,14 +136,14 @@ export default function Notes() {
   };
 
   if (mySubjects.length === 0) return (
-    <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary md:pt-28"><div className="container-custom max-w-5xl"><h1 className="font-display text-4xl font-extrabold tracking-tight md:text-5xl">Notes</h1><div className="mt-8 border-y border-line-soft py-8"><h2 className="text-xl font-extrabold">Choose your subjects first</h2><p className="mt-2 text-sm text-text-muted">Your notes and Google Docs will be organised around the same subjects used on Today.</p><Link to="/library" className="btn-primary mt-5 w-fit">Choose subjects</Link></div></div></div>
+    <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary md:pt-28"><div className="container-custom max-w-5xl"><h1 className="minimal-page-title">Notes</h1><div className="mt-8 border-y border-line-soft py-8"><h2 className="text-xl font-extrabold">Choose your subjects first</h2><p className="mt-2 text-sm text-text-muted">Your notes and Google Docs will be organised around the same subjects used on Today.</p><Link to="/library" className="btn-primary mt-5 w-fit">Choose subjects</Link></div></div></div>
   );
 
   return (
     <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary md:pt-28">
       <div className="container-custom max-w-5xl">
-        <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div><h1 className="font-display text-4xl font-extrabold tracking-tight md:text-5xl">Notes</h1><p className="mt-3 text-base text-text-muted">Your own notes and Google Docs, organised by subject.</p></div>
+        <header className="minimal-page-header flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div><h1 className="minimal-page-title">Notes</h1><p className="minimal-page-description">Your own notes and Google Docs, organised by subject.</p></div>
           <div className="flex flex-wrap gap-3"><button type="button" onClick={() => setEditingLink(null)} className="btn-secondary"><LinkIcon className="h-4 w-4" /> Add Google Doc</button><button type="button" onClick={() => setEditingNote(null)} className="btn-primary"><PlusIcon className="h-4 w-4" /> New note</button></div>
         </header>
 
@@ -164,7 +164,7 @@ export default function Notes() {
 
         <section className="mt-10 animate-rise" aria-labelledby="caplet-notes-heading">
           <h2 id="caplet-notes-heading" className="text-xl font-extrabold">Caplet notes</h2>
-          {visibleNotes.length ? <div className="mt-4 grid gap-3 md:grid-cols-2">{visibleNotes.map((item) => <article key={item.id} className="card-lift rounded-xl border border-line-soft bg-surface-raised p-5 shadow-card"><div className="flex items-start justify-between gap-4"><DocumentTextIcon className="h-5 w-5 text-accent" /><div className="flex gap-1"><button type="button" onClick={() => setEditingNote(item)} aria-label={`Edit ${item.title}`} className="press focus-ring grid h-9 w-9 place-items-center rounded-lg text-text-muted hover:bg-surface-soft"><PencilSquareIcon className="h-4 w-4" /></button><button type="button" onClick={() => setPendingRemoval({ kind: 'note', item })} aria-label={`Remove ${item.title}`} className="press focus-ring grid h-9 w-9 place-items-center rounded-lg text-text-muted hover:bg-surface-soft hover:text-text-error"><TrashIcon className="h-4 w-4" /></button></div></div><h3 className="mt-5 text-lg font-extrabold">{item.title}</h3><p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-text-muted">{item.content}</p></article>)}</div> : <p className="mt-4 border-y border-line-soft py-6 text-sm text-text-muted">No Caplet notes for {subject} yet.</p>}
+          {visibleNotes.length ? <div className="mt-4 grid gap-3 md:grid-cols-2">{visibleNotes.map((item) => <article key={item.id} className="card-lift rounded-2xl border border-line-soft bg-surface-raised p-5 shadow-card"><div className="flex items-start justify-between gap-4"><DocumentTextIcon className="h-5 w-5 text-accent" /><div className="flex gap-1"><button type="button" onClick={() => setEditingNote(item)} aria-label={`Edit ${item.title}`} className="press focus-ring grid h-9 w-9 place-items-center rounded-lg text-text-muted hover:bg-surface-soft"><PencilSquareIcon className="h-4 w-4" /></button><button type="button" onClick={() => setPendingRemoval({ kind: 'note', item })} aria-label={`Remove ${item.title}`} className="press focus-ring grid h-9 w-9 place-items-center rounded-lg text-text-muted hover:bg-surface-soft hover:text-text-error"><TrashIcon className="h-4 w-4" /></button></div></div><h3 className="mt-5 text-lg font-extrabold">{item.title}</h3><p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-text-muted">{item.content}</p></article>)}</div> : <p className="mt-4 border-y border-line-soft py-6 text-sm text-text-muted">No Caplet notes for {subject} yet.</p>}
         </section>
       </div>
       {editingNote !== undefined && <NoteDialog note={editingNote} subjects={mySubjects} initialSubject={subject} onCancel={() => setEditingNote(undefined)} onSave={(value) => { saveNote(value); setEditingNote(undefined); }} />}

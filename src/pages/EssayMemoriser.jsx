@@ -103,7 +103,7 @@ function EssayModelPicker({ model, onChange, disabled = false }) {
                 <ChevronDownIcon className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
             </button>
             {open && (
-                <div role="listbox" aria-label="AI model" className="absolute top-full left-0 mt-1.5 w-52 bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+                <div role="listbox" aria-label="AI model" className="absolute top-full left-0 mt-1.5 w-52 bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30 shadow-pop">
                     <p className="px-3 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-widest text-text-dim">AI model</p>
                     {MODEL_OPTIONS.map((opt) => (
                         <button
@@ -221,7 +221,7 @@ function MaskedWord({ word, hidden = false, overlay = null, className = '', over
             ref={refEl}
             aria-label={ariaLabel}
             title={title}
-            className={`relative inline-block whitespace-pre align-baseline ${animate ? 'animate-[essayWordPop_0.22s_ease-out]' : ''} ${className}`}
+            className={`relative inline-block whitespace-pre align-baseline ${animate ? 'animate-pop' : ''} ${className}`}
         >
             <span className={hidden ? 'invisible' : undefined} aria-hidden={hidden || undefined}>{word}</span>
             {hidden && (
@@ -234,17 +234,6 @@ function MaskedWord({ word, hidden = false, overlay = null, className = '', over
 }
 
 const Caret = () => <span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-pulse shrink-0" />;
-
-/** Shared keyframes for the practice modes. */
-function PracticeStyles() {
-    return (
-        <style>{`
-            @keyframes essayWordPop { 0% { opacity: 0; transform: translateY(6px) scale(0.85); } 60% { transform: translateY(-1px) scale(1.05); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-            @keyframes essayShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-            @keyframes essayStreak { 0% { opacity: 0; transform: scale(0.7); } 60% { transform: scale(1.15); } 100% { opacity: 1; transform: scale(1); } }
-        `}</style>
-    );
-}
 
 /** PDF page markers are extraction artifacts, not the student's essay. */
 const stripPdfArtifacts = (text) => String(text || '')
@@ -316,6 +305,9 @@ function LiveCheck({ target, typed, currentHint = 'none', showRemaining = false,
 }
 
 function GradeButtons({ busy, onPass, onFail, passLabel = 'Got it', passDisabled = false }) {
+    // Pass/fail semantics: rose and emerald are the recall-grade colours (like a
+    // mark scheme), not theme accents. Their filled hover state is always a dark
+    // saturated fill, so the ink stays literal white rather than text-accent-contrast.
     return (
         <div className="flex items-center gap-3 mt-5">
             <button type="button" disabled={busy} onClick={onFail}
@@ -367,12 +359,11 @@ function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500, onReveal }) 
                 {label}
             </button>
             {peeking && (
-                <div role="tooltip" className="absolute z-20 left-0 top-full mt-2 w-72 sm:w-96 p-4 rounded-2xl bg-text-primary text-surface-body shadow-2xl font-serif text-sm leading-relaxed animate-[peekIn_0.15s_ease-out]">
+                <div role="tooltip" className="absolute z-20 left-0 top-full mt-2 w-72 sm:w-96 p-4 rounded-2xl bg-text-primary text-surface-body shadow-pop font-serif text-sm leading-relaxed animate-rise">
                     {text}
                     <div className="absolute -top-1.5 left-5 w-3 h-3 bg-text-primary rotate-45" />
                 </div>
             )}
-            <style>{`@keyframes peekIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
         </div>
     );
 }
@@ -386,7 +377,7 @@ function HintToggle({ options, value, onChange }) {
                     type="button"
                     onClick={() => onChange(opt.key)}
                     className={`text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
-                        value === opt.key ? 'bg-accent text-white' : 'text-text-dim hover:text-text-primary'
+                        value === opt.key ? 'bg-accent text-accent-contrast' : 'text-text-dim hover:text-text-primary'
                     }`}
                 >
                     {opt.label}
@@ -431,12 +422,12 @@ function SessionDone({ onRestart, nextLabel, onNext, saveOk = true }) {
             )}
             <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
                 <button type="button" onClick={onRestart}
-                    className="btn-secondary inline-flex hover:-translate-y-0.5 transition-transform">
+                    className="btn-secondary inline-flex press">
                     Restart
                 </button>
                 {onNext && (
                     <button type="button" onClick={onNext}
-                        className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+                        className="btn-primary inline-flex items-center gap-2 press">
                         Continue to {nextLabel} <ArrowRightIcon className="w-4 h-4" />
                     </button>
                 )}
@@ -488,7 +479,7 @@ function SpotlightMode({ essay }) {
                 </div>
             </div>
 
-            <div className={`${bg} rounded-3xl p-8 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] min-h-[180px]`}>
+            <div className={`${bg} rounded-3xl p-8 md:p-10 shadow-card min-h-[180px]`}>
                 <div className="mb-4 flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-accent">{seg.label}</span>
                     {seg.heading && (
@@ -530,12 +521,12 @@ function SpotlightMode({ essay }) {
                 </button>
                 {idx + 1 < segments.length ? (
                     <button type="button" onClick={() => setIdx((i) => i + 1)}
-                        className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+                        className="btn-primary inline-flex items-center gap-2 press">
                         Next <ArrowRightIcon className="w-4 h-4" />
                     </button>
                 ) : (
                     <button type="button" onClick={() => setIdx(0)}
-                        className="btn-secondary inline-flex hover:-translate-y-0.5 transition-transform">
+                        className="btn-secondary inline-flex press">
                         Read again
                     </button>
                 )}
@@ -545,6 +536,10 @@ function SpotlightMode({ essay }) {
 }
 
 function AnnotatedLegend() {
+    // Essay-annotation series palette. Blue/amber/emerald/violet are literal on
+    // purpose: they encode a fixed set of structural roles (thesis, topic
+    // sentence, quote, conclusion), the way a chart legend does, so they must
+    // stay stable across every theme rather than follow the accent token.
     const items = [
         { swatch: 'bg-blue-200 dark:bg-blue-500/30', label: 'Thesis' },
         { swatch: 'bg-amber-200 dark:bg-amber-500/30', label: 'Topic sentence' },
@@ -616,6 +611,8 @@ function AnnotatedParagraphBlock({ paragraph, index }) {
 
 /** Renders an intro/conclusion block, highlighting the thesis inside the intro. */
 function FramingParagraphBlock({ label, text, thesis, tone }) {
+    // Same annotation series as AnnotatedLegend — blue marks the intro, violet
+    // the conclusion. Literal by design, not a missing token.
     const palette = tone === 'violet'
         ? { box: 'bg-violet-50 dark:bg-violet-500/10 border-violet-200/60 dark:border-violet-500/20', tag: 'text-violet-500', mark: 'bg-violet-200 dark:bg-violet-500/30' }
         : { box: 'bg-blue-50 dark:bg-blue-500/10 border-blue-200/60 dark:border-blue-500/20', tag: 'text-blue-500', mark: 'bg-blue-200 dark:bg-blue-500/30' };
@@ -792,12 +789,12 @@ function RecallChunks({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
                             Show full paragraph
                         </button>
                     ) : (
-                        <div className="p-5 rounded-2xl block-cream shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                        <div className="p-5 rounded-2xl block-cream shadow-card">
                             <p className="text-sm md:text-base text-text-primary leading-relaxed whitespace-pre-wrap font-serif">{current.text}</p>
                         </div>
                     )}
                     <button type="button" onClick={next}
-                        className="btn-primary mt-5 inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+                        className="btn-primary mt-5 inline-flex items-center gap-2 press">
                         {pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'}
                     </button>
                 </div>
@@ -906,14 +903,13 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
 
     return (
         <div>
-            <PracticeStyles />
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">
                     Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
                 <div className="flex items-center gap-3">
                     {streak >= 3 && (
-                        <span key={streak} className="text-xs font-bold text-accent animate-[essayStreak_0.25s_ease-out] tabular-nums">⚡ {streak} in a row</span>
+                        <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">⚡ {streak} in a row</span>
                     )}
                     <HintToggle options={NEXT_WORD_HINTS} value={hintStyle} onChange={setHintStyle} />
                 </div>
@@ -962,7 +958,7 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
                 {/* Right — input + running score, pinned so it never scrolls away */}
                 <div className="lg:sticky lg:top-24 self-start">
                     {!paraDone ? (
-                        <div className={`p-5 rounded-2xl bg-surface-body border transition-colors ${shake ? 'animate-[essayShake_0.3s_ease-in-out] border-rose-400/70' : 'border-line-soft'}`}>
+                        <div className={`p-5 rounded-2xl bg-surface-body border transition-colors ${shake ? 'animate-shake-x border-rose-400/70' : 'border-line-soft'}`}>
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Next word</span>
                                 <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
@@ -979,7 +975,7 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
                                     autoComplete="off" autoCorrect="off" spellCheck={false}
                                 />
                                 <button type="button" onClick={commitWord} disabled={!current.trim()}
-                                    className="btn-primary px-5 py-3 inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                                    className="btn-primary px-5 py-3 inline-flex press disabled:opacity-40">
                                     <ArrowRightIcon className="w-4 h-4" />
                                 </button>
                             </div>
@@ -993,7 +989,7 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
                             </div>
                         </div>
                     ) : (
-                        <div className="p-5 rounded-2xl block-blue animate-[essayWordPop_0.25s_ease-out]">
+                        <div className="p-5 rounded-2xl block-blue animate-pop">
                             <div className="flex items-baseline gap-3 mb-1">
                                 <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
                                 <span className="text-xs text-text-dim">{correct}/{history.length} words</span>
@@ -1097,13 +1093,12 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
 
     return (
         <div>
-            <PracticeStyles />
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">
                     Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
                 {streak >= 5 && (
-                    <span key={streak} className="text-xs font-bold text-accent animate-[essayStreak_0.25s_ease-out] tabular-nums">⚡ {streak} in a row</span>
+                    <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">⚡ {streak} in a row</span>
                 )}
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
@@ -1116,7 +1111,7 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
                     role="application"
                     aria-label="First letters sprint"
                     onClick={() => inputRef.current?.focus()}
-                    className={`p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[220px] max-h-[56vh] overflow-y-auto cursor-text ${shake ? 'animate-[essayShake_0.3s_ease-in-out]' : ''}`}
+                    className={`p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[220px] max-h-[56vh] overflow-y-auto cursor-text ${shake ? 'animate-shake-x' : ''}`}
                 >
                     {/* Hidden input keeps mobile keyboards working. */}
                     <input
@@ -1152,7 +1147,7 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
                     })}
                 </div>
             ) : (
-                <div className="p-5 rounded-2xl block-blue animate-[essayWordPop_0.25s_ease-out] max-w-md">
+                <div className="p-5 rounded-2xl block-blue animate-pop max-w-md">
                     <div className="flex items-baseline gap-3 mb-1">
                         <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
                         <span className="text-xs text-text-dim">{hits}/{results.length} first try</span>
@@ -1234,7 +1229,7 @@ function OpeningsMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
                     <div className="flex items-center justify-between gap-3 mt-3">
                         <SneakPeek text={target} label="Sneak peek" />
                         <button type="button" disabled={busy || !typed.trim()} onClick={goNext}
-                            className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                            className="btn-primary inline-flex press disabled:opacity-40">
                             {pIndex + 1 < paras.length ? 'Next opening →' : 'Finish'}
                         </button>
                     </div>
@@ -1321,11 +1316,11 @@ function SentenceMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
             {phase === 'read' ? (
                 <div>
                     <p className="text-xs font-medium text-text-dim mb-3">Read this sentence, then hide it and type it from memory.</p>
-                    <div className="p-6 rounded-2xl block-blue min-h-[80px] flex items-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                    <div className="p-6 rounded-2xl block-blue min-h-[80px] flex items-center shadow-card">
                         <p className="font-serif text-base md:text-lg leading-relaxed text-text-primary">{sentence}</p>
                     </div>
                     <button type="button" onClick={() => setPhase('type')}
-                        className="btn-primary mt-5 inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+                        className="btn-primary mt-5 inline-flex items-center gap-2 press">
                         Hide &amp; type
                     </button>
                 </div>
@@ -1362,7 +1357,7 @@ function SentenceMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
                                     </button>
                                 )}
                                 <button type="button" disabled={busy || !typed.trim()} onClick={goNext}
-                                    className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                                    className="btn-primary inline-flex press disabled:opacity-40">
                                     {sIndex + 1 < total ? 'Next sentence →' : pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'}
                                 </button>
                             </div>
@@ -1468,10 +1463,9 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
     if (phase === 'report') {
         return (
             <div>
-                <PracticeStyles />
                 <div className="flex flex-wrap items-baseline justify-between gap-3 mb-6">
                     <div className="flex items-baseline gap-4">
-                        <span className="text-4xl font-display font-extrabold text-text-primary tabular-nums animate-[essayWordPop_0.3s_ease-out]">{overall}%</span>
+                        <span className="text-4xl font-display font-extrabold text-text-primary tabular-nums animate-pop">{overall}%</span>
                         <span className="text-sm text-text-dim">{typedWords}/{targetWords} words · {formatDuration(elapsed)}</span>
                     </div>
                 </div>
@@ -1506,11 +1500,11 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
                 </details>
                 <div className="flex flex-wrap items-center gap-3">
                     <button type="button" disabled={busy || saved} onClick={saveResults}
-                        className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                        className="btn-primary inline-flex press disabled:opacity-40">
                         {busy ? 'Saving…' : 'Save results'}
                     </button>
                     <button type="button" disabled={busy} onClick={() => setPhase('write')}
-                        className="btn-secondary inline-flex hover:-translate-y-0.5 transition-transform">
+                        className="btn-secondary inline-flex press">
                         Keep writing
                     </button>
                     <button type="button" disabled={busy} onClick={() => setPhase('done')}
@@ -1551,7 +1545,7 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
                     </button>
                 </div>
                 <button type="button" disabled={!typed.trim()} onClick={() => setPhase('report')}
-                    className="btn-primary inline-flex hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                    className="btn-primary inline-flex press disabled:opacity-40">
                     Finish &amp; mark
                 </button>
             </div>
@@ -1616,7 +1610,7 @@ function QuoteDrill({ slide, onNext, nextLabel }) {
         <div>
             <SlideRenderer key={session} slide={slide} onSubmit={() => {}} />
             <div className="flex justify-center mt-8 pt-6 border-t border-line-soft">
-                <button type="button" onClick={() => setDone(true)} className="btn-secondary inline-flex hover:-translate-y-0.5 transition-transform">
+                <button type="button" onClick={() => setDone(true)} className="btn-secondary inline-flex press">
                     Finish this drill
                 </button>
             </div>
@@ -1728,10 +1722,10 @@ function NewEssayForm({ onCreated }) {
                 />
             </div>
 
-            {error && <p role="alert" className="text-sm text-rose-400 mt-4 font-medium">{error}</p>}
+            {error && <p role="alert" className="text-sm text-text-error mt-4 font-medium">{error}</p>}
             <div className="flex flex-wrap items-center gap-3 mt-5 border-t border-line-soft pt-5">
                 {!sourceFile && (
-                    <label className="btn-secondary inline-flex items-center gap-2 cursor-pointer hover:-translate-y-0.5 transition-transform">
+                    <label className="btn-secondary inline-flex items-center gap-2 cursor-pointer press">
                         <ArrowUpTrayIcon className="w-4 h-4" />
                         {pdfBusy ? 'Reading PDF…' : 'Attach essay PDF'}
                         <input type="file" accept="application/pdf" className="hidden" onChange={onPdf} disabled={pdfBusy} />
@@ -1739,7 +1733,7 @@ function NewEssayForm({ onCreated }) {
                 )}
                 <EssayModelPicker model={model} onChange={setModel} disabled={submitting || pdfBusy} />
                 <button type="button" onClick={submit} disabled={submitting || pdfBusy}
-                    className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                    className="btn-primary inline-flex items-center gap-2 press disabled:opacity-40">
                     <PlusIcon className="w-4 h-4" />
                     {submitting ? 'Setting up…' : 'Create workspace'}
                 </button>
@@ -1756,7 +1750,7 @@ function NewEssayComposer({ onCreated }) {
 
     if (open) {
         return (
-            <section className="bg-surface-raised rounded-3xl p-6 md:p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <section className="bg-surface-raised rounded-3xl p-6 md:p-8 shadow-card">
                 <div className="flex items-start justify-between gap-4 mb-1">
                     <div>
                         <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim mb-2">New material</p>
@@ -1776,7 +1770,7 @@ function NewEssayComposer({ onCreated }) {
     }
 
     return (
-        <section className="block-blue rounded-3xl p-6 md:p-7 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+        <section className="block-blue rounded-3xl p-6 md:p-7 shadow-card">
             <div className="w-10 h-10 rounded-2xl bg-surface-raised flex items-center justify-center mb-5">
                 <PlusIcon className="w-5 h-5 text-accent" />
             </div>
@@ -1785,7 +1779,7 @@ function NewEssayComposer({ onCreated }) {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform"
+                className="btn-primary inline-flex items-center gap-2 press"
             >
                 <PlusIcon className="w-4 h-4" /> Add essay
             </button>
@@ -1856,7 +1850,7 @@ function ScopePicker({ allParagraphs, scope, onChange }) {
                 <ChevronDownIcon className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
             </button>
             {open && (
-                <div className="absolute top-full left-0 mt-1.5 w-80 max-w-[85vw] bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+                <div className="absolute top-full left-0 mt-1.5 w-80 max-w-[85vw] bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30 shadow-pop">
                     <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Choose paragraphs</p>
                         <button type="button" onClick={() => onChange(null)} className="text-[10px] font-bold text-accent hover:opacity-70 transition-opacity">
@@ -1897,7 +1891,7 @@ function PracticeHub({ mode, onChange, dueCount, drills }) {
         // Compact bar while inside an activity — one tap back to the hub.
         const step = PRACTICE_STEPS.find((m) => m.key === mode);
         return (
-            <section aria-label="Current essay practice" className="mb-6 rounded-2xl border border-line-soft bg-surface-raised px-4 py-3 shadow-[0_18px_40px_-34px_rgba(20,20,18,0.45)]">
+            <section aria-label="Current essay practice" className="mb-6 rounded-2xl border border-line-soft bg-surface-raised px-4 py-3 shadow-card-hover">
                 <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">
@@ -1915,7 +1909,7 @@ function PracticeHub({ mode, onChange, dueCount, drills }) {
     }
 
     return (
-        <section aria-label="Essay learning path" className="mb-6 rounded-3xl border border-line-soft bg-surface-raised p-3 md:p-4 shadow-[0_18px_40px_-34px_rgba(20,20,18,0.45)]">
+        <section aria-label="Essay learning path" className="mb-6 rounded-3xl border border-line-soft bg-surface-raised p-3 md:p-4 shadow-card-hover">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-2 mb-3">
                 <div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Your learning path</p>
@@ -2028,11 +2022,11 @@ function EditPanel({ essay, onSaved, saving, parsing = false, error }) {
                 rows={16}
                 className="w-full px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary outline-none focus:border-accent transition-colors font-serif text-sm leading-relaxed resize-y"
             />
-            {(localError || error) && <p role="alert" className="text-sm text-rose-400 mt-3 font-medium">{localError || error}</p>}
+            {(localError || error) && <p role="alert" className="text-sm text-text-error mt-3 font-medium">{localError || error}</p>}
             <div className="flex flex-wrap items-center gap-3 mt-4">
                 {textChanged && <EssayModelPicker model={model} onChange={setModel} disabled={saving || parsing} />}
                 <button type="button" onClick={save} disabled={saving || parsing || !dirty}
-                    className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                    className="btn-primary inline-flex items-center gap-2 press disabled:opacity-40">
                     {saving ? 'Saving…' : parsing ? 'AI mapping in progress…' : textChanged ? 'Save & rescan' : 'Save changes'}
                 </button>
                 {!dirty && !saving && !parsing && <span className="text-xs font-medium text-text-dim">No changes yet.</span>}
@@ -2047,11 +2041,13 @@ function EditPanel({ essay, onSaved, saving, parsing = false, error }) {
 
 function DeleteConfirm({ title, busy, error, onConfirm, onCancel }) {
     return (
-        <div role="alertdialog" aria-label="Delete essay" className="rounded-2xl border border-rose-300/60 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-900/15 p-5 mb-8">
+        <div role="alertdialog" aria-label="Delete essay" className="rounded-2xl border border-line-error bg-surface-error p-5 mb-8">
             <p className="text-sm font-bold text-text-primary">Delete “{title}”?</p>
             <p className="text-sm text-text-muted mt-1">This removes the essay and its review schedule. There is no undo.</p>
-            {error && <p role="alert" className="text-sm text-rose-500 mt-2 font-medium">{error}</p>}
+            {error && <p role="alert" className="text-sm text-text-error mt-2 font-medium">{error}</p>}
             <div className="flex items-center gap-3 mt-4">
+                {/* Destructive confirm — rose is a semantic danger fill that stays
+                    dark in both themes, so the ink is literal white. */}
                 <button type="button" disabled={busy} onClick={onConfirm}
                     className="text-sm font-semibold text-white bg-rose-500 rounded-xl px-5 py-2.5 hover:bg-rose-600 transition-colors disabled:opacity-40">
                     {busy ? 'Deleting…' : 'Delete essay'}
@@ -2438,7 +2434,7 @@ function EssayWorkspace({ essayId }) {
     const paragraphCount = structure?.bodyParagraphs?.length || 0;
 
     return (
-        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
             <div className="container-custom">
                 <Link to="/essays"
                     className="inline-flex items-center gap-2 text-sm font-medium text-text-dim hover:text-accent transition-colors mb-8">
@@ -2447,7 +2443,7 @@ function EssayWorkspace({ essayId }) {
 
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-6">
                     <div className="min-w-0">
-                        <span className="font-hand text-lg text-accent -rotate-2 inline-block mb-1">essay</span>
+                        <span className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">essay</span>
                         <h1 className="text-4xl md:text-6xl break-words">{essay.title}</h1>
                         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-text-dim">
                             <span>{wordCountOf(essay.originalText)} words</span>
@@ -2461,7 +2457,7 @@ function EssayWorkspace({ essayId }) {
                         </div>
                     </div>
                     <button type="button" onClick={() => { setConfirmingDelete(true); setDeleteError(null); }}
-                        className="btn-secondary shrink-0 inline-flex items-center gap-2 hover:-translate-y-0.5 hover:text-rose-400 transition-all">
+                        className="btn-secondary shrink-0 inline-flex items-center gap-2 press hover:text-text-error">
                         <TrashIcon className="w-4 h-4" /> Delete
                     </button>
                 </div>
@@ -2501,7 +2497,7 @@ function EssayWorkspace({ essayId }) {
 
                 {tab !== 'edit' && !structure && (
                     /* ── Setup: choose a model and map the structure ── */
-                    <div className="block-blue rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                    <div className="block-blue rounded-3xl p-10 text-center shadow-card">
                         {parsing ? (
                             <>
                                 <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-5" />
@@ -2518,11 +2514,11 @@ function EssayWorkspace({ essayId }) {
                                 <p className="text-base text-text-primary font-medium mb-2">
                                     Use AI to map this essay into its structure — introduction, thesis, body paragraphs, quotes and techniques — before you practise it.
                                 </p>
-                                <p className="font-hand text-base text-accent mb-6">
+                                <p className="mb-6 font-hand text-base text-accent -rotate-2 inline-block">
                                     Your original wording stays exactly as you wrote it.
                                 </p>
                                 {parseError && (
-                                    <div role="alert" className="text-sm text-rose-400 mb-5 font-medium">
+                                    <div role="alert" className="text-sm text-text-error mb-5 font-medium">
                                         <p className="mb-1">Your essay is saved, but AI mapping did not finish.</p>
                                         <p>{parseError}</p>
                                     </div>
@@ -2530,7 +2526,7 @@ function EssayWorkspace({ essayId }) {
                                 <div className="flex flex-wrap items-center justify-center gap-3">
                                     <EssayModelPicker model={parseModel} onChange={setParseModel} disabled={parsing || saving} />
                                     <button type="button" onClick={() => parse()} disabled={parsing || saving}
-                                        className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+                                        className="btn-primary inline-flex items-center gap-2 press disabled:opacity-40">
                                         <SparklesIcon className="w-4 h-4" />
                                         {parseError ? 'Try setup again' : 'Set up practice'}
                                     </button>
@@ -2546,14 +2542,14 @@ function EssayWorkspace({ essayId }) {
                 )}
 
                 {workspaceError && (
-                    <p role="alert" className="mb-4 rounded-xl border border-rose-300/60 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-500 dark:border-rose-500/30 dark:bg-rose-900/15">
+                    <p role="alert" className="mb-4 rounded-xl border border-line-error bg-surface-error px-4 py-2.5 text-sm font-medium text-text-error">
                         {workspaceError}
                     </p>
                 )}
 
                 {tab === 'overview' && structure && (
                     <div className="space-y-6">
-                        <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                        <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-card">
                             <AnnotatedDocument
                                 essay={essay}
                                 annotations={annotations}
@@ -2572,7 +2568,7 @@ function EssayWorkspace({ essayId }) {
                                 onDiscardFix={discardFix}
                             />
                         </div>
-                        <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                        <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-card">
                             <p className="mb-5 text-[11px] font-bold uppercase tracking-widest text-text-dim">Read it through</p>
                             <ReadMode essay={essay} onStartPractice={() => setMode('wordbyword')} />
                         </div>
@@ -2580,7 +2576,7 @@ function EssayWorkspace({ essayId }) {
                 )}
 
                 {tab === 'context' && (
-                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-card">
                         <ContextLibrary
                             docs={contextDocs}
                             loading={contextLoading}
@@ -2603,7 +2599,7 @@ function EssayWorkspace({ essayId }) {
                         </div>
                         <PracticeHub mode={mode} onChange={setMode} dueCount={dueCount} drills={drills} />
                         {mode && (
-                            <div key={`${mode}-${scope ? scope.join('-') : 'all'}`} className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                            <div key={`${mode}-${scope ? scope.join('-') : 'all'}`} className="bg-surface-raised rounded-3xl p-6 md:p-10 min-h-[320px] flex flex-col justify-center shadow-card">
                                 {mode === 'wordbyword' && (
                                     <RebuildMode initialUnit={modeParam === 'sentence' ? 'sentences' : 'words'}
                                         essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
@@ -2642,7 +2638,7 @@ function EssayWorkspace({ essayId }) {
                 )}
 
                 {tab === 'edit' && (
-                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-card">
                         <EditPanel essay={essay} onSaved={handleSaved} saving={saving} parsing={parsing} error={saveError} />
                     </div>
                 )}
@@ -2653,7 +2649,7 @@ function EssayWorkspace({ essayId }) {
                 <button
                     type="button"
                     onClick={() => setChatOpen(true)}
-                    className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-bold text-white shadow-[0_18px_40px_-20px_rgba(19,81,170,0.9)] transition-transform hover:-translate-y-0.5"
+                    className="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-bold text-accent-contrast shadow-card-hover press"
                 >
                     <ChatBubbleLeftRightIcon className="h-4 w-4" /> Ask about this essay
                 </button>
@@ -2732,10 +2728,10 @@ function EssayLibrary() {
     }
 
     return (
-        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+        <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
             <div className="container-custom">
                 <header className="mb-10 reveal">
-                    <span className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">essay memoriser</span>
+                    <span className="mb-3 font-hand text-2xl text-accent -rotate-2 inline-block">essay memoriser</span>
                     <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl">Learn it by heart.</h1>
                     <p className="mt-6 text-xl text-text-muted font-medium max-w-xl">
                         Every essay is its own workspace: read it, edit it, and practise it until it is word-perfect and exam-ready.
@@ -2752,14 +2748,14 @@ function EssayLibrary() {
                             {essays.length > 0 && <span className="text-xs font-bold text-text-dim">{essays.length} saved</span>}
                         </div>
                         {loadError ? (
-                            <div className="block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                            <div className="block-cream rounded-3xl p-10 text-center shadow-card">
                                 <p className="text-text-primary text-sm font-bold">Could not load your essays.</p>
                                 <button type="button" onClick={loadEssays} className="mt-3 text-sm font-semibold text-accent hover:opacity-70 transition-opacity">
                                     Try again
                                 </button>
                             </div>
                         ) : essays.length === 0 ? (
-                            <div className="block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+                            <div className="block-cream rounded-3xl p-10 text-center shadow-card">
                                 <DocumentTextIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
                                 <p className="text-text-primary text-sm font-bold">No essays yet.</p>
                                 <p className="text-text-dim text-sm mt-1">Add one when you’re ready to start practising.</p>
@@ -2770,7 +2766,7 @@ function EssayLibrary() {
                                     const due = dueByEssay[String(e.id)] || 0;
                                     return (
                                         <Link key={e.id} to={`/essays/${e.id}`}
-                                            className="bg-surface-raised rounded-2xl p-5 flex items-center justify-between gap-4 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform">
+                                            className="bg-surface-raised rounded-2xl p-5 flex items-center justify-between gap-4 group shadow-card press">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                                                     e.parsed ? 'bg-emerald-500/10' : 'bg-accent-soft'

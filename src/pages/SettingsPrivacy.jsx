@@ -164,7 +164,7 @@ function ConfirmationDialog({ title, description, confirmLabel, busy, confirmDis
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-surface-inverse/50 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onCancel(); }}>
-      <section ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId} className="w-full max-w-lg rounded-3xl bg-surface-raised p-7 shadow-2xl md:p-8">
+      <section ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId} className="w-full max-w-lg rounded-3xl bg-surface-raised p-7 shadow-pop md:p-8">
         <span className={`grid h-12 w-12 place-items-center rounded-2xl ${danger ? 'bg-surface-error text-text-error' : 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]'}`}>
           <ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" />
         </span>
@@ -353,7 +353,7 @@ function AIHistory({ interactions, clearing, onRequestClear }) {
         title="AI activity history"
         description="See which Caplet features used AI, when they ran, and the summaries retained for your account."
         action={interactions.length > 0 ? (
-          <button type="button" onClick={onRequestClear} disabled={clearing} className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-surface-error px-4 py-2.5 text-xs font-bold text-text-error transition-transform hover:-translate-y-0.5 disabled:opacity-50">
+          <button type="button" onClick={onRequestClear} disabled={clearing} className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-surface-error px-4 py-2.5 text-xs font-bold text-text-error press disabled:opacity-50">
             <TrashIcon className="h-4 w-4" aria-hidden="true" /> Clear history
           </button>
         ) : null}
@@ -648,7 +648,7 @@ export default function SettingsPrivacy() {
   return (
     <div>
       <div className="mb-10">
-        <p className="font-hand text-accent text-lg -rotate-2 inline-block mb-1">your data, your choices</p>
+        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your data, your choices</p>
         <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Privacy & data</h2>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">Inspect what Caplet stores, control optional processing, download your information, or delete it permanently.</p>
       </div>

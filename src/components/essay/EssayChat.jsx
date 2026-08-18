@@ -56,7 +56,7 @@ function Message({ message, onAddAnnotation, addedIds }) {
     return (
         <div className={isUser ? 'flex justify-end' : ''}>
             <div className={isUser
-                ? 'max-w-[85%] rounded-2xl rounded-br-md bg-accent px-3.5 py-2.5 text-sm text-white'
+                ? 'max-w-[85%] rounded-2xl rounded-br-md bg-accent px-3.5 py-2.5 text-sm text-accent-contrast'
                 : 'max-w-full'}>
                 {isUser ? (
                     <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
@@ -161,7 +161,7 @@ export default function EssayChat({
     return (
         <aside
             aria-label="Essay assistant"
-            className="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-line-soft bg-surface-raised shadow-[-24px_0_60px_-40px_rgba(20,20,18,0.6)]"
+            className="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-line-soft bg-surface-raised shadow-pop"
         >
             <header className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
                 <div className="min-w-0">
@@ -217,7 +217,7 @@ export default function EssayChat({
                         Reading your essay and sources…
                     </p>
                 )}
-                {error && <p role="alert" className="text-xs font-medium text-rose-400">{error}</p>}
+                {error && <p role="alert" className="text-xs font-medium text-text-error">{error}</p>}
             </div>
 
             <div className="border-t border-line-soft p-3">
@@ -236,7 +236,7 @@ export default function EssayChat({
                     />
                     <button type="button" onClick={() => send()} disabled={busy || !input.trim()}
                         aria-label="Send message"
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-white transition-transform hover:-translate-y-0.5 disabled:opacity-40">
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-accent-contrast press disabled:opacity-40">
                         <ArrowUpIcon className="h-4 w-4" />
                     </button>
                 </div>

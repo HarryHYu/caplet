@@ -42,6 +42,7 @@ export default {
           raised: tokenColor('--surface-raised'),
           inverse: tokenColor('--surface-inverse'),
           error: tokenColor('--surface-error'),
+          warning: tokenColor('--surface-warning'),
         },
         text: {
           primary: tokenColor('--text-primary'),
@@ -49,11 +50,13 @@ export default {
           dim: tokenColor('--text-dim'),
           contrast: tokenColor('--text-contrast'),
           error: tokenColor('--text-error'),
+          warning: tokenColor('--text-warning'),
         },
         line: {
           soft: tokenColor('--line-soft'),
           strong: tokenColor('--line-strong'),
           error: tokenColor('--border-error'),
+          warning: tokenColor('--border-warning'),
         },
       },
       letterSpacing: {

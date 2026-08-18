@@ -104,7 +104,7 @@ const SettingsProfile = () => {
   return (
     <div>
       <div className="mb-10">
-        <p className="font-hand text-lg text-accent -rotate-2 inline-block mb-1">your details</p>
+        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your details</p>
         <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Profile details</h2>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">
           Update your personal information and account details.

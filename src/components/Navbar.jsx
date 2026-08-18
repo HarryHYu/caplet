@@ -116,7 +116,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                   className="h-full w-full scale-105 rounded-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </div>
-              <span className="hidden text-base font-bricolage font-extrabold tracking-[-0.02em] text-text-primary transition-colors duration-300 group-hover:text-accent sm:inline md:text-lg">
+              <span className="hidden text-base font-display font-extrabold tracking-[-0.02em] text-text-primary transition-colors duration-300 group-hover:text-accent sm:inline md:text-lg">
                 Caplet
               </span>
             </Link>
@@ -160,7 +160,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                   aria-expanded={showUserMenu}
                   aria-haspopup="true"
                   aria-controls="account-navigation"
-                  className={`focus-ring flex h-9 w-9 items-center justify-center gap-1.5 rounded-full border p-1 transition-all duration-200 active:scale-95 sm:w-auto sm:justify-start sm:pr-2.5 ${
+                  className={`focus-ring flex h-9 w-9 items-center justify-center gap-1.5 rounded-full border p-1 transition-all duration-200 press sm:w-auto sm:justify-start sm:pr-2.5 ${
                     showUserMenu
                       ? 'border-accent bg-accent-soft'
                       : 'border-line-soft hover:border-text-dim hover:bg-surface-soft'
@@ -217,7 +217,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
             {effectiveProductMode === 'study' && <button
               ref={mobileButtonRef}
               type="button"
-              className={`focus-ring relative h-9 w-9 rounded-full text-text-muted transition-[color,background-color,transform] duration-200 hover:bg-surface-soft hover:text-text-primary active:scale-95 lg:hidden ${isOpen ? 'bg-surface-soft text-text-primary' : ''}`}
+              className={`focus-ring relative h-9 w-9 rounded-full text-text-muted transition-[color,background-color,transform] duration-200 hover:bg-surface-soft hover:text-text-primary press lg:hidden ${isOpen ? 'bg-surface-soft text-text-primary' : ''}`}
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? 'close menu' : 'open menu'}
               aria-expanded={isOpen}
@@ -247,7 +247,7 @@ const Navbar = ({ mobileOnly = false, hideOnTablet = false }) => {
                   onClick={() => setIsOpen(false)}
                   {...(item.tourId ? { 'data-tour-id': item.tourId } : {})}
                   aria-current={active ? 'page' : undefined}
-                  className={`focus-ring mobile-nav-item mb-1 flex min-h-10 items-center justify-between rounded-xl px-3 text-xs font-bold tracking-[0.02em] transition-[color,background-color,transform] active:scale-[0.98] ${
+                  className={`focus-ring mobile-nav-item mb-1 flex min-h-10 items-center justify-between rounded-xl px-3 text-xs font-bold tracking-[0.02em] transition-[color,background-color,transform] press ${
                     active
                       ? 'bg-accent-soft text-accent'
                       : 'text-text-primary hover:bg-surface-soft'

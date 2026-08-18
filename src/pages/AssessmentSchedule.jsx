@@ -55,7 +55,7 @@ function TaskEditorDialog({ task, onCancel, onSave }) {
 
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
-      <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="assessment-editor-title" className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-xl border border-line-soft bg-surface-body p-6 shadow-2xl">
+      <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="assessment-editor-title" className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-xl border border-line-soft bg-surface-body p-6 shadow-pop">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 id="assessment-editor-title" className="font-display text-2xl font-extrabold text-text-primary">{task ? 'Edit assessment' : 'Add assessment'}</h2>
@@ -117,13 +117,14 @@ function DeleteTaskDialog({ task, onCancel, onConfirm }) {
   const dialogRef = useDialogFocus({ onDismiss: onCancel });
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4">
-      <section ref={dialogRef} tabIndex="-1" role="alertdialog" aria-modal="true" aria-labelledby="remove-assessment-title" aria-describedby="remove-assessment-description" className="w-full max-w-md rounded-xl border border-line-soft bg-surface-body p-6 shadow-2xl">
+      <section ref={dialogRef} tabIndex="-1" role="alertdialog" aria-modal="true" aria-labelledby="remove-assessment-title" aria-describedby="remove-assessment-description" className="w-full max-w-md rounded-xl border border-line-soft bg-surface-body p-6 shadow-pop">
         <h2 id="remove-assessment-title" className="font-display text-2xl font-extrabold text-text-primary">Remove {task.subject}?</h2>
         <p id="remove-assessment-description" className="mt-3 text-sm leading-relaxed text-text-muted">
           {task.custom ? 'This removes the personal task.' : 'This hides the official task from your personal schedule. The source schedule is not changed.'}
         </p>
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" onClick={onCancel} className="btn-secondary">Cancel</button>
+          {/* Destructive confirm — semantic danger fill, dark in both themes, so the ink is literal white. */}
           <button data-initial-focus type="button" onClick={onConfirm} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-red-600 px-5 text-sm font-bold text-white hover:bg-red-700">Remove</button>
         </div>
       </section>
@@ -173,7 +174,7 @@ function TimelineTask({ task, onEdit, onRemove }) {
           <div className="flex items-center gap-1">
             {isExamTask(task) && days >= 0 && <span className="mr-2 text-xs font-bold text-accent">{countdownLabel(days)}</span>}
             <button type="button" onClick={() => onEdit(task)} aria-label={`Edit ${task.subject}`} className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft hover:text-accent"><PencilSquareIcon className="h-4 w-4" aria-hidden="true" /></button>
-            <button type="button" onClick={() => onRemove(task)} aria-label={`Remove ${task.subject}`} className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft hover:text-red-600"><TrashIcon className="h-4 w-4" aria-hidden="true" /></button>
+            <button type="button" onClick={() => onRemove(task)} aria-label={`Remove ${task.subject}`} className="grid h-10 w-10 place-items-center rounded-lg text-text-muted hover:bg-surface-soft hover:text-text-error"><TrashIcon className="h-4 w-4" aria-hidden="true" /></button>
           </div>
         </div>
       </article>
@@ -210,13 +211,13 @@ export default function AssessmentSchedule() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary selection:bg-accent selection:text-white md:pt-28">
+    <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary selection:bg-accent selection:text-accent-contrast md:pt-28">
       <div className="container-custom max-w-5xl">
-        <header className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <header className="minimal-page-header flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
             <p className="text-sm font-extrabold text-accent">Year 11 · 2026</p>
-            <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Upcoming assessment tasks</h1>
-            <p className="mt-4 text-base font-medium leading-relaxed text-text-muted">See upcoming tasks for your chosen subjects, then adjust your personal schedule.</p>
+            <h1 className="minimal-page-title mt-2">Upcoming assessment tasks</h1>
+            <p className="minimal-page-description">See upcoming tasks for your chosen subjects, then adjust your personal schedule.</p>
           </div>
           <div className="flex flex-wrap gap-3"><Link to="/assessment-log" className="btn-secondary w-fit">Results</Link><button type="button" onClick={openAdd} className="btn-primary w-fit"><PlusIcon className="h-4 w-4" aria-hidden="true" /> Add assessment</button></div>
         </header>

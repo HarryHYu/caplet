@@ -60,7 +60,7 @@ export function FeedbackPanel({ result, question, onRetry, onNext, nextLabel, co
   const maxScore = result?.maxScore ?? question?.marks;
 
   return (
-    <section className="mt-6 rounded-[2rem] border border-line-soft bg-surface-raised p-5 shadow-card sm:p-8 lg:p-10" aria-live="polite" aria-labelledby="practice-feedback-heading">
+    <section className="mt-6 rounded-3xl border border-line-soft bg-surface-raised p-5 shadow-card sm:p-8 lg:p-10" aria-live="polite" aria-labelledby="practice-feedback-heading">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${isCorrect ? 'bg-[color:var(--block-green)] text-[color:var(--mark-green)]' : 'bg-[color:var(--block-amber)] text-[color:var(--mark-amber)]'}`}>
@@ -183,7 +183,7 @@ export default function PracticeQuestion({ question, submitting, onSubmit, initi
       : 'Your draft autosaves while you work.';
 
   return (
-    <form onSubmit={submit} className="rounded-[2rem] border border-line-soft bg-surface-raised p-5 shadow-card sm:p-8 lg:p-10 xl:p-12">
+    <form onSubmit={submit} className="rounded-3xl border border-line-soft bg-surface-raised p-5 shadow-card sm:p-8 lg:p-10 xl:p-12">
       <div className="flex flex-wrap items-center gap-2.5">
         {outcome && <span className="rounded-full bg-accent-soft px-3.5 py-2 font-mono text-xs font-bold text-accent">{outcomeLabel(outcome)}</span>}
         {question?.difficulty && <span className="rounded-full bg-surface-soft px-3.5 py-2 text-xs font-bold capitalize text-text-muted">{question.difficulty}</span>}

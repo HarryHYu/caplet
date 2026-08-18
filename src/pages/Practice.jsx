@@ -274,7 +274,7 @@ function SessionHeader({ session, secondsRemaining, onExit }) {
         </button>
       </div>
 
-      <div className="mt-6 rounded-[2rem] border border-line-soft bg-surface-raised p-5 shadow-card sm:p-7">
+      <div className="mt-6 rounded-3xl border border-line-soft bg-surface-raised p-5 shadow-card sm:p-7">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">{mode.label} · Practice session</p>
@@ -319,13 +319,13 @@ function CompletionSummary({ data, session, onRestart }) {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <section className="animate-rise overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 text-white shadow-[0_32px_70px_-40px_rgba(19,81,170,0.75)] md:p-12">
-        <span className="grid h-14 w-14 animate-tada place-items-center rounded-2xl bg-white/10">
+      <section className="animate-rise overflow-hidden rounded-3xl bg-[color:var(--mark-blue)] p-8 text-accent-contrast shadow-card-hover md:p-12">
+        <span className="grid h-14 w-14 animate-tada place-items-center rounded-2xl bg-accent-contrast/10">
           <TrophyIcon className="h-8 w-8" aria-hidden="true" />
         </span>
-        <p className="mt-7 text-xs font-bold uppercase tracking-[0.14em] text-white/65">Session complete</p>
-        <h1 className="mt-2 text-4xl font-display font-extrabold tracking-tight text-white md:text-6xl">Evidence earned.</h1>
-        <p className="mt-4 max-w-xl text-base font-medium leading-relaxed text-white/80">Every attempt has updated your learning profile and sharpened what Caplet recommends next.</p>
+        <p className="mt-7 text-xs font-bold uppercase tracking-[0.14em] text-accent-contrast/65">Session complete</p>
+        <h1 className="mt-2 text-4xl font-display font-extrabold tracking-tight text-accent-contrast md:text-6xl">Evidence earned.</h1>
+        <p className="mt-4 max-w-xl text-base font-medium leading-relaxed text-accent-contrast/80">Every attempt has updated your learning profile and sharpened what Caplet recommends next.</p>
         <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <SummaryMetric term="Score" value={maxScore ? `${score}/${maxScore}` : score} delayMs={80} />
           <SummaryMetric term="Accuracy" value={`${accuracy}%`} delayMs={140} />
@@ -376,9 +376,9 @@ function CompletionSummary({ data, session, onRestart }) {
 
 function SummaryMetric({ term, value, delayMs = 0 }) {
   return (
-    <div className="animate-rise rounded-2xl bg-white/10 p-4" style={{ animationDelay: `${delayMs}ms` }}>
-      <dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/60">{term}</dt>
-      <dd className="mt-2 font-display text-2xl font-extrabold text-white">{value}</dd>
+    <div className="animate-rise rounded-2xl bg-accent-contrast/10 p-4" style={{ animationDelay: `${delayMs}ms` }}>
+      <dt className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent-contrast/60">{term}</dt>
+      <dd className="mt-2 font-display text-2xl font-extrabold text-accent-contrast">{value}</dd>
     </div>
   );
 }
@@ -714,7 +714,7 @@ export default function Practice() {
   return (
     <main className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
-        <header className="mb-12 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+        <header className="minimal-page-header flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span className="section-kicker">Learn by doing</span>
             <h1 className="minimal-page-title">Practice</h1>

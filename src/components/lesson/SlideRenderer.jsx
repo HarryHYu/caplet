@@ -186,7 +186,7 @@ function MediaSlide({ slide }) {
     if (!videoId) return null;
     return (
       <figure className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center gap-6">
-        <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-line-soft shadow-lg">
+        <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-line-soft shadow-card">
           <iframe
             src={`https://www.youtube.com/embed/${videoId}`}
             className="w-full h-full"
@@ -517,7 +517,7 @@ function CardsCarousel({ cards, caption }) {
       <button
         type="button"
         onClick={() => flippable && setFlipped((v) => !v)}
-        className={`group relative flex-1 min-h-0 rounded-2xl border border-line-soft bg-surface-raised shadow-lg flex flex-col items-center justify-center px-8 py-8 text-center transition-all ${
+        className={`group relative flex-1 min-h-0 rounded-2xl border border-line-soft bg-surface-raised shadow-card flex flex-col items-center justify-center px-8 py-8 text-center transition-all ${
           flippable ? 'cursor-pointer hover:border-accent/60' : ''
         }`}
       >

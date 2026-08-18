@@ -118,7 +118,7 @@ const DebtSequencer = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-lg">Tools &rarr; Debt &amp; Loans</span>
+              <span className="font-hand text-lg text-accent -rotate-2 inline-block">Tools &rarr; Debt &amp; Loans</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-4 mb-8">Debt<br />Sequencer.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 Compare what each of your debts actually costs to carry, so you can see which one a spare
@@ -171,16 +171,16 @@ const DebtSequencer = () => {
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                              <label className="text-xs font-semibold text-text-dim mb-1.5 block">Balance (AUD)</label>
-                              <input type="number" min="0" step="100" value={d.balance} onChange={(e) => updateDebt(i, 'balance', e.target.value)} placeholder="0" className={inputClass} />
+                              <label htmlFor={`debt-${i}-balance`} className="text-xs font-semibold text-text-dim mb-1.5 block">Balance (AUD)</label>
+                              <input id={`debt-${i}-balance`} type="number" min="0" step="100" value={d.balance} onChange={(e) => updateDebt(i, 'balance', e.target.value)} placeholder="0" className={inputClass} />
                             </div>
                             <div>
-                              <label className="text-xs font-semibold text-text-dim mb-1.5 block">Interest rate (%)</label>
-                              <input type="number" min="0" max="100" step="0.1" value={d.rate} onChange={(e) => updateDebt(i, 'rate', e.target.value)} placeholder="19.9" className={inputClass} />
+                              <label htmlFor={`debt-${i}-rate`} className="text-xs font-semibold text-text-dim mb-1.5 block">Interest rate (%)</label>
+                              <input id={`debt-${i}-rate`} type="number" min="0" max="100" step="0.1" value={d.rate} onChange={(e) => updateDebt(i, 'rate', e.target.value)} placeholder="19.9" className={inputClass} />
                             </div>
                             <div>
-                              <label className="text-xs font-semibold text-text-dim mb-1.5 block">Type</label>
-                              <select value={d.type} onChange={(e) => updateDebt(i, 'type', e.target.value)} className={inputClass}>
+                              <label htmlFor={`debt-${i}-type`} className="text-xs font-semibold text-text-dim mb-1.5 block">Type</label>
+                              <select id={`debt-${i}-type`} value={d.type} onChange={(e) => updateDebt(i, 'type', e.target.value)} className={inputClass}>
                                 {DEBT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                               </select>
                             </div>
@@ -200,38 +200,38 @@ const DebtSequencer = () => {
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-semibold text-text-dim mb-1.5 block">HECS/HELP balance (AUD)</label>
-                      <input type="number" min="0" step="100" value={hecsBalance} onChange={(e) => setHecsBalance(e.target.value)} placeholder="0" className={inputClass} />
+                      <label htmlFor="ds-hecs-balance" className="text-xs font-semibold text-text-dim mb-1.5 block">HECS/HELP balance (AUD)</label>
+                      <input id="ds-hecs-balance" type="number" min="0" step="100" value={hecsBalance} onChange={(e) => setHecsBalance(e.target.value)} placeholder="0" className={inputClass} />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-text-dim mb-1.5 block">Annual repayment income (AUD)</label>
-                      <input type="number" min="0" step="1000" value={repaymentIncome} onChange={(e) => setRepaymentIncome(e.target.value)} placeholder="0" className={inputClass} />
-                      <p className="text-[11px] text-text-dim mt-1.5">Roughly your income before tax (used for this calculation only, not saved to your profile). Not exactly gross salary &mdash; the ATO adds a few items.</p>
+                      <label htmlFor="ds-repayment-income" className="text-xs font-semibold text-text-dim mb-1.5 block">Annual repayment income (AUD)</label>
+                      <input id="ds-repayment-income" aria-describedby="ds-repayment-income-hint" type="number" min="0" step="1000" value={repaymentIncome} onChange={(e) => setRepaymentIncome(e.target.value)} placeholder="0" className={inputClass} />
+                      <p id="ds-repayment-income-hint" className="text-[11px] text-text-dim mt-1.5">Roughly your income before tax (used for this calculation only, not saved to your profile). Not exactly gross salary &mdash; the ATO adds a few items.</p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-text-dim mb-1.5 block">Assumed indexation (%)</label>
-                      <input type="number" min="0" max="20" step="0.1" value={indexationRate} onChange={(e) => setIndexationRate(e.target.value)} placeholder="3.2" className={inputClass} />
-                      <p className="text-[11px] text-text-dim mt-1.5">HELP was indexed 3.2% on 1 June 2025.</p>
+                      <label htmlFor="ds-indexation" className="text-xs font-semibold text-text-dim mb-1.5 block">Assumed indexation (%)</label>
+                      <input id="ds-indexation" aria-describedby="ds-indexation-hint" type="number" min="0" max="20" step="0.1" value={indexationRate} onChange={(e) => setIndexationRate(e.target.value)} placeholder="3.2" className={inputClass} />
+                      <p id="ds-indexation-hint" className="text-[11px] text-text-dim mt-1.5">HELP was indexed 3.2% on 1 June 2025.</p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-text-dim mb-1.5 block">Voluntary repayment / year (optional)</label>
-                      <input type="number" min="0" step="100" value={voluntaryAnnual} onChange={(e) => setVoluntaryAnnual(e.target.value)} placeholder="0" className={inputClass} />
+                      <label htmlFor="ds-voluntary" className="text-xs font-semibold text-text-dim mb-1.5 block">Voluntary repayment / year (optional)</label>
+                      <input id="ds-voluntary" type="number" min="0" step="100" value={voluntaryAnnual} onChange={(e) => setVoluntaryAnnual(e.target.value)} placeholder="0" className={inputClass} />
                     </div>
                   </div>
                 </section>
 
                 {/* Spare money */}
                 <section>
-                  <label className="text-sm font-semibold text-text-dim mb-3 block">Spare money per month to direct (optional)</label>
+                  <label htmlFor="ds-spare" className="text-sm font-semibold text-text-dim mb-3 block">Spare money per month to direct (optional)</label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors max-w-xs">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
-                    <input type="number" min="0" step="10" value={extraMonthlyAmount} onChange={(e) => setExtraMonthlyAmount(e.target.value)} placeholder="0"
+                    <input id="ds-spare" type="number" min="0" step="10" value={extraMonthlyAmount} onChange={(e) => setExtraMonthlyAmount(e.target.value)} placeholder="0"
                       className="w-full bg-transparent pl-8 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                 </section>
 
                 {error && <p role="alert" className="text-sm font-semibold text-text-error">{error}</p>}
-                <button type="submit" disabled={running} className="btn-primary press w-full py-5 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-60 disabled:hover:translate-y-0">
+                <button type="submit" disabled={running} className="btn-primary press w-full py-5 text-sm press disabled:opacity-60">
                   {running ? 'Calculating…' : 'Save & Recalculate'}
                 </button>
               </form>

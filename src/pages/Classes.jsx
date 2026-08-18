@@ -159,7 +159,7 @@ const Classes = () => {
     <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         {/* Header Section */}
-        <header data-tour-id="academy-header" className="minimal-page-header flex flex-col justify-between gap-8 md:max-w-none md:flex-row md:items-end reveal">
+        <header data-tour-id="academy-header" className="minimal-page-header flex flex-col justify-between gap-8 md:flex-row md:items-end reveal">
           <div>
             <span className="section-kicker">Learn together</span>
             <h1 className="minimal-page-title">Classes</h1>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AcademicCapIcon,
@@ -86,7 +86,7 @@ function ResourceCard({ resource }) {
       href={resource.url}
       target="_blank"
       rel="noreferrer"
-      className="group flex min-w-0 h-full flex-col rounded-3xl border border-line-soft bg-surface-raised p-5 shadow-card transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-glow"
+      className="group flex min-w-0 h-full flex-col rounded-3xl border border-line-soft bg-surface-raised p-5 shadow-card card-lift hover:border-accent hover:shadow-glow"
     >
       <div className="flex items-start justify-between gap-4">
         <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${categoryTones[resource.categoryId] || 'bg-surface-soft text-accent'}`}>
@@ -137,6 +137,17 @@ export default function MoneyResources() {
     setPage(1);
   };
 
+  // Paging swaps the whole list under the reader's scroll position, leaving
+  // them somewhere in the middle of a brand-new page. Bring the top of the
+  // results back into view whenever the page changes (but not on first paint).
+  const resultsRef = useRef(null);
+  const lastPageRef = useRef(currentPage);
+  useEffect(() => {
+    if (lastPageRef.current === currentPage) return;
+    lastPageRef.current = currentPage;
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [currentPage]);
+
   return (
     <div className="min-h-screen bg-surface-body pb-32 pt-28 selection:bg-accent selection:text-accent-contrast md:pt-32 lg:pb-20">
       <div className="container-custom">
@@ -146,7 +157,7 @@ export default function MoneyResources() {
         </Link>
 
         <header className="mt-8 max-w-4xl">
-          <span className="font-hand text-xl text-accent">Money · research, clearly sorted</span>
+          <span className="font-hand text-xl text-accent -rotate-2 inline-block">Money · research, clearly sorted</span>
           <div className="mt-3 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
               <h1 className="font-display text-5xl font-extrabold tracking-tight text-text-primary md:text-7xl">The Money resource hub.</h1>
@@ -222,7 +233,7 @@ export default function MoneyResources() {
           </div>
         </section>
 
-        <div className="mt-10 space-y-12">
+        <div ref={resultsRef} className="mt-10 scroll-mt-36 space-y-12">
           {visibleCategories.length > 0 ? visibleCategories.map((category) => {
             const resources = pagedResources.filter((resource) => resource.categoryId === category.id);
             const totalResources = displayedResources.filter((resource) => resource.categoryId === category.id).length;

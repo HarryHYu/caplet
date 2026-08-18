@@ -50,7 +50,7 @@ const GSTCalculator = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-lg">Australian tax helper</span>
+              <span className="font-hand text-lg text-accent -rotate-2 inline-block">Australian tax helper</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-2 mb-6">
                 GST Calculator
               </h1>
@@ -69,12 +69,12 @@ const GSTCalculator = () => {
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Transaction Details</h2>
             <form onSubmit={handleSubmit} className="space-y-12">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-3 block">
+                <label htmlFor="gst-amount" className="text-sm font-semibold text-text-dim mb-3 block">
                   Amount (AUD)
                 </label>
                 <div className="relative flex items-center bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors">
                   <span className="pl-5 text-text-dim font-bold text-2xl">$</span>
-                  <input
+                  <input id="gst-amount"
                     type="number"
                     min="0"
                     step="0.01"
@@ -87,15 +87,15 @@ const GSTCalculator = () => {
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-4 block">
+                <span id="gst-mode-label" className="text-sm font-semibold text-text-dim mb-4 block">
                   Calculation Mode
-                </label>
-                <div className="flex flex-col sm:flex-row gap-4">
+                </span>
+                <div role="radiogroup" aria-labelledby="gst-mode-label" className="flex flex-col sm:flex-row gap-4">
                   {[
                     { id: 'add', label: 'Add GST' },
                     { id: 'remove', label: 'Remove GST' }
                   ].map((type) => (
-                    <label key={type.id} className={`flex-1 flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all ${calculationType === type.id ? 'bg-accent text-accent-contrast shadow-pop' : 'bg-surface-body hover:-translate-y-0.5 transition-transform'}`}>
+                    <label key={type.id} className={`flex-1 flex items-center gap-3 cursor-pointer rounded-xl px-5 py-4 transition-all ${calculationType === type.id ? 'bg-accent text-accent-contrast shadow-pop' : 'bg-surface-body press'}`}>
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${calculationType === type.id ? 'bg-accent-contrast' : 'border-2 border-line-soft'}`}>
                         {calculationType === type.id && <div className="w-2 h-2 bg-accent rounded-full" />}
                       </div>
@@ -115,7 +115,7 @@ const GSTCalculator = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-5 text-base mt-2 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-5 text-base mt-2 press">
                 Calculate GST
               </button>
             </form>

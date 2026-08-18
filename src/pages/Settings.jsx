@@ -41,7 +41,7 @@ const Settings = () => {
                     to={item.path}
                     end={item.path === '/settings/profile'}
                     className={({ isActive }) =>
-                      `group block min-w-max snap-start rounded-lg px-4 py-2.5 transition-colors active:scale-[0.98] md:min-w-0 ${isActive
+                      `group block min-w-max snap-start rounded-lg px-4 py-2.5 transition-colors press md:min-w-0 ${isActive
                         ? 'bg-accent-soft text-accent'
                         : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'
                       }`

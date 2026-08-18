@@ -76,7 +76,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
 
       {/* Heading */}
       <div className="mb-8">
-        <p className="font-hand text-accent text-lg mb-1">Welcome aboard</p>
+        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">Welcome aboard</p>
         <h1 className="font-display text-4xl font-extrabold tracking-tight text-text-primary mb-2">
           Create your account
         </h1>
@@ -236,7 +236,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin }) => {
           type="submit"
           disabled={submitLoading || googleLoading}
           aria-busy={submitLoading}
-          className="w-full btn-primary py-4 flex items-center justify-center gap-2 rounded-2xl hover:-translate-y-0.5 transition-transform disabled:opacity-50"
+          className="w-full btn-primary py-4 flex items-center justify-center gap-2 rounded-2xl press disabled:opacity-50"
         >
           {submitLoading ? (
             <>

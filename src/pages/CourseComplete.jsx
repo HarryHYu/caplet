@@ -84,7 +84,7 @@ const CourseComplete = () => {
     return (
       <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
         <div className="container-custom max-w-2xl reveal">
-          <span className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">almost there</span>
+          <span className="mb-3 font-hand text-2xl text-accent -rotate-2 inline-block">almost there</span>
           <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8">Not quite<br />finished.</h1>
           <p className="text-lg text-text-muted mb-12 leading-relaxed">
             You&apos;ve completed {cp.completedLessons} of {cp.totalLessons} lessons in
@@ -108,7 +108,7 @@ const CourseComplete = () => {
             deliberate burst of motion: tada on the kicker, then a short
             rise stagger down the page. */}
         <header className="mb-16">
-          <p className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3 animate-tada">nice work</p>
+          <p className="mb-3 animate-tada font-hand text-2xl text-accent -rotate-2 inline-block">nice work</p>
           <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8 animate-rise" style={{ animationDelay: '120ms' }}>
             {course?.title ? course.title : 'Course'}<br />complete.
           </h1>

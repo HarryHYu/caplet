@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { standardDebtPayoff } from '../../lib/debtMath';
 import { useReveal } from '../../lib/useReveal';
-
-const formatCurrency = (value) =>
-  new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+import { formatCurrencyAUD as formatCurrency, parsePositive, simulateMinimumPayments } from './toolMath';
 
 const CreditCardPayoff = () => {
   const [balance, setBalance] = useState('');
@@ -14,21 +12,23 @@ const CreditCardPayoff = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const B = parseFloat(balance) || 0;
-    const r = parseFloat(apr) / 100 / 12;
-    const P = parseFloat(monthlyPayment) || 0;
+    // Every field is validated with Number.isFinite (via parsePositive): an
+    // empty APR used to parse to NaN, sail past a `<= 0` guard and silently
+    // become a 0% loan.
+    const B = parsePositive(balance);
+    const aprNum = parsePositive(apr);
+    const P = parsePositive(monthlyPayment);
 
-    if (B <= 0 || parseFloat(apr) <= 0 || P <= 0) {
+    if (B === null || aprNum === null || P === null) {
       setResult({ error: 'Please enter valid values for all fields.' });
       return;
     }
 
     // Core payoff math is shared with the backend debt engine via src/lib/debtMath.js
-    // (kept in sync by parity tests on both sides). The minimum-payment simulation
-    // below stays local to this tool.
+    // (kept in sync by parity tests on both sides).
     const { months, totalPaid, totalInterest, neverPayoff } = standardDebtPayoff({
       balance: B,
-      annualRate: parseFloat(apr),
+      annualRate: aprNum,
       monthlyPayment: P,
     });
     if (neverPayoff) {
@@ -38,23 +38,22 @@ const CreditCardPayoff = () => {
     const years = Math.floor(months / 12);
     const remMonths = months % 12;
 
-    // Minimum payment comparison (typically 2% of balance or $25, whichever is greater)
+    // Minimum payment comparison (typically 2% of the balance or $25, whichever
+    // is greater). At high APRs that minimum never amortises the debt; instead
+    // of truncating at 1200 months and quoting a bogus saving, say so.
     const minPayment = Math.max(25, B * 0.02);
-    let minMonths = 0;
-    let minTotalPaid = 0;
-    let runningBalance = B;
-    while (runningBalance > 0 && minMonths < 1200) {
-      const mp = Math.min(Math.max(25, runningBalance * 0.02), runningBalance * (1 + r));
-      const interest = runningBalance * r;
-      runningBalance = runningBalance + interest - mp;
-      minTotalPaid += mp;
-      minMonths++;
+    const minimum = simulateMinimumPayments({ balance: B, annualRate: aprNum });
+    if (minimum.neverAmortizes) {
+      setResult({
+        months, years, remMonths, totalPaid, totalInterest, minPayment,
+        minimumNeverAmortizes: true,
+      });
+      return;
     }
-    const minTotalInterest = minTotalPaid - B;
-    const interestSaved = Math.max(0, minTotalInterest - totalInterest);
-    const monthsSaved = Math.max(0, minMonths - months);
+    const interestSaved = Math.max(0, minimum.totalInterest - totalInterest);
+    const monthsSaved = Math.max(0, minimum.months - months);
 
-    setResult({ months, years, remMonths, totalPaid, totalInterest, minPayment, interestSaved, monthsSaved, minMonths });
+    setResult({ months, years, remMonths, totalPaid, totalInterest, minPayment, interestSaved, monthsSaved, minMonths: minimum.months });
   };
 
   useReveal();
@@ -65,7 +64,7 @@ const CreditCardPayoff = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-lg">Tools &rarr; Debt & Loans</span>
+              <span className="font-hand text-lg text-accent -rotate-2 inline-block">Tools &rarr; Debt & Loans</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-4 mb-8">Credit Card<br />Payoff.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 See exactly how long it takes to clear your balance, and how much interest you save by paying more.
@@ -80,39 +79,39 @@ const CreditCardPayoff = () => {
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Debt Parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-10">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-3 block">Current Balance (AUD)</label>
+                <label htmlFor="cc-balance" className="text-sm font-semibold text-text-dim mb-3 block">Current Balance (AUD)</label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input
-                    type="number" min="0" step="100" value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="0.00"
+                    id="cc-balance" type="number" min="0" step="100" value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="0.00"
                     className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-3 block">Annual Interest Rate (APR %)</label>
+                  <label htmlFor="cc-apr" className="text-sm font-semibold text-text-dim mb-3 block">Annual Interest Rate (APR %)</label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
-                      type="number" min="0" max="100" step="0.1" value={apr} onChange={(e) => setApr(e.target.value)} placeholder="19.9"
+                      id="cc-apr" aria-describedby="cc-apr-hint" type="number" min="0" max="100" step="0.1" value={apr} onChange={(e) => setApr(e.target.value)} placeholder="19.9"
                       className="w-full bg-transparent pl-4 pr-9 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">%</span>
                   </div>
-                  <p className="text-xs text-text-dim mt-2">AU avg is roughly 19 to 20%.</p>
+                  <p id="cc-apr-hint" className="text-xs text-text-dim mt-2">AU avg is roughly 19 to 20%.</p>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-3 block">Monthly Payment (AUD)</label>
+                  <label htmlFor="cc-monthly" className="text-sm font-semibold text-text-dim mb-3 block">Monthly Payment (AUD)</label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input
-                      type="number" min="0" step="10" value={monthlyPayment} onChange={(e) => setMonthlyPayment(e.target.value)} placeholder="0"
+                      id="cc-monthly" type="number" min="0" step="10" value={monthlyPayment} onChange={(e) => setMonthlyPayment(e.target.value)} placeholder="0"
                       className="w-full bg-transparent pl-8 pr-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                   </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-5 text-sm hover:-translate-y-0.5 transition-transform">Calculate Payoff</button>
+              <button type="submit" className="btn-primary press w-full py-5 text-sm press">Calculate Payoff</button>
             </form>
           </div>
 
@@ -140,7 +139,15 @@ const CreditCardPayoff = () => {
                         <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
                       </div>
                     </div>
-                    {result.interestSaved > 0 && (
+                    {result.minimumNeverAmortizes ? (
+                      <div className="pt-6 border-t border-line-soft">
+                        <p className="text-xs font-semibold text-text-dim mb-2">Versus minimum payments</p>
+                        <p className="text-sm font-semibold text-accent">
+                          At this interest rate the {formatCurrency(result.minPayment)}/mo minimum never clears the balance.
+                        </p>
+                        <p className="text-xs text-text-dim mt-1">The 2% minimum stops covering the interest charged, so the debt would stay with you indefinitely. Any payment above it is what actually pays it down.</p>
+                      </div>
+                    ) : result.interestSaved > 0 && (
                       <div className="pt-6 border-t border-line-soft">
                         <p className="text-xs font-semibold text-text-dim mb-2">Versus minimum payments</p>
                         <p className="text-sm font-semibold text-accent">

@@ -79,7 +79,7 @@ const EduTools = () => {
 
         {/* Header */}
         <header className="mb-16 reveal">
-          <span className="font-hand text-accent text-xl mb-6 -rotate-2 inline-block">Learn it, then keep it</span>
+          <span className="mb-6 font-hand text-xl text-accent -rotate-2 inline-block">Learn it, then keep it</span>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
               <h1 className="font-display font-extrabold tracking-tight text-6xl lg:text-8xl mb-8">

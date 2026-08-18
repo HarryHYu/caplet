@@ -51,7 +51,7 @@ const UserProfile = () => {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-surface-body">
         <div className="max-w-md w-full block-amber rounded-3xl p-12 text-center shadow-card">
-          <span className="font-hand text-accent text-lg block mb-3">Hmm.</span>
+          <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Hmm.</span>
           <p className="text-xl font-display font-extrabold tracking-tight text-text-primary mb-8">
             {error || 'We could not find that profile.'}
           </p>
@@ -85,7 +85,7 @@ const UserProfile = () => {
                 {initials}
               </div>
               <div>
-                <span className="font-hand text-accent text-lg block mb-1">Say hello</span>
+                <span className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">Say hello</span>
                 <h1 className="text-5xl font-display font-extrabold tracking-tight text-text-primary mb-3">
                   {profile.firstName} {profile.lastName}
                 </h1>

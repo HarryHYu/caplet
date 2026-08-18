@@ -126,7 +126,7 @@ const SettingsFinancial = () => {
   return (
     <div>
       <div className="mb-12">
-        <p className="font-hand text-lg text-accent -rotate-2 inline-block mb-1">your money, at a glance</p>
+        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your money, at a glance</p>
         <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Financial Profile</h2>
         <p className="text-sm font-medium text-text-dim mt-2">
           Your current snapshot. We use it to tailor the tools and your next steps. It&apos;s private to you.
@@ -137,7 +137,7 @@ const SettingsFinancial = () => {
           <div
             className={`px-6 py-4 rounded-2xl font-semibold text-sm ${message.type === 'success'
               ? 'block-blue text-blue'
-              : 'bg-red-50 text-red-600'
+              : 'bg-surface-error text-text-error'
               }`}
           >
             {message.type === 'success' ? 'Success:' : 'Error:'} {message.text}
@@ -196,7 +196,7 @@ const SettingsFinancial = () => {
                   <input type="number" min="0" max="100" step="0.1" value={d.rate} onChange={(e) => updateDebt(i, 'rate', e.target.value)}
                     placeholder="Rate %" className={`${inputClass} sm:col-span-3`} />
                   <button type="button" onClick={() => removeDebt(i)}
-                    className="sm:col-span-1 text-xs font-medium text-red-500 hover:text-red-600 text-left sm:text-center">
+                    className="sm:col-span-1 text-xs font-medium text-text-error text-left sm:text-center">
                     Remove
                   </button>
                 </div>
@@ -224,7 +224,7 @@ const SettingsFinancial = () => {
                   <input type="number" min="0" step="1" value={g.target} onChange={(e) => updateGoal(i, 'target', e.target.value)}
                     placeholder="Target" className={`${inputClass} sm:col-span-4`} />
                   <button type="button" onClick={() => removeGoal(i)}
-                    className="sm:col-span-1 text-xs font-medium text-red-500 hover:text-red-600 text-left sm:text-center">
+                    className="sm:col-span-1 text-xs font-medium text-text-error text-left sm:text-center">
                     Remove
                   </button>
                 </div>
@@ -241,7 +241,7 @@ const SettingsFinancial = () => {
         </div>
 
         <div className="pt-2">
-          <button type="submit" disabled={saving} className="btn-primary press py-4 px-10 text-sm hover:-translate-y-0.5 transition-transform disabled:opacity-40 disabled:hover:translate-y-0">
+          <button type="submit" disabled={saving} className="btn-primary press py-4 px-10 text-sm press disabled:opacity-40">
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>

@@ -370,7 +370,7 @@ export default function Revision() {
             <div className="container-custom">
                 <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 reveal">
                     <div>
-                        <span className="font-hand text-accent text-lg -rotate-2 inline-block mb-1">your revision</span>
+                        <span className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your revision</span>
                         <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight">Archived slides.</h1>
                         <p className="mt-8 text-xl text-text-muted font-medium max-w-xl">
                             Every slide you've flagged, organized into topics by AI.

@@ -53,7 +53,7 @@ export default function ResetPassword() {
           </div>
         ) : (
           <>
-            <p className="font-hand text-lg text-accent">choose a new password</p>
+            <p className="font-hand text-lg text-accent -rotate-2 inline-block">choose a new password</p>
             <h1 className="mt-1 font-display text-4xl font-extrabold tracking-tight text-text-primary">Set your password</h1>
             {message && <div role="alert" className="mt-6 animate-rise rounded-2xl bg-surface-error p-4 text-sm font-medium text-text-error">{message}</div>}
             <form onSubmit={submit} className="mt-7 space-y-5">

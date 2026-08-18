@@ -46,7 +46,7 @@ const BreakEven = () => {
         <header className="mb-20 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-2xl text-accent">Tools, Business</span>
+              <span className="font-hand text-2xl text-accent -rotate-2 inline-block">Tools, Business</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-2 mb-8">Break-Even<br />Calculator.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 Find out exactly how many units you need to sell before you start making money.
@@ -61,38 +61,38 @@ const BreakEven = () => {
             <h2 className="font-display font-bold tracking-tight text-2xl mb-12">Cost and Revenue Structure</h2>
             <form onSubmit={handleSubmit} className="space-y-16">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-4 block">Fixed Costs (per period)</label>
+                <label htmlFor="be-fixed-costs-per-period" className="text-sm font-semibold text-text-dim mb-4 block">Fixed Costs (per period)</label>
                 <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
-                  <input type="number" min="0" step="100" value={fixedCosts} onChange={(e) => setFixedCosts(e.target.value)} placeholder="0.00"
+                  <input id="be-fixed-costs-per-period" type="number" min="0" step="100" value={fixedCosts} onChange={(e) => setFixedCosts(e.target.value)} placeholder="0.00"
                     className="w-full bg-transparent pl-8 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                 </div>
                 <p className="text-xs text-text-dim mt-2">Rent, salaries, software, insurance. Costs that don't change with output.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">Variable Cost per Unit</label>
+                  <label htmlFor="be-variable-cost-per-unit" className="text-sm font-semibold text-text-dim mb-4 block">Variable Cost per Unit</label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                     <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
-                    <input type="number" min="0" step="0.01" value={variableCost} onChange={(e) => setVariableCost(e.target.value)} placeholder="0.00"
+                    <input id="be-variable-cost-per-unit" type="number" min="0" step="0.01" value={variableCost} onChange={(e) => setVariableCost(e.target.value)} placeholder="0.00"
                       className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                   <p className="text-xs text-text-dim mt-2">Materials, packaging, commissions per unit.</p>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">Selling Price per Unit</label>
+                  <label htmlFor="be-selling-price-per-unit" className="text-sm font-semibold text-text-dim mb-4 block">Selling Price per Unit</label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                     <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
-                    <input type="number" min="0" step="0.01" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} placeholder="0.00"
+                    <input id="be-selling-price-per-unit" type="number" min="0" step="0.01" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} placeholder="0.00"
                       className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                 </div>
               </div>
               <div className="max-w-xs">
-                <label className="text-sm font-semibold text-text-dim mb-4 block">Target Profit (optional)</label>
+                <label htmlFor="be-target-profit-optional" className="text-sm font-semibold text-text-dim mb-4 block">Target Profit (optional)</label>
                 <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-0 bottom-2 text-text-dim font-bold text-sm">$</span>
-                  <input type="number" min="0" step="100" value={targetProfit} onChange={(e) => setTargetProfit(e.target.value)} placeholder="0"
+                  <input id="be-target-profit-optional" type="number" min="0" step="100" value={targetProfit} onChange={(e) => setTargetProfit(e.target.value)} placeholder="0"
                     className="w-full bg-transparent pl-6 pr-4 py-2 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                 </div>
                 <p className="text-xs text-text-dim mt-2">Shows units needed for this profit.</p>

@@ -360,7 +360,7 @@ function QuestionBankWorkspace({ onUnauthorized }) {
           <div>
             <Link to="/editor" className="focus-ring inline-flex items-center gap-2 rounded-lg text-xs font-bold text-text-muted hover:text-text-primary"><ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Lesson editor</Link>
             <p className="mt-4 font-hand text-lg text-accent -rotate-2 inline-block">assessment workspace</p>
-            <h1 className="mt-1 text-4xl font-display font-extrabold tracking-tight text-text-primary md:text-5xl">Question bank.</h1>
+            <h1 className="minimal-page-title mt-1">Question bank.</h1>
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={() => navigateWithGuard({ type: 'new' })} className="btn-primary"><PlusIcon className="h-4 w-4" aria-hidden="true" /> New question</button>

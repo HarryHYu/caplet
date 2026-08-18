@@ -37,13 +37,13 @@ const ROICalculator = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-xl">Tools, wealth and investing</span>
+              <span className="font-hand text-xl text-accent -rotate-2 inline-block">Tools, wealth and investing</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-2 mb-6">Return on<br />Investment.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 Calculate total ROI and annualised return on any investment (shares, property, business, or otherwise).
               </p>
             </div>
-            <Link to="/money/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">&larr; Back to tools</Link>
+            <Link to="/money/tools" className="btn-secondary text-sm px-8 press">&larr; Back to tools</Link>
           </div>
         </header>
 
@@ -53,20 +53,20 @@ const ROICalculator = () => {
             <form onSubmit={handleSubmit} className="space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-3 block">Initial Investment (AUD)</label>
+                  <label htmlFor="roi-initial" className="text-sm font-semibold text-text-dim mb-3 block">Initial Investment (AUD)</label>
                   <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
-                    <input
+                    <input id="roi-initial"
                       type="number" min="0" step="100" value={initialInvestment} onChange={(e) => setInitialInvestment(e.target.value)} placeholder="0.00"
                       className="w-full bg-transparent pl-9 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-3 block">Final Value (AUD)</label>
+                  <label htmlFor="roi-final" className="text-sm font-semibold text-text-dim mb-3 block">Final Value (AUD)</label>
                   <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
-                    <input
+                    <input id="roi-final"
                       type="number" min="0" step="100" value={finalValue} onChange={(e) => setFinalValue(e.target.value)} placeholder="0.00"
                       className="w-full bg-transparent pl-9 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                     />
@@ -74,16 +74,16 @@ const ROICalculator = () => {
                 </div>
               </div>
               <div className="max-w-xs">
-                <label className="text-sm font-semibold text-text-dim mb-3 block">Holding Period (optional)</label>
+                <label htmlFor="roi-years" className="text-sm font-semibold text-text-dim mb-3 block">Holding Period (optional)</label>
                 <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
-                  <input
+                  <input id="roi-years"
                     type="number" min="0" step="0.5" value={years} onChange={(e) => setYears(e.target.value)} placeholder="Years"
                     className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/20"
                   />
                 </div>
                 <p className="text-xs text-text-dim mt-2">Required for annualised return.</p>
               </div>
-              <button type="submit" className="btn-primary press w-full py-5 hover:-translate-y-0.5 transition-transform">Calculate ROI</button>
+              <button type="submit" className="btn-primary press w-full py-5 press">Calculate ROI</button>
             </form>
           </div>
 
@@ -96,7 +96,7 @@ const ROICalculator = () => {
                 <div className="space-y-10">
                   <div>
                     <p className="text-xs font-semibold text-text-dim mb-3">Total ROI</p>
-                    <p className={`font-display text-5xl font-extrabold tracking-tight ${result.roi >= 0 ? 'text-text-primary' : 'text-red-500'}`}>
+                    <p className={`font-display text-5xl font-extrabold tracking-tight ${result.roi >= 0 ? 'text-text-primary' : 'text-text-error'}`}>
                       {result.roi >= 0 ? '+' : ''}{result.roi.toFixed(2)}%
                     </p>
                   </div>
@@ -104,7 +104,7 @@ const ROICalculator = () => {
                     <div className="flex justify-between items-end gap-4">
                       <div className="bg-surface-raised/60 rounded-2xl px-5 py-4 flex-1">
                         <p className="text-xs font-semibold text-text-dim mb-1">Net Gain / Loss</p>
-                        <p className={`text-xl font-bold ${result.gain >= 0 ? 'text-accent' : 'text-red-500'}`}>{formatCurrency(result.gain)}</p>
+                        <p className={`text-xl font-bold ${result.gain >= 0 ? 'text-accent' : 'text-text-error'}`}>{formatCurrency(result.gain)}</p>
                       </div>
                       <div className="bg-surface-raised/60 rounded-2xl px-5 py-4 flex-1 text-right">
                         <p className="text-xs font-semibold text-text-dim mb-1">Final Value</p>
@@ -114,7 +114,7 @@ const ROICalculator = () => {
                     {result.annualizedROI !== null && (
                       <div className="bg-surface-raised/60 rounded-2xl px-5 py-4">
                         <p className="text-xs font-semibold text-text-dim mb-2">Annualised Return (CAGR)</p>
-                        <p className={`text-3xl font-bold ${result.annualizedROI >= 0 ? 'text-text-primary' : 'text-red-500'}`}>
+                        <p className={`text-3xl font-bold ${result.annualizedROI >= 0 ? 'text-text-primary' : 'text-text-error'}`}>
                           {result.annualizedROI >= 0 ? '+' : ''}{result.annualizedROI.toFixed(2)}% p.a.
                         </p>
                         <p className="text-xs text-text-dim mt-1">Over {result.n} year{result.n !== 1 ? 's' : ''}.</p>

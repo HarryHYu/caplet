@@ -39,13 +39,13 @@ const InflationCalculator = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-xl">Tools, savings and growth</span>
+              <span className="font-hand text-xl text-accent -rotate-2 inline-block">Tools, savings and growth</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-6 mt-2">Inflation<br />Calculator.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 See how inflation erodes purchasing power (or inflates future costs) over time.
               </p>
             </div>
-            <Link to="/money/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">&larr; Back to tools</Link>
+            <Link to="/money/tools" className="btn-secondary text-sm px-8 press">&larr; Back to tools</Link>
           </div>
         </header>
 
@@ -69,12 +69,12 @@ const InflationCalculator = () => {
 
             <form onSubmit={handleSubmit} className="space-y-12">
               <div>
-                <label className="text-sm font-bold text-text-dim mb-3 block">
+                <label htmlFor="infl-amount" className="text-sm font-bold text-text-dim mb-3 block">
                   {mode === 'cost' ? 'Current Cost (AUD)' : 'Current Savings (AUD)'}
                 </label>
                 <div className="relative rounded-xl block-cream border border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
-                  <input
+                  <input id="infl-amount"
                     type="number" min="0" step="100" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00"
                     className="w-full bg-transparent pl-9 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/40"
                   />
@@ -82,9 +82,9 @@ const InflationCalculator = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
                 <div>
-                  <label className="text-sm font-bold text-text-dim mb-3 block">Annual Inflation Rate (%)</label>
+                  <label htmlFor="infl-rate" className="text-sm font-bold text-text-dim mb-3 block">Annual Inflation Rate (%)</label>
                   <div className="relative rounded-xl block-cream border border-line-soft focus-within:border-accent transition-colors">
-                    <input
+                    <input id="infl-rate"
                       type="number" min="0" max="50" step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="3.0"
                       className="w-full bg-transparent pl-4 pr-9 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/40"
                     />
@@ -93,16 +93,16 @@ const InflationCalculator = () => {
                   <p className="text-xs text-text-dim mt-2">AU long-run average is roughly 3%.</p>
                 </div>
                 <div>
-                  <label className="text-sm font-bold text-text-dim mb-3 block">Time Period</label>
+                  <label htmlFor="infl-years" className="text-sm font-bold text-text-dim mb-3 block">Time Period</label>
                   <div className="relative rounded-xl block-cream border border-line-soft focus-within:border-accent transition-colors">
-                    <input
+                    <input id="infl-years"
                       type="number" min="1" max="100" step="1" value={years} onChange={(e) => setYears(e.target.value)} placeholder="Years"
                       className="w-full bg-transparent px-4 py-3 text-lg font-bold text-text-primary outline-none placeholder:text-text-dim/40"
                     />
                   </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-4 hover:-translate-y-0.5 transition-transform">Calculate</button>
+              <button type="submit" className="btn-primary press w-full py-4 press">Calculate</button>
             </form>
           </div>
 

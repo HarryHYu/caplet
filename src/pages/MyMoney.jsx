@@ -45,7 +45,7 @@ function DeleteScenarioDialog({ busy, onCancel, onConfirm }) {
   const dialogRef = useDialogFocus({ onDismiss: onCancel, dismissDisabled: busy });
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4 backdrop-blur-sm" role="presentation">
-      <div ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby="delete-scenario-title" aria-describedby="delete-scenario-description" tabIndex="-1" className="animate-slide-up w-full max-w-md rounded-3xl bg-surface-raised p-7 shadow-2xl">
+      <div ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby="delete-scenario-title" aria-describedby="delete-scenario-description" tabIndex="-1" className="animate-slide-up w-full max-w-md rounded-3xl bg-surface-raised p-7 shadow-pop">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-error text-text-error"><TrashIcon className="h-6 w-6" aria-hidden="true" /></span>
         <h2 id="delete-scenario-title" className="mt-5 font-display text-2xl font-extrabold text-text-primary">Delete this saved scenario?</h2>
         <p id="delete-scenario-description" className="mt-3 text-sm font-medium leading-relaxed text-text-muted">The saved goal scenario will be removed. This does not delete the rest of your Caplet account.</p>
@@ -202,7 +202,7 @@ export default function MyMoney() {
                   {masked ? <EyeIcon className="h-4 w-4" aria-hidden="true" /> : <EyeSlashIcon className="h-4 w-4" aria-hidden="true" />}
                   {masked ? 'Show figures' : 'Hide figures'}
                 </button>
-                <button type="button" onClick={() => setDeleteOpen(true)} disabled={saving || deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-surface-error px-5 py-3 text-sm font-bold text-text-error transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-50"><TrashIcon className="h-4 w-4" aria-hidden="true" /> Delete</button>
+                <button type="button" onClick={() => setDeleteOpen(true)} disabled={saving || deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-surface-error px-5 py-3 text-sm font-bold text-text-error press disabled:cursor-wait disabled:opacity-50"><TrashIcon className="h-4 w-4" aria-hidden="true" /> Delete</button>
               </div>
             </div>
           </section>
@@ -216,11 +216,11 @@ export default function MyMoney() {
           <span className="section-kicker">Choose your data</span>
           <h2 id="number-choice-title" className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Start safely with an example.</h2>
           <div className="reveal-stagger mt-5 grid gap-4 md:grid-cols-2">
-            <button type="button" aria-pressed={inputMode === 'sample'} onClick={() => chooseMode('sample')} className={`min-h-32 rounded-3xl p-6 text-left transition-[background-color,box-shadow,transform] duration-300 hover:-translate-y-1 ${inputMode === 'sample' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
+            <button type="button" aria-pressed={inputMode === 'sample'} onClick={() => chooseMode('sample')} className={`min-h-32 rounded-3xl p-6 text-left card-lift ${inputMode === 'sample' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
               <span className="block font-display text-xl font-extrabold">Use sample numbers</span>
               <span className={`mt-2 block text-sm font-medium ${inputMode === 'sample' ? 'text-accent-contrast/80' : 'text-text-muted'}`}>Recommended for trying the prototype. Nothing is added to your financial profile.</span>
             </button>
-            <button type="button" aria-pressed={inputMode === 'own'} onClick={() => chooseMode('own')} className={`min-h-32 rounded-3xl p-6 text-left transition-[background-color,box-shadow,transform] duration-300 hover:-translate-y-1 ${inputMode === 'own' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
+            <button type="button" aria-pressed={inputMode === 'own'} onClick={() => chooseMode('own')} className={`min-h-32 rounded-3xl p-6 text-left card-lift ${inputMode === 'own' ? 'bg-accent text-accent-contrast shadow-glow' : 'bg-surface-raised text-text-primary shadow-card'}`}>
               <span className="block font-display text-xl font-extrabold">Use my own numbers</span>
               <span className={`mt-2 block text-sm font-medium ${inputMode === 'own' ? 'text-accent-contrast/80' : 'text-text-muted'}`}>Only saved after you press Save. Existing savings can be loaded from your private profile.</span>
             </button>

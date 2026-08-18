@@ -25,6 +25,9 @@ import { findQuoteSpans } from '../../lib/essaySlides';
  */
 
 const noteAccent = (annotation) => (annotation.kind === 'explanation'
+    // Annotation series palette (violet = conclusion, amber = topic sentence,
+    // emerald = quote, rose = deletion). Literal like a chart legend so the roles
+    // read the same in every theme; see AnnotatedLegend in EssayMemoriser.
     ? 'border-l-violet-400 dark:border-l-violet-500/70'
     : annotation.source === 'ai'
         ? 'border-l-accent'
@@ -47,7 +50,7 @@ function NoteCard({ annotation, active, onSelect, onDelete, onEdit }) {
             onClick={() => onSelect?.(annotation.id)}
             onKeyDown={(e) => { if (e.key === 'Enter') onSelect?.(annotation.id); }}
             className={`w-full rounded-xl border border-line-soft border-l-[3px] bg-surface-raised p-3 text-left transition-shadow ${noteAccent(annotation)} ${
-                active ? 'shadow-[0_10px_28px_-18px_rgba(20,20,18,0.5)] ring-1 ring-accent/40' : 'hover:shadow-[0_10px_28px_-22px_rgba(20,20,18,0.4)]'
+                active ? 'shadow-card ring-1 ring-accent/40' : 'hover:shadow-card'
             }`}
         >
             <div className="flex items-start justify-between gap-2">
@@ -58,7 +61,7 @@ function NoteCard({ annotation, active, onSelect, onDelete, onEdit }) {
                         <PencilSquareIcon className="h-3.5 w-3.5" />
                     </button>
                     <button type="button" aria-label="Delete note" onClick={(e) => { e.stopPropagation(); onDelete?.(annotation.id); }}
-                        className="rounded p-1 text-text-dim hover:bg-surface-soft hover:text-rose-500 transition-colors">
+                        className="rounded p-1 text-text-dim hover:bg-surface-soft hover:text-text-error transition-colors">
                         <TrashIcon className="h-3.5 w-3.5" />
                     </button>
                 </div>
@@ -79,7 +82,7 @@ function NoteCard({ annotation, active, onSelect, onDelete, onEdit }) {
                     />
                     <div className="mt-1.5 flex items-center gap-2">
                         <button type="button" onClick={() => { onEdit?.(annotation.id, draft); setEditing(false); }}
-                            className="rounded-lg bg-accent px-2.5 py-1 text-[11px] font-bold text-white">Save</button>
+                            className="rounded-lg bg-accent px-2.5 py-1 text-[11px] font-bold text-accent-contrast">Save</button>
                         <button type="button" onClick={() => { setDraft(annotation.note); setEditing(false); }}
                             className="text-[11px] font-semibold text-text-dim hover:text-text-primary">Cancel</button>
                     </div>
@@ -129,7 +132,7 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI, onFix, initialKind = 
     };
 
     return (
-        <div className="rounded-xl border border-accent/50 bg-surface-raised p-3 shadow-[0_10px_28px_-18px_rgba(20,20,18,0.5)]">
+        <div className="rounded-2xl border border-accent/50 bg-surface-raised p-3 shadow-pop">
             <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
                     {isFix ? 'Fix with AI' : isExplanation ? 'Your explanation' : 'New note'}
@@ -151,7 +154,7 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI, onFix, initialKind = 
                             aria-pressed={kind === opt.key}
                             onClick={() => setKind(opt.key)}
                             className={`flex-1 rounded-md px-2 py-1 text-[10px] font-bold transition-colors ${
-                                kind === opt.key ? 'bg-accent text-white' : 'text-text-dim hover:text-text-primary'
+                                kind === opt.key ? 'bg-accent text-accent-contrast' : 'text-text-dim hover:text-text-primary'
                             }`}
                         >
                             {opt.label}
@@ -171,7 +174,7 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI, onFix, initialKind = 
                             aria-pressed={kind === opt.key}
                             onClick={() => setKind(opt.key)}
                             className={`flex-1 rounded-md px-2 py-1 text-[10px] font-bold transition-colors ${
-                                kind === opt.key ? 'bg-accent text-white' : 'text-text-dim hover:text-text-primary'
+                                kind === opt.key ? 'bg-accent text-accent-contrast' : 'text-text-dim hover:text-text-primary'
                             }`}
                         >
                             {opt.label}
@@ -202,7 +205,7 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI, onFix, initialKind = 
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
                 <button type="button" disabled={!note.trim() || busy} onClick={submit}
-                    className="rounded-lg bg-accent px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-40">
+                    className="rounded-lg bg-accent px-2.5 py-1 text-[11px] font-bold text-accent-contrast disabled:opacity-40">
                     {isFix ? (busy ? 'Drafting…' : 'Draft a fix') : isExplanation ? 'Save explanation' : 'Save note'}
                 </button>
                 {onAskAI && !isFix && (
@@ -223,7 +226,7 @@ function NoteComposer({ anchor, onCancel, onSave, onAskAI, onFix, initialKind = 
  */
 function ProposalCard({ proposal, applying, onAccept, onDiscard }) {
     return (
-        <div className="rounded-xl border border-emerald-400/60 bg-surface-raised p-3 shadow-[0_10px_28px_-18px_rgba(20,20,18,0.5)]">
+        <div className="rounded-2xl border border-emerald-400/60 bg-surface-raised p-3 shadow-pop">
             <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Proposed fix</span>
                 <button type="button" aria-label="Discard fix" onClick={onDiscard} disabled={applying}
@@ -242,7 +245,7 @@ function ProposalCard({ proposal, applying, onAccept, onDiscard }) {
             )}
             <div className="mt-2 flex items-center gap-2">
                 <button type="button" onClick={onAccept} disabled={applying}
-                    className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-40">
+                    className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-accent-contrast disabled:opacity-40">
                     {applying ? 'Applying…' : 'Accept'}
                 </button>
                 <button type="button" onClick={onDiscard} disabled={applying}

@@ -83,7 +83,7 @@ function InlineRename({ value, onSave, className = '' }) {
           if (e.key === 'Enter') commit();
           if (e.key === 'Escape') { setDraft(value); setEditing(false); }
         }}
-        className={`bg-transparent border-b border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm ${className}`}
+        className={`bg-transparent border-b border-accent focus-ring rounded-sm ${className}`}
       />
     );
   }
@@ -118,7 +118,7 @@ function WorkspaceOverview({
         <div className="absolute top-[-20%] left-[8%] w-[26vw] h-[26vw] max-w-[340px] max-h-[340px] rounded-full bg-[color:var(--block-blue)] blur-[110px] pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface-body to-transparent pointer-events-none" />
         <div className="relative max-w-3xl mx-auto px-6 md:px-10 pt-14 pb-12">
-          <p className="font-hand text-xl text-blue -rotate-2 mb-3 inline-block">
+          <p className="mb-3 font-hand text-xl text-blue -rotate-2 inline-block">
             lesson workspace
           </p>
           <div className="flex items-end justify-between gap-8">
@@ -352,8 +352,11 @@ function SlideCard({
       className={`group rounded-xl border bg-surface-raised transition-colors duration-150 ${
         expanded
           ? 'border-accent/40'
+          // Amber is the site's caution signal (unsaved/needs-attention). The token
+          // set only covers error, not warning, so this stays literal until
+          // index.css gains a --text-warning/--surface-warning pair.
           : hasWarning
-          ? 'border-amber-400/60'
+          ? 'border-line-warning'
           : 'border-line-soft hover:border-text-dim/25'
       }`}
     >
@@ -371,7 +374,7 @@ function SlideCard({
               {slideKindLabel(slide)}
             </span>
             {hasWarning && !expanded && (
-              <span className="inline-flex items-center gap-1 px-2 py-[3px] rounded-md bg-amber-400/10 text-amber-600 text-[10px] font-bold tracking-wide uppercase">
+              <span className="inline-flex items-center gap-1 px-2 py-[3px] rounded-md bg-surface-warning text-text-warning text-[10px] font-bold tracking-wide uppercase">
                 ⚠ {warnings.length}
               </span>
             )}
@@ -452,15 +455,15 @@ function SlideCard({
         <div className="overflow-hidden">
           <div className="border-t border-line-soft/50 px-5 py-4 space-y-4">
             {hasWarning && (
-              <div className="flex items-start gap-3 px-3.5 py-3 rounded-xl border border-amber-400/30 bg-amber-400/[0.04]">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 mt-[1px] text-amber-500">
+              <div className="flex items-start gap-3 px-3.5 py-3 rounded-xl border border-line-warning bg-surface-warning/[0.04]">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 mt-[1px] text-text-warning">
                   <path d="M7 2L12.5 11.5H1.5L7 2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
                   <path d="M7 6v3M7 10.5h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                 </svg>
                 <div>
                   <ul className="space-y-0.5">
                     {warnings.map((w, i) => (
-                      <li key={i} className="text-[11.5px] text-amber-700 dark:text-amber-400 leading-snug">{w}</li>
+                      <li key={i} className="text-[11.5px] text-text-warning  leading-snug">{w}</li>
                     ))}
                   </ul>
                 </div>
@@ -571,7 +574,7 @@ function LessonBuilder({ lessonId, draft, setDraft, saveMsg, onNewSlide, onAddSl
         <input
           value={draft.title}
           onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-          className="w-full bg-transparent text-[2.5rem] md:text-5xl font-display font-bold text-text-primary tracking-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm leading-none pb-3 border-b border-transparent focus:border-line-soft/50 transition-colors duration-200"
+          className="w-full bg-transparent text-[2.5rem] md:text-5xl font-display font-bold text-text-primary tracking-tight focus-ring rounded-sm leading-none pb-3 border-b border-transparent focus:border-line-soft/50 transition-colors duration-200"
           placeholder="Untitled lesson"
         />
 
@@ -588,7 +591,7 @@ function LessonBuilder({ lessonId, draft, setDraft, saveMsg, onNewSlide, onAddSl
         {saveMsg && (
           <div className={`mb-6 flex items-start gap-2.5 px-4 py-3 rounded-xl border text-sm animate-slide-card-enter ${
             saveMsg.tone === 'error' ? 'bg-surface-error border-line-error text-text-error'
-            : saveMsg.tone === 'warn' ? 'bg-amber-400/[0.06] border-amber-400/30 text-amber-700 dark:text-amber-400'
+            : saveMsg.tone === 'warn' ? 'bg-surface-warning/[0.06] border-line-warning text-text-warning '
             : 'bg-[color-mix(in_srgb,var(--mark-green)_8%,transparent)] border-[color-mix(in_srgb,var(--mark-green)_30%,transparent)] text-[var(--mark-green)]'
           }`}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 mt-[1px]">
@@ -676,7 +679,7 @@ function ContentQualityDrawer({ draft, setDraft, outcomes, validation, history, 
 
   return (
     <div className="fixed inset-0 z-[80] flex justify-end bg-text-primary/30" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose(); }}>
-      <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="quality-title" className="relative h-full w-full max-w-xl overflow-y-auto bg-surface-body p-6 shadow-2xl md:p-8">
+      <section ref={dialogRef} tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="quality-title" className="relative h-full w-full max-w-xl overflow-y-auto bg-surface-body p-6 shadow-pop md:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">Content governance</p>
@@ -1259,8 +1262,8 @@ function EditorWorkspace({ onUnauthorized, initialLessonId = '', demoAccess = fa
                 </>
               )}
               {dirty && (
-                <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium text-amber-500/80">
-                  <span className="w-1 h-1 rounded-full bg-amber-500 shrink-0" />
+                <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium text-text-warning">
+                  <span className="w-1 h-1 rounded-full bg-surface-warning shrink-0" />
                   Unsaved
                 </span>
               )}

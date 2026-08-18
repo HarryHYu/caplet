@@ -34,7 +34,7 @@ export default function Footer() {
             <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-line-soft bg-surface-raised">
               <img src="/logo.png" alt="" className="h-full w-full object-cover" />
             </span>
-            <span className="font-bricolage text-xl font-extrabold tracking-[-0.03em]">Caplet</span>
+            <span className="font-display text-xl font-extrabold tracking-[-0.03em]">Caplet</span>
           </Link>
 
           <nav aria-label="Footer navigation">

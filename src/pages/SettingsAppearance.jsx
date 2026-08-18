@@ -35,7 +35,7 @@ export default function SettingsAppearance() {
   return (
     <div>
       <div className="mb-10">
-        <p className="mb-1 inline-block -rotate-2 font-hand text-lg text-accent">make it yours</p>
+        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">make it yours</p>
         <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Appearance</h2>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">
           Choose how Caplet feels across every page. Your preference is saved on this device.
@@ -128,7 +128,7 @@ export default function SettingsAppearance() {
               >
                 <span className="relative block h-24 overflow-hidden rounded-xl border border-black/5" style={{ backgroundColor: colours[0] }}>
                   <span className="absolute inset-x-3 bottom-3 top-5 rounded-lg border border-black/5 shadow-sm" style={{ backgroundColor: colours[1] }} />
-                  <span className="absolute bottom-6 left-6 h-3 w-20 rounded-full bg-white/80" />
+                  <span className="absolute bottom-6 left-6 h-3 w-20 rounded-full bg-accent-contrast/80" />
                   <span className="absolute bottom-6 right-6 h-7 w-7 rounded-full" style={{ backgroundColor: colours[2] }} />
                   {selected && (
                     <span className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full text-[color:var(--surface-body)] shadow-sm" style={{ backgroundColor: colours[2] }}>

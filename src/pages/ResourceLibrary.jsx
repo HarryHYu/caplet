@@ -314,8 +314,8 @@ function AssessmentPage() {
         <BackLink to="/library/economics">Economics</BackLink>
         <section className="mb-8 max-w-3xl">
           <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Assessment guide</p>
-          <h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Know what the course asks of you.</h1>
-          <p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Use this as a planning reference for HSC-style practice and school assessments. Check the official links below for the current rules.</p>
+          <h1 className="minimal-page-title mt-2">Know what the course asks of you.</h1>
+          <p className="minimal-page-description">Use this as a planning reference for HSC-style practice and school assessments. Check the official links below for the current rules.</p>
         </section>
         <section className="grid gap-4 md:grid-cols-3">{assessmentPages.map((page) => <Link key={page.id} to={`/library/economics/assessment/${page.id}`} className="card-lift focus-ring group rounded-2xl border border-line-soft bg-surface-raised p-6 hover:border-accent"><p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">{page.eyebrow}</p><h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight group-hover:text-accent">{page.title}</h2><p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{page.body}</p><span className="mt-6 inline-flex items-center gap-1 text-sm font-extrabold text-accent">Open <ArrowRightIcon className="h-4 w-4" /></span></Link>)}</section>
       </div>

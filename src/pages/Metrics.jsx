@@ -51,14 +51,14 @@ function timeAgo(iso) {
 
 function StatCell({ label, value, sub, accent }) {
   return (
-    <div className={`p-10 group rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform ${accent ? 'bg-accent text-white' : 'bg-surface-raised'}`}>
-      <p className={`text-sm font-medium mb-8 ${accent ? 'text-white/80' : 'text-text-dim group-hover:text-accent transition-colors'}`}>
+    <div className={`p-10 group rounded-3xl shadow-card press ${accent ? 'bg-accent text-accent-contrast' : 'bg-surface-raised'}`}>
+      <p className={`text-sm font-medium mb-8 ${accent ? 'text-accent-contrast/80' : 'text-text-dim group-hover:text-accent transition-colors'}`}>
         {label}
       </p>
-      <p className={`text-5xl font-display font-extrabold tracking-tight ${accent ? 'text-white' : 'text-text-primary'}`}>
+      <p className={`text-5xl font-display font-extrabold tracking-tight ${accent ? 'text-accent-contrast' : 'text-text-primary'}`}>
         {value}
       </p>
-      {sub && <p className={`mt-4 text-xs font-medium ${accent ? 'text-white/70' : 'text-text-dim'}`}>{sub}</p>}
+      {sub && <p className={`mt-4 text-xs font-medium ${accent ? 'text-accent-contrast/70' : 'text-text-dim'}`}>{sub}</p>}
     </div>
   );
 }
@@ -155,13 +155,13 @@ export default function Metrics() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-surface-body text-text-primary py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body text-text-primary py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
 
         {/* ── header ── */}
         <header className="reveal mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div>
-            <span className="font-hand text-accent text-lg">Platform analytics</span>
+            <span className="font-hand text-lg text-accent -rotate-2 inline-block">Platform analytics</span>
             <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight">
               Caplet<br />
               <span className="text-accent">Metrics.</span>
@@ -177,7 +177,7 @@ export default function Metrics() {
             <button
               type="button"
               onClick={load}
-              className="btn-secondary mt-4 hover:-translate-y-0.5 transition-transform"
+              className="btn-secondary mt-4 press"
             >
               Refresh now
             </button>
@@ -213,7 +213,7 @@ export default function Metrics() {
               { label: 'Survey Responses', value: fmtNum(data.survey?.totalResponses) },
               { label: 'Avg Confidence', value: data.survey?.averageConfidence > 0 ? `${data.survey.averageConfidence}/10` : '—' },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-surface-raised p-6 rounded-2xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] hover:-translate-y-0.5 transition-transform group">
+              <div key={label} className="bg-surface-raised p-6 rounded-2xl shadow-card press group">
                 <p className="text-xs font-medium text-text-dim mb-4 group-hover:text-accent transition-colors">{label}</p>
                 <p className="text-2xl font-display font-extrabold tracking-tight text-text-primary">{value}</p>
               </div>
@@ -289,7 +289,7 @@ export default function Metrics() {
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <article className="rounded-3xl bg-surface-raised p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <article className="rounded-3xl bg-surface-raised p-8 shadow-card">
                 <h3 className="text-xl font-display font-bold tracking-tight text-text-primary">Practice journey</h3>
                 <p className="mt-2 text-sm text-text-dim">Reach across diagnostics, questions and completed practice.</p>
                 <dl className="mt-5">
@@ -318,7 +318,7 @@ export default function Metrics() {
                 )}
               </article>
 
-              <article className="rounded-3xl bg-surface-raised p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+              <article className="rounded-3xl bg-surface-raised p-8 shadow-card">
                 <h3 className="text-xl font-display font-bold tracking-tight text-text-primary">Recommendations and mastery</h3>
                 <p className="mt-2 text-sm text-text-dim">Whether suggested next steps are used, and where learners currently sit.</p>
                 <dl className="mt-5 grid grid-cols-2 gap-4">
@@ -340,7 +340,7 @@ export default function Metrics() {
             </div>
 
             {dailyTrend.length > 0 && (
-              <article className="mt-6 rounded-3xl bg-surface-raised p-6 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)] sm:p-10">
+              <article className="mt-6 rounded-3xl bg-surface-raised p-6 shadow-card sm:p-10">
                 <h3 className="text-xl font-display font-bold tracking-tight text-text-primary">Daily learner activity</h3>
                 <p className="mt-2 text-sm text-text-dim">Daily unique opted-in learners; counts can overlap across activities.</p>
                 <div
@@ -410,7 +410,7 @@ export default function Metrics() {
         <section className="reveal mb-24 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* users by role */}
-          <div className="bg-surface-raised p-10 rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="bg-surface-raised p-10 rounded-3xl shadow-card">
             <h2 className="text-xl font-display font-bold tracking-tight text-text-primary">Users by Role</h2>
             <div className="mt-6">
               <InlineBar label="Students" value={data.users?.byRole?.student ?? 0} total={totalUsers} />
@@ -420,7 +420,7 @@ export default function Metrics() {
           </div>
 
           {/* engagement reach */}
-          <div className="bg-surface-raised p-10 rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          <div className="bg-surface-raised p-10 rounded-3xl shadow-card">
             <h2 className="text-xl font-display font-bold tracking-tight text-text-primary">Engagement Reach</h2>
             <div className="mt-6 space-y-0">
               {[
@@ -443,7 +443,7 @@ export default function Metrics() {
           <section className="reveal mb-24">
             <h2 className="text-2xl font-display font-bold tracking-tight text-text-primary">Top Courses</h2>
             <p className="text-sm text-text-dim mb-8 mt-2">Ranked by total lesson completions.</p>
-            <div className="bg-surface-raised p-10 rounded-3xl shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+            <div className="bg-surface-raised p-10 rounded-3xl shadow-card">
               <ResponsiveContainer width="100%" height={Math.max(180, topCourses.length * 44)}>
                 <BarChart
                   data={topCourses}

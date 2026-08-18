@@ -66,10 +66,10 @@ function FeedbackResult({ attempt, onNew, returnTo }) {
     ? `/library/economics/focus/${attempt.sourceFocusId}?resource=${encodeURIComponent(attempt.sourceResourceId || '')}`
     : returnTo;
   return (
-    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+    <div className="bg-surface-raised rounded-3xl p-6 md:p-10 shadow-card">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-line-soft">
         <MarkRing mark={attempt.estimatedMark} total={attempt.markValue} />
-        <span className="shrink-0 text-sm font-bold px-4 py-2 rounded-full bg-block-blue text-blue self-start md:self-center">
+        <span className="shrink-0 text-sm font-bold px-4 py-2 rounded-full block-blue text-blue self-start md:self-center">
           {attempt.band}
         </span>
       </div>
@@ -101,13 +101,13 @@ function FeedbackResult({ attempt, onNew, returnTo }) {
         </div>
         <div>
           <h3 className="flex items-center gap-2 text-sm font-bold text-text-primary mb-3">
-            <ExclamationTriangleIcon className="w-4 h-4 text-amber-500" /> What was missing
+            <ExclamationTriangleIcon className="w-4 h-4 text-text-warning" /> What was missing
           </h3>
           {attempt.gaps?.length ? (
             <ul className="space-y-2">
               {attempt.gaps.map((g, i) => (
                 <li key={i} className="text-sm text-text-muted leading-relaxed flex gap-2">
-                  <span className="text-amber-500 mt-0.5">&bull;</span><span>{g}</span>
+                  <span className="text-text-warning mt-0.5">&bull;</span><span>{g}</span>
                 </li>
               ))}
             </ul>
@@ -128,13 +128,13 @@ function FeedbackResult({ attempt, onNew, returnTo }) {
 
       <div className="mb-8">
         <h3 className="text-sm font-bold text-text-primary mb-3">Stronger model answer</h3>
-        <p className="p-5 rounded-2xl bg-block-cream font-serif text-sm md:text-base leading-relaxed whitespace-pre-wrap text-text-primary">
+        <p className="p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed whitespace-pre-wrap text-text-primary">
           {attempt.modelAnswer}
         </p>
       </div>
 
       {attempt.nextRecommendation && (
-        <div className="p-5 rounded-2xl bg-block-blue mb-8">
+        <div className="p-5 rounded-2xl block-blue mb-8">
           <p className="text-xs font-bold uppercase tracking-wide text-blue mb-1.5">Next practice</p>
           <p className="text-sm text-text-primary leading-relaxed">{attempt.nextRecommendation}</p>
         </div>
@@ -149,7 +149,7 @@ function FeedbackResult({ attempt, onNew, returnTo }) {
 
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={onNew}
-          className="btn-primary inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform">
+          className="btn-primary inline-flex items-center gap-2 press">
           <SparklesIcon className="w-4 h-4" /> Mark another answer
         </button>
         <Link to="/study-plan" className="inline-flex items-center gap-2 rounded-xl border border-line-soft bg-surface-raised px-5 py-3 text-sm font-extrabold text-text-primary hover:border-accent hover:text-accent">
@@ -199,7 +199,7 @@ function MarkingForm({ onMarked, initialDraft = {} }) {
 
   if (busy) {
     return (
-      <div className="bg-surface-raised rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+      <div className="bg-surface-raised rounded-3xl p-10 text-center shadow-card">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-5" />
         <p className="font-display text-lg font-extrabold tracking-tight text-text-primary mb-2">Marking your answer</p>
         <p className="text-sm text-text-muted"><CyclingMessage messages={MARKING_MESSAGES} /></p>
@@ -208,7 +208,7 @@ function MarkingForm({ onMarked, initialDraft = {} }) {
   }
 
   return (
-    <form onSubmit={submit} className="bg-surface-raised rounded-3xl p-6 md:p-8 shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+    <form onSubmit={submit} className="bg-surface-raised rounded-3xl p-6 md:p-8 shadow-card">
       {initialDraft.sourceFocusId ? <div className="mb-5 rounded-xl border border-accent/20 bg-accent-soft px-4 py-3 text-sm font-bold text-text-primary">From Economics · {initialDraft.focusArea}</div> : null}
       <label className="block text-xs font-bold uppercase tracking-wide text-text-dim mb-2">Question</label>
       <textarea
@@ -258,12 +258,12 @@ function MarkingForm({ onMarked, initialDraft = {} }) {
 
       <div className="mt-2 flex items-center justify-between text-xs font-medium text-text-dim"><span>Be specific: use terms, effects, and evidence.</span><span className="tabular-nums">{studentAnswer.trim() ? studentAnswer.trim().split(/\s+/).length : 0} words</span></div>
 
-      {error && <p className="text-sm text-rose-400 mt-3 font-medium">{error}</p>}
+      {error && <p className="text-sm text-text-error mt-3 font-medium">{error}</p>}
 
       <div className="flex items-center justify-between mt-5">
         <p className="text-[11px] text-text-dim/60 max-w-xs">Estimated mark and feedback are AI-generated practice guidance, not an official result.</p>
         <button type="submit" disabled={busy}
-          className="btn-primary shrink-0 inline-flex items-center gap-2 hover:-translate-y-0.5 transition-transform disabled:opacity-40">
+          className="btn-primary shrink-0 inline-flex items-center gap-2 press disabled:opacity-40">
           <SparklesIcon className="w-4 h-4" /> Mark my answer
         </button>
       </div>
@@ -274,7 +274,7 @@ function MarkingForm({ onMarked, initialDraft = {} }) {
 function HistoryList({ attempts, onOpen, onDelete }) {
   if (!attempts.length) {
     return (
-      <div className="bg-block-cream rounded-3xl p-10 text-center shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+      <div className="block-cream rounded-3xl p-10 text-center shadow-card">
         <ClockIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
         <p className="text-text-dim text-sm font-medium">No attempts yet — mark your first answer to see it here.</p>
       </div>
@@ -284,7 +284,7 @@ function HistoryList({ attempts, onOpen, onDelete }) {
     <div className="grid grid-cols-1 gap-3">
       {attempts.map((a) => (
         <div key={a.id}
-          className="bg-surface-raised rounded-2xl p-5 flex items-center justify-between gap-4 group shadow-[0_24px_50px_-34px_rgba(20,20,18,0.3)]">
+          className="bg-surface-raised rounded-2xl p-5 flex items-center justify-between gap-4 group shadow-card">
           <button type="button" onClick={() => onOpen(a.id)} className="min-w-0 text-left flex-1 flex items-center gap-4">
             <div className="w-11 h-11 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
               <span className="text-xs font-display font-extrabold text-accent">{a.estimatedMark}/{a.markValue}</span>
@@ -295,7 +295,7 @@ function HistoryList({ attempts, onOpen, onDelete }) {
             </div>
           </button>
           <button type="button" onClick={() => onDelete(a.id)}
-            className="shrink-0 p-2 text-text-dim hover:text-rose-400 transition-colors" aria-label="Delete attempt">
+            className="shrink-0 p-2 text-text-dim hover:text-text-error transition-colors" aria-label="Delete attempt">
             <TrashIcon className="w-4 h-4" />
           </button>
         </div>
@@ -373,7 +373,7 @@ export default function EconomicsMarker() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-surface-body py-32 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom max-w-4xl">
         {active ? (
           <div>
@@ -388,7 +388,7 @@ export default function EconomicsMarker() {
         ) : (
           <>
             <header className="mb-12 reveal">
-              <span className="font-hand text-2xl text-accent -rotate-2 inline-block mb-3">capletmark</span>
+              <span className="mb-3 font-hand text-2xl text-accent -rotate-2 inline-block">capletmark</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl">
                 Mark my HSC <br />Economics answer.
               </h1>

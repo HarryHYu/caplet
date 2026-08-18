@@ -52,7 +52,7 @@ const MortgageCalculator = () => {
         <header className="mb-20 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-xl mb-3 block">Tools / Mortgage</span>
+              <span className="mb-3 font-hand text-xl text-accent -rotate-2 inline-block">Tools / Mortgage</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-6">
                 Mortgage <br />Calculator.
               </h1>
@@ -71,12 +71,12 @@ const MortgageCalculator = () => {
             <h2 className="font-display font-bold tracking-tight text-2xl mb-12">Loan Details</h2>
             <form onSubmit={handleSubmit} className="space-y-12">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-3 block">
+                <label htmlFor="mort-amount" className="text-sm font-semibold text-text-dim mb-3 block">
                   Property Loan Amount (AUD)
                 </label>
                 <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
-                  <input
+                  <input id="mort-amount"
                     type="number"
                     min="0"
                     step="10000"
@@ -90,11 +90,11 @@ const MortgageCalculator = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-3 block">
+                  <label htmlFor="mort-rate" className="text-sm font-semibold text-text-dim mb-3 block">
                     Annual Rate (%)
                   </label>
                   <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition">
-                    <input
+                    <input id="mort-rate"
                       type="number"
                       min="0"
                       max="100"
@@ -109,11 +109,11 @@ const MortgageCalculator = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-3 block">
+                  <label htmlFor="mort-term" className="text-sm font-semibold text-text-dim mb-3 block">
                     Loan Term
                   </label>
                   <div className="relative rounded-xl bg-surface-body px-4 focus-within:ring-2 focus-within:ring-accent transition">
-                    <input
+                    <input id="mort-term"
                       type="number"
                       min="1"
                       max="50"
@@ -127,7 +127,7 @@ const MortgageCalculator = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-4 mt-4 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-4 mt-4 press">
                 Calculate Repayments
               </button>
             </form>
@@ -177,7 +177,6 @@ const MortgageCalculator = () => {
                       </p>
                     </div>
                   </div>
-                  <AffiliateListings type="realestate" maxBudget={parseFloat(loanAmount) || undefined} />
                 </>
               )
             ) : (
@@ -188,6 +187,21 @@ const MortgageCalculator = () => {
             )}
           </div>
         </div>
+
+        {/* Sponsored listings sit outside the educational results panel so the
+            teaching content is never mixed up with anything commercial. */}
+        {result && !result.error ? (
+          <section className="mt-10" aria-labelledby="mortgage-sponsored-title">
+            <div className="flex items-center gap-4">
+              <h2 id="mortgage-sponsored-title" className="shrink-0 text-xs font-extrabold uppercase tracking-[0.14em] text-text-dim">Sponsored listings</h2>
+              <span aria-hidden="true" className="h-px flex-1 bg-line-soft" />
+            </div>
+            <p className="mt-2 text-sm font-medium text-text-muted">Paid placements from third parties. Nothing above this line is sponsored, and Caplet does not sell any product.</p>
+            <div className="mt-5 rounded-3xl bg-surface-raised p-6 shadow-card md:p-8">
+              <AffiliateListings type="realestate" maxBudget={parseFloat(loanAmount) || undefined} />
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );

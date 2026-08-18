@@ -49,7 +49,7 @@ const BudgetPlanner = () => {
         <header className="mb-20 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-2xl">Plan your money</span>
+              <span className="font-hand text-2xl text-accent -rotate-2 inline-block">Plan your money</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-4 mb-8">
                 Budget<br />Planner.
               </h1>
@@ -70,12 +70,12 @@ const BudgetPlanner = () => {
 
             <form onSubmit={handleSubmit} className="space-y-16">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-4 block">
+                <label htmlFor="budget-net-monthly-income-aud" className="text-sm font-semibold text-text-dim mb-4 block">
                   Net Monthly Income (AUD)
                 </label>
                 <div className="relative rounded-xl bg-surface-body pl-4 border border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-4 bottom-4 text-text-dim font-bold">$</span>
-                  <input
+                  <input id="budget-net-monthly-income-aud"
                     type="number"
                     min="0"
                     step="100"
@@ -90,12 +90,12 @@ const BudgetPlanner = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 {Object.keys(expenses).map((key) => (
                   <div key={key}>
-                    <label className="text-sm font-semibold text-text-dim mb-4 block">
+                    <label htmlFor={`budget-${key}`} className="text-sm font-semibold text-text-dim mb-4 block">
                       {key.charAt(0).toUpperCase() + key.slice(1)} Account
                     </label>
                     <div className="relative rounded-xl bg-surface-body pl-3 border border-line-soft focus-within:border-accent transition-colors">
                       <span className="absolute left-3 bottom-2.5 text-text-dim font-bold text-sm">$</span>
-                      <input
+                      <input id={`budget-${key}`}
                         type="number"
                         min="0"
                         step="10"
@@ -109,7 +109,7 @@ const BudgetPlanner = () => {
                 ))}
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-5 mt-12 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-5 mt-12 press">
                 Calculate Budget
               </button>
             </form>

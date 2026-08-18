@@ -38,10 +38,11 @@ const NetWorth = () => {
 
   const InputRow = ({ label, groupKey, field, values }) => (
     <div>
-      <label className="text-sm font-semibold text-text-dim mb-4 block">{label}</label>
+      <label htmlFor={`nw-${groupKey}-${field}`} className="text-sm font-semibold text-text-dim mb-4 block">{label}</label>
       <div className="relative rounded-xl bg-surface-raised border border-line-soft focus-within:border-accent transition-colors">
         <span className="absolute left-4 bottom-4 text-text-dim font-bold">$</span>
         <input
+          id={`nw-${groupKey}-${field}`}
           type="number" min="0" step="100" value={values[field]} placeholder="0.00"
           onChange={(e) => set(groupKey, field, e.target.value)}
           className="w-full bg-transparent pl-10 pr-4 py-4 text-2xl font-bold text-text-primary outline-none placeholder:text-text-dim/20"
@@ -58,7 +59,7 @@ const NetWorth = () => {
         <header className="mb-24 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-xl mb-3 block">Tools, Wealth</span>
+              <span className="mb-3 font-hand text-xl text-accent -rotate-2 inline-block">Tools, Wealth</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8">Net Worth<br />Calculator.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 Total assets minus total liabilities, the single most honest number in personal finance.
@@ -87,7 +88,7 @@ const NetWorth = () => {
                   ))}
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-6 text-sm hover:-translate-y-0.5 transition-transform">Calculate Net Worth</button>
+              <button type="submit" className="btn-primary press w-full py-6 text-sm press">Calculate Net Worth</button>
             </form>
           </div>
 
@@ -97,7 +98,7 @@ const NetWorth = () => {
               <div className="animate-rise space-y-12 relative z-10">
                 <div>
                   <p className="text-xs font-semibold text-text-dim mb-4 uppercase tracking-wide">Net Worth</p>
-                  <p className={`font-display text-5xl font-extrabold tracking-tight ${result.netWorth >= 0 ? 'text-text-primary' : 'text-red-500'}`}>
+                  <p className={`font-display text-5xl font-extrabold tracking-tight ${result.netWorth >= 0 ? 'text-text-primary' : 'text-text-error'}`}>
                     {formatCurrency(result.netWorth)}
                   </p>
                 </div>

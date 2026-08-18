@@ -48,7 +48,7 @@ const LoanRepayment = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-lg mb-3 block">Loan repayments</span>
+              <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Loan repayments</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-6">
                 Loan repayments.
               </h1>
@@ -67,12 +67,12 @@ const LoanRepayment = () => {
             <h2 className="font-display font-bold tracking-tight text-2xl mb-10">Loan Details</h2>
             <form onSubmit={handleSubmit} className="space-y-12">
               <div>
-                <label className="text-sm font-semibold text-text-dim mb-4 block">
+                <label htmlFor="loan-amount" className="text-sm font-semibold text-text-dim mb-4 block">
                   Loan Amount (AUD)
                 </label>
                 <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
-                  <input
+                  <input id="loan-amount"
                     type="number"
                     min="0"
                     step="1000"
@@ -86,11 +86,11 @@ const LoanRepayment = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">
+                  <label htmlFor="loan-rate" className="text-sm font-semibold text-text-dim mb-4 block">
                     Annual Rate (%)
                   </label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                    <input
+                    <input id="loan-rate"
                       type="number"
                       min="0"
                       max="100"
@@ -105,11 +105,11 @@ const LoanRepayment = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-4 block">
+                  <label htmlFor="loan-term" className="text-sm font-semibold text-text-dim mb-4 block">
                     Loan Term (Years)
                   </label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
-                    <input
+                    <input id="loan-term"
                       type="number"
                       min="0.5"
                       max="50"
@@ -123,7 +123,7 @@ const LoanRepayment = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-5 mt-4 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-5 mt-4 press">
                 Calculate Repayments
               </button>
             </form>
@@ -166,7 +166,6 @@ const LoanRepayment = () => {
                       </div>
                     </div>
                   </div>
-                  <AffiliateListings type="car" maxBudget={parseFloat(loanAmount) || undefined} />
                 </>
               )
             ) : (
@@ -177,6 +176,21 @@ const LoanRepayment = () => {
             )}
           </div>
         </div>
+
+        {/* Sponsored listings sit outside the educational results panel so the
+            teaching content is never mixed up with anything commercial. */}
+        {result && !result.error ? (
+          <section className="mt-10" aria-labelledby="loan-sponsored-title">
+            <div className="flex items-center gap-4">
+              <h2 id="loan-sponsored-title" className="shrink-0 text-xs font-extrabold uppercase tracking-[0.14em] text-text-dim">Sponsored listings</h2>
+              <span aria-hidden="true" className="h-px flex-1 bg-line-soft" />
+            </div>
+            <p className="mt-2 text-sm font-medium text-text-muted">Paid placements from third parties. Nothing above this line is sponsored, and Caplet does not sell any product.</p>
+            <div className="mt-5 rounded-3xl bg-surface-raised p-6 shadow-card md:p-8">
+              <AffiliateListings type="car" maxBudget={parseFloat(loanAmount) || undefined} />
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );

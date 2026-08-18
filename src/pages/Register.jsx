@@ -15,7 +15,7 @@ const Register = () => {
         {/* Wordmark */}
         <div className="relative z-10 p-12 xl:p-16">
           <Link to="/" className="group inline-flex items-center focus-ring rounded-md">
-            <span className="font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-contrast group-hover:text-accent transition-colors duration-200">
+            <span className="font-display font-extrabold tracking-[-0.02em] text-xl text-text-contrast group-hover:text-accent transition-colors duration-200">
               Caplet
             </span>
           </Link>
@@ -24,7 +24,7 @@ const Register = () => {
         {/* Vertically centered headline */}
         <div className="relative z-10 flex-1 flex items-center px-12 xl:px-20 pb-40">
           <div className="max-w-lg animate-rise-slow">
-            <span className="font-hand text-2xl text-accent mb-6 block -rotate-2">
+            <span className="mb-6 font-hand text-2xl text-accent -rotate-2 inline-block">
               free, open, and a little playful
             </span>
             <h2 className="text-6xl xl:text-7xl font-display font-extrabold text-text-contrast leading-[0.95] tracking-tight mb-6">
@@ -43,7 +43,7 @@ const Register = () => {
 
         {/* Top bar: mobile wordmark + back to home */}
         <div className="flex items-center justify-between px-8 lg:px-16 xl:px-24 pt-10">
-          <Link to="/" className="lg:hidden font-bricolage font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors focus-ring rounded-md">
+          <Link to="/" className="lg:hidden font-display font-extrabold tracking-[-0.02em] text-xl text-text-primary hover:text-accent transition-colors focus-ring rounded-md">
             Caplet
           </Link>
           <Link to="/" className="ml-auto text-sm font-bold text-text-dim hover:text-accent transition-colors focus-ring rounded-md">

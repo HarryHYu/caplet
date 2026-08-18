@@ -18,8 +18,8 @@ import { faculties } from '../data/hscSubjects';
 
 const LibrarySubjectCard = ({ subject }) => {
   const isAvailable = subject.available === true;
-  const classes = `group flex min-h-36 flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 transition-colors ${
-    isAvailable ? 'card-lift focus-ring hover:border-accent/50 hover:bg-surface-soft' : 'opacity-75'
+  const classes = `group flex min-h-36 flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 shadow-card transition-colors ${
+    isAvailable ? 'card-lift focus-ring hover:border-accent/50 hover:bg-surface-soft hover:shadow-card-hover' : 'opacity-75'
   }`;
   const content = (
     <>
@@ -44,7 +44,7 @@ const LibraryCourseCard = ({ path }) => {
   const actionLabel = path.status === 'in_progress' ? 'Continue' : 'Open';
 
   return (
-    <Link to={path.href} className="card-lift focus-ring group flex min-h-full flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 transition-colors hover:border-accent/50 hover:bg-surface-soft">
+    <Link to={path.href} className="card-lift focus-ring group flex min-h-full flex-col justify-between rounded-2xl border border-line-soft bg-surface-raised p-5 shadow-card transition-colors hover:border-accent/50 hover:bg-surface-soft hover:shadow-card-hover">
       <div>
         <h3 className="font-display text-xl font-bold tracking-tight text-text-primary transition-colors group-hover:text-accent">{path.title}</h3>
         {path.description && <p className="mt-2 text-sm font-medium leading-relaxed text-text-muted">{path.description}</p>}
@@ -101,7 +101,7 @@ const Library = () => {
         />
 
         {hubData.partialErrors.length > 0 && (
-          <div role="status" className="mb-10 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">
+          <div role="status" className="animate-rise mb-10 rounded-2xl bg-surface-error px-5 py-4 text-sm font-bold text-text-error">
             Some saved learning information is unavailable right now. You can still browse subjects.
           </div>
         )}
@@ -123,14 +123,16 @@ const Library = () => {
               <button
                 type="button"
                 onClick={() => setFilterActive(false)}
-                className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${!filterActive ? 'bg-accent text-accent-contrast' : 'text-text-muted hover:text-text-primary'}`}
+                aria-pressed={!filterActive}
+                className={`focus-ring press rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${!filterActive ? 'bg-accent text-accent-contrast' : 'text-text-muted hover:text-text-primary'}`}
               >
                 All
               </button>
               <button
                 type="button"
                 onClick={() => setFilterActive(true)}
-                className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${filterActive ? 'bg-accent text-accent-contrast' : 'text-text-muted hover:text-text-primary'}`}
+                aria-pressed={filterActive}
+                className={`focus-ring press rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${filterActive ? 'bg-accent text-accent-contrast' : 'text-text-muted hover:text-text-primary'}`}
               >
                 My subjects
               </button>
@@ -140,7 +142,7 @@ const Library = () => {
               onClick={() => setPickerOpen((value) => !value)}
               aria-expanded={pickerOpen}
               aria-controls="subject-picker"
-              className="inline-flex items-center gap-2 rounded-full border border-line-soft bg-surface-raised px-4 py-1.5 text-sm font-bold text-text-muted transition-colors hover:text-accent"
+              className="focus-ring press inline-flex items-center gap-2 rounded-full border border-line-soft bg-surface-raised px-4 py-1.5 text-sm font-bold text-text-muted transition-colors hover:text-accent"
             >
               Choose subjects <ChevronDownIcon className={`h-4 w-4 transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -153,11 +155,11 @@ const Library = () => {
                 <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-dim" />
                 <input id="subject-search" type="search" value={subjectQuery} onChange={(event) => setSubjectQuery(event.target.value)} autoFocus placeholder="Search subjects" className="min-h-12 w-full rounded-xl border border-line-soft bg-surface-soft py-3 pl-12 pr-4 text-sm font-bold text-text-primary outline-none placeholder:font-medium placeholder:text-text-dim focus:border-accent focus:ring-4 focus:ring-accent-soft" />
               </div>
-              {mySubjects.length > 0 && <div className="mt-3 flex flex-wrap gap-2" aria-label="Selected subjects">{mySubjects.map((name) => <button key={name} type="button" onClick={() => toggleSubject(name)} className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1.5 text-xs font-bold text-accent">{name}<XMarkIcon className="h-3.5 w-3.5" /></button>)}</div>}
+              {mySubjects.length > 0 && <div className="mt-3 flex flex-wrap gap-2" aria-label="Selected subjects">{mySubjects.map((name) => <button key={name} type="button" onClick={() => toggleSubject(name)} className="focus-ring press inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1.5 text-xs font-bold text-accent">{name}<XMarkIcon className="h-3.5 w-3.5" /></button>)}</div>}
               <div role="listbox" aria-label="Subject search results" aria-multiselectable="true" className="mt-3 max-h-72 overflow-y-auto rounded-xl border border-line-soft bg-surface-body p-1">
                 {matchingSubjects.map((subject) => {
                   const selected = mySubjects.includes(subject.name);
-                  return <button key={subject.name} type="button" role="option" aria-selected={selected} onClick={() => toggleSubject(subject.name)} className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition-colors ${selected ? 'bg-accent-soft text-accent' : 'text-text-primary hover:bg-surface-soft'}`}><span>{subject.name}</span>{selected && <CheckIcon className="h-4 w-4 shrink-0" />}</button>;
+                  return <button key={subject.name} type="button" role="option" aria-selected={selected} onClick={() => toggleSubject(subject.name)} className={`focus-ring flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition-colors ${selected ? 'bg-accent-soft text-accent' : 'text-text-primary hover:bg-surface-soft'}`}><span>{subject.name}</span>{selected && <CheckIcon className="h-4 w-4 shrink-0" />}</button>;
                 })}
                 {!matchingSubjects.length && <p className="px-3 py-8 text-center text-sm text-text-muted">No subjects match “{subjectQuery}”.</p>}
               </div>
@@ -166,7 +168,7 @@ const Library = () => {
           )}
 
           {filterActive && mySubjects.length === 0 ? (
-            <div className="reveal rounded-2xl border border-dashed border-line-soft bg-surface-soft p-12 text-center">
+            <div className="animate-rise rounded-2xl border border-dashed border-line-soft bg-surface-soft p-12 text-center">
               <p className="font-display text-xl font-bold text-text-primary">No subjects selected</p>
               <p className="mx-auto mt-2 max-w-sm text-sm text-text-muted">Choose subjects to filter this list.</p>
               <button
@@ -179,13 +181,13 @@ const Library = () => {
             </div>
           ) : (
             <div>
-              {visibleSubjects.length ? <div className="reveal-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{visibleSubjects.map((subject) => <LibrarySubjectCard key={subject.name} subject={subject} />)}</div> : <div className="rounded-2xl border border-dashed border-line-soft bg-surface-soft p-8"><p className="font-display text-xl font-bold text-text-primary">No matching subjects</p><button type="button" onClick={() => { setFilterActive(false); setSubjectQuery(''); }} className="btn-secondary mt-5">Show all</button></div>}
+              {visibleSubjects.length ? <div className="reveal-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{visibleSubjects.map((subject) => <LibrarySubjectCard key={subject.name} subject={subject} />)}</div> : <div className="animate-rise rounded-2xl border border-dashed border-line-soft bg-surface-soft p-8"><p className="font-display text-xl font-bold text-text-primary">No matching subjects</p><button type="button" onClick={() => { setFilterActive(false); setSubjectQuery(''); }} className="btn-secondary focus-ring mt-5">Show all</button></div>}
             </div>
           )}
         </LearningSection>
 
         {hubData.learningPaths.length > 0 && (
-          <LearningSection title="Courses" className="reveal mb-16" action={<Link to="/courses" className="inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">View all <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>}>
+          <LearningSection title="Courses" className="reveal mb-16" action={<Link to="/courses" className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-extrabold text-accent">View all <ArrowRightIcon className="h-4 w-4" aria-hidden="true" /></Link>}>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {hubData.learningPaths.slice(0, 6).map((path) => <LibraryCourseCard key={path.id} path={path} />)}
             </div>

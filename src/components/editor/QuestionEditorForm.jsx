@@ -205,7 +205,13 @@ function VersionHistory({ history, loading, onRefresh }) {
             </li>
           ))}
         </ol>
-      ) : <p className="mt-4 rounded-2xl bg-surface-soft p-5 text-sm font-medium text-text-muted">No saved revisions yet.</p>}
+      ) : (
+        <div className="mt-4 rounded-2xl bg-surface-soft p-5 text-center">
+          <ClockIcon className="mx-auto mb-3 h-7 w-7 text-text-dim" aria-hidden="true" />
+          <p className="text-sm font-bold text-text-primary">No saved revisions yet.</p>
+          <p className="mt-1 text-sm font-medium text-text-muted">Each time you save this question, the previous version lands here.</p>
+        </div>
+      )}
     </Section>
   );
 }

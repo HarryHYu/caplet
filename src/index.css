@@ -65,6 +65,13 @@
   --surface-error: rgba(220, 38, 38, 0.06);
   --border-error: rgba(220, 38, 38, 0.15);
 
+  /* Warning — caution that is not a failure (unsaved changes, missing key,
+     a streak about to lapse). Without this pair those ~20 sites had to
+     hardcode amber and drifted in dark mode. */
+  --text-warning: #9A6407;
+  --surface-warning: rgba(229, 158, 46, 0.10);
+  --border-warning: rgba(229, 158, 46, 0.22);
+
   /* Footer — deliberately dark in BOTH themes (not overridden in .dark),
      so the information/links section always reads as an inked-in base. */
   --footer-bg: #141413;
@@ -215,6 +222,11 @@
   --text-error: #FCA5A5;
   --surface-error: rgba(239, 68, 68, 0.1);
   --border-error: rgba(239, 68, 68, 0.2);
+
+  /* Warning */
+  --text-warning: #F0C070;
+  --surface-warning: rgba(240, 192, 112, 0.12);
+  --border-warning: rgba(240, 192, 112, 0.24);
 
   /* Homepage — handmade-modern, dark theme */
   --ink-body: #E9E5DC;
@@ -471,12 +483,15 @@
     @apply min-h-screen bg-surface-body pb-28 pt-24 text-text-primary md:pt-28;
   }
 
+  /* The measure lives on the title/description, not the header, so a header
+     that splits (title left, actions right) does not have to override a
+     max-width it never wanted. */
   .minimal-page-header {
-    @apply mb-12 max-w-3xl;
+    @apply mb-12;
   }
 
   .minimal-page-title {
-    @apply font-display text-4xl font-extrabold tracking-[-0.035em] text-text-primary md:text-5xl;
+    @apply max-w-3xl font-display text-4xl font-extrabold tracking-[-0.035em] text-text-primary md:text-5xl;
   }
 
   .minimal-page-description {

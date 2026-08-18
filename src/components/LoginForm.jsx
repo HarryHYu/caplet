@@ -59,7 +59,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
 
       {/* Heading */}
       <div className="mb-8">
-        <p className="font-hand text-accent text-lg mb-1">Good to see you</p>
+        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">Good to see you</p>
         <h2 className="text-4xl font-display font-extrabold text-text-primary tracking-tight mb-2">
           Welcome back.
         </h2>
@@ -168,7 +168,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
           type="submit"
           disabled={busy}
           aria-busy={passwordLoading}
-          className="w-full btn-primary py-4 text-base rounded-2xl hover:-translate-y-0.5 transition-transform disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2 focus-ring"
+          className="w-full btn-primary py-4 text-base rounded-2xl press disabled:opacity-50 flex items-center justify-center gap-2 focus-ring"
         >
           {passwordLoading ? (
             <>

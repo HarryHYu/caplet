@@ -41,7 +41,7 @@ const SuperContribution = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-2xl block mb-4">Plan your future</span>
+              <span className="mb-4 font-hand text-2xl text-accent -rotate-2 inline-block">Plan your future</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-6 text-text-primary">
                 Super Contribution Planner
               </h1>
@@ -160,7 +160,7 @@ const SuperContribution = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-4 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-4 press">
                 Calculate Projection
               </button>
             </form>

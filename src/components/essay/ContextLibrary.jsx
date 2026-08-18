@@ -33,7 +33,7 @@ export function ContextDocRow({ doc, onDelete, busy }) {
             </div>
             {onDelete && (
                 <button type="button" aria-label={`Remove ${doc.title}`} disabled={busy} onClick={() => onDelete(doc.id)}
-                    className="shrink-0 rounded-lg p-1.5 text-text-dim transition-colors hover:bg-surface-soft hover:text-rose-500 disabled:opacity-40">
+                    className="shrink-0 rounded-lg p-1.5 text-text-dim transition-colors hover:bg-surface-soft hover:text-text-error disabled:opacity-40">
                     <TrashIcon className="h-4 w-4" />
                 </button>
             )}
@@ -142,7 +142,7 @@ export function AddContextForm({ onAdd, busy, disabled, disabledReason }) {
                     className="mb-3 w-full resize-y rounded-xl border border-line-soft bg-surface-raised px-3 py-2.5 text-sm text-text-primary outline-none transition-colors focus:border-accent"
                 />
             )}
-            {error && <p role="alert" className="mb-3 text-sm font-medium text-rose-400">{error}</p>}
+            {error && <p role="alert" className="mb-3 text-sm font-medium text-text-error">{error}</p>}
             <div className="flex flex-wrap items-center gap-3">
                 {kind !== 'pdf' && (
                     <label className="btn-secondary inline-flex cursor-pointer items-center gap-2">

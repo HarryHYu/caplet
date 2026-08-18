@@ -69,7 +69,11 @@ export default function ForumProfilePage() {
       <div className="mt-6">
         <h2 className="forum-meta mb-2 uppercase">Badges</h2>
         {stats.badges.length === 0 ? (
-          <p className="forum-card p-6 text-center text-sm text-text-muted">No badges yet — answer a question or two to start earning them.</p>
+          <div className="forum-card p-6 text-center">
+            <TrophyIcon className="mx-auto mb-3 h-7 w-7 text-text-dim" aria-hidden="true" />
+            <p className="text-sm font-bold text-text-primary">No badges yet.</p>
+            <p className="mt-1 text-sm text-text-muted">Answer a question or two to start earning them.</p>
+          </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {stats.badges.map((badge) => (
@@ -90,7 +94,10 @@ export default function ForumProfilePage() {
       <div className="mt-6">
         <h2 className="forum-meta mb-2 flex items-center gap-1.5 uppercase"><SparklesIcon className="h-3.5 w-3.5" /> Recent threads</h2>
         {recentThreads.length === 0 ? (
-          <p className="forum-card p-6 text-center text-sm text-text-muted">No public threads yet.</p>
+          <div className="forum-card p-6 text-center">
+            <SparklesIcon className="mx-auto mb-3 h-7 w-7 text-text-dim" aria-hidden="true" />
+            <p className="text-sm font-bold text-text-primary">No public threads yet.</p>
+          </div>
         ) : (
           <ul className="flex flex-col gap-2">
             {recentThreads.map((t) => (

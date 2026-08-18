@@ -31,7 +31,7 @@ const TrustCenter = () => {
     <div className="min-h-screen bg-surface-body py-28 selection:bg-accent selection:text-accent-contrast">
       <div className="container-custom">
         <header className="reveal max-w-5xl mb-16">
-          <span className="font-hand text-accent text-xl -rotate-2 inline-block mb-5">clear answers, in one place</span>
+          <span className="mb-5 font-hand text-xl text-accent -rotate-2 inline-block">clear answers, in one place</span>
           <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl lg:text-8xl leading-[0.95] text-text-primary">
             Trust is part of<br />the product.
           </h1>
@@ -116,11 +116,11 @@ const TrustCenter = () => {
             </section>
 
             <section id="contact" className="scroll-mt-28 rounded-3xl bg-[color:var(--mark-blue)] p-8 md:p-12 text-accent-contrast shadow-card">
-              <p className="font-hand text-xl text-accent-contrast/80 -rotate-2 inline-block mb-3">need a human?</p>
+              <p className="mb-3 font-hand text-xl text-accent-contrast/80 -rotate-2 inline-block">need a human?</p>
               <h2 className="font-display text-3xl md:text-4xl font-extrabold tracking-tight">Contact and escalation</h2>
               <p className="mt-4 max-w-2xl text-accent-contrast/85 leading-relaxed">For privacy, safety, security, school-readiness or account-data questions, contact us directly. Include the account email and enough detail to route the request, but do not send passwords or financial records.</p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <a href="mailto:contact@caplet.org" className="press focus-ring rounded-2xl bg-surface-raised px-5 py-3 text-sm font-bold text-accent hover:-translate-y-0.5 transition-transform">contact@caplet.org</a>
+                <a href="mailto:contact@caplet.org" className="press focus-ring rounded-2xl bg-surface-raised px-5 py-3 text-sm font-bold text-accent press">contact@caplet.org</a>
                 <Link to="/contact" className="press focus-ring rounded-2xl bg-accent-contrast/10 px-5 py-3 text-sm font-bold text-accent-contrast hover:bg-accent-contrast/20 transition-colors">Contact page</Link>
               </div>
             </section>

@@ -185,7 +185,7 @@ function DemoOverview() {
             </div>
             <p className="mt-5 text-sm font-bold text-text-dim">About 2 minutes · sample workspace · no sign-in needed</p>
           </div>
-          <aside className="rounded-[2rem] border border-line-soft bg-surface-raised p-7 shadow-[0_30px_70px_-48px_rgba(20,20,18,0.5)] md:p-9" aria-label="How the guided tour works">
+          <aside className="rounded-3xl border border-line-soft bg-surface-raised p-7 shadow-card md:p-9" aria-label="How the guided tour works">
             <div className="flex items-center gap-4">
               <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-3xl border border-line-soft bg-surface-body p-2">
                 <img src="/logo.png" alt="Caplet guide" className="h-full w-full object-contain" />
@@ -201,7 +201,7 @@ function DemoOverview() {
             <ol className="mt-7 divide-y divide-line-soft border-y border-line-soft">
               {DEMO_STEPS.map((step, index) => (
                 <li key={step.id} className="flex items-center gap-3 py-4">
-                  <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold ${index === 0 ? 'bg-accent text-white' : 'bg-surface-soft text-text-muted'}`}>{index + 1}</span>
+                  <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold ${index === 0 ? 'bg-accent text-accent-contrast' : 'bg-surface-soft text-text-muted'}`}>{index + 1}</span>
                   <div>
                     <p className="text-sm font-extrabold text-text-primary">{step.title}</p>
                     <p className="mt-0.5 text-xs font-semibold text-text-muted">{step.description}</p>
@@ -305,7 +305,7 @@ function DemoGuide({ step }) {
   }
 
   return (
-    <aside className="fixed bottom-4 right-4 z-[90] max-h-[calc(100vh-5rem)] w-[min(21rem,calc(100vw-2rem))] overflow-y-auto rounded-3xl border border-line-soft bg-surface-raised p-4 shadow-[0_26px_70px_-35px_rgba(20,20,18,0.55)] md:bottom-6 md:right-6 md:p-5" aria-label={`Caplet guide: ${step.label}`}>
+    <aside className="fixed bottom-4 right-4 z-[90] max-h-[calc(100vh-5rem)] w-[min(21rem,calc(100vw-2rem))] overflow-y-auto rounded-3xl border border-line-soft bg-surface-raised p-4 shadow-card md:bottom-6 md:right-6 md:p-5" aria-label={`Caplet guide: ${step.label}`}>
       <div className="flex items-start gap-3">
         <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-line-soft bg-surface-body p-1.5">
           <img src="/logo.png" alt="Caplet guide" className="h-full w-full object-contain" />
@@ -386,8 +386,8 @@ function DemoShell() {
             {DEMO_STEPS.map((step, index) => {
               const active = currentStep?.id === step.id;
               return (
-                <button key={step.id} type="button" onClick={() => go(step.path)} aria-current={active ? 'step' : undefined} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-xs font-extrabold transition-colors ${active ? 'bg-accent text-white' : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'}`}>
-                  <span className={`grid h-5 w-5 place-items-center rounded-full text-[10px] ${active ? 'bg-white/20' : 'bg-surface-soft'}`}>{index + 1}</span>
+                <button key={step.id} type="button" onClick={() => go(step.path)} aria-current={active ? 'step' : undefined} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-xs font-extrabold transition-colors ${active ? 'bg-accent text-accent-contrast' : 'text-text-muted hover:bg-surface-soft hover:text-text-primary'}`}>
+                  <span className={`grid h-5 w-5 place-items-center rounded-full text-[10px] ${active ? 'bg-accent-contrast/20' : 'bg-surface-soft'}`}>{index + 1}</span>
                   {step.navLabel}
                 </button>
               );
@@ -401,11 +401,11 @@ function DemoShell() {
                   <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
                 </button>
                 {nextPath ? (
-                  <button type="button" onClick={() => go(nextPath)} className="inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-3 text-xs font-extrabold text-white md:px-4">
+                  <button type="button" onClick={() => go(nextPath)} className="press focus-ring inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-3 text-xs font-extrabold text-accent-contrast md:px-4">
                     <span className="hidden sm:inline">Next</span><ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
                   </button>
                 ) : (
-                  <button type="button" onClick={restart} className="inline-flex h-10 items-center rounded-xl bg-accent px-3 text-xs font-extrabold text-white md:px-4">Finish</button>
+                  <button type="button" onClick={restart} className="press focus-ring inline-flex h-10 items-center rounded-xl bg-accent px-3 text-xs font-extrabold text-accent-contrast md:px-4">Finish</button>
                 )}
               </div>
             )}
@@ -416,7 +416,7 @@ function DemoShell() {
         </div>
 
         {menuOpen && (
-          <div id="demo-menu" className="absolute right-3 top-[calc(100%+0.5rem)] w-[min(22rem,calc(100vw-1.5rem))] rounded-3xl border border-line-soft bg-surface-raised p-3 shadow-[0_28px_70px_-35px_rgba(20,20,18,0.6)] md:right-6">
+          <div id="demo-menu" className="absolute right-3 top-[calc(100%+0.5rem)] w-[min(22rem,calc(100vw-1.5rem))] rounded-3xl border border-line-soft bg-surface-raised p-3 shadow-card md:right-6">
             <p className="px-3 pb-2 pt-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-text-dim">Tour steps</p>
             {DEMO_STEPS.map((step, index) => (
               <button key={step.id} type="button" onClick={() => go(step.path)} className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold ${currentStep?.id === step.id ? 'bg-accent-soft text-accent' : 'text-text-primary hover:bg-surface-soft'}`}>
@@ -448,9 +448,9 @@ function DemoShell() {
       </header>
 
       {announcement && (
-        <div role="status" aria-live="polite" className="fixed right-4 top-20 z-[110] flex max-w-sm items-center gap-3 rounded-2xl bg-text-primary px-4 py-3 text-sm font-bold text-surface-body shadow-xl">
+        <div role="status" aria-live="polite" className="fixed right-4 top-20 z-[110] flex max-w-sm items-center gap-3 rounded-2xl bg-text-primary px-4 py-3 text-sm font-bold text-surface-body shadow-pop">
           <span>{announcement}</span>
-          <button type="button" onClick={clearAnnouncement} className="grid h-8 w-8 place-items-center rounded-full bg-white/10" aria-label="Dismiss reset message"><XMarkIcon className="h-4 w-4" /></button>
+          <button type="button" onClick={clearAnnouncement} className="grid h-8 w-8 place-items-center rounded-full bg-accent-contrast/10" aria-label="Dismiss reset message"><XMarkIcon className="h-4 w-4" /></button>
         </div>
       )}
 

@@ -44,7 +44,7 @@ const EmergencyFund = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-lg block mb-3">Tools / Risk management</span>
+              <span className="mb-3 font-hand text-lg text-accent -rotate-2 inline-block">Tools / Risk management</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-6">
                 Emergency <br />Fund.
               </h1>
@@ -52,7 +52,7 @@ const EmergencyFund = () => {
                 Analyze your capital resilience and define the liquidity buffer you need for unexpected transitions.
               </p>
             </div>
-            <Link to="/money/tools" className="btn-secondary text-sm px-8 hover:-translate-y-0.5 transition-transform">
+            <Link to="/money/tools" className="btn-secondary text-sm px-8 press">
               Back to Tools
             </Link>
           </div>
@@ -63,12 +63,12 @@ const EmergencyFund = () => {
             <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-10">Reserve Parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-12">
               <div>
-                <label className="text-sm font-bold text-text-dim mb-3 block">
+                <label htmlFor="ef-critical-monthly-burn-rate" className="text-sm font-bold text-text-dim mb-3 block">
                   Critical Monthly Burn Rate (AUD)
                 </label>
                 <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
-                  <input
+                  <input id="ef-critical-monthly-burn-rate"
                     type="number"
                     min="0"
                     step="100"
@@ -84,10 +84,10 @@ const EmergencyFund = () => {
               </div>
 
               <div>
-                <label className="text-sm font-bold text-text-dim mb-3 block">
+                <label htmlFor="ef-sustainability-window" className="text-sm font-bold text-text-dim mb-3 block">
                   Sustainability Window
                 </label>
-                <select
+                <select id="ef-sustainability-window"
                   value={monthsCoverage}
                   onChange={(e) => setMonthsCoverage(e.target.value)}
                   className="w-full rounded-xl bg-surface-body border border-line-soft px-5 py-4 text-sm font-bold text-text-primary outline-none focus:border-accent appearance-none cursor-pointer"
@@ -100,12 +100,12 @@ const EmergencyFund = () => {
               </div>
 
               <div>
-                <label className="text-sm font-bold text-text-dim mb-3 block">
+                <label htmlFor="ef-current-savings" className="text-sm font-bold text-text-dim mb-3 block">
                   Current Savings
                 </label>
                 <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
-                  <input
+                  <input id="ef-current-savings"
                     type="number"
                     min="0"
                     step="100"
@@ -117,7 +117,7 @@ const EmergencyFund = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-4 mt-2 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-4 mt-2 press">
                 Analyze Resilience
               </button>
             </form>

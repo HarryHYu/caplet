@@ -45,7 +45,7 @@ const CapitalGains = () => {
         <header className="mb-20 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-2xl text-accent">Tax &amp; income</span>
+              <span className="font-hand text-2xl text-accent -rotate-2 inline-block">Tax &amp; income</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-3 mb-8">Capital Gains<br />Estimator.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 Estimate CGT on the sale of shares, property, or other assets under Australian tax rules.
@@ -128,7 +128,7 @@ const CapitalGains = () => {
                   <p className="text-xs text-text-dim mt-2">{heldOver12m ? '50% CGT discount applies' : 'No discount, full gain is taxable'}</p>
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-6 text-sm hover:-translate-y-0.5 transition-transform">Estimate Capital Gains Tax</button>
+              <button type="submit" className="btn-primary press w-full py-6 text-sm press">Estimate Capital Gains Tax</button>
             </form>
           </div>
 

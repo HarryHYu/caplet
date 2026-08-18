@@ -52,7 +52,7 @@ const SavingsGoal = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-2xl text-accent">Savings goal</span>
+              <span className="font-hand text-2xl text-accent -rotate-2 inline-block">Savings goal</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-2 mb-6">
                 Reach your <span className="hl-swipe hl-blue">target</span>.
               </h1>
@@ -78,6 +78,7 @@ const SavingsGoal = () => {
                   <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
                     <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
                     <input
+                      id="savings-goal-target"
                       type="number"
                       min="0"
                       step="100"
@@ -96,6 +97,7 @@ const SavingsGoal = () => {
                   <div className="relative border-b-2 border-line-soft focus-within:border-accent transition-colors">
                     <span className="absolute left-0 bottom-4 text-text-dim font-bold">$</span>
                     <input
+                      id="savings-goal-current"
                       type="number"
                       min="0"
                       step="100"
@@ -115,6 +117,7 @@ const SavingsGoal = () => {
                   </label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                     <input
+                      id="savings-goal-monthly"
                       type="number"
                       min="0"
                       step="50"
@@ -132,6 +135,7 @@ const SavingsGoal = () => {
                   </label>
                   <div className="relative border-b border-line-soft focus-within:border-accent transition-colors">
                     <input
+                      id="savings-goal-rate"
                       type="number"
                       min="0"
                       max="100"
@@ -146,7 +150,7 @@ const SavingsGoal = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary press w-full py-5 text-base mt-4 hover:-translate-y-0.5 transition-transform">
+              <button type="submit" className="btn-primary press w-full py-5 text-base mt-4 press">
                 Calculate Timeline
               </button>
             </form>
@@ -183,7 +187,7 @@ const SavingsGoal = () => {
                     <div className="bg-surface-raised rounded-2xl p-7 shadow-pop">
                       <p className="text-xs font-semibold text-text-dim mb-3">Final balance</p>
                       <p className="font-display text-3xl font-extrabold tracking-tight">{formatCurrency(result.finalBalance)}</p>
-                      <p className="font-hand text-lg text-accent mt-2">Goal reached.</p>
+                      <p className="mt-2 font-hand text-lg text-accent -rotate-2 inline-block">Goal reached.</p>
                     </div>
 
                     <p className="text-sm text-text-muted leading-relaxed">

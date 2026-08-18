@@ -4,9 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 const NotFound = () => {
   const { isAuthenticated } = useAuth();
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 pt-24 pb-16 bg-surface-body selection:bg-accent selection:text-white">
+    <div className="min-h-screen flex items-center justify-center px-4 pt-24 pb-16 bg-surface-body selection:bg-accent selection:text-accent-contrast">
       <div className="text-center max-w-md mx-auto">
-        <p className="font-hand text-2xl text-accent mb-1 -rotate-2">well, this is awkward</p>
+        <p className="mb-1 font-hand text-2xl text-accent -rotate-2 inline-block">well, this is awkward</p>
         <h1 className="font-display font-extrabold text-text-primary text-[clamp(5rem,18vw,10rem)] leading-none tracking-[-0.04em]">
           404
         </h1>

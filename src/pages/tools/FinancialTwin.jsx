@@ -179,7 +179,7 @@ const FinancialTwin = () => {
         <header className="mb-16 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-lg">Tools &rarr; Savings &amp; Growth</span>
+              <span className="font-hand text-lg text-accent -rotate-2 inline-block">Tools &rarr; Savings &amp; Growth</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mt-4 mb-8">Financial<br />Twin.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 A simulation of your finances built from your real (for now, sample) transaction data &mdash;

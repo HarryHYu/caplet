@@ -40,7 +40,7 @@ const RuleOf72 = () => {
         <header className="mb-20 reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="font-hand text-accent text-xl">Savings and growth</span>
+              <span className="font-hand text-xl text-accent -rotate-2 inline-block">Savings and growth</span>
               <h1 className="font-display font-extrabold tracking-tight text-5xl md:text-7xl mb-8 mt-2">Rule of 72.</h1>
               <p className="text-xl text-text-muted leading-relaxed max-w-xl">
                 Divide 72 by an interest rate to find how many years it takes to double your money, or work it the other way around.
@@ -60,7 +60,7 @@ const RuleOf72 = () => {
                   { val: 'years-to-rate', label: 'Years to required rate' },
                 ].map(({ val, label }) => (
                   <button key={val} type="button" onClick={() => { setMode(val); setResult(null); }}
-                    className={`flex-1 py-3 px-4 text-sm font-bold rounded-xl transition-transform hover:-translate-y-0.5 ${mode === val ? 'bg-accent text-accent-contrast' : 'bg-surface-body text-text-muted'}`}>
+                    className={`flex-1 py-3 px-4 text-sm font-bold rounded-xl press ${mode === val ? 'bg-accent text-accent-contrast' : 'bg-surface-body text-text-muted'}`}>
                     {label}
                   </button>
                 ))}
@@ -70,23 +70,23 @@ const RuleOf72 = () => {
             <form onSubmit={handleSubmit} className="space-y-16">
               {mode === 'rate-to-years' ? (
                 <div>
-                  <label className="text-sm font-bold text-text-dim mb-4 block">Annual interest / growth rate</label>
+                  <label htmlFor="r72-rate" className="text-sm font-bold text-text-dim mb-4 block">Annual interest / growth rate</label>
                   <div className="relative bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors px-5">
-                    <input type="number" min="0.1" max="100" step="0.1" value={rateInput} onChange={(e) => setRateInput(e.target.value)} placeholder="0.0"
+                    <input id="r72-rate" type="number" min="0.1" max="100" step="0.1" value={rateInput} onChange={(e) => setRateInput(e.target.value)} placeholder="0.0"
                       className="w-full bg-transparent pr-8 py-4 text-4xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                     <span className="absolute right-5 bottom-5 text-text-dim font-bold text-xl">%</span>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <label className="text-sm font-bold text-text-dim mb-4 block">Years to double your money</label>
+                  <label htmlFor="r72-years" className="text-sm font-bold text-text-dim mb-4 block">Years to double your money</label>
                   <div className="relative bg-surface-body rounded-xl border border-line-soft focus-within:border-accent transition-colors px-5">
-                    <input type="number" min="0.5" max="200" step="0.5" value={yearsInput} onChange={(e) => setYearsInput(e.target.value)} placeholder="0"
+                    <input id="r72-years" type="number" min="0.5" max="200" step="0.5" value={yearsInput} onChange={(e) => setYearsInput(e.target.value)} placeholder="0"
                       className="w-full bg-transparent pr-4 py-4 text-4xl font-bold text-text-primary outline-none placeholder:text-text-dim/20" />
                   </div>
                 </div>
               )}
-              <button type="submit" className="btn-primary press w-full py-6 text-sm hover:-translate-y-0.5 transition-transform">Calculate</button>
+              <button type="submit" className="btn-primary press w-full py-6 text-sm press">Calculate</button>
             </form>
 
             <div className="mt-16">

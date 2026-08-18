@@ -129,7 +129,7 @@ export default function RecommendedLessons() {
 
       {loading ? (
         <div className="flex gap-4 overflow-hidden">
-          {[0, 1, 2, 3].map((i) => <div key={i} className="h-52 w-[19rem] shrink-0 animate-pulse rounded-3xl bg-surface-soft" />)}
+          {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-52 w-[19rem] shrink-0 rounded-3xl" />)}
         </div>
       ) : recs.length === 0 ? (
         <div className="flex flex-col items-start gap-4 rounded-3xl border border-line-soft bg-surface-raised p-8">

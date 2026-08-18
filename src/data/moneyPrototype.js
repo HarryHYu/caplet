@@ -93,3 +93,21 @@ export function calculateSavingsTimeline({ target, current, monthly }) {
   const months = remaining === 0 ? 0 : monthlyAmount > 0 ? Math.ceil(remaining / monthlyAmount) : null;
   return { target: targetAmount, current: currentAmount, monthly: monthlyAmount, remaining, months };
 }
+
+/**
+ * Headline sentence for the Money overview economy card.
+ *
+ * A missing reference period must never render "through the year to
+ * undefined." — fall back to the raw observation date, then to a period-free
+ * sentence, and finally to an explicit "unavailable" when there is no value.
+ */
+export function inflationHeadline(current) {
+  const value = Number(current?.value);
+  if (current?.value === null || current?.value === undefined || !Number.isFinite(value)) {
+    return 'Inflation data is unavailable right now.';
+  }
+  const period = current?.periodLabel || current?.observationDate;
+  return period
+    ? `Inflation was ${value.toFixed(1)}% through the year to ${period}.`
+    : `Inflation was ${value.toFixed(1)}% through the year to the latest reference period.`;
+}

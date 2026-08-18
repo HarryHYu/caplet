@@ -8,7 +8,7 @@ const SettingsAccount = () => {
   return (
     <div>
       <div className="mb-10">
-        <p className="font-hand text-accent text-lg -rotate-2 inline-block mb-1">your account</p>
+        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your account</p>
         <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Account settings</h2>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">
           Manage your account type and sign-in session.

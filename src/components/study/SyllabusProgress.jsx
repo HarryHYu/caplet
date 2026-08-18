@@ -159,11 +159,13 @@ export default function SyllabusProgress() {
 
       {loading ? (
         <div className="space-y-3">
-          {[0, 1, 2, 3].map((i) => <div key={i} className="h-20 animate-pulse rounded-2xl bg-surface-soft" />)}
+          {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-20 rounded-2xl" />)}
         </div>
       ) : modules.length === 0 ? (
         <div className="rounded-2xl border border-line-soft bg-surface-raised p-8 text-center">
+          <AcademicCapIcon className="mx-auto mb-3 h-7 w-7 text-text-dim" aria-hidden="true" />
           <p className="text-sm font-bold text-text-primary">No syllabus points loaded for {subject} yet.</p>
+          <a href="/library" className="focus-ring mt-3 inline-block rounded-lg text-sm font-bold text-accent">Browse the library</a>
         </div>
       ) : (
         <div className="space-y-3">

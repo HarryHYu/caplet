@@ -169,10 +169,10 @@ export default function DemoPitch() {
           </div>
         </div>
 
-        <div className="mt-20 rounded-[2rem] border border-accent/30 bg-accent/10 p-7 sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
+        <div className="mt-20 rounded-3xl border border-accent/30 bg-accent/10 p-7 sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
           <div><p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-accent">See the product</p><h2 className="mt-3 font-serif text-3xl font-bold sm:text-5xl">Follow the complete school workflow.</h2></div>
           <div className="mt-7 flex flex-wrap gap-3 lg:mt-0 lg:shrink-0">
-            <Link to="/demo" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-extrabold text-white">Open Demo <ArrowRightIcon className="h-4 w-4" /></Link>
+            <Link to="/demo" className="press focus-ring inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-extrabold text-accent-contrast">Open Demo <ArrowRightIcon className="h-4 w-4" /></Link>
             <Link to="/contact" className="inline-flex min-h-11 items-center rounded-xl border border-line-soft/30 px-5 text-sm font-extrabold text-surface-body">Contact us</Link>
           </div>
         </div>

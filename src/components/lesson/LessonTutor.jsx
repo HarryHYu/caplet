@@ -70,7 +70,7 @@ export default function LessonTutor({ slide, lessonId }) {
   };
 
   return (
-    <div className="shrink-0 bg-surface-raised border border-line-soft rounded-[20px] overflow-hidden">
+    <div className="shrink-0 bg-surface-raised border border-line-soft rounded-2xl overflow-hidden">
       {/* Header / toggle */}
       <button
         type="button"
@@ -125,7 +125,7 @@ export default function LessonTutor({ slide, lessonId }) {
               }}
               rows={2}
               placeholder="Ask about this slide…"
-              className="flex-1 resize-none rounded-2xl border border-line-soft bg-surface-body px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent transition-colors"
+              className="flex-1 resize-none rounded-2xl border border-line-soft bg-surface-body px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-dim focus-ring focus:border-accent transition-colors"
             />
             <button
               type="submit"

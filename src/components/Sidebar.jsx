@@ -48,8 +48,8 @@ export default function Sidebar() {
 
     const rowClass = (active) => `focus-ring group relative flex min-h-11 items-center gap-3 text-sm font-medium transition-[color,background-color,transform] duration-150 ${
         collapsed
-            ? 'mx-auto aspect-square h-11 w-11 justify-center rounded-full p-0 active:scale-95'
-            : 'rounded-lg px-3 py-2 active:scale-[0.99]'
+            ? 'mx-auto aspect-square h-11 w-11 justify-center rounded-full p-0 press'
+            : 'rounded-lg px-3 py-2 press'
     } ${
         active
             ? `${collapsed ? 'bg-accent-soft' : ''} font-bold text-accent`
@@ -150,7 +150,7 @@ export default function Sidebar() {
                     <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-line-soft bg-surface-raised">
                         <img src="/logo.png" alt="" className="h-full w-full object-cover" />
                     </span>
-                    {!collapsed && <span className="font-bricolage text-xl font-extrabold tracking-[-0.03em] text-text-primary">Caplet</span>}
+                    {!collapsed && <span className="font-display text-xl font-extrabold tracking-[-0.03em] text-text-primary">Caplet</span>}
                 </Link>
 
                 <nav aria-label="Primary navigation" className="mt-8 flex flex-col gap-1">
@@ -247,7 +247,7 @@ export default function Sidebar() {
                     className="group absolute right-0 top-1/2 z-30 hidden h-28 w-5 -translate-y-1/2 translate-x-1/2 cursor-col-resize items-center justify-center lg:flex"
                     title="Drag to resize sidebar"
                 >
-                    <span className="grid h-14 w-5 place-items-center rounded-full border border-line-soft bg-surface-raised text-text-dim shadow-[0_8px_20px_-16px_rgba(20,20,18,0.45)] transition-colors group-hover:border-accent/40 group-hover:text-accent group-focus-visible:border-accent group-focus-visible:text-accent">
+                    <span className="grid h-14 w-5 place-items-center rounded-full border border-line-soft bg-surface-raised text-text-dim shadow-card transition-colors group-hover:border-accent/40 group-hover:text-accent group-focus-visible:border-accent group-focus-visible:text-accent">
                         <EllipsisVerticalIcon className="h-4 w-4" aria-hidden="true" />
                     </span>
                 </div>

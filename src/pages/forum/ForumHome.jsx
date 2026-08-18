@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftRightIcon, PlusIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import CapletLoader from '../../components/CapletLoader';
 import ForumPageShell from './ForumPageShell';
@@ -52,7 +52,7 @@ export default function ForumHome() {
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <span className="font-hand -rotate-2 inline-block text-lg text-[color:var(--forum-accent)]">ask, answer, help each other out</span>
+          <span className="font-hand text-lg text-[color:var(--forum-accent)] -rotate-2 inline-block">ask, answer, help each other out</span>
           <h1 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">The Study Forum</h1>
         </div>
         {(() => {
@@ -78,7 +78,11 @@ export default function ForumHome() {
       ) : error ? (
         <div className="forum-card p-10 text-center text-text-error">{error}</div>
       ) : data.threads.length === 0 ? (
-        <div className="forum-card p-10 text-center text-text-muted">No threads match these filters yet.</div>
+        <div className="forum-card p-10 text-center">
+          <ChatBubbleLeftRightIcon className="mx-auto mb-3 h-7 w-7 text-text-dim" aria-hidden="true" />
+          <p className="text-sm font-bold text-text-primary">No threads match these filters yet.</p>
+          <Link to="/forum/new" className="focus-ring mt-3 inline-block rounded-lg text-sm font-bold text-accent">Start the first one</Link>
+        </div>
       ) : (
         <>
           <ul className="flex flex-col gap-2">
