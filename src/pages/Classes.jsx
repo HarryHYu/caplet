@@ -6,6 +6,8 @@ import CapletLoader from '../components/CapletLoader';
 import ClassIcon from '../components/ClassIcon';
 import { useReveal } from '../lib/useReveal';
 import useDialogFocus from '../lib/useDialogFocus';
+import { InlineEmpty } from '../components/learning/LearningStates';
+import { AcademicCapIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 
 /** Small spinner for in-flight submit buttons. */
 const ButtonSpinner = () => (
@@ -203,15 +205,16 @@ const Classes = () => {
 
         {isTeacher && (
           <section className="mb-32 reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-12">
-              Classes You Teach
+            <h2 className="mb-6 font-display text-2xl font-bold tracking-tight">
+              Classes you teach
             </h2>
             {classes.teaching.length === 0 ? (
-              <div className="p-16 rounded-3xl text-center block-cream shadow-card">
-                <p className="text-sm font-medium text-text-dim">
-                  You don't manage any classes yet.
-                </p>
-              </div>
+              <InlineEmpty
+                icon={AcademicCapIcon}
+                title="No classes yet"
+                message="Create a class to set work, track evidence and see how the group is going."
+                action={<button type="button" onClick={openCreate} className="btn-primary press">Create a class</button>}
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal-stagger">
                 {classes.teaching.map((cls) => (
@@ -239,17 +242,16 @@ const Classes = () => {
         )}
 
         <section className="reveal">
-          <h2 className="font-display font-bold tracking-tight text-2xl mb-12">
-            Classes You're In
+          <h2 className="mb-6 font-display text-2xl font-bold tracking-tight">
+            Classes you're in
           </h2>
           {classes.student.length === 0 ? (
-            <div className="p-16 rounded-3xl text-center block-cream shadow-card">
-              <p className="text-sm font-medium text-text-dim">
-                {isTeacher
-                  ? "You're not a member of any classes."
-                  : 'Join your first class to get started.'}
-              </p>
-            </div>
+            <InlineEmpty
+              icon={UserGroupIcon}
+              title={isTeacher ? "You're not in any classes" : 'Join your first class'}
+              message="Ask your teacher for the class code — joining links your work to the class."
+              action={<button type="button" onClick={openJoin} className="btn-primary press">Join a class</button>}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal-stagger">
               {classes.student.map((cls) => (
