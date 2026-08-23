@@ -43,6 +43,8 @@ import {
     PencilSquareIcon,
     ClockIcon,
     RectangleStackIcon,
+    ArrowsPointingInIcon,
+    ArrowsPointingOutIcon,
     ArrowsUpDownIcon,
     RocketLaunchIcon,
     Squares2X2Icon,
@@ -291,6 +293,56 @@ function sentenceStartWord(text, wordIdx) {
  * (cue letters, dot, caret) is an overlay clipped to that box. Revealing a
  * word therefore never re-wraps the line or makes the text jump.
  */
+/**
+ * Real fullscreen for a practice panel. Uses the Fullscreen API rather than a
+ * fixed-position overlay so the browser chrome goes too — a drill you are
+ * sprinting through should have nothing else on screen.
+ *
+ * `supported` is false where the API is missing (notably iOS Safari outside
+ * <video>), and the button is simply not offered there; nothing else changes.
+ */
+function useFullscreen(ref) {
+    const [active, setActive] = useState(false);
+
+    useEffect(() => {
+        const sync = () => setActive(!!document.fullscreenElement && document.fullscreenElement === ref.current);
+        document.addEventListener('fullscreenchange', sync);
+        return () => document.removeEventListener('fullscreenchange', sync);
+    }, [ref]);
+
+    const toggle = useCallback(async () => {
+        try {
+            if (document.fullscreenElement) await document.exitFullscreen();
+            else await ref.current?.requestFullscreen?.();
+        } catch {
+            // Denied by the browser (no user gesture, permissions policy) — the
+            // panel keeps working inline, so there is nothing to report.
+        }
+    }, [ref]);
+
+    const supported = typeof document !== 'undefined'
+        && typeof document.documentElement?.requestFullscreen === 'function';
+
+    return { active, supported, toggle };
+}
+
+function FullscreenButton({ active, onToggle }) {
+    return (
+        <button
+            type="button"
+            onClick={onToggle}
+            aria-pressed={active}
+            title={active ? 'Exit full screen (Esc)' : 'Full screen'}
+            className="focus-ring press inline-flex items-center gap-1.5 rounded-xl border border-line-soft px-3 py-2 text-xs font-bold text-text-dim transition-colors hover:border-text-dim hover:text-text-primary"
+        >
+            {active
+                ? <ArrowsPointingInIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                : <ArrowsPointingOutIcon className="h-3.5 w-3.5" aria-hidden="true" />}
+            {active ? 'Exit full screen' : 'Full screen'}
+        </button>
+    );
+}
+
 function MaskedWord({ word, hidden = false, overlay = null, className = '', overlayClassName = '', animate = false, refEl, ariaLabel, title }) {
     return (
         <span
@@ -877,12 +929,34 @@ function RecallChunks({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
     );
 }
 
-// ── WORD BY WORD — type one word at a time; next letter revealed as you go ──
+// ── REBUILD — one keystroke stream, two units ────────────────────────────────
+//
+// The first-letters sprint and the old word-by-word rebuild were the same
+// drill wearing different clothes: same words, same order, same scoring, but
+// one was an inline stream you typed straight into and the other a two-column
+// layout with a separate input box beside it. They are now one component with
+// a unit toggle, and the sprint's presentation won — you type into the
+// paragraph itself.
+//
+// Unit 'letters': one keypress per word, two misses reveal it and move on.
+// Unit 'word':    type the whole word, space or enter commits it.
+//
+// Kept from the word-by-word drill: `wordsEqual` scoring (so smart quotes and
+// accents typed on a plain keyboard still match), the cue levels, and the peek
+// buttons with their once-per-word accuracy penalty.
 
+const firstLetterOf = (word) => {
+    const match = String(word || '').match(/[a-z0-9]/i);
+    return match ? match[0].toLowerCase() : null;
+};
+
+// How much of the next word is shown as a cue. Deliberately NOT worded like
+// the unit toggle above it — two controls both reading "Full word" on one
+// screen is a coin toss for the student.
 const NEXT_WORD_HINTS = [
     { key: 'first', label: '1 letter' },
     { key: 'three', label: '3 letters' },
-    { key: 'word', label: 'Full word' },
+    { key: 'word', label: 'All of it' },
 ];
 
 // Cue letters only — the chip's underline already conveys the word's length,
@@ -892,199 +966,6 @@ const wordCue = (w, style) => {
     return w.slice(0, style === 'three' ? Math.min(3, w.length) : 1);
 };
 
-export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
-    const paras = paragraphs || allParagraphsOf(essay);
-    const [hintStyle, setHintStyle] = useState('first');
-    const [pIndex, setPIndex] = useState(0);
-    const [wordIdx, setWordIdx] = useState(0);
-    const [current, setCurrent] = useState('');
-    const [history, setHistory] = useState([]); // [{target, typed, correct}]
-    const [peekedWords, setPeekedWords] = useState(new Set());
-    const [paraDone, setParaDone] = useState(false);
-    const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
-    const [saveOk, setSaveOk] = useState(true);
-    const [shake, setShake] = useState(false);
-    const [streak, setStreak] = useState(0);
-    const inputRef = useRef(null);
-    const currentRef = useRef(null);
-    const shakeTimer = useRef(null);
-
-    const reset = () => { setPIndex(0); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false); setDone(false); setSaveOk(true); setStreak(0); };
-
-    useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
-    useEffect(() => () => clearTimeout(shakeTimer.current), []);
-    // Keep the word you're on visible inside its own scroll area, so a long
-    // paragraph never pushes it (or the input) out of view.
-    useEffect(() => {
-        if (typeof currentRef.current?.scrollIntoView === 'function') {
-            currentRef.current.scrollIntoView({ block: 'nearest' });
-        }
-    }, [wordIdx, paraDone]);
-
-    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
-    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
-
-    const para = paras[pIndex];
-    const sourceIdx = para.sourceIndex ?? pIndex;
-    const words = String(para.text || '').trim().split(/\s+/).filter(Boolean);
-    const targetWord = words[wordIdx] || '';
-    const currentSentence = sentenceAtWord(para.text, wordIdx);
-
-    const commitWord = () => {
-        const typed = current.trim();
-        if (!typed || paraDone) return;
-        const isCorrect = wordsEqual(typed, targetWord);
-        setHistory((prev) => [...prev, { target: targetWord, typed, correct: isCorrect }]);
-        setCurrent('');
-        if (isCorrect) {
-            setStreak((s) => s + 1);
-        } else {
-            setStreak(0);
-            setShake(true);
-            clearTimeout(shakeTimer.current);
-            shakeTimer.current = setTimeout(() => setShake(false), 320);
-        }
-        if (wordIdx + 1 >= words.length) setParaDone(true);
-        else setWordIdx((i) => i + 1);
-    };
-
-    const advance = async (recall) => {
-        setBusy(true);
-        try {
-            await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), recall, {
-                mode: 'word_by_word',
-                accuracy,
-                hintCount: peekedWords.size,
-            });
-            onScheduled?.();
-        } catch { setSaveOk(false); }
-        setBusy(false);
-        if (pIndex + 1 < paras.length) {
-            setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setHistory([]); setPeekedWords(new Set()); setParaDone(false); setStreak(0);
-        } else setDone(true);
-    };
-
-    const correct = history.filter((h) => h.correct).length;
-    const rawAccuracy = history.length ? Math.round((correct / history.length) * 100) : 0;
-    const accuracy = Math.max(0, Math.min(100, rawAccuracy - (peekedWords.size * 3)));
-    const revealCurrentWord = () => {
-        setPeekedWords((currentPeeked) => {
-            if (currentPeeked.has(wordIdx)) return currentPeeked;
-            return new Set([...currentPeeked, wordIdx]);
-        });
-    };
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
-                <span className="text-xs font-medium text-text-dim">
-                    {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
-                </span>
-                <div className="flex items-center gap-3">
-                    {streak >= 3 && (
-                        <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">⚡ {streak} in a row</span>
-                    )}
-                    <HintToggle options={NEXT_WORD_HINTS} value={hintStyle} onChange={setHintStyle} />
-                </div>
-            </div>
-            <ProgressBar value={pIndex} total={paras.length} />
-            <p className="text-xs font-medium text-text-dim mb-4">Type each word — the cue shows as much of the next word as you choose.</p>
-
-            <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
-                {/* Left — the word stream you're rebuilding (scrolls on its own) */}
-                <div className="p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[220px] lg:min-h-[300px] max-h-[52vh] overflow-y-auto">
-                    {words.map((w, i) => {
-                        if (i < history.length) {
-                            const h = history[i];
-                            if (h.correct) return (
-                                <MaskedWord key={i} word={w} animate
-                                    ariaLabel={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
-                                    title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
-                                    className={peekedWords.has(i) ? 'rounded-sm block-amber text-amber' : 'text-[color:var(--mark-green)]'} />
-                            );
-                            return (
-                                <MaskedWord key={i} word={w} animate
-                                    title={`You typed “${h.typed}”`}
-                                    ariaLabel={`${w} — you typed ${h.typed}`}
-                                    className="rounded-sm bg-surface-warning text-text-warning underline decoration-wavy decoration-[color:var(--mark-amber)]" />
-                            );
-                        }
-                        if (i === wordIdx && !paraDone) {
-                            return (
-                                <MaskedWord key={i} word={w} hidden refEl={currentRef}
-                                    ariaLabel={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
-                                    title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
-                                    className={`border-b-2 transition-colors duration-200 ${peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}
-                                    overlayClassName={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}
-                                    overlay={<>{wordCue(w, hintStyle)}<Caret /></>} />
-                            );
-                        }
-                        return (
-                            <MaskedWord key={i} word={w} hidden
-                                className="border-b border-line-strong select-none"
-                                overlayClassName="text-text-dim"
-                                overlay={w[0]} />
-                        );
-                    })}
-                </div>
-
-                {/* Right — input + running score, pinned so it never scrolls away */}
-                <div className="lg:sticky lg:top-24 self-start">
-                    {!paraDone ? (
-                        <div className={`p-5 rounded-2xl bg-surface-body border transition-colors ${shake ? 'animate-shake-x border-line-error' : 'border-line-soft'}`}>
-                            <div className="flex items-center justify-between mb-3">
-                                <span className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Next word</span>
-                                <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={current}
-                                    onChange={(e) => setCurrent(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); commitWord(); } }}
-                                    placeholder={targetWord ? `${wordCue(targetWord, hintStyle === 'word' ? 'first' : hintStyle).slice(0, 6)}…` : ''}
-                                    className="flex-1 px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif"
-                                    autoComplete="off" autoCorrect="off" spellCheck={false}
-                                />
-                                <button type="button" onClick={commitWord} disabled={!current.trim()} aria-label="Confirm word"
-                                    className="btn-primary px-5 py-3 inline-flex press disabled:opacity-40">
-                                    <ArrowRightIcon className="w-4 h-4" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
-                                <p className="text-xs text-text-dim">Space or Enter to confirm</p>
-                                <div className="flex items-center gap-2">
-                                    <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} onReveal={revealCurrentWord} />
-                                    <SneakPeek text={currentSentence} label="Peek sentence" autoHideMs={3500} onReveal={revealCurrentWord} />
-                                </div>
-                                {peekedWords.size > 0 && <span className="sr-only" role="status">{peekedWords.size} revealed {peekedWords.size === 1 ? 'word' : 'words'}; accuracy reduced by {peekedWords.size * 3} percentage points.</span>}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="p-5 rounded-2xl block-blue animate-pop">
-                            <div className="flex items-baseline gap-3 mb-1">
-                                <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
-                                <span className="text-xs text-text-dim">{correct}/{history.length} words</span>
-                            </div>
-                            <p className="text-xs text-text-muted mb-4">Paragraph rebuilt. How did that feel?</p>
-                            <GradeButtons busy={busy} onFail={() => advance('fail')} onPass={() => advance('pass')} passLabel="Got it" />
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ── FIRST LETTERS — sprint the paragraph typing only each word's first letter ─
-
-const firstLetterOf = (word) => {
-    const match = String(word || '').match(/[a-z0-9]/i);
-    return match ? match[0].toLowerCase() : null;
-};
-
 // Tab rewinds by one scope per tap: sentence → paragraph → the whole drill.
 // Taps only chain while they land inside this window; after it the count
 // starts again at "sentence".
@@ -1092,11 +973,14 @@ const TAB_TAP_MS = 700;
 const TAB_NOTICE_MS = 1600;
 const TAB_SCOPES = ['sentence', 'paragraph', 'the whole drill'];
 
-function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
+export function RebuildDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, unit = 'word' }) {
     const paras = paragraphs || allParagraphsOf(essay);
+    const [hintStyle, setHintStyle] = useState('first');
     const [pIndex, setPIndex] = useState(0);
     const [wordIdx, setWordIdx] = useState(0);
-    const [results, setResults] = useState([]); // 'hit' | 'hinted' per word
+    const [current, setCurrent] = useState('');
+    const [results, setResults] = useState([]); // [{ status: 'hit'|'hinted'|'wrong', typed }]
+    const [peekedWords, setPeekedWords] = useState(new Set());
     const [missCount, setMissCount] = useState(0); // consecutive misses on current word
     const [paraDone, setParaDone] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -1112,14 +996,21 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
     const tabTimer = useRef(null);
     const noticeTimer = useRef(null);
 
-    const reset = () => { setPIndex(0); setWordIdx(0); setResults([]); setMissCount(0); setParaDone(false); setDone(false); setSaveOk(true); setStreak(0); };
+    const letters = unit === 'letters';
 
-    useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
+    const reset = () => {
+        setPIndex(0); setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
+        setMissCount(0); setParaDone(false); setDone(false); setSaveOk(true); setStreak(0);
+    };
+
+    useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone, unit]);
     useEffect(() => () => {
         clearTimeout(shakeTimer.current);
         clearTimeout(tabTimer.current);
         clearTimeout(noticeTimer.current);
     }, []);
+    // Keep the word you're on visible inside its own scroll area, so a long
+    // paragraph never pushes it (or the caret) out of view.
     useEffect(() => {
         if (typeof currentRef.current?.scrollIntoView === 'function') {
             currentRef.current.scrollIntoView({ block: 'nearest' });
@@ -1132,14 +1023,37 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
     const para = paras[pIndex];
     const sourceIdx = para.sourceIndex ?? pIndex;
     const words = String(para.text || '').trim().split(/\s+/).filter(Boolean);
-    const hits = results.filter((r) => r === 'hit').length;
-    const accuracy = results.length ? Math.round((hits / results.length) * 100) : 100;
+    const targetWord = words[wordIdx] || '';
+    const currentSentence = sentenceAtWord(para.text, wordIdx);
 
-    const advanceWord = (result) => {
-        setResults((prev) => [...prev, result]);
+    const hits = results.filter((r) => r.status === 'hit').length;
+    // Nothing typed yet is 100%, not 0% — you have not got anything wrong.
+    const rawAccuracy = results.length ? Math.round((hits / results.length) * 100) : 100;
+    const accuracy = Math.max(0, Math.min(100, rawAccuracy - (peekedWords.size * 3)));
+
+    const advanceWord = (status, typed) => {
+        setResults((prev) => [...prev, { status, typed }]);
+        setCurrent('');
         setMissCount(0);
+        if (status === 'hit') setStreak((s) => s + 1);
+        else setStreak(0);
         if (wordIdx + 1 >= words.length) setParaDone(true);
         else setWordIdx((i) => i + 1);
+    };
+
+    const flashWrong = () => {
+        setShake(true);
+        clearTimeout(shakeTimer.current);
+        shakeTimer.current = setTimeout(() => setShake(false), 320);
+    };
+
+    // Type the whole word: space or enter commits it, right or wrong.
+    const commitWord = () => {
+        const typed = current.trim();
+        if (!typed || paraDone) return;
+        const isCorrect = wordsEqual(typed, targetWord);
+        if (!isCorrect) flashWrong();
+        advanceWord(isCorrect ? 'hit' : 'wrong', typed);
     };
 
     /**
@@ -1157,12 +1071,13 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
         noticeTimer.current = setTimeout(() => setRewind(null), TAB_NOTICE_MS);
         setRewind(TAB_SCOPES[tap - 1]);
 
+        setCurrent('');
         setMissCount(0);
         setStreak(0);
         setParaDone(false);
         if (tap === 1) {
             // Back to the first word of the sentence you are in. `results` is
-            // one entry per word typed so far, so it truncates to the same point.
+            // one entry per word answered, so it truncates to the same point.
             const start = sentenceStartWord(para.text, wordIdx);
             setWordIdx(start);
             setResults((prev) => prev.slice(0, start));
@@ -1182,20 +1097,21 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
         // most want to rewind and go again.
         if (e.key === 'Tab') { e.preventDefault(); onTab(); return; }
         if (paraDone) return;
+        if (!letters) {
+            if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); commitWord(); }
+            return; // every other key just edits the controlled input
+        }
         const key = String(e.key || '').toLowerCase();
         if (key.length !== 1) return;
         e.preventDefault();
-        const expected = firstLetterOf(words[wordIdx]);
+        const expected = firstLetterOf(targetWord);
         if (!expected) { advanceWord('hit'); return; }
         if (!/[a-z0-9]/.test(key)) return;
         if (key === expected) {
-            setStreak((s) => s + 1);
             advanceWord(missCount > 0 ? 'hinted' : 'hit');
         } else {
             setStreak(0);
-            setShake(true);
-            clearTimeout(shakeTimer.current);
-            shakeTimer.current = setTimeout(() => setShake(false), 320);
+            flashWrong();
             // Two misses reveal the word and move on — momentum beats stalling.
             if (missCount + 1 >= 2) advanceWord('hinted');
             else setMissCount((m) => m + 1);
@@ -1206,16 +1122,50 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
         setBusy(true);
         try {
             await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), recall, {
-                mode: 'first_letters',
+                mode: letters ? 'first_letters' : 'word_by_word',
                 accuracy,
-                hintCount: results.filter((r) => r === 'hinted').length,
+                hintCount: peekedWords.size + results.filter((r) => r.status === 'hinted').length,
             });
             onScheduled?.();
         } catch { setSaveOk(false); }
         setBusy(false);
         if (pIndex + 1 < paras.length) {
-            setPIndex((i) => i + 1); setWordIdx(0); setResults([]); setMissCount(0); setParaDone(false); setStreak(0);
+            setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setResults([]);
+            setPeekedWords(new Set()); setMissCount(0); setParaDone(false); setStreak(0);
         } else setDone(true);
+    };
+
+    const revealCurrentWord = () => {
+        setPeekedWords((alreadyPeeked) => {
+            if (alreadyPeeked.has(wordIdx)) return alreadyPeeked;
+            return new Set([...alreadyPeeked, wordIdx]);
+        });
+    };
+
+    const answeredChip = (w, i) => {
+        const r = results[i];
+        if (r.status === 'hit') {
+            return (
+                <MaskedWord key={i} word={w} animate
+                    ariaLabel={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
+                    title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
+                    className={peekedWords.has(i) ? 'rounded-sm block-amber text-amber' : 'text-[color:var(--mark-green)]'} />
+            );
+        }
+        if (r.status === 'wrong') {
+            return (
+                <MaskedWord key={i} word={w} animate
+                    title={`You typed “${r.typed}”`}
+                    ariaLabel={`${w} — you typed ${r.typed}`}
+                    className="rounded-sm bg-surface-warning text-text-warning underline decoration-wavy decoration-[color:var(--mark-amber)]" />
+            );
+        }
+        return (
+            <MaskedWord key={i} word={w} animate
+                ariaLabel={`${w}, revealed after two misses`}
+                title="Revealed after two misses"
+                className="rounded-sm bg-surface-warning text-text-warning" />
+        );
     };
 
     return (
@@ -1224,54 +1174,77 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
                 <span className="text-xs font-medium text-text-dim">
                     {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
-                <span className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                     {rewind && (
                         <span key={rewind} role="status" className="animate-pop text-xs font-bold text-accent">
                             Restarted {rewind}
                         </span>
                     )}
-                    {streak >= 5 && (
+                    {streak >= 3 && (
                         <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">⚡ {streak} in a row</span>
                     )}
-                </span>
+                    {!paraDone && <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>}
+                </div>
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
-            <p className="text-xs font-medium text-text-dim mb-4">
-                Recall at speed: press the <strong>first letter</strong> of each next word. Two misses reveal it and move on.
-                {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> restarts the sentence —
-                twice for the paragraph, three times for the whole drill.
-            </p>
+
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs font-medium text-text-dim">
+                    {letters
+                        ? <>Recall at speed: press the <strong>first letter</strong> of each next word. Two misses reveal it and move on.</>
+                        : <>Type each word — space or enter confirms it. The cue shows as much of the next word as you choose.</>}
+                    {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> restarts the sentence —
+                    twice for the paragraph, three times for the whole drill.
+                </p>
+                {!letters && (
+                    <span className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Cue</span>
+                        <HintToggle options={NEXT_WORD_HINTS} value={hintStyle} onChange={setHintStyle} />
+                    </span>
+                )}
+            </div>
 
             {!paraDone ? (
                 <div
                     role="application"
-                    aria-label="First letters sprint"
+                    aria-label={letters ? 'First letters sprint' : 'Word by word rebuild'}
                     onClick={() => inputRef.current?.focus()}
                     className={`p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[220px] max-h-[56vh] overflow-y-auto cursor-text ${shake ? 'animate-shake-x' : ''}`}
                 >
-                    {/* Hidden input keeps mobile keyboards working. */}
+                    {/* Hidden input keeps mobile keyboards working. In word mode
+                        it is controlled, so IME and autocorrect behave. */}
                     <input
                         ref={inputRef}
+                        value={letters ? '' : current}
+                        onChange={(e) => { if (!letters) setCurrent(e.target.value); }}
                         onKeyDown={onKey}
-                        value=""
-                        onChange={() => {}}
-                        aria-label="Type the first letter of the next word"
+                        aria-label={letters ? 'Type the first letter of the next word' : 'Type the next word'}
                         className="absolute h-px w-px opacity-0"
                         autoComplete="off" autoCorrect="off" spellCheck={false}
                     />
                     {words.map((w, i) => {
-                        if (i < results.length) {
-                            return (
-                                <MaskedWord key={i} word={w} animate
-                                    className={results[i] === 'hit' ? 'text-text-primary' : 'rounded-sm bg-surface-warning text-text-warning'} />
-                            );
-                        }
+                        if (i < results.length) return answeredChip(w, i);
                         if (i === wordIdx) {
+                            if (letters) {
+                                return (
+                                    <MaskedWord key={i} word={w} hidden refEl={currentRef}
+                                        className={`border-b-2 ${missCount > 0 ? 'border-line-error' : 'border-accent'}`}
+                                        overlayClassName={missCount > 0 ? 'text-text-error' : 'text-accent'}
+                                        overlay={<>{missCount > 0 ? w[0] : '?'}<Caret /></>} />
+                                );
+                            }
+                            // Word mode grows with what you type instead of masking
+                            // to the target's width, so a long typo stays visible.
                             return (
-                                <MaskedWord key={i} word={w} hidden refEl={currentRef}
-                                    className={`border-b-2 ${missCount > 0 ? 'border-line-error' : 'border-accent'}`}
-                                    overlayClassName={missCount > 0 ? 'text-text-error' : 'text-accent'}
-                                    overlay={<>{missCount > 0 ? w[0] : '?'}<Caret /></>} />
+                                <span key={i} ref={currentRef}
+                                    aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
+                                    title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
+                                    className={`inline-flex items-baseline whitespace-pre border-b-2 ${peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}>
+                                    {current
+                                        ? <span className="text-text-primary">{current}</span>
+                                        : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
+                                    <Caret />
+                                </span>
                             );
                         }
                         return (
@@ -1288,10 +1261,22 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
                         <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
                         <span className="text-xs text-text-dim">{hits}/{results.length} first try</span>
                     </div>
-                    <p className="text-xs text-text-muted mb-4">Sprint finished. How solid did it feel?</p>
+                    <p className="text-xs text-text-muted mb-4">
+                        {letters ? 'Sprint finished. How solid did it feel?' : 'Paragraph rebuilt. How did that feel?'}
+                    </p>
                     <GradeButtons busy={busy} onFail={() => finishParagraph('fail')} onPass={() => finishParagraph('pass')} passLabel="Got it" />
                 </div>
             )}
+
+            <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                {!paraDone && (
+                    <div className="flex items-center gap-2">
+                        <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} onReveal={revealCurrentWord} />
+                        <SneakPeek text={currentSentence} label="Peek sentence" autoHideMs={3500} onReveal={revealCurrentWord} />
+                    </div>
+                )}
+                {peekedWords.size > 0 && <span className="sr-only" role="status">{peekedWords.size} revealed {peekedWords.size === 1 ? 'word' : 'words'}; accuracy reduced by {peekedWords.size * 3} percentage points.</span>}
+            </div>
         </div>
     );
 }
@@ -1704,11 +1689,12 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
 // ── Consolidated tools: one Rebuild (unit toggle), one Review (style toggle) ─
 
 const REBUILD_UNITS = [
-    { key: 'words', label: 'Word by word' },
+    { key: 'word', label: 'Full word' },
+    { key: 'letters', label: 'First letters' },
     { key: 'sentences', label: 'Sentence by sentence' },
 ];
 
-function RebuildMode({ initialUnit = 'words', ...props }) {
+function RebuildMode({ initialUnit = 'word', ...props }) {
     const [unit, setUnit] = useState(initialUnit);
     return (
         <div>
@@ -1716,9 +1702,11 @@ function RebuildMode({ initialUnit = 'words', ...props }) {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Unit</span>
                 <HintToggle options={REBUILD_UNITS} value={unit} onChange={setUnit} />
             </div>
-            {unit === 'words'
-                ? <GuidedTypeMode key="words" {...props} />
-                : <SentenceMode key="sentences" {...props} />}
+            {/* key={unit}: switching remounts the drill, so you never finish a
+                paragraph half-scored under the rules of the other unit. */}
+            {unit === 'sentences'
+                ? <SentenceMode key="sentences" {...props} />
+                : <RebuildDrill key={unit} unit={unit} {...props} />}
         </div>
     );
 }
@@ -1933,10 +1921,9 @@ function NewEssayComposer({ onCreated }) {
 // ── Practice hub — every activity visible, guided chain intact ──────────────
 
 const PRACTICE_STEPS = [
-    { key: 'wordbyword', step: '1', label: 'Rebuild it', icon: PencilIcon, desc: 'Type it back — word by word or sentence by sentence.' },
-    { key: 'letters', step: '2', label: 'First letters', icon: BoltIcon, desc: 'Sprint it from first letters only.' },
-    { key: 'typeit', step: '3', label: 'Exam run', icon: DocumentTextIcon, desc: 'Write the whole selection, no hints, timed.' },
-    { key: 'recall', step: '4', label: 'Review', icon: ClockIcon, desc: 'Cloze cards or written openings, on the schedule.' },
+    { key: 'wordbyword', step: '1', label: 'Rebuild it', icon: PencilIcon, desc: 'Type it back into the paragraph — full words, first letters or whole sentences.' },
+    { key: 'typeit', step: '2', label: 'Exam run', icon: DocumentTextIcon, desc: 'Write the whole selection, no hints, timed.' },
+    { key: 'recall', step: '3', label: 'Review', icon: ClockIcon, desc: 'Cloze cards or written openings, on the schedule.' },
 ];
 
 const DRILL_MODES = [
@@ -1947,9 +1934,12 @@ const DRILL_MODES = [
 
 // Old bookmarks may still carry the pre-consolidation mode keys — they open
 // the merged tool with the matching option preselected.
-const MODE_ALIASES = { sentence: 'wordbyword', openings: 'recall' };
+const MODE_ALIASES = { sentence: 'wordbyword', letters: 'wordbyword', openings: 'recall' };
 
 const PRACTICE_MODE_KEYS = new Set([...PRACTICE_STEPS, ...DRILL_MODES].map((m) => m.key));
+
+/** Which unit an aliased ?mode= should open the merged Rebuild drill on. */
+const REBUILD_UNIT_FOR_PARAM = { letters: 'letters', sentence: 'sentences' };
 
 const modeLabel = (key) => [...PRACTICE_STEPS, ...DRILL_MODES].find((m) => m.key === key)?.label || key;
 
@@ -2243,6 +2233,8 @@ function EssayWorkspace({ essayId }) {
     // True while a speed run is live — collapses the workspace chrome so the
     // word stream owns the screen (MonkeyType-style focus mode).
     const [speedRunning, setSpeedRunning] = useState(false);
+    const practiceRef = useRef(null);
+    const { active: practiceFullscreen, supported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen(practiceRef);
     const [proposal, setProposal] = useState(null);
     const [applyingFix, setApplyingFix] = useState(false);
     const [workspaceError, setWorkspaceError] = useState(null);
@@ -2741,7 +2733,12 @@ function EssayWorkspace({ essayId }) {
                 )}
 
                 {tab === 'practice' && structure && (
-                    <div>
+                    <div
+                        ref={practiceRef}
+                        /* The fullscreen element paints its own ground — without a
+                           background the browser shows the drill on black. */
+                        className={practiceFullscreen ? 'overflow-y-auto bg-surface-body p-6 md:p-10' : undefined}
+                    >
                         {!speedRunning && (
                             <>
                                 <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -2749,6 +2746,11 @@ function EssayWorkspace({ essayId }) {
                                     {scope && (
                                         <span className="text-xs font-medium text-text-dim">
                                             Every activity below runs on just your selection.
+                                        </span>
+                                    )}
+                                    {fullscreenSupported && (
+                                        <span className="ml-auto">
+                                            <FullscreenButton active={practiceFullscreen} onToggle={toggleFullscreen} />
                                         </span>
                                     )}
                                 </div>
@@ -2766,12 +2768,8 @@ function EssayWorkspace({ essayId }) {
                                     : 'surface-card min-h-[320px] flex flex-col justify-center md:p-8'}
                             >
                                 {mode === 'wordbyword' && (
-                                    <RebuildMode initialUnit={modeParam === 'sentence' ? 'sentences' : 'words'}
+                                    <RebuildMode initialUnit={REBUILD_UNIT_FOR_PARAM[modeParam] || 'word'}
                                         essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
-                                        onNext={() => setMode('letters')} nextLabel={modeLabel('letters')} />
-                                )}
-                                {mode === 'letters' && (
-                                    <FirstLettersMode essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
                                         onNext={() => setMode('typeit')} nextLabel={modeLabel('typeit')} />
                                 )}
                                 {mode === 'typeit' && (

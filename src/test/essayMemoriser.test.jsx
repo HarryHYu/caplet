@@ -28,7 +28,7 @@ vi.mock('../services/api', () => ({
   },
 }));
 
-import EssayMemoriser, { GuidedTypeMode } from '../pages/EssayMemoriser';
+import EssayMemoriser, { RebuildDrill } from '../pages/EssayMemoriser';
 import api from '../services/api';
 
 afterEach(() => cleanup());
@@ -112,21 +112,23 @@ describe('EssayMemoriser', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Practice/i }));
     expect(await screen.findByText(/Your learning path/i)).toBeInTheDocument();
-    // Four consolidated tools — overlapping modes became option toggles.
+    // Three consolidated tools — overlapping modes became option toggles.
     expect(screen.getByRole('button', { name: /Rebuild it/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /First letters/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Exam run/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Review/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Sentences$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Openings$/i })).not.toBeInTheDocument();
+    // First letters is a unit of Rebuild it now, not a step of its own.
+    expect(screen.queryByRole('button', { name: /^First letters$/i })).not.toBeInTheDocument();
     // Unavailable drills (no quotes, one paragraph) are hidden, not dead ends.
     expect(screen.queryByRole('button', { name: /Quote cards/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Paragraph order/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Rebuild it/i }));
-    expect(await screen.findByText(/Step 1 of 4/i)).toBeInTheDocument();
-    // The merged tool exposes its unit options inside the mode.
-    expect(screen.getByRole('button', { name: /Word by word/i })).toBeInTheDocument();
+    expect(await screen.findByText(/Step 1 of 3/i)).toBeInTheDocument();
+    // The merged tool exposes all three units inside the mode.
+    expect(screen.getByRole('button', { name: /Full word/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^First letters$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sentence by sentence/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /All activities/i })).toBeInTheDocument();
   });
@@ -174,6 +176,55 @@ describe('EssayMemoriser', () => {
     cleanup();
     renderAt('/essays/essay-1?tab=practice&mode=recall&scope=intro');
     expect(await screen.findByText(/Introduction · 1 of 1/i)).toBeInTheDocument();
+  });
+
+  it('types full words into the same stream the first-letter sprint uses', async () => {
+    api.getEssay.mockResolvedValue({ essay: parsedEssay });
+    renderAt('/essays/essay-1?tab=practice&mode=wordbyword&scope=intro');
+
+    // Full word is the default unit, and it shares the sprint's inline stream
+    // rather than the old separate input box beside it.
+    await screen.findByRole('application', { name: /Word by word rebuild/i });
+    fireEvent.click(screen.getByRole('button', { name: /^First letters$/i }));
+    expect(screen.getByRole('application', { name: /First letters sprint/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Full word$/i }));
+    expect(screen.getByRole('application', { name: /Word by word rebuild/i })).toBeInTheDocument();
+
+    // Space commits a word, and scoring still tolerates the things it always
+    // did — this word is correct.
+    const input = screen.getByLabelText(/Type the next word/i);
+    fireEvent.change(input, { target: { value: 'Shakespeare' } });
+    fireEvent.keyDown(input, { key: ' ' });
+    expect(screen.getByText('100%')).toBeInTheDocument();
+
+    // A wrong word is recorded with what you actually typed, not silently eaten.
+    fireEvent.change(input, { target: { value: 'offers' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(screen.getByTitle(/You typed “offers”/)).toBeInTheDocument();
+    expect(screen.getByText('50%')).toBeInTheDocument();
+  });
+
+  it('offers full screen only where the browser supports it', async () => {
+    api.getEssay.mockResolvedValue({ essay: parsedEssay });
+
+    // jsdom has no Fullscreen API, so the control must stay out of the way.
+    renderAt('/essays/essay-1?tab=practice');
+    await screen.findByText(/Your learning path/i);
+    expect(screen.queryByRole('button', { name: /Full screen/i })).not.toBeInTheDocument();
+    cleanup();
+
+    const request = vi.fn().mockResolvedValue(undefined);
+    Element.prototype.requestFullscreen = request;
+    try {
+      renderAt('/essays/essay-1?tab=practice');
+      await screen.findByText(/Your learning path/i);
+      const button = screen.getByRole('button', { name: /Full screen/i });
+      expect(button).toHaveAttribute('aria-pressed', 'false');
+      fireEvent.click(button);
+      expect(request).toHaveBeenCalled();
+    } finally {
+      delete Element.prototype.requestFullscreen;
+    }
   });
 
   describe('First letters — Tab rewinds by one scope per tap', () => {
@@ -363,7 +414,7 @@ describe('EssayMemoriser', () => {
         bodyParagraphs: [{ text: 'It’s Macbeth’s downfall', quotes: [], techniques: [] }],
       },
     };
-    render(<GuidedTypeMode essay={essay} />);
+    render(<RebuildDrill essay={essay} unit="word" />);
     const input = screen.getByRole('textbox');
     // Typed with a straight apostrophe; target has curly ones.
     fireEvent.change(input, { target: { value: "It's" } });
@@ -380,7 +431,7 @@ describe('EssayMemoriser', () => {
         bodyParagraphs: [{ text: 'Café Größe für École', quotes: [], techniques: [] }],
       },
     };
-    render(<GuidedTypeMode essay={essay} />);
+    render(<RebuildDrill essay={essay} unit="word" />);
     const input = screen.getByRole('textbox');
     for (const word of ['Cafe', 'Groesse', 'fur', 'Ecole']) {
       fireEvent.change(input, { target: { value: word } });
@@ -537,7 +588,7 @@ describe('EssayMemoriser', () => {
         bodyParagraphs: [{ text: 'Alpha beta gamma delta', quotes: [], techniques: [] }],
       },
     };
-    render(<GuidedTypeMode essay={essay} />);
+    render(<RebuildDrill essay={essay} unit="word" />);
 
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'Alpha' } });
