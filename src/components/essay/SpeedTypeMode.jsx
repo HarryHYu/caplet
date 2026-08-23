@@ -125,11 +125,16 @@ function WpmSparkline({ records, startedAt, endedAt }) {
 
 export default function SpeedTypeMode({ essay, paragraphs = null, onRunningChange }) {
     const allSections = useMemo(() => buildSpeedSections(essay), [essay]);
-    // A narrowed practice scope narrows the drill too: only the selected body
-    // paragraphs are offered (intro/conclusion sit outside the selection).
+    // A narrowed practice scope narrows the drill too. Section ids here are
+    // 'intro' / 'bp0' / 'conclusion'; the workspace identifies the same sections
+    // by sourceIndex, which is 'intro' / 0 / 'conclusion' — so only the numeric
+    // body indices need the `bp` prefix.
     const sections = useMemo(() => {
         if (!paragraphs) return allSections;
-        const keep = new Set(paragraphs.map((p, i) => `bp${p.sourceIndex ?? i}`));
+        const keep = new Set(paragraphs.map((p, i) => {
+            const id = p.sourceIndex ?? i;
+            return typeof id === 'number' ? `bp${id}` : String(id);
+        }));
         return allSections.filter((s) => keep.has(s.id));
     }, [allSections, paragraphs]);
 

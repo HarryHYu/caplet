@@ -185,17 +185,76 @@ function buildSpotlightSegments(structure) {
 
 const wordCountOf = (text) => String(text || '').trim().split(/\s+/).filter(Boolean).length;
 
-/** Body paragraphs annotated with their index in the full essay. */
-const allParagraphsOf = (essay) => (essay?.parsedStructure?.bodyParagraphs || [])
-    .map((p, i) => ({ ...p, sourceIndex: i }));
+/**
+ * Every practisable section of the essay, in reading order: the introduction,
+ * each body paragraph, then the conclusion.
+ *
+ * The intro and conclusion used to be missing here, which meant they were
+ * missing from EVERY drill — Rebuild it, First letters, Exam run and Review all
+ * take their list from this function, so the two paragraphs students most need
+ * word-perfect were the only two they could not practise.
+ *
+ * `sourceIndex` is the section's stable identity: body paragraphs keep their
+ * numeric index and the intro/conclusion get the string ids 'intro' and
+ * 'conclusion'. Numbering them 0..n+1 instead would have been tidier but would
+ * have shifted every body paragraph's spaced-repetition key by one
+ * (`${essayId}:${sourceIndex}`), silently re-pointing saved review history at
+ * the wrong paragraph. String ids cannot collide with the existing numbers.
+ */
+const allParagraphsOf = (essay) => {
+    const s = essay?.parsedStructure || {};
+    const sections = [];
+    const intro = String(s.introduction || '').trim();
+    if (intro) {
+        sections.push({
+            text: s.introduction,
+            topicSentence: splitSentences(intro)[0] || intro,
+            quotes: [],
+            techniques: [],
+            sourceIndex: 'intro',
+            label: 'Introduction',
+        });
+    }
+    (Array.isArray(s.bodyParagraphs) ? s.bodyParagraphs : []).forEach((p, i) => {
+        sections.push({ ...p, sourceIndex: i, label: `Body ¶${i + 1}` });
+    });
+    const conclusion = String(s.conclusion || '').trim();
+    if (conclusion) {
+        sections.push({
+            text: s.conclusion,
+            topicSentence: splitSentences(conclusion)[0] || conclusion,
+            quotes: [],
+            techniques: [],
+            sourceIndex: 'conclusion',
+            label: 'Conclusion',
+        });
+    }
+    return sections;
+};
 
-/** Parses a "0,2,3" scope param into valid sorted indices, or null for "all". */
-function parseScope(param, total) {
+/**
+ * The section immediately before `sourceIndex` in reading order, or null for
+ * the first one. Cues are drawn from the essay's REAL neighbour so a scoped
+ * session still shows the true transition — and so the first body paragraph
+ * now cues off the introduction instead of jumping straight to the thesis.
+ */
+const previousSectionOf = (essay, sourceIndex) => {
+    const all = allParagraphsOf(essay);
+    const at = all.findIndex((p) => p.sourceIndex === sourceIndex);
+    return at > 0 ? all[at - 1] : null;
+};
+
+/**
+ * Parses a "intro,0,2" scope param into valid section ids in reading order, or
+ * null for "all". Ids are matched against the essay's own section list, so a
+ * stale link naming a paragraph that no longer exists degrades to a smaller
+ * selection rather than an empty drill.
+ */
+function parseScope(param, sections) {
     if (!param) return null;
-    const ids = [...new Set(String(param).split(',')
-        .map((n) => parseInt(n, 10))
-        .filter((n) => Number.isInteger(n) && n >= 0 && n < total))].sort((a, b) => a - b);
-    if (!ids.length || ids.length === total) return null;
+    const wanted = new Set(String(param).split(',').map((s) => s.trim()).filter(Boolean));
+    const ids = sections.map((p) => p.sourceIndex).filter((id) => wanted.has(String(id)));
+    if (!ids.length || ids.length === sections.length) return null;
     return ids;
 }
 
@@ -728,18 +787,16 @@ function RecallChunks({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
 
     const reset = () => { setPIndex(0); setGraded(false); setRevealed(false); setDone(false); setSaveOk(true); };
 
-    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs were found in this essay.</EmptyModeNote>;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const current = paras[pIndex];
     const sourceIdx = current.sourceIndex ?? pIndex;
-    const cloze = buildTopicSentenceCloze(current, sourceIdx);
-    // Cues come from the paragraph's REAL neighbour in the essay, so a scoped
-    // session still gives the true transition context.
-    const prevInEssay = sourceIdx > 0 ? structure.bodyParagraphs?.[sourceIdx - 1] : null;
+    const cloze = buildTopicSentenceCloze(current, current.label);
+    const prevInEssay = previousSectionOf(essay, sourceIdx);
     const cue = !prevInEssay
-        ? (structure.thesis ? `Thesis: "${structure.thesis}"` : 'Recall your first body paragraph.')
-        : `Previous paragraph ended: "${lastSentence(prevInEssay.text)}". What comes next?`;
+        ? (structure.thesis ? `Thesis: "${structure.thesis}"` : 'Recall your opening.')
+        : `${prevInEssay.label} ended: "${lastSentence(prevInEssay.text)}". What comes next?`;
 
     const grade = async (recall) => {
         setBusy(true);
@@ -764,7 +821,7 @@ function RecallChunks({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
     return (
         <div>
             <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-text-dim">Paragraph {pIndex + 1} / {paras.length}{current.heading ? ` · ${current.heading}` : ''}</span>
+                <span className="text-xs font-medium text-text-dim">{current.label} · {pIndex + 1} of {paras.length}{current.heading ? ` · ${current.heading}` : ''}</span>
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-sm text-text-muted italic mb-6 px-4 py-3 bg-surface-body rounded-xl border border-line-soft">{cue}</p>
@@ -849,7 +906,7 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
         }
     }, [wordIdx, paraDone]);
 
-    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const para = paras[pIndex];
@@ -906,7 +963,7 @@ export function GuidedTypeMode({ essay, paragraphs, onScheduled, onNext, nextLab
         <div>
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">
-                    Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}{para.heading ? ` · ${para.heading}` : ''}
+                    {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
                 <div className="flex items-center gap-3">
                     {streak >= 3 && (
@@ -1038,7 +1095,7 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
         }
     }, [wordIdx, paraDone]);
 
-    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const para = paras[pIndex];
@@ -1096,7 +1153,7 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
         <div>
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">
-                    Paragraph {pIndex + 1} / {paras.length}{paras.length !== (essay.parsedStructure?.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}{para.heading ? ` · ${para.heading}` : ''}
+                    {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
                 {streak >= 5 && (
                     <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">⚡ {streak} in a row</span>
@@ -1178,16 +1235,16 @@ function OpeningsMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
 
     useEffect(() => { textareaRef.current?.focus(); }, [pIndex]);
 
-    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const para = paras[pIndex];
     const sourceIdx = para.sourceIndex ?? pIndex;
     const target = para.topicSentence || splitSentences(para.text)[0] || '';
-    const prevInEssay = sourceIdx > 0 ? structure.bodyParagraphs?.[sourceIdx - 1] : null;
+    const prevInEssay = previousSectionOf(essay, sourceIdx);
     const cue = !prevInEssay
-        ? (structure.thesis ? `Your thesis: "${structure.thesis}" — open your first body paragraph.` : 'Open your first body paragraph.')
-        : `The previous paragraph ended: "${lastSentence(prevInEssay.text)}" — write the next opening.`;
+        ? (structure.thesis ? `Your thesis: "${structure.thesis}" — write your opening.` : 'Write your opening.')
+        : `${prevInEssay.label} ended: "${lastSentence(prevInEssay.text)}" — write the next opening.`;
 
     const diff = diffWords(target, typed);
     const accuracy = diffAccuracy(diff);
@@ -1210,7 +1267,7 @@ function OpeningsMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
         <div>
             <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-text-dim">
-                    Opening {pIndex + 1} / {paras.length}{paras.length !== (structure.bodyParagraphs?.length || 0) ? ` (¶${sourceIdx + 1} in essay)` : ''}
+                    Opening of {para.label} · {pIndex + 1} of {paras.length}
                 </span>
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
@@ -1279,7 +1336,7 @@ function SentenceMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
     useEffect(() => { if (phase === 'type') textareaRef.current?.focus(); }, [phase, sIndex, pIndex]);
     useEffect(() => { setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }, [hintStyle]);
 
-    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const para = paras[pIndex];
@@ -1309,7 +1366,7 @@ function SentenceMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
     return (
         <div>
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
-                <span className="text-xs font-medium text-text-dim">Para {pIndex + 1}/{paras.length} · Sentence {sIndex + 1}/{total}{para.heading ? ` · ${para.heading}` : ''}</span>
+                <span className="text-xs font-medium text-text-dim">{para.label} · Sentence {sIndex + 1}/{total}{para.heading ? ` · ${para.heading}` : ''}</span>
                 <HintToggle options={SENTENCE_HINTS} value={hintStyle} onChange={setHintStyle} />
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
@@ -1420,7 +1477,7 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
 
     const reset = () => { setTyped(''); setPhase('write'); setElapsed(0); setStartedAt(null); setSaveOk(true); setSaved(false); };
 
-    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>No body paragraphs found.</EmptyModeNote>;
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (phase === 'done') return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
 
     const targetJoined = paras.map((p) => p.text).join('\n\n');
@@ -1483,7 +1540,7 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
                             const verdict = accuracyVerdict(r.accuracy);
                             return (
                                 <div key={i} className="flex items-center gap-3">
-                                    <span className="text-xs font-bold text-text-dim w-10 shrink-0">¶{(r.para.sourceIndex ?? i) + 1}</span>
+                                    <span className="w-24 shrink-0 truncate text-xs font-bold text-text-dim">{r.para.label || `¶${i + 1}`}</span>
                                     <div className="h-2 flex-1 bg-line-soft rounded-full overflow-hidden">
                                         <div className={`h-full rounded-full transition-all duration-500 ${VERDICT_CLASS[`${verdict}Fill`]}`} style={{ width: `${r.accuracy}%` }} />
                                     </div>
@@ -1833,15 +1890,20 @@ function ScopePicker({ allParagraphs, scope, onChange }) {
 
     if (allParagraphs.length < 2) return null;
 
-    const toggle = (idx) => {
-        const next = selected.includes(idx) ? selected.filter((i) => i !== idx) : [...selected, idx].sort((a, b) => a - b);
+    // Reading order, not numeric order: the list mixes 'intro' and 'conclusion'
+    // with numeric body indices, so sorting by value would throw them together
+    // at one end. Ordering by position in the section list is always right.
+    const order = allParagraphs.map((p) => p.sourceIndex);
+    const toggle = (id) => {
+        const nextSet = selected.includes(id) ? selected.filter((i) => i !== id) : [...selected, id];
+        const next = order.filter((i) => nextSet.includes(i));
         if (!next.length) return; // never allow an empty selection
         onChange(next.length === allParagraphs.length ? null : next);
     };
 
     const label = !scope
-        ? `All ${allParagraphs.length} paragraphs`
-        : `${scope.length} of ${allParagraphs.length} paragraphs`;
+        ? `All ${allParagraphs.length} sections`
+        : `${scope.length} of ${allParagraphs.length} sections`;
 
     return (
         <div ref={ref} className="relative inline-block">
@@ -1860,7 +1922,7 @@ function ScopePicker({ allParagraphs, scope, onChange }) {
             {open && (
                 <div className="absolute top-full left-0 mt-1.5 w-80 max-w-[85vw] bg-surface-raised border border-line-soft rounded-xl overflow-hidden z-30 shadow-pop">
                     <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Choose paragraphs</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Choose sections</p>
                         <button type="button" onClick={() => onChange(null)} className="text-[10px] font-bold text-accent hover:opacity-70 transition-opacity">
                             Select all
                         </button>
@@ -1878,7 +1940,7 @@ function ScopePicker({ allParagraphs, scope, onChange }) {
                                         className="mt-0.5 h-4 w-4 rounded border-line-soft accent-[color:var(--accent,currentColor)]"
                                     />
                                     <span className="min-w-0">
-                                        <span className="block text-xs font-bold text-text-primary">¶{p.sourceIndex + 1}</span>
+                                        <span className="block text-xs font-bold text-text-primary">{p.label}</span>
                                         <span className="block text-[11px] font-medium text-text-dim truncate">{snippet}</span>
                                     </span>
                                 </label>
@@ -2116,7 +2178,7 @@ function EssayWorkspace({ essayId }) {
     const modeParam = searchParams.get('mode');
     const mode = PRACTICE_MODE_KEYS.has(modeParam) ? modeParam : (MODE_ALIASES[modeParam] || null);
     const allParas = allParagraphsOf(essay);
-    const scope = parseScope(searchParams.get('scope'), allParas.length);
+    const scope = parseScope(searchParams.get('scope'), allParas);
     const scoped = scope ? allParas.filter((p) => scope.includes(p.sourceIndex)) : allParas;
     const setScope = (ids) => {
         const next = new URLSearchParams(searchParams);

@@ -145,11 +145,35 @@ describe('EssayMemoriser', () => {
     api.getEssay.mockResolvedValue({ essay: twoParas });
     renderAt('/essays/essay-1?tab=practice');
 
-    const chip = await screen.findByRole('button', { name: /Practising: All 2 paragraphs/i });
+    // Intro + two bodies + conclusion — the intro and conclusion are sections
+    // you can practise, not scenery, so they are in the count and the picker.
+    const chip = await screen.findByRole('button', { name: /Practising: All 4 sections/i });
     fireEvent.click(chip);
-    // Deselect the first paragraph — practice narrows to the second.
-    fireEvent.click(screen.getByRole('checkbox', { name: /¶1/ }));
-    expect(screen.getByRole('button', { name: /Practising: 1 of 2 paragraphs/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /Introduction/ })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /Conclusion/ })).toBeInTheDocument();
+    // Deselect the first body paragraph — practice narrows to the rest.
+    fireEvent.click(screen.getByRole('checkbox', { name: /Body ¶1/ }));
+    expect(screen.getByRole('button', { name: /Practising: 3 of 4 sections/i })).toBeInTheDocument();
+  });
+
+  it('practises the introduction and the conclusion, not only body paragraphs', async () => {
+    api.getEssay.mockResolvedValue({ essay: parsedEssay });
+    renderAt('/essays/essay-1?tab=practice');
+
+    // Rebuild it walks the whole essay in reading order: intro first.
+    fireEvent.click(await screen.findByRole('button', { name: /Rebuild it/i }));
+    expect(await screen.findByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
+
+    // Scoping to the conclusion alone must actually drill the conclusion —
+    // every mode used to silently fall back to body paragraphs only.
+    cleanup();
+    renderAt('/essays/essay-1?tab=practice&mode=wordbyword&scope=conclusion');
+    expect(await screen.findByText(/Conclusion · 1 of 1/i)).toBeInTheDocument();
+
+    // …and Review, which schedules its spaced repetition per section.
+    cleanup();
+    renderAt('/essays/essay-1?tab=practice&mode=recall&scope=intro');
+    expect(await screen.findByText(/Introduction · 1 of 1/i)).toBeInTheDocument();
   });
 
   it('shows planning labels as annotations, never as exam prose', async () => {

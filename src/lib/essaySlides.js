@@ -79,16 +79,22 @@ export function makeCloze(sentence, maxBlanks = 2) {
 }
 
 /** A fillblank slide for one paragraph's topic sentence, or null. */
-export function buildTopicSentenceCloze(paragraph, pIdx) {
+/**
+ * @param {object} paragraph
+ * @param {string|number} label  A section label ("Introduction", "Body ¶2") or,
+ *   for callers that still pass a zero-based body index, the number itself.
+ */
+export function buildTopicSentenceCloze(paragraph, label) {
   const cloze = makeCloze(paragraph?.topicSentence || '', 2);
   if (!cloze) return null;
+  const name = typeof label === 'number' ? `body paragraph ${label + 1}` : String(label || 'this section');
   return {
     type: 'fillblank',
     template: cloze.template,
     blanks: cloze.blanks,
     mode: 'textbox',
-    explanation: `Topic sentence of body paragraph ${pIdx + 1}.`,
-    caption: `Body paragraph ${pIdx + 1}`,
+    explanation: `Opening sentence of ${name.toLowerCase()}.`,
+    caption: typeof label === 'number' ? `Body paragraph ${label + 1}` : name,
   };
 }
 
