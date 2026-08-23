@@ -176,6 +176,91 @@ describe('EssayMemoriser', () => {
     expect(await screen.findByText(/Introduction · 1 of 1/i)).toBeInTheDocument();
   });
 
+  describe('First letters — Tab rewinds by one scope per tap', () => {
+    // Words already answered render revealed (animate-pop); everything ahead
+    // stays masked. Counting them is the same as reading the word cursor.
+    const sprint = () => screen.getByRole('application', { name: /First letters sprint/i });
+    const answered = () => sprint().querySelectorAll('.animate-pop').length;
+    const press = (key) => fireEvent.keyDown(
+      screen.getByLabelText(/Type the first letter of the next word/i), { key },
+    );
+
+    it('rewinds to the sentence, then the paragraph', async () => {
+      // Two sentences in one paragraph, so "sentence" and "paragraph" differ.
+      api.getEssay.mockResolvedValue({
+        essay: {
+          ...parsedEssay,
+          parsedStructure: { ...parsedEssay.parsedStructure, introduction: 'Alpha beta gamma. Delta epsilon zeta.' },
+        },
+      });
+      renderAt('/essays/essay-1?tab=practice&mode=letters&scope=intro');
+      await screen.findByRole('application', { name: /First letters sprint/i });
+
+      // Through the first sentence and two words into the second.
+      ['a', 'b', 'g', 'd', 'e'].forEach(press);
+      expect(answered()).toBe(5);
+
+      // One tap: back to the start of the sentence you are in (word 3).
+      press('Tab');
+      expect(answered()).toBe(3);
+      expect(screen.getByRole('status')).toHaveTextContent(/Restarted sentence/i);
+
+      // A second tap inside the window widens it to the whole paragraph.
+      press('Tab');
+      expect(answered()).toBe(0);
+      expect(screen.getByRole('status')).toHaveTextContent(/Restarted paragraph/i);
+    });
+
+    it('rewinds the whole drill on the third tap', async () => {
+      api.getEssay.mockResolvedValue({ essay: parsedEssay });
+      renderAt('/essays/essay-1?tab=practice&mode=letters');
+      expect(await screen.findByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
+
+      // Finish the introduction and move on to the first body paragraph.
+      ['s', 'p', 'a', 'a', 'd'].forEach(press);
+      fireEvent.click(await screen.findByRole('button', { name: /Got it/i }));
+      expect(await screen.findByText(/Body ¶1 · 2 of 3/i)).toBeInTheDocument();
+
+      ['m', 'c'].forEach(press);
+      press('Tab');
+      press('Tab');
+      press('Tab');
+      expect(screen.getByRole('status')).toHaveTextContent(/Restarted the whole drill/i);
+      // Back to the top of the essay, not just the top of this paragraph.
+      expect(screen.getByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
+      expect(answered()).toBe(0);
+    });
+
+    it('starts the ladder again once the tap window lapses', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        api.getEssay.mockResolvedValue({
+          essay: {
+            ...parsedEssay,
+            parsedStructure: { ...parsedEssay.parsedStructure, introduction: 'Alpha beta gamma. Delta epsilon zeta.' },
+          },
+        });
+        renderAt('/essays/essay-1?tab=practice&mode=letters&scope=intro');
+        await screen.findByRole('application', { name: /First letters sprint/i });
+
+        ['a', 'b', 'g', 'd', 'e'].forEach(press);
+        press('Tab');
+        expect(answered()).toBe(3);
+
+        // Well past the window: the next tap is a first tap again, so it
+        // restarts the sentence rather than escalating to the paragraph.
+        await vi.advanceTimersByTimeAsync(2000);
+        ['d', 'e'].forEach(press);
+        expect(answered()).toBe(5);
+        press('Tab');
+        expect(answered()).toBe(3);
+        expect(screen.getByRole('status')).toHaveTextContent(/Restarted sentence/i);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   it('shows planning labels as annotations, never as exam prose', async () => {
     const annotated = {
       id: 'essay-notes',

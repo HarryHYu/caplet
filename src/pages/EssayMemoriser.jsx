@@ -270,6 +270,22 @@ function sentenceAtWord(text, wordIdx) {
 }
 
 /**
+ * Word index at which the sentence containing word `wordIdx` begins — i.e. the
+ * point a "restart this sentence" rewind should land on. Counts words the same
+ * way sentenceAtWord does, so the two always agree on sentence boundaries.
+ */
+function sentenceStartWord(text, wordIdx) {
+    const sentences = splitSentences(text);
+    let start = 0;
+    for (const s of sentences) {
+        const length = s.trim().split(/\s+/).filter(Boolean).length;
+        if (wordIdx < start + length) return start;
+        start += length;
+    }
+    return 0;
+}
+
+/**
  * A word chip whose width NEVER changes. The real word is always rendered —
  * invisibly while masked — so it reserves its exact final width; the mask
  * (cue letters, dot, caret) is an overlay clipped to that box. Revealing a
@@ -1069,6 +1085,13 @@ const firstLetterOf = (word) => {
     return match ? match[0].toLowerCase() : null;
 };
 
+// Tab rewinds by one scope per tap: sentence → paragraph → the whole drill.
+// Taps only chain while they land inside this window; after it the count
+// starts again at "sentence".
+const TAB_TAP_MS = 700;
+const TAB_NOTICE_MS = 1600;
+const TAB_SCOPES = ['sentence', 'paragraph', 'the whole drill'];
+
 function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
     const paras = paragraphs || allParagraphsOf(essay);
     const [pIndex, setPIndex] = useState(0);
@@ -1081,14 +1104,22 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
     const [saveOk, setSaveOk] = useState(true);
     const [shake, setShake] = useState(false);
     const [streak, setStreak] = useState(0);
+    const [rewind, setRewind] = useState(null); // last Tab scope, shown briefly
     const inputRef = useRef(null);
     const currentRef = useRef(null);
     const shakeTimer = useRef(null);
+    const tabTaps = useRef(0);
+    const tabTimer = useRef(null);
+    const noticeTimer = useRef(null);
 
     const reset = () => { setPIndex(0); setWordIdx(0); setResults([]); setMissCount(0); setParaDone(false); setDone(false); setSaveOk(true); setStreak(0); };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
-    useEffect(() => () => clearTimeout(shakeTimer.current), []);
+    useEffect(() => () => {
+        clearTimeout(shakeTimer.current);
+        clearTimeout(tabTimer.current);
+        clearTimeout(noticeTimer.current);
+    }, []);
     useEffect(() => {
         if (typeof currentRef.current?.scrollIntoView === 'function') {
             currentRef.current.scrollIntoView({ block: 'nearest' });
@@ -1111,7 +1142,45 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
         else setWordIdx((i) => i + 1);
     };
 
+    /**
+     * Tab rewinds. Each scope contains the one before it (sentence ⊂ paragraph
+     * ⊂ drill), so every tap applies immediately and widens the previous one
+     * rather than waiting to see whether more taps are coming — no dead delay
+     * on a single press.
+     */
+    const onTab = () => {
+        const tap = Math.min(tabTaps.current + 1, TAB_SCOPES.length);
+        tabTaps.current = tap;
+        clearTimeout(tabTimer.current);
+        tabTimer.current = setTimeout(() => { tabTaps.current = 0; }, TAB_TAP_MS);
+        clearTimeout(noticeTimer.current);
+        noticeTimer.current = setTimeout(() => setRewind(null), TAB_NOTICE_MS);
+        setRewind(TAB_SCOPES[tap - 1]);
+
+        setMissCount(0);
+        setStreak(0);
+        setParaDone(false);
+        if (tap === 1) {
+            // Back to the first word of the sentence you are in. `results` is
+            // one entry per word typed so far, so it truncates to the same point.
+            const start = sentenceStartWord(para.text, wordIdx);
+            setWordIdx(start);
+            setResults((prev) => prev.slice(0, start));
+        } else if (tap === 2) {
+            setWordIdx(0);
+            setResults([]);
+        } else {
+            setPIndex(0);
+            setWordIdx(0);
+            setResults([]);
+            setSaveOk(true);
+        }
+    };
+
     const onKey = (e) => {
+        // Before the paraDone guard: a finished paragraph is exactly when you
+        // most want to rewind and go again.
+        if (e.key === 'Tab') { e.preventDefault(); onTab(); return; }
         if (paraDone) return;
         const key = String(e.key || '').toLowerCase();
         if (key.length !== 1) return;
@@ -1155,13 +1224,22 @@ function FirstLettersMode({ essay, paragraphs, onScheduled, onNext, nextLabel, o
                 <span className="text-xs font-medium text-text-dim">
                     {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
-                {streak >= 5 && (
-                    <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">⚡ {streak} in a row</span>
-                )}
+                <span className="flex items-center gap-3">
+                    {rewind && (
+                        <span key={rewind} role="status" className="animate-pop text-xs font-bold text-accent">
+                            Restarted {rewind}
+                        </span>
+                    )}
+                    {streak >= 5 && (
+                        <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">⚡ {streak} in a row</span>
+                    )}
+                </span>
             </div>
             <ProgressBar value={pIndex} total={paras.length} />
             <p className="text-xs font-medium text-text-dim mb-4">
                 Recall at speed: press the <strong>first letter</strong> of each next word. Two misses reveal it and move on.
+                {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> restarts the sentence —
+                twice for the paragraph, three times for the whole drill.
             </p>
 
             {!paraDone ? (
