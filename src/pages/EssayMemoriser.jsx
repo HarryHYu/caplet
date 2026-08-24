@@ -1341,24 +1341,31 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
     // killed the pass until you make it back past it.
     const [revealed, setRevealed] = useState(false);
     const [deathAt, setDeathAt] = useState(null); // { p, w, typed }
+    // Tab is the peek key here (not the rewind ladder — mistakes already
+    // restart the run for you). A tap flashes the word you are on; holding it
+    // reveals the whole passage until you let go. Both charge the same
+    // once-per-word penalty as the peek buttons.
+    const [wordPeek, setWordPeek] = useState(false);
     const inputRef = useRef(null);
     const currentRef = useRef(null);
     const shakeTimer = useRef(null);
-    const tabTaps = useRef(0);
-    const tabTimer = useRef(null);
     const noticeTimer = useRef(null);
+    const holdPeek = useRef(false);
+    const holdTimer = useRef(null);
+    const wordPeekTimer = useRef(null);
 
     const reset = () => {
         setPIndex(0); setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
         setCommits(0); setHitCount(0); setSlips(0); setParaDone(false); setDone(false);
-        setSaveOk(true); setStreak(0); setRevealed(false); setDeathAt(null);
+        setSaveOk(true); setStreak(0); setRevealed(false); setDeathAt(null); setWordPeek(false);
     };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
     useEffect(() => () => {
         clearTimeout(shakeTimer.current);
-        clearTimeout(tabTimer.current);
         clearTimeout(noticeTimer.current);
+        clearTimeout(holdTimer.current);
+        clearTimeout(wordPeekTimer.current);
     }, []);
     useEffect(() => {
         if (typeof currentRef.current?.scrollIntoView === 'function') {
@@ -1437,37 +1444,38 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         }
     };
 
-    // Same Tab ladder as the rebuild drill: sentence → paragraph → the whole
-    // drill, each tap applying immediately and widening the last.
-    const onTab = () => {
-        const tap = Math.min(tabTaps.current + 1, TAB_SCOPES.length);
-        tabTaps.current = tap;
-        clearTimeout(tabTimer.current);
-        tabTimer.current = setTimeout(() => { tabTaps.current = 0; }, TAB_TAP_MS);
-        showNotice('accent', `Restarted ${TAB_SCOPES[tap - 1]}`);
-
-        setCurrent('');
-        setStreak(0);
-        setParaDone(false);
-        if (tap === 1) {
-            const start = sentenceStartWord(para.text, wordIdx);
-            setWordIdx(start);
-            setResults((prev) => prev.slice(0, start));
-        } else if (tap === 2) {
-            setWordIdx(0);
-            setResults([]);
-        } else {
-            setPIndex(0);
-            setWordIdx(0);
-            setResults([]);
-            setSaveOk(true);
-        }
-    };
-
     const onKey = (e) => {
-        if (e.key === 'Tab') { e.preventDefault(); onTab(); return; }
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            if (paraDone || e.repeat) return;
+            // Wait a beat before treating it as a hold; a quick tap resolves
+            // in onKeyUp as a single-word flash instead.
+            clearTimeout(holdTimer.current);
+            holdTimer.current = setTimeout(() => {
+                holdPeek.current = true;
+                revealCurrentWord();
+                setRevealed(true);
+            }, 300);
+            return;
+        }
         if (paraDone) return;
         if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); commitWord(); }
+    };
+
+    const onKeyUp = (e) => {
+        if (e.key !== 'Tab') return;
+        e.preventDefault();
+        clearTimeout(holdTimer.current);
+        if (holdPeek.current) {
+            holdPeek.current = false;
+            setRevealed(false);
+            return;
+        }
+        if (paraDone) return;
+        revealCurrentWord();
+        setWordPeek(true);
+        clearTimeout(wordPeekTimer.current);
+        wordPeekTimer.current = setTimeout(() => setWordPeek(false), 1600);
     };
 
     const finishParagraph = async (recall) => {
@@ -1534,8 +1542,8 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                 Get it perfect: space commits each word, and a wrong word <strong>restarts the {resetScope === 'all' ? 'whole run' : resetScope}</strong> —
                 revealing the passage so you can re-read it before you go again.
                 Capitals, accents and apostrophes never count against you — punctuation does.
-                {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> restarts the sentence —
-                twice for the paragraph, three times for the whole drill.
+                {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> peeks the word you’re on —
+                hold it down to see the whole passage. Peeks trim accuracy, same as the buttons.
             </p>
             <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
                 <span className="flex items-center gap-2">
@@ -1565,9 +1573,11 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                         value={current}
                         onChange={(e) => {
                             if (revealed && e.target.value) setRevealed(false);
+                            if (wordPeek && e.target.value) setWordPeek(false);
                             setCurrent(e.target.value);
                         }}
                         onKeyDown={onKey}
+                        onKeyUp={onKeyUp}
                         aria-label="Type the next word"
                         className="absolute h-px w-px opacity-0"
                         autoComplete="off" autoCorrect="off" spellCheck={false}
@@ -1601,7 +1611,9 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                                         ? <span className="text-text-primary">{current}</span>
                                         : revealed
                                             ? <span className="italic text-text-muted">{w}</span>
-                                            : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
+                                            : wordPeek
+                                                ? <span className="text-amber">{w}</span>
+                                                : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
                                     <Caret />
                                 </span>
                             );
@@ -1638,7 +1650,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
             <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                 {revealed && !paraDone && (
                     <span className="mr-auto text-xs font-bold text-text-warning">
-                        Reading the answer — it hides again when you start typing
+                        Reading the answer — it hides again when you carry on
                     </span>
                 )}
                 {!paraDone && (

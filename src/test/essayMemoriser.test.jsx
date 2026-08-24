@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 // Mock the API singleton — the library calls getEssays and getDueReviewItems
@@ -378,6 +378,37 @@ describe('EssayMemoriser', () => {
       typeWord('wrong');
       expect(await screen.findByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
       expect(screen.getByRole('status')).toHaveTextContent(/back to the top/i);
+    });
+
+    it('Tab taps peek the current word; holding Tab reveals the whole passage', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        api.getEssay.mockResolvedValue({ essay: conradEssay() });
+        renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+        await screen.findByRole('application', { name: /Perfect run/i });
+        const input = screen.getByLabelText(/Type the next word/i);
+
+        // A quick tap flashes just the word you are on, at the peek price.
+        fireEvent.keyDown(input, { key: 'Tab' });
+        fireEvent.keyUp(input, { key: 'Tab' });
+        expect(screen.getByText('97%')).toBeInTheDocument();
+        expect(stream()).not.toHaveAttribute('data-revealed');
+        // The old rewind ladder is gone from this drill: no restart happened.
+        expect(screen.queryByText(/Restarted/)).not.toBeInTheDocument();
+
+        // Holding Tab lays the whole passage bare until it is released. The
+        // word was already peeked above, so no second penalty.
+        fireEvent.keyDown(input, { key: 'Tab' });
+        // The reveal fires from a timer, outside React's event batching —
+        // flush it inside act() so the re-render is guaranteed to land.
+        await act(async () => { await vi.advanceTimersByTimeAsync(350); });
+        expect(stream()).toHaveAttribute('data-revealed', 'true');
+        fireEvent.keyUp(input, { key: 'Tab' });
+        expect(stream()).not.toHaveAttribute('data-revealed');
+        expect(screen.getByText('97%')).toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('reveals the passage on death and hides it again when you type', async () => {
