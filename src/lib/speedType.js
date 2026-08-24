@@ -268,3 +268,81 @@ export function computeStats(records, elapsedMs) {
     seconds: Math.max(1, Math.round(elapsedMs / 1000)),
   };
 }
+
+// ── Perfect run ─────────────────────────────────────────────────────────────
+// The perfect-run drill's word comparator. Different contract from the
+// forgiveness toggles above: capitals, accents and apostrophes NEVER count
+// against you, real punctuation (quotes, stops, commas, hyphens…) ALWAYS
+// does, and — with typo tolerance on — a word passes when most of its
+// letters are right and in order ("Conrad's" typed as "conrdas").
+
+const PERFECT_APOSTROPHES = /['’‘‚‛`´ʼ]/g;
+
+/** The two canonical spellings of a word once nothing forgivable is left. */
+const perfectVariants = (w) => {
+  const base = typeable(String(w || '')).toLowerCase().replace(PERFECT_APOSTROPHES, '');
+  return [foldAccents(base), foldGerman(base)];
+};
+
+export const perfectLetters = (s) => String(s || '').replace(/[^\p{L}\p{N}]/gu, '');
+export const perfectPunct = (s) => String(s || '').replace(/[\p{L}\p{N}]/gu, '');
+
+/**
+ * Optimal-string-alignment distance: Levenshtein plus adjacent transposition
+ * as a single edit, so "conrdas" sits one edit from "conrads" rather than two.
+ */
+export function osaDistance(a, b) {
+  const n = a.length;
+  const m = b.length;
+  if (!n) return m;
+  if (!m) return n;
+  const d = Array.from({ length: n + 1 }, (_, i) => {
+    const row = new Array(m + 1).fill(0);
+    row[0] = i;
+    return row;
+  });
+  for (let j = 0; j <= m; j++) d[0][j] = j;
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return d[n][m];
+}
+
+// How many letter-edits a word of this length absorbs. Three-letter words get
+// no general budget (of→on must fail), but a pure adjacent swap — teh→the —
+// is the single most common typo there is, so it passes from three letters
+// up. Not at two: "on"→"no" is a different word, not a typo.
+const perfectTolerance = (len) => (len >= 8 ? 2 : len >= 4 ? 1 : 0);
+
+const isAdjacentSwap = (a, b) => {
+  if (a.length !== b.length) return false;
+  let i = 0;
+  while (i < a.length && a[i] === b[i]) i += 1;
+  if (i >= a.length - 1) return false;
+  return a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2);
+};
+
+/**
+ * @returns {{ok: boolean, exact: boolean}} — `exact` false means the word was
+ *   accepted only thanks to typo tolerance, so the UI can mark it amber.
+ */
+export function perfectWordMatch(target, typed, { typos = true } = {}) {
+  const tv = perfectVariants(target);
+  const yv = perfectVariants(typed);
+  if (tv.some((t) => yv.includes(t))) return { ok: true, exact: true };
+  // Real punctuation is never forgiven — and never fuzzed either: "contested"
+  // for "contested." fails here regardless of the typo toggle.
+  if (perfectPunct(tv[0]) !== perfectPunct(yv[0])) return { ok: false, exact: false };
+  const pairs = tv.map((t, i) => [perfectLetters(t), perfectLetters(yv[i])]);
+  if (pairs.some(([t, y]) => t === y)) return { ok: true, exact: true };
+  if (!typos) return { ok: false, exact: false };
+  const ok = pairs.some(([t, y]) => osaDistance(t, y) <= perfectTolerance(t.length)
+    || (t.length >= 3 && isAdjacentSwap(t, y)));
+  return { ok, exact: false };
+}

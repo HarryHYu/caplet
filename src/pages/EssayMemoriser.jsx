@@ -8,7 +8,7 @@ import { extractPdfText } from '../lib/pdfExtract';
 import AnnotatedDocument from '../components/essay/AnnotatedDocument';
 import SpeedTypeMode from '../components/essay/SpeedTypeMode';
 import AccuracyRing from '../components/essay/AccuracyRing';
-import { foldAccents, foldGerman, alignWords, splitSentences, VERDICT_CLASS, accuracyVerdict } from '../lib/speedType';
+import { foldAccents, foldGerman, alignWords, splitSentences, perfectWordMatch, VERDICT_CLASS, accuracyVerdict } from '../lib/speedType';
 import EssayChat from '../components/essay/EssayChat';
 import ContextLibrary, { AddContextForm, ContextDocRow } from '../components/essay/ContextLibrary';
 import { MAX_CONTEXT_DOCS } from '../lib/essayContext';
@@ -34,7 +34,7 @@ import {
     AcademicCapIcon,
     ArrowUpTrayIcon,
     ArrowRightIcon,
-    BoltIcon,
+    CheckBadgeIcon,
     CheckIcon,
     ChevronDownIcon,
     EyeIcon,
@@ -1199,7 +1199,10 @@ export function RebuildDrill({ essay, paragraphs, onScheduled, onNext, nextLabel
                 {!letters && (
                     <span className="flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Cue</span>
-                        <HintToggle options={NEXT_WORD_HINTS} value={hintStyle} onChange={setHintStyle} />
+                        {/* Hand focus straight back to the stream so changing the
+                            cue never interrupts the typing. */}
+                        <HintToggle options={NEXT_WORD_HINTS} value={hintStyle}
+                            onChange={(next) => { setHintStyle(next); inputRef.current?.focus(); }} />
                     </span>
                 )}
             </div>
@@ -1264,6 +1267,347 @@ export function RebuildDrill({ essay, paragraphs, onScheduled, onNext, nextLabel
                     <p className="text-xs text-text-muted mb-4">
                         {letters ? 'Sprint finished. How solid did it feel?' : 'Paragraph rebuilt. How did that feel?'}
                     </p>
+                    <GradeButtons busy={busy} onFail={() => finishParagraph('fail')} onPass={() => finishParagraph('pass')} passLabel="Got it" />
+                </div>
+            )}
+
+            <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                {!paraDone && (
+                    <div className="flex items-center gap-2">
+                        <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} onReveal={revealCurrentWord} />
+                        <SneakPeek text={currentSentence} label="Peek sentence" autoHideMs={3500} onReveal={revealCurrentWord} />
+                    </div>
+                )}
+                {peekedWords.size > 0 && <span className="sr-only" role="status">{peekedWords.size} revealed {peekedWords.size === 1 ? 'word' : 'words'}; accuracy reduced by {peekedWords.size * 3} percentage points.</span>}
+            </div>
+        </div>
+    );
+}
+
+// ── PERFECT RUN — a wrong word restarts the scope you chose ─────────────────
+//
+// Pasted from RebuildDrill's word unit and rebuilt around one rule: you do
+// not get to move on past a mistake. A wrong commit restarts the sentence,
+// the paragraph, or the entire run (your choice) — so finishing at all means
+// you typed it perfectly in one unbroken pass. Everything else carries over:
+// the inline stream, the Tab rewind ladder, cue levels, peeks and grading.
+//
+// Word checking is its own contract (see perfectWordMatch): capitals, accents
+// and apostrophes NEVER count against you, real punctuation ALWAYS does, and
+// with typo tolerance on, a word passes when most of its letters are right
+// and in order — "Conrad's" typed as "conrdas" is close enough.
+
+const PERFECT_RESETS = [
+    { key: 'sentence', label: 'Sentence' },
+    { key: 'paragraph', label: 'Paragraph' },
+    { key: 'all', label: 'Everything' },
+];
+
+const PERFECT_TYPOS = [
+    { key: 'typos', label: 'Typos forgiven' },
+    { key: 'strict', label: 'Exact letters' },
+];
+
+const PERFECT_RESET_NOTICE = {
+    sentence: 'Not this time — sentence restarted',
+    paragraph: 'Not this time — paragraph restarted',
+    all: 'Not this time — back to the top',
+};
+
+export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
+    const paras = paragraphs || allParagraphsOf(essay);
+    const [resetScope, setResetScope] = useState('sentence');
+    const [typoMode, setTypoMode] = useState('typos');
+    const [hintStyle, setHintStyle] = useState('first');
+    const [pIndex, setPIndex] = useState(0);
+    const [wordIdx, setWordIdx] = useState(0);
+    const [current, setCurrent] = useState('');
+    const [results, setResults] = useState([]); // accepted words only: [{ status: 'hit'|'loose', typed }]
+    const [peekedWords, setPeekedWords] = useState(new Set());
+    // Lifetime-of-this-paragraph counters — an auto-restart rewinds the stream
+    // but NOT these, so the accuracy figure keeps the mistakes you paid for.
+    const [commits, setCommits] = useState(0);
+    const [hitCount, setHitCount] = useState(0);
+    const [slips, setSlips] = useState(0);
+    const [paraDone, setParaDone] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const [done, setDone] = useState(false);
+    const [saveOk, setSaveOk] = useState(true);
+    const [shake, setShake] = useState(false);
+    const [streak, setStreak] = useState(0);
+    const [notice, setNotice] = useState(null); // { tone: 'accent'|'error', text }
+    const inputRef = useRef(null);
+    const currentRef = useRef(null);
+    const shakeTimer = useRef(null);
+    const tabTaps = useRef(0);
+    const tabTimer = useRef(null);
+    const noticeTimer = useRef(null);
+
+    const reset = () => {
+        setPIndex(0); setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
+        setCommits(0); setHitCount(0); setSlips(0); setParaDone(false); setDone(false);
+        setSaveOk(true); setStreak(0);
+    };
+
+    useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
+    useEffect(() => () => {
+        clearTimeout(shakeTimer.current);
+        clearTimeout(tabTimer.current);
+        clearTimeout(noticeTimer.current);
+    }, []);
+    useEffect(() => {
+        if (typeof currentRef.current?.scrollIntoView === 'function') {
+            currentRef.current.scrollIntoView({ block: 'nearest' });
+        }
+    }, [wordIdx, paraDone]);
+
+    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
+    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
+
+    const para = paras[pIndex];
+    const sourceIdx = para.sourceIndex ?? pIndex;
+    const words = String(para.text || '').trim().split(/\s+/).filter(Boolean);
+    const targetWord = words[wordIdx] || '';
+    const currentSentence = sentenceAtWord(para.text, wordIdx);
+
+    const rawAccuracy = commits ? Math.round((hitCount / commits) * 100) : 100;
+    const accuracy = Math.max(0, Math.min(100, rawAccuracy - (peekedWords.size * 3)));
+
+    const showNotice = (tone, text) => {
+        setNotice({ tone, text });
+        clearTimeout(noticeTimer.current);
+        noticeTimer.current = setTimeout(() => setNotice(null), TAB_NOTICE_MS);
+    };
+
+    const flashWrong = () => {
+        setShake(true);
+        clearTimeout(shakeTimer.current);
+        shakeTimer.current = setTimeout(() => setShake(false), 320);
+    };
+
+    const advanceWord = (status, typed) => {
+        setResults((prev) => [...prev, { status, typed }]);
+        setCurrent('');
+        setStreak((s) => s + 1);
+        if (wordIdx + 1 >= words.length) setParaDone(true);
+        else setWordIdx((i) => i + 1);
+    };
+
+    // The mode's whole point: a rejected word rewinds the chosen scope, and
+    // you type your way back. Nothing is marked wrong in the stream — the
+    // restart IS the consequence.
+    const slip = () => {
+        setSlips((n) => n + 1);
+        setStreak(0);
+        setCurrent('');
+        flashWrong();
+        showNotice('error', PERFECT_RESET_NOTICE[resetScope]);
+        if (resetScope === 'sentence') {
+            const start = sentenceStartWord(para.text, wordIdx);
+            setWordIdx(start);
+            setResults((prev) => prev.slice(0, start));
+        } else if (resetScope === 'paragraph') {
+            setWordIdx(0);
+            setResults([]);
+        } else {
+            setPIndex(0);
+            setWordIdx(0);
+            setResults([]);
+            setPeekedWords(new Set());
+        }
+    };
+
+    const commitWord = () => {
+        const typed = current.trim();
+        if (!typed || paraDone) return;
+        const verdict = perfectWordMatch(targetWord, typed, { typos: typoMode === 'typos' });
+        setCommits((c) => c + 1);
+        if (verdict.ok) {
+            setHitCount((h) => h + 1);
+            advanceWord(verdict.exact ? 'hit' : 'loose', typed);
+        } else {
+            slip();
+        }
+    };
+
+    // Same Tab ladder as the rebuild drill: sentence → paragraph → the whole
+    // drill, each tap applying immediately and widening the last.
+    const onTab = () => {
+        const tap = Math.min(tabTaps.current + 1, TAB_SCOPES.length);
+        tabTaps.current = tap;
+        clearTimeout(tabTimer.current);
+        tabTimer.current = setTimeout(() => { tabTaps.current = 0; }, TAB_TAP_MS);
+        showNotice('accent', `Restarted ${TAB_SCOPES[tap - 1]}`);
+
+        setCurrent('');
+        setStreak(0);
+        setParaDone(false);
+        if (tap === 1) {
+            const start = sentenceStartWord(para.text, wordIdx);
+            setWordIdx(start);
+            setResults((prev) => prev.slice(0, start));
+        } else if (tap === 2) {
+            setWordIdx(0);
+            setResults([]);
+        } else {
+            setPIndex(0);
+            setWordIdx(0);
+            setResults([]);
+            setSaveOk(true);
+        }
+    };
+
+    const onKey = (e) => {
+        if (e.key === 'Tab') { e.preventDefault(); onTab(); return; }
+        if (paraDone) return;
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); commitWord(); }
+    };
+
+    const finishParagraph = async (recall) => {
+        setBusy(true);
+        try {
+            await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), recall, {
+                mode: 'perfect_run',
+                accuracy,
+                restarts: slips,
+                hintCount: peekedWords.size,
+            });
+            onScheduled?.();
+        } catch { setSaveOk(false); }
+        setBusy(false);
+        if (pIndex + 1 < paras.length) {
+            setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setResults([]);
+            setPeekedWords(new Set()); setCommits(0); setHitCount(0); setSlips(0);
+            setParaDone(false); setStreak(0);
+        } else setDone(true);
+    };
+
+    const revealCurrentWord = () => {
+        setPeekedWords((alreadyPeeked) => {
+            if (alreadyPeeked.has(wordIdx)) return alreadyPeeked;
+            return new Set([...alreadyPeeked, wordIdx]);
+        });
+    };
+
+    // Clicking a toggle steals focus from the hidden input; hand it straight
+    // back so the run continues without a second click on the stream.
+    // Synchronously — the button took focus on mousedown, so by the time the
+    // change handler runs, focusing the input wins, and even a keystroke in
+    // the same tick lands in the drill.
+    const andRefocus = (set) => (next) => {
+        set(next);
+        inputRef.current?.focus();
+    };
+
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
+                <span className="text-xs font-medium text-text-dim">
+                    {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
+                </span>
+                <div className="flex items-center gap-3">
+                    {notice && (
+                        <span key={notice.text} role="status"
+                            className={`animate-pop text-xs font-bold ${notice.tone === 'error' ? 'text-text-error' : 'text-accent'}`}>
+                            {notice.text}
+                        </span>
+                    )}
+                    {streak >= 3 && (
+                        <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">⚡ {streak} in a row</span>
+                    )}
+                    {slips > 0 && !paraDone && (
+                        <span className="text-xs font-bold text-text-warning tabular-nums">{slips}× restarted</span>
+                    )}
+                    {!paraDone && <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>}
+                </div>
+            </div>
+            <ProgressBar value={pIndex} total={paras.length} />
+
+            <p className="text-xs font-medium text-text-dim mb-3">
+                Get it perfect: space commits each word, and a wrong word <strong>restarts the {resetScope === 'all' ? 'whole run' : resetScope}</strong>.
+                Capitals, accents and apostrophes never count against you — punctuation does.
+                {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> restarts the sentence —
+                twice for the paragraph, three times for the whole drill.
+            </p>
+            <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+                <span className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">A mistake restarts</span>
+                    <HintToggle options={PERFECT_RESETS} value={resetScope} onChange={andRefocus(setResetScope)} />
+                </span>
+                <span className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Letters</span>
+                    <HintToggle options={PERFECT_TYPOS} value={typoMode} onChange={andRefocus(setTypoMode)} />
+                </span>
+                <span className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Cue</span>
+                    <HintToggle options={NEXT_WORD_HINTS} value={hintStyle} onChange={andRefocus(setHintStyle)} />
+                </span>
+            </div>
+
+            {!paraDone ? (
+                <div
+                    role="application"
+                    aria-label="Perfect run"
+                    onClick={() => inputRef.current?.focus()}
+                    className={`p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[220px] max-h-[56vh] overflow-y-auto cursor-text ${shake ? 'animate-shake-x' : ''}`}
+                >
+                    <input
+                        ref={inputRef}
+                        value={current}
+                        onChange={(e) => setCurrent(e.target.value)}
+                        onKeyDown={onKey}
+                        aria-label="Type the next word"
+                        className="absolute h-px w-px opacity-0"
+                        autoComplete="off" autoCorrect="off" spellCheck={false}
+                    />
+                    {words.map((w, i) => {
+                        if (i < results.length) {
+                            const r = results[i];
+                            if (r.status === 'loose') {
+                                return (
+                                    <MaskedWord key={i} word={w} animate
+                                        title={`Close enough — you typed “${r.typed}”`}
+                                        ariaLabel={`${w} — accepted with a typo, you typed ${r.typed}`}
+                                        className="rounded-sm block-amber text-amber" />
+                                );
+                            }
+                            return (
+                                <MaskedWord key={i} word={w} animate
+                                    ariaLabel={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
+                                    title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
+                                    className={peekedWords.has(i) ? 'rounded-sm block-amber text-amber' : 'text-[color:var(--mark-green)]'} />
+                            );
+                        }
+                        if (i === wordIdx) {
+                            return (
+                                <span key={i} ref={currentRef}
+                                    aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
+                                    title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
+                                    className={`inline-flex items-baseline whitespace-pre border-b-2 ${peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}>
+                                    {current
+                                        ? <span className="text-text-primary">{current}</span>
+                                        : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
+                                    <Caret />
+                                </span>
+                            );
+                        }
+                        return (
+                            <MaskedWord key={i} word={w} hidden
+                                className="select-none"
+                                overlayClassName="justify-center text-text-dim/60"
+                                overlay="·" />
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="p-5 rounded-2xl block-blue animate-pop max-w-md">
+                    <div className="flex items-baseline gap-3 mb-1">
+                        <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
+                        <span className="text-xs text-text-dim">
+                            {slips === 0 ? 'flawless — no restarts' : `${slips} restart${slips === 1 ? '' : 's'} on the way`}
+                        </span>
+                    </div>
+                    <p className="text-xs text-text-muted mb-4">One unbroken pass, start to finish. How solid did it feel?</p>
                     <GradeButtons busy={busy} onFail={() => finishParagraph('fail')} onPass={() => finishParagraph('pass')} passLabel="Got it" />
                 </div>
             )}
@@ -1928,6 +2272,7 @@ const PRACTICE_STEPS = [
 
 const DRILL_MODES = [
     { key: 'speed', label: 'Speed run', icon: RocketLaunchIcon },
+    { key: 'perfect', label: 'Perfect run', icon: CheckBadgeIcon },
     { key: 'quotes', label: 'Quote cards', icon: RectangleStackIcon },
     { key: 'order', label: 'Paragraph order', icon: ArrowsUpDownIcon },
 ];
@@ -2573,7 +2918,7 @@ function EssayWorkspace({ essayId }) {
 
     const quoteCards = structure ? buildQuoteCards(structure) : null;
     const paragraphOrder = structure ? buildParagraphOrder(structure) : null;
-    const drills = { speed: !!structure, quotes: !!quoteCards, order: !!paragraphOrder };
+    const drills = { speed: !!structure, perfect: !!structure, quotes: !!quoteCards, order: !!paragraphOrder };
     const paragraphCount = structure?.bodyParagraphs?.length || 0;
 
     return (
@@ -2788,6 +3133,10 @@ function EssayWorkspace({ essayId }) {
                                     intro/conclusion from every run, since scoping is expressed
                                     in body-paragraph indices only. */}
                                 {mode === 'speed' && <SpeedTypeMode essay={essay} paragraphs={scope ? scoped : null} onRunningChange={setSpeedRunning} />}
+                                {mode === 'perfect' && (
+                                    <PerfectRunDrill essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
+                                        onNext={() => setMode(null)} nextLabel="all activities" />
+                                )}
                                 {mode === 'quotes' && (
                                     quoteCards
                                         ? <QuoteDrill slide={quoteCards}

@@ -15,6 +15,8 @@ import {
   runSignature,
   speedBestKey,
   alignWords,
+  perfectWordMatch,
+  osaDistance,
 } from '../lib/speedType';
 
 afterEach(() => {
@@ -163,6 +165,48 @@ const startIntroRun = (extraSetup) => {
   fireEvent.click(screen.getByRole('button', { name: /Start the run/ }));
   fireEvent.focus(screen.getByLabelText('Type the essay here'));
 };
+
+
+describe('perfectWordMatch — the perfect-run comparator', () => {
+  it('forgives capitals, accents and apostrophes outright', () => {
+    expect(perfectWordMatch("Conrad's", 'conrads')).toMatchObject({ ok: true, exact: true });
+    expect(perfectWordMatch('Café', 'cafe').ok).toBe(true);
+    expect(perfectWordMatch('Größe', 'groesse').ok).toBe(true);
+    expect(perfectWordMatch('Größe', 'grosse').ok).toBe(true);
+    // …in strict-letters mode too: those are never "typos".
+    expect(perfectWordMatch("Conrad's", 'conrads', { typos: false }).ok).toBe(true);
+  });
+
+  it('accepts small typos when most letters are right and in order', () => {
+    // The commissioning example: transposition inside a 7-letter core.
+    expect(perfectWordMatch("Conrad's", 'conrdas')).toMatchObject({ ok: true, exact: false });
+    expect(perfectWordMatch('ambition', 'ambtion').ok).toBe(true);   // dropped letter
+    expect(perfectWordMatch('the', 'teh').ok).toBe(true);            // the classic
+    expect(perfectWordMatch('of', 'on').ok).toBe(false);             // different word
+    expect(perfectWordMatch('on', 'no').ok).toBe(false);             // also a different word
+    expect(perfectWordMatch('ambition', 'admonition').ok).toBe(false); // too far gone
+  });
+
+  it('never forgives real punctuation, fuzzy or not', () => {
+    expect(perfectWordMatch('contested.', 'contested').ok).toBe(false);
+    expect(perfectWordMatch('contested.', 'contested,').ok).toBe(false);
+    expect(perfectWordMatch('“ambition,”', '"ambition,"').ok).toBe(true); // curly ↔ straight is typeability, not error
+    expect(perfectWordMatch('"ambition,"', 'ambition,').ok).toBe(false);
+    expect(perfectWordMatch('laissez-faire', 'laissezfaire').ok).toBe(false);
+  });
+
+  it('strict mode drops only the fuzz', () => {
+    expect(perfectWordMatch("Conrad's", 'conrdas', { typos: false }).ok).toBe(false);
+    expect(perfectWordMatch('the', 'teh', { typos: false }).ok).toBe(false);
+  });
+
+  it('osaDistance counts an adjacent swap as one edit', () => {
+    expect(osaDistance('conrads', 'conrdas')).toBe(1);
+    expect(osaDistance('abc', 'abc')).toBe(0);
+    expect(osaDistance('abc', 'axc')).toBe(1);
+    expect(osaDistance('', 'ab')).toBe(2);
+  });
+});
 
 describe('SpeedTypeMode', () => {
   it('offers every toggle and scope preset in setup', () => {

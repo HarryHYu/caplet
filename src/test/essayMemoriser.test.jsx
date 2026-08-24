@@ -120,6 +120,8 @@ describe('EssayMemoriser', () => {
     expect(screen.queryByRole('button', { name: /^Openings$/i })).not.toBeInTheDocument();
     // First letters is a unit of Rebuild it now, not a step of its own.
     expect(screen.queryByRole('button', { name: /^First letters$/i })).not.toBeInTheDocument();
+    // Perfect run needs only a parsed structure, so it is always on offer.
+    expect(screen.getByRole('button', { name: /Perfect run/i })).toBeInTheDocument();
     // Unavailable drills (no quotes, one paragraph) are hidden, not dead ends.
     expect(screen.queryByRole('button', { name: /Quote cards/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Paragraph order/i })).not.toBeInTheDocument();
@@ -309,6 +311,85 @@ describe('EssayMemoriser', () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+  });
+
+  describe('Perfect run — a mistake restarts the chosen scope', () => {
+    const stream = () => screen.getByRole('application', { name: /Perfect run/i });
+    const answered = () => stream().querySelectorAll('.animate-pop').length;
+    const typeWord = (w) => {
+      const input = screen.getByLabelText(/Type the next word/i);
+      fireEvent.change(input, { target: { value: w } });
+      fireEvent.keyDown(input, { key: ' ' });
+    };
+    const conradEssay = () => ({
+      ...parsedEssay,
+      parsedStructure: {
+        ...parsedEssay.parsedStructure,
+        introduction: "Conrad's vision endures. Ambition corrupts entirely.",
+      },
+    });
+
+    it('tolerates typos, insists on punctuation, and restarts the sentence', async () => {
+      api.getEssay.mockResolvedValue({ essay: conradEssay() });
+      renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+      await screen.findByRole('application', { name: /Perfect run/i });
+
+      // "Conrad's" typed lowercase, no apostrophe, letters transposed → in.
+      typeWord('conrdas');
+      expect(answered()).toBe(1);
+      expect(screen.getByTitle(/Close enough — you typed/)).toBeInTheDocument();
+
+      // Missing full stop is a real mistake: back to the sentence start.
+      typeWord('vision');
+      typeWord('endures');
+      expect(answered()).toBe(0);
+      expect(screen.getByRole('status')).toHaveTextContent(/sentence restarted/i);
+
+      // Climb back through sentence one; a slip in sentence two only rewinds
+      // sentence two.
+      ['conrads', 'vision', 'endures.', 'ambition', 'corrupts'].forEach(typeWord);
+      expect(answered()).toBe(5);
+      typeWord('collapses');
+      expect(answered()).toBe(3);
+    });
+
+    it('can restart the paragraph or the entire run instead', async () => {
+      api.getEssay.mockResolvedValue({ essay: conradEssay() });
+      renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+      await screen.findByRole('application', { name: /Perfect run/i });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Paragraph' }));
+      ['conrads', 'vision', 'endures.', 'ambition'].forEach(typeWord);
+      expect(answered()).toBe(4);
+      typeWord('wrong');
+      expect(answered()).toBe(0);
+      expect(screen.getByRole('status')).toHaveTextContent(/paragraph restarted/i);
+      cleanup();
+
+      // Everything: a slip in Body ¶1 sends the run back to the Introduction.
+      api.getEssay.mockResolvedValue({ essay: parsedEssay });
+      renderAt('/essays/essay-1?tab=practice&mode=perfect');
+      await screen.findByText(/Introduction · 1 of 3/i);
+      fireEvent.click(screen.getByRole('button', { name: 'Everything' }));
+      ['shakespeare', 'presents', 'ambition', 'as', 'destructive.'].forEach(typeWord);
+      fireEvent.click(await screen.findByRole('button', { name: /Got it/i }));
+      expect(await screen.findByText(/Body ¶1 · 2 of 3/i)).toBeInTheDocument();
+      typeWord('wrong');
+      expect(await screen.findByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent(/back to the top/i);
+    });
+
+    it('strict letters keeps caps and apostrophes forgiven but drops the fuzz', async () => {
+      api.getEssay.mockResolvedValue({ essay: conradEssay() });
+      renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+      await screen.findByRole('application', { name: /Perfect run/i });
+
+      fireEvent.click(screen.getByRole('button', { name: /Exact letters/i }));
+      typeWord('conrdas');
+      expect(answered()).toBe(0);
+      typeWord('conrads');
+      expect(answered()).toBe(1);
     });
   });
 
