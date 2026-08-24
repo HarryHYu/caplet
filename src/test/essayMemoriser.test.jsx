@@ -380,6 +380,24 @@ describe('EssayMemoriser', () => {
       expect(screen.getByRole('status')).toHaveTextContent(/back to the top/i);
     });
 
+    it('reveals the passage on death and hides it again when you type', async () => {
+      api.getEssay.mockResolvedValue({ essay: conradEssay() });
+      renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+      await screen.findByRole('application', { name: /Perfect run/i });
+      expect(stream()).not.toHaveAttribute('data-revealed');
+
+      // Death lays the passage bare and marks the word that killed the pass.
+      typeWord('wrong');
+      expect(stream()).toHaveAttribute('data-revealed', 'true');
+      expect(screen.getByTitle('You slipped here — you typed “wrong”')).toBeInTheDocument();
+
+      // The first keystroke of the retry masks it again.
+      fireEvent.change(screen.getByLabelText(/Type the next word/i), { target: { value: 'c' } });
+      expect(stream()).not.toHaveAttribute('data-revealed');
+      // …but the death marker stays until you make it past that word.
+      expect(screen.getByTitle('You slipped here — you typed “wrong”')).toBeInTheDocument();
+    });
+
     it('strict letters keeps caps and apostrophes forgiven but drops the fuzz', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');

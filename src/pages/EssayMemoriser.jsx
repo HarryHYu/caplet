@@ -1336,6 +1336,11 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
     const [shake, setShake] = useState(false);
     const [streak, setStreak] = useState(0);
     const [notice, setNotice] = useState(null); // { tone: 'accent'|'error', text }
+    // A slip lays the passage bare so you can study what you got wrong; it
+    // masks again the moment you resume typing. `deathAt` marks the word that
+    // killed the pass until you make it back past it.
+    const [revealed, setRevealed] = useState(false);
+    const [deathAt, setDeathAt] = useState(null); // { p, w, typed }
     const inputRef = useRef(null);
     const currentRef = useRef(null);
     const shakeTimer = useRef(null);
@@ -1346,7 +1351,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
     const reset = () => {
         setPIndex(0); setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
         setCommits(0); setHitCount(0); setSlips(0); setParaDone(false); setDone(false);
-        setSaveOk(true); setStreak(0);
+        setSaveOk(true); setStreak(0); setRevealed(false); setDeathAt(null);
     };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
@@ -1396,11 +1401,13 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
     // The mode's whole point: a rejected word rewinds the chosen scope, and
     // you type your way back. Nothing is marked wrong in the stream — the
     // restart IS the consequence.
-    const slip = () => {
+    const slip = (typed) => {
         setSlips((n) => n + 1);
         setStreak(0);
         setCurrent('');
         flashWrong();
+        setDeathAt({ p: pIndex, w: wordIdx, typed });
+        setRevealed(true);
         showNotice('error', PERFECT_RESET_NOTICE[resetScope]);
         if (resetScope === 'sentence') {
             const start = sentenceStartWord(para.text, wordIdx);
@@ -1426,7 +1433,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
             setHitCount((h) => h + 1);
             advanceWord(verdict.exact ? 'hit' : 'loose', typed);
         } else {
-            slip();
+            slip(typed);
         }
     };
 
@@ -1478,7 +1485,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         if (pIndex + 1 < paras.length) {
             setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setResults([]);
             setPeekedWords(new Set()); setCommits(0); setHitCount(0); setSlips(0);
-            setParaDone(false); setStreak(0);
+            setParaDone(false); setStreak(0); setRevealed(false); setDeathAt(null);
         } else setDone(true);
     };
 
@@ -1524,7 +1531,8 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
             <ProgressBar value={pIndex} total={paras.length} />
 
             <p className="text-xs font-medium text-text-dim mb-3">
-                Get it perfect: space commits each word, and a wrong word <strong>restarts the {resetScope === 'all' ? 'whole run' : resetScope}</strong>.
+                Get it perfect: space commits each word, and a wrong word <strong>restarts the {resetScope === 'all' ? 'whole run' : resetScope}</strong> —
+                revealing the passage so you can re-read it before you go again.
                 Capitals, accents and apostrophes never count against you — punctuation does.
                 {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> restarts the sentence —
                 twice for the paragraph, three times for the whole drill.
@@ -1548,13 +1556,17 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                 <div
                     role="application"
                     aria-label="Perfect run"
+                    data-revealed={revealed || undefined}
                     onClick={() => inputRef.current?.focus()}
                     className={`p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[220px] max-h-[56vh] overflow-y-auto cursor-text ${shake ? 'animate-shake-x' : ''}`}
                 >
                     <input
                         ref={inputRef}
                         value={current}
-                        onChange={(e) => setCurrent(e.target.value)}
+                        onChange={(e) => {
+                            if (revealed && e.target.value) setRevealed(false);
+                            setCurrent(e.target.value);
+                        }}
                         onKeyDown={onKey}
                         aria-label="Type the next word"
                         className="absolute h-px w-px opacity-0"
@@ -1578,23 +1590,34 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                                     className={peekedWords.has(i) ? 'rounded-sm block-amber text-amber' : 'text-[color:var(--mark-green)]'} />
                             );
                         }
+                        const diedHere = deathAt && deathAt.p === pIndex && deathAt.w === i;
                         if (i === wordIdx) {
                             return (
                                 <span key={i} ref={currentRef}
                                     aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
-                                    title={peekedWords.has(i) ? 'Revealed with a hint' : undefined}
-                                    className={`inline-flex items-baseline whitespace-pre border-b-2 ${peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}>
+                                    title={diedHere ? `You slipped here — you typed “${deathAt.typed}”` : peekedWords.has(i) ? 'Revealed with a hint' : undefined}
+                                    className={`inline-flex items-baseline whitespace-pre border-b-2 ${diedHere ? 'border-[color:var(--text-error)]' : peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}>
                                     {current
                                         ? <span className="text-text-primary">{current}</span>
-                                        : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
+                                        : revealed
+                                            ? <span className="italic text-text-muted">{w}</span>
+                                            : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
                                     <Caret />
                                 </span>
                             );
                         }
+                        if (revealed) {
+                            return (
+                                <MaskedWord key={i} word={w}
+                                    title={diedHere ? `You slipped here — you typed “${deathAt.typed}”` : undefined}
+                                    className={diedHere ? 'rounded-sm bg-surface-error text-text-error' : 'text-text-muted'} />
+                            );
+                        }
                         return (
                             <MaskedWord key={i} word={w} hidden
+                                title={diedHere ? 'You slipped here last time' : undefined}
                                 className="select-none"
-                                overlayClassName="justify-center text-text-dim/60"
+                                overlayClassName={`justify-center ${diedHere ? 'text-text-error' : 'text-text-dim/60'}`}
                                 overlay="·" />
                         );
                     })}
@@ -1613,6 +1636,11 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
             )}
 
             <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                {revealed && !paraDone && (
+                    <span className="mr-auto text-xs font-bold text-text-warning">
+                        Reading the answer — it hides again when you start typing
+                    </span>
+                )}
                 {!paraDone && (
                     <div className="flex items-center gap-2">
                         <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} onReveal={revealCurrentWord} />
