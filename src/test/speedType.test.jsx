@@ -187,12 +187,15 @@ describe('perfectWordMatch — the perfect-run comparator', () => {
     expect(perfectWordMatch('ambition', 'admonition').ok).toBe(false); // too far gone
   });
 
-  it('never forgives real punctuation, fuzzy or not', () => {
-    expect(perfectWordMatch('contested.', 'contested').ok).toBe(false);
-    expect(perfectWordMatch('contested.', 'contested,').ok).toBe(false);
-    expect(perfectWordMatch('“ambition,”', '"ambition,"').ok).toBe(true); // curly ↔ straight is typeability, not error
-    expect(perfectWordMatch('"ambition,"', 'ambition,').ok).toBe(false);
-    expect(perfectWordMatch('laissez-faire', 'laissezfaire').ok).toBe(false);
+  it('accepts punctuation slips but flags them — letters alone decide life and death', () => {
+    expect(perfectWordMatch('contested.', 'contested')).toMatchObject({ ok: true, punctSlip: true });
+    expect(perfectWordMatch('contested.', 'contested,')).toMatchObject({ ok: true, punctSlip: true });
+    expect(perfectWordMatch('“ambition,”', '"ambition,"')).toMatchObject({ ok: true, exact: true }); // curly ↔ straight is typeability, not error
+    expect(perfectWordMatch('"ambition,"', 'ambition,')).toMatchObject({ ok: true, punctSlip: true });
+    expect(perfectWordMatch('laissez-faire', 'laissezfaire')).toMatchObject({ ok: true, punctSlip: true });
+    // Wrong letters still kill, with or without the punctuation.
+    expect(perfectWordMatch('contested.', 'disputed.').ok).toBe(false);
+    expect(perfectWordMatch('contested.', 'disputed').ok).toBe(false);
   });
 
   it('strict mode drops only the fuzz', () => {

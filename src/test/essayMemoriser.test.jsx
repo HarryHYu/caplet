@@ -330,7 +330,7 @@ describe('EssayMemoriser', () => {
       },
     });
 
-    it('tolerates typos, insists on punctuation, and restarts the sentence', async () => {
+    it('tolerates typos, flags punctuation slips, and restarts on wrong letters', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
       await screen.findByRole('application', { name: /Perfect run/i });
@@ -340,18 +340,19 @@ describe('EssayMemoriser', () => {
       expect(answered()).toBe(1);
       expect(screen.getByTitle(/Close enough — you typed/)).toBeInTheDocument();
 
-      // Missing full stop is a real mistake: back to the sentence start.
+      // A missing full stop warns in amber but does NOT restart.
       typeWord('vision');
       typeWord('endures');
-      expect(answered()).toBe(0);
-      expect(screen.getByRole('status')).toHaveTextContent(/sentence restarted/i);
+      expect(answered()).toBe(3);
+      expect(screen.getByTitle('Punctuation slip — you typed “endures”')).toBeInTheDocument();
+      expect(screen.queryByText(/restarted/i)).not.toBeInTheDocument();
 
-      // Climb back through sentence one; a slip in sentence two only rewinds
-      // sentence two.
-      ['conrads', 'vision', 'endures.', 'ambition', 'corrupts'].forEach(typeWord);
+      // Wrong LETTERS still kill: back to the start of the sentence you are in.
+      ['ambition', 'corrupts'].forEach(typeWord);
       expect(answered()).toBe(5);
       typeWord('collapses');
       expect(answered()).toBe(3);
+      expect(screen.getByRole('status')).toHaveTextContent(/sentence restarted/i);
     });
 
     it('can restart the paragraph or the entire run instead', async () => {
@@ -380,32 +381,44 @@ describe('EssayMemoriser', () => {
       expect(screen.getByRole('status')).toHaveTextContent(/back to the top/i);
     });
 
-    it('Tab taps peek the current word; holding Tab reveals the whole passage', async () => {
+    it('Tab cycles hidden → word → passage → hidden; a long hold toggles blind', async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
       try {
         api.getEssay.mockResolvedValue({ essay: conradEssay() });
         renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
         await screen.findByRole('application', { name: /Perfect run/i });
         const input = screen.getByLabelText(/Type the next word/i);
+        const tap = () => {
+          fireEvent.keyDown(input, { key: 'Tab' });
+          fireEvent.keyUp(input, { key: 'Tab' });
+        };
 
-        // A quick tap flashes just the word you are on, at the peek price.
-        fireEvent.keyDown(input, { key: 'Tab' });
-        fireEvent.keyUp(input, { key: 'Tab' });
+        // First tap: just the word, at the peek price.
+        tap();
         expect(screen.getByText('97%')).toBeInTheDocument();
         expect(stream()).not.toHaveAttribute('data-revealed');
-        // The old rewind ladder is gone from this drill: no restart happened.
-        expect(screen.queryByText(/Restarted/)).not.toBeInTheDocument();
-
-        // Holding Tab lays the whole passage bare until it is released. The
-        // word was already peeked above, so no second penalty.
-        fireEvent.keyDown(input, { key: 'Tab' });
-        // The reveal fires from a timer, outside React's event batching —
-        // flush it inside act() so the re-render is guaranteed to land.
-        await act(async () => { await vi.advanceTimersByTimeAsync(350); });
+        // Second tap: the whole passage. Third: hidden again.
+        tap();
         expect(stream()).toHaveAttribute('data-revealed', 'true');
-        fireEvent.keyUp(input, { key: 'Tab' });
+        tap();
         expect(stream()).not.toHaveAttribute('data-revealed');
-        expect(screen.getByText('97%')).toBeInTheDocument();
+        // No rewind ladder here — nothing restarted.
+        expect(screen.queryByText(/restarted/i)).not.toBeInTheDocument();
+
+        // A long hold toggles fully-blind cues instead of cycling the peek.
+        fireEvent.keyDown(input, { key: 'Tab' });
+        // The toggle fires from a timer, outside React's event batching —
+        // flush it inside act() so the re-render is guaranteed to land.
+        await act(async () => { await vi.advanceTimersByTimeAsync(500); });
+        fireEvent.keyUp(input, { key: 'Tab' });
+        expect(screen.getByText(/Fully blind — no cues/i)).toBeInTheDocument();
+        expect(stream()).not.toHaveAttribute('data-revealed');
+
+        // Holding again brings the cues back.
+        fireEvent.keyDown(input, { key: 'Tab' });
+        await act(async () => { await vi.advanceTimersByTimeAsync(500); });
+        fireEvent.keyUp(input, { key: 'Tab' });
+        expect(screen.getByText(/Cues back on/i)).toBeInTheDocument();
       } finally {
         vi.useRealTimers();
       }

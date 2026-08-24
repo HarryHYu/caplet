@@ -960,8 +960,10 @@ const NEXT_WORD_HINTS = [
 ];
 
 // Cue letters only — the chip's underline already conveys the word's length,
-// so no dash-padding (which never matched the real width anyway).
+// so no dash-padding (which never matched the real width anyway). 'none' is
+// the perfect run's fully-blind setting: no cue at all, just the caret.
 const wordCue = (w, style) => {
+    if (style === 'none') return '';
     if (style === 'word') return w;
     return w.slice(0, style === 'three' ? Math.min(3, w.length) : 1);
 };
@@ -1308,6 +1310,13 @@ const PERFECT_TYPOS = [
     { key: 'strict', label: 'Exact letters' },
 ];
 
+// The perfect run adds a fully-blind cue on top of the shared levels; a long
+// hold of Tab toggles in and out of it without touching the mouse.
+const PERFECT_HINTS = [
+    { key: 'none', label: 'Blind' },
+    ...NEXT_WORD_HINTS,
+];
+
 const PERFECT_RESET_NOTICE = {
     sentence: 'Not this time — sentence restarted',
     paragraph: 'Not this time — paragraph restarted',
@@ -1336,28 +1345,28 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
     const [shake, setShake] = useState(false);
     const [streak, setStreak] = useState(0);
     const [notice, setNotice] = useState(null); // { tone: 'accent'|'error', text }
-    // A slip lays the passage bare so you can study what you got wrong; it
-    // masks again the moment you resume typing. `deathAt` marks the word that
-    // killed the pass until you make it back past it.
-    const [revealed, setRevealed] = useState(false);
+    // A slip lays the passage bare (peek level 2) so you can study what you
+    // got wrong; it masks again the moment you resume typing. `deathAt` marks
+    // the word that killed the pass until you make it back past it.
     const [deathAt, setDeathAt] = useState(null); // { p, w, typed }
     // Tab is the peek key here (not the rewind ladder — mistakes already
-    // restart the run for you). A tap flashes the word you are on; holding it
-    // reveals the whole passage until you let go. Both charge the same
-    // once-per-word penalty as the peek buttons.
-    const [wordPeek, setWordPeek] = useState(false);
+    // restart the run for you). Taps cycle 0 → word → whole passage → hidden;
+    // typing always drops back to hidden. A long hold instead toggles fully
+    // blind: the cue disappears entirely until the next long hold. Peeks
+    // charge the same once-per-word penalty as the peek buttons.
+    const [peekLevel, setPeekLevel] = useState(0); // 0 hidden · 1 word · 2 passage
     const inputRef = useRef(null);
     const currentRef = useRef(null);
     const shakeTimer = useRef(null);
     const noticeTimer = useRef(null);
-    const holdPeek = useRef(false);
+    const holdFired = useRef(false);
     const holdTimer = useRef(null);
-    const wordPeekTimer = useRef(null);
+    const preBlindHint = useRef('first');
 
     const reset = () => {
         setPIndex(0); setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
         setCommits(0); setHitCount(0); setSlips(0); setParaDone(false); setDone(false);
-        setSaveOk(true); setStreak(0); setRevealed(false); setDeathAt(null); setWordPeek(false);
+        setSaveOk(true); setStreak(0); setDeathAt(null); setPeekLevel(0);
     };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
@@ -1365,7 +1374,6 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         clearTimeout(shakeTimer.current);
         clearTimeout(noticeTimer.current);
         clearTimeout(holdTimer.current);
-        clearTimeout(wordPeekTimer.current);
     }, []);
     useEffect(() => {
         if (typeof currentRef.current?.scrollIntoView === 'function') {
@@ -1414,7 +1422,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         setCurrent('');
         flashWrong();
         setDeathAt({ p: pIndex, w: wordIdx, typed });
-        setRevealed(true);
+        setPeekLevel(2);
         showNotice('error', PERFECT_RESET_NOTICE[resetScope]);
         if (resetScope === 'sentence') {
             const start = sentenceStartWord(para.text, wordIdx);
@@ -1438,7 +1446,9 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         setCommits((c) => c + 1);
         if (verdict.ok) {
             setHitCount((h) => h + 1);
-            advanceWord(verdict.exact ? 'hit' : 'loose', typed);
+            // A punctuation slip is accepted but flagged — only wrong LETTERS
+            // restart the run.
+            advanceWord(verdict.punctSlip ? 'punct' : verdict.exact ? 'hit' : 'loose', typed);
         } else {
             slip(typed);
         }
@@ -1448,14 +1458,21 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         if (e.key === 'Tab') {
             e.preventDefault();
             if (paraDone || e.repeat) return;
-            // Wait a beat before treating it as a hold; a quick tap resolves
-            // in onKeyUp as a single-word flash instead.
+            // Wait a beat: released early it is a tap (cycle the peek);
+            // held long enough it toggles fully-blind cues instead.
+            holdFired.current = false;
             clearTimeout(holdTimer.current);
             holdTimer.current = setTimeout(() => {
-                holdPeek.current = true;
-                revealCurrentWord();
-                setRevealed(true);
-            }, 300);
+                holdFired.current = true;
+                if (hintStyle === 'none') {
+                    setHintStyle(preBlindHint.current || 'first');
+                    showNotice('accent', 'Cues back on');
+                } else {
+                    preBlindHint.current = hintStyle;
+                    setHintStyle('none');
+                    showNotice('accent', 'Fully blind — no cues');
+                }
+            }, 450);
             return;
         }
         if (paraDone) return;
@@ -1466,16 +1483,14 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         if (e.key !== 'Tab') return;
         e.preventDefault();
         clearTimeout(holdTimer.current);
-        if (holdPeek.current) {
-            holdPeek.current = false;
-            setRevealed(false);
-            return;
-        }
-        if (paraDone) return;
-        revealCurrentWord();
-        setWordPeek(true);
-        clearTimeout(wordPeekTimer.current);
-        wordPeekTimer.current = setTimeout(() => setWordPeek(false), 1600);
+        if (holdFired.current || paraDone) return;
+        // Tap: hidden → word → whole passage → hidden again. The death reveal
+        // shares level 2, so a tap also dismisses it.
+        setPeekLevel((level) => {
+            const next = (level + 1) % 3;
+            if (next > 0) revealCurrentWord();
+            return next;
+        });
     };
 
     const finishParagraph = async (recall) => {
@@ -1493,7 +1508,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         if (pIndex + 1 < paras.length) {
             setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setResults([]);
             setPeekedWords(new Set()); setCommits(0); setHitCount(0); setSlips(0);
-            setParaDone(false); setStreak(0); setRevealed(false); setDeathAt(null);
+            setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null);
         } else setDone(true);
     };
 
@@ -1539,11 +1554,11 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
             <ProgressBar value={pIndex} total={paras.length} />
 
             <p className="text-xs font-medium text-text-dim mb-3">
-                Get it perfect: space commits each word, and a wrong word <strong>restarts the {resetScope === 'all' ? 'whole run' : resetScope}</strong> —
+                Get it perfect: space commits each word, and wrong <strong>letters restart the {resetScope === 'all' ? 'whole run' : resetScope}</strong> —
                 revealing the passage so you can re-read it before you go again.
-                Capitals, accents and apostrophes never count against you — punctuation does.
-                {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> peeks the word you’re on —
-                hold it down to see the whole passage. Peeks trim accuracy, same as the buttons.
+                Capitals, accents and apostrophes never count against you; a punctuation slip warns in amber instead of restarting.
+                {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> peeks the word — again for
+                the whole passage, a third time to hide. Hold Tab to go fully blind. Peeks trim accuracy, same as the buttons.
             </p>
             <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
                 <span className="flex items-center gap-2">
@@ -1556,7 +1571,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                 </span>
                 <span className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Cue</span>
-                    <HintToggle options={NEXT_WORD_HINTS} value={hintStyle} onChange={andRefocus(setHintStyle)} />
+                    <HintToggle options={PERFECT_HINTS} value={hintStyle} onChange={andRefocus(setHintStyle)} />
                 </span>
             </div>
 
@@ -1564,7 +1579,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                 <div
                     role="application"
                     aria-label="Perfect run"
-                    data-revealed={revealed || undefined}
+                    data-revealed={peekLevel === 2 || undefined}
                     onClick={() => inputRef.current?.focus()}
                     className={`p-5 rounded-2xl block-cream font-serif text-sm md:text-base leading-relaxed flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[220px] max-h-[56vh] overflow-y-auto cursor-text ${shake ? 'animate-shake-x' : ''}`}
                 >
@@ -1572,8 +1587,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                         ref={inputRef}
                         value={current}
                         onChange={(e) => {
-                            if (revealed && e.target.value) setRevealed(false);
-                            if (wordPeek && e.target.value) setWordPeek(false);
+                            if (peekLevel && e.target.value) setPeekLevel(0);
                             setCurrent(e.target.value);
                         }}
                         onKeyDown={onKey}
@@ -1585,6 +1599,14 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                     {words.map((w, i) => {
                         if (i < results.length) {
                             const r = results[i];
+                            if (r.status === 'punct') {
+                                return (
+                                    <MaskedWord key={i} word={w} animate
+                                        title={`Punctuation slip — you typed “${r.typed}”`}
+                                        ariaLabel={`${w} — punctuation slip, you typed ${r.typed}`}
+                                        className="rounded-sm bg-surface-warning text-text-warning underline decoration-dotted" />
+                                );
+                            }
                             if (r.status === 'loose') {
                                 return (
                                     <MaskedWord key={i} word={w} animate
@@ -1609,16 +1631,16 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                                     className={`inline-flex items-baseline whitespace-pre border-b-2 ${diedHere ? 'border-[color:var(--text-error)]' : peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}>
                                     {current
                                         ? <span className="text-text-primary">{current}</span>
-                                        : revealed
+                                        : peekLevel === 2
                                             ? <span className="italic text-text-muted">{w}</span>
-                                            : wordPeek
+                                            : peekLevel === 1
                                                 ? <span className="text-amber">{w}</span>
                                                 : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
                                     <Caret />
                                 </span>
                             );
                         }
-                        if (revealed) {
+                        if (peekLevel === 2) {
                             return (
                                 <MaskedWord key={i} word={w}
                                     title={diedHere ? `You slipped here — you typed “${deathAt.typed}”` : undefined}
@@ -1648,7 +1670,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
             )}
 
             <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-                {revealed && !paraDone && (
+                {peekLevel === 2 && !paraDone && (
                     <span className="mr-auto text-xs font-bold text-text-warning">
                         Reading the answer — it hides again when you carry on
                     </span>

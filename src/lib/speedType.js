@@ -272,9 +272,10 @@ export function computeStats(records, elapsedMs) {
 // ── Perfect run ─────────────────────────────────────────────────────────────
 // The perfect-run drill's word comparator. Different contract from the
 // forgiveness toggles above: capitals, accents and apostrophes NEVER count
-// against you, real punctuation (quotes, stops, commas, hyphens…) ALWAYS
-// does, and — with typo tolerance on — a word passes when most of its
-// letters are right and in order ("Conrad's" typed as "conrdas").
+// against you; wrong LETTERS kill the pass; wrong punctuation (quotes,
+// stops, commas, hyphens…) is accepted but flagged, so the drill can warn
+// in amber instead of restarting. With typo tolerance on, letters pass when
+// most of them are right and in order ("Conrad's" typed as "conrdas").
 
 const PERFECT_APOSTROPHES = /['’‘‚‛`´ʼ]/g;
 
@@ -329,20 +330,22 @@ const isAdjacentSwap = (a, b) => {
 };
 
 /**
- * @returns {{ok: boolean, exact: boolean}} — `exact` false means the word was
- *   accepted only thanks to typo tolerance, so the UI can mark it amber.
+ * @returns {{ok: boolean, exact: boolean, punctSlip: boolean}} — `ok` false
+ *   means the letters were wrong (this is what restarts a perfect run).
+ *   `punctSlip` true means the letters passed but the punctuation did not:
+ *   accepted, but the UI warns. `exact` false marks any accepted word that
+ *   needed forgiveness (typo or punctuation), so it can render amber.
  */
 export function perfectWordMatch(target, typed, { typos = true } = {}) {
   const tv = perfectVariants(target);
   const yv = perfectVariants(typed);
-  if (tv.some((t) => yv.includes(t))) return { ok: true, exact: true };
-  // Real punctuation is never forgiven — and never fuzzed either: "contested"
-  // for "contested." fails here regardless of the typo toggle.
-  if (perfectPunct(tv[0]) !== perfectPunct(yv[0])) return { ok: false, exact: false };
+  if (tv.some((t) => yv.includes(t))) return { ok: true, exact: true, punctSlip: false };
+  const punctOk = perfectPunct(tv[0]) === perfectPunct(yv[0]);
   const pairs = tv.map((t, i) => [perfectLetters(t), perfectLetters(yv[i])]);
-  if (pairs.some(([t, y]) => t === y)) return { ok: true, exact: true };
-  if (!typos) return { ok: false, exact: false };
-  const ok = pairs.some(([t, y]) => osaDistance(t, y) <= perfectTolerance(t.length)
-    || (t.length >= 3 && isAdjacentSwap(t, y)));
-  return { ok, exact: false };
+  const lettersExact = pairs.some(([t, y]) => t === y);
+  const lettersClose = lettersExact || (typos && pairs.some(([t, y]) =>
+    osaDistance(t, y) <= perfectTolerance(t.length)
+    || (t.length >= 3 && isAdjacentSwap(t, y))));
+  if (!lettersClose) return { ok: false, exact: false, punctSlip: false };
+  return { ok: true, exact: lettersExact && punctOk, punctSlip: !punctOk };
 }
