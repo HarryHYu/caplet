@@ -424,6 +424,49 @@ describe('EssayMemoriser', () => {
       }
     });
 
+    it('tuned resets escalate: sentence, then 2 sentences, then the paragraph, then over again', async () => {
+      api.getEssay.mockResolvedValue({ essay: conradEssay() });
+      renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+      await screen.findByRole('application', { name: /Perfect run/i });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Tuned…' }));
+      // The editor opens seeded with the commissioning ladder.
+      const steps = screen.getAllByRole('combobox');
+      expect(steps.map((el) => el.value)).toEqual(['s1', 's2', 'paragraph']);
+
+      // Into sentence two, then the 1st mistake: back one sentence.
+      ['conrads', 'vision', 'endures.', 'ambition'].forEach(typeWord);
+      expect(answered()).toBe(4);
+      typeWord('wrong');
+      expect(answered()).toBe(3);
+      expect(screen.getByRole('status')).toHaveTextContent(/sentence restarted/i);
+
+      // 2nd mistake from sentence two: back TWO sentences — the whole intro.
+      typeWord('ambition');
+      typeWord('wrong');
+      expect(answered()).toBe(0);
+      expect(screen.getByRole('status')).toHaveTextContent(/back 2 sentences/i);
+
+      // 3rd mistake: the paragraph rung.
+      typeWord('conrads');
+      typeWord('wrong');
+      expect(answered()).toBe(0);
+      expect(screen.getByRole('status')).toHaveTextContent(/paragraph restarted/i);
+
+      // The ladder topped out, so it starts over: 4th mistake is a sentence.
+      ['conrads', 'vision', 'endures.', 'ambition'].forEach(typeWord);
+      typeWord('wrong');
+      expect(answered()).toBe(3);
+      expect(screen.getByRole('status')).toHaveTextContent(/sentence restarted/i);
+
+      // The ladder is editable: retune step 1 to the paragraph and it fires.
+      fireEvent.change(screen.getAllByRole('combobox')[0], { target: { value: 'paragraph' } });
+      typeWord('ambition');
+      typeWord('wrong');
+      expect(answered()).toBe(0);
+      expect(screen.getByRole('status')).toHaveTextContent(/paragraph restarted/i);
+    });
+
     it('reveals the passage on death and hides it again when you type', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');

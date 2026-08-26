@@ -190,12 +190,18 @@ describe('perfectWordMatch — the perfect-run comparator', () => {
   it('accepts punctuation slips but flags them — letters alone decide life and death', () => {
     expect(perfectWordMatch('contested.', 'contested')).toMatchObject({ ok: true, punctSlip: true });
     expect(perfectWordMatch('contested.', 'contested,')).toMatchObject({ ok: true, punctSlip: true });
-    expect(perfectWordMatch('“ambition,”', '"ambition,"')).toMatchObject({ ok: true, exact: true }); // curly ↔ straight is typeability, not error
-    expect(perfectWordMatch('"ambition,"', 'ambition,')).toMatchObject({ ok: true, punctSlip: true });
     expect(perfectWordMatch('laissez-faire', 'laissezfaire')).toMatchObject({ ok: true, punctSlip: true });
     // Wrong letters still kill, with or without the punctuation.
     expect(perfectWordMatch('contested.', 'disputed.').ok).toBe(false);
     expect(perfectWordMatch('contested.', 'disputed').ok).toBe(false);
+  });
+
+  it('forgives quotation marks outright, like apostrophes', () => {
+    expect(perfectWordMatch('“ambition,”', '"ambition,"')).toMatchObject({ ok: true, exact: true });
+    expect(perfectWordMatch('"ambition,"', 'ambition,')).toMatchObject({ ok: true, exact: true });
+    expect(perfectWordMatch('“ambition,”', 'ambition,')).toMatchObject({ ok: true, exact: true });
+    // …but the comma inside is still real punctuation.
+    expect(perfectWordMatch('"ambition,"', 'ambition')).toMatchObject({ ok: true, punctSlip: true });
   });
 
   it('strict mode drops only the fuzz', () => {

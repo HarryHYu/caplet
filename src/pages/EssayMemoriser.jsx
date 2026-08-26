@@ -44,6 +44,7 @@ import {
     ClockIcon,
     RectangleStackIcon,
     ArrowsPointingInIcon,
+    XMarkIcon,
     ArrowsPointingOutIcon,
     ArrowsUpDownIcon,
     RocketLaunchIcon,
@@ -277,14 +278,25 @@ function sentenceAtWord(text, wordIdx) {
  * way sentenceAtWord does, so the two always agree on sentence boundaries.
  */
 function sentenceStartWord(text, wordIdx) {
+    return sentenceStartWordBack(text, wordIdx, 0);
+}
+
+/**
+ * Word index where the sentence `back` sentences before the current one
+ * begins (clamped to the paragraph start) — "restart the last 2 sentences"
+ * is a rewind to sentenceStartWordBack(text, wordIdx, 1).
+ */
+function sentenceStartWordBack(text, wordIdx, back = 0) {
     const sentences = splitSentences(text);
-    let start = 0;
-    for (const s of sentences) {
-        const length = s.trim().split(/\s+/).filter(Boolean).length;
-        if (wordIdx < start + length) return start;
-        start += length;
+    const starts = [];
+    let acc = 0;
+    for (const sentence of sentences) {
+        starts.push(acc);
+        acc += sentence.trim().split(/\s+/).filter(Boolean).length;
     }
-    return 0;
+    let si = 0;
+    for (let i = 0; i < starts.length; i += 1) if (wordIdx >= starts[i]) si = i;
+    return starts[Math.max(0, si - back)] || 0;
 }
 
 /**
@@ -1303,7 +1315,28 @@ const PERFECT_RESETS = [
     { key: 'sentence', label: 'Sentence' },
     { key: 'paragraph', label: 'Paragraph' },
     { key: 'all', label: 'Everything' },
+    { key: 'tuned', label: 'Tuned…' },
 ];
+
+// What one rung of the mistake ladder can rewind. The fixed reset scopes are
+// just one-rung ladders of the same vocabulary.
+const TUNE_RUNGS = [
+    { key: 's1', label: 'the sentence' },
+    { key: 's2', label: 'the last 2 sentences' },
+    { key: 's3', label: 'the last 3 sentences' },
+    { key: 'paragraph', label: 'the paragraph' },
+    { key: 'all', label: 'everything' },
+];
+
+const RUNG_NOTICE = {
+    s1: 'Not this time — sentence restarted',
+    s2: 'Not this time — back 2 sentences',
+    s3: 'Not this time — back 3 sentences',
+    paragraph: 'Not this time — paragraph restarted',
+    all: 'Not this time — back to the top',
+};
+
+const ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
 
 const PERFECT_TYPOS = [
     { key: 'typos', label: 'Typos forgiven' },
@@ -1317,15 +1350,13 @@ const PERFECT_HINTS = [
     ...NEXT_WORD_HINTS,
 ];
 
-const PERFECT_RESET_NOTICE = {
-    sentence: 'Not this time — sentence restarted',
-    paragraph: 'Not this time — paragraph restarted',
-    all: 'Not this time — back to the top',
-};
-
 export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
     const paras = paragraphs || allParagraphsOf(essay);
     const [resetScope, setResetScope] = useState('sentence');
+    // The tuned ladder: the Nth mistake in a paragraph fires step N; after the
+    // last step it starts over. Seeded with the commissioning example.
+    const [tuneSteps, setTuneSteps] = useState(['s1', 's2', 'paragraph']);
+    const [ladderPos, setLadderPos] = useState(0);
     const [typoMode, setTypoMode] = useState('typos');
     const [hintStyle, setHintStyle] = useState('first');
     const [pIndex, setPIndex] = useState(0);
@@ -1366,7 +1397,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
     const reset = () => {
         setPIndex(0); setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
         setCommits(0); setHitCount(0); setSlips(0); setParaDone(false); setDone(false);
-        setSaveOk(true); setStreak(0); setDeathAt(null); setPeekLevel(0);
+        setSaveOk(true); setStreak(0); setDeathAt(null); setPeekLevel(0); setLadderPos(0);
     };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
@@ -1413,29 +1444,39 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         else setWordIdx((i) => i + 1);
     };
 
-    // The mode's whole point: a rejected word rewinds the chosen scope, and
-    // you type your way back. Nothing is marked wrong in the stream — the
-    // restart IS the consequence.
+    // The mode's whole point: a rejected word rewinds, and you type your way
+    // back. Nothing is marked wrong in the stream — the restart IS the
+    // consequence. The fixed scopes are one-rung ladders; 'tuned' climbs the
+    // student's own: each mistake fires the next rung, and after the top rung
+    // the ladder starts over.
+    const ladder = resetScope === 'tuned'
+        ? (tuneSteps.length ? tuneSteps : ['s1'])
+        : [resetScope === 'sentence' ? 's1' : resetScope];
+
     const slip = (typed) => {
+        const pos = Math.min(ladderPos, ladder.length - 1);
+        const rung = ladder[pos];
+        setLadderPos(pos + 1 >= ladder.length ? 0 : pos + 1);
         setSlips((n) => n + 1);
         setStreak(0);
         setCurrent('');
         flashWrong();
         setDeathAt({ p: pIndex, w: wordIdx, typed });
         setPeekLevel(2);
-        showNotice('error', PERFECT_RESET_NOTICE[resetScope]);
-        if (resetScope === 'sentence') {
-            const start = sentenceStartWord(para.text, wordIdx);
-            setWordIdx(start);
-            setResults((prev) => prev.slice(0, start));
-        } else if (resetScope === 'paragraph') {
+        showNotice('error', RUNG_NOTICE[rung]);
+        if (rung === 'paragraph') {
             setWordIdx(0);
             setResults([]);
-        } else {
+        } else if (rung === 'all') {
             setPIndex(0);
             setWordIdx(0);
             setResults([]);
             setPeekedWords(new Set());
+        } else {
+            const back = rung === 's3' ? 2 : rung === 's2' ? 1 : 0;
+            const start = sentenceStartWordBack(para.text, wordIdx, back);
+            setWordIdx(start);
+            setResults((prev) => prev.slice(0, start));
         }
     };
 
@@ -1508,7 +1549,7 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
         if (pIndex + 1 < paras.length) {
             setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setResults([]);
             setPeekedWords(new Set()); setCommits(0); setHitCount(0); setSlips(0);
-            setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null);
+            setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null); setLadderPos(0);
         } else setDone(true);
     };
 
@@ -1554,16 +1595,17 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
             <ProgressBar value={pIndex} total={paras.length} />
 
             <p className="text-xs font-medium text-text-dim mb-3">
-                Get it perfect: space commits each word, and wrong <strong>letters restart the {resetScope === 'all' ? 'whole run' : resetScope}</strong> —
+                Get it perfect: space commits each word, and wrong <strong>letters restart {resetScope === 'tuned' ? 'more each mistake — your tune below' : resetScope === 'all' ? 'the whole run' : `the ${resetScope}`}</strong> —
                 revealing the passage so you can re-read it before you go again.
-                Capitals, accents and apostrophes never count against you; a punctuation slip warns in amber instead of restarting.
+                Capitals, accents, apostrophes and quote marks never count against you; other punctuation slips warn in amber instead of restarting.
                 {' '}<kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">Tab</kbd> peeks the word — again for
                 the whole passage, a third time to hide. Hold Tab to go fully blind. Peeks trim accuracy, same as the buttons.
             </p>
             <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
                 <span className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">A mistake restarts</span>
-                    <HintToggle options={PERFECT_RESETS} value={resetScope} onChange={andRefocus(setResetScope)} />
+                    <HintToggle options={PERFECT_RESETS} value={resetScope}
+                        onChange={andRefocus((next) => { setResetScope(next); setLadderPos(0); })} />
                 </span>
                 <span className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Letters</span>
@@ -1574,6 +1616,53 @@ export function PerfectRunDrill({ essay, paragraphs, onScheduled, onNext, nextLa
                     <HintToggle options={PERFECT_HINTS} value={hintStyle} onChange={andRefocus(setHintStyle)} />
                 </span>
             </div>
+
+            {resetScope === 'tuned' && (
+                <div className="mb-4 rounded-xl border border-line-soft bg-surface-body p-3">
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-dim">
+                        Your tune — each mistake in a paragraph steps it up; after the last step it starts over
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                        {tuneSteps.map((step, i) => (
+                            // Index keys are fine here: rows are only ever
+                            // appended or removed from a tiny list.
+                            <div key={i} className={`flex items-center gap-2 text-xs ${i === ladderPos ? 'font-bold text-text-primary' : 'font-medium text-text-muted'}`}>
+                                <span className="w-32 shrink-0">
+                                    {ORDINALS[i] || `${i + 1}th`} mistake restarts{i === ladderPos ? ' →' : ''}
+                                </span>
+                                <select
+                                    value={step}
+                                    aria-label={`${ORDINALS[i] || `${i + 1}th`} mistake restarts`}
+                                    onChange={(e) => {
+                                        const next = [...tuneSteps];
+                                        next[i] = e.target.value;
+                                        setTuneSteps(next);
+                                        setLadderPos(0);
+                                        inputRef.current?.focus();
+                                    }}
+                                    className="rounded-lg px-2 py-1.5 text-xs font-bold"
+                                >
+                                    {TUNE_RUNGS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+                                </select>
+                                {tuneSteps.length > 1 && (
+                                    <button type="button" aria-label={`Remove step ${i + 1}`}
+                                        onClick={() => { setTuneSteps(tuneSteps.filter((_, k) => k !== i)); setLadderPos(0); inputRef.current?.focus(); }}
+                                        className="focus-ring rounded p-1 text-text-dim transition-colors hover:text-text-primary">
+                                        <XMarkIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    {tuneSteps.length < 6 && (
+                        <button type="button"
+                            onClick={() => { setTuneSteps([...tuneSteps, tuneSteps[tuneSteps.length - 1] || 's1']); setLadderPos(0); inputRef.current?.focus(); }}
+                            className="focus-ring mt-2 text-xs font-bold text-accent transition-opacity hover:opacity-70">
+                            + Add a step
+                        </button>
+                    )}
+                </div>
+            )}
 
             {!paraDone ? (
                 <div

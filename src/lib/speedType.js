@@ -271,17 +271,19 @@ export function computeStats(records, elapsedMs) {
 
 // ── Perfect run ─────────────────────────────────────────────────────────────
 // The perfect-run drill's word comparator. Different contract from the
-// forgiveness toggles above: capitals, accents and apostrophes NEVER count
-// against you; wrong LETTERS kill the pass; wrong punctuation (quotes,
-// stops, commas, hyphens…) is accepted but flagged, so the drill can warn
-// in amber instead of restarting. With typo tolerance on, letters pass when
+// forgiveness toggles above: capitals, accents, apostrophes and quotation
+// marks NEVER count against you; wrong LETTERS kill the pass; other wrong
+// punctuation (stops, commas, hyphens…) is accepted but flagged, so the
+// drill can warn in amber instead of restarting. With typo tolerance on, letters pass when
 // most of them are right and in order ("Conrad's" typed as "conrdas").
 
-const PERFECT_APOSTROPHES = /['’‘‚‛`´ʼ]/g;
+// Apostrophes AND quotation marks: both are keyboard/marking noise, not
+// memory. typeable() has already folded curly doubles onto straight ones.
+const PERFECT_FORGIVEN_MARKS = /['’‘‚‛`´ʼ"]/g;
 
 /** The two canonical spellings of a word once nothing forgivable is left. */
 const perfectVariants = (w) => {
-  const base = typeable(String(w || '')).toLowerCase().replace(PERFECT_APOSTROPHES, '');
+  const base = typeable(String(w || '')).toLowerCase().replace(PERFECT_FORGIVEN_MARKS, '');
   return [foldAccents(base), foldGerman(base)];
 };
 
