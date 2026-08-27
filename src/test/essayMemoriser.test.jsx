@@ -28,7 +28,7 @@ vi.mock('../services/api', () => ({
   },
 }));
 
-import EssayMemoriser, { RebuildDrill } from '../pages/EssayMemoriser';
+import EssayMemoriser, { MemoriseDrill } from '../pages/EssayMemoriser';
 import api from '../services/api';
 
 afterEach(() => cleanup());
@@ -113,20 +113,20 @@ describe('EssayMemoriser', () => {
     fireEvent.click(screen.getByRole('button', { name: /Practice/i }));
     expect(await screen.findByText(/Your learning path/i)).toBeInTheDocument();
     // Three consolidated tools — overlapping modes became option toggles.
-    expect(screen.getByRole('button', { name: /Rebuild it/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Memorise/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Exam run/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Review/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Sentences$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Openings$/i })).not.toBeInTheDocument();
     // First letters is a unit of Rebuild it now, not a step of its own.
     expect(screen.queryByRole('button', { name: /^First letters$/i })).not.toBeInTheDocument();
-    // Perfect run needs only a parsed structure, so it is always on offer.
-    expect(screen.getByRole('button', { name: /Perfect run/i })).toBeInTheDocument();
+    // Perfect run merged INTO Memorise — no separate drill chip any more.
+    expect(screen.queryByRole('button', { name: /Perfect run/i })).not.toBeInTheDocument();
     // Unavailable drills (no quotes, one paragraph) are hidden, not dead ends.
     expect(screen.queryByRole('button', { name: /Quote cards/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Paragraph order/i })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Rebuild it/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Memorise/i }));
     expect(await screen.findByText(/Step 1 of 3/i)).toBeInTheDocument();
     // The merged tool exposes all three units inside the mode.
     expect(screen.getByRole('button', { name: /Full word/i })).toBeInTheDocument();
@@ -164,8 +164,8 @@ describe('EssayMemoriser', () => {
     api.getEssay.mockResolvedValue({ essay: parsedEssay });
     renderAt('/essays/essay-1?tab=practice');
 
-    // Rebuild it walks the whole essay in reading order: intro first.
-    fireEvent.click(await screen.findByRole('button', { name: /Rebuild it/i }));
+    // Memorise walks the whole essay in reading order: intro first.
+    fireEvent.click(await screen.findByRole('button', { name: /Memorise/i }));
     expect(await screen.findByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
 
     // Scoping to the conclusion alone must actually drill the conclusion —
@@ -180,30 +180,30 @@ describe('EssayMemoriser', () => {
     expect(await screen.findByText(/Introduction · 1 of 1/i)).toBeInTheDocument();
   });
 
-  it('types full words into the same stream the first-letter sprint uses', async () => {
+  it('Memorise offers both typing units, and "Just marks it" keeps the old rebuild behaviour', async () => {
     api.getEssay.mockResolvedValue({ essay: parsedEssay });
     renderAt('/essays/essay-1?tab=practice&mode=wordbyword&scope=intro');
 
-    // Full word is the default unit, and it shares the sprint's inline stream
-    // rather than the old separate input box beside it.
-    await screen.findByRole('application', { name: /Word by word rebuild/i });
+    // Full word is the default unit; both units share the same inline stream.
+    await screen.findByRole('application', { name: /Memorise — full words/i });
     fireEvent.click(screen.getByRole('button', { name: /^First letters$/i }));
-    expect(screen.getByRole('application', { name: /First letters sprint/i })).toBeInTheDocument();
+    expect(screen.getByRole('application', { name: /Memorise — first letters/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /^Full word$/i }));
-    expect(screen.getByRole('application', { name: /Word by word rebuild/i })).toBeInTheDocument();
+    expect(screen.getByRole('application', { name: /Memorise — full words/i })).toBeInTheDocument();
 
-    // Space commits a word, and scoring still tolerates the things it always
-    // did — this word is correct.
+    // With the gentle policy, a wrong word is marked and you move on — no
+    // restart, exactly the old Rebuild it.
+    fireEvent.click(screen.getByRole('button', { name: /Just marks it/i }));
     const input = screen.getByLabelText(/Type the next word/i);
     fireEvent.change(input, { target: { value: 'Shakespeare' } });
     fireEvent.keyDown(input, { key: ' ' });
     expect(screen.getByText('100%')).toBeInTheDocument();
 
-    // A wrong word is recorded with what you actually typed, not silently eaten.
     fireEvent.change(input, { target: { value: 'offers' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(screen.getByTitle(/You typed “offers”/)).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
+    expect(screen.queryByText(/restarted/i)).not.toBeInTheDocument();
   });
 
   it('offers full screen only where the browser supports it', async () => {
@@ -229,17 +229,14 @@ describe('EssayMemoriser', () => {
     }
   });
 
-  describe('First letters — Tab rewinds by one scope per tap', () => {
-    // Words already answered render revealed (animate-pop); everything ahead
-    // stays masked. Counting them is the same as reading the word cursor.
-    const sprint = () => screen.getByRole('application', { name: /First letters sprint/i });
+  describe('Memorise — the Space gestures', () => {
+    const sprint = () => screen.getByRole('application', { name: /Memorise — first letters/i });
     const answered = () => sprint().querySelectorAll('.animate-pop').length;
-    const press = (key) => fireEvent.keyDown(
-      screen.getByLabelText(/Type the first letter of the next word/i), { key },
-    );
+    const input = () => screen.getByLabelText(/Type the first letter of the next word/i);
+    const press = (key) => fireEvent.keyDown(input(), { key });
+    const tapSpace = () => { fireEvent.keyDown(input(), { key: ' ' }); fireEvent.keyUp(input(), { key: ' ' }); };
 
-    it('rewinds to the sentence, then the paragraph', async () => {
-      // Two sentences in one paragraph, so "sentence" and "paragraph" differ.
+    it('three quick Space taps restart the sentence', async () => {
       api.getEssay.mockResolvedValue({
         essay: {
           ...parsedEssay,
@@ -247,75 +244,73 @@ describe('EssayMemoriser', () => {
         },
       });
       renderAt('/essays/essay-1?tab=practice&mode=letters&scope=intro');
-      await screen.findByRole('application', { name: /First letters sprint/i });
+      await screen.findByRole('application', { name: /Memorise — first letters/i });
 
-      // Through the first sentence and two words into the second.
       ['a', 'b', 'g', 'd', 'e'].forEach(press);
       expect(answered()).toBe(5);
 
-      // One tap: back to the start of the sentence you are in (word 3).
-      press('Tab');
+      // One tap does nothing; two taps do nothing; the third restarts the
+      // sentence you are in — a chosen restart, so no slip is recorded.
+      tapSpace();
+      tapSpace();
+      expect(answered()).toBe(5);
+      tapSpace();
       expect(answered()).toBe(3);
-      expect(screen.getByRole('status')).toHaveTextContent(/Restarted sentence/i);
-
-      // A second tap inside the window widens it to the whole paragraph.
-      press('Tab');
-      expect(answered()).toBe(0);
-      expect(screen.getByRole('status')).toHaveTextContent(/Restarted paragraph/i);
+      expect(screen.getByRole('status')).toHaveTextContent(/Sentence restarted/i);
+      expect(screen.queryByText(/× restarted/)).not.toBeInTheDocument();
     });
 
-    it('rewinds the whole drill on the third tap', async () => {
-      api.getEssay.mockResolvedValue({ essay: parsedEssay });
-      renderAt('/essays/essay-1?tab=practice&mode=letters');
-      expect(await screen.findByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
-
-      // Finish the introduction and move on to the first body paragraph.
-      ['s', 'p', 'a', 'a', 'd'].forEach(press);
-      fireEvent.click(await screen.findByRole('button', { name: /Got it/i }));
-      expect(await screen.findByText(/Body ¶1 · 2 of 3/i)).toBeInTheDocument();
-
-      ['m', 'c'].forEach(press);
-      press('Tab');
-      press('Tab');
-      press('Tab');
-      expect(screen.getByRole('status')).toHaveTextContent(/Restarted the whole drill/i);
-      // Back to the top of the essay, not just the top of this paragraph.
-      expect(screen.getByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
-      expect(answered()).toBe(0);
-    });
-
-    it('starts the ladder again once the tap window lapses', async () => {
+    it('holding Space restarts the paragraph, and holding on restarts everything', async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
       try {
-        api.getEssay.mockResolvedValue({
-          essay: {
-            ...parsedEssay,
-            parsedStructure: { ...parsedEssay.parsedStructure, introduction: 'Alpha beta gamma. Delta epsilon zeta.' },
-          },
-        });
-        renderAt('/essays/essay-1?tab=practice&mode=letters&scope=intro');
-        await screen.findByRole('application', { name: /First letters sprint/i });
+        api.getEssay.mockResolvedValue({ essay: parsedEssay });
+        renderAt('/essays/essay-1?tab=practice&mode=letters');
+        expect(await screen.findByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
 
-        ['a', 'b', 'g', 'd', 'e'].forEach(press);
-        press('Tab');
-        expect(answered()).toBe(3);
+        // Finish the introduction and move on to the first body paragraph.
+        ['s', 'p', 'a', 'a', 'd'].forEach(press);
+        fireEvent.click(await screen.findByRole('button', { name: /Got it/i }));
+        expect(await screen.findByText(/Body ¶1 · 2 of 3/i)).toBeInTheDocument();
+        ['m', 'c'].forEach(press);
+        expect(answered()).toBe(2);
 
-        // Well past the window: the next tap is a first tap again, so it
-        // restarts the sentence rather than escalating to the paragraph.
-        await vi.advanceTimersByTimeAsync(2000);
-        ['d', 'e'].forEach(press);
-        expect(answered()).toBe(5);
-        press('Tab');
-        expect(answered()).toBe(3);
-        expect(screen.getByRole('status')).toHaveTextContent(/Restarted sentence/i);
+        // Hold past the first stage: the paragraph restarts…
+        fireEvent.keyDown(input(), { key: ' ' });
+        await act(async () => { await vi.advanceTimersByTimeAsync(700); });
+        expect(answered()).toBe(0);
+        expect(screen.getByRole('status')).toHaveTextContent(/Paragraph restarted/i);
+        expect(screen.getByText(/Body ¶1 · 2 of 3/i)).toBeInTheDocument();
+
+        // …and holding on takes the whole run back to the top.
+        await act(async () => { await vi.advanceTimersByTimeAsync(1100); });
+        fireEvent.keyUp(input(), { key: ' ' });
+        expect(await screen.findByText(/Introduction · 1 of 3/i)).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveTextContent(/Back to the very top/i);
       } finally {
         vi.useRealTimers();
       }
     });
+
+    it('a committing Space never counts towards the reset taps', async () => {
+      api.getEssay.mockResolvedValue({ essay: parsedEssay });
+      renderAt('/essays/essay-1?tab=practice&mode=wordbyword&scope=intro');
+      await screen.findByRole('application', { name: /Memorise — full words/i });
+      const field = screen.getByLabelText(/Type the next word/i);
+      const commit = (w) => {
+        fireEvent.change(field, { target: { value: w } });
+        fireEvent.keyDown(field, { key: ' ' });
+        fireEvent.keyUp(field, { key: ' ' });
+      };
+      // Three word commits in a row — three space keyups — must not restart.
+      ['Shakespeare', 'presents', 'ambition'].forEach(commit);
+      const stream = screen.getByRole('application', { name: /Memorise — full words/i });
+      expect(stream.querySelectorAll('.animate-pop').length).toBe(3);
+      expect(screen.queryByText(/Sentence restarted/i)).not.toBeInTheDocument();
+    });
   });
 
-  describe('Perfect run — a mistake restarts the chosen scope', () => {
-    const stream = () => screen.getByRole('application', { name: /Perfect run/i });
+  describe('Memorise — mistakes restart the chosen scope', () => {
+    const stream = () => screen.getByRole('application', { name: /Memorise — full words/i });
     const answered = () => stream().querySelectorAll('.animate-pop').length;
     const typeWord = (w) => {
       const input = screen.getByLabelText(/Type the next word/i);
@@ -333,7 +328,7 @@ describe('EssayMemoriser', () => {
     it('tolerates typos, flags punctuation slips, and restarts on wrong letters', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
-      await screen.findByRole('application', { name: /Perfect run/i });
+      await screen.findByRole('application', { name: /Memorise — full words/i });
 
       // "Conrad's" typed lowercase, no apostrophe, letters transposed → in.
       typeWord('conrdas');
@@ -358,7 +353,7 @@ describe('EssayMemoriser', () => {
     it('can restart the paragraph or the entire run instead', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
-      await screen.findByRole('application', { name: /Perfect run/i });
+      await screen.findByRole('application', { name: /Memorise — full words/i });
 
       fireEvent.click(screen.getByRole('button', { name: 'Paragraph' }));
       ['conrads', 'vision', 'endures.', 'ambition'].forEach(typeWord);
@@ -386,7 +381,7 @@ describe('EssayMemoriser', () => {
       try {
         api.getEssay.mockResolvedValue({ essay: conradEssay() });
         renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
-        await screen.findByRole('application', { name: /Perfect run/i });
+        await screen.findByRole('application', { name: /Memorise — full words/i });
         const input = screen.getByLabelText(/Type the next word/i);
         const tap = () => {
           fireEvent.keyDown(input, { key: 'Tab' });
@@ -427,7 +422,7 @@ describe('EssayMemoriser', () => {
     it('tuned resets escalate: sentence, then 2 sentences, then the paragraph, then over again', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
-      await screen.findByRole('application', { name: /Perfect run/i });
+      await screen.findByRole('application', { name: /Memorise — full words/i });
 
       fireEvent.click(screen.getByRole('button', { name: 'Tuned…' }));
       // The editor opens seeded with the commissioning ladder.
@@ -481,7 +476,7 @@ describe('EssayMemoriser', () => {
         },
       });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
-      await screen.findByRole('application', { name: /Perfect run/i });
+      await screen.findByRole('application', { name: /Memorise — full words/i });
 
       // Four words in — past the quote, still inside sentence one.
       ['he', 'cites', 'stop.', 'go."'].forEach(typeWord);
@@ -500,7 +495,7 @@ describe('EssayMemoriser', () => {
     it('reveals the passage on death and hides it again when you type', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
-      await screen.findByRole('application', { name: /Perfect run/i });
+      await screen.findByRole('application', { name: /Memorise — full words/i });
       expect(stream()).not.toHaveAttribute('data-revealed');
 
       // Death lays the passage bare and marks the word that killed the pass.
@@ -518,7 +513,7 @@ describe('EssayMemoriser', () => {
     it('strict letters keeps caps and apostrophes forgiven but drops the fuzz', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
-      await screen.findByRole('application', { name: /Perfect run/i });
+      await screen.findByRole('application', { name: /Memorise — full words/i });
 
       fireEvent.click(screen.getByRole('button', { name: /Exact letters/i }));
       typeWord('conrdas');
@@ -630,7 +625,7 @@ describe('EssayMemoriser', () => {
         bodyParagraphs: [{ text: 'It’s Macbeth’s downfall', quotes: [], techniques: [] }],
       },
     };
-    render(<RebuildDrill essay={essay} unit="word" />);
+    render(<MemoriseDrill essay={essay} unit="word" />);
     const input = screen.getByRole('textbox');
     // Typed with a straight apostrophe; target has curly ones.
     fireEvent.change(input, { target: { value: "It's" } });
@@ -647,7 +642,7 @@ describe('EssayMemoriser', () => {
         bodyParagraphs: [{ text: 'Café Größe für École', quotes: [], techniques: [] }],
       },
     };
-    render(<RebuildDrill essay={essay} unit="word" />);
+    render(<MemoriseDrill essay={essay} unit="word" />);
     const input = screen.getByRole('textbox');
     for (const word of ['Cafe', 'Groesse', 'fur', 'Ecole']) {
       fireEvent.change(input, { target: { value: word } });
@@ -804,7 +799,7 @@ describe('EssayMemoriser', () => {
         bodyParagraphs: [{ text: 'Alpha beta gamma delta', quotes: [], techniques: [] }],
       },
     };
-    render(<RebuildDrill essay={essay} unit="word" />);
+    render(<MemoriseDrill essay={essay} unit="word" />);
 
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'Alpha' } });
@@ -834,7 +829,7 @@ describe('EssayMemoriser', () => {
       'essayParagraph',
       'essay-hints:0',
       'pass',
-      { mode: 'word_by_word', accuracy: 94, hintCount: 2 },
+      { mode: 'word_by_word', policy: 'sentence', accuracy: 94, hintCount: 2, restarts: 0 },
     );
   });
 });

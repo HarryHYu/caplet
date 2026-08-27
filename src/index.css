@@ -1073,6 +1073,16 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
   html { scroll-behavior: auto !important; }
 }
 
+/* Practice fullscreen: same page, just bigger. The Memorise stream scales up
+   when its panel owns the whole display, so fullscreen buys reading size, not
+   only empty margin. */
+:fullscreen .memorise-stream {
+  font-size: 1.375rem;
+  line-height: 2.1;
+  min-height: 44vh;
+  max-height: 62vh;
+}
+
 /*
  * Writing surfaces
  * ----------------
