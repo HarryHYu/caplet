@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { useReveal } from '../lib/useReveal';
@@ -1047,41 +1047,73 @@ function HypnoSpiral({ reverse = false, className = '', spinClass = null, bare =
 }
 
 /**
- * The full-page trance field: rays converging on the centre, two
- * counter-rotating spirals over them, the whole field masked open at the
- * middle so the eye is pulled to a calm centre — where the words are.
- * Deliberately NO strobe: rapid flashing is a photosensitivity hazard, and
- * slow convergent motion is what actually holds a gaze. Fixed-positioned, so
- * it fills the viewport in normal mode and the fullscreen element in zen.
- * Every layer centres with margins, never translate — the spin animations
- * own each element's transform.
+ * The full-page trance field, built as a tunnel around a circular eye:
+ *  - two counter-rotating sector wheels (their moiré supplies the flicker),
+ *  - a stack of rings endlessly collapsing into the centre,
+ *  - a slow zooming spiral for texture,
+ *  - a pulse at 2.5 flashes/sec — the ceiling under the photosensitivity
+ *    limit; this ships to every student, not just the one who asked.
+ * The field is masked open in a CIRCLE at the centre and a breathing iris
+ * glow fills the hole, so the word dial floats on a bright round core with
+ * no rectangle anywhere. Fixed-positioned, so it fills the viewport in
+ * normal mode and the fullscreen element in zen. Every layer centres with
+ * margins, never translate — the animations own each element's transform.
  */
 function TranceField() {
     return (
-        <div aria-hidden="true"
-            className="pointer-events-none fixed inset-0 z-[60] overflow-hidden animate-hypno-breathe [mask-image:radial-gradient(ellipse_46rem_20rem_at_center,transparent_0,transparent_38%,black_82%)]">
-            {/* Two sector wheels counter-rotating at different speeds: the
-                moiré between them flickers far harder than either wheel
-                actually flashes. */}
-            <div className="absolute left-1/2 top-1/2 -ml-[125vmax] -mt-[125vmax] h-[250vmax] w-[250vmax]">
-                <div className="absolute inset-0 animate-hypno-rays rounded-full opacity-[0.3]"
-                    style={{ background: 'repeating-conic-gradient(from 0deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
-                <div className="absolute inset-0 animate-hypno-rays-rev rounded-full opacity-[0.22]"
-                    style={{ background: 'repeating-conic-gradient(from 4.5deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
+        <>
+            <div aria-hidden="true"
+                className="pointer-events-none fixed inset-0 z-[60] overflow-hidden animate-hypno-breathe [mask-image:radial-gradient(circle_at_center,transparent_0,transparent_14rem,black_28rem)]">
+                {/* Two sector wheels counter-rotating at different speeds: the
+                    moiré between them flickers far harder than either wheel
+                    actually flashes. */}
+                <div className="absolute left-1/2 top-1/2 -ml-[125vmax] -mt-[125vmax] h-[250vmax] w-[250vmax]">
+                    <div className="absolute inset-0 animate-hypno-rays rounded-full opacity-[0.34]"
+                        style={{ background: 'repeating-conic-gradient(from 0deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
+                    <div className="absolute inset-0 animate-hypno-rays-rev rounded-full opacity-[0.26]"
+                        style={{ background: 'repeating-conic-gradient(from 4.5deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
+                </div>
+                {/* The tunnel: rings forever falling into the centre, evenly
+                    staggered across one loop so the flow never breaks. */}
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <div key={i}
+                        className="absolute left-1/2 top-1/2 -ml-[75vmax] -mt-[75vmax] h-[150vmax] w-[150vmax] rounded-full border-[5vmax] border-[color:var(--text-primary)] animate-hypno-tunnel"
+                        style={{ animationDelay: `${-i * 1.3}s` }} />
+                ))}
+                <div className="absolute left-1/2 top-1/2 -ml-[80vmax] -mt-[80vmax] h-[160vmax] w-[160vmax] opacity-40">
+                    <HypnoSpiral bare spinClass="animate-hypno-zoom" className="h-full w-full" />
+                </div>
+                <div className="absolute inset-0 animate-hypno-flash"
+                    style={{ background: 'radial-gradient(circle at 50% 50%, transparent 28%, var(--surface-raised) 72%)' }} />
             </div>
-            <div className="absolute left-1/2 top-1/2 -ml-[80vmax] -mt-[80vmax] h-[160vmax] w-[160vmax] opacity-40">
-                <HypnoSpiral bare spinClass="animate-hypno-zoom" className="h-full w-full" />
-            </div>
-            <div className="absolute left-1/2 top-1/2 -ml-[45vmax] -mt-[45vmax] h-[90vmax] w-[90vmax] opacity-30">
-                <HypnoSpiral bare spinClass="animate-hypno-slow-rev" className="h-full w-full" />
-            </div>
-            {/* The lights: a full-field pulse at 2.5 flashes/sec — as hot as it
-                goes while staying under the photosensitivity flash limit. This
-                ships to every student, not just the one who asked. */}
-            <div className="absolute inset-0 animate-hypno-flash"
-                style={{ background: 'radial-gradient(circle at 50% 50%, transparent 28%, var(--surface-raised) 72%)' }} />
-        </div>
+            {/* The iris: a bright breathing core the word dial floats on. */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61] animate-hypno-breathe"
+                style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 9rem, transparent 16rem)' }} />
+        </>
     );
+}
+
+// ── The word dial — a watch-style wheel the sentence rides through the eye ──
+//
+// Every word sits on the rim of a huge invisible wheel whose hub is DIAL_R px
+// below the viewport centre. The active word is at the top of the wheel —
+// dead centre of the eye — and each commit rotates the whole wheel one step
+// anticlockwise: typed words tilt away and sink to the left, upcoming words
+// swing up from the right. Positions are pure geometry off the word's offset
+// from the active index, so a CSS transition on transform gives the dial its
+// click-advance — no measuring, no layout.
+const DIAL_STEP = 7;    // degrees of wheel per word
+const DIAL_R = 1250;    // wheel radius in px
+const DIAL_WINDOW = 7;  // words rendered either side of the active one
+
+function dialWordStyle(off) {
+    const deg = off * DIAL_STEP;
+    const rad = (deg * Math.PI) / 180;
+    const dist = Math.abs(off);
+    return {
+        transform: `translate(${Math.round(DIAL_R * Math.sin(rad))}px, ${Math.round(DIAL_R * (1 - Math.cos(rad)))}px) rotate(${deg}deg) scale(${Math.max(0.55, 1 - dist * 0.07)})`,
+        opacity: dist === 0 ? 1 : Math.max(0, 1 - dist * 0.22),
+    };
 }
 
 // ── The trouble log — every word you tripped on, kept for review ────────────
@@ -1189,7 +1221,6 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const [trance, setTrance] = useState(false);
     const inputRef = useRef(null);
     const currentRef = useRef(null);
-    const streamRef = useRef(null);
     const shakeTimer = useRef(null);
     const noticeTimer = useRef(null);
     const holdFired = useRef(false);
@@ -1225,18 +1256,6 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             currentRef.current.scrollIntoView({ block: 'nearest' });
         }
     }, [wordIdx, paraDone, trance]);
-    // Trance is a teleprompter: the stream slides so the ACTIVE word sits at
-    // the viewport centre — inside the vortex eye — no matter how long the
-    // paragraph is. Runs after every render; measuring is cheap and wordIdx,
-    // rewinds, reveals and line-wraps all move the anchor.
-    useLayoutEffect(() => {
-        const stream = streamRef.current;
-        if (!stream) return;
-        if (!trance) { stream.style.removeProperty('transform'); return; }
-        const el = currentRef.current;
-        const anchor = el ? el.offsetTop + el.offsetHeight / 2 : stream.offsetHeight / 2;
-        stream.style.transform = `translate(-50%, ${Math.round(window.innerHeight / 2 - anchor)}px)`;
-    });
     useEffect(() => {
         if (!menuOpen) return undefined;
         const handler = (e) => { if (!menuRef.current?.contains(e.target)) setMenuOpen(false); };
@@ -1754,29 +1773,28 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             {!fullscreen && !trance && tuneEditor && <div className="mb-4">{tuneEditor}</div>}
 
             {!paraDone ? (
-                /* In trance the outer layer clips and fades: only a band of
-                   lines around the viewport centre is visible, matching the
-                   vortex eye. The stream itself is translated by the
-                   teleprompter effect so the active word never leaves it. */
+                /* In trance the outer layer fills the screen and the inner
+                   element is a zero-size anchor at the viewport centre: every
+                   word is absolutely placed on the dial around that anchor,
+                   so there is no text block — and no rectangle — at all. */
                 <div
                     onClick={() => inputRef.current?.focus()}
                     className={trance
-                        ? `fixed inset-0 z-[70] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0,transparent_12%,black_38%,black_62%,transparent_88%,transparent_100%)] ${shake ? 'animate-shake-x' : ''}`
+                        ? `fixed inset-0 z-[70] cursor-text overflow-hidden ${shake ? 'animate-shake-x' : ''}`
                         : 'contents'}
                 >
                 <div
-                    ref={streamRef}
                     role="application"
                     aria-label={letters ? 'Memorise — first letters' : 'Memorise — full words'}
                     data-revealed={peekLevel === 2 || undefined}
                     onClick={() => inputRef.current?.focus()}
-                    className={`memorise-stream flex flex-wrap cursor-text font-serif leading-loose ${
-                        trance
-                            ? 'trance-stream absolute left-1/2 top-0 w-full max-w-4xl content-start justify-center gap-x-2.5 gap-y-2 bg-transparent px-10 text-center transition-transform duration-500 ease-out'
-                            : fullscreen
-                                ? 'overflow-y-auto content-start gap-x-1.5 gap-y-1.5 my-4 min-h-[44vh] max-h-[68vh] p-1 bg-transparent'
-                                : 'overflow-y-auto content-start gap-x-1.5 gap-y-1.5 p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
-                    } ${!trance && shake ? 'animate-shake-x' : ''}`}
+                    className={trance
+                        ? 'memorise-stream trance-stream absolute left-1/2 top-1/2 h-0 w-0 font-serif'
+                        : `memorise-stream flex flex-wrap overflow-y-auto cursor-text font-serif leading-loose content-start ${
+                            fullscreen
+                                ? 'gap-x-1.5 gap-y-1.5 my-4 min-h-[44vh] max-h-[68vh] p-1 bg-transparent'
+                                : 'gap-x-1.5 gap-y-1.5 p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
+                        } ${shake ? 'animate-shake-x' : ''}`}
                 >
                     {/* Hidden input keeps mobile keyboards working. In word mode
                         it is controlled, so IME and autocorrect behave. */}
@@ -1795,19 +1813,20 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                         autoComplete="off" autoCorrect="off" spellCheck={false}
                     />
                     {words.map((w, i) => {
-                        if (i < results.length) return answeredChip(w, i);
+                        const off = i - wordIdx;
+                        if (trance && Math.abs(off) > DIAL_WINDOW) return null;
                         const diedHere = deathAt && deathAt.p === pIndex && deathAt.w === i;
-                        if (i === wordIdx) {
-                            if (letters) {
-                                return (
-                                    <MaskedWord key={i} word={w} hidden refEl={currentRef}
-                                        title={diedHere ? `You slipped here — you pressed “${deathAt.typed}”` : undefined}
-                                        className={`border-b-2 ${diedHere || missCount > 0 ? 'border-line-error' : 'border-accent'}`}
-                                        overlayClassName={peekLevel > 0 ? 'text-amber' : missCount > 0 ? 'text-text-error' : 'text-accent'}
-                                        overlay={<>{peekLevel > 0 ? w : missCount > 0 ? w[0] : '?'}<Caret /></>} />
-                                );
-                            }
-                            return (
+                        let token;
+                        if (i < results.length) {
+                            token = answeredChip(w, i);
+                        } else if (i === wordIdx) {
+                            token = letters ? (
+                                <MaskedWord key={i} word={w} hidden refEl={currentRef}
+                                    title={diedHere ? `You slipped here — you pressed “${deathAt.typed}”` : undefined}
+                                    className={`border-b-2 ${diedHere || missCount > 0 ? 'border-line-error' : 'border-accent'}`}
+                                    overlayClassName={peekLevel > 0 ? 'text-amber' : missCount > 0 ? 'text-text-error' : 'text-accent'}
+                                    overlay={<>{peekLevel > 0 ? w : missCount > 0 ? w[0] : '?'}<Caret /></>} />
+                            ) : (
                                 <span key={i} ref={currentRef}
                                     aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
                                     title={diedHere ? `You slipped here — you typed “${deathAt.typed}”` : peekedWords.has(i) ? 'Revealed with a hint' : undefined}
@@ -1822,20 +1841,27 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                                     <Caret />
                                 </span>
                             );
-                        }
-                        if (peekLevel === 2) {
-                            return (
+                        } else if (peekLevel === 2) {
+                            token = (
                                 <MaskedWord key={i} word={w}
                                     title={diedHere ? `You slipped here — you typed “${deathAt.typed}”` : undefined}
                                     className={diedHere ? 'rounded-sm bg-surface-error text-text-error' : 'text-text-muted'} />
                             );
+                        } else {
+                            token = (
+                                <MaskedWord key={i} word={w} hidden
+                                    title={diedHere ? 'You slipped here last time' : undefined}
+                                    className="select-none"
+                                    overlayClassName={`justify-center ${diedHere ? 'text-text-error' : 'text-text-dim/60'}`}
+                                    overlay="·" />
+                            );
                         }
+                        if (!trance) return token;
                         return (
-                            <MaskedWord key={i} word={w} hidden
-                                title={diedHere ? 'You slipped here last time' : undefined}
-                                className="select-none"
-                                overlayClassName={`justify-center ${diedHere ? 'text-text-error' : 'text-text-dim/60'}`}
-                                overlay="·" />
+                            <div key={`dial-${i}`} style={dialWordStyle(off)}
+                                className="absolute left-0 top-0 will-change-transform transition-[transform,opacity] duration-500 ease-out">
+                                <div className="w-max -translate-x-1/2 -translate-y-1/2">{token}</div>
+                            </div>
                         );
                     })}
                 </div>

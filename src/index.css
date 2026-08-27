@@ -1083,11 +1083,11 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
   max-height: 62vh;
 }
 
-/* Trance: the words ARE the scene — bigger still, floating straight on the
-   field with no card. The field's centre mask keeps their zone calm. */
+/* Trance: the words ride the dial straight through the eye of the field —
+   big type, tight leading; the dial's distance-scale does the rest. */
 .trance-stream {
-  font-size: 1.7rem;
-  line-height: 2.2;
+  font-size: 2rem;
+  line-height: 1.4;
 }
 
 /*
