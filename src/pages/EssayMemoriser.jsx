@@ -1046,50 +1046,140 @@ function HypnoSpiral({ reverse = false, className = '', spinClass = null, bare =
     );
 }
 
+// Pre-rendered sprite artwork for the trance canvas. Each is drawn ONCE into
+// an offscreen canvas; the frame loop only blits them with rotation/scale, so
+// the illusion can be as dense as we like without per-frame paint cost.
+
+/** Alternating-band Archimedean spiral — the classic hypno wheel. */
+function makeSpiralSprite(size, arms, turns, ink) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const g = c.getContext('2d');
+    if (!g) return c;
+    g.translate(size / 2, size / 2);
+    g.fillStyle = ink;
+    const total = turns * 2 * Math.PI;
+    const maxR = size / 2;
+    const band = Math.PI / arms; // ink and gap bands share each arm's pitch
+    for (let a = 0; a < arms; a++) {
+        const phase = (a / arms) * 2 * Math.PI;
+        g.beginPath();
+        for (let th = 0; th <= total; th += 0.06) {
+            const r = (th / total) * maxR;
+            const x = Math.cos(th + phase) * r;
+            const y = Math.sin(th + phase) * r;
+            if (th === 0) g.moveTo(x, y); else g.lineTo(x, y);
+        }
+        for (let th = total; th >= 0; th -= 0.06) {
+            const r = (th / total) * maxR;
+            g.lineTo(Math.cos(th + phase + band) * r, Math.sin(th + phase + band) * r);
+        }
+        g.closePath();
+        g.fill();
+    }
+    return c;
+}
+
+/** Sector wheel — spokes for the counter-rotation moiré. */
+function makeRaySprite(size, spokes, ink) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const g = c.getContext('2d');
+    if (!g) return c;
+    g.translate(size / 2, size / 2);
+    g.fillStyle = ink;
+    const step = (2 * Math.PI) / spokes;
+    for (let i = 0; i < spokes; i++) {
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.arc(0, 0, size / 2, i * step, i * step + step / 2);
+        g.closePath();
+        g.fill();
+    }
+    return c;
+}
+
 /**
- * The full-page trance field, built as a tunnel around a circular eye:
- *  - two counter-rotating sector wheels (their moiré supplies the flicker),
- *  - a stack of rings endlessly collapsing into the centre,
- *  - a slow zooming spiral for texture,
- *  - a pulse at 2.5 flashes/sec — the ceiling under the photosensitivity
- *    limit; this ships to every student, not just the one who asked.
- * The eye is a STATIC iris gradient painted OVER the field — an opaque core
- * fading out — which both gives the dial a bright round stage and replaces a
- * mask-image on the container: masking would force the whole animated stack
- * through an offscreen pass every frame, and that (plus a breathing opacity
- * on the backdrop, which reads as text flicker) is exactly what makes weak
- * GPUs stutter. So: no masks, nothing under or over the text animating
- * opacity, and as few full-screen layers as the illusion can carry.
- * Fixed-positioned, so it fills the viewport in normal mode and the
- * fullscreen element in zen. Every layer centres with margins, never
- * translate — the animations own each element's transform.
+ * The full-page trance field. The moving artwork is ONE canvas: spiral and
+ * ray sprites are pre-rendered offscreen, and every frame is just four
+ * rotated/scaled blits — far cheaper than a stack of animated CSS layers,
+ * which is what let the swirl come back without the lag. On top of it, in
+ * CSS where they stay auditable and dead simple:
+ *  - the pulse layer, at 2.5 flashes/sec — the ceiling under the
+ *    photosensitivity limit; this ships to every student, not just the one
+ *    who asked — and
+ *  - the iris: a STATIC bright core the word dial rides on. Nothing under
+ *    or over the letters animates opacity (a breathing backdrop reads as
+ *    text flicker), and its long fade veils the field around the eye.
+ * prefers-reduced-motion gets a single still frame.
  */
 function TranceField() {
+    const canvasRef = useRef(null);
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext?.('2d');
+        if (!ctx) return undefined; // jsdom / very old browsers: keep the iris + flash only
+        const css = getComputedStyle(document.documentElement);
+        const ink = (css.getPropertyValue('--text-primary') || '#2b2620').trim();
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        let w = 0; let h = 0; let D = 0; let sprites = null;
+        const fit = () => {
+            w = window.innerWidth; h = window.innerHeight;
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(h * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            // Draw size D keeps the corners covered even at the pulse's
+            // smallest scale; the sprite's own resolution is capped
+            // separately — a moving illusion survives a little softness.
+            D = Math.ceil(Math.hypot(w, h) * 1.6);
+            const side = Math.min(D, 2048);
+            sprites = {
+                spiral: makeSpiralSprite(side, 4, 5, ink),
+                rays: makeRaySprite(side, 36, ink),
+            };
+        };
+        fit();
+        const blit = (sprite, rot, scale, alpha) => {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(rot);
+            ctx.scale(scale, scale);
+            ctx.drawImage(sprite, -D / 2, -D / 2, D, D);
+            ctx.restore();
+        };
+        const frame = (t) => {
+            ctx.clearRect(0, 0, w, h);
+            // Counter-rotating spoke wheels: the moiré between them shimmers
+            // far harder than either wheel actually moves.
+            blit(sprites.rays, t * 0.4, 1, 0.26);
+            blit(sprites.rays, -t * 0.26, 1.02, 0.2);
+            // The swirl: a fast spiral breathing in and out, and a slower
+            // counter-spiral underneath so the two interfere.
+            const pulse = 1 + 0.12 * Math.sin(t * 0.9);
+            blit(sprites.spiral, -t * 0.9, pulse, 0.4);
+            blit(sprites.spiral, t * 0.45, pulse * 1.4, 0.16);
+        };
+        const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        let raf = 0;
+        if (reduced) {
+            frame(0);
+        } else {
+            const loop = (ms) => { frame(ms / 1000); raf = requestAnimationFrame(loop); };
+            raf = requestAnimationFrame(loop);
+        }
+        const onResize = () => { fit(); if (reduced) frame(0); };
+        window.addEventListener('resize', onResize);
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener('resize', onResize);
+        };
+    }, []);
     return (
         <>
-            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
-                {/* Two sector wheels counter-rotating at different speeds: the
-                    moiré between them flickers far harder than either wheel
-                    actually flashes. 170vmax covers any viewport diagonal. */}
-                <div className="absolute left-1/2 top-1/2 -ml-[85vmax] -mt-[85vmax] h-[170vmax] w-[170vmax]">
-                    <div className="absolute inset-0 animate-hypno-rays rounded-full opacity-[0.34]"
-                        style={{ background: 'repeating-conic-gradient(from 0deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
-                    <div className="absolute inset-0 animate-hypno-rays-rev rounded-full opacity-[0.26]"
-                        style={{ background: 'repeating-conic-gradient(from 4.5deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
-                </div>
-                {/* The tunnel: rings forever falling into the centre, evenly
-                    staggered across one loop so the flow never breaks. */}
-                {[0, 1, 2].map((i) => (
-                    <div key={i}
-                        className="absolute left-1/2 top-1/2 -ml-[60vmax] -mt-[60vmax] h-[120vmax] w-[120vmax] rounded-full border-[4vmax] border-[color:var(--text-primary)] animate-hypno-tunnel"
-                        style={{ animationDelay: `${-i * 1.6}s` }} />
-                ))}
-                <div className="absolute inset-0 animate-hypno-flash"
-                    style={{ background: 'radial-gradient(circle at 50% 50%, transparent 28%, var(--surface-raised) 72%)' }} />
-            </div>
-            {/* The iris: a bright, deliberately still core the dial rides on.
-                Its opaque centre and long fade also veil the field where the
-                words live, doing the old centre-mask's job for free. */}
+            <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60]" />
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] animate-hypno-flash"
+                style={{ background: 'radial-gradient(circle at 50% 50%, transparent 28%, var(--surface-raised) 72%)' }} />
             <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61]"
                 style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 11rem, transparent 26rem)' }} />
         </>
