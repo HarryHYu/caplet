@@ -128,10 +128,10 @@ describe('EssayMemoriser', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Memorise/i }));
     expect(await screen.findByText(/Step 1 of 3/i)).toBeInTheDocument();
-    // The merged tool exposes all three units inside the mode.
+    // Both typing units live inside the mode; sentence-by-sentence is gone.
     expect(screen.getByRole('button', { name: /Full word/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^First letters$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Sentence by sentence/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Sentence by sentence/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /All activities/i })).toBeInTheDocument();
   });
 
@@ -289,6 +289,33 @@ describe('EssayMemoriser', () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+
+    it('typing a first letter re-masks the death reveal — no copying the passage', async () => {
+      api.getEssay.mockResolvedValue({
+        essay: {
+          ...parsedEssay,
+          parsedStructure: { ...parsedEssay.parsedStructure, introduction: 'Alpha beta gamma. Delta epsilon zeta.' },
+        },
+      });
+      renderAt('/essays/essay-1?tab=practice&mode=letters&scope=intro');
+      await screen.findByRole('application', { name: /Memorise — first letters/i });
+
+      // A wrong first letter slips (default sentence policy) and reveals.
+      press('x');
+      expect(sprint()).toHaveAttribute('data-revealed', 'true');
+
+      // The very next keypress hides the passage again AND commits.
+      press('a');
+      expect(sprint()).not.toHaveAttribute('data-revealed');
+      expect(answered()).toBe(1);
+      // And a later slip reveals again — the cycle keeps working. (The slip
+      // rewound the sentence, so the retry starts back on the first word.)
+      press('x');
+      expect(sprint()).toHaveAttribute('data-revealed', 'true');
+      press('a');
+      expect(sprint()).not.toHaveAttribute('data-revealed');
+      expect(answered()).toBe(1);
     });
 
     it('a committing Space never counts towards the reset taps', async () => {
@@ -625,7 +652,7 @@ describe('EssayMemoriser', () => {
         bodyParagraphs: [{ text: 'It’s Macbeth’s downfall', quotes: [], techniques: [] }],
       },
     };
-    render(<MemoriseDrill essay={essay} unit="word" />);
+    render(<MemoriseDrill essay={essay} initialUnit="word" />);
     const input = screen.getByRole('textbox');
     // Typed with a straight apostrophe; target has curly ones.
     fireEvent.change(input, { target: { value: "It's" } });
@@ -642,7 +669,7 @@ describe('EssayMemoriser', () => {
         bodyParagraphs: [{ text: 'Café Größe für École', quotes: [], techniques: [] }],
       },
     };
-    render(<MemoriseDrill essay={essay} unit="word" />);
+    render(<MemoriseDrill essay={essay} initialUnit="word" />);
     const input = screen.getByRole('textbox');
     for (const word of ['Cafe', 'Groesse', 'fur', 'Ecole']) {
       fireEvent.change(input, { target: { value: word } });
@@ -799,7 +826,7 @@ describe('EssayMemoriser', () => {
         bodyParagraphs: [{ text: 'Alpha beta gamma delta', quotes: [], techniques: [] }],
       },
     };
-    render(<MemoriseDrill essay={essay} unit="word" />);
+    render(<MemoriseDrill essay={essay} initialUnit="word" />);
 
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'Alpha' } });

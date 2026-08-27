@@ -975,6 +975,11 @@ const wordCue = (w, style) => {
 
 const NOTICE_MS = 1600;
 
+const MEMORISE_UNITS = [
+    { key: 'word', label: 'Full word' },
+    { key: 'letters', label: 'First letters' },
+];
+
 const MISTAKE_POLICIES = [
     { key: 'none', label: 'Just marks it' },
     { key: 'sentence', label: 'Sentence' },
@@ -1017,9 +1022,12 @@ const Kbd = ({ children }) => (
     <kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">{children}</kbd>
 );
 
-export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, unit = 'word' }) {
+export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false }) {
     const paras = paragraphs || allParagraphsOf(essay);
+    const [unit, setUnit] = useState(initialUnit === 'letters' ? 'letters' : 'word');
     const letters = unit === 'letters';
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef(null);
     const [policy, setPolicy] = useState('sentence');
     // The tuned ladder: the Nth mistake in a paragraph fires step N; after the
     // last step it starts over. Seeded with the commissioning example.
@@ -1088,6 +1096,13 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             currentRef.current.scrollIntoView({ block: 'nearest' });
         }
     }, [wordIdx, paraDone]);
+    useEffect(() => {
+        if (!menuOpen) return undefined;
+        const handler = (e) => { if (!menuRef.current?.contains(e.target)) setMenuOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [menuOpen]);
+    useEffect(() => { if (!fullscreen) setMenuOpen(false); }, [fullscreen]);
 
     if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
@@ -1190,6 +1205,11 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     };
 
     const commitLetter = (key) => {
+        // The reveal must never survive typing — the word unit hides it from
+        // the input's onChange, but the letters unit has no input text, so an
+        // open reveal used to stay up for the whole run. Hide it on every
+        // committed keypress instead.
+        if (peekLevel) setPeekLevel(0);
         const expected = firstLetterOf(targetWord);
         if (!expected) { setCommits((c) => c + 1); setHitCount((h) => h + 1); advanceWord('hit'); return; }
         if (!/[a-z0-9]/.test(key)) return;
@@ -1329,6 +1349,17 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         inputRef.current?.focus();
     };
 
+    // Different unit, different commit semantics — restart the paragraph clean
+    // rather than half-scoring it under two rule sets.
+    const switchUnit = (next) => {
+        if (next === unit) { inputRef.current?.focus(); return; }
+        setUnit(next);
+        setWordIdx(0); setResults([]); setCurrent(''); setMissCount(0);
+        setCommits(0); setHitCount(0); setSlips(0); setPeekedWords(new Set());
+        setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null); setLadderPos(0);
+        inputRef.current?.focus();
+    };
+
     const answeredChip = (w, i) => {
         const r = results[i];
         if (r.status === 'punct') {
@@ -1371,8 +1402,83 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         );
     };
 
+    // One definition of the option groups, rendered inline normally and inside
+    // the pop-up menu in fullscreen.
+    const settingsGroups = (
+        <>
+            <span className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Unit</span>
+                <HintToggle options={MEMORISE_UNITS} value={unit} onChange={switchUnit} />
+            </span>
+            <span className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">A mistake</span>
+                <HintToggle options={MISTAKE_POLICIES} value={policy}
+                    onChange={andRefocus((next) => { setPolicy(next); setLadderPos(0); })} />
+            </span>
+            {!letters && (
+                <span className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Letters</span>
+                    <HintToggle options={MEMORISE_TYPOS} value={typoMode} onChange={andRefocus(setTypoMode)} />
+                </span>
+            )}
+            {!letters && (
+                <span className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Cue</span>
+                    <HintToggle options={MEMORISE_HINTS} value={hintStyle} onChange={andRefocus(setHintStyle)} />
+                </span>
+            )}
+        </>
+    );
+
+    const tuneEditor = policy === 'tuned' && (
+        <div className="rounded-xl border border-line-soft bg-surface-body p-3">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-dim">
+                Your tune — each mistake in a paragraph steps it up; after the last step it starts over
+            </p>
+            <div className="flex flex-col gap-1.5">
+                {tuneSteps.map((step, i) => (
+                    // Index keys are fine here: rows are only ever appended or
+                    // removed from a tiny list.
+                    <div key={i} className={`flex items-center gap-2 text-xs ${i === ladderPos ? 'font-bold text-text-primary' : 'font-medium text-text-muted'}`}>
+                        <span className="w-32 shrink-0">
+                            {ORDINALS[i] || `${i + 1}th`} mistake restarts{i === ladderPos ? ' →' : ''}
+                        </span>
+                        <select
+                            value={step}
+                            aria-label={`${ORDINALS[i] || `${i + 1}th`} mistake restarts`}
+                            onChange={(e) => {
+                                const next = [...tuneSteps];
+                                next[i] = e.target.value;
+                                setTuneSteps(next);
+                                setLadderPos(0);
+                                inputRef.current?.focus();
+                            }}
+                            className="rounded-lg px-2 py-1.5 text-xs font-bold"
+                        >
+                            {TUNE_RUNGS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+                        </select>
+                        {tuneSteps.length > 1 && (
+                            <button type="button" aria-label={`Remove step ${i + 1}`}
+                                onClick={() => { setTuneSteps(tuneSteps.filter((_, k) => k !== i)); setLadderPos(0); inputRef.current?.focus(); }}
+                                className="focus-ring rounded p-1 text-text-dim transition-colors hover:text-text-primary">
+                                <XMarkIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
+            {tuneSteps.length < 6 && (
+                <button type="button"
+                    onClick={() => { setTuneSteps([...tuneSteps, tuneSteps[tuneSteps.length - 1] || 's1']); setLadderPos(0); inputRef.current?.focus(); }}
+                    className="focus-ring mt-2 text-xs font-bold text-accent transition-opacity hover:opacity-70">
+                    + Add a step
+                </button>
+            )}
+        </div>
+    );
+
     return (
-        <div>
+        <div className={fullscreen ? 'mx-auto flex min-h-[76vh] w-full max-w-5xl flex-col justify-center' : undefined}>
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">
                     {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
@@ -1391,86 +1497,43 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                         <span className="text-xs font-bold text-text-warning tabular-nums">{slips}× restarted</span>
                     )}
                     {!paraDone && <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>}
-                </div>
-            </div>
-            <ProgressBar value={pIndex} total={paras.length} />
-
-            <p className="text-xs font-medium leading-relaxed text-text-dim mb-3">
-                {letters
-                    ? <>Recall at speed: press the <strong>first letter</strong> of each next word.{' '}</>
-                    : <>Type it back from memory — <Kbd>Space</Kbd> commits each word.{' '}</>}
-                {policy === 'none'
-                    ? <>Wrong {letters ? 'letters reveal the word after two misses' : 'words are marked'} and you move on.</>
-                    : <>Wrong <strong>letters restart {policy === 'tuned' ? 'more each mistake — your tune below' : policy === 'all' ? 'the whole run' : `the ${policy}`}</strong>, revealing the passage so you can re-read it. Punctuation slips warn in amber; capitals, accents, apostrophes and quote marks never count.</>}
-                {' '}Empty-handed, tap <Kbd>Space</Kbd> ×3 to restart the sentence — hold it for the paragraph, keep holding for everything.
-                {' '}<Kbd>Tab</Kbd> peeks the word, again for the passage, a third time to hide.{!letters && <> Hold <Kbd>Tab</Kbd> to go fully blind.</>} Peeks trim accuracy.
-            </p>
-            <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-xl border border-line-soft bg-surface-body px-3.5 py-2.5">
-                <span className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">A mistake</span>
-                    <HintToggle options={MISTAKE_POLICIES} value={policy}
-                        onChange={andRefocus((next) => { setPolicy(next); setLadderPos(0); })} />
-                </span>
-                {!letters && (
-                    <span className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Letters</span>
-                        <HintToggle options={MEMORISE_TYPOS} value={typoMode} onChange={andRefocus(setTypoMode)} />
-                    </span>
-                )}
-                {!letters && (
-                    <span className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Cue</span>
-                        <HintToggle options={MEMORISE_HINTS} value={hintStyle} onChange={andRefocus(setHintStyle)} />
-                    </span>
-                )}
-            </div>
-
-            {policy === 'tuned' && (
-                <div className="mb-4 rounded-xl border border-line-soft bg-surface-body p-3">
-                    <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-dim">
-                        Your tune — each mistake in a paragraph steps it up; after the last step it starts over
-                    </p>
-                    <div className="flex flex-col gap-1.5">
-                        {tuneSteps.map((step, i) => (
-                            // Index keys are fine here: rows are only ever
-                            // appended or removed from a tiny list.
-                            <div key={i} className={`flex items-center gap-2 text-xs ${i === ladderPos ? 'font-bold text-text-primary' : 'font-medium text-text-muted'}`}>
-                                <span className="w-32 shrink-0">
-                                    {ORDINALS[i] || `${i + 1}th`} mistake restarts{i === ladderPos ? ' →' : ''}
-                                </span>
-                                <select
-                                    value={step}
-                                    aria-label={`${ORDINALS[i] || `${i + 1}th`} mistake restarts`}
-                                    onChange={(e) => {
-                                        const next = [...tuneSteps];
-                                        next[i] = e.target.value;
-                                        setTuneSteps(next);
-                                        setLadderPos(0);
-                                        inputRef.current?.focus();
-                                    }}
-                                    className="rounded-lg px-2 py-1.5 text-xs font-bold"
-                                >
-                                    {TUNE_RUNGS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
-                                </select>
-                                {tuneSteps.length > 1 && (
-                                    <button type="button" aria-label={`Remove step ${i + 1}`}
-                                        onClick={() => { setTuneSteps(tuneSteps.filter((_, k) => k !== i)); setLadderPos(0); inputRef.current?.focus(); }}
-                                        className="focus-ring rounded p-1 text-text-dim transition-colors hover:text-text-primary">
-                                        <XMarkIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                                    </button>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    {tuneSteps.length < 6 && (
-                        <button type="button"
-                            onClick={() => { setTuneSteps([...tuneSteps, tuneSteps[tuneSteps.length - 1] || 's1']); setLadderPos(0); inputRef.current?.focus(); }}
-                            className="focus-ring mt-2 text-xs font-bold text-accent transition-opacity hover:opacity-70">
-                            + Add a step
-                        </button>
+                    {fullscreen && (
+                        <span ref={menuRef} className="relative">
+                            <button type="button" aria-expanded={menuOpen}
+                                onClick={() => setMenuOpen((v) => !v)}
+                                className="focus-ring press inline-flex items-center gap-1.5 rounded-xl border border-line-soft px-3 py-2 text-xs font-bold text-text-dim transition-colors hover:border-text-dim hover:text-text-primary">
+                                <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" aria-hidden="true" /> Settings
+                            </button>
+                            {menuOpen && (
+                                <div className="absolute right-0 top-full z-30 mt-2 flex w-max max-w-[92vw] flex-col gap-3 rounded-2xl border border-line-soft bg-surface-raised p-4 shadow-pop">
+                                    {settingsGroups}
+                                    {tuneEditor}
+                                </div>
+                            )}
+                        </span>
                     )}
                 </div>
+            </div>
+            {!fullscreen && <ProgressBar value={pIndex} total={paras.length} />}
+
+            {!fullscreen && (
+                <p className="text-xs font-medium leading-relaxed text-text-dim mb-3">
+                    {letters
+                        ? <>Recall at speed: press the <strong>first letter</strong> of each next word.{' '}</>
+                        : <>Type it back from memory — <Kbd>Space</Kbd> commits each word.{' '}</>}
+                    {policy === 'none'
+                        ? <>Wrong {letters ? 'letters reveal the word after two misses' : 'words are marked'} and you move on.</>
+                        : <>Wrong <strong>letters restart {policy === 'tuned' ? 'more each mistake — your tune below' : policy === 'all' ? 'the whole run' : `the ${policy}`}</strong>, revealing the passage so you can re-read it. Punctuation slips warn in amber; capitals, accents, apostrophes and quote marks never count.</>}
+                    {' '}Empty-handed, tap <Kbd>Space</Kbd> ×3 to restart the sentence — hold it for the paragraph, keep holding for everything.
+                    {' '}<Kbd>Tab</Kbd> peeks the word, again for the passage, a third time to hide.{!letters && <> Hold <Kbd>Tab</Kbd> to go fully blind.</>} Peeks trim accuracy.
+                </p>
             )}
+            {!fullscreen && (
+                <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-xl border border-line-soft bg-surface-body px-3.5 py-2.5">
+                    {settingsGroups}
+                </div>
+            )}
+            {!fullscreen && tuneEditor && <div className="mb-4">{tuneEditor}</div>}
 
             {!paraDone ? (
                 <div
@@ -1478,7 +1541,11 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     aria-label={letters ? 'Memorise — first letters' : 'Memorise — full words'}
                     data-revealed={peekLevel === 2 || undefined}
                     onClick={() => inputRef.current?.focus()}
-                    className={`memorise-stream p-6 rounded-2xl block-cream font-serif text-sm md:text-base leading-loose flex flex-wrap gap-x-1.5 gap-y-1.5 content-start min-h-[240px] max-h-[60vh] overflow-y-auto cursor-text shadow-card transition-shadow focus-within:shadow-card-hover ${shake ? 'animate-shake-x' : ''}`}
+                    className={`memorise-stream flex flex-wrap gap-x-1.5 gap-y-1.5 content-start overflow-y-auto cursor-text font-serif leading-loose ${
+                        fullscreen
+                            ? 'my-4 min-h-[44vh] max-h-[68vh] bg-transparent p-1'
+                            : 'p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
+                    } ${shake ? 'animate-shake-x' : ''}`}
                 >
                     {/* Hidden input keeps mobile keyboards working. In word mode
                         it is controlled, so IME and autocorrect behave. */}
@@ -1542,7 +1609,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     })}
                 </div>
             ) : (
-                <div className="p-6 rounded-2xl block-blue animate-pop max-w-md shadow-card">
+                <div className={`p-6 rounded-2xl block-blue animate-pop max-w-md shadow-card ${fullscreen ? 'mx-auto my-8' : ''}`}>
                     <div className="flex items-baseline gap-3 mb-1">
                         <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
                         <span className="text-xs text-text-dim">
@@ -1564,11 +1631,16 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                         Reading the answer — it hides again when you carry on
                     </span>
                 )}
-                {!paraDone && (
+                {!paraDone && !fullscreen && (
                     <div className="flex items-center gap-2">
                         <SneakPeek text={targetWord} label="Peek word" autoHideMs={2000} onReveal={revealCurrentWord} />
                         <SneakPeek text={currentSentence} label="Peek sentence" autoHideMs={3500} onReveal={revealCurrentWord} />
                     </div>
+                )}
+                {fullscreen && !paraDone && (
+                    <span className="text-[11px] font-medium text-text-dim">
+                        <Kbd>Space</Kbd> ×3 sentence · hold for more · <Kbd>Tab</Kbd> peeks · <Kbd>Esc</Kbd> exits
+                    </span>
                 )}
                 {peekedWords.size > 0 && <span className="sr-only" role="status">{peekedWords.size} revealed {peekedWords.size === 1 ? 'word' : 'words'}; accuracy reduced by {peekedWords.size * 3} percentage points.</span>}
             </div>
@@ -1663,145 +1735,6 @@ function OpeningsMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdi
                     )}
                 </div>
             </div>
-        </div>
-    );
-}
-
-// ── SENTENCE BY SENTENCE — rebuild the essay one sentence at a time ─────────
-
-const SENTENCE_HINTS = [
-    { key: 'readFirst', label: 'Read first' },
-    { key: 'firstWord', label: 'First word only' },
-];
-
-const startingPhase = (hintStyle) => (hintStyle === 'firstWord' ? 'type' : 'read');
-
-function SentenceMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit }) {
-    const paras = paragraphs || allParagraphsOf(essay);
-    const [hintStyle, setHintStyle] = useState('readFirst');
-    const [pIndex, setPIndex] = useState(0);
-    const [sIndex, setSIndex] = useState(0);
-    const [phase, setPhase] = useState('read'); // 'read' | 'type'
-    const [typed, setTyped] = useState('');
-    const [revealed, setRevealed] = useState(false);
-    const [busy, setBusy] = useState(false);
-    const [done, setDone] = useState(false);
-    const [saveOk, setSaveOk] = useState(true);
-    const textareaRef = useRef(null);
-
-    const reset = () => { setPIndex(0); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); setDone(false); setSaveOk(true); };
-
-    useEffect(() => { if (phase === 'type') textareaRef.current?.focus(); }, [phase, sIndex, pIndex]);
-    useEffect(() => { setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }, [hintStyle]);
-
-    if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
-    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
-
-    const para = paras[pIndex];
-    const sourceIdx = para.sourceIndex ?? pIndex;
-    const sentences = splitSentences(para.text);
-    const sentence = sentences[sIndex] || '';
-    const total = sentences.length;
-    const firstWord = sentence.split(/\s+/)[0] || '';
-    const rest = sentence.slice(firstWord.length).trimStart();
-    const targetText = hintStyle === 'firstWord' ? rest : sentence;
-
-    const graded = diffWords(targetText, typed);
-    const accuracy = diffAccuracy(graded);
-
-    const goNext = async () => {
-        const recall = accuracy >= 70 ? 'pass' : 'fail';
-        if (sIndex + 1 < total) { setSIndex((i) => i + 1); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }
-        else {
-            setBusy(true);
-            try { await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), recall); onScheduled?.(); } catch { setSaveOk(false); }
-            setBusy(false);
-            if (pIndex + 1 < paras.length) { setPIndex((i) => i + 1); setSIndex(0); setPhase(startingPhase(hintStyle)); setTyped(''); setRevealed(false); }
-            else setDone(true);
-        }
-    };
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
-                <span className="text-xs font-medium text-text-dim">{para.label} · Sentence {sIndex + 1}/{total}{para.heading ? ` · ${para.heading}` : ''}</span>
-                <HintToggle options={SENTENCE_HINTS} value={hintStyle} onChange={setHintStyle} />
-            </div>
-            <ProgressBar value={pIndex} total={paras.length} />
-
-            {phase === 'read' ? (
-                <div>
-                    <p className="text-xs font-medium text-text-dim mb-3">Read this sentence, then hide it and type it from memory.</p>
-                    <div className="p-6 rounded-2xl block-blue min-h-[80px] flex items-center shadow-card">
-                        <p className="font-serif text-base md:text-lg leading-relaxed text-text-primary">{sentence}</p>
-                    </div>
-                    <button type="button" onClick={() => setPhase('type')}
-                        className="btn-primary mt-5 inline-flex items-center gap-2 press">
-                        Hide &amp; type
-                    </button>
-                </div>
-            ) : (
-                <div className="grid lg:grid-cols-2 gap-5 lg:gap-6 items-start">
-                    {/* Left — write it */}
-                    <div>
-                        {hintStyle === 'firstWord' ? (
-                            <div className="flex items-baseline gap-2 mb-3 p-4 bg-surface-body rounded-2xl border border-line-soft">
-                                <span className="text-lg font-bold font-serif text-accent">{firstWord}</span>
-                                <span className="text-text-dim text-sm">… finish the sentence</span>
-                            </div>
-                        ) : (
-                            <div className="p-3 rounded-2xl bg-surface-body border-2 border-dashed border-line-soft text-text-dim italic text-xs mb-3 font-serif">
-                                Sentence hidden — type it from memory.
-                            </div>
-                        )}
-                        <textarea
-                            ref={textareaRef}
-                            value={typed}
-                            onChange={(e) => setTyped(e.target.value)}
-                            placeholder={hintStyle === 'firstWord' ? 'Complete the sentence…' : 'Type the sentence from memory…'}
-                            rows={5}
-                            className="w-full px-4 py-3 rounded-2xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-serif text-base resize-none"
-                            onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && typed.trim()) goNext(); }}
-                        />
-                        <div className="flex items-center justify-between gap-3 mt-3">
-                            <SneakPeek text={sentence} label="Sneak peek" />
-                            <div className="flex items-center gap-2">
-                                {typed.trim() && (
-                                    <button type="button" onClick={() => { setTyped(''); setRevealed(false); textareaRef.current?.focus(); }}
-                                        className="text-sm font-semibold text-text-dim border border-line-soft rounded-xl px-4 py-2.5 hover:border-text-dim transition-colors">
-                                        Clear
-                                    </button>
-                                )}
-                                <button type="button" disabled={busy || !typed.trim()} onClick={goNext}
-                                    className="btn-primary inline-flex press disabled:opacity-40">
-                                    {sIndex + 1 < total ? 'Next sentence →' : pIndex + 1 < paras.length ? 'Next paragraph →' : 'Finish'}
-                                </button>
-                            </div>
-                        </div>
-                        <p className="text-xs text-text-dim mt-2">Checks live as you type · Cmd/Ctrl+Enter for next</p>
-                    </div>
-
-                    {/* Right — live check, always beside your typing */}
-                    <div className="lg:sticky lg:top-24 self-start">
-                        <LiveCheck
-                            target={targetText}
-                            typed={typed}
-                            prefix={hintStyle === 'firstWord' ? `${firstWord} ` : ''}
-                            currentHint="dashes"
-                            showRemaining
-                            title="Live check"
-                        />
-                        {!revealed ? (
-                            <button type="button" onClick={() => setRevealed(true)}
-                                className="mt-3 text-sm font-medium text-accent hover:opacity-70 transition-opacity">
-                                Reveal full sentence
-                            </button>
-                        ) : (
-                            <p className="mt-3 p-4 rounded-2xl block-cream font-serif text-sm leading-relaxed text-text-primary">{sentence}</p>
-                        )}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
@@ -1981,30 +1914,7 @@ function ExamRunMode({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit
     );
 }
 
-// ── Consolidated tools: one Rebuild (unit toggle), one Review (style toggle) ─
-
-const MEMORISE_UNITS = [
-    { key: 'word', label: 'Full word' },
-    { key: 'letters', label: 'First letters' },
-    { key: 'sentences', label: 'Sentence by sentence' },
-];
-
-function MemoriseMode({ initialUnit = 'word', ...props }) {
-    const [unit, setUnit] = useState(initialUnit);
-    return (
-        <div>
-            <div className="flex items-center justify-end gap-2 mb-4">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Unit</span>
-                <HintToggle options={MEMORISE_UNITS} value={unit} onChange={setUnit} />
-            </div>
-            {/* key={unit}: switching remounts the drill, so you never finish a
-                paragraph half-scored under the rules of the other unit. */}
-            {unit === 'sentences'
-                ? <SentenceMode key="sentences" {...props} />
-                : <MemoriseDrill key={unit} unit={unit} {...props} />}
-        </div>
-    );
-}
+// ── Consolidated tools: one Review (style toggle) ───────────────────────────
 
 const REVIEW_STYLES = [
     { key: 'cloze', label: 'Cloze cards' },
@@ -2234,7 +2144,7 @@ const MODE_ALIASES = { sentence: 'wordbyword', letters: 'wordbyword', perfect: '
 const PRACTICE_MODE_KEYS = new Set([...PRACTICE_STEPS, ...DRILL_MODES].map((m) => m.key));
 
 /** Which unit an aliased ?mode= should open the merged Rebuild drill on. */
-const REBUILD_UNIT_FOR_PARAM = { letters: 'letters', sentence: 'sentences' };
+const REBUILD_UNIT_FOR_PARAM = { letters: 'letters' };
 
 const modeLabel = (key) => [...PRACTICE_STEPS, ...DRILL_MODES].find((m) => m.key === key)?.label || key;
 
@@ -2552,17 +2462,22 @@ function EssayWorkspace({ essayId }) {
         setSearchParams(next, { replace: true });
     };
 
+    // Tabs and modes are query params, so the site-wide ScrollToTop (which
+    // keys on pathname) never fires for them — scroll explicitly, or switching
+    // tab from deep in a long page leaves you stranded mid-scroll.
     const setTab = (key) => {
         const next = new URLSearchParams(searchParams);
         if (key === 'overview') next.delete('tab'); else next.set('tab', key);
         next.delete('mode');
         setSearchParams(next);
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     };
     const setMode = useCallback((key) => {
         const next = new URLSearchParams(searchParams);
         next.set('tab', 'practice');
         if (key) next.set('mode', key); else next.delete('mode');
         setSearchParams(next);
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }, [searchParams, setSearchParams]);
     const goEdit = useCallback(() => {
         const next = new URLSearchParams(searchParams);
@@ -3038,7 +2953,7 @@ function EssayWorkspace({ essayId }) {
                         className={practiceFullscreen ? 'overflow-y-auto bg-surface-body px-6 py-5 md:px-10' : undefined}
                     >
                         {practiceFullscreen && (
-                            <div className="mx-auto mb-6 flex w-full max-w-6xl items-center justify-between border-b border-line-soft pb-4">
+                            <div className="mx-auto mb-2 flex w-full max-w-6xl items-center justify-between pb-2">
                                 <span className="flex items-center gap-2.5">
                                     <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-line-soft bg-surface-raised">
                                         <img src="/logo.png" alt="" className="h-full w-full object-cover" />
@@ -3050,7 +2965,7 @@ function EssayWorkspace({ essayId }) {
                             </div>
                         )}
                         <div className={practiceFullscreen ? 'mx-auto w-full max-w-6xl' : undefined}>
-                        {!speedRunning && (
+                        {!speedRunning && !practiceFullscreen && (
                             <>
                                 <div className="mb-4 flex flex-wrap items-center gap-3">
                                     <ScopePicker allParagraphs={allParas} scope={scope} onChange={setScope} />
@@ -3076,12 +2991,13 @@ function EssayWorkspace({ essayId }) {
                                 /* A live speed run drops the card entirely and takes the
                                    viewport: no border, no fill, the words centred on the
                                    page ground. Every other drill keeps the card. */
-                                className={speedRunning
+                                className={speedRunning || practiceFullscreen
                                     ? 'flex min-h-[calc(100vh-9rem)] flex-col justify-center'
                                     : 'surface-card min-h-[320px] flex flex-col justify-center md:p-8'}
                             >
                                 {mode === 'wordbyword' && (
-                                    <MemoriseMode initialUnit={REBUILD_UNIT_FOR_PARAM[modeParam] || 'word'}
+                                    <MemoriseDrill initialUnit={REBUILD_UNIT_FOR_PARAM[modeParam] || 'word'}
+                                        fullscreen={practiceFullscreen}
                                         essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
                                         onNext={() => setMode('typeit')} nextLabel={modeLabel('typeit')} />
                                 )}
