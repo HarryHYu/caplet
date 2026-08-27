@@ -112,7 +112,7 @@ export default {
         'hypno-zoom': 'hypno-zoom 6s linear infinite',
         'hypno-breathe': 'hypno-breathe 3s ease-in-out infinite',
         'hypno-flash': 'hypno-flash 0.4s linear infinite',
-        'hypno-tunnel': 'hypno-tunnel 7.8s linear infinite',
+        'hypno-tunnel': 'hypno-tunnel 4.8s linear infinite',
         'bar-fill': 'bar-fill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
         shimmer: 'shimmer 1.6s linear infinite',
       },
@@ -193,8 +193,9 @@ export default {
           '0%, 100%': { opacity: '0' },
           '50%': { opacity: '0.7' },
         },
-        // A ring born huge and offscreen, swallowed by the centre — six of
+        // A ring born huge and offscreen, swallowed by the centre — a few of
         // these evenly staggered read as an endless tunnel falling inward.
+        // Duration must equal ring count x their stagger for a seamless loop.
         'hypno-tunnel': {
           '0%': { transform: 'scale(1.6)', opacity: '0' },
           '18%': { opacity: '0.45' },

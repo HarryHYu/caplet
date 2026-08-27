@@ -1053,21 +1053,25 @@ function HypnoSpiral({ reverse = false, className = '', spinClass = null, bare =
  *  - a slow zooming spiral for texture,
  *  - a pulse at 2.5 flashes/sec — the ceiling under the photosensitivity
  *    limit; this ships to every student, not just the one who asked.
- * The field is masked open in a CIRCLE at the centre and a breathing iris
- * glow fills the hole, so the word dial floats on a bright round core with
- * no rectangle anywhere. Fixed-positioned, so it fills the viewport in
- * normal mode and the fullscreen element in zen. Every layer centres with
- * margins, never translate — the animations own each element's transform.
+ * The eye is a STATIC iris gradient painted OVER the field — an opaque core
+ * fading out — which both gives the dial a bright round stage and replaces a
+ * mask-image on the container: masking would force the whole animated stack
+ * through an offscreen pass every frame, and that (plus a breathing opacity
+ * on the backdrop, which reads as text flicker) is exactly what makes weak
+ * GPUs stutter. So: no masks, nothing under or over the text animating
+ * opacity, and as few full-screen layers as the illusion can carry.
+ * Fixed-positioned, so it fills the viewport in normal mode and the
+ * fullscreen element in zen. Every layer centres with margins, never
+ * translate — the animations own each element's transform.
  */
 function TranceField() {
     return (
         <>
-            <div aria-hidden="true"
-                className="pointer-events-none fixed inset-0 z-[60] overflow-hidden animate-hypno-breathe [mask-image:radial-gradient(circle_at_center,transparent_0,transparent_14rem,black_28rem)]">
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
                 {/* Two sector wheels counter-rotating at different speeds: the
                     moiré between them flickers far harder than either wheel
-                    actually flashes. */}
-                <div className="absolute left-1/2 top-1/2 -ml-[125vmax] -mt-[125vmax] h-[250vmax] w-[250vmax]">
+                    actually flashes. 170vmax covers any viewport diagonal. */}
+                <div className="absolute left-1/2 top-1/2 -ml-[85vmax] -mt-[85vmax] h-[170vmax] w-[170vmax]">
                     <div className="absolute inset-0 animate-hypno-rays rounded-full opacity-[0.34]"
                         style={{ background: 'repeating-conic-gradient(from 0deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
                     <div className="absolute inset-0 animate-hypno-rays-rev rounded-full opacity-[0.26]"
@@ -1075,20 +1079,19 @@ function TranceField() {
                 </div>
                 {/* The tunnel: rings forever falling into the centre, evenly
                     staggered across one loop so the flow never breaks. */}
-                {[0, 1, 2, 3, 4, 5].map((i) => (
+                {[0, 1, 2].map((i) => (
                     <div key={i}
-                        className="absolute left-1/2 top-1/2 -ml-[75vmax] -mt-[75vmax] h-[150vmax] w-[150vmax] rounded-full border-[5vmax] border-[color:var(--text-primary)] animate-hypno-tunnel"
-                        style={{ animationDelay: `${-i * 1.3}s` }} />
+                        className="absolute left-1/2 top-1/2 -ml-[60vmax] -mt-[60vmax] h-[120vmax] w-[120vmax] rounded-full border-[4vmax] border-[color:var(--text-primary)] animate-hypno-tunnel"
+                        style={{ animationDelay: `${-i * 1.6}s` }} />
                 ))}
-                <div className="absolute left-1/2 top-1/2 -ml-[80vmax] -mt-[80vmax] h-[160vmax] w-[160vmax] opacity-40">
-                    <HypnoSpiral bare spinClass="animate-hypno-zoom" className="h-full w-full" />
-                </div>
                 <div className="absolute inset-0 animate-hypno-flash"
                     style={{ background: 'radial-gradient(circle at 50% 50%, transparent 28%, var(--surface-raised) 72%)' }} />
             </div>
-            {/* The iris: a bright breathing core the word dial floats on. */}
-            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61] animate-hypno-breathe"
-                style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 9rem, transparent 16rem)' }} />
+            {/* The iris: a bright, deliberately still core the dial rides on.
+                Its opaque centre and long fade also veil the field where the
+                words live, doing the old centre-mask's job for free. */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61]"
+                style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 11rem, transparent 26rem)' }} />
         </>
     );
 }
@@ -1859,7 +1862,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                         if (!trance) return token;
                         return (
                             <div key={`dial-${i}`} style={dialWordStyle(off)}
-                                className="absolute left-0 top-0 will-change-transform transition-[transform,opacity] duration-500 ease-out">
+                                className="absolute left-0 top-0 will-change-transform transition-[transform,opacity] duration-200 ease-out">
                                 <div className="w-max -translate-x-1/2 -translate-y-1/2">{token}</div>
                             </div>
                         );
