@@ -105,6 +105,10 @@ export default {
         'caret-blink': 'caret-blink 1.1s ease-in-out infinite',
         hypno: 'hypno-spin 9s linear infinite',
         'hypno-rev': 'hypno-spin 9s linear infinite reverse',
+        'hypno-slow': 'hypno-spin 18s linear infinite',
+        'hypno-slow-rev': 'hypno-spin 28s linear infinite reverse',
+        'hypno-rays': 'hypno-spin 60s linear infinite',
+        'hypno-breathe': 'hypno-breathe 7s ease-in-out infinite',
         'bar-fill': 'bar-fill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
         shimmer: 'shimmer 1.6s linear infinite',
       },
@@ -176,6 +180,10 @@ export default {
         },
         'hypno-spin': {
           to: { transform: 'rotate(360deg)' },
+        },
+        'hypno-breathe': {
+          '0%, 100%': { opacity: '0.5' },
+          '50%': { opacity: '1' },
         },
         'bar-fill': {
           '0%': { transform: 'scaleX(0)' },

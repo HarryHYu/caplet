@@ -1028,15 +1028,43 @@ const Kbd = ({ children }) => (
 // turn, stroked at half the pitch so ring and gap read evenly. currentColor
 // ink on the raised surface keeps it black-and-white in every palette, and
 // the site-wide reduced-motion rule freezes the spin automatically.
-function HypnoSpiral({ reverse = false, className = '' }) {
+function HypnoSpiral({ reverse = false, className = '', spinClass = null, bare = false }) {
     return (
         <svg viewBox="-21 -21 42 42" aria-hidden="true"
-            className={`pointer-events-none select-none ${reverse ? 'animate-hypno-rev' : 'animate-hypno'} ${className}`}>
-            <circle r="20" fill="var(--surface-raised)" stroke="var(--line-soft)" strokeWidth="0.4" />
+            className={`pointer-events-none select-none ${spinClass || (reverse ? 'animate-hypno-rev' : 'animate-hypno')} ${className}`}>
+            {!bare && <circle r="20" fill="var(--surface-raised)" stroke="var(--line-soft)" strokeWidth="0.4" />}
             <path
                 d="M 0 0 a 1 1 0 0 1 2 0 a 2 2 0 0 1 -4 0 a 3 3 0 0 1 6 0 a 4 4 0 0 1 -8 0 a 5 5 0 0 1 10 0 a 6 6 0 0 1 -12 0 a 7 7 0 0 1 14 0 a 8 8 0 0 1 -16 0 a 9 9 0 0 1 18 0"
                 fill="none" stroke="var(--text-primary)" strokeWidth="1.1" strokeLinecap="round" />
         </svg>
+    );
+}
+
+/**
+ * The full-page trance field: rays converging on the centre, two
+ * counter-rotating spirals over them, the whole field masked open at the
+ * middle so the eye is pulled to a calm centre — where the words are.
+ * Deliberately NO strobe: rapid flashing is a photosensitivity hazard, and
+ * slow convergent motion is what actually holds a gaze. Fixed-positioned, so
+ * it fills the viewport in normal mode and the fullscreen element in zen.
+ * Every layer centres with margins, never translate — the spin animations
+ * own each element's transform.
+ */
+function TranceField() {
+    return (
+        <div aria-hidden="true"
+            className="pointer-events-none fixed inset-0 z-[60] overflow-hidden animate-hypno-breathe [mask-image:radial-gradient(circle_at_center,transparent_0,transparent_10rem,black_34rem)]">
+            <div className="absolute left-1/2 top-1/2 -ml-[125vmax] -mt-[125vmax] h-[250vmax] w-[250vmax]">
+                <div className="absolute inset-0 animate-hypno-rays rounded-full opacity-[0.07]"
+                    style={{ background: 'repeating-conic-gradient(from 0deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
+            </div>
+            <div className="absolute left-1/2 top-1/2 -ml-[80vmax] -mt-[80vmax] h-[160vmax] w-[160vmax] opacity-[0.16]">
+                <HypnoSpiral bare spinClass="animate-hypno-slow" className="h-full w-full" />
+            </div>
+            <div className="absolute left-1/2 top-1/2 -ml-[45vmax] -mt-[45vmax] h-[90vmax] w-[90vmax] opacity-[0.12]">
+                <HypnoSpiral bare spinClass="animate-hypno-slow-rev" className="h-full w-full" />
+            </div>
+        </div>
     );
 }
 
@@ -1591,15 +1619,8 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
 
     return (
         <div className={fullscreen ? 'relative mx-auto flex min-h-[76vh] w-full max-w-5xl flex-col justify-center' : 'relative'}>
-            {trance && !paraDone && (
-                <>
-                    {/* Centered with margins, not translate — the spin animation
-                        owns the transform, and would silently discard it. */}
-                    <HypnoSpiral className={`absolute top-1/2 hidden xl:block ${fullscreen ? 'h-56 w-56 -left-64 -mt-[112px]' : 'h-44 w-44 -left-56 -mt-[88px]'}`} />
-                    <HypnoSpiral reverse className={`absolute top-1/2 hidden xl:block ${fullscreen ? 'h-56 w-56 -right-64 -mt-[112px]' : 'h-44 w-44 -right-56 -mt-[88px]'}`} />
-                </>
-            )}
-            <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
+            {trance && !paraDone && <TranceField />}
+            <div className={`flex items-center justify-between mb-2 flex-wrap gap-3 ${trance ? 'relative z-[70]' : ''}`}>
                 <span className="text-xs font-medium text-text-dim">
                     {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
@@ -1674,9 +1695,9 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     onClick={() => inputRef.current?.focus()}
                     className={`memorise-stream flex flex-wrap gap-x-1.5 gap-y-1.5 content-start overflow-y-auto cursor-text font-serif leading-loose ${
                         fullscreen
-                            ? 'my-4 min-h-[44vh] max-h-[68vh] bg-transparent p-1'
+                            ? `my-4 min-h-[44vh] max-h-[68vh] p-1 ${trance ? 'rounded-3xl bg-surface-body/95 p-8 shadow-pop' : 'bg-transparent'}`
                             : 'p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
-                    } ${shake ? 'animate-shake-x' : ''}`}
+                    } ${trance ? 'relative z-[70]' : ''} ${shake ? 'animate-shake-x' : ''}`}
                 >
                     {/* Hidden input keeps mobile keyboards working. In word mode
                         it is controlled, so IME and autocorrect behave. */}
@@ -1756,7 +1777,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                 </div>
             )}
 
-            <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+            <div className={`mt-3 flex flex-wrap items-center justify-end gap-2 ${trance ? 'relative z-[70]' : ''}`}>
                 {peekLevel === 2 && !paraDone && (
                     <span className="mr-auto text-xs font-bold text-text-warning">
                         Reading the answer — it hides again when you carry on
