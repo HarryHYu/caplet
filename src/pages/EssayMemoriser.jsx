@@ -327,10 +327,16 @@ function useFullscreen(ref) {
         }
     }, [ref]);
 
+    const enter = useCallback(async () => {
+        try {
+            if (!document.fullscreenElement) await ref.current?.requestFullscreen?.();
+        } catch { /* inline fallback */ }
+    }, [ref]);
+
     const supported = typeof document !== 'undefined'
         && typeof document.documentElement?.requestFullscreen === 'function';
 
-    return { active, supported, toggle };
+    return { active, supported, toggle, enter };
 }
 
 function FullscreenButton({ active, onToggle }) {
@@ -1053,17 +1059,27 @@ function HypnoSpiral({ reverse = false, className = '', spinClass = null, bare =
 function TranceField() {
     return (
         <div aria-hidden="true"
-            className="pointer-events-none fixed inset-0 z-[60] overflow-hidden animate-hypno-breathe [mask-image:radial-gradient(circle_at_center,transparent_0,transparent_10rem,black_34rem)]">
+            className="pointer-events-none fixed inset-0 z-[60] overflow-hidden animate-hypno-breathe [mask-image:radial-gradient(circle_at_center,transparent_0,transparent_7rem,black_24rem)]">
+            {/* Two sector wheels counter-rotating at different speeds: the
+                moiré between them flickers far harder than either wheel
+                actually flashes. */}
             <div className="absolute left-1/2 top-1/2 -ml-[125vmax] -mt-[125vmax] h-[250vmax] w-[250vmax]">
-                <div className="absolute inset-0 animate-hypno-rays rounded-full opacity-[0.07]"
+                <div className="absolute inset-0 animate-hypno-rays rounded-full opacity-[0.17]"
                     style={{ background: 'repeating-conic-gradient(from 0deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
+                <div className="absolute inset-0 animate-hypno-rays-rev rounded-full opacity-[0.14]"
+                    style={{ background: 'repeating-conic-gradient(from 4.5deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
             </div>
-            <div className="absolute left-1/2 top-1/2 -ml-[80vmax] -mt-[80vmax] h-[160vmax] w-[160vmax] opacity-[0.16]">
+            <div className="absolute left-1/2 top-1/2 -ml-[80vmax] -mt-[80vmax] h-[160vmax] w-[160vmax] opacity-30">
                 <HypnoSpiral bare spinClass="animate-hypno-slow" className="h-full w-full" />
             </div>
-            <div className="absolute left-1/2 top-1/2 -ml-[45vmax] -mt-[45vmax] h-[90vmax] w-[90vmax] opacity-[0.12]">
+            <div className="absolute left-1/2 top-1/2 -ml-[45vmax] -mt-[45vmax] h-[90vmax] w-[90vmax] opacity-25">
                 <HypnoSpiral bare spinClass="animate-hypno-slow-rev" className="h-full w-full" />
             </div>
+            {/* The lights: a full-field pulse at 2.5 flashes/sec — as hot as it
+                goes while staying under the photosensitivity flash limit. This
+                ships to every student, not just the one who asked. */}
+            <div className="absolute inset-0 animate-hypno-flash"
+                style={{ background: 'radial-gradient(circle at 50% 50%, transparent 28%, var(--surface-raised) 72%)' }} />
         </div>
     );
 }
@@ -1124,7 +1140,7 @@ function TroubleReview({ trouble, onClose }) {
     );
 }
 
-export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false }) {
+export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false, enterFullscreen = undefined }) {
     const paras = paragraphs || allParagraphsOf(essay);
     const [unit, setUnit] = useState(initialUnit === 'letters' ? 'letters' : 'word');
     const letters = unit === 'letters';
@@ -1193,7 +1209,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         setTrouble(new Map()); setReviewOpen(false);
     };
 
-    useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
+    useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone, fullscreen]);
     useEffect(() => () => {
         clearTimeout(shakeTimer.current);
         clearTimeout(noticeTimer.current);
@@ -1214,6 +1230,10 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         return () => document.removeEventListener('mousedown', handler);
     }, [menuOpen]);
     useEffect(() => { if (!fullscreen) setMenuOpen(false); }, [fullscreen]);
+    // Trance rides fullscreen: it enters it on toggle, and Esc (or the exit
+    // button) ends both together. Where fullscreen is unsupported or denied,
+    // the field simply runs inline instead.
+    useEffect(() => { if (!fullscreen) setTrance(false); }, [fullscreen]);
 
     if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) {
@@ -1404,6 +1424,15 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     };
 
     const onKey = (e) => {
+        // Esc ends the trance (and fullscreen with it). The browser's native
+        // Esc-exits-fullscreen does most of this on its own; handling it here
+        // too covers the inline fallback where fullscreen never engaged.
+        if (e.key === 'Escape' && trance) {
+            e.preventDefault();
+            setTrance(false);
+            if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+            return;
+        }
         if (e.key === 'Tab') {
             e.preventDefault();
             if (paraDone || e.repeat) return;
@@ -1795,8 +1824,13 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     </span>
                 )}
                 <button type="button" aria-pressed={trance}
-                    onClick={() => { setTrance((v) => !v); inputRef.current?.focus(); }}
-                    title="Spinning spirals flank the words. That's it. That's the feature."
+                    onClick={() => {
+                        const next = !trance;
+                        setTrance(next);
+                        if (next) enterFullscreen?.();
+                        inputRef.current?.focus();
+                    }}
+                    title="The page becomes the vortex. Esc to escape."
                     className={`focus-ring press inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${trance ? 'border-accent bg-accent-soft text-accent' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'}`}>
                     <HypnoSpiral className="h-4 w-4" /> Trance
                 </button>
@@ -2610,7 +2644,7 @@ function EssayWorkspace({ essayId }) {
     // word stream owns the screen (MonkeyType-style focus mode).
     const [speedRunning, setSpeedRunning] = useState(false);
     const practiceRef = useRef(null);
-    const { active: practiceFullscreen, supported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen(practiceRef);
+    const { active: practiceFullscreen, supported: fullscreenSupported, toggle: toggleFullscreen, enter: enterFullscreen } = useFullscreen(practiceRef);
     const [proposal, setProposal] = useState(null);
     const [applyingFix, setApplyingFix] = useState(false);
     const [workspaceError, setWorkspaceError] = useState(null);
@@ -3169,6 +3203,7 @@ function EssayWorkspace({ essayId }) {
                                 {mode === 'wordbyword' && (
                                     <MemoriseDrill initialUnit={REBUILD_UNIT_FOR_PARAM[modeParam] || 'word'}
                                         fullscreen={practiceFullscreen}
+                                        enterFullscreen={fullscreenSupported ? enterFullscreen : undefined}
                                         essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
                                         onNext={() => setMode('typeit')} nextLabel={modeLabel('typeit')} />
                                 )}
