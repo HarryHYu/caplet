@@ -1660,7 +1660,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         <div className={fullscreen ? 'relative mx-auto flex min-h-[76vh] w-full max-w-5xl flex-col justify-center' : 'relative'}>
             {zen && <TranceField />}
             {zen && (
-                <div className="relative z-[70] mb-8 text-center text-xs font-bold uppercase tracking-widest text-text-dim">
+                <div className="pointer-events-none fixed inset-x-0 top-6 z-[71] text-center text-xs font-bold uppercase tracking-widest text-text-dim">
                     {para.label} · {pIndex + 1}/{paras.length} ·{' '}
                     <span className={`tabular-nums ${accuracy >= 90 ? 'text-text-primary' : VERDICT_CLASS[accuracyVerdict(accuracy)]}`}>{accuracy}%</span>
                     {slips > 0 && <span className="ml-2 text-text-warning tabular-nums">{slips}× restarted</span>}
@@ -1745,12 +1745,12 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     aria-label={letters ? 'Memorise — first letters' : 'Memorise — full words'}
                     data-revealed={peekLevel === 2 || undefined}
                     onClick={() => inputRef.current?.focus()}
-                    className={`memorise-stream flex flex-wrap content-start overflow-y-auto cursor-text font-serif leading-loose ${
+                    className={`memorise-stream flex flex-wrap overflow-y-auto cursor-text font-serif leading-loose ${
                         trance
-                            ? 'trance-stream relative z-[70] mx-auto my-2 w-full max-w-4xl justify-center gap-x-2.5 gap-y-2 bg-transparent p-2 text-center min-h-[30vh] max-h-[72vh]'
+                            ? 'trance-stream fixed inset-0 z-[70] mx-auto w-full max-w-4xl content-center justify-center gap-x-2.5 gap-y-2 bg-transparent px-10 py-24 text-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
                             : fullscreen
-                                ? 'gap-x-1.5 gap-y-1.5 my-4 min-h-[44vh] max-h-[68vh] p-1 bg-transparent'
-                                : 'gap-x-1.5 gap-y-1.5 p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
+                                ? 'content-start gap-x-1.5 gap-y-1.5 my-4 min-h-[44vh] max-h-[68vh] p-1 bg-transparent'
+                                : 'content-start gap-x-1.5 gap-y-1.5 p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
                     } ${shake ? 'animate-shake-x' : ''}`}
                 >
                     {/* Hidden input keeps mobile keyboards working. In word mode
@@ -1832,7 +1832,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             )}
 
             {zen && (
-                <div className="relative z-[70] mt-8 text-center text-[11px] font-medium text-text-dim">
+                <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[71] text-center text-[11px] font-medium text-text-dim">
                     {peekLevel === 2 && (
                         <p className="mb-1 font-bold text-text-warning">Reading the answer — it hides again when you carry on</p>
                     )}
