@@ -1022,6 +1022,62 @@ const Kbd = ({ children }) => (
     <kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">{children}</kbd>
 );
 
+// ── The trouble log — every word you tripped on, kept for review ────────────
+
+const TROUBLE_KIND_LABEL = {
+    slip: 'restarted you',
+    wrong: 'typed wrong',
+    hinted: 'revealed',
+    peek: 'peeked',
+};
+
+function TroubleReview({ trouble, onClose }) {
+    const entries = [...trouble.values()].sort((a, b) => (a.p - b.p) || (a.w - b.w));
+    const sections = [];
+    entries.forEach((e) => {
+        const last = sections[sections.length - 1];
+        if (last && last.label === e.label) last.items.push(e);
+        else sections.push({ label: e.label, items: [e] });
+    });
+    return (
+        <div className="animate-rise rounded-2xl border border-line-soft bg-surface-raised p-5 shadow-card">
+            <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Where you tripped up</p>
+                {onClose && (
+                    <button type="button" aria-label="Close review" onClick={onClose}
+                        className="focus-ring rounded p-1 text-text-dim transition-colors hover:text-text-primary">
+                        <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                )}
+            </div>
+            {entries.length === 0 ? (
+                <p className="text-sm text-text-muted">Nothing yet — no slips, no peeks. Keep going.</p>
+            ) : (
+                <div className="space-y-4">
+                    {sections.map((sec) => (
+                        <div key={sec.label}>
+                            <p className="mb-1.5 text-xs font-bold text-text-dim">{sec.label}</p>
+                            <ul className="space-y-2">
+                                {sec.items.map((e) => (
+                                    <li key={`${e.p}:${e.w}`} className="text-sm leading-snug">
+                                        <span className="font-serif font-bold text-text-primary">{e.word}</span>
+                                        {e.count > 1 && <span className="ml-1.5 text-xs font-bold text-text-warning tabular-nums">×{e.count}</span>}
+                                        <span className="ml-2 text-xs font-medium text-text-dim">
+                                            {Object.entries(e.kinds).map(([k, n]) => `${TROUBLE_KIND_LABEL[k]}${n > 1 ? ` ×${n}` : ''}`).join(' · ')}
+                                            {e.typed ? ` — you typed “${e.typed}”` : ''}
+                                        </span>
+                                        <span className="mt-0.5 block text-xs italic leading-relaxed text-text-muted">{e.sentence}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false }) {
     const paras = paragraphs || allParagraphsOf(essay);
     const [unit, setUnit] = useState(initialUnit === 'letters' ? 'letters' : 'word');
@@ -1061,6 +1117,11 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     // hidden. A long hold (full-word unit) toggles fully-blind cues. Peeks
     // charge the same once-per-word penalty as the peek buttons.
     const [peekLevel, setPeekLevel] = useState(0); // 0 hidden · 1 word · 2 passage
+    // The trouble log: every word that tripped you — a slip, a wrong commit, a
+    // two-miss reveal, a peek — kept for the WHOLE session so the review at
+    // the end (and on demand) shows exactly what needs another pass.
+    const [trouble, setTrouble] = useState(() => new Map());
+    const [reviewOpen, setReviewOpen] = useState(false);
     const inputRef = useRef(null);
     const currentRef = useRef(null);
     const shakeTimer = useRef(null);
@@ -1080,6 +1141,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         setPIndex(0); setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
         setMissCount(0); setCommits(0); setHitCount(0); setSlips(0); setParaDone(false);
         setDone(false); setSaveOk(true); setStreak(0); setDeathAt(null); setPeekLevel(0); setLadderPos(0);
+        setTrouble(new Map()); setReviewOpen(false);
     };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone]);
@@ -1105,7 +1167,14 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     useEffect(() => { if (!fullscreen) setMenuOpen(false); }, [fullscreen]);
 
     if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
-    if (done) return <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />;
+    if (done) {
+        return (
+            <div>
+                <SessionDone onRestart={reset} onNext={onNext} nextLabel={nextLabel} saveOk={saveOk} />
+                <div className="mt-6"><TroubleReview trouble={trouble} /></div>
+            </div>
+        );
+    }
 
     const para = paras[pIndex];
     const sourceIdx = para.sourceIndex ?? pIndex;
@@ -1173,7 +1242,26 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         ? (tuneSteps.length ? tuneSteps : ['s1'])
         : [policy === 'sentence' ? 's1' : policy];
 
+    const logTrouble = (kind, typed = null) => {
+        setTrouble((prev) => {
+            const key = `${pIndex}:${wordIdx}`;
+            const next = new Map(prev);
+            const cur = next.get(key) || {
+                p: pIndex, w: wordIdx, word: targetWord, label: para.label,
+                sentence: currentSentence, count: 0, kinds: {}, typed: null,
+            };
+            next.set(key, {
+                ...cur,
+                count: cur.count + 1,
+                kinds: { ...cur.kinds, [kind]: (cur.kinds[kind] || 0) + 1 },
+                typed: typed ?? cur.typed,
+            });
+            return next;
+        });
+    };
+
     const slip = (typed) => {
+        logTrouble('slip', typed);
         const pos = Math.min(ladderPos, ladder.length - 1);
         const rung = ladder[pos];
         setLadderPos(pos + 1 >= ladder.length ? 0 : pos + 1);
@@ -1197,6 +1285,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             // count as the mistake.
             advanceWord(verdict.punctSlip ? 'punct' : verdict.exact ? 'hit' : 'loose', typed);
         } else if (policy === 'none') {
+            logTrouble('wrong', typed);
             flashWrong();
             advanceWord('wrong', typed);
         } else {
@@ -1221,7 +1310,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             setStreak(0);
             flashWrong();
             // Two misses reveal the word and move on — momentum beats stalling.
-            if (missCount + 1 >= 2) { setCommits((c) => c + 1); advanceWord('hinted'); }
+            if (missCount + 1 >= 2) { logTrouble('hinted', key); setCommits((c) => c + 1); advanceWord('hinted'); }
             else setMissCount((m) => m + 1);
         } else {
             setCommits((c) => c + 1);
@@ -1307,12 +1396,12 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         clearTimeout(holdTimer.current);
         if (holdFired.current || paraDone) return;
         // Tap: hidden → word → whole passage → hidden again. The death reveal
-        // shares level 2, so a tap also dismisses it.
-        setPeekLevel((level) => {
-            const next = (level + 1) % 3;
-            if (next > 0) revealCurrentWord();
-            return next;
-        });
+        // shares level 2, so a tap also dismisses it. (Computed from the
+        // closure, not inside the updater — revealCurrentWord logs to the
+        // trouble review, and updaters may run twice.)
+        const next = (peekLevel + 1) % 3;
+        setPeekLevel(next);
+        if (next > 0) revealCurrentWord();
     };
 
     const finishParagraph = async (recall) => {
@@ -1336,6 +1425,8 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     };
 
     const revealCurrentWord = () => {
+        // First peek of a word is an "unfamiliar here" signal for the review.
+        if (!peekedWords.has(wordIdx)) logTrouble('peek');
         setPeekedWords((alreadyPeeked) => {
             if (alreadyPeeked.has(wordIdx)) return alreadyPeeked;
             return new Set([...alreadyPeeked, wordIdx]);
@@ -1508,6 +1599,13 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                                 <div className="absolute right-0 top-full z-30 mt-2 flex w-max max-w-[92vw] flex-col gap-3 rounded-2xl border border-line-soft bg-surface-raised p-4 shadow-pop">
                                     {settingsGroups}
                                     {tuneEditor}
+                                    {trouble.size > 0 && (
+                                        <button type="button"
+                                            onClick={() => { setMenuOpen(false); setReviewOpen(true); }}
+                                            className="focus-ring w-fit text-xs font-bold text-accent transition-opacity hover:opacity-70">
+                                            Review slip-ups ({trouble.size})
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </span>
@@ -1642,8 +1740,21 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                         <Kbd>Space</Kbd> ×3 sentence · hold for more · <Kbd>Tab</Kbd> peeks · <Kbd>Esc</Kbd> exits
                     </span>
                 )}
+                {trouble.size > 0 && (
+                    <button type="button" aria-expanded={reviewOpen}
+                        onClick={() => setReviewOpen((v) => !v)}
+                        className="focus-ring press inline-flex items-center gap-1.5 rounded-xl border border-line-soft px-3 py-2 text-xs font-bold text-text-dim transition-colors hover:border-text-dim hover:text-text-primary">
+                        Review slips ({trouble.size})
+                    </button>
+                )}
                 {peekedWords.size > 0 && <span className="sr-only" role="status">{peekedWords.size} revealed {peekedWords.size === 1 ? 'word' : 'words'}; accuracy reduced by {peekedWords.size * 3} percentage points.</span>}
             </div>
+
+            {reviewOpen && (
+                <div className="mt-4">
+                    <TroubleReview trouble={trouble} onClose={() => setReviewOpen(false)} />
+                </div>
+            )}
         </div>
     );
 }

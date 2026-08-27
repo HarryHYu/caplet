@@ -318,6 +318,38 @@ describe('EssayMemoriser', () => {
       expect(answered()).toBe(1);
     });
 
+    it('remembers every slip and peek in a review, at the end and on demand', async () => {
+      api.getEssay.mockResolvedValue({ essay: parsedEssay });
+      renderAt('/essays/essay-1?tab=practice&mode=wordbyword&scope=intro');
+      await screen.findByRole('application', { name: /Memorise — full words/i });
+      const field = screen.getByLabelText(/Type the next word/i);
+      const commit = (w) => {
+        fireEvent.change(field, { target: { value: w } });
+        fireEvent.keyDown(field, { key: ' ' });
+        fireEvent.keyUp(field, { key: ' ' });
+      };
+
+      // Slip on the first word, then peek it on the retry — one entry, two marks.
+      commit('nope');
+      fireEvent.click(screen.getByRole('button', { name: 'Peek word' }));
+
+      // Mid-run, the review opens from its button and names the damage.
+      fireEvent.click(screen.getByRole('button', { name: /Review slips \(1\)/i }));
+      expect(screen.getByText(/Where you tripped up/i)).toBeInTheDocument();
+      expect(screen.getByText(/restarted you/)).toBeInTheDocument();
+      expect(screen.getByText(/you typed “nope”/)).toBeInTheDocument();
+      expect(screen.getByText(/peeked/)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Close review/i }));
+      expect(screen.queryByText(/Where you tripped up/i)).not.toBeInTheDocument();
+
+      // Finish the section cleanly — the finish screen carries the review.
+      ['Shakespeare', 'presents', 'ambition', 'as', 'destructive.'].forEach(commit);
+      fireEvent.click(await screen.findByRole('button', { name: /Got it/i }));
+      expect(await screen.findByText(/Where you tripped up/i)).toBeInTheDocument();
+      expect(screen.getByText(/you typed “nope”/)).toBeInTheDocument();
+      expect(screen.getByText(/Introduction/)).toBeInTheDocument();
+    });
+
     it('a committing Space never counts towards the reset taps', async () => {
       api.getEssay.mockResolvedValue({ essay: parsedEssay });
       renderAt('/essays/essay-1?tab=practice&mode=wordbyword&scope=intro');
