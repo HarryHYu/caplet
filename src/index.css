@@ -1076,11 +1076,18 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
 /* Practice fullscreen: same page, just bigger. The Memorise stream scales up
    when its panel owns the whole display, so fullscreen buys reading size, not
    only empty margin. */
-:fullscreen .memorise-stream {
+:fullscreen .memorise-stream:not(.trance-stream) {
   font-size: 1.375rem;
   line-height: 2.1;
   min-height: 44vh;
   max-height: 62vh;
+}
+
+/* Trance: the words ARE the scene — bigger still, floating straight on the
+   field with no card. The field's centre mask keeps their zone calm. */
+.trance-stream {
+  font-size: 1.7rem;
+  line-height: 2.2;
 }
 
 /*

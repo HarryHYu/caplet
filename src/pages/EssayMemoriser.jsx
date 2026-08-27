@@ -1059,20 +1059,20 @@ function HypnoSpiral({ reverse = false, className = '', spinClass = null, bare =
 function TranceField() {
     return (
         <div aria-hidden="true"
-            className="pointer-events-none fixed inset-0 z-[60] overflow-hidden animate-hypno-breathe [mask-image:radial-gradient(circle_at_center,transparent_0,transparent_7rem,black_24rem)]">
+            className="pointer-events-none fixed inset-0 z-[60] overflow-hidden animate-hypno-breathe [mask-image:radial-gradient(ellipse_46rem_20rem_at_center,transparent_0,transparent_38%,black_82%)]">
             {/* Two sector wheels counter-rotating at different speeds: the
                 moiré between them flickers far harder than either wheel
                 actually flashes. */}
             <div className="absolute left-1/2 top-1/2 -ml-[125vmax] -mt-[125vmax] h-[250vmax] w-[250vmax]">
-                <div className="absolute inset-0 animate-hypno-rays rounded-full opacity-[0.17]"
+                <div className="absolute inset-0 animate-hypno-rays rounded-full opacity-[0.3]"
                     style={{ background: 'repeating-conic-gradient(from 0deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
-                <div className="absolute inset-0 animate-hypno-rays-rev rounded-full opacity-[0.14]"
+                <div className="absolute inset-0 animate-hypno-rays-rev rounded-full opacity-[0.22]"
                     style={{ background: 'repeating-conic-gradient(from 4.5deg at 50% 50%, var(--text-primary) 0deg 9deg, var(--surface-body) 9deg 18deg)' }} />
             </div>
-            <div className="absolute left-1/2 top-1/2 -ml-[80vmax] -mt-[80vmax] h-[160vmax] w-[160vmax] opacity-30">
-                <HypnoSpiral bare spinClass="animate-hypno-slow" className="h-full w-full" />
+            <div className="absolute left-1/2 top-1/2 -ml-[80vmax] -mt-[80vmax] h-[160vmax] w-[160vmax] opacity-40">
+                <HypnoSpiral bare spinClass="animate-hypno-zoom" className="h-full w-full" />
             </div>
-            <div className="absolute left-1/2 top-1/2 -ml-[45vmax] -mt-[45vmax] h-[90vmax] w-[90vmax] opacity-25">
+            <div className="absolute left-1/2 top-1/2 -ml-[45vmax] -mt-[45vmax] h-[90vmax] w-[90vmax] opacity-30">
                 <HypnoSpiral bare spinClass="animate-hypno-slow-rev" className="h-full w-full" />
             </div>
             {/* The lights: a full-field pulse at 2.5 flashes/sec — as hot as it
@@ -1140,7 +1140,7 @@ function TroubleReview({ trouble, onClose }) {
     );
 }
 
-export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false, enterFullscreen = undefined }) {
+export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false, enterFullscreen = undefined, onTranceChange = undefined }) {
     const paras = paragraphs || allParagraphsOf(essay);
     const [unit, setUnit] = useState(initialUnit === 'letters' ? 'letters' : 'word');
     const letters = unit === 'letters';
@@ -1234,6 +1234,12 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     // button) ends both together. Where fullscreen is unsupported or denied,
     // the field simply runs inline instead.
     useEffect(() => { if (!fullscreen) setTrance(false); }, [fullscreen]);
+    // The workspace hides its own chrome (brand bar) while the vortex owns
+    // the screen.
+    useEffect(() => {
+        onTranceChange?.(trance);
+        return () => onTranceChange?.(false);
+    }, [trance, onTranceChange]);
 
     if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) {
@@ -1253,6 +1259,10 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
 
     const rawAccuracy = commits ? Math.round((hitCount / commits) * 100) : 100;
     const accuracy = Math.max(0, Math.min(100, rawAccuracy - (peekedWords.size * 3)));
+
+    // Trance is its own scene: nothing on screen but the vortex, the words,
+    // one status line and the way out. The full UI returns at the grade card.
+    const zen = trance && !paraDone;
 
     const showNotice = (tone, text) => {
         setNotice({ tone, text });
@@ -1648,8 +1658,21 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
 
     return (
         <div className={fullscreen ? 'relative mx-auto flex min-h-[76vh] w-full max-w-5xl flex-col justify-center' : 'relative'}>
-            {trance && !paraDone && <TranceField />}
-            <div className={`flex items-center justify-between mb-2 flex-wrap gap-3 ${trance ? 'relative z-[70]' : ''}`}>
+            {zen && <TranceField />}
+            {zen && (
+                <div className="relative z-[70] mb-8 text-center text-xs font-bold uppercase tracking-widest text-text-dim">
+                    {para.label} · {pIndex + 1}/{paras.length} ·{' '}
+                    <span className={`tabular-nums ${accuracy >= 90 ? 'text-text-primary' : VERDICT_CLASS[accuracyVerdict(accuracy)]}`}>{accuracy}%</span>
+                    {slips > 0 && <span className="ml-2 text-text-warning tabular-nums">{slips}× restarted</span>}
+                    {notice && (
+                        <span key={notice.text} role="status"
+                            className={`ml-3 animate-pop normal-case tracking-normal ${notice.tone === 'error' ? 'text-text-error' : 'text-accent'}`}>
+                            {notice.text}
+                        </span>
+                    )}
+                </div>
+            )}
+            <div className={`flex items-center justify-between mb-2 flex-wrap gap-3 ${zen ? 'hidden' : ''}`}>
                 <span className="text-xs font-medium text-text-dim">
                     {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
                 </span>
@@ -1695,10 +1718,10 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     )}
                 </div>
             </div>
-            {!fullscreen && <ProgressBar value={pIndex + (words.length ? results.length / words.length : 0)} total={paras.length} />}
+            {!fullscreen && !trance && <ProgressBar value={pIndex + (words.length ? results.length / words.length : 0)} total={paras.length} />}
 
-            {!fullscreen && (
-                <p className={`text-xs font-medium leading-relaxed text-text-dim mb-3 transition-opacity duration-500 ${trance ? 'opacity-30 hover:opacity-100' : ''}`}>
+            {!fullscreen && !trance && (
+                <p className="text-xs font-medium leading-relaxed text-text-dim mb-3">
                     {letters
                         ? <>Recall at speed: press the <strong>first letter</strong> of each next word.{' '}</>
                         : <>Type it back from memory — <Kbd>Space</Kbd> commits each word.{' '}</>}
@@ -1709,12 +1732,12 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     {' '}<Kbd>Tab</Kbd> peeks the word, again for the passage, a third time to hide.{!letters && <> Hold <Kbd>Tab</Kbd> to go fully blind.</>} Peeks trim accuracy.
                 </p>
             )}
-            {!fullscreen && (
-                <div className={`mb-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-xl border border-line-soft bg-surface-body px-3.5 py-2.5 transition-opacity duration-500 ${trance ? 'opacity-30 hover:opacity-100' : ''}`}>
+            {!fullscreen && !trance && (
+                <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-xl border border-line-soft bg-surface-body px-3.5 py-2.5">
                     {settingsGroups}
                 </div>
             )}
-            {!fullscreen && tuneEditor && <div className="mb-4">{tuneEditor}</div>}
+            {!fullscreen && !trance && tuneEditor && <div className="mb-4">{tuneEditor}</div>}
 
             {!paraDone ? (
                 <div
@@ -1722,11 +1745,13 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     aria-label={letters ? 'Memorise — first letters' : 'Memorise — full words'}
                     data-revealed={peekLevel === 2 || undefined}
                     onClick={() => inputRef.current?.focus()}
-                    className={`memorise-stream flex flex-wrap gap-x-1.5 gap-y-1.5 content-start overflow-y-auto cursor-text font-serif leading-loose ${
-                        fullscreen
-                            ? `my-4 min-h-[44vh] max-h-[68vh] p-1 ${trance ? 'rounded-3xl bg-surface-body/95 p-8 shadow-pop' : 'bg-transparent'}`
-                            : 'p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
-                    } ${trance ? 'relative z-[70]' : ''} ${shake ? 'animate-shake-x' : ''}`}
+                    className={`memorise-stream flex flex-wrap content-start overflow-y-auto cursor-text font-serif leading-loose ${
+                        trance
+                            ? 'trance-stream relative z-[70] mx-auto my-2 w-full max-w-4xl justify-center gap-x-2.5 gap-y-2 bg-transparent p-2 text-center min-h-[30vh] max-h-[72vh]'
+                            : fullscreen
+                                ? 'gap-x-1.5 gap-y-1.5 my-4 min-h-[44vh] max-h-[68vh] p-1 bg-transparent'
+                                : 'gap-x-1.5 gap-y-1.5 p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
+                    } ${shake ? 'animate-shake-x' : ''}`}
                 >
                     {/* Hidden input keeps mobile keyboards working. In word mode
                         it is controlled, so IME and autocorrect behave. */}
@@ -1806,7 +1831,15 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                 </div>
             )}
 
-            <div className={`mt-3 flex flex-wrap items-center justify-end gap-2 ${trance ? 'relative z-[70]' : ''}`}>
+            {zen && (
+                <div className="relative z-[70] mt-8 text-center text-[11px] font-medium text-text-dim">
+                    {peekLevel === 2 && (
+                        <p className="mb-1 font-bold text-text-warning">Reading the answer — it hides again when you carry on</p>
+                    )}
+                    <Kbd>Esc</Kbd> to escape · <Kbd>Space</Kbd> ×3 restarts the sentence, hold for more · <Kbd>Tab</Kbd> peeks
+                </div>
+            )}
+            <div className={`mt-3 flex flex-wrap items-center justify-end gap-2 ${zen ? 'hidden' : ''}`}>
                 {peekLevel === 2 && !paraDone && (
                     <span className="mr-auto text-xs font-bold text-text-warning">
                         Reading the answer — it hides again when you carry on
@@ -2645,6 +2678,7 @@ function EssayWorkspace({ essayId }) {
     const [speedRunning, setSpeedRunning] = useState(false);
     const practiceRef = useRef(null);
     const { active: practiceFullscreen, supported: fullscreenSupported, toggle: toggleFullscreen, enter: enterFullscreen } = useFullscreen(practiceRef);
+    const [tranceOn, setTranceOn] = useState(false);
     const [proposal, setProposal] = useState(null);
     const [applyingFix, setApplyingFix] = useState(false);
     const [workspaceError, setWorkspaceError] = useState(null);
@@ -3157,7 +3191,7 @@ function EssayWorkspace({ essayId }) {
                            page, bigger", not a different app. */
                         className={practiceFullscreen ? 'overflow-y-auto bg-surface-body px-6 py-5 md:px-10' : undefined}
                     >
-                        {practiceFullscreen && (
+                        {practiceFullscreen && !tranceOn && (
                             <div className="mx-auto mb-2 flex w-full max-w-6xl items-center justify-between pb-2">
                                 <span className="flex items-center gap-2.5">
                                     <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-line-soft bg-surface-raised">
@@ -3204,6 +3238,7 @@ function EssayWorkspace({ essayId }) {
                                     <MemoriseDrill initialUnit={REBUILD_UNIT_FOR_PARAM[modeParam] || 'word'}
                                         fullscreen={practiceFullscreen}
                                         enterFullscreen={fullscreenSupported ? enterFullscreen : undefined}
+                                        onTranceChange={setTranceOn}
                                         essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
                                         onNext={() => setMode('typeit')} nextLabel={modeLabel('typeit')} />
                                 )}

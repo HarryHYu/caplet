@@ -107,8 +107,9 @@ export default {
         'hypno-rev': 'hypno-spin 9s linear infinite reverse',
         'hypno-slow': 'hypno-spin 5s linear infinite',
         'hypno-slow-rev': 'hypno-spin 7s linear infinite reverse',
-        'hypno-rays': 'hypno-spin 9s linear infinite',
-        'hypno-rays-rev': 'hypno-spin 12s linear infinite reverse',
+        'hypno-rays': 'hypno-spin 7s linear infinite',
+        'hypno-rays-rev': 'hypno-spin 10s linear infinite reverse',
+        'hypno-zoom': 'hypno-zoom 6s linear infinite',
         'hypno-breathe': 'hypno-breathe 3s ease-in-out infinite',
         'hypno-flash': 'hypno-flash 0.4s linear infinite',
         'bar-fill': 'bar-fill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
@@ -189,7 +190,12 @@ export default {
         },
         'hypno-flash': {
           '0%, 100%': { opacity: '0' },
-          '50%': { opacity: '0.55' },
+          '50%': { opacity: '0.7' },
+        },
+        'hypno-zoom': {
+          '0%': { transform: 'rotate(0deg) scale(1)' },
+          '50%': { transform: 'rotate(180deg) scale(1.18)' },
+          '100%': { transform: 'rotate(360deg) scale(1)' },
         },
         'bar-fill': {
           '0%': { transform: 'scaleX(0)' },
