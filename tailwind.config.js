@@ -103,6 +103,8 @@ export default {
         'shake-x': 'shake-x 0.3s ease-in-out',
         'streak-pop': 'streak-pop 0.25s ease-out both',
         'caret-blink': 'caret-blink 1.1s ease-in-out infinite',
+        hypno: 'hypno-spin 9s linear infinite',
+        'hypno-rev': 'hypno-spin 9s linear infinite reverse',
         'bar-fill': 'bar-fill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
         shimmer: 'shimmer 1.6s linear infinite',
       },
@@ -171,6 +173,9 @@ export default {
           '0%, 45%': { opacity: '1' },
           '55%, 95%': { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        'hypno-spin': {
+          to: { transform: 'rotate(360deg)' },
         },
         'bar-fill': {
           '0%': { transform: 'scaleX(0)' },

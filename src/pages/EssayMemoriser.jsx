@@ -368,7 +368,7 @@ function MaskedWord({ word, hidden = false, overlay = null, className = '', over
     );
 }
 
-const Caret = () => <span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-pulse shrink-0" />;
+const Caret = () => <span className="inline-block align-middle w-0.5 h-4 bg-accent ml-0.5 animate-caret-blink shrink-0" />;
 
 /** PDF page markers are extraction artifacts, not the student's essay. */
 const stripPdfArtifacts = (text) => String(text || '')
@@ -532,7 +532,7 @@ function ProgressBar({ value, total }) {
             aria-label="Essay practice progress"
             aria-valuemin="0"
             aria-valuemax={total}
-            aria-valuenow={Math.min(value, total)}
+            aria-valuenow={Math.round(Math.min(value, total) * 100) / 100}
         >
             <div className="h-full bg-accent rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
         </div>
@@ -1022,6 +1022,24 @@ const Kbd = ({ children }) => (
     <kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">{children}</kbd>
 );
 
+// ── Trance — a spinning b/w spiral flanks the stream, and you just type ─────
+//
+// Classic compass spiral: 180° arcs whose radius grows by one unit each half
+// turn, stroked at half the pitch so ring and gap read evenly. currentColor
+// ink on the raised surface keeps it black-and-white in every palette, and
+// the site-wide reduced-motion rule freezes the spin automatically.
+function HypnoSpiral({ reverse = false, className = '' }) {
+    return (
+        <svg viewBox="-21 -21 42 42" aria-hidden="true"
+            className={`pointer-events-none select-none ${reverse ? 'animate-hypno-rev' : 'animate-hypno'} ${className}`}>
+            <circle r="20" fill="var(--surface-raised)" stroke="var(--line-soft)" strokeWidth="0.4" />
+            <path
+                d="M 0 0 a 1 1 0 0 1 2 0 a 2 2 0 0 1 -4 0 a 3 3 0 0 1 6 0 a 4 4 0 0 1 -8 0 a 5 5 0 0 1 10 0 a 6 6 0 0 1 -12 0 a 7 7 0 0 1 14 0 a 8 8 0 0 1 -16 0 a 9 9 0 0 1 18 0"
+                fill="none" stroke="var(--text-primary)" strokeWidth="1.1" strokeLinecap="round" />
+        </svg>
+    );
+}
+
 // ── The trouble log — every word you tripped on, kept for review ────────────
 
 const TROUBLE_KIND_LABEL = {
@@ -1122,6 +1140,9 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     // the end (and on demand) shows exactly what needs another pass.
     const [trouble, setTrouble] = useState(() => new Map());
     const [reviewOpen, setReviewOpen] = useState(false);
+    // Trance: spinning spirals flank the stream and the chrome fades back, so
+    // there is nothing to look at but the words.
+    const [trance, setTrance] = useState(false);
     const inputRef = useRef(null);
     const currentRef = useRef(null);
     const shakeTimer = useRef(null);
@@ -1569,7 +1590,15 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     );
 
     return (
-        <div className={fullscreen ? 'mx-auto flex min-h-[76vh] w-full max-w-5xl flex-col justify-center' : undefined}>
+        <div className={fullscreen ? 'relative mx-auto flex min-h-[76vh] w-full max-w-5xl flex-col justify-center' : 'relative'}>
+            {trance && !paraDone && (
+                <>
+                    {/* Centered with margins, not translate — the spin animation
+                        owns the transform, and would silently discard it. */}
+                    <HypnoSpiral className={`absolute top-1/2 hidden xl:block ${fullscreen ? 'h-56 w-56 -left-64 -mt-[112px]' : 'h-44 w-44 -left-56 -mt-[88px]'}`} />
+                    <HypnoSpiral reverse className={`absolute top-1/2 hidden xl:block ${fullscreen ? 'h-56 w-56 -right-64 -mt-[112px]' : 'h-44 w-44 -right-56 -mt-[88px]'}`} />
+                </>
+            )}
             <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                 <span className="text-xs font-medium text-text-dim">
                     {para.label} · {pIndex + 1} of {paras.length}{para.heading ? ` · ${para.heading}` : ''}
@@ -1582,12 +1611,16 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                         </span>
                     )}
                     {streak >= 3 && (
-                        <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">⚡ {streak} in a row</span>
+                        <span key={streak} className="text-xs font-bold text-accent animate-streak-pop tabular-nums">{streak >= 10 ? '🔥' : '⚡'} {streak} in a row</span>
                     )}
                     {slips > 0 && !paraDone && (
                         <span className="text-xs font-bold text-text-warning tabular-nums">{slips}× restarted</span>
                     )}
-                    {!paraDone && <span className="text-lg font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>}
+                    {!paraDone && (
+                        <span className={`text-lg font-display font-extrabold tabular-nums transition-colors duration-300 ${accuracy >= 90 ? 'text-text-primary' : VERDICT_CLASS[accuracyVerdict(accuracy)]}`}>
+                            {accuracy}%
+                        </span>
+                    )}
                     {fullscreen && (
                         <span ref={menuRef} className="relative">
                             <button type="button" aria-expanded={menuOpen}
@@ -1612,10 +1645,10 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     )}
                 </div>
             </div>
-            {!fullscreen && <ProgressBar value={pIndex} total={paras.length} />}
+            {!fullscreen && <ProgressBar value={pIndex + (words.length ? results.length / words.length : 0)} total={paras.length} />}
 
             {!fullscreen && (
-                <p className="text-xs font-medium leading-relaxed text-text-dim mb-3">
+                <p className={`text-xs font-medium leading-relaxed text-text-dim mb-3 transition-opacity duration-500 ${trance ? 'opacity-30 hover:opacity-100' : ''}`}>
                     {letters
                         ? <>Recall at speed: press the <strong>first letter</strong> of each next word.{' '}</>
                         : <>Type it back from memory — <Kbd>Space</Kbd> commits each word.{' '}</>}
@@ -1627,7 +1660,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                 </p>
             )}
             {!fullscreen && (
-                <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-xl border border-line-soft bg-surface-body px-3.5 py-2.5">
+                <div className={`mb-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-xl border border-line-soft bg-surface-body px-3.5 py-2.5 transition-opacity duration-500 ${trance ? 'opacity-30 hover:opacity-100' : ''}`}>
                     {settingsGroups}
                 </div>
             )}
@@ -1740,6 +1773,12 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                         <Kbd>Space</Kbd> ×3 sentence · hold for more · <Kbd>Tab</Kbd> peeks · <Kbd>Esc</Kbd> exits
                     </span>
                 )}
+                <button type="button" aria-pressed={trance}
+                    onClick={() => { setTrance((v) => !v); inputRef.current?.focus(); }}
+                    title="Spinning spirals flank the words. That's it. That's the feature."
+                    className={`focus-ring press inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${trance ? 'border-accent bg-accent-soft text-accent' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'}`}>
+                    <HypnoSpiral className="h-4 w-4" /> Trance
+                </button>
                 {trouble.size > 0 && (
                     <button type="button" aria-expanded={reviewOpen}
                         onClick={() => setReviewOpen((v) => !v)}
