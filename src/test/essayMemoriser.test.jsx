@@ -467,6 +467,36 @@ describe('EssayMemoriser', () => {
       expect(screen.getByRole('status')).toHaveTextContent(/paragraph restarted/i);
     });
 
+    it('a full stop inside a quotation is not a reset point', async () => {
+      // Sentence one contains a quote with its own terminators; sentence two
+      // starts at word 6. A naive splitter would break inside the quote and
+      // rewind a mistake to "Go." instead of the real sentence start.
+      api.getEssay.mockResolvedValue({
+        essay: {
+          ...parsedEssay,
+          parsedStructure: {
+            ...parsedEssay.parsedStructure,
+            introduction: 'He cites "Stop. Go." boldly here. Second sentence now.',
+          },
+        },
+      });
+      renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+      await screen.findByRole('application', { name: /Perfect run/i });
+
+      // Four words in — past the quote, still inside sentence one.
+      ['he', 'cites', 'stop.', 'go."'].forEach(typeWord);
+      expect(answered()).toBe(4);
+      typeWord('wrong');
+      // The whole first sentence rewinds — not just back to inside the quote.
+      expect(answered()).toBe(0);
+
+      // And with sentence one done, a slip in sentence two lands on word 6.
+      ['he', 'cites', 'stop.', 'go."', 'boldly', 'here.', 'second'].forEach(typeWord);
+      expect(answered()).toBe(7);
+      typeWord('wrong');
+      expect(answered()).toBe(6);
+    });
+
     it('reveals the passage on death and hides it again when you type', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');

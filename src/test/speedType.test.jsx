@@ -167,6 +167,27 @@ const startIntroRun = (extraSetup) => {
 };
 
 
+describe('splitSentences — quote-aware', () => {
+  it('splits plain prose exactly as before', () => {
+    expect(splitSentences('One two. Three four! Five?  Six.')).toEqual(['One two.', 'Three four!', 'Five?', 'Six.']);
+    expect(splitSentences('No terminator at all')).toEqual(['No terminator at all']);
+  });
+
+  it('never treats punctuation inside a quotation as a sentence boundary', () => {
+    expect(splitSentences('He cites "Out, out! Brief candle." in the speech. Then argues more.'))
+      .toEqual(['He cites "Out, out! Brief candle." in the speech.', 'Then argues more.']);
+    expect(splitSentences('“Stop! Now. Please.” he said. Done.'))
+      .toEqual(['“Stop! Now. Please.” he said.', 'Done.']);
+    expect(splitSentences('« Arrête. Vite. » dit-il. Fin.'))
+      .toEqual(['« Arrête. Vite. » dit-il.', 'Fin.']);
+  });
+
+  it('fails conservatively on an unbalanced quote — one long sentence, never a mid-quote break', () => {
+    expect(splitSentences('He wrote "never closed. And on. And on.'))
+      .toEqual(['He wrote "never closed. And on. And on.']);
+  });
+});
+
 describe('perfectWordMatch — the perfect-run comparator', () => {
   it('forgives capitals, accents and apostrophes outright', () => {
     expect(perfectWordMatch("Conrad's", 'conrads')).toMatchObject({ ok: true, exact: true });

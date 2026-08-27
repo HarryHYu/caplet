@@ -87,8 +87,38 @@ export function charStatuses(target, typed, opts = {}) {
   return out;
 }
 
+/**
+ * Sentence split on .!? + whitespace — but QUOTE-AWARE: a terminator inside
+ * an open quotation ("Out, out! Brief candle.") is part of the sentence that
+ * cites it, not a boundary. Everything sentence-shaped hangs off this — the
+ * perfect run's rewinds, the rebuild ladder, peek-sentence, sentence flow —
+ * so a mid-quote full stop must never become a reset point.
+ *
+ * Only double quotes toggle the state (straight, curly, guillemets); single
+ * quotes are left alone because they are indistinguishable from apostrophes.
+ * An unbalanced quote fails conservatively: the rest of the paragraph stays
+ * one sentence, so a rewind goes further back rather than into the quote.
+ */
 export function splitSentences(text) {
-  return String(text || '').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+  const s = String(text || '').trim();
+  const out = [];
+  let start = 0;
+  let inQuote = false;
+  for (let i = 0; i < s.length; i += 1) {
+    const ch = s[i];
+    if (ch === '"') inQuote = !inQuote;
+    else if (ch === '“' || ch === '«') inQuote = true;
+    else if (ch === '”' || ch === '»') inQuote = false;
+    else if (!inQuote && (ch === '.' || ch === '!' || ch === '?') && i + 1 < s.length && /\s/.test(s[i + 1])) {
+      out.push(s.slice(start, i + 1));
+      let j = i + 1;
+      while (j < s.length && /\s/.test(s[j])) j += 1;
+      start = j;
+      i = j - 1;
+    }
+  }
+  if (start < s.length) out.push(s.slice(start));
+  return out.filter(Boolean);
 }
 
 /**
