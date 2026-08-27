@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { useReveal } from '../lib/useReveal';
@@ -1189,6 +1189,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const [trance, setTrance] = useState(false);
     const inputRef = useRef(null);
     const currentRef = useRef(null);
+    const streamRef = useRef(null);
     const shakeTimer = useRef(null);
     const noticeTimer = useRef(null);
     const holdFired = useRef(false);
@@ -1219,10 +1220,23 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         clearTimeout(spaceHold2.current);
     }, []);
     useEffect(() => {
+        if (trance) return;
         if (typeof currentRef.current?.scrollIntoView === 'function') {
             currentRef.current.scrollIntoView({ block: 'nearest' });
         }
-    }, [wordIdx, paraDone]);
+    }, [wordIdx, paraDone, trance]);
+    // Trance is a teleprompter: the stream slides so the ACTIVE word sits at
+    // the viewport centre — inside the vortex eye — no matter how long the
+    // paragraph is. Runs after every render; measuring is cheap and wordIdx,
+    // rewinds, reveals and line-wraps all move the anchor.
+    useLayoutEffect(() => {
+        const stream = streamRef.current;
+        if (!stream) return;
+        if (!trance) { stream.style.removeProperty('transform'); return; }
+        const el = currentRef.current;
+        const anchor = el ? el.offsetTop + el.offsetHeight / 2 : stream.offsetHeight / 2;
+        stream.style.transform = `translate(-50%, ${Math.round(window.innerHeight / 2 - anchor)}px)`;
+    });
     useEffect(() => {
         if (!menuOpen) return undefined;
         const handler = (e) => { if (!menuRef.current?.contains(e.target)) setMenuOpen(false); };
@@ -1740,18 +1754,29 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             {!fullscreen && !trance && tuneEditor && <div className="mb-4">{tuneEditor}</div>}
 
             {!paraDone ? (
+                /* In trance the outer layer clips and fades: only a band of
+                   lines around the viewport centre is visible, matching the
+                   vortex eye. The stream itself is translated by the
+                   teleprompter effect so the active word never leaves it. */
                 <div
+                    onClick={() => inputRef.current?.focus()}
+                    className={trance
+                        ? `fixed inset-0 z-[70] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0,transparent_12%,black_38%,black_62%,transparent_88%,transparent_100%)] ${shake ? 'animate-shake-x' : ''}`
+                        : 'contents'}
+                >
+                <div
+                    ref={streamRef}
                     role="application"
                     aria-label={letters ? 'Memorise — first letters' : 'Memorise — full words'}
                     data-revealed={peekLevel === 2 || undefined}
                     onClick={() => inputRef.current?.focus()}
-                    className={`memorise-stream flex flex-wrap overflow-y-auto cursor-text font-serif leading-loose ${
+                    className={`memorise-stream flex flex-wrap cursor-text font-serif leading-loose ${
                         trance
-                            ? 'trance-stream fixed inset-0 z-[70] mx-auto w-full max-w-4xl content-center justify-center gap-x-2.5 gap-y-2 bg-transparent px-10 py-24 text-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+                            ? 'trance-stream absolute left-1/2 top-0 w-full max-w-4xl content-start justify-center gap-x-2.5 gap-y-2 bg-transparent px-10 text-center transition-transform duration-500 ease-out'
                             : fullscreen
-                                ? 'content-start gap-x-1.5 gap-y-1.5 my-4 min-h-[44vh] max-h-[68vh] p-1 bg-transparent'
-                                : 'content-start gap-x-1.5 gap-y-1.5 p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
-                    } ${shake ? 'animate-shake-x' : ''}`}
+                                ? 'overflow-y-auto content-start gap-x-1.5 gap-y-1.5 my-4 min-h-[44vh] max-h-[68vh] p-1 bg-transparent'
+                                : 'overflow-y-auto content-start gap-x-1.5 gap-y-1.5 p-6 rounded-2xl block-cream text-sm md:text-base min-h-[240px] max-h-[60vh] shadow-card transition-shadow focus-within:shadow-card-hover'
+                    } ${!trance && shake ? 'animate-shake-x' : ''}`}
                 >
                     {/* Hidden input keeps mobile keyboards working. In word mode
                         it is controlled, so IME and autocorrect behave. */}
@@ -1813,6 +1838,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                                 overlay="·" />
                         );
                     })}
+                </div>
                 </div>
             ) : (
                 <div className={`p-6 rounded-2xl block-blue animate-pop max-w-md shadow-card ${fullscreen ? 'mx-auto my-8' : ''}`}>
