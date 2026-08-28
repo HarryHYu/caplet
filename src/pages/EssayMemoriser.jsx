@@ -1222,15 +1222,6 @@ function FocusField({ dimmed }) {
 // alpha so the luminance swing under any beam stays small.
 const PARTY_HUES = ['#8b5cf6', '#22d3ee', '#fbbf24', '#34d399', '#60a5fa'];
 
-const partyBeamGradient = (alpha, from) => {
-    // Wedges at i*72°+from; stops must ascend, so `from` stays small enough
-    // that the last wedge's tail (from+338°) never exceeds a full turn.
-    const stops = PARTY_HUES.map((hue, i) => {
-        const a = i * 72 + from;
-        return `transparent ${a}deg, ${hue}${alpha} ${a + 14}deg ${a + 34}deg, transparent ${a + 50}deg`;
-    });
-    return `conic-gradient(from 0deg at 50% 50%, ${stops.join(', ')})`;
-};
 
 // The DJ deck's resting position. Values are 0..1 fader positions; the field
 // maps them onto real parameters INSIDE the safety caps — no fader position
@@ -1238,52 +1229,102 @@ const partyBeamGradient = (alpha, from) => {
 const PARTY_MIX_DEFAULT = { tempo: 0.45, lights: 0.75, glitter: 0.6, confetti: 0.6 };
 
 /**
- * PARTY — a disco, not a strobe, now with a mixing desk. The ball hangs
- * top-centre shedding colour beams; glitter twinkles on staggered clocks;
- * confetti drifts and pops per landed word. The faders scale counts, speeds
- * and brightness, but every mapping clamps inside the limits: beam wheels
- * never spin faster than ~15°/s (duration floor 24s) no matter where Tempo
- * sits, twinkle cycles never drop under ~1.1s, and there is still ZERO
- * large-area luminance rhythm at any fader position.
+ * PARTY — a dark club with the words in the spotlight. A lighting truss
+ * spans the top: six PAR cans blink in a colour chase and shed soft beam
+ * cones, two moving heads rock their beams across the room, the mirror
+ * ball's reflection dots orbit the walls, stars twinkle, confetti falls,
+ * and a white spotlight cone lands exactly on the word pool.
+ *
+ * Still zero strobe by construction: the only things that "flash" are
+ * tiny-area lenses, glints and stars (far under the flash area threshold,
+ * on staggered clocks); beam cones FADE on ≥2.8s cycles and the rocking
+ * heads sweep any point at well under one pass per second; the room, the
+ * spotlight and the pool are static. No red anywhere.
  */
 function PartyField({ dimmed, mix }) {
     const tempo = 0.5 + mix.tempo * 1.1;                    // 0.5x – 1.6x
-    const twinkles = 6 + Math.round(mix.glitter * 20);      // 6 – 26
+    const stars = 8 + Math.round(mix.glitter * 14);         // 8 – 22
     const confetti = 8 + Math.round(mix.glitter * 20);      // 8 – 28
-    const lights = 0.45 + mix.lights * 0.55;                // beam opacity 0.45 – 1
+    const lights = 0.45 + mix.lights * 0.55;                // fixture brightness
+    const cans = ['#8b5cf6', '#22d3ee', '#fbbf24', '#34d399', '#60a5fa', '#8b5cf6'];
     return (
         <>
-            {/* Room glow: static colour wash pooling in the corners. */}
+            {/* The room: deep navy in either theme — a party happens in the
+                dark. The bright iris pool below is the readable island. */}
             <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60]"
-                style={{
-                    background: [
-                        'radial-gradient(ellipse 70% 55% at 12% 8%, #8b5cf614 0 40%, transparent 70%)',
-                        'radial-gradient(ellipse 70% 55% at 88% 10%, #22d3ee12 0 40%, transparent 70%)',
-                        'radial-gradient(ellipse 90% 60% at 50% 102%, #fbbf2412 0 44%, transparent 74%)',
-                    ].join(', '),
-                }} />
-            {/* Beams from the ball, two wheels counter-sweeping. The 24s
-                duration floor holds the ≤15°/s rotation cap at max Tempo. */}
-            <div aria-hidden="true"
-                className="pointer-events-none fixed inset-0 z-[60] overflow-hidden transition-opacity duration-700"
-                style={{ opacity: dimmed ? 0.4 : lights }}>
-                <div className="absolute left-1/2 top-[11vh] -ml-[110vmax] -mt-[110vmax] h-[220vmax] w-[220vmax] animate-party-beams"
-                    style={{ background: partyBeamGradient('29', 6), animationDuration: `${Math.max(24, 26 / tempo)}s` }} />
-                <div className="absolute left-1/2 top-[11vh] -ml-[110vmax] -mt-[110vmax] h-[220vmax] w-[220vmax] animate-party-beams-rev"
-                    style={{ background: partyBeamGradient('1c', 20), animationDuration: `${Math.max(24, 34 / tempo)}s` }} />
-            </div>
-            {/* Glitter: tiny staggered twinkles — each a dot, never in sync. */}
-            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60]">
-                {Array.from({ length: twinkles }, (_, k) => (
-                    <span key={k}
-                        className="absolute h-1 w-1 rounded-full animate-party-twinkle"
+                style={{ background: 'linear-gradient(180deg, #0e1128 0%, #151936 55%, #1a1e42 100%)' }} />
+            {/* Floor sheen. */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60]"
+                style={{ background: 'radial-gradient(ellipse 62% 22% at 50% 98%, #ffffff12 0 40%, transparent 100%)' }} />
+            {/* The ball's reflections: a ring of dots orbiting the room. */}
+            <div aria-hidden="true" className="pointer-events-none fixed left-1/2 top-[10vh] z-[60] h-0 w-0 animate-party-orbit"
+                style={{ opacity: 0.5 * lights, animationDuration: `${Math.max(24, 44 / tempo)}s` }}>
+                {Array.from({ length: 14 }, (_, k) => (
+                    <span key={k} className="absolute rounded-full"
                         style={{
-                            left: `${(k * 137) % 97 + 1.5}%`,
-                            top: `${(k * 61) % 88 + 4}%`,
+                            height: k % 3 === 0 ? 7 : 5,
+                            width: k % 3 === 0 ? 7 : 5,
                             background: PARTY_HUES[k % PARTY_HUES.length],
+                            transform: `rotate(${k * 25.7}deg) translateY(${30 + (k % 4) * 5}vmin)`,
+                        }} />
+                ))}
+            </div>
+            {/* Lighting rig, dimmable as one unit (quiescence + Lights). */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] overflow-hidden transition-opacity duration-700"
+                style={{ opacity: dimmed ? 0.35 : lights }}>
+                {/* Truss bar. */}
+                <div className="absolute left-1/2 top-[5.5vh] h-2.5 w-[70vw] -translate-x-1/2 rounded-sm border-y border-[#454b6e]"
+                    style={{ background: 'repeating-linear-gradient(115deg, #2b3050 0 7px, #171a30 7px 14px)' }} />
+                {/* PAR cans: lens blinks in a chase, each cone fades slowly. */}
+                {cans.map((hue, k) => (
+                    <div key={k} className="absolute top-[5.5vh]" style={{ left: `${16 + k * 13.5}%` }}>
+                        <span className="absolute -top-0.5 left-1/2 h-3.5 w-2.5 -translate-x-1/2 rounded-b-sm bg-[#2b3050]" />
+                        <span className="absolute top-2.5 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full animate-party-lens"
+                            style={{ background: hue, boxShadow: `0 0 12px 4px ${hue}88`, animationDuration: `${Math.max(1.6, 4.2 / tempo)}s`, animationDelay: `${-k * 0.7}s` }} />
+                        <div className="absolute top-3 left-1/2 h-[58vh] w-[15vw] -translate-x-1/2 animate-party-beamfade"
+                            style={{
+                                background: `linear-gradient(180deg, ${hue}4d, ${hue}14 55%, transparent 82%)`,
+                                clipPath: 'polygon(46% 0, 54% 0, 100% 100%, 0 100%)',
+                                transform: `translateX(-50%) rotate(${(k - 2.5) * 5}deg)`,
+                                transformOrigin: '50% 0',
+                                animationDuration: `${Math.max(2.8, 6.5 / tempo)}s`,
+                                animationDelay: `${-k * 1.1}s`,
+                            }} />
+                    </div>
+                ))}
+                {/* Moving heads at the truss ends, rocking their beams. */}
+                {[{ left: '9%', hue: '#22d3ee', cls: 'animate-party-rock' }, { left: '89%', hue: '#8b5cf6', cls: 'animate-party-rock-rev' }].map((head, k) => (
+                    <div key={k} className="absolute top-[5vh]" style={{ left: head.left }}>
+                        <span className="absolute left-1/2 h-4 w-4 -translate-x-1/2 rounded-md bg-[#343a5e]" />
+                        <div className={`absolute top-2 left-1/2 h-[72vh] w-[9vw] ${head.cls}`}
+                            style={{
+                                marginLeft: '-4.5vw',
+                                background: `linear-gradient(180deg, ${head.hue}59, ${head.hue}17 60%, transparent 85%)`,
+                                clipPath: 'polygon(43% 0, 57% 0, 92% 100%, 8% 100%)',
+                                transformOrigin: '50% 0',
+                                animationDuration: `${Math.max(5.5, (7.5 + k * 2) / tempo)}s`,
+                            }} />
+                    </div>
+                ))}
+                {/* The spotlight: a still white cone onto the word pool. */}
+                <div className="absolute left-1/2 top-[6vh] h-[46vh] w-[40vw] -translate-x-1/2"
+                    style={{
+                        background: 'linear-gradient(180deg, #ffffff30, #ffffff10 62%, transparent)',
+                        clipPath: 'polygon(47% 0, 53% 0, 92% 100%, 8% 100%)',
+                    }} />
+            </div>
+            {/* Stars in the dark, twinkling on staggered clocks. */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60]">
+                {Array.from({ length: stars }, (_, k) => (
+                    <span key={k} className="absolute animate-party-twinkle select-none"
+                        style={{
+                            left: `${(k * 137) % 95 + 2}%`,
+                            top: `${(k * 53) % 52 + 3}%`,
+                            color: k % 4 === 3 ? PARTY_HUES[k % PARTY_HUES.length] : '#e7eaff',
+                            fontSize: k % 3 === 0 ? 14 : 9,
                             animationDuration: `${Math.max(1.1, 2.6 / tempo)}s`,
                             animationDelay: `${-(k * 0.53) % 2.6}s`,
-                        }} />
+                        }}>✦</span>
                 ))}
             </div>
             {/* Confetti drifting down. */}
@@ -1294,58 +1335,92 @@ function PartyField({ dimmed, mix }) {
                         style={{
                             left: `${(k * 89) % 98 + 1}%`,
                             background: PARTY_HUES[(k * 3 + 1) % PARTY_HUES.length],
-                            opacity: 0.55,
+                            opacity: 0.75,
                             animationDuration: `${Math.max(5, (11 + (k % 5) * 1.7) / tempo)}s`,
                             animationDelay: `${-((k * 1.9) % 12)}s`,
                         }} />
                 ))}
             </div>
-            {/* The ball: facets slide sideways inside a shaded sphere. */}
-            <div aria-hidden="true" className="pointer-events-none fixed left-1/2 top-0 z-[62] -ml-10">
-                <div className="mx-auto h-[4.5vh] w-px bg-[color:var(--line-soft)]" />
-                <div className="relative h-20 w-20 overflow-hidden rounded-full animate-party-drop shadow-card">
+            {/* The mirror ball, hung from the truss centre. */}
+            <div aria-hidden="true" className="pointer-events-none fixed left-1/2 top-[5.5vh] z-[62] -ml-12 flex w-24 flex-col items-center">
+                <div className="h-[3.5vh] w-px bg-[#454b6e]" />
+                <div className="relative h-24 w-24 overflow-hidden rounded-full animate-party-drop"
+                    style={{ boxShadow: '0 0 36px 8px #ffffff21, 0 12px 30px #00000088' }}>
                     <div className="absolute inset-y-0 -left-full w-[300%] animate-party-ball"
-                        style={{ background: 'repeating-linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 16%, var(--surface-raised)) 0 10px, var(--surface-raised) 10px 20px)', animationDuration: `${Math.max(6, 14 / tempo)}s` }} />
+                        style={{ background: 'repeating-linear-gradient(90deg, #dfe3f6 0 11px, #9aa1c4 11px 22px)', animationDuration: `${Math.max(6, 14 / tempo)}s` }} />
                     <div className="absolute inset-0"
-                        style={{ background: 'repeating-linear-gradient(0deg, color-mix(in srgb, var(--text-primary) 12%, transparent) 0 1.5px, transparent 1.5px 13px)' }} />
+                        style={{ background: 'repeating-linear-gradient(0deg, #10132b55 0 1.5px, transparent 1.5px 14px)' }} />
+                    <div className="absolute inset-0"
+                        style={{ background: 'conic-gradient(#8b5cf626, #22d3ee26, #fbbf2426, #34d39926, #60a5fa26, #8b5cf626)' }} />
                     <div className="absolute inset-0 rounded-full"
-                        style={{ background: 'radial-gradient(circle at 34% 30%, #ffffff59 0 18%, transparent 55%), radial-gradient(circle at 50% 50%, transparent 55%, #00000033 100%)' }} />
+                        style={{ background: 'radial-gradient(circle at 32% 26%, #ffffff8c 0 14%, transparent 50%), radial-gradient(circle at 50% 50%, transparent 52%, #0009 100%)' }} />
                 </div>
+                {[[-8, 10, '-0.2s'], [96, 30, '-0.8s'], [40, 100, '-1.4s']].map(([x, y, delay], k) => (
+                    <span key={k} className="absolute animate-party-twinkle text-[13px] text-white"
+                        style={{ left: x, top: `calc(3.5vh + ${y}px)`, animationDelay: delay, animationDuration: '1.4s' }}>✦</span>
+                ))}
             </div>
-            {/* The iris the dial rides on — same still core as Focus. */}
+            {/* The pool the dial rides in — the spotlight's landing. */}
             <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61]"
-                style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 11rem, transparent 24rem)' }} />
+                style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 11rem, transparent 26rem)' }} />
         </>
     );
 }
 
 /**
- * The DJ deck: four vertical faders pinned to the right edge of the Party
- * scene. Pure fader positions in, clamped parameters out (in PartyField and
- * ConfettiBurst) — the deck can make the party lazier or livelier, never
- * unsafe. Focus returns to the drill the moment a fader is released.
+ * The DJ deck — styled as hardware: dark housing, per-channel knob (turns
+ * with the value), channel LED, a fader cap riding a groove, and a lit
+ * segment ladder. Pure fader positions in, clamped parameters out (in
+ * PartyField and ConfettiBurst) — the deck can make the party lazier or
+ * livelier, never unsafe. Focus returns to the drill on release.
  */
 function PartyMixer({ mix, onChange, onDone }) {
-    const fader = (key, label) => (
-        <label className="flex flex-col items-center gap-2">
-            <span className="relative block h-28 w-8">
-                <input type="range" min="0" max="100" value={Math.round(mix[key] * 100)}
-                    aria-label={`${label} fader`}
-                    onChange={(e) => onChange({ ...mix, [key]: Number(e.target.value) / 100 })}
-                    onPointerUp={onDone}
-                    className="absolute left-1/2 top-1/2 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-90 cursor-pointer accent-[color:var(--accent)]" />
-            </span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-text-dim">{label}</span>
-        </label>
-    );
+    const CHANNELS = [
+        { key: 'tempo', label: 'Tempo', hue: '#22d3ee' },
+        { key: 'lights', label: 'Lights', hue: '#fbbf24' },
+        { key: 'glitter', label: 'Glitter', hue: '#8b5cf6' },
+        { key: 'confetti', label: 'Drops', hue: '#34d399' },
+    ];
     return (
-        <div className="fixed right-4 top-1/2 z-[73] -translate-y-1/2 rounded-2xl border border-line-soft bg-surface-raised/90 px-3 py-4 shadow-pop backdrop-blur">
-            <p className="mb-3 text-center text-[9px] font-bold uppercase tracking-widest text-text-dim">DJ deck</p>
-            <div className="flex gap-1.5">
-                {fader('tempo', 'Tempo')}
-                {fader('lights', 'Lights')}
-                {fader('glitter', 'Glitter')}
-                {fader('confetti', 'Drops')}
+        <div className="fixed right-4 top-1/2 z-[73] -translate-y-1/2 rounded-xl border border-[#3d4366] p-3 shadow-pop"
+            style={{ background: 'linear-gradient(180deg, #232741 0%, #161930 100%)', boxShadow: '0 18px 40px #00000080, inset 0 1px 0 #ffffff14' }}>
+            <div className="mb-2.5 flex items-center justify-between px-0.5">
+                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#7d84ad]">DJ-01</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-[#34d399]" style={{ boxShadow: '0 0 6px 1px #34d39988' }} />
+            </div>
+            <div className="flex gap-2.5">
+                {CHANNELS.map(({ key, label, hue }) => {
+                    const v = mix[key];
+                    return (
+                        <label key={key} className="flex flex-col items-center gap-1.5">
+                            {/* Knob: turns with the channel value. */}
+                            <span className="relative block h-6 w-6 rounded-full border border-[#0c0e1c]"
+                                style={{ background: 'radial-gradient(circle at 35% 30%, #4a5077, #23273f 70%)', transform: `rotate(${-135 + v * 270}deg)`, boxShadow: '0 2px 4px #0009' }}>
+                                <span className="absolute left-1/2 top-0.5 h-2 w-0.5 -translate-x-1/2 rounded bg-[#dfe3f6]" />
+                            </span>
+                            {/* Channel LED: brighter as the channel opens. */}
+                            <span className="h-1.5 w-1.5 rounded-full"
+                                style={{ background: hue, opacity: 0.3 + v * 0.7, boxShadow: v > 0.55 ? `0 0 7px 2px ${hue}99` : 'none' }} />
+                            {/* Fader in its groove, with a segment ladder. */}
+                            <span className="relative block h-28 w-9">
+                                <span className="absolute left-1/2 top-1 bottom-1 w-1 -translate-x-1/2 rounded-full"
+                                    style={{ background: '#070915', boxShadow: 'inset 0 1px 3px #000c' }} />
+                                <span className="absolute right-0.5 top-1 bottom-1 flex w-1 flex-col-reverse gap-[3px]">
+                                    {Array.from({ length: 8 }, (_, s) => (
+                                        <span key={s} className="w-full flex-1 rounded-[1px]"
+                                            style={{ background: s / 8 < v ? (s >= 6 ? '#fbbf24' : '#34d399') : '#262b47' }} />
+                                    ))}
+                                </span>
+                                <input type="range" min="0" max="100" value={Math.round(v * 100)}
+                                    aria-label={`${label} fader`}
+                                    onChange={(e) => onChange({ ...mix, [key]: Number(e.target.value) / 100 })}
+                                    onPointerUp={onDone}
+                                    className="dj-fader absolute left-1/2 top-1/2 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-90 cursor-pointer" />
+                            </span>
+                            <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[#8f96c0]">{label}</span>
+                        </label>
+                    );
+                })}
             </div>
         </div>
     );
@@ -2125,10 +2200,12 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             {breakDue && zen && (
                 <EyesBreak onDone={() => { sceneStart.current = Date.now(); setBreakDue(false); inputRef.current?.focus(); }} />
             )}
-            {zen && (
-                <div className={`pointer-events-none fixed inset-x-0 top-6 z-[71] text-center text-xs font-bold uppercase tracking-widest text-text-dim transition-opacity duration-700 ${scene !== 'party' && !stalled && !notice && !paraDone ? 'opacity-0' : 'opacity-100'}`}>
+            {/* Focus and Trance carry NO text but the words themselves — no
+                status, no instructions. Party keeps its HUD; it's a party. */}
+            {zen && scene === 'party' && (
+                <div className="pointer-events-none fixed inset-x-0 top-6 z-[71] text-center text-xs font-bold uppercase tracking-widest text-[#aab1d6]">
                     {para.label} · {pIndex + 1}/{paras.length} ·{' '}
-                    <span className={`tabular-nums ${accuracy >= 90 ? 'text-text-primary' : VERDICT_CLASS[accuracyVerdict(accuracy)]}`}>{accuracy}%</span>
+                    <span className={`tabular-nums ${accuracy >= 90 ? 'text-[#eef0ff]' : VERDICT_CLASS[accuracyVerdict(accuracy)]}`}>{accuracy}%</span>
                     {slips > 0 && <span className="ml-2 text-text-warning tabular-nums">{slips}× restarted</span>}
                     {notice && (
                         <span key={notice.text} role="status"
@@ -2329,8 +2406,8 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                 </div>
             )}
 
-            {zen && (
-                <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[71] text-center text-[11px] font-medium text-text-dim">
+            {zen && scene === 'party' && (
+                <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[71] text-center text-[11px] font-medium text-[#aab1d6]">
                     {peekLevel === 2 && (
                         <p className="mb-1 font-bold text-text-warning">Reading the answer — it hides again when you carry on</p>
                     )}

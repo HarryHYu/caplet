@@ -1090,6 +1090,53 @@ html.cursor-on [contenteditable='true'] { cursor: text !important; }
   line-height: 1.4;
 }
 
+/* The Party DJ deck's faders: hardware, not browser defaults. The input is
+   rotated -90° in markup, so the "horizontal" track runs vertically. */
+.dj-fader {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 24px;
+  background: transparent;
+}
+.dj-fader:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.dj-fader::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: transparent; /* the groove is drawn by the panel */
+}
+.dj-fader::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 26px;
+  margin-top: -11px;
+  border-radius: 3px;
+  border: 1px solid #0c0e1c;
+  background:
+    linear-gradient(90deg, transparent 0 6px, #12141f 6px 9px, transparent 9px 100%),
+    linear-gradient(180deg, #e8eaf6 0%, #a9b0d2 45%, #565d85 52%, #868dad 100%);
+  box-shadow: 0 2px 5px #000c;
+  cursor: grab;
+}
+.dj-fader::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: transparent;
+}
+.dj-fader::-moz-range-thumb {
+  width: 15px;
+  height: 26px;
+  border-radius: 3px;
+  border: 1px solid #0c0e1c;
+  background:
+    linear-gradient(90deg, transparent 0 6px, #12141f 6px 9px, transparent 9px 100%),
+    linear-gradient(180deg, #e8eaf6 0%, #a9b0d2 45%, #565d85 52%, #868dad 100%);
+  box-shadow: 0 2px 5px #000c;
+  cursor: grab;
+}
+
 /*
  * Writing surfaces
  * ----------------

@@ -103,10 +103,14 @@ export default {
         'shake-x': 'shake-x 0.3s ease-in-out',
         'streak-pop': 'streak-pop 0.25s ease-out both',
         'caret-blink': 'caret-blink 1.1s ease-in-out infinite',
-        // Scene animations. Party's beam wheels turn a full circle in 26/34s
-        // (~14/11 deg/s) — under the ≤15°/s fullscreen-rotation safety cap.
-        'party-beams': 'hypno-spin 26s linear infinite',
-        'party-beams-rev': 'hypno-spin 34s linear infinite reverse',
+        // Scene animations. The orbit (mirror-ball reflections circling the
+        // room) stays under the ≤15°/s rotation cap via its 24s duration
+        // floor; lens blinks and beam fades run ≥1.6s / ≥2.8s cycles.
+        'party-orbit': 'hypno-spin 44s linear infinite',
+        'party-lens': 'party-lens 4.2s ease-in-out infinite',
+        'party-beamfade': 'party-beamfade 6.5s ease-in-out infinite',
+        'party-rock': 'party-rock 7.5s ease-in-out infinite',
+        'party-rock-rev': 'party-rock 9.5s ease-in-out infinite reverse',
         'party-twinkle': 'party-twinkle 2.6s ease-in-out infinite',
         'party-confetti': 'party-confetti 13s linear infinite',
         'party-ball': 'party-ball 14s linear infinite',
@@ -189,6 +193,21 @@ export default {
         'party-twinkle': {
           '0%, 100%': { opacity: '0.15', transform: 'scale(0.8)' },
           '50%': { opacity: '0.7', transform: 'scale(1.25)' },
+        },
+        // A PAR can's lens: a punchy blink, but the lens is a dot — far
+        // under the flash area threshold — and every can is staggered.
+        'party-lens': {
+          '0%, 100%': { opacity: '0.25' },
+          '10%': { opacity: '1' },
+          '32%': { opacity: '0.35' },
+        },
+        'party-beamfade': {
+          '0%, 100%': { opacity: '0.22' },
+          '50%': { opacity: '0.85' },
+        },
+        'party-rock': {
+          '0%, 100%': { transform: 'rotate(-16deg)' },
+          '50%': { transform: 'rotate(16deg)' },
         },
         'party-confetti': {
           '0%': { transform: 'translateY(-12vh) rotate(0deg)' },
