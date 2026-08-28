@@ -300,8 +300,9 @@ describe('EssayMemoriser', () => {
       });
       renderAt('/essays/essay-1?tab=practice&mode=letters&scope=intro');
       await screen.findByRole('application', { name: /Memorise — first letters/i });
+      fireEvent.click(screen.getByRole('button', { name: 'Sentence' }));
 
-      // A wrong first letter slips (default sentence policy) and reveals.
+      // A wrong first letter slips (sentence policy) and reveals.
       press('x');
       expect(sprint()).toHaveAttribute('data-revealed', 'true');
 
@@ -322,6 +323,7 @@ describe('EssayMemoriser', () => {
       api.getEssay.mockResolvedValue({ essay: parsedEssay });
       renderAt('/essays/essay-1?tab=practice&mode=wordbyword&scope=intro');
       await screen.findByRole('application', { name: /Memorise — full words/i });
+      fireEvent.click(screen.getByRole('button', { name: 'Sentence' }));
       const field = screen.getByLabelText(/Type the next word/i);
       const commit = (w) => {
         fireEvent.change(field, { target: { value: w } });
@@ -388,6 +390,7 @@ describe('EssayMemoriser', () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
       await screen.findByRole('application', { name: /Memorise — full words/i });
+      fireEvent.click(screen.getByRole('button', { name: 'Sentence' }));
 
       // "Conrad's" typed lowercase, no apostrophe, letters transposed → in.
       typeWord('conrdas');
@@ -536,6 +539,7 @@ describe('EssayMemoriser', () => {
       });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
       await screen.findByRole('application', { name: /Memorise — full words/i });
+      fireEvent.click(screen.getByRole('button', { name: 'Sentence' }));
 
       // Four words in — past the quote, still inside sentence one.
       ['he', 'cites', 'stop.', 'go."'].forEach(typeWord);
@@ -555,6 +559,7 @@ describe('EssayMemoriser', () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
       await screen.findByRole('application', { name: /Memorise — full words/i });
+      fireEvent.click(screen.getByRole('button', { name: 'Sentence' }));
       expect(stream()).not.toHaveAttribute('data-revealed');
 
       // Death lays the passage bare and marks the word that killed the pass.
@@ -579,6 +584,89 @@ describe('EssayMemoriser', () => {
       expect(answered()).toBe(0);
       typeWord('conrads');
       expect(answered()).toBe(1);
+    });
+  });
+
+  describe('Memorise — Fix & go (the default) and the scenes', () => {
+    const stream = () => screen.getByRole('application', { name: /Memorise — full words/i });
+    const answered = () => stream().querySelectorAll('.animate-pop').length;
+    const typeWord = (w) => {
+      const input = screen.getByLabelText(/Type the next word/i);
+      fireEvent.change(input, { target: { value: w } });
+      fireEvent.keyDown(input, { key: ' ' });
+    };
+    const conradEssay = () => ({
+      ...parsedEssay,
+      parsedStructure: {
+        ...parsedEssay.parsedStructure,
+        introduction: "Conrad's vision endures. Ambition corrupts entirely.",
+      },
+    });
+
+    it('a wrong word shows the answer, takes the retype, and never restarts', async () => {
+      api.getEssay.mockResolvedValue({ essay: conradEssay() });
+      renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+      await screen.findByRole('application', { name: /Memorise — full words/i });
+
+      // Wrong word: calm corrective feedback — the answer appears at the
+      // centre, nothing rewinds, nothing is laid bare.
+      typeWord('vision');
+      expect(answered()).toBe(0);
+      expect(screen.getByRole('status')).toHaveTextContent(/Read it, then type it back/i);
+      expect(screen.getByLabelText(/Conrad's — type it back/i)).toBeInTheDocument();
+      expect(stream()).not.toHaveAttribute('data-revealed');
+      expect(screen.queryByText(/restarted/i)).not.toBeInTheDocument();
+
+      // Typing it back moves on, recorded as the original wrong attempt.
+      typeWord('conrads');
+      expect(answered()).toBe(1);
+      expect(screen.getByTitle(/You typed “vision”/)).toBeInTheDocument();
+
+      // And the rest of the run continues normally.
+      typeWord('vision');
+      expect(answered()).toBe(2);
+    });
+
+    it('first letters: a wrong press reveals the word and waits for the right letter', async () => {
+      api.getEssay.mockResolvedValue({ essay: conradEssay() });
+      renderAt('/essays/essay-1?tab=practice&mode=letters&scope=intro');
+      const sprint = await screen.findByRole('application', { name: /Memorise — first letters/i });
+      const press = (key) => fireEvent.keyDown(screen.getByLabelText(/Type the first letter/i), { key });
+
+      press('x');
+      // No advance, no passage reveal, no restart — just the word, revealed.
+      expect(sprint.querySelectorAll('.animate-pop').length).toBe(0);
+      expect(sprint).not.toHaveAttribute('data-revealed');
+      expect(screen.queryByText(/restarted/i)).not.toBeInTheDocument();
+
+      press('c');
+      expect(sprint.querySelectorAll('.animate-pop').length).toBe(1);
+    });
+
+    it('Focus and Party take the screen, Party pops confetti per word, Esc leaves', async () => {
+      api.getEssay.mockResolvedValue({ essay: conradEssay() });
+      renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+      await screen.findByRole('application', { name: /Memorise — full words/i });
+
+      // Focus: the word dial owns the screen and the entry ritual plays.
+      fireEvent.click(screen.getByRole('button', { name: /^Focus$/ }));
+      expect(screen.getByRole('button', { name: /^Focus$/ })).toHaveAttribute('aria-pressed', 'true');
+      expect(stream().classList.contains('trance-stream')).toBe(true);
+      expect(screen.getByText(/Everything but the next word is gone/i)).toBeInTheDocument();
+
+      // Esc ends the scene.
+      fireEvent.keyDown(screen.getByLabelText(/Type the next word/i), { key: 'Escape' });
+      expect(screen.getByRole('button', { name: /^Focus$/ })).toHaveAttribute('aria-pressed', 'false');
+      expect(stream().classList.contains('trance-stream')).toBe(false);
+
+      // Party: every landed word earns a confetti burst.
+      fireEvent.click(screen.getByRole('button', { name: /^Party$/ }));
+      expect(screen.getByRole('button', { name: /^Party$/ })).toHaveAttribute('aria-pressed', 'true');
+      expect(document.querySelectorAll('.animate-party-burst').length).toBe(0);
+      typeWord('conrads');
+      expect(document.querySelectorAll('.animate-party-burst').length).toBe(10);
+      fireEvent.keyDown(screen.getByLabelText(/Type the next word/i), { key: 'Escape' });
+      expect(screen.getByRole('button', { name: /^Party$/ })).toHaveAttribute('aria-pressed', 'false');
     });
   });
 
@@ -888,7 +976,7 @@ describe('EssayMemoriser', () => {
       'essayParagraph',
       'essay-hints:0',
       'pass',
-      { mode: 'word_by_word', policy: 'sentence', accuracy: 94, hintCount: 2, restarts: 0 },
+      { mode: 'word_by_word', policy: 'retype', accuracy: 94, hintCount: 2, restarts: 0 },
     );
   });
 });

@@ -103,16 +103,17 @@ export default {
         'shake-x': 'shake-x 0.3s ease-in-out',
         'streak-pop': 'streak-pop 0.25s ease-out both',
         'caret-blink': 'caret-blink 1.1s ease-in-out infinite',
-        hypno: 'hypno-spin 9s linear infinite',
-        'hypno-rev': 'hypno-spin 9s linear infinite reverse',
-        'hypno-slow': 'hypno-spin 5s linear infinite',
-        'hypno-slow-rev': 'hypno-spin 7s linear infinite reverse',
-        'hypno-rays': 'hypno-spin 7s linear infinite',
-        'hypno-rays-rev': 'hypno-spin 10s linear infinite reverse',
-        'hypno-zoom': 'hypno-zoom 6s linear infinite',
-        'hypno-breathe': 'hypno-breathe 3s ease-in-out infinite',
-        'hypno-flash': 'hypno-flash 0.4s linear infinite',
-        'hypno-tunnel': 'hypno-tunnel 4.8s linear infinite',
+        // Scene animations. Party's beam wheels turn a full circle in 26/34s
+        // (~14/11 deg/s) — under the ≤15°/s fullscreen-rotation safety cap.
+        'party-beams': 'hypno-spin 26s linear infinite',
+        'party-beams-rev': 'hypno-spin 34s linear infinite reverse',
+        'party-twinkle': 'party-twinkle 2.6s ease-in-out infinite',
+        'party-confetti': 'party-confetti 13s linear infinite',
+        'party-ball': 'party-ball 14s linear infinite',
+        'party-drop': 'party-drop 0.9s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'party-burst': 'party-burst 0.7s ease-out both',
+        'scene-veil': 'scene-veil 5.2s ease-in-out both',
+        'scene-veil-line': 'scene-veil-line 5.2s ease-in-out both',
         'bar-fill': 'bar-fill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
         shimmer: 'shimmer 1.6s linear infinite',
       },
@@ -185,26 +186,41 @@ export default {
         'hypno-spin': {
           to: { transform: 'rotate(360deg)' },
         },
-        'hypno-breathe': {
-          '0%, 100%': { opacity: '0.6' },
-          '50%': { opacity: '1' },
+        'party-twinkle': {
+          '0%, 100%': { opacity: '0.15', transform: 'scale(0.8)' },
+          '50%': { opacity: '0.7', transform: 'scale(1.25)' },
         },
-        'hypno-flash': {
-          '0%, 100%': { opacity: '0' },
-          '50%': { opacity: '0.7' },
+        'party-confetti': {
+          '0%': { transform: 'translateY(-12vh) rotate(0deg)' },
+          '100%': { transform: 'translateY(112vh) rotate(520deg)' },
         },
-        // A ring born huge and offscreen, swallowed by the centre — a few of
-        // these evenly staggered read as an endless tunnel falling inward.
-        // Duration must equal ring count x their stagger for a seamless loop.
-        'hypno-tunnel': {
-          '0%': { transform: 'scale(1.6)', opacity: '0' },
-          '18%': { opacity: '0.45' },
-          '100%': { transform: 'scale(0.02)', opacity: '0' },
+        // Facet strip is 3x the ball and the pattern repeats every third, so
+        // sliding one third loops seamlessly.
+        'party-ball': {
+          to: { transform: 'translateX(33.333%)' },
         },
-        'hypno-zoom': {
-          '0%': { transform: 'rotate(0deg) scale(1)' },
-          '50%': { transform: 'rotate(180deg) scale(1.18)' },
-          '100%': { transform: 'rotate(360deg) scale(1)' },
+        'party-drop': {
+          '0%': { transform: 'translateY(-16vh)' },
+          '62%': { transform: 'translateY(1.2vh)' },
+          '82%': { transform: 'translateY(-0.6vh)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+        'party-burst': {
+          '0%': { transform: 'translate(0, 0) scale(1)', opacity: '1' },
+          '100%': { transform: 'translate(var(--bx), var(--by)) scale(0.4)', opacity: '0' },
+        },
+        // The Focus entry ritual: a veil that holds, then lifts — identical
+        // every time, because constancy is what makes a ritual a cue.
+        'scene-veil': {
+          '0%': { opacity: '1' },
+          '55%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        'scene-veil-line': {
+          '0%': { opacity: '0' },
+          '16%': { opacity: '1' },
+          '66%': { opacity: '1' },
+          '100%': { opacity: '0' },
         },
         'bar-fill': {
           '0%': { transform: 'scaleX(0)' },

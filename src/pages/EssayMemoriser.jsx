@@ -48,6 +48,7 @@ import {
     ArrowsUpDownIcon,
     RocketLaunchIcon,
     Squares2X2Icon,
+    ViewfinderCircleIcon,
 } from '@heroicons/react/24/outline';
 
 // ── Cycling messages during AI parsing ─────────────────────────────────────
@@ -986,7 +987,12 @@ const MEMORISE_UNITS = [
     { key: 'letters', label: 'First letters' },
 ];
 
+// 'retype' is the research-backed default: a wrong word shows you the answer,
+// you type it back, you carry on — corrective feedback instead of punishment,
+// and no over-training of paragraph openings. The restart ladder survives as
+// deliberate hard modes.
 const MISTAKE_POLICIES = [
+    { key: 'retype', label: 'Fix & go' },
     { key: 'none', label: 'Just marks it' },
     { key: 'sentence', label: 'Sentence' },
     { key: 'paragraph', label: 'Paragraph' },
@@ -1028,165 +1034,191 @@ const Kbd = ({ children }) => (
     <kbd className="rounded bg-surface-soft px-1 py-0.5 font-mono text-[10px]">{children}</kbd>
 );
 
-// ── Trance — a spinning b/w spiral flanks the stream, and you just type ─────
+// ── The scenes — Focus (a still room) and Party (a disco) ───────────────────
 //
-// Classic compass spiral: 180° arcs whose radius grows by one unit each half
-// turn, stroked at half the pitch so ring and gap read evenly. currentColor
-// ink on the raised surface keeps it black-and-white in every palette, and
-// the site-wide reduced-motion rule freezes the spin automatically.
-function HypnoSpiral({ reverse = false, className = '', spinClass = null, bare = false }) {
+// Both are fullscreen backdrops behind the word dial, built to the safety and
+// learning constraints from the trance research dossier. The hard rules,
+// compiled in rather than configurable:
+//  - NO large-area luminance rhythm at any rate (nothing approaching the
+//    WCAG "flash" definition of a ≥10% relative-luminance swing over a
+//    significant area — the only per-commit accents are tiny-area particles);
+//  - no oscillating/counterphase pattern anywhere, and no moving layer above
+//    ~0.25 Michelson contrast (Focus sits near 0.03, Party's beams ~0.1);
+//  - fullscreen rotation ≤ ~15°/s (Party's beams: ~14°/s), no zoom pulse;
+//  - no saturated red, ever;
+//  - the bright iris under the words is static and never animates opacity —
+//    a breathing backdrop right behind letters reads as text flicker.
+// The site-wide reduced-motion rule freezes every CSS animation, so under
+// prefers-reduced-motion both scenes are simply still images.
+
+/**
+ * FOCUS — the fade-out chamber. Deliberately, provably boring: a static,
+ * heavily blurred texture at ~3% contrast around a bright iris. Under steady
+ * fixation on the centre word, stationary low-contrast peripheral texture
+ * genuinely dissolves from perception within tens of seconds (Troxler
+ * fading) — the room melts away for free, which no amount of animation can
+ * do, because motion is exactly what prevents the fade. When the student
+ * stalls mid-retrieval (working memory straining — the moment peripheral
+ * intrusion costs most) the texture dims further out of the way.
+ */
+function FocusField({ dimmed }) {
+    const soft = (pct) => `color-mix(in srgb, var(--text-primary) ${pct}%, transparent)`;
     return (
-        <svg viewBox="-21 -21 42 42" aria-hidden="true"
-            className={`pointer-events-none select-none ${spinClass || (reverse ? 'animate-hypno-rev' : 'animate-hypno')} ${className}`}>
-            {!bare && <circle r="20" fill="var(--surface-raised)" stroke="var(--line-soft)" strokeWidth="0.4" />}
-            <path
-                d="M 0 0 a 1 1 0 0 1 2 0 a 2 2 0 0 1 -4 0 a 3 3 0 0 1 6 0 a 4 4 0 0 1 -8 0 a 5 5 0 0 1 10 0 a 6 6 0 0 1 -12 0 a 7 7 0 0 1 14 0 a 8 8 0 0 1 -16 0 a 9 9 0 0 1 18 0"
-                fill="none" stroke="var(--text-primary)" strokeWidth="1.1" strokeLinecap="round" />
-        </svg>
+        <>
+            <div aria-hidden="true"
+                className={`pointer-events-none fixed inset-0 z-[60] transition-opacity duration-700 ${dimmed ? 'opacity-30' : 'opacity-100'}`}
+                style={{
+                    background: [
+                        `radial-gradient(circle at 50% 50%, transparent 0 30%, ${soft(4)} 46%, transparent 62%)`,
+                        `radial-gradient(circle at 50% 50%, transparent 0 64%, ${soft(5)} 82%, transparent 100%)`,
+                        `radial-gradient(ellipse 60% 50% at 16% 84%, ${soft(3)} 0 30%, transparent 62%)`,
+                        `radial-gradient(ellipse 55% 45% at 86% 12%, ${soft(3)} 0 26%, transparent 58%)`,
+                    ].join(', '),
+                }} />
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61]"
+                style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 11rem, transparent 24rem)' }} />
+        </>
     );
 }
 
-// Pre-rendered sprite artwork for the trance canvas. Each is drawn ONCE into
-// an offscreen canvas; the frame loop only blits them with rotation/scale, so
-// the illusion can be as dense as we like without per-frame paint cost.
+// Party colours: violet / cyan / amber / green / blue — deliberately NO red
+// (saturated red is its own photosensitivity hazard class) and used at low
+// alpha so the luminance swing under any beam stays small.
+const PARTY_HUES = ['#8b5cf6', '#22d3ee', '#fbbf24', '#34d399', '#60a5fa'];
 
-/** Alternating-band Archimedean spiral — the classic hypno wheel. */
-function makeSpiralSprite(size, arms, turns, ink) {
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const g = c.getContext('2d');
-    if (!g) return c;
-    g.translate(size / 2, size / 2);
-    g.fillStyle = ink;
-    const total = turns * 2 * Math.PI;
-    const maxR = size / 2;
-    const band = Math.PI / arms; // ink and gap bands share each arm's pitch
-    for (let a = 0; a < arms; a++) {
-        const phase = (a / arms) * 2 * Math.PI;
-        g.beginPath();
-        for (let th = 0; th <= total; th += 0.06) {
-            const r = (th / total) * maxR;
-            const x = Math.cos(th + phase) * r;
-            const y = Math.sin(th + phase) * r;
-            if (th === 0) g.moveTo(x, y); else g.lineTo(x, y);
-        }
-        for (let th = total; th >= 0; th -= 0.06) {
-            const r = (th / total) * maxR;
-            g.lineTo(Math.cos(th + phase + band) * r, Math.sin(th + phase + band) * r);
-        }
-        g.closePath();
-        g.fill();
-    }
-    return c;
-}
+const partyBeamGradient = (alpha, from) => {
+    // Wedges at i*72°+from; stops must ascend, so `from` stays small enough
+    // that the last wedge's tail (from+338°) never exceeds a full turn.
+    const stops = PARTY_HUES.map((hue, i) => {
+        const a = i * 72 + from;
+        return `transparent ${a}deg, ${hue}${alpha} ${a + 14}deg ${a + 34}deg, transparent ${a + 50}deg`;
+    });
+    return `conic-gradient(from 0deg at 50% 50%, ${stops.join(', ')})`;
+};
 
-/** Sector wheel — spokes for the counter-rotation moiré. */
-function makeRaySprite(size, spokes, ink) {
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const g = c.getContext('2d');
-    if (!g) return c;
-    g.translate(size / 2, size / 2);
-    g.fillStyle = ink;
-    const step = (2 * Math.PI) / spokes;
-    for (let i = 0; i < spokes; i++) {
-        g.beginPath();
-        g.moveTo(0, 0);
-        g.arc(0, 0, size / 2, i * step, i * step + step / 2);
-        g.closePath();
-        g.fill();
-    }
-    return c;
+/**
+ * PARTY — a disco, not a strobe. The ball hangs top-centre shedding soft
+ * colour beams that sweep the room at ~14°/s; glitter twinkles on staggered
+ * clocks; confetti drifts down slowly. Every layer is low-contrast, soft-
+ * edged and slow, so the composite has ZERO events that meet the flash
+ * definition — the fun is colour, sway and the confetti you earn per word,
+ * not luminance banging. (Per-commit bursts live with the dial, not here.)
+ */
+function PartyField({ dimmed }) {
+    return (
+        <>
+            {/* Room glow: static colour wash pooling in the corners. */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60]"
+                style={{
+                    background: [
+                        'radial-gradient(ellipse 70% 55% at 12% 8%, #8b5cf614 0 40%, transparent 70%)',
+                        'radial-gradient(ellipse 70% 55% at 88% 10%, #22d3ee12 0 40%, transparent 70%)',
+                        'radial-gradient(ellipse 90% 60% at 50% 102%, #fbbf2412 0 44%, transparent 74%)',
+                    ].join(', '),
+                }} />
+            {/* Beams from the ball, two wheels counter-sweeping slowly. */}
+            <div aria-hidden="true" className={`pointer-events-none fixed inset-0 z-[60] overflow-hidden transition-opacity duration-700 ${dimmed ? 'opacity-40' : 'opacity-100'}`}>
+                <div className="absolute left-1/2 top-[11vh] -ml-[110vmax] -mt-[110vmax] h-[220vmax] w-[220vmax] animate-party-beams"
+                    style={{ background: partyBeamGradient('29', 6) }} />
+                <div className="absolute left-1/2 top-[11vh] -ml-[110vmax] -mt-[110vmax] h-[220vmax] w-[220vmax] animate-party-beams-rev"
+                    style={{ background: partyBeamGradient('1c', 20) }} />
+            </div>
+            {/* Glitter: tiny staggered twinkles — each a dot, never in sync. */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60]">
+                {Array.from({ length: 14 }, (_, k) => (
+                    <span key={k}
+                        className="absolute h-1 w-1 rounded-full animate-party-twinkle"
+                        style={{
+                            left: `${(k * 137) % 97 + 1.5}%`,
+                            top: `${(k * 61) % 88 + 4}%`,
+                            background: PARTY_HUES[k % PARTY_HUES.length],
+                            animationDelay: `${-(k * 0.53) % 2.6}s`,
+                        }} />
+                ))}
+            </div>
+            {/* Confetti drifting down, slow and sparse. */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
+                {Array.from({ length: 16 }, (_, k) => (
+                    <span key={k}
+                        className="absolute top-0 h-1.5 w-2.5 rounded-[2px] animate-party-confetti"
+                        style={{
+                            left: `${(k * 89) % 98 + 1}%`,
+                            background: PARTY_HUES[(k * 3 + 1) % PARTY_HUES.length],
+                            opacity: 0.55,
+                            animationDuration: `${11 + (k % 5) * 1.7}s`,
+                            animationDelay: `${-((k * 1.9) % 12)}s`,
+                        }} />
+                ))}
+            </div>
+            {/* The ball: facets slide sideways inside a shaded sphere. */}
+            <div aria-hidden="true" className="pointer-events-none fixed left-1/2 top-0 z-[62] -ml-10">
+                <div className="mx-auto h-[4.5vh] w-px bg-[color:var(--line-soft)]" />
+                <div className="relative h-20 w-20 overflow-hidden rounded-full animate-party-drop shadow-card">
+                    <div className="absolute inset-y-0 -left-full w-[300%] animate-party-ball"
+                        style={{ background: 'repeating-linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 16%, var(--surface-raised)) 0 10px, var(--surface-raised) 10px 20px)' }} />
+                    <div className="absolute inset-0"
+                        style={{ background: 'repeating-linear-gradient(0deg, color-mix(in srgb, var(--text-primary) 12%, transparent) 0 1.5px, transparent 1.5px 13px)' }} />
+                    <div className="absolute inset-0 rounded-full"
+                        style={{ background: 'radial-gradient(circle at 34% 30%, #ffffff59 0 18%, transparent 55%), radial-gradient(circle at 50% 50%, transparent 55%, #00000033 100%)' }} />
+                </div>
+            </div>
+            {/* The iris the dial rides on — same still core as Focus. */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61]"
+                style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 11rem, transparent 24rem)' }} />
+        </>
+    );
 }
 
 /**
- * The full-page trance field. The moving artwork is ONE canvas: spiral and
- * ray sprites are pre-rendered offscreen, and every frame is just four
- * rotated/scaled blits — far cheaper than a stack of animated CSS layers,
- * which is what let the swirl come back without the lag. On top of it, in
- * CSS where they stay auditable and dead simple:
- *  - the pulse layer, at 2.5 flashes/sec — the ceiling under the
- *    photosensitivity limit; this ships to every student, not just the one
- *    who asked — and
- *  - the iris: a STATIC bright core the word dial rides on. Nothing under
- *    or over the letters animates opacity (a breathing backdrop reads as
- *    text flicker), and its long fade veils the field around the eye.
- * prefers-reduced-motion gets a single still frame.
+ * One confetti pop at the centre — earned per committed word, so it is
+ * task-locked feedback (self-generated events don't grab attention the way
+ * free-running motion does). Ten tiny particles, deterministic spread from
+ * the commit count, gone in 700ms. Remounted via key to replay.
  */
-function TranceField() {
-    const canvasRef = useRef(null);
+function ConfettiBurst({ seed }) {
+    return (
+        <div aria-hidden="true" className="pointer-events-none fixed left-1/2 top-1/2 z-[72]">
+            {Array.from({ length: 10 }, (_, k) => {
+                const ang = (k / 10) * Math.PI * 2 + (seed % 7) * 0.4;
+                const dist = 58 + ((seed * 13 + k * 29) % 42);
+                return (
+                    <span key={k} className="absolute h-1.5 w-1.5 rounded-full animate-party-burst"
+                        style={{
+                            background: PARTY_HUES[(k + seed) % PARTY_HUES.length],
+                            '--bx': `${Math.round(Math.cos(ang) * dist)}px`,
+                            '--by': `${Math.round(Math.sin(ang) * dist * 0.7) - 22}px`,
+                        }} />
+                );
+            })}
+        </div>
+    );
+}
+
+/**
+ * The 18-minute eyes break. The remedy is distance focus and blinking, not
+ * a dimmer screen — prolonged central fixation suppresses blink rate, so the
+ * copy sends the eyes across the room (20-20-20 style); the overlay is just
+ * the enforcement.
+ */
+function EyesBreak({ onDone }) {
+    const [left, setLeft] = useState(45);
     useEffect(() => {
-        const canvas = canvasRef.current;
-        const ctx = canvas?.getContext?.('2d');
-        if (!ctx) return undefined; // jsdom / very old browsers: keep the iris + flash only
-        const css = getComputedStyle(document.documentElement);
-        const ink = (css.getPropertyValue('--text-primary') || '#2b2620').trim();
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        let w = 0; let h = 0; let D = 0; let sprites = null;
-        const fit = () => {
-            w = window.innerWidth; h = window.innerHeight;
-            canvas.width = Math.round(w * dpr);
-            canvas.height = Math.round(h * dpr);
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            // Draw size D keeps the corners covered even at the pulse's
-            // smallest scale; the sprite's own resolution is capped
-            // separately — a moving illusion survives a little softness.
-            D = Math.ceil(Math.hypot(w, h) * 1.6);
-            const side = Math.min(D, 2048);
-            sprites = {
-                spiral: makeSpiralSprite(side, 4, 5, ink),
-                rays: makeRaySprite(side, 36, ink),
-            };
-        };
-        fit();
-        const blit = (sprite, rot, scale, alpha) => {
-            ctx.save();
-            ctx.globalAlpha = alpha;
-            ctx.translate(w / 2, h / 2);
-            ctx.rotate(rot);
-            ctx.scale(scale, scale);
-            ctx.drawImage(sprite, -D / 2, -D / 2, D, D);
-            ctx.restore();
-        };
-        const frame = (t) => {
-            ctx.clearRect(0, 0, w, h);
-            // Counter-rotating spoke wheels: the moiré between them shimmers
-            // far harder than either wheel actually moves.
-            blit(sprites.rays, t * 0.4, 1, 0.26);
-            blit(sprites.rays, -t * 0.26, 1.02, 0.2);
-            // The swirl: a fast spiral breathing in and out, and a slower
-            // counter-spiral underneath so the two interfere.
-            const pulse = 1 + 0.12 * Math.sin(t * 0.9);
-            blit(sprites.spiral, -t * 0.9, pulse, 0.4);
-            blit(sprites.spiral, t * 0.45, pulse * 1.4, 0.16);
-        };
-        const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-        let raf = 0;
-        if (reduced) {
-            frame(0);
-        } else {
-            const loop = (ms) => { frame(ms / 1000); raf = requestAnimationFrame(loop); };
-            raf = requestAnimationFrame(loop);
-        }
-        const onResize = () => { fit(); if (reduced) frame(0); };
-        window.addEventListener('resize', onResize);
-        return () => {
-            cancelAnimationFrame(raf);
-            window.removeEventListener('resize', onResize);
-        };
+        const iv = setInterval(() => setLeft((s) => Math.max(0, s - 1)), 1000);
+        return () => clearInterval(iv);
     }, []);
     return (
-        <>
-            {/* h-full w-full is load-bearing: a canvas with no CSS size
-                displays at its BITMAP size, and the bitmap is dpr-scaled —
-                on Retina screens that meant a 1.5x canvas hanging off the
-                top-left with the vortex eye at 75%/75% of the viewport. */}
-            <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] h-full w-full" />
-            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] animate-hypno-flash"
-                style={{ background: 'radial-gradient(circle at 50% 50%, transparent 28%, var(--surface-raised) 72%)' }} />
-            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61]"
-                style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 11rem, transparent 26rem)' }} />
-        </>
+        <div className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-4 bg-[color:var(--surface-body)] px-6 text-center">
+            <p className="font-display text-2xl font-extrabold text-text-primary">Eyes off the screen</p>
+            <p className="max-w-sm text-sm leading-relaxed text-text-muted">
+                Look at something far away — across the room, out a window — and blink a few times.
+                Your eyes have been fixed at one distance for a while; the far focus is the actual rest.
+            </p>
+            <p className="font-mono text-4xl font-extrabold tabular-nums text-text-primary">{left}s</p>
+            <button type="button" disabled={left > 0} onClick={onDone}
+                className="focus-ring press rounded-xl border border-line-soft px-4 py-2 text-sm font-bold text-text-primary transition-opacity disabled:opacity-40">
+                Back to it
+            </button>
+        </div>
     );
 }
 
@@ -1210,6 +1242,9 @@ function dialWordStyle(off) {
     return {
         transform: `translate(${Math.round(DIAL_R * Math.sin(rad))}px, ${Math.round(DIAL_R * (1 - Math.cos(rad)))}px) rotate(${deg}deg) scale(${Math.max(0.55, 1 - dist * 0.07)})`,
         opacity: dist === 0 ? 1 : Math.max(0, 1 - dist * 0.22),
+        // Two words out, dial text is crowded-out texture anyway (Bouma) —
+        // blur it into honest texture so sharp-but-unreadable words don't nag.
+        filter: dist >= 2 ? `blur(${Math.min(3, (dist - 1) * 1.1).toFixed(1)}px)` : 'none',
     };
 }
 
@@ -1275,7 +1310,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const letters = unit === 'letters';
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
-    const [policy, setPolicy] = useState('sentence');
+    const [policy, setPolicy] = useState('retype');
     // The tuned ladder: the Nth mistake in a paragraph fires step N; after the
     // last step it starts over. Seeded with the commissioning example.
     const [tuneSteps, setTuneSteps] = useState(['s1', 's2', 'paragraph']);
@@ -1313,11 +1348,25 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     // the end (and on demand) shows exactly what needs another pass.
     const [trouble, setTrouble] = useState(() => new Map());
     const [reviewOpen, setReviewOpen] = useState(false);
-    // Trance: spinning spirals flank the stream and the chrome fades back, so
-    // there is nothing to look at but the words.
-    const [trance, setTrance] = useState(false);
+    // Scenes: 'focus' (the still fade-out chamber) or 'party' (the disco).
+    // Either one owns the whole screen; null is the ordinary card layout.
+    const [scene, setScene] = useState(null);
+    // The entry ritual overlay — identical every time, that's the point.
+    const [sceneIntro, setSceneIntro] = useState(false);
+    // 'retype' policy: the wrong word being fixed — { i, typed }. The answer
+    // stays revealed at the centre until it's typed back correctly.
+    const [fix, setFix] = useState(null);
+    // No keystroke for 2s inside a scene = a retrieval stall: the field dims
+    // out of the way exactly when working memory is straining hardest.
+    const [stalled, setStalled] = useState(false);
+    // After ~18 min in a scene, the 20-20-20 eyes break takes the screen.
+    const [breakDue, setBreakDue] = useState(false);
+    const [burst, setBurst] = useState(0); // party: confetti pop per commit
     const inputRef = useRef(null);
     const currentRef = useRef(null);
+    const stallTimer = useRef(null);
+    const introTimer = useRef(null);
+    const sceneStart = useRef(0);
     const shakeTimer = useRef(null);
     const noticeTimer = useRef(null);
     const holdFired = useRef(false);
@@ -1335,7 +1384,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         setPIndex(0); setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
         setMissCount(0); setCommits(0); setHitCount(0); setSlips(0); setParaDone(false);
         setDone(false); setSaveOk(true); setStreak(0); setDeathAt(null); setPeekLevel(0); setLadderPos(0);
-        setTrouble(new Map()); setReviewOpen(false);
+        setTrouble(new Map()); setReviewOpen(false); setFix(null);
     };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone, fullscreen]);
@@ -1346,13 +1395,15 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         clearTimeout(spaceTapTimer.current);
         clearTimeout(spaceHold1.current);
         clearTimeout(spaceHold2.current);
+        clearTimeout(stallTimer.current);
+        clearTimeout(introTimer.current);
     }, []);
     useEffect(() => {
-        if (trance) return;
+        if (scene) return;
         if (typeof currentRef.current?.scrollIntoView === 'function') {
             currentRef.current.scrollIntoView({ block: 'nearest' });
         }
-    }, [wordIdx, paraDone, trance]);
+    }, [wordIdx, paraDone, scene]);
     useEffect(() => {
         if (!menuOpen) return undefined;
         const handler = (e) => { if (!menuRef.current?.contains(e.target)) setMenuOpen(false); };
@@ -1360,16 +1411,31 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         return () => document.removeEventListener('mousedown', handler);
     }, [menuOpen]);
     useEffect(() => { if (!fullscreen) setMenuOpen(false); }, [fullscreen]);
-    // Trance rides fullscreen: it enters it on toggle, and Esc (or the exit
+    // Scenes ride fullscreen: entering one enters it, and Esc (or the exit
     // button) ends both together. Where fullscreen is unsupported or denied,
-    // the field simply runs inline instead.
-    useEffect(() => { if (!fullscreen) setTrance(false); }, [fullscreen]);
-    // The workspace hides its own chrome (brand bar) while the vortex owns
-    // the screen.
+    // the scene simply runs inline instead.
+    useEffect(() => { if (!fullscreen) setScene(null); }, [fullscreen]);
+    // The workspace hides its own chrome (brand bar) while a scene owns the
+    // screen.
     useEffect(() => {
-        onTranceChange?.(trance);
+        onTranceChange?.(!!scene);
         return () => onTranceChange?.(false);
-    }, [trance, onTranceChange]);
+    }, [scene, onTranceChange]);
+    // Stall watch: arm on scene entry, re-armed by every keystroke (onKey).
+    useEffect(() => {
+        if (!scene) { setStalled(false); clearTimeout(stallTimer.current); return undefined; }
+        clearTimeout(stallTimer.current);
+        stallTimer.current = setTimeout(() => setStalled(true), 2000);
+        return () => clearTimeout(stallTimer.current);
+    }, [scene]);
+    // The eyes-break clock — checked coarsely; precision is pointless here.
+    useEffect(() => {
+        if (!scene) { setBreakDue(false); return undefined; }
+        const iv = setInterval(() => {
+            if (Date.now() - sceneStart.current > 18 * 60 * 1000) setBreakDue(true);
+        }, 30000);
+        return () => clearInterval(iv);
+    }, [scene]);
 
     if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) {
@@ -1390,9 +1456,38 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const rawAccuracy = commits ? Math.round((hitCount / commits) * 100) : 100;
     const accuracy = Math.max(0, Math.min(100, rawAccuracy - (peekedWords.size * 3)));
 
-    // Trance is its own scene: nothing on screen but the vortex, the words,
+    // A scene is its own world: nothing on screen but the field, the words,
     // one status line and the way out. The full UI returns at the grade card.
-    const zen = trance && !paraDone;
+    const zen = !!scene && !paraDone;
+
+    const enterScene = (kind) => {
+        const next = scene === kind ? null : kind;
+        setScene(next);
+        setSceneIntro(false);
+        clearTimeout(introTimer.current);
+        if (next) {
+            enterFullscreen?.();
+            sceneStart.current = Date.now();
+            setBreakDue(false);
+            // The ritual: the same veil, the same line, the same length,
+            // every single time — constancy is what makes it a cue.
+            if (next === 'focus') {
+                setSceneIntro(true);
+                introTimer.current = setTimeout(() => setSceneIntro(false), 5200);
+            }
+        } else if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        }
+        inputRef.current?.focus();
+    };
+
+    // Any keystroke inside a scene resets the stall clock.
+    const markActivity = () => {
+        if (!scene) return;
+        setStalled(false);
+        clearTimeout(stallTimer.current);
+        stallTimer.current = setTimeout(() => setStalled(true), 2000);
+    };
 
     const showNotice = (tone, text) => {
         setNotice({ tone, text });
@@ -1410,8 +1505,14 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         setResults((prev) => [...prev, { status, typed }]);
         setCurrent('');
         setMissCount(0);
+        setFix(null);
         if (status === 'wrong' || status === 'hinted') setStreak(0);
-        else setStreak((s) => s + 1);
+        else {
+            setStreak((s) => s + 1);
+            // Party: every landed word earns its confetti pop — task-locked
+            // juice, the one kind of event the capture literature endorses.
+            if (scene === 'party') setBurst((b) => b + 1);
+        }
         if (wordIdx + 1 >= words.length) setParaDone(true);
         else setWordIdx((i) => i + 1);
     };
@@ -1419,6 +1520,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const rewindTo = (rung) => {
         setCurrent('');
         setMissCount(0);
+        setFix(null);
         if (rung === 'paragraph') {
             setWordIdx(0);
             setResults([]);
@@ -1487,12 +1589,28 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         const typed = current.trim();
         if (!typed || paraDone) return;
         const verdict = perfectWordMatch(targetWord, typed, { typos: typoMode === 'typos' });
-        setCommits((c) => c + 1);
+        const fixing = policy === 'retype' && fix?.i === wordIdx;
+        // The retype completion isn't a fresh attempt — the wrong one already
+        // paid; charging a second commit would double-bill the accuracy.
+        if (!fixing) setCommits((c) => c + 1);
         if (verdict.ok) {
-            setHitCount((h) => h + 1);
-            // A punctuation slip is accepted but flagged — only wrong LETTERS
-            // count as the mistake.
-            advanceWord(verdict.punctSlip ? 'punct' : verdict.exact ? 'hit' : 'loose', typed);
+            if (fixing) {
+                advanceWord('wrong', fix.typed);
+            } else {
+                setHitCount((h) => h + 1);
+                // A punctuation slip is accepted but flagged — only wrong
+                // LETTERS count as the mistake.
+                advanceWord(verdict.punctSlip ? 'punct' : verdict.exact ? 'hit' : 'loose', typed);
+            }
+        } else if (policy === 'retype') {
+            // Corrective feedback, not punishment: the answer appears at the
+            // centre, calm and unshaken, and stays until it's typed back.
+            if (!fixing) logTrouble('wrong', typed);
+            setStreak(0);
+            setMissCount((m) => m + 1);
+            setFix({ i: wordIdx, typed: fixing ? fix.typed : typed });
+            setCurrent('');
+            showNotice('error', 'Read it, then type it back');
         } else if (policy === 'none') {
             logTrouble('wrong', typed);
             flashWrong();
@@ -1515,6 +1633,13 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             setCommits((c) => c + 1);
             if (missCount > 0) advanceWord('hinted');
             else { setHitCount((h) => h + 1); advanceWord('hit'); }
+        } else if (policy === 'retype') {
+            // First wrong letter reveals the whole word, calm and unshaken —
+            // read it, then press its letter. No auto-advance: the corrected
+            // keystroke is the point.
+            setStreak(0);
+            if (missCount === 0) logTrouble('wrong', key);
+            setMissCount((m) => m + 1);
         } else if (policy === 'none') {
             setStreak(0);
             flashWrong();
@@ -1564,12 +1689,15 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     };
 
     const onKey = (e) => {
-        // Esc ends the trance (and fullscreen with it). The browser's native
+        markActivity();
+        // Esc ends the scene (and fullscreen with it). The browser's native
         // Esc-exits-fullscreen does most of this on its own; handling it here
         // too covers the inline fallback where fullscreen never engaged.
-        if (e.key === 'Escape' && trance) {
+        if (e.key === 'Escape' && scene) {
             e.preventDefault();
-            setTrance(false);
+            setScene(null);
+            setSceneIntro(false);
+            setBreakDue(false);
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             return;
         }
@@ -1638,7 +1766,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         if (pIndex + 1 < paras.length) {
             setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setResults([]);
             setPeekedWords(new Set()); setMissCount(0); setCommits(0); setHitCount(0); setSlips(0);
-            setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null); setLadderPos(0);
+            setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null); setLadderPos(0); setFix(null);
         } else setDone(true);
     };
 
@@ -1663,7 +1791,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const switchUnit = (next) => {
         if (next === unit) { inputRef.current?.focus(); return; }
         setUnit(next);
-        setWordIdx(0); setResults([]); setCurrent(''); setMissCount(0);
+        setWordIdx(0); setResults([]); setCurrent(''); setMissCount(0); setFix(null);
         setCommits(0); setHitCount(0); setSlips(0); setPeekedWords(new Set());
         setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null); setLadderPos(0);
         inputRef.current?.focus();
@@ -1722,7 +1850,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             <span className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">A mistake</span>
                 <HintToggle options={MISTAKE_POLICIES} value={policy}
-                    onChange={andRefocus((next) => { setPolicy(next); setLadderPos(0); })} />
+                    onChange={andRefocus((next) => { setPolicy(next); setLadderPos(0); setFix(null); setMissCount(0); })} />
             </span>
             {!letters && (
                 <span className="flex items-center gap-2">
@@ -1788,9 +1916,22 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
 
     return (
         <div className={fullscreen ? 'relative mx-auto flex min-h-[76vh] w-full max-w-5xl flex-col justify-center' : 'relative'}>
-            {zen && <TranceField />}
+            {zen && (scene === 'party'
+                ? <PartyField dimmed={peekLevel === 2} />
+                : <FocusField dimmed={stalled || peekLevel === 2} />)}
+            {zen && scene === 'party' && burst > 0 && <ConfettiBurst key={burst} seed={burst} />}
+            {zen && sceneIntro && (
+                <div className="pointer-events-none fixed inset-0 z-[75] animate-scene-veil bg-[color:var(--surface-body)]">
+                    <p className="absolute inset-x-0 top-1/2 -translate-y-1/2 animate-scene-veil-line px-8 text-center font-serif text-2xl italic text-text-muted">
+                        Everything but the next word is gone.
+                    </p>
+                </div>
+            )}
+            {breakDue && zen && (
+                <EyesBreak onDone={() => { sceneStart.current = Date.now(); setBreakDue(false); inputRef.current?.focus(); }} />
+            )}
             {zen && (
-                <div className="pointer-events-none fixed inset-x-0 top-6 z-[71] text-center text-xs font-bold uppercase tracking-widest text-text-dim">
+                <div className={`pointer-events-none fixed inset-x-0 top-6 z-[71] text-center text-xs font-bold uppercase tracking-widest text-text-dim transition-opacity duration-700 ${scene === 'focus' && !stalled && !notice && !paraDone ? 'opacity-0' : 'opacity-100'}`}>
                     {para.label} · {pIndex + 1}/{paras.length} ·{' '}
                     <span className={`tabular-nums ${accuracy >= 90 ? 'text-text-primary' : VERDICT_CLASS[accuracyVerdict(accuracy)]}`}>{accuracy}%</span>
                     {slips > 0 && <span className="ml-2 text-text-warning tabular-nums">{slips}× restarted</span>}
@@ -1848,35 +1989,37 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     )}
                 </div>
             </div>
-            {!fullscreen && !trance && <ProgressBar value={pIndex + (words.length ? results.length / words.length : 0)} total={paras.length} />}
+            {!fullscreen && !scene && <ProgressBar value={pIndex + (words.length ? results.length / words.length : 0)} total={paras.length} />}
 
-            {!fullscreen && !trance && (
+            {!fullscreen && !scene && (
                 <p className="text-xs font-medium leading-relaxed text-text-dim mb-3">
                     {letters
                         ? <>Recall at speed: press the <strong>first letter</strong> of each next word.{' '}</>
                         : <>Type it back from memory — <Kbd>Space</Kbd> commits each word.{' '}</>}
-                    {policy === 'none'
-                        ? <>Wrong {letters ? 'letters reveal the word after two misses' : 'words are marked'} and you move on.</>
-                        : <>Wrong <strong>letters restart {policy === 'tuned' ? 'more each mistake — your tune below' : policy === 'all' ? 'the whole run' : `the ${policy}`}</strong>, revealing the passage so you can re-read it. Punctuation slips warn in amber; capitals, accents, apostrophes and quote marks never count.</>}
+                    {policy === 'retype'
+                        ? <>A wrong {letters ? 'letter' : 'word'} <strong>shows you the answer — type it back</strong> and carry on. Punctuation slips warn in amber; capitals, accents, apostrophes and quote marks never count.</>
+                        : policy === 'none'
+                            ? <>Wrong {letters ? 'letters reveal the word after two misses' : 'words are marked'} and you move on.</>
+                            : <>Wrong <strong>letters restart {policy === 'tuned' ? 'more each mistake — your tune below' : policy === 'all' ? 'the whole run' : `the ${policy}`}</strong>, revealing the passage so you can re-read it. Punctuation slips warn in amber; capitals, accents, apostrophes and quote marks never count.</>}
                     {' '}Empty-handed, tap <Kbd>Space</Kbd> ×3 to restart the sentence — hold it for the paragraph, keep holding for everything.
                     {' '}<Kbd>Tab</Kbd> peeks the word, again for the passage, a third time to hide.{!letters && <> Hold <Kbd>Tab</Kbd> to go fully blind.</>} Peeks trim accuracy.
                 </p>
             )}
-            {!fullscreen && !trance && (
+            {!fullscreen && !scene && (
                 <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-xl border border-line-soft bg-surface-body px-3.5 py-2.5">
                     {settingsGroups}
                 </div>
             )}
-            {!fullscreen && !trance && tuneEditor && <div className="mb-4">{tuneEditor}</div>}
+            {!fullscreen && !scene && tuneEditor && <div className="mb-4">{tuneEditor}</div>}
 
             {!paraDone ? (
-                /* In trance the outer layer fills the screen and the inner
+                /* In a scene the outer layer fills the screen and the inner
                    element is a zero-size anchor at the viewport centre: every
                    word is absolutely placed on the dial around that anchor,
                    so there is no text block — and no rectangle — at all. */
                 <div
                     onClick={() => inputRef.current?.focus()}
-                    className={trance
+                    className={scene
                         ? `fixed inset-0 z-[70] cursor-text overflow-hidden ${shake ? 'animate-shake-x' : ''}`
                         : 'contents'}
                 >
@@ -1885,7 +2028,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     aria-label={letters ? 'Memorise — first letters' : 'Memorise — full words'}
                     data-revealed={peekLevel === 2 || undefined}
                     onClick={() => inputRef.current?.focus()}
-                    className={trance
+                    className={scene
                         ? 'memorise-stream trance-stream absolute left-1/2 top-1/2 h-0 w-0 font-serif'
                         : `memorise-stream flex flex-wrap overflow-y-auto cursor-text font-serif leading-loose content-start ${
                             fullscreen
@@ -1911,33 +2054,40 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     />
                     {words.map((w, i) => {
                         const off = i - wordIdx;
-                        if (trance && Math.abs(off) > DIAL_WINDOW) return null;
+                        if (scene && Math.abs(off) > DIAL_WINDOW) return null;
                         const diedHere = deathAt && deathAt.p === pIndex && deathAt.w === i;
                         let token;
                         if (i < results.length) {
                             token = answeredChip(w, i);
                         } else if (i === wordIdx) {
-                            token = letters ? (
-                                <MaskedWord key={i} word={w} hidden refEl={currentRef}
-                                    title={diedHere ? `You slipped here — you pressed “${deathAt.typed}”` : undefined}
-                                    className={`border-b-2 ${diedHere || missCount > 0 ? 'border-line-error' : 'border-accent'}`}
-                                    overlayClassName={peekLevel > 0 ? 'text-amber' : missCount > 0 ? 'text-text-error' : 'text-accent'}
-                                    overlay={<>{peekLevel > 0 ? w : missCount > 0 ? w[0] : '?'}<Caret /></>} />
-                            ) : (
-                                <span key={i} ref={currentRef}
-                                    aria-label={peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
-                                    title={diedHere ? `You slipped here — you typed “${deathAt.typed}”` : peekedWords.has(i) ? 'Revealed with a hint' : undefined}
-                                    className={`inline-flex items-baseline whitespace-pre border-b-2 ${diedHere ? 'border-[color:var(--text-error)]' : peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}>
-                                    {current
-                                        ? <span className="text-text-primary">{current}</span>
-                                        : peekLevel === 2
-                                            ? <span className="italic text-text-muted">{w}</span>
-                                            : peekLevel === 1
+                            {
+                                // 'retype': the answer being fixed stays revealed
+                                // (calm amber) until it's typed back correctly.
+                                const fixing = policy === 'retype' && ((letters && missCount > 0) || (!letters && fix?.i === i));
+                                token = letters ? (
+                                    <MaskedWord key={i} word={w} hidden refEl={currentRef}
+                                        title={diedHere ? `You slipped here — you pressed “${deathAt.typed}”` : undefined}
+                                        className={`border-b-2 ${fixing ? 'border-[color:var(--mark-amber)]' : diedHere || missCount > 0 ? 'border-line-error' : 'border-accent'}`}
+                                        overlayClassName={peekLevel > 0 || fixing ? 'text-amber' : missCount > 0 ? 'text-text-error' : 'text-accent'}
+                                        overlay={<>{peekLevel > 0 || fixing ? w : missCount > 0 ? w[0] : '?'}<Caret /></>} />
+                                ) : (
+                                    <span key={i} ref={currentRef}
+                                        aria-label={fixing ? `${w} — type it back` : peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
+                                        title={diedHere ? `You slipped here — you typed “${deathAt.typed}”` : peekedWords.has(i) ? 'Revealed with a hint' : undefined}
+                                        className={`inline-flex items-baseline whitespace-pre border-b-2 ${fixing ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : diedHere ? 'border-[color:var(--text-error)]' : peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}>
+                                        {current
+                                            ? <span className="text-text-primary">{current}</span>
+                                            : fixing
                                                 ? <span className="text-amber">{w}</span>
-                                                : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
-                                    <Caret />
-                                </span>
-                            );
+                                                : peekLevel === 2
+                                                    ? <span className="italic text-text-muted">{w}</span>
+                                                    : peekLevel === 1
+                                                        ? <span className="text-amber">{w}</span>
+                                                        : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
+                                        <Caret />
+                                    </span>
+                                );
+                            }
                         } else if (peekLevel === 2) {
                             token = (
                                 <MaskedWord key={i} word={w}
@@ -1953,11 +2103,15 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                                     overlay="·" />
                             );
                         }
-                        if (!trance) return token;
+                        if (!scene) return token;
                         return (
                             <div key={`dial-${i}`} style={dialWordStyle(off)}
-                                className="absolute left-0 top-0 will-change-transform transition-[transform,opacity] duration-200 ease-out">
-                                <div className="w-max -translate-x-1/2 -translate-y-1/2">{token}</div>
+                                className="absolute left-0 top-0 will-change-transform transition-[transform,opacity,filter] duration-200 ease-out">
+                                {/* The ACTIVE word anchors ~32% in, not at its
+                                    middle — the optimal viewing position for
+                                    word recognition sits a third of the way
+                                    into a word, so that's what fixation gets. */}
+                                <div className={off === 0 ? 'w-max -translate-x-[32%] -translate-y-1/2' : 'w-max -translate-x-1/2 -translate-y-1/2'}>{token}</div>
                             </div>
                         );
                     })}
@@ -1968,13 +2122,13 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     <div className="flex items-baseline gap-3 mb-1">
                         <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
                         <span className="text-xs text-text-dim">
-                            {policy === 'none'
+                            {policy === 'none' || policy === 'retype'
                                 ? `${hitCount}/${commits} first try`
                                 : slips === 0 ? 'flawless — no restarts' : `${slips} restart${slips === 1 ? '' : 's'} on the way`}
                         </span>
                     </div>
                     <p className="text-xs text-text-muted mb-4">
-                        {policy === 'none' ? 'Paragraph rebuilt. How did that feel?' : 'One unbroken pass, start to finish. How solid did it feel?'}
+                        {policy === 'none' || policy === 'retype' ? 'Paragraph rebuilt. How did that feel?' : 'One unbroken pass, start to finish. How solid did it feel?'}
                     </p>
                     <GradeButtons busy={busy} onFail={() => finishParagraph('fail')} onPass={() => finishParagraph('pass')} passLabel="Got it" />
                 </div>
@@ -2005,16 +2159,17 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                         <Kbd>Space</Kbd> ×3 sentence · hold for more · <Kbd>Tab</Kbd> peeks · <Kbd>Esc</Kbd> exits
                     </span>
                 )}
-                <button type="button" aria-pressed={trance}
-                    onClick={() => {
-                        const next = !trance;
-                        setTrance(next);
-                        if (next) enterFullscreen?.();
-                        inputRef.current?.focus();
-                    }}
-                    title="The page becomes the vortex. Esc to escape."
-                    className={`focus-ring press inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${trance ? 'border-accent bg-accent-soft text-accent' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'}`}>
-                    <HypnoSpiral className="h-4 w-4" /> Trance
+                <button type="button" aria-pressed={scene === 'focus'}
+                    onClick={() => enterScene('focus')}
+                    title="A still room and one word. The rest of the screen fades from your sight as you type. Esc leaves."
+                    className={`focus-ring press inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${scene === 'focus' ? 'border-accent bg-accent-soft text-accent' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'}`}>
+                    <ViewfinderCircleIcon className="h-4 w-4" aria-hidden="true" /> Focus
+                </button>
+                <button type="button" aria-pressed={scene === 'party'}
+                    onClick={() => enterScene('party')}
+                    title="Disco ball, colour beams, and confetti for every word you land. Esc leaves."
+                    className={`focus-ring press inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${scene === 'party' ? 'border-accent bg-accent-soft text-accent' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'}`}>
+                    <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Party
                 </button>
                 {trouble.size > 0 && (
                     <button type="button" aria-expanded={reviewOpen}
