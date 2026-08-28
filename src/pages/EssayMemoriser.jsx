@@ -1177,7 +1177,11 @@ function TranceField() {
     }, []);
     return (
         <>
-            <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60]" />
+            {/* h-full w-full is load-bearing: a canvas with no CSS size
+                displays at its BITMAP size, and the bitmap is dpr-scaled —
+                on Retina screens that meant a 1.5x canvas hanging off the
+                top-left with the vortex eye at 75%/75% of the viewport. */}
+            <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] h-full w-full" />
             <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] animate-hypno-flash"
                 style={{ background: 'radial-gradient(circle at 50% 50%, transparent 28%, var(--surface-raised) 72%)' }} />
             <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61]"
