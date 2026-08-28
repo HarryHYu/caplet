@@ -1051,6 +1051,142 @@ const Kbd = ({ children }) => (
 // The site-wide reduced-motion rule freezes every CSS animation, so under
 // prefers-reduced-motion both scenes are simply still images.
 
+/** The classic compass-spiral mark — the Trance button's icon. Static. */
+function HypnoSpiral({ className = '' }) {
+    return (
+        <svg viewBox="-21 -21 42 42" aria-hidden="true" className={`pointer-events-none select-none ${className}`}>
+            <path
+                d="M 0 0 a 1 1 0 0 1 2 0 a 2 2 0 0 1 -4 0 a 3 3 0 0 1 6 0 a 4 4 0 0 1 -8 0 a 5 5 0 0 1 10 0 a 6 6 0 0 1 -12 0 a 7 7 0 0 1 14 0 a 8 8 0 0 1 -16 0 a 9 9 0 0 1 18 0"
+                fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+    );
+}
+
+/**
+ * TRANCE — the swirl, kept inside the dossier's "Drift variant" envelope.
+ * A canvas vortex (pre-rendered spiral + spoke sprites, blitted with
+ * rotation each frame) turns slowly around the bright iris. The safety
+ * numbers are the design, not a compromise on it:
+ *  - counter-rotating pairs: net fullscreen rotation ≈ 6°/s (cap 10-15),
+ *    absolute speed sum ~35°/s (cap 60) — swirl without the vection dose;
+ *  - every layer at low alpha: worst-case overlap stays ≤ ~0.22 Michelson
+ *    (motion perception saturates at a few % contrast — full contrast buys
+ *    zero extra swirl, only glare);
+ *  - the breathing zoom at 0.048 Hz ±5% — well below the ~0.17-0.2 Hz
+ *    nauseogenic band the old 0.14 Hz pulse sat next to;
+ *  - a static edge vignette anchors the screen frame against vection, and
+ *    the whole field dims during typing stalls, like Focus.
+ * Low sprite resolution upscaled = naturally soft band edges. Reduced
+ * motion gets a single still frame.
+ */
+function TranceVortex({ dimmed }) {
+    const canvasRef = useRef(null);
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext?.('2d');
+        if (!ctx) return undefined; // jsdom / very old browsers: iris + vignette only
+        const css = getComputedStyle(document.documentElement);
+        const ink = (css.getPropertyValue('--text-primary') || '#2b2620').trim();
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        let w = 0; let h = 0; let D = 0; let sprites = null;
+        const spiralSprite = (size, arms, turns) => {
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const g = c.getContext('2d');
+            if (!g) return c;
+            g.translate(size / 2, size / 2);
+            g.fillStyle = ink;
+            const total = turns * 2 * Math.PI;
+            const maxR = size / 2;
+            const band = Math.PI / arms;
+            for (let a = 0; a < arms; a++) {
+                const phase = (a / arms) * 2 * Math.PI;
+                g.beginPath();
+                for (let th = 0; th <= total; th += 0.06) {
+                    const r = (th / total) * maxR;
+                    if (th === 0) g.moveTo(Math.cos(th + phase) * r, Math.sin(th + phase) * r);
+                    else g.lineTo(Math.cos(th + phase) * r, Math.sin(th + phase) * r);
+                }
+                for (let th = total; th >= 0; th -= 0.06) {
+                    const r = (th / total) * maxR;
+                    g.lineTo(Math.cos(th + phase + band) * r, Math.sin(th + phase + band) * r);
+                }
+                g.closePath();
+                g.fill();
+            }
+            return c;
+        };
+        const raySprite = (size, spokes) => {
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const g = c.getContext('2d');
+            if (!g) return c;
+            g.translate(size / 2, size / 2);
+            g.fillStyle = ink;
+            const step = (2 * Math.PI) / spokes;
+            for (let i = 0; i < spokes; i++) {
+                g.beginPath();
+                g.moveTo(0, 0);
+                g.arc(0, 0, size / 2, i * step, i * step + step / 2);
+                g.closePath();
+                g.fill();
+            }
+            return c;
+        };
+        const fit = () => {
+            w = window.innerWidth; h = window.innerHeight;
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(h * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            D = Math.ceil(Math.hypot(w, h) * 1.6);
+            const side = Math.min(D, 1200); // low res upscaled = soft edges
+            sprites = { spiral: spiralSprite(side, 4, 5), rays: raySprite(side, 36) };
+        };
+        fit();
+        const blit = (sprite, rot, scale, alpha) => {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(rot);
+            ctx.scale(scale, scale);
+            ctx.drawImage(sprite, -D / 2, -D / 2, D, D);
+            ctx.restore();
+        };
+        const frame = (t) => {
+            ctx.clearRect(0, 0, w, h);
+            blit(sprites.rays, t * 0.3, 1, 0.16);
+            blit(sprites.rays, -t * 0.3, 1.02, 0.12);
+            const pulse = 1 + 0.05 * Math.sin(t * 0.3);
+            blit(sprites.spiral, -t * 0.22, pulse, 0.26);
+            blit(sprites.spiral, t * 0.12, pulse * 1.4, 0.1);
+        };
+        const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        let raf = 0;
+        if (reduced) frame(0);
+        else {
+            const loop = (ms) => { frame(ms / 1000); raf = requestAnimationFrame(loop); };
+            raf = requestAnimationFrame(loop);
+        }
+        const onResize = () => { fit(); if (reduced) frame(0); };
+        window.addEventListener('resize', onResize);
+        return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
+    }, []);
+    return (
+        <>
+            <div aria-hidden="true" className={`pointer-events-none fixed inset-0 z-[60] transition-opacity duration-700 ${dimmed ? 'opacity-25' : 'opacity-100'}`}>
+                {/* h-full w-full is load-bearing: a canvas with no CSS size
+                    displays at its dpr-scaled BITMAP size and hangs off the
+                    top-left on Retina screens. */}
+                <canvas ref={canvasRef} className="h-full w-full" />
+                <div className="absolute inset-0"
+                    style={{ background: 'radial-gradient(circle at 50% 50%, transparent 58%, color-mix(in srgb, var(--text-primary) 9%, transparent) 100%)' }} />
+            </div>
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[61]"
+                style={{ background: 'radial-gradient(circle at 50% 50%, var(--surface-body) 0 11rem, transparent 24rem)' }} />
+        </>
+    );
+}
+
 /**
  * FOCUS — the fade-out chamber. Deliberately, provably boring: a static,
  * heavily blurred texture at ~3% contrast around a bright iris. Under steady
@@ -1096,15 +1232,25 @@ const partyBeamGradient = (alpha, from) => {
     return `conic-gradient(from 0deg at 50% 50%, ${stops.join(', ')})`;
 };
 
+// The DJ deck's resting position. Values are 0..1 fader positions; the field
+// maps them onto real parameters INSIDE the safety caps — no fader position
+// can push any layer past a limit.
+const PARTY_MIX_DEFAULT = { tempo: 0.45, lights: 0.75, glitter: 0.6, confetti: 0.6 };
+
 /**
- * PARTY — a disco, not a strobe. The ball hangs top-centre shedding soft
- * colour beams that sweep the room at ~14°/s; glitter twinkles on staggered
- * clocks; confetti drifts down slowly. Every layer is low-contrast, soft-
- * edged and slow, so the composite has ZERO events that meet the flash
- * definition — the fun is colour, sway and the confetti you earn per word,
- * not luminance banging. (Per-commit bursts live with the dial, not here.)
+ * PARTY — a disco, not a strobe, now with a mixing desk. The ball hangs
+ * top-centre shedding colour beams; glitter twinkles on staggered clocks;
+ * confetti drifts and pops per landed word. The faders scale counts, speeds
+ * and brightness, but every mapping clamps inside the limits: beam wheels
+ * never spin faster than ~15°/s (duration floor 24s) no matter where Tempo
+ * sits, twinkle cycles never drop under ~1.1s, and there is still ZERO
+ * large-area luminance rhythm at any fader position.
  */
-function PartyField({ dimmed }) {
+function PartyField({ dimmed, mix }) {
+    const tempo = 0.5 + mix.tempo * 1.1;                    // 0.5x – 1.6x
+    const twinkles = 6 + Math.round(mix.glitter * 20);      // 6 – 26
+    const confetti = 8 + Math.round(mix.glitter * 20);      // 8 – 28
+    const lights = 0.45 + mix.lights * 0.55;                // beam opacity 0.45 – 1
     return (
         <>
             {/* Room glow: static colour wash pooling in the corners. */}
@@ -1116,36 +1262,40 @@ function PartyField({ dimmed }) {
                         'radial-gradient(ellipse 90% 60% at 50% 102%, #fbbf2412 0 44%, transparent 74%)',
                     ].join(', '),
                 }} />
-            {/* Beams from the ball, two wheels counter-sweeping slowly. */}
-            <div aria-hidden="true" className={`pointer-events-none fixed inset-0 z-[60] overflow-hidden transition-opacity duration-700 ${dimmed ? 'opacity-40' : 'opacity-100'}`}>
+            {/* Beams from the ball, two wheels counter-sweeping. The 24s
+                duration floor holds the ≤15°/s rotation cap at max Tempo. */}
+            <div aria-hidden="true"
+                className="pointer-events-none fixed inset-0 z-[60] overflow-hidden transition-opacity duration-700"
+                style={{ opacity: dimmed ? 0.4 : lights }}>
                 <div className="absolute left-1/2 top-[11vh] -ml-[110vmax] -mt-[110vmax] h-[220vmax] w-[220vmax] animate-party-beams"
-                    style={{ background: partyBeamGradient('29', 6) }} />
+                    style={{ background: partyBeamGradient('29', 6), animationDuration: `${Math.max(24, 26 / tempo)}s` }} />
                 <div className="absolute left-1/2 top-[11vh] -ml-[110vmax] -mt-[110vmax] h-[220vmax] w-[220vmax] animate-party-beams-rev"
-                    style={{ background: partyBeamGradient('1c', 20) }} />
+                    style={{ background: partyBeamGradient('1c', 20), animationDuration: `${Math.max(24, 34 / tempo)}s` }} />
             </div>
             {/* Glitter: tiny staggered twinkles — each a dot, never in sync. */}
             <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60]">
-                {Array.from({ length: 14 }, (_, k) => (
+                {Array.from({ length: twinkles }, (_, k) => (
                     <span key={k}
                         className="absolute h-1 w-1 rounded-full animate-party-twinkle"
                         style={{
                             left: `${(k * 137) % 97 + 1.5}%`,
                             top: `${(k * 61) % 88 + 4}%`,
                             background: PARTY_HUES[k % PARTY_HUES.length],
+                            animationDuration: `${Math.max(1.1, 2.6 / tempo)}s`,
                             animationDelay: `${-(k * 0.53) % 2.6}s`,
                         }} />
                 ))}
             </div>
-            {/* Confetti drifting down, slow and sparse. */}
+            {/* Confetti drifting down. */}
             <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
-                {Array.from({ length: 16 }, (_, k) => (
+                {Array.from({ length: confetti }, (_, k) => (
                     <span key={k}
                         className="absolute top-0 h-1.5 w-2.5 rounded-[2px] animate-party-confetti"
                         style={{
                             left: `${(k * 89) % 98 + 1}%`,
                             background: PARTY_HUES[(k * 3 + 1) % PARTY_HUES.length],
                             opacity: 0.55,
-                            animationDuration: `${11 + (k % 5) * 1.7}s`,
+                            animationDuration: `${Math.max(5, (11 + (k % 5) * 1.7) / tempo)}s`,
                             animationDelay: `${-((k * 1.9) % 12)}s`,
                         }} />
                 ))}
@@ -1155,7 +1305,7 @@ function PartyField({ dimmed }) {
                 <div className="mx-auto h-[4.5vh] w-px bg-[color:var(--line-soft)]" />
                 <div className="relative h-20 w-20 overflow-hidden rounded-full animate-party-drop shadow-card">
                     <div className="absolute inset-y-0 -left-full w-[300%] animate-party-ball"
-                        style={{ background: 'repeating-linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 16%, var(--surface-raised)) 0 10px, var(--surface-raised) 10px 20px)' }} />
+                        style={{ background: 'repeating-linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 16%, var(--surface-raised)) 0 10px, var(--surface-raised) 10px 20px)', animationDuration: `${Math.max(6, 14 / tempo)}s` }} />
                     <div className="absolute inset-0"
                         style={{ background: 'repeating-linear-gradient(0deg, color-mix(in srgb, var(--text-primary) 12%, transparent) 0 1.5px, transparent 1.5px 13px)' }} />
                     <div className="absolute inset-0 rounded-full"
@@ -1170,16 +1320,48 @@ function PartyField({ dimmed }) {
 }
 
 /**
+ * The DJ deck: four vertical faders pinned to the right edge of the Party
+ * scene. Pure fader positions in, clamped parameters out (in PartyField and
+ * ConfettiBurst) — the deck can make the party lazier or livelier, never
+ * unsafe. Focus returns to the drill the moment a fader is released.
+ */
+function PartyMixer({ mix, onChange, onDone }) {
+    const fader = (key, label) => (
+        <label className="flex flex-col items-center gap-2">
+            <span className="relative block h-28 w-8">
+                <input type="range" min="0" max="100" value={Math.round(mix[key] * 100)}
+                    aria-label={`${label} fader`}
+                    onChange={(e) => onChange({ ...mix, [key]: Number(e.target.value) / 100 })}
+                    onPointerUp={onDone}
+                    className="absolute left-1/2 top-1/2 w-28 -translate-x-1/2 -translate-y-1/2 -rotate-90 cursor-pointer accent-[color:var(--accent)]" />
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-text-dim">{label}</span>
+        </label>
+    );
+    return (
+        <div className="fixed right-4 top-1/2 z-[73] -translate-y-1/2 rounded-2xl border border-line-soft bg-surface-raised/90 px-3 py-4 shadow-pop backdrop-blur">
+            <p className="mb-3 text-center text-[9px] font-bold uppercase tracking-widest text-text-dim">DJ deck</p>
+            <div className="flex gap-1.5">
+                {fader('tempo', 'Tempo')}
+                {fader('lights', 'Lights')}
+                {fader('glitter', 'Glitter')}
+                {fader('confetti', 'Drops')}
+            </div>
+        </div>
+    );
+}
+
+/**
  * One confetti pop at the centre — earned per committed word, so it is
  * task-locked feedback (self-generated events don't grab attention the way
  * free-running motion does). Ten tiny particles, deterministic spread from
  * the commit count, gone in 700ms. Remounted via key to replay.
  */
-function ConfettiBurst({ seed }) {
+function ConfettiBurst({ seed, count = 10 }) {
     return (
         <div aria-hidden="true" className="pointer-events-none fixed left-1/2 top-1/2 z-[72]">
-            {Array.from({ length: 10 }, (_, k) => {
-                const ang = (k / 10) * Math.PI * 2 + (seed % 7) * 0.4;
+            {Array.from({ length: count }, (_, k) => {
+                const ang = (k / count) * Math.PI * 2 + (seed % 7) * 0.4;
                 const dist = 58 + ((seed * 13 + k * 29) % 42);
                 return (
                     <span key={k} className="absolute h-1.5 w-1.5 rounded-full animate-party-burst"
@@ -1362,6 +1544,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     // After ~18 min in a scene, the 20-20-20 eyes break takes the screen.
     const [breakDue, setBreakDue] = useState(false);
     const [burst, setBurst] = useState(0); // party: confetti pop per commit
+    const [mix, setMix] = useState(PARTY_MIX_DEFAULT); // the party DJ deck
     const inputRef = useRef(null);
     const currentRef = useRef(null);
     const stallTimer = useRef(null);
@@ -1695,6 +1878,11 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         // too covers the inline fallback where fullscreen never engaged.
         if (e.key === 'Escape' && scene) {
             e.preventDefault();
+            // After minutes adapted to the vortex, a motion aftereffect is
+            // guaranteed — say so, so the rippling page isn't alarming.
+            if (scene === 'trance' && Date.now() - sceneStart.current > 45000) {
+                showNotice('accent', 'Your vision may ripple for a moment — that’s normal');
+            }
             setScene(null);
             setSceneIntro(false);
             setBreakDue(false);
@@ -1917,9 +2105,16 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     return (
         <div className={fullscreen ? 'relative mx-auto flex min-h-[76vh] w-full max-w-5xl flex-col justify-center' : 'relative'}>
             {zen && (scene === 'party'
-                ? <PartyField dimmed={peekLevel === 2} />
-                : <FocusField dimmed={stalled || peekLevel === 2} />)}
-            {zen && scene === 'party' && burst > 0 && <ConfettiBurst key={burst} seed={burst} />}
+                ? <PartyField dimmed={peekLevel === 2} mix={mix} />
+                : scene === 'trance'
+                    ? <TranceVortex dimmed={stalled || peekLevel === 2} />
+                    : <FocusField dimmed={stalled || peekLevel === 2} />)}
+            {zen && scene === 'party' && burst > 0 && (
+                <ConfettiBurst key={burst} seed={burst} count={6 + Math.round(mix.confetti * 12)} />
+            )}
+            {zen && scene === 'party' && (
+                <PartyMixer mix={mix} onChange={setMix} onDone={() => inputRef.current?.focus()} />
+            )}
             {zen && sceneIntro && (
                 <div className="pointer-events-none fixed inset-0 z-[75] animate-scene-veil bg-[color:var(--surface-body)]">
                     <p className="absolute inset-x-0 top-1/2 -translate-y-1/2 animate-scene-veil-line px-8 text-center font-serif text-2xl italic text-text-muted">
@@ -1931,7 +2126,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                 <EyesBreak onDone={() => { sceneStart.current = Date.now(); setBreakDue(false); inputRef.current?.focus(); }} />
             )}
             {zen && (
-                <div className={`pointer-events-none fixed inset-x-0 top-6 z-[71] text-center text-xs font-bold uppercase tracking-widest text-text-dim transition-opacity duration-700 ${scene === 'focus' && !stalled && !notice && !paraDone ? 'opacity-0' : 'opacity-100'}`}>
+                <div className={`pointer-events-none fixed inset-x-0 top-6 z-[71] text-center text-xs font-bold uppercase tracking-widest text-text-dim transition-opacity duration-700 ${scene !== 'party' && !stalled && !notice && !paraDone ? 'opacity-0' : 'opacity-100'}`}>
                     {para.label} · {pIndex + 1}/{paras.length} ·{' '}
                     <span className={`tabular-nums ${accuracy >= 90 ? 'text-text-primary' : VERDICT_CLASS[accuracyVerdict(accuracy)]}`}>{accuracy}%</span>
                     {slips > 0 && <span className="ml-2 text-text-warning tabular-nums">{slips}× restarted</span>}
@@ -2165,9 +2360,15 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     className={`focus-ring press inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${scene === 'focus' ? 'border-accent bg-accent-soft text-accent' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'}`}>
                     <ViewfinderCircleIcon className="h-4 w-4" aria-hidden="true" /> Focus
                 </button>
+                <button type="button" aria-pressed={scene === 'trance'}
+                    onClick={() => enterScene('trance')}
+                    title="A slow vortex turns around the words — the swirl, kept inside the photosensitivity and motion-sickness limits. Esc leaves."
+                    className={`focus-ring press inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${scene === 'trance' ? 'border-accent bg-accent-soft text-accent' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'}`}>
+                    <HypnoSpiral className="h-4 w-4" /> Trance
+                </button>
                 <button type="button" aria-pressed={scene === 'party'}
                     onClick={() => enterScene('party')}
-                    title="Disco ball, colour beams, and confetti for every word you land. Esc leaves."
+                    title="Disco ball, colour beams, confetti for every word you land — and a DJ deck to mix it. Esc leaves."
                     className={`focus-ring press inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${scene === 'party' ? 'border-accent bg-accent-soft text-accent' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'}`}>
                     <SparklesIcon className="h-4 w-4" aria-hidden="true" /> Party
                 </button>

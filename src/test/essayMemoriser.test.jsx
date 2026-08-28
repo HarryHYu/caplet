@@ -659,12 +659,24 @@ describe('EssayMemoriser', () => {
       expect(screen.getByRole('button', { name: /^Focus$/ })).toHaveAttribute('aria-pressed', 'false');
       expect(stream().classList.contains('trance-stream')).toBe(false);
 
-      // Party: every landed word earns a confetti burst.
+      // Trance: the vortex canvas mounts (still, in jsdom) with the dial.
+      fireEvent.click(screen.getByRole('button', { name: /^Trance$/ }));
+      expect(screen.getByRole('button', { name: /^Trance$/ })).toHaveAttribute('aria-pressed', 'true');
+      expect(stream().classList.contains('trance-stream')).toBe(true);
+      expect(document.querySelector('canvas')).not.toBeNull();
+      fireEvent.keyDown(screen.getByLabelText(/Type the next word/i), { key: 'Escape' });
+      expect(screen.getByRole('button', { name: /^Trance$/ })).toHaveAttribute('aria-pressed', 'false');
+
+      // Party: every landed word earns a confetti burst, and the DJ deck is
+      // on the wall.
       fireEvent.click(screen.getByRole('button', { name: /^Party$/ }));
+      expect(screen.getByLabelText(/Tempo fader/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Glitter fader/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /^Party$/ })).toHaveAttribute('aria-pressed', 'true');
       expect(document.querySelectorAll('.animate-party-burst').length).toBe(0);
       typeWord('conrads');
-      expect(document.querySelectorAll('.animate-party-burst').length).toBe(10);
+      // Burst size follows the Drops fader: 6 + round(0.6 * 12) at rest.
+      expect(document.querySelectorAll('.animate-party-burst').length).toBe(13);
       fireEvent.keyDown(screen.getByLabelText(/Type the next word/i), { key: 'Escape' });
       expect(screen.getByRole('button', { name: /^Party$/ })).toHaveAttribute('aria-pressed', 'false');
     });
