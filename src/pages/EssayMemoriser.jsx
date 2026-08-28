@@ -987,6 +987,14 @@ const MEMORISE_UNITS = [
     { key: 'letters', label: 'First letters' },
 ];
 
+// Input: type the words back, or WATCH them play through — each word pops
+// up revealed at the centre and auto-commits at a steady, adjustable pace.
+// A read-through lap, not retrieval: watched words never touch accuracy.
+const INPUT_MODES = [
+    { key: 'type', label: 'Type' },
+    { key: 'watch', label: 'Watch' },
+];
+
 // 'retype' is the research-backed default: a wrong word shows you the answer,
 // you type it back, you carry on — corrective feedback instead of punishment,
 // and no over-training of paragraph openings. The restart ladder survives as
@@ -1620,8 +1628,15 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const [breakDue, setBreakDue] = useState(false);
     const [burst, setBurst] = useState(0); // party: confetti pop per commit
     const [mix, setMix] = useState(PARTY_MIX_DEFAULT); // the party DJ deck
+    // Watch input: the drill plays itself at a steady pace and you read.
+    const [watch, setWatch] = useState(false);
+    const [wpm, setWpm] = useState(160);
+    const [watchPaused, setWatchPaused] = useState(false);
+    const [watched, setWatched] = useState(0); // words auto-played this paragraph
     const inputRef = useRef(null);
     const currentRef = useRef(null);
+    const watchTick = useRef(null);   // the advance fn, assigned every render
+    const lastBurstAt = useRef(0);    // party bursts rate-limited to ~2.5/s
     const stallTimer = useRef(null);
     const introTimer = useRef(null);
     const sceneStart = useRef(0);
@@ -1642,7 +1657,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         setPIndex(0); setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
         setMissCount(0); setCommits(0); setHitCount(0); setSlips(0); setParaDone(false);
         setDone(false); setSaveOk(true); setStreak(0); setDeathAt(null); setPeekLevel(0); setLadderPos(0);
-        setTrouble(new Map()); setReviewOpen(false); setFix(null);
+        setTrouble(new Map()); setReviewOpen(false); setFix(null); setWatched(0);
     };
 
     useEffect(() => { if (!paraDone) inputRef.current?.focus(); }, [pIndex, paraDone, fullscreen]);
@@ -1694,6 +1709,13 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         }, 30000);
         return () => clearInterval(iv);
     }, [scene]);
+    // Watch: one word per beat. Re-arms itself off wordIdx, so pausing,
+    // pace changes and paragraph advances all take effect on the next beat.
+    useEffect(() => {
+        if (!watch || watchPaused || paraDone || done || breakDue || sceneIntro) return undefined;
+        const t = setTimeout(() => watchTick.current?.(), Math.max(140, Math.round(60000 / wpm)));
+        return () => clearTimeout(t);
+    }, [watch, watchPaused, wordIdx, pIndex, paraDone, done, breakDue, sceneIntro, wpm]);
 
     if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) {
@@ -1759,6 +1781,17 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         shakeTimer.current = setTimeout(() => setShake(false), 320);
     };
 
+    // Party: a landed word earns its confetti pop — task-locked juice, the
+    // one kind of event the capture literature endorses. Rate-limited so a
+    // sprint (or a fast Watch pace) can't turn pops into a pulse.
+    const maybeBurst = () => {
+        if (scene !== 'party') return;
+        const now = Date.now();
+        if (now - lastBurstAt.current < 400) return;
+        lastBurstAt.current = now;
+        setBurst((b) => b + 1);
+    };
+
     const advanceWord = (status, typed) => {
         setResults((prev) => [...prev, { status, typed }]);
         setCurrent('');
@@ -1767,13 +1800,28 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         if (status === 'wrong' || status === 'hinted') setStreak(0);
         else {
             setStreak((s) => s + 1);
-            // Party: every landed word earns its confetti pop — task-locked
-            // juice, the one kind of event the capture literature endorses.
-            if (scene === 'party') setBurst((b) => b + 1);
+            maybeBurst();
         }
         if (wordIdx + 1 >= words.length) setParaDone(true);
         else setWordIdx((i) => i + 1);
     };
+
+    // A Watch beat: the current word (already shown revealed at the centre)
+    // clicks off the dial. No commits, no accuracy, no streak — a watched
+    // word is a read word, not a recalled one.
+    const watchAdvance = () => {
+        setResults((prev) => [...prev, { status: 'hit', typed: null }]);
+        setWatched((n) => n + 1);
+        setCurrent('');
+        setMissCount(0);
+        setFix(null);
+        setPeekLevel(0);
+        maybeBurst();
+        markActivity();
+        if (wordIdx + 1 >= words.length) setParaDone(true);
+        else setWordIdx((i) => i + 1);
+    };
+    watchTick.current = watchAdvance;
 
     const rewindTo = (rung) => {
         setCurrent('');
@@ -1913,8 +1961,16 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const onSpaceDown = (e) => {
         // A space with a word in hand commits it; empty-handed it is the reset
         // key — tap 3× for the sentence, hold for the paragraph, keep holding
-        // for everything.
+        // for everything. While watching, Space is simply pause/resume.
         e.preventDefault();
+        if (watch) {
+            if (e.repeat) return;
+            spaceArmed.current = false;
+            const next = !watchPaused;
+            setWatchPaused(next);
+            showNotice('accent', next ? 'Paused — Space resumes' : 'Rolling');
+            return;
+        }
         if (!letters && current.trim()) { spaceArmed.current = false; commitWord(); return; }
         if (e.repeat) return;
         spaceArmed.current = true;
@@ -1988,6 +2044,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         }
         if (paraDone) return;
         if (e.key === ' ') { onSpaceDown(e); return; }
+        if (watch) return; // watching: keys other than Space/Tab/Esc are idle
         if (!letters) {
             if (e.key === 'Enter') { e.preventDefault(); commitWord(); }
             return; // every other key just edits the controlled input
@@ -2017,10 +2074,11 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         setBusy(true);
         try {
             await api.submitReview('essayParagraph', paragraphItemId(essay.id, sourceIdx), recall, {
-                mode: letters ? 'first_letters' : 'word_by_word',
+                mode: watched > 0 ? 'watched' : letters ? 'first_letters' : 'word_by_word',
                 policy,
                 accuracy,
                 restarts: slips,
+                watched,
                 hintCount: peekedWords.size + results.filter((r) => r.status === 'hinted').length,
             });
             onScheduled?.();
@@ -2029,7 +2087,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         if (pIndex + 1 < paras.length) {
             setPIndex((i) => i + 1); setWordIdx(0); setCurrent(''); setResults([]);
             setPeekedWords(new Set()); setMissCount(0); setCommits(0); setHitCount(0); setSlips(0);
-            setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null); setLadderPos(0); setFix(null);
+            setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null); setLadderPos(0); setFix(null); setWatched(0);
         } else setDone(true);
     };
 
@@ -2054,7 +2112,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const switchUnit = (next) => {
         if (next === unit) { inputRef.current?.focus(); return; }
         setUnit(next);
-        setWordIdx(0); setResults([]); setCurrent(''); setMissCount(0); setFix(null);
+        setWordIdx(0); setResults([]); setCurrent(''); setMissCount(0); setFix(null); setWatched(0);
         setCommits(0); setHitCount(0); setSlips(0); setPeekedWords(new Set());
         setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null); setLadderPos(0);
         inputRef.current?.focus();
@@ -2106,6 +2164,21 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     // the pop-up menu in fullscreen.
     const settingsGroups = (
         <>
+            <span className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Input</span>
+                <HintToggle options={INPUT_MODES} value={watch ? 'watch' : 'type'}
+                    onChange={andRefocus((v) => { setWatch(v === 'watch'); setWatchPaused(false); setCurrent(''); setFix(null); setMissCount(0); })} />
+                {watch && (
+                    <label className="flex items-center gap-1.5 text-[10px] font-bold text-text-dim">
+                        <input type="range" min="60" max="400" step="20" value={wpm}
+                            aria-label="Watch pace, words per minute"
+                            onChange={(e) => setWpm(Number(e.target.value))}
+                            onPointerUp={() => inputRef.current?.focus()}
+                            className="w-24 cursor-pointer accent-[color:var(--accent)]" />
+                        <span className="tabular-nums">{wpm} wpm</span>
+                    </label>
+                )}
+            </span>
             <span className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Unit</span>
                 <HintToggle options={MEMORISE_UNITS} value={unit} onChange={switchUnit} />
@@ -2265,9 +2338,11 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
 
             {!fullscreen && !scene && (
                 <p className="text-xs font-medium leading-relaxed text-text-dim mb-3">
-                    {letters
-                        ? <>Recall at speed: press the <strong>first letter</strong> of each next word.{' '}</>
-                        : <>Type it back from memory — <Kbd>Space</Kbd> commits each word.{' '}</>}
+                    {watch
+                        ? <>Sit back — the words <strong>play themselves</strong> at your pace, one after another. <Kbd>Space</Kbd> pauses and resumes. A watched pass is a read-through: it never counts as recall, so type it back afterwards.{' '}</>
+                        : letters
+                            ? <>Recall at speed: press the <strong>first letter</strong> of each next word.{' '}</>
+                            : <>Type it back from memory — <Kbd>Space</Kbd> commits each word.{' '}</>}
                     {policy === 'retype'
                         ? <>A wrong {letters ? 'letter' : 'word'} <strong>shows you the answer — type it back</strong> and carry on. Punctuation slips warn in amber; capitals, accents, apostrophes and quote marks never count.</>
                         : policy === 'none'
@@ -2314,7 +2389,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                         ref={inputRef}
                         value={letters ? '' : current}
                         onChange={(e) => {
-                            if (letters) return;
+                            if (letters || watch) return;
                             if (peekLevel && e.target.value) setPeekLevel(0);
                             setCurrent(e.target.value);
                         }}
@@ -2336,7 +2411,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                                 // 'retype': the answer being fixed stays revealed
                                 // (calm amber) until it's typed back correctly.
                                 const fixing = policy === 'retype' && ((letters && missCount > 0) || (!letters && fix?.i === i));
-                                token = letters ? (
+                                token = letters && !watch ? (
                                     <MaskedWord key={i} word={w} hidden refEl={currentRef}
                                         title={diedHere ? `You slipped here — you pressed “${deathAt.typed}”` : undefined}
                                         className={`border-b-2 ${fixing ? 'border-[color:var(--mark-amber)]' : diedHere || missCount > 0 ? 'border-line-error' : 'border-accent'}`}
@@ -2347,16 +2422,20 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                                         aria-label={fixing ? `${w} — type it back` : peekedWords.has(i) ? `${w}, revealed with a hint` : undefined}
                                         title={diedHere ? `You slipped here — you typed “${deathAt.typed}”` : peekedWords.has(i) ? 'Revealed with a hint' : undefined}
                                         className={`inline-flex items-baseline whitespace-pre border-b-2 ${fixing ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : diedHere ? 'border-[color:var(--text-error)]' : peekedWords.has(i) ? 'rounded-sm block-amber border-[color:var(--mark-amber)]' : 'border-accent'}`}>
-                                        {current
-                                            ? <span className="text-text-primary">{current}</span>
-                                            : fixing
-                                                ? <span className="text-amber">{w}</span>
-                                                : peekLevel === 2
-                                                    ? <span className="italic text-text-muted">{w}</span>
-                                                    : peekLevel === 1
-                                                        ? <span className="text-amber">{w}</span>
-                                                        : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
-                                        <Caret />
+                                        {watch
+                                            /* Watching: the word itself pops
+                                               up, dwells a beat, clicks off. */
+                                            ? <span className="text-text-primary">{w}</span>
+                                            : current
+                                                ? <span className="text-text-primary">{current}</span>
+                                                : fixing
+                                                    ? <span className="text-amber">{w}</span>
+                                                    : peekLevel === 2
+                                                        ? <span className="italic text-text-muted">{w}</span>
+                                                        : peekLevel === 1
+                                                            ? <span className="text-amber">{w}</span>
+                                                            : <span className={peekedWords.has(i) ? 'text-amber' : hintStyle === 'word' ? 'text-text-muted italic' : 'text-accent'}>{wordCue(w, hintStyle)}</span>}
+                                        {!watch && <Caret />}
                                     </span>
                                 );
                             }
@@ -2394,13 +2473,17 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     <div className="flex items-baseline gap-3 mb-1">
                         <span className="text-3xl font-display font-extrabold text-text-primary tabular-nums">{accuracy}%</span>
                         <span className="text-xs text-text-dim">
-                            {policy === 'none' || policy === 'retype'
-                                ? `${hitCount}/${commits} first try`
-                                : slips === 0 ? 'flawless — no restarts' : `${slips} restart${slips === 1 ? '' : 's'} on the way`}
+                            {watched > 0
+                                ? `watched ${watched} word${watched === 1 ? '' : 's'} at ${wpm} wpm`
+                                : policy === 'none' || policy === 'retype'
+                                    ? `${hitCount}/${commits} first try`
+                                    : slips === 0 ? 'flawless — no restarts' : `${slips} restart${slips === 1 ? '' : 's'} on the way`}
                         </span>
                     </div>
                     <p className="text-xs text-text-muted mb-4">
-                        {policy === 'none' || policy === 'retype' ? 'Paragraph rebuilt. How did that feel?' : 'One unbroken pass, start to finish. How solid did it feel?'}
+                        {watched > 0
+                            ? 'That was a read-through, not a recall — grade how well you could have said it, then type it back for real.'
+                            : policy === 'none' || policy === 'retype' ? 'Paragraph rebuilt. How did that feel?' : 'One unbroken pass, start to finish. How solid did it feel?'}
                     </p>
                     <GradeButtons busy={busy} onFail={() => finishParagraph('fail')} onPass={() => finishParagraph('pass')} passLabel="Got it" />
                 </div>

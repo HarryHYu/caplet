@@ -643,6 +643,40 @@ describe('EssayMemoriser', () => {
       expect(sprint.querySelectorAll('.animate-pop').length).toBe(1);
     });
 
+    it('Watch plays the words by itself at the chosen pace, and Space pauses', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        api.getEssay.mockResolvedValue({ essay: conradEssay() });
+        renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+        await screen.findByRole('application', { name: /Memorise — full words/i });
+        fireEvent.click(screen.getByRole('button', { name: /^Watch$/ }));
+
+        // Default pace is 160 wpm — one word every 375ms, no typing needed.
+        // One beat lands per 400ms window regardless of when the next beat
+        // is re-armed, so step window by window.
+        await act(async () => { await vi.advanceTimersByTimeAsync(400); });
+        expect(answered()).toBe(1);
+        await act(async () => { await vi.advanceTimersByTimeAsync(400); });
+        expect(answered()).toBe(2);
+
+        // Space pauses the roll…
+        const input = screen.getByLabelText(/Type the next word/i);
+        fireEvent.keyDown(input, { key: ' ' });
+        fireEvent.keyUp(input, { key: ' ' });
+        await act(async () => { await vi.advanceTimersByTimeAsync(1200); });
+        expect(answered()).toBe(2);
+
+        // …and Space again resumes it. Watching never counts as recall.
+        fireEvent.keyDown(input, { key: ' ' });
+        fireEvent.keyUp(input, { key: ' ' });
+        await act(async () => { await vi.advanceTimersByTimeAsync(400); });
+        expect(answered()).toBe(3);
+        expect(screen.getByText('100%')).toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('Focus and Party take the screen, Party pops confetti per word, Esc leaves', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
@@ -988,7 +1022,7 @@ describe('EssayMemoriser', () => {
       'essayParagraph',
       'essay-hints:0',
       'pass',
-      { mode: 'word_by_word', policy: 'retype', accuracy: 94, hintCount: 2, restarts: 0 },
+      { mode: 'word_by_word', policy: 'retype', accuracy: 94, hintCount: 2, restarts: 0, watched: 0 },
     );
   });
 });
