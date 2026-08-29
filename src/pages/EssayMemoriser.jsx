@@ -1636,6 +1636,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
     const inputRef = useRef(null);
     const currentRef = useRef(null);
     const watchTick = useRef(null);   // the advance fn, assigned every render
+    const watchNext = useRef(null);   // paragraph auto-advance, same pattern
     const lastBurstAt = useRef(0);    // party bursts rate-limited to ~2.5/s
     const stallTimer = useRef(null);
     const introTimer = useRef(null);
@@ -1716,6 +1717,14 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         const t = setTimeout(() => watchTick.current?.(), Math.max(140, Math.round(60000 / wpm)));
         return () => clearTimeout(t);
     }, [watch, watchPaused, wordIdx, pIndex, paraDone, done, breakDue, sceneIntro, wpm]);
+    // Watch never needs a click between paragraphs: the finished card holds
+    // for 5s, then the next paragraph starts rolling — looping at the end.
+    // Grading manually within the 5s still works and cancels the timer.
+    useEffect(() => {
+        if (!watch || watchPaused || !paraDone || done) return undefined;
+        const t = setTimeout(() => watchNext.current?.(), 5000);
+        return () => clearTimeout(t);
+    }, [watch, watchPaused, paraDone, done, pIndex]);
 
     if (!paras.length) return <EmptyModeNote onEdit={onEdit}>This essay has no paragraphs to practise yet.</EmptyModeNote>;
     if (done) {
@@ -1822,6 +1831,18 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         else setWordIdx((i) => i + 1);
     };
     watchTick.current = watchAdvance;
+
+    // On to the next paragraph (or back around to the first) with no grade
+    // submitted — a watched paragraph was read, not recalled, so there is
+    // nothing honest to grade automatically.
+    const watchNextParagraph = () => {
+        setPIndex((i) => (i + 1 < paras.length ? i + 1 : 0));
+        setWordIdx(0); setCurrent(''); setResults([]); setPeekedWords(new Set());
+        setMissCount(0); setCommits(0); setHitCount(0); setSlips(0);
+        setParaDone(false); setStreak(0); setPeekLevel(0); setDeathAt(null);
+        setLadderPos(0); setFix(null); setWatched(0);
+    };
+    watchNext.current = watchNextParagraph;
 
     const rewindTo = (rung) => {
         setCurrent('');
@@ -2485,6 +2506,9 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                             ? 'That was a read-through, not a recall — grade how well you could have said it, then type it back for real.'
                             : policy === 'none' || policy === 'retype' ? 'Paragraph rebuilt. How did that feel?' : 'One unbroken pass, start to finish. How solid did it feel?'}
                     </p>
+                    {watch && (
+                        <p className="mb-3 -mt-2 text-xs font-bold text-accent">Rolling on in 5 seconds — grade it now to log this one.</p>
+                    )}
                     <GradeButtons busy={busy} onFail={() => finishParagraph('fail')} onPass={() => finishParagraph('pass')} passLabel="Got it" />
                 </div>
             )}

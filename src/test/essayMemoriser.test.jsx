@@ -677,6 +677,34 @@ describe('EssayMemoriser', () => {
       }
     });
 
+    it('Watch rolls into the next paragraph by itself after 5s, looping at the end', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        api.getEssay.mockResolvedValue({ essay: conradEssay() });
+        renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
+        await screen.findByRole('application', { name: /Memorise — full words/i });
+        fireEvent.click(screen.getByRole('button', { name: /^Watch$/ }));
+
+        // Roll through all 6 intro words, one beat per window.
+        for (let i = 0; i < 6; i++) {
+          await act(async () => { await vi.advanceTimersByTimeAsync(400); });
+        }
+        expect(screen.getByText(/watched 6 words/i)).toBeInTheDocument();
+        expect(screen.getByText(/Rolling on in 5 seconds/i)).toBeInTheDocument();
+
+        // No click: 5s later the scope loops back around and rolls again.
+        await act(async () => { await vi.advanceTimersByTimeAsync(5100); });
+        expect(screen.queryByText(/watched 6 words/i)).not.toBeInTheDocument();
+        expect(answered()).toBeLessThanOrEqual(1);
+        await act(async () => { await vi.advanceTimersByTimeAsync(450); });
+        expect(answered()).toBeGreaterThanOrEqual(1);
+        // No grade was auto-submitted for the watched pass.
+        expect(api.submitReview).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('Focus and Party take the screen, Party pops confetti per word, Esc leaves', async () => {
       api.getEssay.mockResolvedValue({ essay: conradEssay() });
       renderAt('/essays/essay-1?tab=practice&mode=perfect&scope=intro');
