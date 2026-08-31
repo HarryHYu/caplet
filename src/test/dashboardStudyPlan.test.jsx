@@ -127,16 +127,24 @@ describe('minimal dashboard study flow', () => {
   });
 
   it('shows a countdown to the next exam', async () => {
-    localStorage.setItem('caplet:my-subjects', JSON.stringify(['English Advanced', 'Physics']));
-    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+    // The fixture exam is dated 2026-08-31; pin the clock safely before it
+    // so this test doesn't rot the day the calendar catches up (it did).
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-06-01T09:00:00'));
+    try {
+      localStorage.setItem('caplet:my-subjects', JSON.stringify(['English Advanced', 'Physics']));
+      api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
 
-    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+      render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
-    const countdownLink = await screen.findByRole('link', { name: /days.*until English Advanced/i });
-    expect(countdownLink).toHaveAttribute('href', '/assessments');
-    const upcoming = screen.getByRole('region', { name: 'Upcoming assessments' });
-    expect(upcoming).toBeInTheDocument();
-    expect(within(upcoming).queryByText('Economics')).not.toBeInTheDocument();
+      const countdownLink = await screen.findByRole('link', { name: /days.*until English Advanced/i });
+      expect(countdownLink).toHaveAttribute('href', '/assessments');
+      const upcoming = screen.getByRole('region', { name: 'Upcoming assessments' });
+      expect(upcoming).toBeInTheDocument();
+      expect(within(upcoming).queryByText('Economics')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('uses a personalised exam when it is the next assessment', async () => {

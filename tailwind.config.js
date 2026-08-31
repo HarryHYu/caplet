@@ -118,6 +118,8 @@ export default {
         'party-burst': 'party-burst 0.7s ease-out both',
         'scene-veil': 'scene-veil 5.2s ease-in-out both',
         'scene-veil-line': 'scene-veil-line 5.2s ease-in-out both',
+        'ink-splat': 'ink-splat 7s ease-out both',
+        'bomb-smoke': 'bomb-smoke 6s ease-in-out both',
         'bar-fill': 'bar-fill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
         shimmer: 'shimmer 1.6s linear infinite',
       },
@@ -227,6 +229,21 @@ export default {
         'party-burst': {
           '0%': { transform: 'translate(0, 0) scale(1)', opacity: '1' },
           '100%': { transform: 'translate(var(--bx), var(--by)) scale(0.4)', opacity: '0' },
+        },
+        // Study Party sabotage. Ink splats on, drips, dries off; the bomb's
+        // smoke is one slow blur fade. Neither is a luminance strobe.
+        'ink-splat': {
+          '0%': { opacity: '0', transform: 'scale(0.3)' },
+          '7%': { opacity: '0.95', transform: 'scale(1.05)' },
+          '14%': { transform: 'scale(1)' },
+          '75%': { opacity: '0.9', transform: 'scale(1) translateY(2vh)' },
+          '100%': { opacity: '0', transform: 'scale(1.02) translateY(5vh)' },
+        },
+        'bomb-smoke': {
+          '0%': { opacity: '0' },
+          '8%': { opacity: '1' },
+          '80%': { opacity: '1' },
+          '100%': { opacity: '0' },
         },
         // The Focus entry ritual: a veil that holds, then lifts — identical
         // every time, because constancy is what makes a ritual a cue.

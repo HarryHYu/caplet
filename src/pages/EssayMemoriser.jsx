@@ -10,6 +10,7 @@ import SpeedTypeMode from '../components/essay/SpeedTypeMode';
 import AccuracyRing from '../components/essay/AccuracyRing';
 import { foldAccents, foldGerman, alignWords, splitSentences, perfectWordMatch, VERDICT_CLASS, accuracyVerdict } from '../lib/speedType';
 import EssayChat from '../components/essay/EssayChat';
+import StudyParty from '../components/essay/StudyParty';
 import ContextLibrary, { AddContextForm, ContextDocRow } from '../components/essay/ContextLibrary';
 import { MAX_CONTEXT_DOCS } from '../lib/essayContext';
 import {
@@ -1569,7 +1570,7 @@ function TroubleReview({ trouble, onClose }) {
     );
 }
 
-export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false, enterFullscreen = undefined, onTranceChange = undefined }) {
+export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false, enterFullscreen = undefined, onTranceChange = undefined, onWordLanded = undefined }) {
     const paras = paragraphs || allParagraphsOf(essay);
     const [unit, setUnit] = useState(initialUnit === 'letters' ? 'letters' : 'word');
     const letters = unit === 'letters';
@@ -1810,6 +1811,9 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         else {
             setStreak((s) => s + 1);
             maybeBurst();
+            // Study Party: a TYPED landed word earns; watched words never
+            // reach this path, so autoplay can't farm the tycoon.
+            onWordLanded?.({ para: pIndex, paraCount: paras.length, accuracy });
         }
         if (wordIdx + 1 >= words.length) setParaDone(true);
         else setWordIdx((i) => i + 1);
@@ -3366,6 +3370,7 @@ function EssayWorkspace({ essayId }) {
     // word stream owns the screen (MonkeyType-style focus mode).
     const [speedRunning, setSpeedRunning] = useState(false);
     const practiceRef = useRef(null);
+    const partyReporter = useRef(null);
     const { active: practiceFullscreen, supported: fullscreenSupported, toggle: toggleFullscreen, enter: enterFullscreen } = useFullscreen(practiceRef);
     const [tranceOn, setTranceOn] = useState(false);
     const [proposal, setProposal] = useState(null);
@@ -3928,6 +3933,7 @@ function EssayWorkspace({ essayId }) {
                                         fullscreen={practiceFullscreen}
                                         enterFullscreen={fullscreenSupported ? enterFullscreen : undefined}
                                         onTranceChange={setTranceOn}
+                                        onWordLanded={(info) => partyReporter.current?.(info)}
                                         essay={essay} paragraphs={scoped} onScheduled={loadDue} onEdit={goEdit}
                                         onNext={() => setMode('typeit')} nextLabel={modeLabel('typeit')} />
                                 )}
@@ -3960,6 +3966,12 @@ function EssayWorkspace({ essayId }) {
                                         : <EmptyModeNote>Need at least two body paragraphs to practise ordering.</EmptyModeNote>
                                 )}
                             </div>
+                        )}
+                        {/* Memorise together: rendered INSIDE the fullscreen
+                            container so the wallet chip and incoming ink/bombs
+                            reach the Focus/Trance/Party scenes too. */}
+                        {!speedRunning && (
+                            <StudyParty registerReporter={(fn) => { partyReporter.current = fn; }} />
                         )}
                         </div>
                     </div>

@@ -7,6 +7,7 @@ const { testConnection } = require('./config/database');
 const { runMigrations } = require('./config/migrationRunner');
 const seedProductionDatabase = require('./scripts/seed-production');
 const { attachLiveSocket } = require('./realtime/liveSocket');
+const { attachPartySocket } = require('./realtime/partySocket');
 const { requestContext } = require('./middleware/requestContext');
 const { createRateLimiter } = require('./middleware/rateLimit');
 const { assertSharedLimiterConfiguration } = require('./services/distributedLimitStore');
@@ -299,7 +300,10 @@ const startServer = async () => {
 
     // Live hosted quiz sessions (Kahoot-style) — Socket.IO on the same
     // http.Server/port, under the /live namespace.
-    attachLiveSocket(server);
+    const io = attachLiveSocket(server);
+    // Study Party (shared essay memorising) rides the same Socket.IO server
+    // under /party. All party state is in-memory only — chat included.
+    attachPartySocket(io);
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
