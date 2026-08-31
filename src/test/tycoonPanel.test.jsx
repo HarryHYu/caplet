@@ -38,6 +38,7 @@ afterEach(() => cleanup());
 beforeEach(() => { fakeSocket = makeFakeSocket(); });
 
 const selfSnapshot = (over = {}) => ({
+  run: 'First run',
   me: {
     id: 'u1', name: 'Harry', connected: true, watching: false, words: 12, para: 1, paraCount: 4,
     accuracy: 95, money: 120, tier: 'wood', tierIndex: 1, b: 2, shields: 1, wipers: false,
@@ -201,6 +202,44 @@ describe('TycoonPanel', () => {
     });
     expect(screen.getByText('$5,000')).toBeInTheDocument();
     expect(screen.queryByLabelText('Admin password')).not.toBeInTheDocument(); // closes on success
+  });
+
+  it('the Games menu shelves, loads and deletes runs like save files', async () => {
+    await boot();
+    fireEvent.click(screen.getByRole('button', { name: /💾 First run/ }));
+    await act(async () => {
+      fakeSocket.ackOf('tycoon:saves')({
+        ok: true,
+        current: { name: 'First run', money: 120, tierIndex: 1 },
+        saves: [{ id: 's1', name: 'Old grind', money: 777, tierIndex: 5, tier: 'gold', lifetimeWords: 4200 }],
+      });
+    });
+    expect(screen.getByText('Old grind')).toBeInTheDocument();
+    // Start a fresh run — the current one goes to the shelf.
+    fireEvent.change(screen.getByLabelText('New game name'), { target: { value: 'Run 2' } });
+    fireEvent.click(screen.getByRole('button', { name: /^New game$/ }));
+    const created = fakeSocket.emitted.find((e) => e.event === 'tycoon:newGame');
+    expect(created.payload).toEqual({ name: 'Run 2' });
+    await act(async () => {
+      created.ackFn({
+        ok: true,
+        self: selfSnapshot({ run: 'Run 2', me: { ...selfSnapshot().me, money: 0, tier: 'stone', tierIndex: 0, b: 1 } }),
+        saves: [
+          { id: 's2', name: 'First run', money: 120, tierIndex: 1, tier: 'wood', lifetimeWords: 400 },
+          { id: 's1', name: 'Old grind', money: 777, tierIndex: 5, tier: 'gold', lifetimeWords: 4200 },
+        ],
+      });
+    });
+    expect(screen.getByText('$0')).toBeInTheDocument(); // fresh monkey
+    expect(screen.getByText('First run')).toBeInTheDocument(); // shelved
+    // Load the old grind back.
+    fireEvent.click(screen.getAllByRole('button', { name: /^Load$/ })[1]);
+    expect(fakeSocket.emitted.some((e) => e.event === 'tycoon:loadGame' && e.payload.id === 's1')).toBe(true);
+    // Deleting asks twice.
+    fireEvent.click(screen.getByRole('button', { name: 'Delete First run' }));
+    expect(fakeSocket.emitted.some((e) => e.event === 'tycoon:deleteSave')).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Really delete First run' }));
+    expect(fakeSocket.emitted.some((e) => e.event === 'tycoon:deleteSave' && e.payload.id === 's2')).toBe(true);
   });
 
   it('renders incoming hits as FX whose wipe counter climbs with typed words', async () => {

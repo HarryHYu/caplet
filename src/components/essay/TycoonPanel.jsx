@@ -92,8 +92,14 @@ export default function TycoonPanel({ registerReporter, game = false, onClose, o
     const [adminOpen, setAdminOpen] = useState(false);
     const [adminPass, setAdminPass] = useState('');
     const [adminMoney, setAdminMoney] = useState('');
+    const [gamesOpen, setGamesOpen] = useState(false);
+    const [saves, setSaves] = useState(null); // parked runs, fetched on open
+    const [newName, setNewName] = useState('');
+    const [confirmDelete, setConfirmDelete] = useState(null);
     const [memberPulses, setMemberPulses] = useState({}); // id -> bump when their words move
     const [fxList, setFxList] = useState([]); // classroom throws: {id, kind, from, to, outcome}
+    const [selfImpact, setSelfImpact] = useState(null); // burst on MY monkey in the side scene
+    const selfImpactTimer = useRef(null);
     const reloadUntil = useRef(0);       // my weapons reload (any target)
     const targetCoolUntil = useRef({});  // targetId -> ts their recovery ends
     const prevWords = useRef({});
@@ -153,15 +159,22 @@ export default function TycoonPanel({ registerReporter, game = false, onClose, o
             setFxList((prev) => [...prev.slice(-6), { id, kind, from, to, outcome }]);
             setTimeout(() => setFxList((prev) => prev.filter((f) => f.id !== id)), 2600);
         });
+        const burstSelf = (kind, outcome) => {
+            setSelfImpact({ kind, outcome });
+            clearTimeout(selfImpactTimer.current);
+            selfImpactTimer.current = setTimeout(() => setSelfImpact(null), 1300);
+        };
         socket.on('party:hit', ({ kind, from, durationMs, stolen }) => {
             const id = `${kind}-${Date.now()}`;
             setHits((prev) => [...prev, { id, kind, wipe: 0 }]);
+            burstSelf(kind, 'hit');
             play('boing');
             say(`${SABOTAGE_EMOJI[kind] || '💥'} ${from} hit you with ${SABOTAGE_META[kind]?.label || kind}!`);
             if (stolen) addFloater(`-$${stolen}`, 'loss');
             setTimeout(() => setHits((prev) => prev.filter((h) => h.id !== id)), durationMs || 6000);
         });
         socket.on('party:blocked', ({ kind, from, how, bounty }) => {
+            burstSelf(kind, how);
             if (how === 'absorbed') {
                 play('coin');
                 addFloater(`+$${bounty}`, 'crit');
@@ -182,6 +195,7 @@ export default function TycoonPanel({ registerReporter, game = false, onClose, o
         return () => {
             clearTimeout(flushTimer.current);
             clearTimeout(noticeTimer.current);
+            clearTimeout(selfImpactTimer.current);
             socket.disconnect();
             socketRef.current = null;
         };
@@ -305,6 +319,28 @@ export default function TycoonPanel({ registerReporter, game = false, onClose, o
             if (ack(r, 'kaching')) { setAdminOpen(false); setAdminPass(''); setAdminMoney(''); say('Wallet set.'); }
         });
     };
+    const toggleGames = () => {
+        setGamesOpen((v) => !v);
+        setConfirmDelete(null);
+        socketRef.current?.emit('tycoon:saves', {}, (r) => { if (r?.ok) setSaves(r.saves); });
+    };
+    const newGame = (e) => {
+        e.preventDefault();
+        socketRef.current?.emit('tycoon:newGame', { name: newName.trim() || 'New run' }, (r) => {
+            if (ack(r, 'kaching')) { setSaves(r.saves); setNewName(''); say('Fresh monkey — the old run is on the shelf.'); }
+        });
+    };
+    const loadGame = (id) => socketRef.current?.emit('tycoon:loadGame', { id }, (r) => {
+        if (ack(r, 'kaching')) { setSaves(r.saves); say('Run loaded.'); }
+    });
+    const deleteSave = (id) => {
+        if (confirmDelete !== id) { setConfirmDelete(id); return; }
+        socketRef.current?.emit('tycoon:deleteSave', { id }, (r) => {
+            if (r?.error) { setError(r.error); return; }
+            setSaves(r.saves);
+            setConfirmDelete(null);
+        });
+    };
     const sendChat = (e) => {
         e.preventDefault();
         const text = draft.trim();
@@ -353,6 +389,48 @@ export default function TycoonPanel({ registerReporter, game = false, onClose, o
                 </form>
             )}
             {self && <StreakMeter meter={self.meter} full={self.meterFull} />}
+            <button type="button" onClick={toggleGames} aria-expanded={gamesOpen}
+                className="focus-ring w-fit rounded-lg border border-line-soft px-2 py-1 text-[10px] font-bold text-text-dim hover:text-text-primary">
+                💾 {self?.run || 'Games'}{saves?.length ? ` · ${saves.length} saved` : ''}
+            </button>
+            {gamesOpen && (
+                <div className="flex flex-col gap-1.5 rounded-lg border border-line-soft bg-surface-body p-2">
+                    <form onSubmit={newGame} className="flex items-end gap-1.5">
+                        <label className="min-w-0 flex-1 text-[10px] font-medium text-text-dim">
+                            New game — shelves this run
+                            <input value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={40}
+                                placeholder="Name the new run" aria-label="New game name"
+                                className="mt-0.5 block w-full rounded-lg px-1.5 py-1 text-xs font-bold" />
+                        </label>
+                        <button type="submit" className="focus-ring press rounded-lg bg-accent px-2 py-1.5 text-[11px] font-bold text-white">
+                            New game
+                        </button>
+                    </form>
+                    {saves?.length > 0 && (
+                        <ul className="flex flex-col gap-1">
+                            {saves.map((s) => (
+                                <li key={s.id} className="flex items-center gap-1.5 rounded-lg border border-line-soft px-2 py-1 text-[11px]">
+                                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: TIER_DOTS[s.tierIndex] || TIER_DOTS[0] }} title={TIER_LABELS[s.tierIndex]} />
+                                    <span className="min-w-0 truncate font-bold text-text-primary">{s.name}</span>
+                                    <span className="ml-auto shrink-0 font-mono text-[10px] font-extrabold tabular-nums text-text-dim">${(s.money ?? 0).toLocaleString()}</span>
+                                    <button type="button" onClick={() => loadGame(s.id)}
+                                        className="focus-ring press shrink-0 rounded border border-line-soft px-1.5 py-0.5 text-[10px] font-bold text-text-primary hover:border-text-dim">
+                                        Load
+                                    </button>
+                                    <button type="button" onClick={() => deleteSave(s.id)}
+                                        aria-label={confirmDelete === s.id ? `Really delete ${s.name}` : `Delete ${s.name}`}
+                                        className={`focus-ring press shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-bold ${confirmDelete === s.id ? 'border-text-error text-text-error' : 'border-line-soft text-text-dim hover:text-text-primary'}`}>
+                                        {confirmDelete === s.id ? 'Sure?' : '✕'}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    {saves && saves.length === 0 && (
+                        <p className="text-[10px] text-text-muted">No shelved runs yet. New game parks this one safely.</p>
+                    )}
+                </div>
+            )}
             {notice && <p className="text-[11px] font-bold text-accent" role="status">{notice}</p>}
         </>
     );
@@ -643,10 +721,13 @@ export default function TycoonPanel({ registerReporter, game = false, onClose, o
 
                 {error && <p className="text-[11px] font-bold text-text-error" role="alert">{error}</p>}
 
-                {/* The scene: monkey, money, floaters */}
+                {/* The scene: monkey, money, floaters — dressed exactly like
+                    its classroom self. */}
                 <div className="relative">
                     <MoneyFloaters floaters={floaters} />
-                    <TycoonMonkey tier={(me?.tierIndex ?? 0) + 1} typePulse={typePulse} celebrate={celebrate} />
+                    <TycoonMonkey tier={(me?.tierIndex ?? 0) + 1} typePulse={typePulse} celebrate={celebrate}
+                        acc={me?.acc} sophisticated={me?.sophisticated} watching={me?.watching}
+                        autos={me?.autos} robo={me?.robo} impact={selfImpact} />
                     {me?.pets?.length > 0 && (
                         <div className="pointer-events-none absolute bottom-1 right-2 flex gap-1 text-sm" aria-hidden="true">
                             {me.pets.map((p) => <span key={p}>{PET_EMOJI[p]}</span>)}

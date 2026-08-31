@@ -412,3 +412,31 @@ describe('arena: automonkeys, robo, hats', () => {
     expect(row).toMatchObject({ autos: 3, robo: true, acc: { head: 2, eyes: 1, body: 0 }, sophisticated: false });
   });
 });
+
+describe('save slots', () => {
+  it('runs carry a name, defaulting politely', () => {
+    expect(player('u1', 'Harry').state.name).toBe('First run');
+    expect(player('u2', 'Alex', { name: '  speedy boi  ' }).state.name).toBe('speedy boi');
+  });
+
+  it('replaceState swaps the whole game and resets every per-run field', () => {
+    const me = player('u1', 'Harry', { tier: 7, money: 5000 });
+    me.meter = 20; me.shields = 3; me.wipers = true; me.umbrella = true;
+    me.words = 120; me.goalHit = true; me.lastSabotageAt = 99; me.lastHitAt = 99;
+    const fresh = tycoon.replaceState(me, { name: 'Run 2' });
+    expect(fresh).toMatchObject({ name: 'Run 2', money: 0, tier: 0, lifetimeWords: 0 });
+    expect(me.meter).toBe(0);
+    expect(me.shields).toBe(0);
+    expect(me.wipers).toBe(false);
+    expect(me.umbrella).toBe(false);
+    expect(me.words).toBe(0);
+    expect(me.goalHit).toBe(false);
+    expect(me.dirty).toBe(true);
+    expect(me.bucket.tokens).toBe(45); // fresh credit bucket, not a money printer
+  });
+
+  it('saveSummary is the save-slot card: name, wallet, tier, lifetime words', () => {
+    const card = tycoon.saveSummary({ name: 'Old grind', money: 777, tier: 5, lifetimeWords: 4200 });
+    expect(card).toEqual({ name: 'Old grind', money: 777, tierIndex: 5, tier: 'gold', lifetimeWords: 4200 });
+  });
+});

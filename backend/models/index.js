@@ -20,6 +20,7 @@ const UserFinancialProfile = require('./UserFinancialProfile');
 const ReviewItem = require('./ReviewItem');
 const Essay = require('./Essay');
 const TycoonState = require('./TycoonState');
+const TycoonSave = require('./TycoonSave');
 const EssayContextDoc = require('./EssayContextDoc');
 const EssayAnnotation = require('./EssayAnnotation');
 const LiveSession = require('./LiveSession');
@@ -314,6 +315,8 @@ Essay.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 // Typewriter tycoon — one persistent game-state row per user.
 User.hasOne(TycoonState, { foreignKey: 'userId', as: 'tycoonState', onDelete: 'CASCADE' });
 TycoonState.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(TycoonSave, { foreignKey: 'userId', as: 'tycoonSaves', onDelete: 'CASCADE' });
+TycoonSave.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // Essay workspace — per-essay context documents (AI grounding library) and
 // paragraph annotations. Both cascade with the essay and with the user.
@@ -902,6 +905,7 @@ module.exports = {
   sequelize,
   User,
   TycoonState,
+  TycoonSave,
   Course,
   Module,
   Lesson,

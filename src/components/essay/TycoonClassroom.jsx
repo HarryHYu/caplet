@@ -36,8 +36,11 @@ export default function TycoonClassroom({ members = [], myId, pulses = {}, fx = 
             if (seen.current.has(f.id)) return;
             seen.current.add(f.id);
             const wrap = wrapRef.current?.getBoundingClientRect();
-            const fromBox = deskRefs.current[f.from]?.getBoundingClientRect();
-            const toBox = deskRefs.current[f.to]?.getBoundingClientRect();
+            // Measure the scene SVGs, not the desk containers — the svg is
+            // centred with side margins, and the monkey's head sits at a fixed
+            // fraction of its 320x190 viewBox. Aim there, dead centre.
+            const fromBox = deskRefs.current[f.from]?.querySelector('svg')?.getBoundingClientRect();
+            const toBox = deskRefs.current[f.to]?.querySelector('svg')?.getBoundingClientRect();
             const showImpact = () => {
                 setImpacts((prev) => ({ ...prev, [f.to]: { kind: f.kind, outcome: f.outcome } }));
                 setTimeout(() => setImpacts((prev) => {
@@ -48,13 +51,18 @@ export default function TycoonClassroom({ members = [], myId, pulses = {}, fx = 
             };
             if (still || !wrap || !fromBox || !toBox) { showImpact(); return; }
             setThrows((prev) => ({ ...prev, [f.from]: (prev[f.from] || 0) + 1 }));
+            // Head centre in the TycoonMonkey viewBox: (116, 55) of 320x190.
+            // The emoji glyph anchors top-left, so pull back half its size.
+            const HEAD_X = 116 / 320;
+            const HEAD_Y = 55 / 190;
+            const HALF_GLYPH = 13;
             setProjectiles((prev) => [...prev, {
                 id: f.id,
                 kind: f.kind,
-                x1: fromBox.left - wrap.left + fromBox.width * 0.45,
-                y1: fromBox.top - wrap.top + fromBox.height * 0.35,
-                x2: toBox.left - wrap.left + toBox.width * 0.36,
-                y2: toBox.top - wrap.top + toBox.height * 0.3,
+                x1: fromBox.left - wrap.left + fromBox.width * 0.55 - HALF_GLYPH,
+                y1: fromBox.top - wrap.top + fromBox.height * 0.45 - HALF_GLYPH,
+                x2: toBox.left - wrap.left + toBox.width * HEAD_X - HALF_GLYPH,
+                y2: toBox.top - wrap.top + toBox.height * HEAD_Y - HALF_GLYPH,
             }]);
             setTimeout(() => {
                 setProjectiles((prev) => prev.filter((p) => p.id !== f.id));

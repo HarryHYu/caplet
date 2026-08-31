@@ -11,6 +11,10 @@
  *                                               -> {ok, earned, crits, jackpot, meter, self}
  *   tycoon:buy      {item}                      -> {ok, self} | {error}
  *   tycoon:admin    {password, money}           -> {ok, self} | {error}   dev cheat, TYCOON_ADMIN_PASSWORD (default "test")
+ *   tycoon:saves    {}                          -> {ok, current, saves: [{id, name, money, tier, ...}]}
+ *   tycoon:newGame  {name}                      -> {ok, self, saves}      park the current run, start fresh
+ *   tycoon:loadGame {id}                        -> {ok, self, saves}      park current, load that save
+ *   tycoon:deleteSave {id}                      -> {ok, saves}
  *   party:create    {goalWords}                 -> {ok, you, self, snapshot}
  *   party:join      {code}                      -> {ok, you, self, snapshot}
  *   party:leave     {}                          -> {ok}
@@ -23,8 +27,9 @@
  *   party:hit       {kind, from, durationMs}    (you got got)
  *   party:blocked   {kind, from, how:'shield'|'umbrella'|'absorbed', bounty?}
  */
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { User, TycoonState } = require('../models');
+const { User, TycoonState, TycoonSave } = require('../models');
 const { JWT_SECRET } = require('../middleware/auth');
 const partyRoom = require('./partyRoom');
 
@@ -159,6 +164,83 @@ function attachPartySocket(io) {
         broadcastState(room);
       }
       return cb?.({ ok: true, bought: result.bought, self: partyRoom.selfSnapshot(session) });
+    });
+
+    // ── Save slots: the active run lives in tycoon_states; parked runs in
+    // tycoon_saves. New game and load both shelve the current run first, so
+    // nothing is ever lost without an explicit delete. ──
+    const MAX_SAVES = 10;
+    const listSaves = async () => {
+      const rows = await TycoonSave.findAll({
+        where: { userId: socket.data.userId },
+        order: [['updatedAt', 'DESC']],
+      });
+      return rows.map((row) => ({ id: row.id, ...partyRoom.saveSummary(row.state), savedAt: row.updatedAt }));
+    };
+    const parkCurrent = async (session) => {
+      await TycoonSave.create({
+        id: crypto.randomUUID(),
+        userId: socket.data.userId,
+        name: session.state.name,
+        state: session.state,
+      });
+    };
+
+    socket.on('tycoon:saves', async (_payload, cb) => {
+      const session = mySession();
+      if (!session) return cb?.({ error: 'Say hello first.' });
+      try {
+        return cb?.({ ok: true, current: partyRoom.saveSummary(session.state), saves: await listSaves() });
+      } catch {
+        return cb?.({ error: 'Could not load your saves.' });
+      }
+    });
+
+    socket.on('tycoon:newGame', async (payload, cb) => {
+      const session = mySession();
+      if (!session) return cb?.({ error: 'Say hello first.' });
+      try {
+        if ((await TycoonSave.count({ where: { userId: socket.data.userId } })) >= MAX_SAVES) {
+          return cb?.({ error: `The shelf holds ${MAX_SAVES} saved runs — delete one first.` });
+        }
+        await parkCurrent(session);
+        partyRoom.replaceState(session, { name: payload?.name || 'New run' });
+        await saveSession(session);
+        const room = myRoom();
+        if (room) broadcastState(room);
+        return cb?.({ ok: true, self: partyRoom.selfSnapshot(session), saves: await listSaves() });
+      } catch {
+        return cb?.({ error: 'Could not start a new game.' });
+      }
+    });
+
+    socket.on('tycoon:loadGame', async (payload, cb) => {
+      const session = mySession();
+      if (!session) return cb?.({ error: 'Say hello first.' });
+      try {
+        const row = await TycoonSave.findOne({ where: { id: String(payload?.id || ''), userId: socket.data.userId } });
+        if (!row) return cb?.({ error: 'That save is gone.' });
+        await parkCurrent(session);
+        partyRoom.replaceState(session, row.state);
+        await row.destroy(); // it is the active run now
+        await saveSession(session);
+        const room = myRoom();
+        if (room) broadcastState(room);
+        return cb?.({ ok: true, self: partyRoom.selfSnapshot(session), saves: await listSaves() });
+      } catch {
+        return cb?.({ error: 'Could not load that game.' });
+      }
+    });
+
+    socket.on('tycoon:deleteSave', async (payload, cb) => {
+      const session = mySession();
+      if (!session) return cb?.({ error: 'Say hello first.' });
+      try {
+        await TycoonSave.destroy({ where: { id: String(payload?.id || ''), userId: socket.data.userId } });
+        return cb?.({ ok: true, saves: await listSaves() });
+      } catch {
+        return cb?.({ error: 'Could not delete that save.' });
+      }
     });
 
     // Dev/admin cheat console: password-gated wallet override. Override the

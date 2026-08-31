@@ -147,6 +147,7 @@ function normalizeState(raw) {
   const s = raw && typeof raw === 'object' ? raw : {};
   const up = s.up && typeof s.up === 'object' ? s.up : {};
   return {
+    name: String(s.name || 'First run').slice(0, 40).trim() || 'First run',
     money: Math.max(0, Math.round(Number(s.money) || 0)),
     tier: Math.max(0, Math.min(TIERS.length - 1, Math.round(Number(s.tier) || 0))),
     up: {
@@ -208,6 +209,32 @@ function ensureSession(userId, name, persistedState) {
 }
 
 function getSession(userId) { return sessions.get(String(userId)) || null; }
+
+/** Swap the whole active game (new game / load save). Every per-run field —
+ * meter, defences, cooldowns, credit bucket — starts fresh with it. */
+function replaceState(session, rawState) {
+  session.state = normalizeState(rawState);
+  session.meter = 0;
+  session.shields = 0;
+  session.wipers = false;
+  session.umbrella = false;
+  session.umbrellaReadyAt = 0;
+  session.lastSabotageAt = 0;
+  session.lastHitAt = 0;
+  session.goalHit = false;
+  session.words = 0;
+  session.bucket = { tokens: CREDIT_WPM_CAP, ts: now() };
+  session.autoTs = now();
+  session.autoCarry = 0;
+  session.dirty = true;
+  return session.state;
+}
+
+/** The save-slot card: enough to pick a run from a list. */
+function saveSummary(rawState) {
+  const s = normalizeState(rawState);
+  return { name: s.name, money: s.money, tierIndex: s.tier, tier: TIERS[s.tier].key, lifetimeWords: s.lifetimeWords };
+}
 
 // ── Earnings ────────────────────────────────────────────────────────────────
 
@@ -658,6 +685,7 @@ function publicMember(session) {
 function selfSnapshot(session) {
   return {
     me: publicMember(session),
+    run: session.state.name,
     up: { ...session.state.up },
     meter: session.meter,
     meterFull: STREAK_METER_FULL,
@@ -723,6 +751,8 @@ module.exports = {
   normalizeState,
   ensureSession,
   getSession,
+  replaceState,
+  saveSummary,
   recordProgress,
   shopFor,
   buy,
