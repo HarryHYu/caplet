@@ -10,6 +10,7 @@
  *                    paraCount, accuracy, watching}
  *                                               -> {ok, earned, crits, jackpot, meter, self}
  *   tycoon:buy      {item}                      -> {ok, self} | {error}
+ *   tycoon:admin    {password, money}           -> {ok, self} | {error}   dev cheat, TYCOON_ADMIN_PASSWORD (default "test")
  *   party:create    {goalWords}                 -> {ok, you, self, snapshot}
  *   party:join      {code}                      -> {ok, you, self, snapshot}
  *   party:leave     {}                          -> {ok}
@@ -140,6 +141,20 @@ function attachPartySocket(io) {
       return cb?.({ ok: true, bought: result.bought, self: partyRoom.selfSnapshot(session) });
     });
 
+    // Dev/admin cheat console: password-gated wallet override. Override the
+    // password with TYCOON_ADMIN_PASSWORD in the environment.
+    socket.on('tycoon:admin', (payload, cb) => {
+      const session = mySession();
+      if (!session) return cb?.({ error: 'Say hello first.' });
+      const expected = process.env.TYCOON_ADMIN_PASSWORD || 'test';
+      if (String(payload?.password || '') !== expected) return cb?.({ error: 'Wrong password.' });
+      const result = partyRoom.adminSetMoney(session, payload?.money);
+      if (result.error) return cb?.({ error: result.error });
+      const room = myRoom();
+      if (room) broadcastState(room);
+      return cb?.({ ok: true, self: partyRoom.selfSnapshot(session) });
+    });
+
     socket.on('party:create', (payload, cb) => {
       const session = mySession();
       if (!session) return cb?.({ error: 'Say hello first.' });
@@ -209,21 +224,29 @@ function attachPartySocket(io) {
       const room = myRoom();
       if (!session || !room) return cb?.({ error: 'Not in a party.' });
       const result = partyRoom.sabotage(room, session.id, payload?.target, payload?.kind);
-      if (result.error) return cb?.({ error: result.error });
+      if (result.error) return cb?.({ error: result.error, retryInMs: result.retryInMs, scope: result.scope });
       const label = partyRoom.SABOTAGES[result.kind].label;
       if (result.absorbed) {
         emitToMember(room, result.target.id, 'party:blocked', { kind: result.kind, from: session.name, how: 'absorbed', bounty: result.cost });
         systemChat(room, `🧘 ${result.target.name} absorbed ${session.name}'s ${label} (+$${result.cost})`);
       } else if (result.blocked) {
         emitToMember(room, result.target.id, 'party:blocked', { kind: result.kind, from: session.name, how: result.blocked });
-        systemChat(room, `${result.blocked === 'shield' ? '🛡️' : '☂️'} ${result.target.name} blocked ${session.name}'s ${label}`);
+        systemChat(room, result.blocked === 'pet'
+          ? `🐈 ${result.target.name}'s desk cat chased off ${session.name}'s ${label}`
+          : `${result.blocked === 'shield' ? '🛡️' : '☂️'} ${result.target.name} blocked ${session.name}'s ${label}`);
       } else {
         emitToMember(room, result.target.id, 'party:hit', { kind: result.kind, from: session.name, durationMs: result.durationMs, stolen: result.stolen });
         const flair = { confetti: '🎉', snail: '🐌', ink: '🦑', jelly: '🍮', fog: '🌫️', bomb: '💣', cat: '🐈', thief: '🦹' }[result.kind] || '💥';
         systemChat(room, `${flair} ${session.name} hit ${result.target.name} with ${label}${result.stolen ? ` and stole $${result.stolen}` : ''}`);
       }
       broadcastState(room);
-      return cb?.({ ok: true, outcome: result.absorbed ? 'absorbed' : result.blocked || 'hit', self: partyRoom.selfSnapshot(session) });
+      return cb?.({
+        ok: true,
+        outcome: result.absorbed ? 'absorbed' : result.blocked || 'hit',
+        reloadMs: result.reloadMs,
+        targetCooldownMs: result.targetCooldownMs,
+        self: partyRoom.selfSnapshot(session),
+      });
     });
 
     socket.on('party:gift', (payload, cb) => {

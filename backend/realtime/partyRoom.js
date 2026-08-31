@@ -77,11 +77,14 @@ const DEFENCES = {
   wipers: { label: 'Wipers', bMult: 75 },
   umbrella: { label: 'Umbrella', bMult: 100, blocksUpTo: 18 },
 };
+// Pets are one-time companions with a small passive each.
 const PETS = {
-  snailPet: { label: 'Desk snail', bMult: 30 },
-  catPet: { label: 'Desk cat', bMult: 90 },
-  dragonPet: { label: 'Desk dragon', bMult: 250 },
+  snailPet: { label: 'Desk snail', bMult: 30, perk: 'incoming hits fade 20% faster' },
+  catPet: { label: 'Desk cat', bMult: 90, perk: 'chases off Cat Deploys; thieves only grab half' },
+  dragonPet: { label: 'Desk dragon', bMult: 250, perk: '+10% word earnings' },
 };
+const SNAIL_PET_DURATION_MULT = 0.8;
+const DRAGON_PET_EARN_MULT = 1.1;
 const GIFT_PRESETS = [10, 25, 50];       // × sender's b
 const GIFT_RECEIVE_CAP_B = 60;           // × receiver's b — anti-funnelling
 const THIEF_RATE = 0.08;
@@ -201,7 +204,8 @@ function recordProgress(session, { wordsDelta, missesDelta, paragraphsDelta, par
   for (let i = 0; i < words; i += 1) {
     session.meter = Math.min(STREAK_METER_FULL, session.meter + 1);
     const isCrit = ribbon.p > 0 && crypto.randomInt(10000) < ribbon.p * 10000;
-    const perWord = Math.min(b * 10 * 1.5, Math.round((isCrit ? b * ribbon.mult : b) * Math.min(M_CAP, streakMultiplier(session))));
+    const dragon = state.pets.includes('dragonPet') ? DRAGON_PET_EARN_MULT : 1;
+    const perWord = Math.min(b * 10 * 1.5, Math.round((isCrit ? b * ribbon.mult : b) * dragon * Math.min(M_CAP, streakMultiplier(session))));
     earned += perWord;
     if (isCrit) { crits += 1; jackpot += perWord; }
   }
@@ -247,7 +251,7 @@ function shopFor(session) {
     wipers: { cost: DEFENCES.wipers.bMult * b, owned: session.wipers },
     umbrella: { cost: DEFENCES.umbrella.bMult * b, owned: session.umbrella },
     pets: Object.entries(PETS).map(([key, pet]) => ({
-      key, label: pet.label, cost: pet.bMult * b, owned: state.pets.includes(key),
+      key, label: pet.label, perk: pet.perk, cost: pet.bMult * b, owned: state.pets.includes(key),
     })),
     sabotages: Object.entries(SABOTAGES).map(([key, sab]) => ({
       key, label: sab.label, cost: sab.bMult * b, durationMs: sab.durationMs,
@@ -303,6 +307,18 @@ function buy(session, item) {
     return { bought: item, cost };
   }
   return { error: 'Unknown item.' };
+}
+
+/** Dev/admin cheat: set a wallet outright. The password is checked by the
+ * socket layer; this only validates and applies the amount. */
+function adminSetMoney(session, amount) {
+  const n = Math.round(Number(amount));
+  if (!Number.isFinite(n) || n < 0 || n > 10_000_000) {
+    return { error: 'Amount must be between 0 and 10,000,000.' };
+  }
+  session.state.money = n;
+  session.dirty = true;
+  return { ok: true, money: n };
 }
 
 // ── Parties ─────────────────────────────────────────────────────────────────
@@ -390,11 +406,13 @@ function sabotage(room, attackerId, targetId, kind) {
   if (room.sabotagesOff) return { error: 'The host has declared peace.' };
   const sinceLast = now() - attacker.lastSabotageAt;
   if (sinceLast < SABOTAGE_COOLDOWN_MS) {
-    return { error: `Reloading — ${Math.ceil((SABOTAGE_COOLDOWN_MS - sinceLast) / 1000)}s.` };
+    const waitMs = SABOTAGE_COOLDOWN_MS - sinceLast;
+    return { error: `Reloading — ${Math.ceil(waitMs / 1000)}s.`, retryInMs: waitMs, scope: 'attacker' };
   }
   const sinceHit = now() - target.lastHitAt;
   if (sinceHit < TARGET_COOLDOWN_MS) {
-    return { error: `${target.name} is still recovering — ${Math.ceil((TARGET_COOLDOWN_MS - sinceHit) / 1000)}s.` };
+    const waitMs = TARGET_COOLDOWN_MS - sinceHit;
+    return { error: `${target.name} is still recovering — ${Math.ceil(waitMs / 1000)}s.`, retryInMs: waitMs, scope: 'target' };
   }
   const cost = weapon.bMult * bOf(attacker.state);
   if (!spend(attacker, cost)) return { error: `Need $${cost} for ${weapon.label}.` };
@@ -405,19 +423,24 @@ function sabotage(room, attackerId, targetId, kind) {
   if (target.watching) {
     target.state.money += cost;
     target.dirty = true;
-    return { absorbed: true, kind, cost, attacker, target };
+    return { absorbed: true, kind, cost, attacker, target, reloadMs: SABOTAGE_COOLDOWN_MS };
   }
   if (target.shields > 0) {
     target.shields -= 1;
-    return { blocked: 'shield', kind, cost, attacker, target };
+    return { blocked: 'shield', kind, cost, attacker, target, reloadMs: SABOTAGE_COOLDOWN_MS };
   }
   if (target.umbrella && weapon.bMult <= DEFENCES.umbrella.blocksUpTo && now() >= target.umbrellaReadyAt) {
     target.umbrellaReadyAt = now() + UMBRELLA_COOLDOWN_MS;
-    return { blocked: 'umbrella', kind, cost, attacker, target };
+    return { blocked: 'umbrella', kind, cost, attacker, target, reloadMs: SABOTAGE_COOLDOWN_MS };
+  }
+  // A desk cat guards its territory: Cat Deploys get chased straight off.
+  if (kind === 'cat' && target.state.pets.includes('catPet')) {
+    return { blocked: 'pet', kind, cost, attacker, target, reloadMs: SABOTAGE_COOLDOWN_MS };
   }
 
   target.lastHitAt = now();
-  const durationMs = Math.round(weapon.durationMs * (target.wipers ? 0.5 : 1));
+  const snailGuard = target.state.pets.includes('snailPet') ? SNAIL_PET_DURATION_MULT : 1;
+  const durationMs = Math.round(weapon.durationMs * (target.wipers ? 0.5 : 1) * snailGuard);
   let stolen = 0;
   if (kind === 'thief') {
     const victimB = bOf(target.state);
@@ -426,6 +449,7 @@ function sabotage(room, attackerId, targetId, kind) {
       THIEF_CAP_B * victimB,
       Math.max(0, target.state.money - THIEF_FLOOR_B * victimB),
     );
+    if (target.state.pets.includes('catPet')) stolen = Math.floor(stolen / 2);
     if (stolen > 0) {
       target.state.money -= stolen;
       attacker.state.money += Math.floor(stolen / 2); // half burns
@@ -433,7 +457,10 @@ function sabotage(room, attackerId, targetId, kind) {
       attacker.dirty = true;
     }
   }
-  return { hit: true, kind, cost, durationMs, stolen, attacker, target };
+  return {
+    hit: true, kind, cost, durationMs, stolen, attacker, target,
+    reloadMs: SABOTAGE_COOLDOWN_MS, targetCooldownMs: TARGET_COOLDOWN_MS,
+  };
 }
 
 function gift(room, fromId, toId, kind, presetIndex) {
@@ -583,6 +610,7 @@ module.exports = {
   recordProgress,
   shopFor,
   buy,
+  adminSetMoney,
   createParty,
   getRoom,
   joinParty,

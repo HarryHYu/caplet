@@ -145,6 +145,53 @@ describe('TycoonPanel', () => {
     expect(screen.getByText('no u')).toBeInTheDocument();
   });
 
+  it('a landed hit starts the tray countdown, disables weapons, and gifts are priced in dollars', async () => {
+    await boot();
+    fireEvent.click(screen.getByRole('button', { name: /Open party/i }));
+    await act(async () => {
+      fakeSocket.ackOf('party:create')({ ok: true, you: 'u1', self: selfSnapshot(), snapshot: roomSnapshot() });
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Interact with Alex P\./i }));
+    expect(screen.getByTitle(/Send them \$20 of your money/)).toBeInTheDocument(); // 10 x b($2), in dollars not "b"
+    fireEvent.click(screen.getByTitle(/Ink Splat — \$28/));
+    await act(async () => {
+      fakeSocket.ackOf('party:sabotage')({ ok: true, outcome: 'hit', reloadMs: 8000, targetCooldownMs: 20000, self: selfSnapshot() });
+    });
+    expect(screen.getByRole('timer')).toHaveTextContent(/20s/);
+    expect(screen.getByTitle(/Ink Splat — \$28/)).toBeDisabled();
+  });
+
+  it('cooldown rejections surface right in the tray with their countdown', async () => {
+    await boot();
+    fireEvent.click(screen.getByRole('button', { name: /Open party/i }));
+    await act(async () => {
+      fakeSocket.ackOf('party:create')({ ok: true, you: 'u1', self: selfSnapshot(), snapshot: roomSnapshot() });
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Interact with Alex P\./i }));
+    fireEvent.click(screen.getByTitle(/Ink Splat — \$28/));
+    await act(async () => {
+      fakeSocket.ackOf('party:sabotage')({ error: 'Alex P. is still recovering — 12s.', retryInMs: 12000, scope: 'target' });
+    });
+    expect(screen.getByText(/still recovering — 12s/)).toBeInTheDocument();
+    expect(screen.getByRole('timer')).toHaveTextContent(/12s/);
+    expect(screen.getByTitle(/Ink Splat — \$28/)).toBeDisabled();
+  });
+
+  it('the wallet opens the password-gated admin form and sets money over the wire', async () => {
+    await boot();
+    fireEvent.click(screen.getByTitle('Admin'));
+    fireEvent.change(screen.getByLabelText('Admin password'), { target: { value: 'test' } });
+    fireEvent.change(screen.getByLabelText('Admin money amount'), { target: { value: '5000' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Set$/ }));
+    const call = fakeSocket.emitted.find((e) => e.event === 'tycoon:admin');
+    expect(call.payload).toEqual({ password: 'test', money: 5000 });
+    await act(async () => {
+      call.ackFn({ ok: true, self: selfSnapshot({ me: { ...selfSnapshot().me, money: 5000 } }) });
+    });
+    expect(screen.getByText('$5,000')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Admin password')).not.toBeInTheDocument(); // closes on success
+  });
+
   it('renders incoming hits as FX whose wipe counter climbs with typed words', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {

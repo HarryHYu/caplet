@@ -279,3 +279,69 @@ describe('chat and sweep', () => {
     expect(tycoon.getSession('u1')).toBeNull();
   });
 });
+
+describe('round 2: cooldown metadata, pet perks, admin', () => {
+  const duel = () => {
+    const a = player('u1', 'Harry');
+    const b = player('u2', 'Alex');
+    const room = tycoon.createParty(a, 0);
+    tycoon.joinParty(room.code, b);
+    a.state.money = 1000;
+    return { a, b, room };
+  };
+
+  it('sabotage acks carry the cooldown windows; rejections carry retry info', () => {
+    const { a, room } = duel();
+    const hit = tycoon.sabotage(room, 'u1', 'u2', 'confetti');
+    expect(hit.reloadMs).toBe(8000);
+    expect(hit.targetCooldownMs).toBe(20000);
+    const reloading = tycoon.sabotage(room, 'u1', 'u2', 'confetti');
+    expect(reloading.scope).toBe('attacker');
+    expect(reloading.retryInMs).toBeGreaterThan(0);
+    expect(reloading.retryInMs).toBeLessThanOrEqual(8000);
+    a.lastSabotageAt = 0; // reload done, but the victim is still recovering
+    const recovering = tycoon.sabotage(room, 'u1', 'u2', 'confetti');
+    expect(recovering.scope).toBe('target');
+    expect(recovering.retryInMs).toBeGreaterThan(8000);
+    expect(recovering.retryInMs).toBeLessThanOrEqual(20000);
+  });
+
+  it('the desk dragon pays +10% per word (visible above stone rounding)', () => {
+    const plain = player('u1', 'Harry', { tier: 3 }); // iron b=7
+    const lord = player('u2', 'Draco', { tier: 3, pets: ['dragonPet'] });
+    expect(progress(plain, 10).earned).toBe(70);
+    expect(progress(lord, 10).earned).toBe(80); // round(7 * 1.1) = 8 per word
+  });
+
+  it('the desk snail shortens incoming hit durations by 20%', () => {
+    const { b, room } = duel();
+    b.state.pets = ['snailPet'];
+    const r = tycoon.sabotage(room, 'u1', 'u2', 'ink');
+    expect(r.hit).toBe(true);
+    expect(r.durationMs).toBe(7000 * 0.8);
+  });
+
+  it('the desk cat chases off Cat Deploys and halves the word thief', () => {
+    const { a, b, room } = duel();
+    b.state.pets = ['catPet'];
+    b.state.money = 500;
+    const chased = tycoon.sabotage(room, 'u1', 'u2', 'cat');
+    expect(chased.blocked).toBe('pet');
+    expect(b.lastHitAt).toBe(0); // never landed
+    a.lastSabotageAt = 0;
+    const theft = tycoon.sabotage(room, 'u1', 'u2', 'thief');
+    expect(theft.stolen).toBe(20); // 8% of 500 = 40, cat halves it
+    expect(b.state.money).toBe(480);
+  });
+
+  it('adminSetMoney sets and clamps; junk is rejected', () => {
+    const me = player('u1', 'Harry');
+    expect(tycoon.adminSetMoney(me, 5000)).toEqual({ ok: true, money: 5000 });
+    expect(me.state.money).toBe(5000);
+    expect(me.dirty).toBe(true);
+    expect(tycoon.adminSetMoney(me, -5).error).toMatch(/between/);
+    expect(tycoon.adminSetMoney(me, 999999999).error).toMatch(/between/);
+    expect(tycoon.adminSetMoney(me, 'lol').error).toMatch(/between/);
+    expect(me.state.money).toBe(5000); // junk never applied
+  });
+});

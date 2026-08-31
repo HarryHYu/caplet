@@ -84,6 +84,13 @@ export default function TycoonPanel({ registerReporter, compact = false, onClose
     const [celebrate, setCelebrate] = useState(0);
     const [muted, setMutedState] = useState(getMuted());
     const [attackTarget, setAttackTarget] = useState(null); // member id with open tray
+    const [trayMsg, setTrayMsg] = useState(null); // feedback right where the attack buttons live
+    const [, tickCooldowns] = useState(0); // re-render driver while a cooldown counts down
+    const [adminOpen, setAdminOpen] = useState(false);
+    const [adminPass, setAdminPass] = useState('');
+    const [adminMoney, setAdminMoney] = useState('');
+    const reloadUntil = useRef(0);       // my weapons reload (any target)
+    const targetCoolUntil = useRef({});  // targetId -> ts their recovery ends
     const pending = useRef({ words: 0, misses: 0, paragraphs: 0, para: 0, paraCount: 0, accuracy: 100, watching: false });
     const flushTimer = useRef(null);
     const noticeTimer = useRef(null);
@@ -131,6 +138,9 @@ export default function TycoonPanel({ registerReporter, compact = false, onClose
                 play('coin');
                 addFloater(`+$${bounty}`, 'crit');
                 say(`🧘 Absorbed ${from}'s ${SABOTAGE_META[kind]?.label || kind} (+$${bounty})`);
+            } else if (how === 'pet') {
+                play('thunk');
+                say(`🐈 Your desk cat chased off ${from}'s ${SABOTAGE_META[kind]?.label || kind}`);
             } else {
                 play('thunk');
                 say(`${how === 'shield' ? '🛡️' : '☂️'} Blocked ${from}'s ${SABOTAGE_META[kind]?.label || kind}`);
@@ -199,6 +209,19 @@ export default function TycoonPanel({ registerReporter, compact = false, onClose
 
     useEffect(() => { chatEndRef.current?.scrollIntoView?.({ block: 'nearest' }); }, [chatLog]);
 
+    // Tick while any sabotage cooldown is live so the tray countdowns stay
+    // honest; when nothing is cooling the interval sets no state at all.
+    useEffect(() => {
+        if (!inParty) return undefined;
+        const id = setInterval(() => {
+            const t = Date.now();
+            if (reloadUntil.current > t || Object.values(targetCoolUntil.current).some((ts) => ts > t)) {
+                tickCooldowns((n) => n + 1);
+            }
+        }, 500);
+        return () => clearInterval(id);
+    }, [inParty]);
+
     const ack = (result, sound) => {
         if (result?.error) { setError(result.error); return false; }
         setError(null);
@@ -223,9 +246,33 @@ export default function TycoonPanel({ registerReporter, compact = false, onClose
     const leaveParty = () => socketRef.current?.emit('party:leave', {}, () => { setRoom(null); setChatLog([]); setAttackTarget(null); });
     const togglePeace = () => socketRef.current?.emit('party:peace', { off: !room.sabotagesOff }, (r) => ack(r));
     const zap = (target, kind) => socketRef.current?.emit('party:sabotage', { target, kind }, (r) => {
-        if (ack(r)) say(r.outcome === 'hit' ? 'Direct hit!' : r.outcome === 'absorbed' ? 'They absorbed it… and kept your money.' : 'Blocked!');
+        const t = Date.now();
+        if (r?.error) {
+            // Cooldown rejections land right in the tray, with a live countdown.
+            if (r.retryInMs && r.scope === 'target') targetCoolUntil.current[target] = t + r.retryInMs;
+            else if (r.retryInMs) reloadUntil.current = t + r.retryInMs;
+            setTrayMsg(r.error);
+            tickCooldowns((n) => n + 1);
+            return;
+        }
+        if (!ack(r)) return;
+        if (r.reloadMs) reloadUntil.current = t + r.reloadMs;
+        if (r.targetCooldownMs) targetCoolUntil.current[target] = t + r.targetCooldownMs;
+        setTrayMsg(null);
+        tickCooldowns((n) => n + 1);
+        say(r.outcome === 'hit' ? 'Direct hit!' : r.outcome === 'absorbed' ? 'They absorbed it… and kept your money.' : 'Blocked!');
     });
-    const sendGift = (target, kind, preset) => socketRef.current?.emit('party:gift', { target, kind, preset }, (r) => ack(r, 'coin'));
+    const sendGift = (target, kind, preset) => socketRef.current?.emit('party:gift', { target, kind, preset }, (r) => {
+        if (r?.error) { setTrayMsg(r.error); return; }
+        setTrayMsg(null);
+        ack(r, 'coin');
+    });
+    const submitAdmin = (e) => {
+        e.preventDefault();
+        socketRef.current?.emit('tycoon:admin', { password: adminPass, money: Number(adminMoney) }, (r) => {
+            if (ack(r, 'kaching')) { setAdminOpen(false); setAdminPass(''); setAdminMoney(''); say('Wallet set.'); }
+        });
+    };
     const sendChat = (e) => {
         e.preventDefault();
         const text = draft.trim();
@@ -291,14 +338,34 @@ export default function TycoonPanel({ registerReporter, compact = false, onClose
                     )}
                 </div>
                 <div className="flex items-baseline justify-between">
-                    <span key={me?.money} className="animate-streak-pop font-mono text-2xl font-extrabold tabular-nums text-text-primary">
-                        ${me ? me.money.toLocaleString() : '…'}
-                    </span>
+                    <button type="button" onClick={() => setAdminOpen((v) => !v)} title="Admin"
+                        className="focus-ring rounded text-left">
+                        <span key={me?.money} className="animate-streak-pop font-mono text-2xl font-extrabold tabular-nums text-text-primary">
+                            ${me ? me.money.toLocaleString() : '…'}
+                        </span>
+                    </button>
                     <span className="text-[10px] font-bold text-text-dim">
                         <span className="mr-1 inline-block h-2 w-2 rounded-full align-baseline" style={{ background: TIER_DOTS[me?.tierIndex ?? 0] }} />
                         {TIER_LABELS[me?.tierIndex ?? 0]} · ${me?.b ?? 1}/word
                     </span>
                 </div>
+                {adminOpen && (
+                    <form onSubmit={submitAdmin} className="flex items-end gap-1.5 rounded-lg border border-line-soft bg-surface-body p-2">
+                        <label className="text-[10px] font-medium text-text-dim">
+                            Password
+                            <input type="password" value={adminPass} onChange={(e) => setAdminPass(e.target.value)}
+                                aria-label="Admin password" className="mt-0.5 block w-20 rounded-lg px-1.5 py-1 text-xs" />
+                        </label>
+                        <label className="text-[10px] font-medium text-text-dim">
+                            Money
+                            <input type="number" min="0" max="10000000" value={adminMoney} onChange={(e) => setAdminMoney(e.target.value)}
+                                aria-label="Admin money amount" className="mt-0.5 block w-24 rounded-lg px-1.5 py-1 text-xs font-bold" />
+                        </label>
+                        <button type="submit" className="focus-ring press rounded-lg border border-line-soft px-2 py-1.5 text-[11px] font-bold text-text-primary">
+                            Set
+                        </button>
+                    </form>
+                )}
                 {self && <StreakMeter meter={self.meter} full={self.meterFull} />}
                 {notice && <p className="text-[11px] font-bold text-accent" role="status">{notice}</p>}
 
@@ -341,7 +408,8 @@ export default function TycoonPanel({ registerReporter, compact = false, onClose
                                 <ShopButton key={pet.key} label={`${PET_EMOJI[pet.key]} ${pet.owned ? '✓' : ''}`}
                                     cost={pet.owned ? null : pet.cost}
                                     disabled={pet.owned || me.money < pet.cost}
-                                    onClick={() => buyItem(pet.key)} title={pet.label} />
+                                    onClick={() => buyItem(pet.key)}
+                                    title={pet.perk ? `${pet.label} — ${pet.perk}` : pet.label} />
                             ))}
                         </div>
                     </div>
@@ -431,31 +499,48 @@ export default function TycoonPanel({ registerReporter, compact = false, onClose
                                             <p className="mt-0.5 text-[9px] font-bold tabular-nums text-text-dim">
                                                 {m.words}w{room.goalWords > 0 ? `/${room.goalWords}` : ''} · ¶{m.para}/{m.paraCount || '?'} · {m.accuracy}%
                                             </p>
-                                            {trayOpen && self?.shop && (
-                                                <div className="mt-1.5 flex flex-wrap gap-1 border-t border-line-soft pt-1.5">
-                                                    {self.shop.sabotages.map((s) => (
-                                                        <button key={s.key} type="button" title={`${s.label} — $${s.cost}`}
-                                                            disabled={room.sabotagesOff || me.money < s.cost}
-                                                            onClick={() => zap(m.id, s.key)}
-                                                            className="focus-ring press rounded border border-line-soft px-1.5 py-0.5 text-[11px] disabled:opacity-40">
-                                                            {SABOTAGE_EMOJI[s.key]}<span className="ml-0.5 font-mono text-[8px] text-text-dim">${s.cost}</span>
-                                                        </button>
-                                                    ))}
-                                                    <span className="mx-1 w-px bg-line-soft" aria-hidden="true" />
-                                                    {[0, 1, 2].map((preset) => (
-                                                        <button key={preset} type="button" title={`Gift $${[10, 25, 50][preset] * (me?.b || 1)}`}
-                                                            onClick={() => sendGift(m.id, 'cash', preset)}
-                                                            className="focus-ring press rounded border border-line-soft px-1.5 py-0.5 text-[9px] font-bold text-text-dim hover:text-text-primary">
-                                                            💸{[10, 25, 50][preset]}b
-                                                        </button>
-                                                    ))}
-                                                    <button type="button" title="Give one of your shields" disabled={!self || me.money < 0 || (self.shop.shield.held < 1)}
-                                                        onClick={() => sendGift(m.id, 'shield')}
-                                                        className="focus-ring press rounded border border-line-soft px-1.5 py-0.5 text-[9px] font-bold text-text-dim hover:text-text-primary disabled:opacity-40">
-                                                        🛡️→
-                                                    </button>
-                                                </div>
-                                            )}
+                                            {trayOpen && self?.shop && (() => {
+                                                const t = Date.now();
+                                                const coolLeftMs = Math.max(reloadUntil.current - t, (targetCoolUntil.current[m.id] || 0) - t, 0);
+                                                const coolLeft = Math.ceil(coolLeftMs / 1000);
+                                                return (
+                                                    <div className="mt-1.5 border-t border-line-soft pt-1.5">
+                                                        <div className="flex flex-wrap items-center gap-1">
+                                                            {coolLeft > 0 && (
+                                                                <span className="rounded bg-surface-soft px-1.5 py-0.5 font-mono text-[9px] font-extrabold tabular-nums text-text-dim" role="timer">
+                                                                    ⏳{coolLeft}s
+                                                                </span>
+                                                            )}
+                                                            {self.shop.sabotages.map((s) => (
+                                                                <button key={s.key} type="button" title={`${s.label} — $${s.cost}`}
+                                                                    disabled={room.sabotagesOff || me.money < s.cost || coolLeft > 0}
+                                                                    onClick={() => zap(m.id, s.key)}
+                                                                    className="focus-ring press rounded border border-line-soft px-1.5 py-0.5 text-[11px] disabled:opacity-40">
+                                                                    {SABOTAGE_EMOJI[s.key]}<span className="ml-0.5 font-mono text-[8px] text-text-dim">${s.cost}</span>
+                                                                </button>
+                                                            ))}
+                                                            <span className="mx-1 w-px bg-line-soft" aria-hidden="true" />
+                                                            {[0, 1, 2].map((preset) => {
+                                                                const giftCost = [10, 25, 50][preset] * (me?.b || 1);
+                                                                return (
+                                                                    <button key={preset} type="button" title={`Send them $${giftCost} of your money`}
+                                                                        disabled={me.money < giftCost}
+                                                                        onClick={() => sendGift(m.id, 'cash', preset)}
+                                                                        className="focus-ring press rounded border border-line-soft px-1.5 py-0.5 text-[9px] font-bold text-text-dim hover:text-text-primary disabled:opacity-40">
+                                                                        💸${giftCost}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                            <button type="button" title="Give one of your shields" disabled={!self || (self.shop.shield.held < 1)}
+                                                                onClick={() => sendGift(m.id, 'shield')}
+                                                                className="focus-ring press rounded border border-line-soft px-1.5 py-0.5 text-[9px] font-bold text-text-dim hover:text-text-primary disabled:opacity-40">
+                                                                🛡️→
+                                                            </button>
+                                                        </div>
+                                                        {trayMsg && <p className="mt-1 text-[10px] font-bold text-text-dim" role="status">{trayMsg}</p>}
+                                                    </div>
+                                                );
+                                            })()}
                                         </li>
                                     );
                                 })}
