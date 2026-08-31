@@ -512,9 +512,9 @@ function SneakPeek({ text, label = 'Sneak peek', autoHideMs = 3500, onReveal }) 
     );
 }
 
-function HintToggle({ options, value, onChange }) {
+function HintToggle({ options, value, onChange, wrap = false }) {
     return (
-        <div className="flex items-center gap-1 p-1 bg-surface-body rounded-full border border-line-soft">
+        <div className={`flex items-center gap-1 p-1 bg-surface-body border border-line-soft ${wrap ? 'max-w-full flex-wrap rounded-2xl' : 'rounded-full'}`}>
             {options.map((opt) => (
                 <button
                     key={opt.key}
@@ -2203,13 +2203,16 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         );
     };
 
-    // One definition of the option groups, rendered inline normally and inside
-    // the pop-up menu in fullscreen.
+    // One definition of the option groups — rendered inline normally, inside
+    // the pop-up menu in fullscreen, or portalled into the arena's narrow left
+    // column, where the pills stack under their labels and wrap to fit.
+    const inSidebar = !!settingsSlot;
+    const groupCls = inSidebar ? 'flex min-w-0 flex-col items-start gap-1' : 'flex items-center gap-2';
     const settingsGroups = (
         <>
-            <span className="flex items-center gap-2">
+            <span className={groupCls}>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Input</span>
-                <HintToggle options={INPUT_MODES} value={watch ? 'watch' : 'type'}
+                <HintToggle wrap={inSidebar} options={INPUT_MODES} value={watch ? 'watch' : 'type'}
                     onChange={andRefocus((v) => {
                         const on = v === 'watch';
                         setWatch(on); setWatchPaused(false); setCurrent(''); setFix(null); setMissCount(0);
@@ -2226,25 +2229,25 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     </label>
                 )}
             </span>
-            <span className="flex items-center gap-2">
+            <span className={groupCls}>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Unit</span>
-                <HintToggle options={MEMORISE_UNITS} value={unit} onChange={switchUnit} />
+                <HintToggle wrap={inSidebar} options={MEMORISE_UNITS} value={unit} onChange={switchUnit} />
             </span>
-            <span className="flex items-center gap-2">
+            <span className={groupCls}>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">A mistake</span>
-                <HintToggle options={MISTAKE_POLICIES} value={policy}
+                <HintToggle wrap={inSidebar} options={MISTAKE_POLICIES} value={policy}
                     onChange={andRefocus((next) => { setPolicy(next); setLadderPos(0); setFix(null); setMissCount(0); })} />
             </span>
             {!letters && (
-                <span className="flex items-center gap-2">
+                <span className={groupCls}>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Letters</span>
-                    <HintToggle options={MEMORISE_TYPOS} value={typoMode} onChange={andRefocus(setTypoMode)} />
+                    <HintToggle wrap={inSidebar} options={MEMORISE_TYPOS} value={typoMode} onChange={andRefocus(setTypoMode)} />
                 </span>
             )}
             {!letters && (
-                <span className="flex items-center gap-2">
+                <span className={groupCls}>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Cue</span>
-                    <HintToggle options={MEMORISE_HINTS} value={hintStyle} onChange={andRefocus(setHintStyle)} />
+                    <HintToggle wrap={inSidebar} options={MEMORISE_HINTS} value={hintStyle} onChange={andRefocus(setHintStyle)} />
                 </span>
             )}
         </>
@@ -2384,7 +2387,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             {!fullscreen && !scene && <ProgressBar value={pIndex + (words.length ? results.length / words.length : 0)} total={paras.length} />}
 
             {settingsSlot && createPortal(
-                <div className="flex flex-col gap-2.5">
+                <div className="flex min-w-0 flex-col gap-2.5">
                     {settingsGroups}
                     {tuneEditor}
                 </div>,
