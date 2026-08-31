@@ -1,46 +1,311 @@
 /**
- * Study Party rooms — the shared-memorising lobby behind the /party socket
- * namespace. EVERYTHING here is in-memory on purpose: parties, progress,
- * money and chat live only as long as the party does. Nothing is written to
- * the database, so chat is genuinely ephemeral (a product requirement) and a
- * dead room simply evaporates.
+ * Typewriter Tycoon — the server-authoritative economy behind the /party
+ * socket namespace, now UNIVERSAL: every player has one persistent game
+ * state (money, typewriter tier, upgrades, pets — saved per account by the
+ * socket layer), and parties are an in-memory social layer on top (roster,
+ * chat, sabotage). Chat and party membership never touch the database.
  *
- * The economy is server-authoritative: clients only report landed words;
- * money, upgrade costs, sabotage charges and gifts are all computed here so
- * a devtools user can't print cash.
+ * This module is deliberately pure (no DB, no sockets) so the whole economy
+ * is unit-testable. Clients only ever report typed-word counts; every dollar,
+ * price, crit and theft is computed here.
+ *
+ * The numbers are the balance-audited spec (see the tycoon design docs):
+ * tier 2 ~3 minutes in, a tier per session mid-game, diamond a multi-session
+ * flex; every secondary pays back in ~8-10 min at its intended tier; all
+ * sink prices scale with the buyer's own $/word (b) so sabotage always costs
+ * the same minutes-of-income at any wealth level.
  */
 const crypto = require('crypto');
 
-const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // matches Live/Classroom codes
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_LENGTH = 6;
 const MAX_MEMBERS = 12;
 const MAX_CHAT_KEPT = 40;
 const MAX_CHAT_LENGTH = 240;
-const MAX_WORDS_PER_REPORT = 60;
-const ROOM_IDLE_MS = 60 * 60 * 1000;       // an hour of silence kills the room
-const ALL_GONE_MS = 2 * 60 * 1000;          // everyone disconnected 2 min -> gone
-const SABOTAGE_COOLDOWN_MS = 8 * 1000;
+const ROOM_IDLE_MS = 60 * 60 * 1000;
+const ALL_GONE_MS = 2 * 60 * 1000;
+const SABOTAGE_COOLDOWN_MS = 8 * 1000;   // per attacker
+const TARGET_COOLDOWN_MS = 20 * 1000;    // per victim — no chain-blinding
+const UMBRELLA_COOLDOWN_MS = 12 * 1000;
 
-// The tycoon knobs. Word value starts at $1/word; each Rate level adds $1.
-const UPGRADES = {
-  rate: { label: 'Word value', baseCost: 40, growth: 2.2, maxLevel: 6 },
-  shield: { label: 'Shield', cost: 30, maxHeld: 3 },
+// ── The typewriter ladder — the primary upgrade ─────────────────────────────
+const TIERS = [
+  { key: 'stone', label: 'Stone', b: 1, cost: 0 },
+  { key: 'wood', label: 'Wood', b: 2, cost: 70 },
+  { key: 'copper', label: 'Copper', b: 4, cost: 350 },
+  { key: 'iron', label: 'Iron', b: 7, cost: 1100 },
+  { key: 'bronze', label: 'Bronze', b: 12, cost: 2600 },
+  { key: 'gold', label: 'Gold', b: 20, cost: 7500 },
+  { key: 'platinum', label: 'Platinum', b: 33, cost: 20000 },
+  { key: 'diamond', label: 'Diamond', b: 55, cost: 60000 },
+];
+
+// ── Secondary upgrade lines (all paybacks tuned to ~8-10 min) ───────────────
+const SECONDARIES = {
+  // +10% income at FULL combo per level; the meter fills over 20 straight
+  // correct words and a miss halves it.
+  streak: { label: 'Streak Engine', costs: [30, 66, 145, 320, 700] },
+  // Random words go gold and pay a multiple of b.
+  ribbon: { label: 'Ribbon', costs: [120, 170, 650, 950] },
+  // Finishing a paragraph pass pays a lump of 8b × level.
+  paper: { label: 'Paper Feed', costs: [110, 260, 520] },
 };
+const RIBBON_LEVELS = [
+  { p: 0, mult: 0 },
+  { p: 0.03, mult: 5 },
+  { p: 0.04, mult: 6 },
+  { p: 0.05, mult: 8 },
+  { p: 0.05, mult: 10 },
+];
+const STREAK_METER_FULL = 20;
+const M_CAP = 3.2;
+const CREDIT_WPM_CAP = 45; // token bucket: nobody "types" faster than this
 
+// ── Sinks: everything priced in multiples of the buyer's b ──────────────────
 const SABOTAGES = {
-  ink: { cost: 25, durationMs: 7000, label: 'ink' },
-  bomb: { cost: 45, durationMs: 6000, label: 'bomb' },
+  confetti: { label: 'Confetti Cannon', bMult: 6, durationMs: 4000 },
+  snail: { label: 'Snail-Mo', bMult: 8, durationMs: 8000 },
+  ink: { label: 'Ink Splat', bMult: 14, durationMs: 7000 },
+  jelly: { label: 'Jelly Text', bMult: 18, durationMs: 6000 },
+  fog: { label: 'Fog on the Glass', bMult: 24, durationMs: 8000 },
+  bomb: { label: 'Blur Bomb', bMult: 30, durationMs: 6000 },
+  cat: { label: 'Cat Deploy', bMult: 40, durationMs: 10000 },
+  thief: { label: 'Word Thief', bMult: 55, durationMs: 3000 },
 };
+const DEFENCES = {
+  shield: { label: 'Shield', bMult: 20, max: 3 },
+  wipers: { label: 'Wipers', bMult: 75 },
+  umbrella: { label: 'Umbrella', bMult: 100, blocksUpTo: 18 },
+};
+const PETS = {
+  snailPet: { label: 'Desk snail', bMult: 30 },
+  catPet: { label: 'Desk cat', bMult: 90 },
+  dragonPet: { label: 'Desk dragon', bMult: 250 },
+};
+const GIFT_PRESETS = [10, 25, 50];       // × sender's b
+const GIFT_RECEIVE_CAP_B = 60;           // × receiver's b — anti-funnelling
+const THIEF_RATE = 0.08;
+const THIEF_CAP_B = 40;                  // × victim's b
+const THIEF_FLOOR_B = 15;                // victim never left below this
 
-const GIFT_MAX = 500;
-
-// Same light profanity mask the Live nicknames use — chat is between mates,
-// but this ships publicly.
 const BLOCKED_TERMS = [
   'fuck', 'shit', 'bitch', 'cunt', 'nigger', 'nigga', 'faggot', 'retard', 'porn',
 ];
 
-const rooms = new Map(); // code -> room
+// ── Stores ──────────────────────────────────────────────────────────────────
+const sessions = new Map(); // userId -> live session (party OR solo)
+const rooms = new Map();    // code -> party room
+
+function now() { return Date.now(); }
+
+/** The persistent slice — everything here survives across runs. */
+function normalizeState(raw) {
+  const s = raw && typeof raw === 'object' ? raw : {};
+  const up = s.up && typeof s.up === 'object' ? s.up : {};
+  return {
+    money: Math.max(0, Math.round(Number(s.money) || 0)),
+    tier: Math.max(0, Math.min(TIERS.length - 1, Math.round(Number(s.tier) || 0))),
+    up: {
+      streak: Math.max(0, Math.min(SECONDARIES.streak.costs.length, Math.round(Number(up.streak) || 0))),
+      ribbon: Math.max(0, Math.min(SECONDARIES.ribbon.costs.length, Math.round(Number(up.ribbon) || 0))),
+      paper: Math.max(0, Math.min(SECONDARIES.paper.costs.length, Math.round(Number(up.paper) || 0))),
+    },
+    pets: Array.isArray(s.pets) ? s.pets.filter((k) => PETS[k]).slice(0, 8) : [],
+    lifetimeWords: Math.max(0, Math.round(Number(s.lifetimeWords) || 0)),
+  };
+}
+
+function bOf(state) { return TIERS[state.tier].b; }
+
+/** One live session per user, party or solo. `state` is the persistent bit. */
+function ensureSession(userId, name, persistedState) {
+  const id = String(userId);
+  let session = sessions.get(id);
+  if (!session) {
+    session = {
+      id,
+      name: String(name || 'Student').slice(0, 24),
+      state: normalizeState(persistedState),
+      connected: true,
+      lastSeen: now(),
+      dirty: false,       // socket layer saves when set
+      roomCode: null,
+      // Per-run bits — reset every fresh session:
+      words: 0,
+      para: 0,
+      paraCount: 0,
+      accuracy: 100,
+      watching: false,
+      meter: 0,
+      shields: 0,
+      wipers: false,
+      umbrella: false,
+      umbrellaReadyAt: 0,
+      lastSabotageAt: 0,
+      lastHitAt: 0,
+      goalHit: false,
+      bucket: { tokens: CREDIT_WPM_CAP, ts: now() },
+    };
+    sessions.set(id, session);
+  } else {
+    session.connected = true;
+    session.lastSeen = now();
+    session.name = String(name || session.name).slice(0, 24);
+  }
+  return session;
+}
+
+function getSession(userId) { return sessions.get(String(userId)) || null; }
+
+// ── Earnings ────────────────────────────────────────────────────────────────
+
+/** Token bucket: credited words can never exceed 45/min sustained. */
+function creditWords(session, requested) {
+  const b = session.bucket;
+  const t = now();
+  b.tokens = Math.min(CREDIT_WPM_CAP, b.tokens + ((t - b.ts) / 60000) * CREDIT_WPM_CAP);
+  b.ts = t;
+  const granted = Math.max(0, Math.min(Math.floor(b.tokens), Math.round(Number(requested) || 0), 60));
+  b.tokens -= granted;
+  return granted;
+}
+
+function streakMultiplier(session) {
+  const lv = session.state.up.streak;
+  return 1 + 0.10 * lv * (session.meter / STREAK_METER_FULL);
+}
+
+/**
+ * Credit a progress report. Misses halve the streak meter (never zero — a
+ * reset at recall pace feels brutal); each credited word fills it by one.
+ * Ribbon crits are rolled per word server-side. Watched words never reach
+ * this function — the client reports watching state, not watched words.
+ */
+function recordProgress(session, { wordsDelta, missesDelta, paragraphsDelta, para, paraCount, accuracy, watching } = {}) {
+  session.lastSeen = now();
+  session.watching = !!watching;
+  if (Number.isFinite(Number(para))) session.para = Math.max(0, Math.round(Number(para)));
+  if (Number.isFinite(Number(paraCount))) session.paraCount = Math.max(0, Math.round(Number(paraCount)));
+  if (Number.isFinite(Number(accuracy))) session.accuracy = Math.max(0, Math.min(100, Math.round(Number(accuracy))));
+
+  const misses = Math.max(0, Math.min(20, Math.round(Number(missesDelta) || 0)));
+  for (let i = 0; i < misses; i += 1) session.meter = Math.floor(session.meter / 2);
+
+  const words = creditWords(session, wordsDelta);
+  const state = session.state;
+  const b = bOf(state);
+  const ribbon = RIBBON_LEVELS[state.up.ribbon];
+  let earned = 0;
+  let crits = 0;
+  let jackpot = 0;
+  for (let i = 0; i < words; i += 1) {
+    session.meter = Math.min(STREAK_METER_FULL, session.meter + 1);
+    const isCrit = ribbon.p > 0 && crypto.randomInt(10000) < ribbon.p * 10000;
+    const perWord = Math.min(b * 10 * 1.5, Math.round((isCrit ? b * ribbon.mult : b) * Math.min(M_CAP, streakMultiplier(session))));
+    earned += perWord;
+    if (isCrit) { crits += 1; jackpot += perWord; }
+  }
+  const paragraphs = Math.max(0, Math.min(4, Math.round(Number(paragraphsDelta) || 0)));
+  const paperLump = paragraphs * 8 * b * state.up.paper;
+  earned += paperLump;
+
+  state.money += earned;
+  state.lifetimeWords += words;
+  session.words += words;
+  session.dirty = earned > 0 || words > 0;
+
+  let goalJustHit = false;
+  const room = session.roomCode ? rooms.get(session.roomCode) : null;
+  if (room) {
+    room.lastActivity = now();
+    if (room.goalWords > 0 && !session.goalHit && session.words >= room.goalWords) {
+      session.goalHit = true;
+      goalJustHit = true;
+    }
+  }
+  return { earned, words, crits, jackpot, paperLump, meter: session.meter, goalJustHit };
+}
+
+// ── The shop ────────────────────────────────────────────────────────────────
+
+/** Everything purchasable, with live prices for this player. */
+function shopFor(session) {
+  const state = session.state;
+  const b = bOf(state);
+  const nextTier = state.tier + 1 < TIERS.length ? TIERS[state.tier + 1] : null;
+  const secondary = (key) => {
+    const line = SECONDARIES[key];
+    const lv = state.up[key];
+    return { level: lv, max: line.costs.length, cost: lv < line.costs.length ? line.costs[lv] : null };
+  };
+  return {
+    tier: nextTier ? { key: nextTier.key, label: nextTier.label, b: nextTier.b, cost: nextTier.cost } : null,
+    streak: secondary('streak'),
+    ribbon: secondary('ribbon'),
+    paper: secondary('paper'),
+    shield: { cost: DEFENCES.shield.bMult * b, held: session.shields, max: DEFENCES.shield.max },
+    wipers: { cost: DEFENCES.wipers.bMult * b, owned: session.wipers },
+    umbrella: { cost: DEFENCES.umbrella.bMult * b, owned: session.umbrella },
+    pets: Object.entries(PETS).map(([key, pet]) => ({
+      key, label: pet.label, cost: pet.bMult * b, owned: state.pets.includes(key),
+    })),
+    sabotages: Object.entries(SABOTAGES).map(([key, sab]) => ({
+      key, label: sab.label, cost: sab.bMult * b, durationMs: sab.durationMs,
+    })),
+  };
+}
+
+function spend(session, cost) {
+  if (session.state.money < cost) return false;
+  session.state.money -= cost;
+  session.dirty = true;
+  return true;
+}
+
+function buy(session, item) {
+  const state = session.state;
+  const b = bOf(state);
+  if (item === 'tier') {
+    if (state.tier + 1 >= TIERS.length) return { error: 'Diamond is the top — there is nothing above it.' };
+    const next = TIERS[state.tier + 1];
+    if (!spend(session, next.cost)) return { error: `Need $${next.cost} for the ${next.label} typewriter.` };
+    state.tier += 1;
+    return { bought: 'tier', tier: next.key, label: next.label, cost: next.cost };
+  }
+  if (SECONDARIES[item]) {
+    const line = SECONDARIES[item];
+    const lv = state.up[item];
+    if (lv >= line.costs.length) return { error: `${line.label} is maxed.` };
+    const cost = line.costs[lv];
+    if (!spend(session, cost)) return { error: `Need $${cost} for ${line.label}.` };
+    state.up[item] += 1;
+    return { bought: item, level: state.up[item], cost };
+  }
+  if (item === 'shield') {
+    if (session.shields >= DEFENCES.shield.max) return { error: 'Shields are stacked to the max.' };
+    const cost = DEFENCES.shield.bMult * b;
+    if (!spend(session, cost)) return { error: `Need $${cost} for a shield.` };
+    session.shields += 1;
+    return { bought: 'shield', cost };
+  }
+  if (item === 'wipers' || item === 'umbrella') {
+    if (session[item]) return { error: `You already have ${item}.` };
+    const cost = DEFENCES[item].bMult * b;
+    if (!spend(session, cost)) return { error: `Need $${cost} for ${DEFENCES[item].label}.` };
+    session[item] = true;
+    return { bought: item, cost };
+  }
+  if (PETS[item]) {
+    if (state.pets.includes(item)) return { error: 'That pet already lives on your desk.' };
+    const cost = PETS[item].bMult * b;
+    if (!spend(session, cost)) return { error: `Need $${cost} for the ${PETS[item].label}.` };
+    state.pets.push(item);
+    return { bought: item, cost };
+  }
+  return { error: 'Unknown item.' };
+}
+
+// ── Parties ─────────────────────────────────────────────────────────────────
 
 function randomCode() {
   let code = '';
@@ -56,39 +321,23 @@ function allocateCode() {
   throw new Error('Could not allocate a party code');
 }
 
-function now() { return Date.now(); }
-
-function makeMember(userId, name) {
-  return {
-    id: String(userId),
-    name: String(name || 'Student').slice(0, 24),
-    connected: true,
-    lastSeen: now(),
-    words: 0,
-    para: 0,
-    paraCount: 0,
-    accuracy: 100,
-    money: 0,
-    rateLevel: 0,
-    shields: 0,
-    goalHit: false,
-    lastSabotageAt: 0,
-  };
-}
-
-function createParty(userId, name, goalWords) {
+function createParty(session, goalWords) {
   const code = allocateCode();
   const goal = Number.isFinite(Number(goalWords)) ? Math.max(0, Math.min(5000, Math.round(Number(goalWords)))) : 0;
   const room = {
     code,
-    hostId: String(userId),
+    hostId: session.id,
     goalWords: goal,
-    members: new Map([[String(userId), makeMember(userId, name)]]),
+    sabotagesOff: false,
+    memberIds: new Set([session.id]),
     chat: [],
     createdAt: now(),
     lastActivity: now(),
   };
   rooms.set(code, room);
+  session.roomCode = code;
+  session.words = 0;
+  session.goalHit = false;
   return room;
 }
 
@@ -96,125 +345,121 @@ function getRoom(code) {
   return rooms.get(String(code || '').toUpperCase().trim()) || null;
 }
 
-function joinParty(code, userId, name) {
+function joinParty(code, session) {
   const room = getRoom(code);
   if (!room) return { error: 'No party with that code — check it with your host.' };
-  const id = String(userId);
-  const existing = room.members.get(id);
-  if (existing) {
-    existing.connected = true;
-    existing.lastSeen = now();
-    existing.name = String(name || existing.name).slice(0, 24);
+  if (room.memberIds.has(session.id)) {
+    session.roomCode = room.code;
     room.lastActivity = now();
-    return { room, member: existing, rejoined: true };
+    return { room, rejoined: true };
   }
-  if (room.members.size >= MAX_MEMBERS) return { error: 'That party is full (12 people).' };
-  const member = makeMember(id, name);
-  room.members.set(id, member);
+  if (room.memberIds.size >= MAX_MEMBERS) return { error: 'That party is full (12 people).' };
+  room.memberIds.add(session.id);
+  session.roomCode = room.code;
+  session.words = 0;
+  session.goalHit = false;
   room.lastActivity = now();
-  return { room, member };
+  return { room };
 }
 
-function leaveParty(room, userId) {
-  room.members.delete(String(userId));
+function leaveParty(session) {
+  const room = session.roomCode ? rooms.get(session.roomCode) : null;
+  session.roomCode = null;
+  if (!room) return null;
+  room.memberIds.delete(session.id);
   room.lastActivity = now();
-  if (room.members.size === 0) rooms.delete(room.code);
+  if (room.memberIds.size === 0) rooms.delete(room.code);
+  return room;
 }
 
-function markDisconnected(room, userId) {
-  const member = room.members.get(String(userId));
-  if (!member) return;
-  member.connected = false;
-  member.lastSeen = now();
+function setPeace(room, userId, off) {
+  if (room.hostId !== String(userId)) return { error: 'Only the host can toggle sabotages.' };
+  room.sabotagesOff = !!off;
+  return { sabotagesOff: room.sabotagesOff };
 }
 
-function wordValue(member) {
-  return 1 + member.rateLevel;
-}
-
-/** A landed word pays out; watched words never reach here by design. */
-function recordProgress(room, userId, { wordsDelta, para, paraCount, accuracy } = {}) {
-  const member = room.members.get(String(userId));
-  if (!member) return { error: 'Not in this party.' };
-  const delta = Math.max(0, Math.min(MAX_WORDS_PER_REPORT, Math.round(Number(wordsDelta) || 0)));
-  member.words += delta;
-  member.money += delta * wordValue(member);
-  if (Number.isFinite(Number(para))) member.para = Math.max(0, Math.round(Number(para)));
-  if (Number.isFinite(Number(paraCount))) member.paraCount = Math.max(0, Math.round(Number(paraCount)));
-  if (Number.isFinite(Number(accuracy))) member.accuracy = Math.max(0, Math.min(100, Math.round(Number(accuracy))));
-  member.lastSeen = now();
-  room.lastActivity = now();
-  let goalJustHit = false;
-  if (room.goalWords > 0 && !member.goalHit && member.words >= room.goalWords) {
-    member.goalHit = true;
-    goalJustHit = true;
-  }
-  return { member, goalJustHit };
-}
-
-function upgradeCost(room, userId) {
-  const member = room.members.get(String(userId));
-  if (!member) return null;
-  return Math.round(UPGRADES.rate.baseCost * (UPGRADES.rate.growth ** member.rateLevel));
-}
-
-function buyUpgrade(room, userId, item) {
-  const member = room.members.get(String(userId));
-  if (!member) return { error: 'Not in this party.' };
-  room.lastActivity = now();
-  if (item === 'rate') {
-    if (member.rateLevel >= UPGRADES.rate.maxLevel) return { error: 'Word value is maxed out.' };
-    const cost = upgradeCost(room, userId);
-    if (member.money < cost) return { error: `Need $${cost} for that.` };
-    member.money -= cost;
-    member.rateLevel += 1;
-    return { member, item, cost };
-  }
-  if (item === 'shield') {
-    if (member.shields >= UPGRADES.shield.maxHeld) return { error: 'Shields are stacked to the max.' };
-    if (member.money < UPGRADES.shield.cost) return { error: `Need $${UPGRADES.shield.cost} for a shield.` };
-    member.money -= UPGRADES.shield.cost;
-    member.shields += 1;
-    return { member, item, cost: UPGRADES.shield.cost };
-  }
-  return { error: 'Unknown upgrade.' };
-}
+// ── Sabotage, absorb, theft ─────────────────────────────────────────────────
 
 function sabotage(room, attackerId, targetId, kind) {
-  const attacker = room.members.get(String(attackerId));
-  const target = room.members.get(String(targetId));
+  const attacker = getSession(attackerId);
+  const target = getSession(targetId);
   const weapon = SABOTAGES[kind];
   if (!attacker || !weapon) return { error: 'Unknown sabotage.' };
-  if (!target) return { error: 'They already left.' };
-  if (String(attackerId) === String(targetId)) return { error: 'Sabotaging yourself is a study technique we do not endorse.' };
+  if (!target || !room.memberIds.has(target.id)) return { error: 'They already left.' };
+  if (attacker.id === target.id) return { error: 'Sabotaging yourself is a study technique we do not endorse.' };
+  if (room.sabotagesOff) return { error: 'The host has declared peace.' };
   const sinceLast = now() - attacker.lastSabotageAt;
   if (sinceLast < SABOTAGE_COOLDOWN_MS) {
     return { error: `Reloading — ${Math.ceil((SABOTAGE_COOLDOWN_MS - sinceLast) / 1000)}s.` };
   }
-  if (attacker.money < weapon.cost) return { error: `Need $${weapon.cost} for ${weapon.label}.` };
-  attacker.money -= weapon.cost;
+  const sinceHit = now() - target.lastHitAt;
+  if (sinceHit < TARGET_COOLDOWN_MS) {
+    return { error: `${target.name} is still recovering — ${Math.ceil((TARGET_COOLDOWN_MS - sinceHit) / 1000)}s.` };
+  }
+  const cost = weapon.bMult * bOf(attacker.state);
+  if (!spend(attacker, cost)) return { error: `Need $${cost} for ${weapon.label}.` };
   attacker.lastSabotageAt = now();
   room.lastActivity = now();
+
+  // Zen absorb: a watcher can't be touched — and pockets the attacker's spend.
+  if (target.watching) {
+    target.state.money += cost;
+    target.dirty = true;
+    return { absorbed: true, kind, cost, attacker, target };
+  }
   if (target.shields > 0) {
     target.shields -= 1;
-    return { blocked: true, kind, attacker, target };
+    return { blocked: 'shield', kind, cost, attacker, target };
   }
-  return { blocked: false, kind, durationMs: weapon.durationMs, attacker, target };
+  if (target.umbrella && weapon.bMult <= DEFENCES.umbrella.blocksUpTo && now() >= target.umbrellaReadyAt) {
+    target.umbrellaReadyAt = now() + UMBRELLA_COOLDOWN_MS;
+    return { blocked: 'umbrella', kind, cost, attacker, target };
+  }
+
+  target.lastHitAt = now();
+  const durationMs = Math.round(weapon.durationMs * (target.wipers ? 0.5 : 1));
+  let stolen = 0;
+  if (kind === 'thief') {
+    const victimB = bOf(target.state);
+    stolen = Math.min(
+      Math.round(target.state.money * THIEF_RATE),
+      THIEF_CAP_B * victimB,
+      Math.max(0, target.state.money - THIEF_FLOOR_B * victimB),
+    );
+    if (stolen > 0) {
+      target.state.money -= stolen;
+      attacker.state.money += Math.floor(stolen / 2); // half burns
+      target.dirty = true;
+      attacker.dirty = true;
+    }
+  }
+  return { hit: true, kind, cost, durationMs, stolen, attacker, target };
 }
 
-function gift(room, fromId, toId, amount) {
-  const from = room.members.get(String(fromId));
-  const to = room.members.get(String(toId));
-  if (!from || !to) return { error: 'They already left.' };
-  if (String(fromId) === String(toId)) return { error: 'That is just moving money between pockets.' };
-  const value = Math.round(Number(amount) || 0);
-  if (value < 1 || value > GIFT_MAX) return { error: `Gifts are $1–$${GIFT_MAX}.` };
-  if (from.money < value) return { error: 'Not enough in the wallet.' };
-  from.money -= value;
-  to.money += value;
+function gift(room, fromId, toId, kind, presetIndex) {
+  const from = getSession(fromId);
+  const to = getSession(toId);
+  if (!from || !to || !room.memberIds.has(to.id)) return { error: 'They already left.' };
+  if (from.id === to.id) return { error: 'That is just moving money between pockets.' };
+  if (kind === 'shield') {
+    if (from.shields < 1) return { error: 'No shield to give.' };
+    if (to.shields >= DEFENCES.shield.max) return { error: `${to.name}'s shields are already stacked.` };
+    from.shields -= 1;
+    to.shields += 1;
+    room.lastActivity = now();
+    return { from, to, kind: 'shield' };
+  }
+  const preset = GIFT_PRESETS[Math.max(0, Math.min(GIFT_PRESETS.length - 1, Math.round(Number(presetIndex) || 0)))];
+  const cost = preset * bOf(from.state);
+  if (!spend(from, cost)) return { error: 'Not enough in the wallet.' };
+  const credited = Math.min(cost, GIFT_RECEIVE_CAP_B * bOf(to.state));
+  to.state.money += credited;
+  to.dirty = true;
   room.lastActivity = now();
-  return { from, to, value };
+  return { from, to, kind: 'cash', value: credited };
 }
+
+// ── Chat (relayed + briefly buffered, never persisted) ──────────────────────
 
 function maskProfanity(text) {
   let out = text;
@@ -224,10 +469,9 @@ function maskProfanity(text) {
   return out;
 }
 
-/** Chat is relayed and briefly buffered for late joiners — never persisted. */
 function addChat(room, userId, text, { system = false } = {}) {
-  const member = system ? null : room.members.get(String(userId));
-  if (!system && !member) return { error: 'Not in this party.' };
+  const session = system ? null : getSession(userId);
+  if (!system && (!session || !room.memberIds.has(session.id))) return { error: 'Not in this party.' };
   const clean = maskProfanity(
     String(text || '')
       .replace(/[\p{Cc}\p{Cf}]/gu, ' ')
@@ -236,72 +480,120 @@ function addChat(room, userId, text, { system = false } = {}) {
       .slice(0, MAX_CHAT_LENGTH),
   );
   if (!clean) return { error: 'Nothing to send.' };
-  const message = {
-    id: crypto.randomUUID(),
-    from: system ? null : member.name,
-    system,
-    text: clean,
-    at: now(),
-  };
+  const message = { id: crypto.randomUUID(), from: system ? null : session.name, system, text: clean, at: now() };
   room.chat.push(message);
   if (room.chat.length > MAX_CHAT_KEPT) room.chat.splice(0, room.chat.length - MAX_CHAT_KEPT);
   room.lastActivity = now();
   return { message };
 }
 
-/** The wire shape. Members sorted by words so the roster reads as a race. */
-function snapshot(room) {
+// ── Snapshots ───────────────────────────────────────────────────────────────
+
+function publicMember(session) {
+  return {
+    id: session.id,
+    name: session.name,
+    connected: session.connected,
+    watching: session.watching,
+    words: session.words,
+    para: session.para,
+    paraCount: session.paraCount,
+    accuracy: session.accuracy,
+    money: session.state.money,
+    tier: TIERS[session.state.tier].key,
+    tierIndex: session.state.tier,
+    b: bOf(session.state),
+    shields: session.shields,
+    wipers: session.wipers,
+    umbrella: session.umbrella,
+    pets: session.state.pets,
+    goalHit: session.goalHit,
+  };
+}
+
+/** The player's own full picture: state + shop with live prices. */
+function selfSnapshot(session) {
+  return {
+    me: publicMember(session),
+    up: { ...session.state.up },
+    meter: session.meter,
+    meterFull: STREAK_METER_FULL,
+    lifetimeWords: session.state.lifetimeWords,
+    shop: shopFor(session),
+  };
+}
+
+function roomSnapshot(room) {
   return {
     code: room.code,
     hostId: room.hostId,
     goalWords: room.goalWords,
-    members: [...room.members.values()]
+    sabotagesOff: room.sabotagesOff,
+    members: [...room.memberIds]
+      .map((id) => getSession(id))
+      .filter(Boolean)
       .sort((a, b) => b.words - a.words || a.name.localeCompare(b.name))
-      .map((m) => ({
-        id: m.id,
-        name: m.name,
-        connected: m.connected,
-        words: m.words,
-        para: m.para,
-        paraCount: m.paraCount,
-        accuracy: m.accuracy,
-        money: m.money,
-        rateLevel: m.rateLevel,
-        wordValue: wordValue(m),
-        shields: m.shields,
-        goalHit: m.goalHit,
-      })),
+      .map(publicMember),
     chat: room.chat.slice(-MAX_CHAT_KEPT),
   };
 }
 
-/** Reaps rooms nobody is in any more. Called on an interval by the socket layer. */
-function sweepRooms() {
+// ── Lifecycle ───────────────────────────────────────────────────────────────
+
+function markDisconnected(userId) {
+  const session = getSession(userId);
+  if (!session) return;
+  session.connected = false;
+  session.lastSeen = now();
+}
+
+/** Reaps dead rooms and idle solo sessions. Sessions with dirty state are
+ *  kept until the socket layer has saved them. */
+function sweep() {
   const t = now();
   for (const [code, room] of rooms) {
     const idle = t - room.lastActivity > ROOM_IDLE_MS;
-    const allGone = [...room.members.values()].every((m) => !m.connected && t - m.lastSeen > ALL_GONE_MS);
-    if (idle || room.members.size === 0 || allGone) rooms.delete(code);
+    const members = [...room.memberIds].map((id) => getSession(id)).filter(Boolean);
+    const allGone = members.every((m) => !m.connected && t - m.lastSeen > ALL_GONE_MS);
+    if (idle || members.length === 0 || allGone) {
+      for (const m of members) m.roomCode = null;
+      rooms.delete(code);
+    }
+  }
+  for (const [id, session] of sessions) {
+    if (!session.connected && !session.dirty && !session.roomCode && t - session.lastSeen > ALL_GONE_MS) {
+      sessions.delete(id);
+    }
   }
 }
 
 module.exports = {
+  sessions,
   rooms,
+  TIERS,
+  SECONDARIES,
+  SABOTAGES,
+  DEFENCES,
+  PETS,
+  GIFT_PRESETS,
+  MAX_MEMBERS,
+  normalizeState,
+  ensureSession,
+  getSession,
+  recordProgress,
+  shopFor,
+  buy,
   createParty,
   getRoom,
   joinParty,
   leaveParty,
-  markDisconnected,
-  recordProgress,
-  upgradeCost,
-  buyUpgrade,
+  setPeace,
   sabotage,
   gift,
   addChat,
-  snapshot,
-  sweepRooms,
-  UPGRADES,
-  SABOTAGES,
-  SABOTAGE_COOLDOWN_MS,
-  MAX_MEMBERS,
+  publicMember,
+  selfSnapshot,
+  roomSnapshot,
+  markDisconnected,
+  sweep,
 };

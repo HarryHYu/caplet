@@ -1,0 +1,486 @@
+/**
+ * The Typewriter Tycoon panel — the game column that sits to the RIGHT of
+ * the Memorise drill. A monkey at a typewriter physically types and hops on
+ * every word you land, money floats up off the platen into the counter, the
+ * typewriter's material IS your main upgrade (stone → diamond), and the shop
+ * lives underneath. Party (roster, chat, sabotage) is the same panel with
+ * friends in it.
+ *
+ * All economy math is server-side; this component only reports typed-word
+ * counts (batched ~700ms) and renders what the server says back. In
+ * `compact` mode (fullscreen scenes) the panel keeps its socket and
+ * overlays alive but shrinks to a HUD chip so the scene owns the screen.
+ */
+import { useEffect, useRef, useState } from 'react';
+import {
+    SpeakerWaveIcon, SpeakerXMarkIcon, UserGroupIcon, XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { connectPartySocket } from '../../services/partySocket';
+import { play, getMuted, setMuted } from '../../lib/tycoonSounds';
+import TycoonMonkey from './TycoonMonkey';
+import { SABOTAGE_FX, SABOTAGE_META } from './sabotageFx';
+
+const TIER_LABELS = ['Stone', 'Wood', 'Copper', 'Iron', 'Bronze', 'Gold', 'Platinum', 'Diamond'];
+const TIER_DOTS = ['#8d8d8d', '#a5793f', '#c67434', '#5b6470', '#8c7a3c', '#d4a017', '#c7d0dd', '#7dd8e8'];
+const SABOTAGE_EMOJI = { confetti: '🎉', snail: '🐌', ink: '🦑', jelly: '🍮', fog: '🌫️', bomb: '💣', cat: '🐈', thief: '🦹' };
+const PET_EMOJI = { snailPet: '🐌', catPet: '🐈', dragonPet: '🐲' };
+
+let floaterSeq = 0;
+
+function MoneyFloaters({ floaters }) {
+    return (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-10">
+            {floaters.map((f) => (
+                <span key={f.id}
+                    className={`absolute animate-money-float font-mono text-sm font-extrabold ${f.tone === 'crit' ? 'text-[#d4a017] text-base' : f.tone === 'loss' ? 'text-text-error' : 'text-[color:var(--mark-green)]'}`}
+                    style={{ left: `${f.x}%`, top: 44 }}>
+                    {f.text}
+                </span>
+            ))}
+        </div>
+    );
+}
+
+function StreakMeter({ meter, full }) {
+    const pct = Math.round((meter / Math.max(1, full)) * 100);
+    return (
+        <div className="flex items-center gap-2" title={`Streak meter — ${meter}/${full}. Misses halve it.`}>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Streak</span>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-soft">
+                <div className={`h-full rounded-full transition-[width] duration-300 ${pct >= 100 ? 'bg-[#d4a017]' : 'bg-accent'}`} style={{ width: `${pct}%` }} />
+            </div>
+            {pct >= 100 && <span className="text-[10px]">⚡</span>}
+        </div>
+    );
+}
+
+function ShopButton({ label, sub, cost, disabled, onClick, title }) {
+    return (
+        <button type="button" disabled={disabled} onClick={onClick} title={title}
+            className="focus-ring press flex w-full items-center justify-between gap-2 rounded-lg border border-line-soft px-2.5 py-1.5 text-left text-[11px] font-bold text-text-primary transition-colors hover:border-text-dim disabled:cursor-not-allowed disabled:opacity-45">
+            <span className="min-w-0">
+                <span className="block truncate">{label}</span>
+                {sub && <span className="block text-[9px] font-medium text-text-dim">{sub}</span>}
+            </span>
+            {cost != null && <span className="shrink-0 font-mono text-[10px] text-text-dim">${cost}</span>}
+        </button>
+    );
+}
+
+export default function TycoonPanel({ registerReporter, compact = false, onClose }) {
+    const socketRef = useRef(null);
+    const [self, setSelf] = useState(null);
+    const [room, setRoom] = useState(null);
+    const [myId, setMyId] = useState(null);
+    const [chatLog, setChatLog] = useState([]);
+    const [draft, setDraft] = useState('');
+    const [joinCode, setJoinCode] = useState('');
+    const [goalInput, setGoalInput] = useState('200');
+    const [error, setError] = useState(null);
+    const [notice, setNotice] = useState(null);
+    const [hits, setHits] = useState([]); // active incoming FX: {id, kind, wipe}
+    const [floaters, setFloaters] = useState([]);
+    const [typePulse, setTypePulse] = useState(0);
+    const [celebrate, setCelebrate] = useState(0);
+    const [muted, setMutedState] = useState(getMuted());
+    const [attackTarget, setAttackTarget] = useState(null); // member id with open tray
+    const pending = useRef({ words: 0, misses: 0, paragraphs: 0, para: 0, paraCount: 0, accuracy: 100, watching: false });
+    const flushTimer = useRef(null);
+    const noticeTimer = useRef(null);
+    const chatEndRef = useRef(null);
+
+    const me = self?.me || null;
+    const inParty = !!room;
+    const isHost = inParty && room.hostId === myId;
+
+    const say = (text) => {
+        setNotice(text);
+        clearTimeout(noticeTimer.current);
+        noticeTimer.current = setTimeout(() => setNotice(null), 2800);
+    };
+
+    const addFloater = (text, tone = 'earn') => {
+        const id = `f${floaterSeq += 1}`;
+        setFloaters((prev) => [...prev.slice(-7), { id, text, tone, x: 22 + ((floaterSeq * 23) % 56) }]);
+        setTimeout(() => setFloaters((prev) => prev.filter((f) => f.id !== id)), 950);
+    };
+
+    // ── Socket lifecycle ────────────────────────────────────────────────────
+    useEffect(() => {
+        const socket = connectPartySocket();
+        socketRef.current = socket;
+        const hello = () => socket.emit('tycoon:hello', {}, (result) => {
+            if (result?.error) { setError(result.error); return; }
+            setSelf(result.self);
+            setMyId(result.self.me.id);
+            setError(null);
+        });
+        if (socket.connected) hello(); else socket.on('connect', hello);
+        socket.on('party:state', (snap) => setRoom(snap));
+        socket.on('party:chat', (message) => setChatLog((prev) => [...prev.slice(-60), message]));
+        socket.on('party:hit', ({ kind, from, durationMs, stolen }) => {
+            const id = `${kind}-${Date.now()}`;
+            setHits((prev) => [...prev, { id, kind, wipe: 0 }]);
+            play('boing');
+            say(`${SABOTAGE_EMOJI[kind] || '💥'} ${from} hit you with ${SABOTAGE_META[kind]?.label || kind}!`);
+            if (stolen) addFloater(`-$${stolen}`, 'loss');
+            setTimeout(() => setHits((prev) => prev.filter((h) => h.id !== id)), durationMs || 6000);
+        });
+        socket.on('party:blocked', ({ kind, from, how, bounty }) => {
+            if (how === 'absorbed') {
+                play('coin');
+                addFloater(`+$${bounty}`, 'crit');
+                say(`🧘 Absorbed ${from}'s ${SABOTAGE_META[kind]?.label || kind} (+$${bounty})`);
+            } else {
+                play('thunk');
+                say(`${how === 'shield' ? '🛡️' : '☂️'} Blocked ${from}'s ${SABOTAGE_META[kind]?.label || kind}`);
+            }
+        });
+        socket.on('connect_error', () => setError('Could not reach the game server.'));
+        return () => {
+            clearTimeout(flushTimer.current);
+            clearTimeout(noticeTimer.current);
+            socket.disconnect();
+            socketRef.current = null;
+        };
+    }, []);
+
+    // ── The drill reports in; we animate instantly and settle up in batches ─
+    useEffect(() => {
+        if (!registerReporter) return undefined;
+        const flushSoon = () => {
+            if (flushTimer.current) return;
+            flushTimer.current = setTimeout(() => {
+                flushTimer.current = null;
+                const batch = pending.current;
+                pending.current = { ...batch, words: 0, misses: 0, paragraphs: 0 };
+                socketRef.current?.emit('tycoon:progress', {
+                    wordsDelta: batch.words,
+                    missesDelta: batch.misses,
+                    paragraphsDelta: batch.paragraphs,
+                    para: batch.para,
+                    paraCount: batch.paraCount,
+                    accuracy: batch.accuracy,
+                    watching: batch.watching,
+                }, (ack) => {
+                    if (!ack?.ok) return;
+                    setSelf(ack.self);
+                    if (ack.earned > 0) {
+                        addFloater(`+$${ack.earned}`, ack.crits > 0 ? 'crit' : 'earn');
+                        if (ack.crits > 0) { play('jackpot'); say(`✨ CRIT ×${ack.crits} — +$${ack.jackpot}`); }
+                        else if (ack.paperLump > 0) play('coin');
+                    }
+                });
+            }, 700);
+        };
+        const report = (info) => {
+            const p = pending.current;
+            p.para = (info?.para ?? 0) + 1;
+            p.paraCount = info?.paraCount ?? p.paraCount;
+            p.accuracy = info?.accuracy ?? p.accuracy;
+            p.watching = !!info?.watching;
+            if (info?.kind === 'word') {
+                p.words += 1;
+                setTypePulse((n) => n + 1);
+                play('clack');
+                setHits((prev) => (prev.length ? prev.map((h) => ({ ...h, wipe: h.wipe + 1 })) : prev));
+            } else if (info?.kind === 'miss') {
+                p.misses += 1;
+            } else if (info?.kind === 'paragraph') {
+                p.paragraphs += 1;
+                setCelebrate((n) => n + 1);
+                play('ding');
+            }
+            flushSoon();
+        };
+        registerReporter(report);
+        return () => registerReporter(null);
+    }, [registerReporter]);
+
+    useEffect(() => { chatEndRef.current?.scrollIntoView?.({ block: 'nearest' }); }, [chatLog]);
+
+    const ack = (result, sound) => {
+        if (result?.error) { setError(result.error); return false; }
+        setError(null);
+        if (result?.self) setSelf(result.self);
+        if (sound) play(sound);
+        return true;
+    };
+
+    const buyItem = (item) => socketRef.current?.emit('tycoon:buy', { item }, (r) => {
+        if (ack(r, 'kaching') && r.bought === 'tier') setCelebrate((n) => n + 1);
+    });
+    const createParty = () => socketRef.current?.emit('party:create', { goalWords: Number(goalInput) || 0 }, (r) => {
+        if (ack(r)) { setRoom(r.snapshot); setChatLog(r.snapshot.chat || []); }
+    });
+    const joinParty = () => {
+        const code = joinCode.toUpperCase().trim();
+        if (!code) return;
+        socketRef.current?.emit('party:join', { code }, (r) => {
+            if (ack(r)) { setRoom(r.snapshot); setChatLog(r.snapshot.chat || []); setJoinCode(''); }
+        });
+    };
+    const leaveParty = () => socketRef.current?.emit('party:leave', {}, () => { setRoom(null); setChatLog([]); setAttackTarget(null); });
+    const togglePeace = () => socketRef.current?.emit('party:peace', { off: !room.sabotagesOff }, (r) => ack(r));
+    const zap = (target, kind) => socketRef.current?.emit('party:sabotage', { target, kind }, (r) => {
+        if (ack(r)) say(r.outcome === 'hit' ? 'Direct hit!' : r.outcome === 'absorbed' ? 'They absorbed it… and kept your money.' : 'Blocked!');
+    });
+    const sendGift = (target, kind, preset) => socketRef.current?.emit('party:gift', { target, kind, preset }, (r) => ack(r, 'coin'));
+    const sendChat = (e) => {
+        e.preventDefault();
+        const text = draft.trim();
+        if (!text) return;
+        socketRef.current?.emit('party:chat', { text }, (r) => { if (r?.error) setError(r.error); });
+        setDraft('');
+    };
+    const toggleMute = () => { const next = !muted; setMuted(next); setMutedState(next); };
+
+    const fxOverlays = hits.map((h) => {
+        const Fx = SABOTAGE_FX[h.kind];
+        return Fx ? <Fx key={h.id} wipe={h.wipe} /> : null;
+    });
+
+    // ── Compact HUD (fullscreen scenes): socket + FX alive, chrome tiny ─────
+    if (compact) {
+        return (
+            <>
+                {fxOverlays}
+                {me && (
+                    <div className="pointer-events-none fixed right-4 top-4 z-[73] flex items-center gap-2 rounded-xl border border-line-soft bg-surface-raised/95 px-3 py-1.5 shadow-pop">
+                        <span className="h-2 w-2 rounded-full" style={{ background: TIER_DOTS[me.tierIndex] }} title={TIER_LABELS[me.tierIndex]} />
+                        <span className="font-mono text-sm font-extrabold tabular-nums text-text-primary">${me.money.toLocaleString()}</span>
+                        <span className="text-[9px] font-bold text-text-dim">${me.b}/word</span>
+                        {notice && <span className="max-w-44 truncate text-[9px] font-bold text-accent">{notice}</span>}
+                    </div>
+                )}
+            </>
+        );
+    }
+
+    return (
+        <>
+            {fxOverlays}
+            <div className="flex flex-col gap-3 rounded-2xl border border-line-soft bg-surface-raised p-4 shadow-card">
+                {/* Header */}
+                <div className="flex items-center justify-between gap-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Typewriter tycoon</p>
+                    <span className="flex items-center gap-1">
+                        <button type="button" onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Unmute sounds' : 'Mute sounds'}
+                            className="focus-ring rounded p-1 text-text-dim transition-colors hover:text-text-primary">
+                            {muted ? <SpeakerXMarkIcon className="h-4 w-4" aria-hidden="true" /> : <SpeakerWaveIcon className="h-4 w-4" aria-hidden="true" />}
+                        </button>
+                        {onClose && (
+                            <button type="button" onClick={onClose} aria-label="Turn gamify off"
+                                className="focus-ring rounded p-1 text-text-dim transition-colors hover:text-text-primary">
+                                <XMarkIcon className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                        )}
+                    </span>
+                </div>
+
+                {error && <p className="text-[11px] font-bold text-text-error" role="alert">{error}</p>}
+
+                {/* The scene: monkey, money, floaters */}
+                <div className="relative">
+                    <MoneyFloaters floaters={floaters} />
+                    <TycoonMonkey tier={(me?.tierIndex ?? 0) + 1} typePulse={typePulse} celebrate={celebrate} />
+                    {me?.pets?.length > 0 && (
+                        <div className="pointer-events-none absolute bottom-1 right-2 flex gap-1 text-sm" aria-hidden="true">
+                            {me.pets.map((p) => <span key={p}>{PET_EMOJI[p]}</span>)}
+                        </div>
+                    )}
+                </div>
+                <div className="flex items-baseline justify-between">
+                    <span key={me?.money} className="animate-streak-pop font-mono text-2xl font-extrabold tabular-nums text-text-primary">
+                        ${me ? me.money.toLocaleString() : '…'}
+                    </span>
+                    <span className="text-[10px] font-bold text-text-dim">
+                        <span className="mr-1 inline-block h-2 w-2 rounded-full align-baseline" style={{ background: TIER_DOTS[me?.tierIndex ?? 0] }} />
+                        {TIER_LABELS[me?.tierIndex ?? 0]} · ${me?.b ?? 1}/word
+                    </span>
+                </div>
+                {self && <StreakMeter meter={self.meter} full={self.meterFull} />}
+                {notice && <p className="text-[11px] font-bold text-accent" role="status">{notice}</p>}
+
+                {/* The shop */}
+                {self?.shop && (
+                    <div className="flex flex-col gap-1.5">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim">Shop</p>
+                        {self.shop.tier && (
+                            <ShopButton
+                                label={`⌨️ ${self.shop.tier.label} typewriter`}
+                                sub={`$${self.shop.tier.b}/word`}
+                                cost={self.shop.tier.cost}
+                                disabled={me.money < self.shop.tier.cost}
+                                onClick={() => buyItem('tier')} />
+                        )}
+                        <div className="grid grid-cols-2 gap-1.5">
+                            <ShopButton label={`⚡ Streak ${self.up.streak}/${self.shop.streak.max}`} sub="+10% at full combo"
+                                cost={self.shop.streak.cost} disabled={self.shop.streak.cost == null || me.money < self.shop.streak.cost}
+                                onClick={() => buyItem('streak')} title="Streak Engine — full-combo income bonus" />
+                            <ShopButton label={`✨ Ribbon ${self.up.ribbon}/${self.shop.ribbon.max}`} sub="gold crit words"
+                                cost={self.shop.ribbon.cost} disabled={self.shop.ribbon.cost == null || me.money < self.shop.ribbon.cost}
+                                onClick={() => buyItem('ribbon')} title="Ribbon — random words pay big" />
+                            <ShopButton label={`📃 Paper ${self.up.paper}/${self.shop.paper.max}`} sub="paragraph bonus"
+                                cost={self.shop.paper.cost} disabled={self.shop.paper.cost == null || me.money < self.shop.paper.cost}
+                                onClick={() => buyItem('paper')} title="Paper Feed — lump sum per finished paragraph" />
+                            <ShopButton label={`🛡️ Shield ×${self.shop.shield.held}`} sub="blocks one hit"
+                                cost={self.shop.shield.cost} disabled={self.shop.shield.held >= self.shop.shield.max || me.money < self.shop.shield.cost}
+                                onClick={() => buyItem('shield')} />
+                            <ShopButton label={self.shop.wipers.owned ? '🧹 Wipers ✓' : '🧹 Wipers'} sub="halves hit durations"
+                                cost={self.shop.wipers.owned ? null : self.shop.wipers.cost}
+                                disabled={self.shop.wipers.owned || me.money < self.shop.wipers.cost}
+                                onClick={() => buyItem('wipers')} />
+                            <ShopButton label={self.shop.umbrella.owned ? '☂️ Umbrella ✓' : '☂️ Umbrella'} sub="auto-blocks cheap hits"
+                                cost={self.shop.umbrella.owned ? null : self.shop.umbrella.cost}
+                                disabled={self.shop.umbrella.owned || me.money < self.shop.umbrella.cost}
+                                onClick={() => buyItem('umbrella')} />
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5">
+                            {self.shop.pets.map((pet) => (
+                                <ShopButton key={pet.key} label={`${PET_EMOJI[pet.key]} ${pet.owned ? '✓' : ''}`}
+                                    cost={pet.owned ? null : pet.cost}
+                                    disabled={pet.owned || me.money < pet.cost}
+                                    onClick={() => buyItem(pet.key)} title={pet.label} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Party */}
+                <div className="border-t border-line-soft pt-3">
+                    <p className="mb-2 flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-text-dim">
+                        <UserGroupIcon className="h-3.5 w-3.5" aria-hidden="true" /> Party
+                        {inParty && (
+                            <button type="button" title="Click to copy the code"
+                                onClick={() => navigator.clipboard?.writeText(room.code).then(() => say('Code copied'))}
+                                className="focus-ring rounded border border-line-soft px-1.5 py-0.5 font-mono text-[10px] font-extrabold tracking-[0.2em] text-accent">
+                                {room.code}
+                            </button>
+                        )}
+                        {inParty && room.goalWords > 0 && <span className="normal-case tracking-normal">goal {room.goalWords}</span>}
+                        {inParty && room.sabotagesOff && <span className="normal-case tracking-normal">🕊️ peace</span>}
+                        {inParty && (
+                            <button type="button" onClick={leaveParty} className="focus-ring ml-auto text-[10px] font-bold normal-case tracking-normal text-text-dim hover:text-text-primary">
+                                Leave
+                            </button>
+                        )}
+                    </p>
+
+                    {!inParty && (
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-end gap-1.5">
+                                <label className="text-[10px] font-medium text-text-dim">
+                                    Goal
+                                    <input type="number" min="0" max="5000" value={goalInput} onChange={(e) => setGoalInput(e.target.value)}
+                                        className="mt-0.5 block w-16 rounded-lg px-1.5 py-1 text-xs font-bold" />
+                                </label>
+                                <button type="button" onClick={createParty}
+                                    className="focus-ring press rounded-lg bg-accent px-2.5 py-1.5 text-[11px] font-bold text-white">
+                                    Open party
+                                </button>
+                                <form className="ml-auto flex items-end gap-1.5" onSubmit={(e) => { e.preventDefault(); joinParty(); }}>
+                                    <input value={joinCode} onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                                        maxLength={8} placeholder="CODE" aria-label="Party code"
+                                        className="w-20 rounded-lg px-1.5 py-1.5 font-mono text-[11px] font-bold tracking-[0.15em]" />
+                                    <button type="submit" className="focus-ring press rounded-lg border border-line-soft px-2 py-1.5 text-[11px] font-bold text-text-primary">
+                                        Join
+                                    </button>
+                                </form>
+                            </div>
+                            <p className="text-[10px] leading-relaxed text-text-muted">
+                                Friends see your race live. Typed words earn; watching earns nothing but absorbs attacks. Chat is never saved.
+                            </p>
+                        </div>
+                    )}
+
+                    {inParty && (
+                        <div className="flex flex-col gap-2">
+                            {isHost && (
+                                <button type="button" onClick={togglePeace}
+                                    className="focus-ring w-fit rounded-lg border border-line-soft px-2 py-1 text-[10px] font-bold text-text-dim hover:text-text-primary">
+                                    {room.sabotagesOff ? '⚔️ Allow sabotage' : '🕊️ Declare peace'}
+                                </button>
+                            )}
+                            <ul className="flex flex-col gap-1.5">
+                                {room.members.map((m) => {
+                                    const mine = m.id === myId;
+                                    const target = room.goalWords > 0 ? room.goalWords : Math.max(40, ...room.members.map((x) => x.words));
+                                    const pct = Math.min(100, Math.round((m.words / Math.max(1, target)) * 100));
+                                    const trayOpen = attackTarget === m.id;
+                                    return (
+                                        <li key={m.id} className="rounded-lg border border-line-soft bg-surface-body px-2 py-1.5">
+                                            <div className="flex items-center gap-1.5 text-[11px]">
+                                                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: TIER_DOTS[m.tierIndex] }} title={TIER_LABELS[m.tierIndex]} />
+                                                <span className={`truncate font-bold ${m.connected ? 'text-text-primary' : 'text-text-dim line-through'}`}>
+                                                    {m.goalHit && '🏆'}{m.watching && '🧘'}{m.name}{mine && <span className="font-medium text-text-dim"> · you</span>}
+                                                </span>
+                                                <span className="ml-auto font-mono text-[10px] font-extrabold tabular-nums text-text-primary">${m.money.toLocaleString()}</span>
+                                                {m.shields > 0 && <span className="text-[9px]">{'🛡️'.repeat(m.shields)}</span>}
+                                                {!mine && (
+                                                    <button type="button" aria-expanded={trayOpen} aria-label={`Interact with ${m.name}`}
+                                                        onClick={() => setAttackTarget(trayOpen ? null : m.id)}
+                                                        className="focus-ring rounded border border-line-soft px-1 text-[10px] font-bold hover:border-text-dim">
+                                                        ⚔️
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-soft">
+                                                <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${pct}%` }} />
+                                            </div>
+                                            <p className="mt-0.5 text-[9px] font-bold tabular-nums text-text-dim">
+                                                {m.words}w{room.goalWords > 0 ? `/${room.goalWords}` : ''} · ¶{m.para}/{m.paraCount || '?'} · {m.accuracy}%
+                                            </p>
+                                            {trayOpen && self?.shop && (
+                                                <div className="mt-1.5 flex flex-wrap gap-1 border-t border-line-soft pt-1.5">
+                                                    {self.shop.sabotages.map((s) => (
+                                                        <button key={s.key} type="button" title={`${s.label} — $${s.cost}`}
+                                                            disabled={room.sabotagesOff || me.money < s.cost}
+                                                            onClick={() => zap(m.id, s.key)}
+                                                            className="focus-ring press rounded border border-line-soft px-1.5 py-0.5 text-[11px] disabled:opacity-40">
+                                                            {SABOTAGE_EMOJI[s.key]}<span className="ml-0.5 font-mono text-[8px] text-text-dim">${s.cost}</span>
+                                                        </button>
+                                                    ))}
+                                                    <span className="mx-1 w-px bg-line-soft" aria-hidden="true" />
+                                                    {[0, 1, 2].map((preset) => (
+                                                        <button key={preset} type="button" title={`Gift $${[10, 25, 50][preset] * (me?.b || 1)}`}
+                                                            onClick={() => sendGift(m.id, 'cash', preset)}
+                                                            className="focus-ring press rounded border border-line-soft px-1.5 py-0.5 text-[9px] font-bold text-text-dim hover:text-text-primary">
+                                                            💸{[10, 25, 50][preset]}b
+                                                        </button>
+                                                    ))}
+                                                    <button type="button" title="Give one of your shields" disabled={!self || me.money < 0 || (self.shop.shield.held < 1)}
+                                                        onClick={() => sendGift(m.id, 'shield')}
+                                                        className="focus-ring press rounded border border-line-soft px-1.5 py-0.5 text-[9px] font-bold text-text-dim hover:text-text-primary disabled:opacity-40">
+                                                        🛡️→
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                            {/* Chat — relayed live, never saved. */}
+                            <div className="flex flex-col rounded-lg border border-line-soft bg-surface-body p-2">
+                                <div className="flex max-h-32 min-h-[4.5rem] flex-col gap-0.5 overflow-y-auto text-[11px]">
+                                    {chatLog.map((msg) => (
+                                        <p key={msg.id} className={msg.system ? 'italic text-text-dim' : 'text-text-primary'}>
+                                            {!msg.system && <strong>{msg.from}: </strong>}{msg.text}
+                                        </p>
+                                    ))}
+                                    <span ref={chatEndRef} />
+                                </div>
+                                <form onSubmit={sendChat} className="mt-1.5 flex gap-1">
+                                    <input value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={240}
+                                        aria-label="Party chat message" placeholder="Say something… (not saved)"
+                                        className="min-w-0 flex-1 rounded-lg px-2 py-1 text-[11px]" />
+                                    <button type="submit" className="focus-ring press rounded-lg bg-accent px-2 py-1 text-[11px] font-bold text-white">Send</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </>
+    );
+}

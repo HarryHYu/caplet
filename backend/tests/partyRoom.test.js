@@ -1,136 +1,281 @@
 /**
- * Study Party room logic — the server-authoritative economy. No sockets,
- * no DB: partyRoom is a pure in-memory module, which is the whole point
- * (chat and progress must not outlive the party).
+ * Typewriter Tycoon economy — server-authoritative, pure in-memory module.
+ * These tests pin the audited balance numbers and every anti-exploit clamp.
  */
-const party = require('../realtime/partyRoom');
+const tycoon = require('../realtime/partyRoom');
 
 afterEach(() => {
-  party.rooms.clear();
+  tycoon.rooms.clear();
+  tycoon.sessions.clear();
 });
 
-function twoPersonParty(goalWords = 0) {
-  const room = party.createParty('u1', 'Harry', goalWords);
-  party.joinParty(room.code, 'u2', 'Alex');
-  return room;
-}
+const player = (id, name, state) => tycoon.ensureSession(id, name, state);
+const progress = (session, words, extra = {}) => tycoon.recordProgress(session, { wordsDelta: words, ...extra });
 
-describe('party rooms', () => {
-  it('creates a joinable room with an unambiguous code and caps membership', () => {
-    const room = party.createParty('u1', 'Harry', 200);
-    expect(room.code).toMatch(/^[A-HJ-NP-Z2-9]{6}$/);
-    expect(room.goalWords).toBe(200);
-    for (let i = 2; i <= party.MAX_MEMBERS; i += 1) {
-      expect(party.joinParty(room.code, `u${i}`, `P${i}`).member).toBeTruthy();
+describe('earning', () => {
+  it('pays b per word by tier, credits lifetime words, and marks dirty for saving', () => {
+    const me = player('u1', 'Harry');
+    const r = progress(me, 10);
+    expect(r.earned).toBe(10); // stone: $1/word
+    expect(me.state.money).toBe(10);
+    expect(me.state.lifetimeWords).toBe(10);
+    expect(me.dirty).toBe(true);
+
+    const rich = player('u2', 'Rich', { tier: 7 }); // diamond
+    expect(progress(rich, 10).earned).toBe(550); // $55/word
+  });
+
+  it('token-buckets credited words to 45/min — no devtools money printer', () => {
+    const me = player('u1', 'Harry');
+    const first = progress(me, 60);
+    expect(first.words).toBe(45); // full bucket, then dry
+    const second = progress(me, 30);
+    expect(second.words).toBeLessThanOrEqual(1); // bucket refills at 45/min
+  });
+
+  it('the streak engine ramps with the meter and misses halve it', () => {
+    const me = player('u1', 'Harry', { tier: 0, up: { streak: 5, ribbon: 0, paper: 0 } });
+    progress(me, 20); // meter -> 20 (full)
+    expect(me.meter).toBe(20);
+    // At full meter with streak L5, each word pays round(1 * 1.5) = $2 (rounded).
+    const wasMoney = me.state.money;
+    const r = progress(me, 5);
+    expect(r.earned).toBeGreaterThanOrEqual(9); // ~1.5x on $1 words, rounded up
+    expect(me.state.money).toBe(wasMoney + r.earned);
+    progress(me, 0, { missesDelta: 1 });
+    expect(me.meter).toBe(10); // halved, not zeroed
+  });
+
+  it('paper feed pays the paragraph lump: 8b x level per pass', () => {
+    const me = player('u1', 'Harry', { tier: 3, up: { streak: 0, ribbon: 0, paper: 2 } }); // iron b=7
+    const r = progress(me, 0, { paragraphsDelta: 1 });
+    expect(r.paperLump).toBe(8 * 7 * 2); // $112
+    expect(me.state.money).toBe(112);
+  });
+
+  it('ribbon crits exist and stay bounded', () => {
+    const me = player('u1', 'Harry', { tier: 7, up: { streak: 5, ribbon: 4, paper: 0 } });
+    me.meter = 20;
+    // 45 words at 5% crit — over several buckets, crits should appear; every
+    // single word's pay stays under the b*10*1.5 hard bound.
+    let crits = 0;
+    for (let i = 0; i < 4; i += 1) {
+      me.bucket = { tokens: 45, ts: Date.now() };
+      const r = progress(me, 45);
+      crits += r.crits;
+      expect(r.earned).toBeLessThanOrEqual(45 * 55 * 15);
     }
-    expect(party.joinParty(room.code, 'u99', 'Late').error).toMatch(/full/i);
-    expect(party.joinParty('NOPE99', 'u1', 'Harry').error).toMatch(/No party/i);
-    // Rejoining reconnects instead of duplicating.
-    const again = party.joinParty(room.code, 'u2', 'P2');
-    expect(again.rejoined).toBe(true);
-    expect(room.members.size).toBe(party.MAX_MEMBERS);
+    expect(crits).toBeGreaterThan(0);
+  });
+});
+
+describe('the shop', () => {
+  it('sells the tier ladder at the audited prices', () => {
+    const me = player('u1', 'Harry');
+    me.state.money = 70;
+    expect(tycoon.buy(me, 'tier')).toMatchObject({ bought: 'tier', tier: 'wood', cost: 70 });
+    expect(me.state.money).toBe(0);
+    expect(tycoon.buy(me, 'tier').error).toMatch(/Need \$350/);
+    me.state.tier = 7;
+    expect(tycoon.buy(me, 'tier').error).toMatch(/Diamond is the top/);
   });
 
-  it('pays $1 per landed word, scaled by the Word value upgrade', () => {
-    const room = twoPersonParty();
-    party.recordProgress(room, 'u1', { wordsDelta: 40, para: 1, paraCount: 4, accuracy: 92 });
-    let me = room.members.get('u1');
-    expect(me.words).toBe(40);
-    expect(me.money).toBe(40);
-
-    // First rate upgrade costs 40 — exactly affordable — and doubles pay.
-    const buy = party.buyUpgrade(room, 'u1', 'rate');
-    expect(buy.cost).toBe(40);
-    me = room.members.get('u1');
-    expect(me.money).toBe(0);
-    party.recordProgress(room, 'u1', { wordsDelta: 10 });
-    expect(room.members.get('u1').money).toBe(20); // $2/word now
-
-    // Costs escalate; broke players are refused.
-    expect(party.buyUpgrade(room, 'u1', 'rate').error).toMatch(/Need \$/);
-    // Reported deltas are clamped so a devtools user can't print money.
-    party.recordProgress(room, 'u2', { wordsDelta: 100000 });
-    expect(room.members.get('u2').words).toBeLessThanOrEqual(60);
+  it('sells secondaries level by level and stops at max', () => {
+    const me = player('u1', 'Harry');
+    me.state.money = 10000;
+    expect(tycoon.buy(me, 'streak')).toMatchObject({ bought: 'streak', level: 1, cost: 30 });
+    expect(tycoon.buy(me, 'ribbon')).toMatchObject({ level: 1, cost: 120 });
+    expect(tycoon.buy(me, 'paper')).toMatchObject({ level: 1, cost: 110 });
+    me.state.up.paper = 3;
+    expect(tycoon.buy(me, 'paper').error).toMatch(/maxed/i);
   });
 
-  it('announces the goal exactly once per member', () => {
-    const room = twoPersonParty(50);
-    expect(party.recordProgress(room, 'u1', { wordsDelta: 49 }).goalJustHit).toBe(false);
-    expect(party.recordProgress(room, 'u1', { wordsDelta: 1 }).goalJustHit).toBe(true);
-    expect(party.recordProgress(room, 'u1', { wordsDelta: 10 }).goalJustHit).toBe(false);
+  it('prices defences and pets in the buyer own b', () => {
+    const me = player('u1', 'Harry', { tier: 2 }); // copper b=4
+    me.state.money = 1000;
+    expect(tycoon.buy(me, 'shield')).toMatchObject({ cost: 80 });   // 20b
+    expect(tycoon.buy(me, 'wipers')).toMatchObject({ cost: 300 });  // 75b
+    expect(tycoon.buy(me, 'catPet')).toMatchObject({ cost: 360 }); // 90b
+    expect(me.wipers).toBe(true);
+    expect(me.state.pets).toContain('catPet');
+    expect(tycoon.buy(me, 'catPet').error).toMatch(/already lives/);
+    const shop = tycoon.shopFor(me);
+    expect(shop.umbrella.cost).toBe(400); // 100b
+    expect(shop.sabotages.find((s) => s.key === 'ink').cost).toBe(56); // 14b
+  });
+});
+
+describe('parties and warfare', () => {
+  const setUpDuel = () => {
+    const a = player('u1', 'Harry');
+    const b = player('u2', 'Alex');
+    const room = tycoon.createParty(a, 80);
+    tycoon.joinParty(room.code, b);
+    return { a, b, room };
+  };
+
+  it('sabotage pays the attacker b-scaled price and lands with duration', () => {
+    const { a, b, room } = setUpDuel();
+    a.state.money = 1000;
+    const r = tycoon.sabotage(room, 'u1', 'u2', 'ink');
+    expect(r.hit).toBe(true);
+    expect(r.cost).toBe(14); // 14 x stone b
+    expect(r.durationMs).toBe(7000);
+    expect(a.state.money).toBe(986);
+    expect(b.lastHitAt).toBeGreaterThan(0);
   });
 
-  it('sabotage costs money, respects cooldown, and shields eat hits', () => {
-    const room = twoPersonParty();
-    party.recordProgress(room, 'u1', { wordsDelta: 60 }); // $60
-    party.recordProgress(room, 'u2', { wordsDelta: 30 }); // $30
-    party.buyUpgrade(room, 'u2', 'shield');
-
-    // Shield eats the first ink; attacker still pays.
-    const first = party.sabotage(room, 'u1', 'u2', 'ink');
-    expect(first.blocked).toBe(true);
-    expect(room.members.get('u1').money).toBe(35);
-    expect(room.members.get('u2').shields).toBe(0);
-
-    // Cooldown blocks the immediate follow-up.
-    expect(party.sabotage(room, 'u1', 'u2', 'ink').error).toMatch(/Reloading/);
-
-    // After cooldown, the hit lands with its duration.
-    room.members.get('u1').lastSabotageAt = 0;
-    const second = party.sabotage(room, 'u1', 'u2', 'ink');
-    expect(second.blocked).toBe(false);
-    expect(second.durationMs).toBeGreaterThan(0);
-
-    // No self-harm, no ghosts, no free weapons.
-    room.members.get('u1').lastSabotageAt = 0;
-    expect(party.sabotage(room, 'u1', 'u1', 'ink').error).toBeTruthy();
-    expect(party.sabotage(room, 'u1', 'ghost', 'ink').error).toBeTruthy();
-    expect(party.sabotage(room, 'u2', 'u1', 'bomb').error).toMatch(/Need \$/);
+  it('richer attackers pay more for the same weapon', () => {
+    const { a, room } = setUpDuel();
+    a.state.tier = 7; // diamond b=55
+    a.state.money = 10000;
+    const r = tycoon.sabotage(room, 'u1', 'u2', 'ink');
+    expect(r.cost).toBe(14 * 55);
   });
 
-  it('gifts move real money and refuse nonsense amounts', () => {
-    const room = twoPersonParty();
-    party.recordProgress(room, 'u1', { wordsDelta: 20 });
-    expect(party.gift(room, 'u1', 'u2', 15).value).toBe(15);
-    expect(room.members.get('u1').money).toBe(5);
-    expect(room.members.get('u2').money).toBe(15);
-    expect(party.gift(room, 'u1', 'u2', 50).error).toMatch(/Not enough/);
-    expect(party.gift(room, 'u1', 'u2', 0).error).toBeTruthy();
-    expect(party.gift(room, 'u1', 'u1', 5).error).toBeTruthy();
+  it('cooldowns: 8s per attacker, 20s per victim', () => {
+    const { a, b, room } = setUpDuel();
+    const c = player('u3', 'Cam');
+    tycoon.joinParty(room.code, c);
+    a.state.money = 1000; c.state.money = 1000;
+    tycoon.sabotage(room, 'u1', 'u2', 'confetti');
+    expect(tycoon.sabotage(room, 'u1', 'u2', 'confetti').error).toMatch(/Reloading/);
+    // A different attacker still can't chain the same victim.
+    expect(tycoon.sabotage(room, 'u3', 'u2', 'confetti').error).toMatch(/recovering/);
+    expect(b.shields).toBe(0);
   });
 
-  it('chat is sanitised, masked, capped — and lives only in the room object', () => {
-    const room = twoPersonParty();
-    const sent = party.addChat(room, 'u1', '  hello   there  ');
-    expect(sent.message.text).toBe('hello there');
-    expect(sent.message.from).toBe('Harry');
-    expect(party.addChat(room, 'u1', 'well fuck').message.text).toBe('well ✿✿✿✿');
-    expect(party.addChat(room, 'u1', '   ').error).toBeTruthy();
-    for (let i = 0; i < 60; i += 1) party.addChat(room, 'u2', `msg ${i}`);
+  it('shield, umbrella and wipers each do their one job', () => {
+    const { a, b, room } = setUpDuel();
+    a.state.money = 10000; b.state.money = 10000;
+    tycoon.buy(b, 'shield');
+    tycoon.buy(b, 'umbrella');
+    tycoon.buy(b, 'wipers');
+    // Shield eats the first hit of any size.
+    expect(tycoon.sabotage(room, 'u1', 'u2', 'bomb').blocked).toBe('shield');
+    a.lastSabotageAt = 0; b.lastHitAt = 0;
+    // Umbrella auto-blocks cheap attacks (<= 18b)...
+    expect(tycoon.sabotage(room, 'u1', 'u2', 'jelly').blocked).toBe('umbrella');
+    a.lastSabotageAt = 0; b.lastHitAt = 0;
+    // ...but is on cooldown right after, and never blocks the dear ones.
+    const hit = tycoon.sabotage(room, 'u1', 'u2', 'fog');
+    expect(hit.hit).toBe(true);
+    expect(hit.durationMs).toBe(4000); // wipers halve 8s fog
+  });
+
+  it('watch mode absorbs the attack and pockets the spend', () => {
+    const { a, b, room } = setUpDuel();
+    a.state.money = 1000;
+    tycoon.recordProgress(b, { watching: true });
+    const r = tycoon.sabotage(room, 'u1', 'u2', 'bomb');
+    expect(r.absorbed).toBe(true);
+    expect(b.state.money).toBe(30); // the attacker's whole spend, as a bounty
+    expect(a.state.money).toBe(970);
+    expect(b.lastHitAt).toBe(0); // no hit ever landed
+  });
+
+  it('the word thief steals 8% capped, half burns, floor protected', () => {
+    const { a, b, room } = setUpDuel();
+    a.state.money = 1000;
+    b.state.money = 500;
+    const r = tycoon.sabotage(room, 'u1', 'u2', 'thief');
+    expect(r.stolen).toBe(40); // 8% of 500, under cap 40x1
+    expect(b.state.money).toBe(460);
+    expect(a.state.money).toBe(1000 - 55 + 20); // paid 55b(=55), got half of 40
+    // Floor: a broke victim can't be dragged below 15b.
+    a.lastSabotageAt = 0; b.lastHitAt = 0;
+    b.state.money = 16;
+    const r2 = tycoon.sabotage(room, 'u1', 'u2', 'thief');
+    expect(r2.stolen).toBe(1);
+    expect(b.state.money).toBe(15);
+  });
+
+  it('host peace toggle turns warfare off for everyone but the host controls it', () => {
+    const { a, room } = setUpDuel();
+    a.state.money = 100;
+    expect(tycoon.setPeace(room, 'u2', true).error).toMatch(/Only the host/);
+    tycoon.setPeace(room, 'u1', true);
+    expect(tycoon.sabotage(room, 'u1', 'u2', 'confetti').error).toMatch(/peace/i);
+    tycoon.setPeace(room, 'u1', false);
+    expect(tycoon.sabotage(room, 'u1', 'u2', 'confetti').hit).toBe(true);
+  });
+
+  it('gifts cash (receiver-capped) and shields', () => {
+    const { a, b, room } = setUpDuel();
+    a.state.tier = 7; // diamond sender
+    a.state.money = 10000;
+    a.shields = 1;
+    const r = tycoon.gift(room, 'u1', 'u2', 'cash', 2); // 50b = $2750 face
+    expect(r.value).toBe(60); // capped at 60 x receiver's stone b
+    expect(b.state.money).toBe(60);
+    expect(a.state.money).toBe(10000 - 2750);
+    const s = tycoon.gift(room, 'u1', 'u2', 'shield');
+    expect(s.kind).toBe('shield');
+    expect(a.shields).toBe(0);
+    expect(b.shields).toBe(1);
+  });
+
+  it('goal announces once; roster sorts by session words', () => {
+    const { a, b, room } = setUpDuel();
+    b.bucket = { tokens: 45, ts: Date.now() };
+    expect(tycoon.recordProgress(b, { wordsDelta: 45 }).goalJustHit).toBe(false);
+    b.bucket = { tokens: 45, ts: Date.now() };
+    const hit = tycoon.recordProgress(b, { wordsDelta: 45 });
+    expect(hit.goalJustHit).toBe(true); // 90 words >= the 80-word goal
+    const snap = tycoon.roomSnapshot(room);
+    expect(snap.members[0].id).toBe('u2');
+    expect(snap.members[0].tier).toBe('stone');
+    expect(snap.goalWords).toBe(80);
+    void a;
+  });
+
+  it('persistence: state survives a reconnect, chat does not survive the room', () => {
+    const me = player('u1', 'Harry');
+    me.state.money = 999; me.state.tier = 3;
+    const saved = JSON.parse(JSON.stringify(me.state));
+    tycoon.sessions.clear();
+    const back = player('u1', 'Harry', saved);
+    expect(back.state.money).toBe(999);
+    expect(back.state.tier).toBe(3);
+    expect(back.shields).toBe(0); // per-run gear resets
+
+    const room = tycoon.createParty(back, 0);
+    tycoon.addChat(room, 'u1', 'ephemeral!');
+    tycoon.leaveParty(back);
+    expect(tycoon.getRoom(room.code)).toBeNull();
+  });
+
+  it('normalizeState refuses garbage', () => {
+    const s = tycoon.normalizeState({ money: -50, tier: 99, up: { streak: 42 }, pets: ['nonsense', 'catPet'] });
+    expect(s.money).toBe(0);
+    expect(s.tier).toBe(7);
+    expect(s.up.streak).toBe(5);
+    expect(s.pets).toEqual(['catPet']);
+  });
+});
+
+describe('chat and sweep', () => {
+  it('chat is sanitised, masked, capped at 40', () => {
+    const a = player('u1', 'Harry');
+    const room = tycoon.createParty(a, 0);
+    expect(tycoon.addChat(room, 'u1', '  hello   there ').message.text).toBe('hello there');
+    expect(tycoon.addChat(room, 'u1', 'well fuck').message.text).toBe('well ✿✿✿✿');
+    for (let i = 0; i < 60; i += 1) tycoon.addChat(room, 'u1', `m${i}`);
     expect(room.chat.length).toBeLessThanOrEqual(40);
-    // Ephemerality: killing the room erases the chat with it.
-    party.leaveParty(room, 'u1');
-    party.leaveParty(room, 'u2');
-    expect(party.getRoom(room.code)).toBeNull();
   });
 
-  it('sweeps rooms whose members are all long gone', () => {
-    const room = twoPersonParty();
-    party.markDisconnected(room, 'u1');
-    party.markDisconnected(room, 'u2');
-    for (const m of room.members.values()) m.lastSeen = Date.now() - 10 * 60 * 1000;
-    party.sweepRooms();
-    expect(party.getRoom(room.code)).toBeNull();
-  });
-
-  it('snapshots rank members by words and expose the tycoon numbers', () => {
-    const room = twoPersonParty(100);
-    party.recordProgress(room, 'u2', { wordsDelta: 30, accuracy: 88 });
-    const snap = party.snapshot(room);
-    expect(snap.members[0].name).toBe('Alex');
-    expect(snap.members[0].wordValue).toBe(1);
-    expect(snap.members[0].accuracy).toBe(88);
-    expect(snap.goalWords).toBe(100);
-    expect(Array.isArray(snap.chat)).toBe(true);
+  it('sweep reaps abandoned rooms and clean idle sessions, keeps dirty ones', () => {
+    const a = player('u1', 'Harry');
+    const room = tycoon.createParty(a, 0);
+    tycoon.markDisconnected('u1');
+    a.lastSeen = Date.now() - 10 * 60 * 1000;
+    a.dirty = true;
+    tycoon.sweep();
+    expect(tycoon.getRoom(room.code)).toBeNull();
+    expect(tycoon.getSession('u1')).not.toBeNull(); // dirty = awaiting save
+    a.dirty = false;
+    a.roomCode = null;
+    tycoon.sweep();
+    expect(tycoon.getSession('u1')).toBeNull();
   });
 });

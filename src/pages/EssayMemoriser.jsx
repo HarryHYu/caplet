@@ -10,7 +10,7 @@ import SpeedTypeMode from '../components/essay/SpeedTypeMode';
 import AccuracyRing from '../components/essay/AccuracyRing';
 import { foldAccents, foldGerman, alignWords, splitSentences, perfectWordMatch, VERDICT_CLASS, accuracyVerdict } from '../lib/speedType';
 import EssayChat from '../components/essay/EssayChat';
-import StudyParty from '../components/essay/StudyParty';
+import TycoonPanel from '../components/essay/TycoonPanel';
 import ContextLibrary, { AddContextForm, ContextDocRow } from '../components/essay/ContextLibrary';
 import { MAX_CONTEXT_DOCS } from '../lib/essayContext';
 import {
@@ -1811,12 +1811,15 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         else {
             setStreak((s) => s + 1);
             maybeBurst();
-            // Study Party: a TYPED landed word earns; watched words never
-            // reach this path, so autoplay can't farm the tycoon.
-            onWordLanded?.({ para: pIndex, paraCount: paras.length, accuracy });
+            // Tycoon: a TYPED landed word earns; watched words never reach
+            // this path, so autoplay can't farm the economy.
+            onWordLanded?.({ kind: 'word', para: pIndex, paraCount: paras.length, accuracy, watching: false });
         }
-        if (wordIdx + 1 >= words.length) setParaDone(true);
-        else setWordIdx((i) => i + 1);
+        if (wordIdx + 1 >= words.length) {
+            // A typed pass finishing the paragraph is worth a Paper Feed lump.
+            onWordLanded?.({ kind: 'paragraph', para: pIndex, paraCount: paras.length, accuracy, watching: false });
+            setParaDone(true);
+        } else setWordIdx((i) => i + 1);
     };
 
     // A Watch beat: the current word (already shown revealed at the centre)
@@ -1831,6 +1834,7 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         setPeekLevel(0);
         maybeBurst();
         markActivity();
+        onWordLanded?.({ kind: 'tick', para: pIndex, paraCount: paras.length, accuracy, watching: true });
         if (wordIdx + 1 >= words.length) setParaDone(true);
         else setWordIdx((i) => i + 1);
     };
@@ -1885,6 +1889,9 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
         : [policy === 'sentence' ? 's1' : policy];
 
     const logTrouble = (kind, typed = null) => {
+        if (kind === 'slip' || kind === 'wrong') {
+            onWordLanded?.({ kind: 'miss', para: pIndex, paraCount: paras.length, accuracy, watching: false });
+        }
         setTrouble((prev) => {
             const key = `${pIndex}:${wordIdx}`;
             const next = new Map(prev);
@@ -2192,7 +2199,11 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             <span className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">Input</span>
                 <HintToggle options={INPUT_MODES} value={watch ? 'watch' : 'type'}
-                    onChange={andRefocus((v) => { setWatch(v === 'watch'); setWatchPaused(false); setCurrent(''); setFix(null); setMissCount(0); })} />
+                    onChange={andRefocus((v) => {
+                        const on = v === 'watch';
+                        setWatch(on); setWatchPaused(false); setCurrent(''); setFix(null); setMissCount(0);
+                        onWordLanded?.({ kind: 'state', para: pIndex, paraCount: paras.length, accuracy, watching: on });
+                    })} />
                 {watch && (
                     <label className="flex items-center gap-1.5 text-[10px] font-bold text-text-dim">
                         <input type="range" min="60" max="400" step="20" value={wpm}
@@ -3371,6 +3382,16 @@ function EssayWorkspace({ essayId }) {
     const [speedRunning, setSpeedRunning] = useState(false);
     const practiceRef = useRef(null);
     const partyReporter = useRef(null);
+    // Gamify: the typewriter-tycoon side panel. Off by default solo (it's a
+    // study app first); opening/joining a party happens inside the panel, so
+    // partying implies it's on.
+    const [gamify, setGamify] = useState(() => {
+        try { return localStorage.getItem('caplet:gamify') === '1'; } catch { return false; }
+    });
+    const setGamifyPersist = (on) => {
+        setGamify(on);
+        try { localStorage.setItem('caplet:gamify', on ? '1' : '0'); } catch { /* fine */ }
+    };
     const { active: practiceFullscreen, supported: fullscreenSupported, toggle: toggleFullscreen, enter: enterFullscreen } = useFullscreen(practiceRef);
     const [tranceOn, setTranceOn] = useState(false);
     const [proposal, setProposal] = useState(null);
@@ -3898,6 +3919,8 @@ function EssayWorkspace({ essayId }) {
                             </div>
                         )}
                         <div className={practiceFullscreen ? 'mx-auto w-full max-w-6xl' : undefined}>
+                        <div className={gamify && !practiceFullscreen && !speedRunning ? 'xl:grid xl:grid-cols-[minmax(0,1fr)_330px] xl:items-start xl:gap-5' : undefined}>
+                        <div className="min-w-0">
                         {!speedRunning && !practiceFullscreen && (
                             <>
                                 <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -3909,11 +3932,17 @@ function EssayWorkspace({ essayId }) {
                                     )}
                                     {/* In fullscreen the brand bar carries the exit
                                         button — one control, not two. */}
-                                    {fullscreenSupported && !practiceFullscreen && (
-                                        <span className="ml-auto">
+                                    <span className="ml-auto flex items-center gap-2">
+                                        <button type="button" aria-pressed={gamify}
+                                            onClick={() => setGamifyPersist(!gamify)}
+                                            title="The typewriter tycoon: every typed word earns, upgrades, parties, sabotage."
+                                            className={`focus-ring press inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${gamify ? 'border-accent bg-accent-soft text-accent' : 'border-line-soft text-text-dim hover:border-text-dim hover:text-text-primary'}`}>
+                                            🕹️ Gamify
+                                        </button>
+                                        {fullscreenSupported && !practiceFullscreen && (
                                             <FullscreenButton active={false} onToggle={toggleFullscreen} />
-                                        </span>
-                                    )}
+                                        )}
+                                    </span>
                                 </div>
                                 <PracticeHub mode={mode} onChange={setMode} dueCount={dueCount} drills={drills} />
                             </>
@@ -3967,12 +3996,20 @@ function EssayWorkspace({ essayId }) {
                                 )}
                             </div>
                         )}
-                        {/* Memorise together: rendered INSIDE the fullscreen
-                            container so the wallet chip and incoming ink/bombs
-                            reach the Focus/Trance/Party scenes too. */}
-                        {!speedRunning && (
-                            <StudyParty registerReporter={(fn) => { partyReporter.current = fn; }} />
+                        </div>
+                        {/* The tycoon column. Rendered INSIDE the fullscreen
+                            container so its HUD chip and incoming sabotage
+                            effects reach the Focus/Trance/Party scenes too;
+                            in fullscreen it collapses to a compact HUD. */}
+                        {gamify && !speedRunning && (
+                            <div className={practiceFullscreen ? undefined : 'mt-5 min-w-0 xl:mt-0 xl:sticky xl:top-5 xl:max-h-[calc(100vh-2.5rem)] xl:overflow-y-auto xl:overscroll-contain'}>
+                                <TycoonPanel
+                                    compact={practiceFullscreen}
+                                    registerReporter={(fn) => { partyReporter.current = fn; }}
+                                    onClose={() => setGamifyPersist(false)} />
+                            </div>
                         )}
+                        </div>
                         </div>
                     </div>
                 )}

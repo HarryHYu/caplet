@@ -1,33 +1,58 @@
 /**
- * Study Party — the /party Socket.IO namespace. Logged-in users only (a
- * party shares each member's own essay progress; there is no anonymous
- * role). All room state lives in partyRoom.js, in memory only.
+ * Typewriter Tycoon + Study Party — the /party Socket.IO namespace.
+ * Logged-in users only. The economy lives in partyRoom.js (pure, in-memory);
+ * this layer does auth, persistence (TycoonState — debounced saves of each
+ * player's game state), and the wire protocol.
  *
- * Wire protocol (client -> server, all with ack callbacks):
- *   party:create   {goalWords}            -> {ok, snapshot}
- *   party:join     {code}                 -> {ok, snapshot}
- *   party:leave    {}                     -> {ok}
- *   party:progress {wordsDelta, para, paraCount, accuracy}
- *   party:chat     {text}
- *   party:buy      {item}                 -> {ok|error}
- *   party:sabotage {target, kind}         -> {ok|error, blocked}
- *   party:gift     {target, amount}       -> {ok|error}
+ * Client -> server (ack callbacks throughout):
+ *   tycoon:hello    {}                          -> {ok, self}          load my saved game
+ *   tycoon:progress {wordsDelta, missesDelta, paragraphsDelta, para,
+ *                    paraCount, accuracy, watching}
+ *                                               -> {ok, earned, crits, jackpot, meter, self}
+ *   tycoon:buy      {item}                      -> {ok, self} | {error}
+ *   party:create    {goalWords}                 -> {ok, you, self, snapshot}
+ *   party:join      {code}                      -> {ok, you, self, snapshot}
+ *   party:leave     {}                          -> {ok}
+ *   party:peace     {off}                       -> {ok} host only
+ *   party:chat      {text}
+ *   party:sabotage  {target, kind}              -> {ok, outcome}
+ *   party:gift      {target, kind:'cash'|'shield', preset}
  * Server -> client:
- *   party:state    full snapshot (roster/money/goal)
- *   party:chat     one message
- *   party:hit      {kind, from, durationMs}   (you got inked/bombed)
- *   party:shielded {kind, from}               (your shield ate one)
+ *   party:state     room snapshot     party:chat one message
+ *   party:hit       {kind, from, durationMs}    (you got got)
+ *   party:blocked   {kind, from, how:'shield'|'umbrella'|'absorbed', bounty?}
  */
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { User, TycoonState } = require('../models');
 const { JWT_SECRET } = require('../middleware/auth');
 const partyRoom = require('./partyRoom');
+
+const SAVE_INTERVAL_MS = 10 * 1000;
 
 function displayName(user) {
   const first = String(user.firstName || '').trim();
   const last = String(user.lastName || '').trim();
   if (first && last) return `${first} ${last[0]}.`;
   return first || 'Student';
+}
+
+async function loadState(userId) {
+  try {
+    const row = await TycoonState.findByPk(userId);
+    return row ? row.state : null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveSession(session) {
+  if (!session.dirty) return;
+  session.dirty = false;
+  try {
+    await TycoonState.upsert({ userId: session.id, state: session.state });
+  } catch {
+    session.dirty = true; // retry on the next sweep
+  }
 }
 
 function attachPartySocket(io) {
@@ -50,7 +75,7 @@ function attachPartySocket(io) {
   });
 
   const broadcastState = (room) => {
-    party.to(room.code).emit('party:state', partyRoom.snapshot(room));
+    party.to(room.code).emit('party:state', partyRoom.roomSnapshot(room));
   };
 
   const systemChat = (room, text) => {
@@ -58,66 +83,120 @@ function attachPartySocket(io) {
     if (result.message) party.to(room.code).emit('party:chat', result.message);
   };
 
-  /** Emit to every open socket a member has (they may have two tabs). */
   const emitToMember = (room, memberId, event, payload) => {
     for (const s of party.sockets.values()) {
-      if (s.data.userId === String(memberId) && s.data.partyCode === room.code) {
-        s.emit(event, payload);
-      }
+      if (s.data.userId === String(memberId)) s.emit(event, payload);
     }
   };
 
   party.on('connection', (socket) => {
-    const roomOf = () => (socket.data.partyCode ? partyRoom.getRoom(socket.data.partyCode) : null);
+    const mySession = () => partyRoom.getSession(socket.data.userId);
+    const myRoom = () => {
+      const session = mySession();
+      return session?.roomCode ? partyRoom.getRoom(session.roomCode) : null;
+    };
+
+    socket.on('tycoon:hello', async (_payload, cb) => {
+      try {
+        const persisted = await loadState(socket.data.userId);
+        const session = partyRoom.ensureSession(socket.data.userId, socket.data.name, persisted);
+        if (session.roomCode) socket.join(session.roomCode); // reconnect into my party
+        cb?.({ ok: true, self: partyRoom.selfSnapshot(session) });
+      } catch {
+        cb?.({ error: 'Could not load your game.' });
+      }
+    });
+
+    socket.on('tycoon:progress', (payload, cb) => {
+      const session = mySession();
+      if (!session) return cb?.({ error: 'Say hello first.' });
+      const result = partyRoom.recordProgress(session, payload || {});
+      const room = myRoom();
+      if (room) {
+        if (result.goalJustHit) systemChat(room, `🏆 ${session.name} hit the ${room.goalWords}-word goal!`);
+        broadcastState(room);
+      }
+      return cb?.({
+        ok: true,
+        earned: result.earned,
+        crits: result.crits,
+        jackpot: result.jackpot,
+        paperLump: result.paperLump,
+        meter: result.meter,
+        self: partyRoom.selfSnapshot(session),
+      });
+    });
+
+    socket.on('tycoon:buy', (payload, cb) => {
+      const session = mySession();
+      if (!session) return cb?.({ error: 'Say hello first.' });
+      const result = partyRoom.buy(session, payload?.item);
+      if (result.error) return cb?.({ error: result.error });
+      const room = myRoom();
+      if (room) {
+        if (result.bought === 'tier') systemChat(room, `⌨️ ${session.name} upgraded to the ${result.label} typewriter!`);
+        broadcastState(room);
+      }
+      return cb?.({ ok: true, bought: result.bought, self: partyRoom.selfSnapshot(session) });
+    });
 
     socket.on('party:create', (payload, cb) => {
+      const session = mySession();
+      if (!session) return cb?.({ error: 'Say hello first.' });
       try {
-        const room = partyRoom.createParty(socket.data.userId, socket.data.name, payload?.goalWords);
-        socket.data.partyCode = room.code;
+        if (session.roomCode) { // leaving the old one implicitly
+          socket.leave(session.roomCode);
+          const old = partyRoom.leaveParty(session);
+          if (old && partyRoom.getRoom(old.code)) broadcastState(old);
+        }
+        const room = partyRoom.createParty(session, payload?.goalWords);
         socket.join(room.code);
-        systemChat(room, `${socket.data.name} opened the party`);
-        cb?.({ ok: true, you: socket.data.userId, snapshot: partyRoom.snapshot(room) });
+        systemChat(room, `${session.name} opened the party`);
+        cb?.({ ok: true, you: session.id, self: partyRoom.selfSnapshot(session), snapshot: partyRoom.roomSnapshot(room) });
       } catch {
         cb?.({ error: 'Could not open a party right now.' });
       }
     });
 
     socket.on('party:join', (payload, cb) => {
-      const result = partyRoom.joinParty(payload?.code, socket.data.userId, socket.data.name);
+      const session = mySession();
+      if (!session) return cb?.({ error: 'Say hello first.' });
+      const result = partyRoom.joinParty(payload?.code, session);
       if (result.error) return cb?.({ error: result.error });
       const { room, rejoined } = result;
-      socket.data.partyCode = room.code;
       socket.join(room.code);
-      if (!rejoined) systemChat(room, `${socket.data.name} joined`);
+      if (!rejoined) systemChat(room, `${session.name} joined`);
       broadcastState(room);
-      return cb?.({ ok: true, you: socket.data.userId, snapshot: partyRoom.snapshot(room) });
+      return cb?.({ ok: true, you: session.id, self: partyRoom.selfSnapshot(session), snapshot: partyRoom.roomSnapshot(room) });
     });
 
     socket.on('party:leave', (_payload, cb) => {
-      const room = roomOf();
-      if (room) {
-        partyRoom.leaveParty(room, socket.data.userId);
-        socket.leave(room.code);
-        if (partyRoom.getRoom(room.code)) {
-          systemChat(room, `${socket.data.name} left`);
+      const session = mySession();
+      if (session) {
+        const code = session.roomCode;
+        const room = partyRoom.leaveParty(session);
+        if (code) socket.leave(code);
+        if (room && partyRoom.getRoom(room.code)) {
+          systemChat(room, `${session.name} left`);
           broadcastState(room);
         }
       }
-      socket.data.partyCode = null;
       cb?.({ ok: true });
     });
 
-    socket.on('party:progress', (payload) => {
-      const room = roomOf();
-      if (!room) return;
-      const result = partyRoom.recordProgress(room, socket.data.userId, payload || {});
-      if (result.error) return;
-      if (result.goalJustHit) systemChat(room, `🏆 ${socket.data.name} hit the ${room.goalWords}-word goal!`);
+    socket.on('party:peace', (payload, cb) => {
+      const session = mySession();
+      const room = myRoom();
+      if (!session || !room) return cb?.({ error: 'Not in a party.' });
+      const result = partyRoom.setPeace(room, session.id, payload?.off);
+      if (result.error) return cb?.({ error: result.error });
+      systemChat(room, result.sabotagesOff ? '🕊️ The host declared peace — sabotages are off' : '⚔️ Sabotages are back on');
       broadcastState(room);
+      return cb?.({ ok: true });
     });
 
     socket.on('party:chat', (payload, cb) => {
-      const room = roomOf();
+      const room = myRoom();
       if (!room) return cb?.({ error: 'Not in a party.' });
       const result = partyRoom.addChat(room, socket.data.userId, payload?.text);
       if (result.error) return cb?.({ error: result.error });
@@ -125,56 +204,59 @@ function attachPartySocket(io) {
       return cb?.({ ok: true });
     });
 
-    socket.on('party:buy', (payload, cb) => {
-      const room = roomOf();
-      if (!room) return cb?.({ error: 'Not in a party.' });
-      const result = partyRoom.buyUpgrade(room, socket.data.userId, payload?.item);
-      if (result.error) return cb?.({ error: result.error });
-      broadcastState(room);
-      return cb?.({ ok: true });
-    });
-
     socket.on('party:sabotage', (payload, cb) => {
-      const room = roomOf();
-      if (!room) return cb?.({ error: 'Not in a party.' });
-      const result = partyRoom.sabotage(room, socket.data.userId, payload?.target, payload?.kind);
+      const session = mySession();
+      const room = myRoom();
+      if (!session || !room) return cb?.({ error: 'Not in a party.' });
+      const result = partyRoom.sabotage(room, session.id, payload?.target, payload?.kind);
       if (result.error) return cb?.({ error: result.error });
-      if (result.blocked) {
-        emitToMember(room, result.target.id, 'party:shielded', { kind: result.kind, from: socket.data.name });
-        systemChat(room, `🛡️ ${result.target.name} blocked ${socket.data.name}'s ${result.kind}`);
+      const label = partyRoom.SABOTAGES[result.kind].label;
+      if (result.absorbed) {
+        emitToMember(room, result.target.id, 'party:blocked', { kind: result.kind, from: session.name, how: 'absorbed', bounty: result.cost });
+        systemChat(room, `🧘 ${result.target.name} absorbed ${session.name}'s ${label} (+$${result.cost})`);
+      } else if (result.blocked) {
+        emitToMember(room, result.target.id, 'party:blocked', { kind: result.kind, from: session.name, how: result.blocked });
+        systemChat(room, `${result.blocked === 'shield' ? '🛡️' : '☂️'} ${result.target.name} blocked ${session.name}'s ${label}`);
       } else {
-        emitToMember(room, result.target.id, 'party:hit', {
-          kind: result.kind,
-          from: socket.data.name,
-          durationMs: result.durationMs,
-        });
-        systemChat(room, `${result.kind === 'ink' ? '🦑' : '💣'} ${socket.data.name} ${result.kind === 'ink' ? 'inked' : 'bombed'} ${result.target.name}`);
+        emitToMember(room, result.target.id, 'party:hit', { kind: result.kind, from: session.name, durationMs: result.durationMs, stolen: result.stolen });
+        const flair = { confetti: '🎉', snail: '🐌', ink: '🦑', jelly: '🍮', fog: '🌫️', bomb: '💣', cat: '🐈', thief: '🦹' }[result.kind] || '💥';
+        systemChat(room, `${flair} ${session.name} hit ${result.target.name} with ${label}${result.stolen ? ` and stole $${result.stolen}` : ''}`);
       }
       broadcastState(room);
-      return cb?.({ ok: true, blocked: !!result.blocked });
+      return cb?.({ ok: true, outcome: result.absorbed ? 'absorbed' : result.blocked || 'hit', self: partyRoom.selfSnapshot(session) });
     });
 
     socket.on('party:gift', (payload, cb) => {
-      const room = roomOf();
-      if (!room) return cb?.({ error: 'Not in a party.' });
-      const result = partyRoom.gift(room, socket.data.userId, payload?.target, payload?.amount);
+      const session = mySession();
+      const room = myRoom();
+      if (!session || !room) return cb?.({ error: 'Not in a party.' });
+      const result = partyRoom.gift(room, session.id, payload?.target, payload?.kind, payload?.preset);
       if (result.error) return cb?.({ error: result.error });
-      systemChat(room, `💸 ${result.from.name} sent ${result.to.name} $${result.value}`);
+      systemChat(room, result.kind === 'shield'
+        ? `🛡️ ${result.from.name} handed ${result.to.name} a shield`
+        : `💸 ${result.from.name} sent ${result.to.name} $${result.value}`);
       broadcastState(room);
-      return cb?.({ ok: true });
+      return cb?.({ ok: true, self: partyRoom.selfSnapshot(session) });
     });
 
-    socket.on('disconnect', () => {
-      const room = roomOf();
-      if (!room) return;
-      partyRoom.markDisconnected(room, socket.data.userId);
-      broadcastState(room);
+    socket.on('disconnect', async () => {
+      const session = mySession();
+      if (!session) return;
+      partyRoom.markDisconnected(socket.data.userId);
+      const room = myRoom();
+      if (room) broadcastState(room);
+      await saveSession(session);
     });
   });
 
-  // Reap dead rooms once a minute; unref so tests exit cleanly.
-  const sweeper = setInterval(() => partyRoom.sweepRooms(), 60 * 1000);
-  if (typeof sweeper.unref === 'function') sweeper.unref();
+  // Periodic save of dirty states + room/session sweep.
+  const saver = setInterval(async () => {
+    for (const session of partyRoom.sessions.values()) {
+      if (session.dirty) await saveSession(session);
+    }
+    partyRoom.sweep();
+  }, SAVE_INTERVAL_MS);
+  if (typeof saver.unref === 'function') saver.unref();
 
   return party;
 }

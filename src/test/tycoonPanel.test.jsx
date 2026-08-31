@@ -1,0 +1,179 @@
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+
+// A hand-rolled fake socket: tests drive both directions of the wire.
+function makeFakeSocket() {
+  const handlers = new Map();
+  return {
+    connected: true,
+    emitted: [],
+    on(event, fn) { handlers.set(event, fn); return this; },
+    once(event, fn) { handlers.set(event, fn); return this; },
+    off() { return this; },
+    emit(event, payload, ackFn) { this.emitted.push({ event, payload, ackFn }); this.lastAck = ackFn; },
+    disconnect: vi.fn(),
+    fire(event, payload) { handlers.get(event)?.(payload); },
+    ackOf(event) { return [...this.emitted].reverse().find((e) => e.event === event)?.ackFn; },
+  };
+}
+
+let fakeSocket;
+vi.mock('../services/partySocket', () => ({ connectPartySocket: () => fakeSocket }));
+// The visual children are exercised by their own render checks; here they are
+// stand-ins so this test pins the game logic, not the art.
+vi.mock('../components/essay/TycoonMonkey', () => ({
+  default: ({ tier, typePulse }) => <div data-testid="monkey" data-tier={tier} data-pulse={typePulse} />,
+}));
+vi.mock('../components/essay/sabotageFx', () => ({
+  SABOTAGE_FX: { ink: ({ wipe }) => <div data-testid="fx-ink" data-wipe={wipe} /> },
+  SABOTAGE_META: { ink: { label: 'Ink Splat', durationMs: 7000 } },
+}));
+
+import TycoonPanel from '../components/essay/TycoonPanel';
+
+afterEach(() => cleanup());
+beforeEach(() => { fakeSocket = makeFakeSocket(); });
+
+const selfSnapshot = (over = {}) => ({
+  me: {
+    id: 'u1', name: 'Harry', connected: true, watching: false, words: 12, para: 1, paraCount: 4,
+    accuracy: 95, money: 120, tier: 'wood', tierIndex: 1, b: 2, shields: 1, wipers: false,
+    umbrella: false, pets: ['snailPet'], goalHit: false,
+  },
+  up: { streak: 1, ribbon: 0, paper: 0 },
+  meter: 12,
+  meterFull: 20,
+  lifetimeWords: 400,
+  shop: {
+    tier: { key: 'copper', label: 'Copper', b: 4, cost: 350 },
+    streak: { level: 1, max: 5, cost: 66 },
+    ribbon: { level: 0, max: 4, cost: 120 },
+    paper: { level: 0, max: 3, cost: 110 },
+    shield: { cost: 40, held: 1, max: 3 },
+    wipers: { cost: 150, owned: false },
+    umbrella: { cost: 200, owned: false },
+    pets: [
+      { key: 'snailPet', label: 'Desk snail', cost: 60, owned: true },
+      { key: 'catPet', label: 'Desk cat', cost: 180, owned: false },
+      { key: 'dragonPet', label: 'Desk dragon', cost: 500, owned: false },
+    ],
+    sabotages: [
+      { key: 'ink', label: 'Ink Splat', cost: 28, durationMs: 7000 },
+      { key: 'bomb', label: 'Blur Bomb', cost: 60, durationMs: 6000 },
+    ],
+  },
+  ...over,
+});
+
+const roomSnapshot = () => ({
+  code: 'ABC234',
+  hostId: 'u1',
+  goalWords: 100,
+  sabotagesOff: false,
+  members: [
+    { id: 'u1', name: 'Harry', connected: true, watching: false, words: 12, para: 1, paraCount: 4, accuracy: 95, money: 120, tier: 'wood', tierIndex: 1, b: 2, shields: 1, wipers: false, umbrella: false, pets: [], goalHit: false },
+    { id: 'u2', name: 'Alex P.', connected: true, watching: true, words: 4, para: 1, paraCount: 3, accuracy: 88, money: 30, tier: 'stone', tierIndex: 0, b: 1, shields: 0, wipers: false, umbrella: false, pets: [], goalHit: false },
+  ],
+  chat: [{ id: 'c1', from: null, system: true, text: 'Harry opened the party', at: 1 }],
+});
+
+const boot = async (props = {}) => {
+  const registerReporter = vi.fn();
+  render(<TycoonPanel registerReporter={registerReporter} {...props} />);
+  await act(async () => { fakeSocket.ackOf('tycoon:hello')({ ok: true, self: selfSnapshot() }); });
+  return { registerReporter };
+};
+
+describe('TycoonPanel', () => {
+  it('loads the saved game: monkey tier, money, streak meter, shop prices', async () => {
+    const { registerReporter } = await boot();
+    expect(screen.getByTestId('monkey')).toHaveAttribute('data-tier', '2'); // wood
+    expect(screen.getAllByText('$120').length).toBeGreaterThan(0); // wallet (and the ribbon price happens to match)
+    expect(screen.getByText(/Wood · \$2\/word/)).toBeInTheDocument();
+    expect(screen.getByText(/Copper typewriter/)).toBeInTheDocument();
+    expect(screen.getByText('$350')).toBeInTheDocument();
+    expect(registerReporter).toHaveBeenCalled();
+  });
+
+  it('typed words pulse the monkey immediately and settle up in one batch', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { registerReporter } = await boot();
+      const report = registerReporter.mock.calls[0][0];
+      await act(async () => {
+        report({ kind: 'word', para: 0, paraCount: 4, accuracy: 100, watching: false });
+        report({ kind: 'word', para: 0, paraCount: 4, accuracy: 100, watching: false });
+        report({ kind: 'miss', para: 0, paraCount: 4, accuracy: 90, watching: false });
+      });
+      expect(screen.getByTestId('monkey')).toHaveAttribute('data-pulse', '2');
+      await act(async () => { await vi.advanceTimersByTimeAsync(800); });
+      const progress = fakeSocket.emitted.find((e) => e.event === 'tycoon:progress');
+      expect(progress.payload).toMatchObject({ wordsDelta: 2, missesDelta: 1, para: 1, accuracy: 90 });
+      // The ack updates the wallet and floats the earnings.
+      await act(async () => {
+        progress.ackFn({ ok: true, earned: 4, crits: 0, jackpot: 0, paperLump: 0, meter: 14, self: selfSnapshot({ me: { ...selfSnapshot().me, money: 124 } }) });
+      });
+      expect(screen.getByText('$124')).toBeInTheDocument();
+      expect(screen.getByText('+$4')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('opens a party, shows the roster with tiers and the watcher badge, sends chat', async () => {
+    await boot();
+    fireEvent.click(screen.getByRole('button', { name: /Open party/i }));
+    await act(async () => {
+      fakeSocket.ackOf('party:create')({ ok: true, you: 'u1', self: selfSnapshot(), snapshot: roomSnapshot() });
+    });
+    expect(screen.getByRole('button', { name: 'ABC234' })).toBeInTheDocument();
+    expect(screen.getByText(/goal 100/)).toBeInTheDocument();
+    expect(screen.getByText(/🧘Alex P\./)).toBeInTheDocument(); // the zen watcher
+    // Host-only peace toggle exists.
+    expect(screen.getByRole('button', { name: /Declare peace/i })).toBeInTheDocument();
+
+    // The attack tray opens on the other player only, with priced weapons.
+    fireEvent.click(screen.getByRole('button', { name: /Interact with Alex P\./i }));
+    const ink = screen.getByTitle(/Ink Splat — \$28/);
+    fireEvent.click(ink);
+    expect(fakeSocket.emitted.some((e) => e.event === 'party:sabotage' && e.payload.kind === 'ink' && e.payload.target === 'u2')).toBe(true);
+
+    fireEvent.change(screen.getByLabelText(/Party chat message/i), { target: { value: 'oi' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Send$/i }));
+    expect(fakeSocket.emitted.some((e) => e.event === 'party:chat' && e.payload.text === 'oi')).toBe(true);
+    await act(async () => { fakeSocket.fire('party:chat', { id: 'c2', from: 'Alex P.', system: false, text: 'no u', at: 2 }); });
+    expect(screen.getByText('no u')).toBeInTheDocument();
+  });
+
+  it('renders incoming hits as FX whose wipe counter climbs with typed words', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { registerReporter } = await boot();
+      const report = registerReporter.mock.calls[0][0];
+      await act(async () => { fakeSocket.fire('party:hit', { kind: 'ink', from: 'Alex P.', durationMs: 4000 }); });
+      expect(screen.getByTestId('fx-ink')).toHaveAttribute('data-wipe', '0');
+      await act(async () => { report({ kind: 'word', para: 0, paraCount: 4, accuracy: 100, watching: false }); });
+      expect(screen.getByTestId('fx-ink')).toHaveAttribute('data-wipe', '1');
+      await act(async () => { await vi.advanceTimersByTimeAsync(4200); });
+      expect(screen.queryByTestId('fx-ink')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('absorbed attacks pay the bounty notice instead of an effect', async () => {
+    await boot();
+    await act(async () => { fakeSocket.fire('party:blocked', { kind: 'ink', from: 'Alex P.', how: 'absorbed', bounty: 28 }); });
+    expect(screen.getByText(/Absorbed Alex P\.'s Ink Splat \(\+\$28\)/)).toBeInTheDocument();
+    expect(screen.queryByTestId('fx-ink')).not.toBeInTheDocument();
+  });
+
+  it('compact mode is just the HUD chip plus live effects', async () => {
+    await boot({ compact: true });
+    expect(screen.getAllByText('$120').length).toBeGreaterThan(0); // wallet (and the ribbon price happens to match)
+    expect(screen.queryByTestId('monkey')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Shop/i)).not.toBeInTheDocument();
+    await act(async () => { fakeSocket.fire('party:hit', { kind: 'ink', from: 'Alex P.', durationMs: 3000 }); });
+    expect(screen.getByTestId('fx-ink')).toBeInTheDocument();
+  });
+});

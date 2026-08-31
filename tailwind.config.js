@@ -120,6 +120,7 @@ export default {
         'scene-veil-line': 'scene-veil-line 5.2s ease-in-out both',
         'ink-splat': 'ink-splat 7s ease-out both',
         'bomb-smoke': 'bomb-smoke 6s ease-in-out both',
+        'money-float': 'money-float 0.9s ease-out both',
         'bar-fill': 'bar-fill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
         shimmer: 'shimmer 1.6s linear infinite',
       },
@@ -244,6 +245,12 @@ export default {
           '8%': { opacity: '1' },
           '80%': { opacity: '1' },
           '100%': { opacity: '0' },
+        },
+        // Tycoon: earned dollars drift up off the typewriter and evaporate.
+        'money-float': {
+          '0%': { opacity: '0', transform: 'translateY(6px) scale(0.85)' },
+          '18%': { opacity: '1', transform: 'translateY(0) scale(1.05)' },
+          '100%': { opacity: '0', transform: 'translateY(-44px) scale(1)' },
         },
         // The Focus entry ritual: a veil that holds, then lifts — identical
         // every time, because constancy is what makes a ritual a cue.
