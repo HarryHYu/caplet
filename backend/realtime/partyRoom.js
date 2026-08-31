@@ -24,8 +24,10 @@ const MAX_CHAT_KEPT = 40;
 const MAX_CHAT_LENGTH = 240;
 const ROOM_IDLE_MS = 60 * 60 * 1000;
 const ALL_GONE_MS = 2 * 60 * 1000;
-const SABOTAGE_COOLDOWN_MS = 8 * 1000;   // per attacker
-const TARGET_COOLDOWN_MS = 20 * 1000;    // per victim — no chain-blinding
+// Long on purpose: the point is studying with occasional mischief, not a
+// clicker war. One attack roughly per drill paragraph, not per sentence.
+const SABOTAGE_COOLDOWN_MS = 15 * 1000;  // per attacker
+const TARGET_COOLDOWN_MS = 45 * 1000;    // per victim — no chain-blinding
 const UMBRELLA_COOLDOWN_MS = 12 * 1000;
 
 // ── The typewriter ladder — the primary upgrade ─────────────────────────────
@@ -85,6 +87,46 @@ const PETS = {
 };
 const SNAIL_PET_DURATION_MULT = 0.8;
 const DRAGON_PET_EARN_MULT = 1.1;
+
+// Automonkeys: idle assistants. Ten of them together earn exactly half of
+// honest typing at the 45wpm credit cap (45b/min), so each pays 2.25b/min.
+// The robo monkey is three automonkeys in a trench coat.
+const AUTO_MAX = 10;
+const AUTO_RATE_B_PER_MIN = 2.25;
+const AUTO_COST_B = 250;
+const ROBO_UNITS = 3;
+const ROBO_COST_B = 1500;
+const AUTO_GAP_CAP_MIN = 5; // an idle tab can bank at most this many minutes at once
+
+// The wardrobe: three accessory slots, each a tier ladder. Dress the monkey
+// all the way up — crown, gold monocle, tuxedo — and it becomes properly
+// Sophisticated (a further +5% on words, and everyone can tell).
+const ACCESSORIES = {
+  head: { label: 'Head', tiers: [
+    { key: 'cap', label: 'Flat cap', bMult: 60, perk: '+2% word pay', earnMult: 1.02 },
+    { key: 'tophat', label: 'Top hat', bMult: 250, perk: '+5% word pay', earnMult: 1.05 },
+    { key: 'crown', label: 'Crown', bMult: 1200, perk: '+10% word pay', earnMult: 1.10 },
+  ] },
+  eyes: { label: 'Eyes', tiers: [
+    { key: 'readers', label: 'Reading glasses', bMult: 80, perk: 'misses keep 60% of your streak', missKeep: 0.6 },
+    { key: 'monocle', label: 'Monocle', bMult: 350, perk: 'misses keep 70% of your streak', missKeep: 0.7 },
+    { key: 'goldMonocle', label: 'Gold monocle', bMult: 1500, perk: 'misses keep 80% of your streak', missKeep: 0.8 },
+  ] },
+  body: { label: 'Body', tiers: [
+    { key: 'scarf', label: 'Scarf', bMult: 100, perk: 'paragraph bonuses +10%', paperMult: 1.10 },
+    { key: 'waistcoat', label: 'Waistcoat', bMult: 400, perk: 'paragraph bonuses +25%', paperMult: 1.25 },
+    { key: 'tuxedo', label: 'Tuxedo', bMult: 2000, perk: 'paragraph bonuses +50%', paperMult: 1.50 },
+  ] },
+};
+const SOPHISTICATED_EARN_MULT = 1.05;
+
+function accTier(state, slot) {
+  const level = state.acc?.[slot] || 0;
+  return level > 0 ? ACCESSORIES[slot].tiers[level - 1] : null;
+}
+function isSophisticated(state) {
+  return Object.keys(ACCESSORIES).every((slot) => (state.acc?.[slot] || 0) >= ACCESSORIES[slot].tiers.length);
+}
 const GIFT_PRESETS = [10, 25, 50];       // × sender's b
 const GIFT_RECEIVE_CAP_B = 60;           // × receiver's b — anti-funnelling
 const THIEF_RATE = 0.08;
@@ -114,6 +156,12 @@ function normalizeState(raw) {
       paper: Math.max(0, Math.min(SECONDARIES.paper.costs.length, Math.round(Number(up.paper) || 0))),
     },
     pets: Array.isArray(s.pets) ? s.pets.filter((k) => PETS[k]).slice(0, 8) : [],
+    autos: Math.max(0, Math.min(AUTO_MAX, Math.round(Number(s.autos) || 0))),
+    robo: !!s.robo,
+    acc: Object.fromEntries(Object.keys(ACCESSORIES).map((slot) => [
+      slot,
+      Math.max(0, Math.min(ACCESSORIES[slot].tiers.length, Math.round(Number(s.acc?.[slot]) || 0))),
+    ])),
     lifetimeWords: Math.max(0, Math.round(Number(s.lifetimeWords) || 0)),
   };
 }
@@ -148,6 +196,8 @@ function ensureSession(userId, name, persistedState) {
       lastHitAt: 0,
       goalHit: false,
       bucket: { tokens: CREDIT_WPM_CAP, ts: now() },
+      autoTs: now(),
+      autoCarry: 0,
     };
     sessions.set(id, session);
   } else {
@@ -178,6 +228,26 @@ function streakMultiplier(session) {
   return 1 + 0.10 * lv * (session.meter / STREAK_METER_FULL);
 }
 
+/** Idle income from automonkeys (and the robo). Lazy accrual with a carry so
+ * fractional cents survive between ticks; the gap cap stops a laptop waking
+ * from sleep from cashing the whole nap. */
+function accrueAuto(session) {
+  const t = now();
+  const last = session.autoTs ?? t;
+  session.autoTs = t;
+  const units = (session.state.autos || 0) + (session.state.robo ? ROBO_UNITS : 0);
+  if (units <= 0) { session.autoCarry = 0; return 0; }
+  const minutes = Math.min(Math.max(0, (t - last) / 60000), AUTO_GAP_CAP_MIN);
+  const raw = units * AUTO_RATE_B_PER_MIN * bOf(session.state) * minutes + (session.autoCarry || 0);
+  const earned = Math.floor(raw);
+  session.autoCarry = raw - earned;
+  if (earned > 0) {
+    session.state.money += earned;
+    session.dirty = true;
+  }
+  return earned;
+}
+
 /**
  * Credit a progress report. Misses halve the streak meter (never zero — a
  * reset at recall pace feels brutal); each credited word fills it by one.
@@ -192,7 +262,8 @@ function recordProgress(session, { wordsDelta, missesDelta, paragraphsDelta, par
   if (Number.isFinite(Number(accuracy))) session.accuracy = Math.max(0, Math.min(100, Math.round(Number(accuracy))));
 
   const misses = Math.max(0, Math.min(20, Math.round(Number(missesDelta) || 0)));
-  for (let i = 0; i < misses; i += 1) session.meter = Math.floor(session.meter / 2);
+  const missKeep = accTier(session.state, 'eyes')?.missKeep ?? 0.5;
+  for (let i = 0; i < misses; i += 1) session.meter = Math.floor(session.meter * missKeep);
 
   const words = creditWords(session, wordsDelta);
   const state = session.state;
@@ -205,12 +276,13 @@ function recordProgress(session, { wordsDelta, missesDelta, paragraphsDelta, par
     session.meter = Math.min(STREAK_METER_FULL, session.meter + 1);
     const isCrit = ribbon.p > 0 && crypto.randomInt(10000) < ribbon.p * 10000;
     const dragon = state.pets.includes('dragonPet') ? DRAGON_PET_EARN_MULT : 1;
-    const perWord = Math.min(b * 10 * 1.5, Math.round((isCrit ? b * ribbon.mult : b) * dragon * Math.min(M_CAP, streakMultiplier(session))));
+    const accEarn = (accTier(state, 'head')?.earnMult || 1) * (isSophisticated(state) ? SOPHISTICATED_EARN_MULT : 1);
+    const perWord = Math.min(b * 10 * 1.5, Math.round((isCrit ? b * ribbon.mult : b) * dragon * accEarn * Math.min(M_CAP, streakMultiplier(session))));
     earned += perWord;
     if (isCrit) { crits += 1; jackpot += perWord; }
   }
   const paragraphs = Math.max(0, Math.min(4, Math.round(Number(paragraphsDelta) || 0)));
-  const paperLump = paragraphs * 8 * b * state.up.paper;
+  const paperLump = Math.round(paragraphs * 8 * b * state.up.paper * (accTier(state, 'body')?.paperMult || 1));
   earned += paperLump;
 
   state.money += earned;
@@ -256,6 +328,21 @@ function shopFor(session) {
     sabotages: Object.entries(SABOTAGES).map(([key, sab]) => ({
       key, label: sab.label, cost: sab.bMult * b, durationMs: sab.durationMs,
     })),
+    autos: { count: state.autos, max: AUTO_MAX, cost: AUTO_COST_B * b },
+    robo: { owned: state.robo, cost: ROBO_COST_B * b },
+    wardrobe: Object.entries(ACCESSORIES).map(([slot, line]) => {
+      const level = state.acc[slot] || 0;
+      const next = level < line.tiers.length ? line.tiers[level] : null;
+      return {
+        slot,
+        label: line.label,
+        level,
+        max: line.tiers.length,
+        current: level > 0 ? line.tiers[level - 1].label : null,
+        next: next ? { label: next.label, perk: next.perk, cost: next.bMult * b } : null,
+      };
+    }),
+    sophisticated: isSophisticated(state),
   };
 }
 
@@ -305,6 +392,32 @@ function buy(session, item) {
     if (!spend(session, cost)) return { error: `Need $${cost} for the ${PETS[item].label}.` };
     state.pets.push(item);
     return { bought: item, cost };
+  }
+  if (item === 'auto') {
+    if (state.autos >= AUTO_MAX) return { error: 'The classroom is full of assistants.' };
+    const cost = AUTO_COST_B * b;
+    if (!spend(session, cost)) return { error: `Need $${cost} for an automonkey.` };
+    state.autos += 1;
+    return { bought: 'auto', count: state.autos, cost };
+  }
+  if (item === 'robo') {
+    if (state.robo) return { error: 'Your robo monkey is already whirring away.' };
+    const cost = ROBO_COST_B * b;
+    if (!spend(session, cost)) return { error: `Need $${cost} for the robo monkey.` };
+    state.robo = true;
+    return { bought: 'robo', cost };
+  }
+  if (item?.startsWith?.('acc:')) {
+    const slot = item.slice(4);
+    const line = ACCESSORIES[slot];
+    if (!line) return { error: 'Unknown accessory.' };
+    const level = state.acc[slot] || 0;
+    if (level >= line.tiers.length) return { error: `Your ${slot} is already as sophisticated as it gets.` };
+    const next = line.tiers[level];
+    const cost = next.bMult * b;
+    if (!spend(session, cost)) return { error: `Need $${cost} for the ${next.label}.` };
+    state.acc[slot] = level + 1;
+    return { bought: item, level: state.acc[slot], label: next.label, cost, sophisticated: isSophisticated(state) };
   }
   return { error: 'Unknown item.' };
 }
@@ -534,6 +647,10 @@ function publicMember(session) {
     wipers: session.wipers,
     umbrella: session.umbrella,
     pets: session.state.pets,
+    autos: session.state.autos,
+    robo: session.state.robo,
+    acc: { ...session.state.acc },
+    sophisticated: isSophisticated(session.state),
     goalHit: session.goalHit,
   };
 }
@@ -611,6 +728,9 @@ module.exports = {
   shopFor,
   buy,
   adminSetMoney,
+  accrueAuto,
+  ACCESSORIES,
+  AUTO_MAX,
   createParty,
   getRoom,
   joinParty,

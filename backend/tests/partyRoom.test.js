@@ -293,17 +293,17 @@ describe('round 2: cooldown metadata, pet perks, admin', () => {
   it('sabotage acks carry the cooldown windows; rejections carry retry info', () => {
     const { a, room } = duel();
     const hit = tycoon.sabotage(room, 'u1', 'u2', 'confetti');
-    expect(hit.reloadMs).toBe(8000);
-    expect(hit.targetCooldownMs).toBe(20000);
+    expect(hit.reloadMs).toBe(15000); // calm cadence: study first, mischief second
+    expect(hit.targetCooldownMs).toBe(45000);
     const reloading = tycoon.sabotage(room, 'u1', 'u2', 'confetti');
     expect(reloading.scope).toBe('attacker');
     expect(reloading.retryInMs).toBeGreaterThan(0);
-    expect(reloading.retryInMs).toBeLessThanOrEqual(8000);
+    expect(reloading.retryInMs).toBeLessThanOrEqual(15000);
     a.lastSabotageAt = 0; // reload done, but the victim is still recovering
     const recovering = tycoon.sabotage(room, 'u1', 'u2', 'confetti');
     expect(recovering.scope).toBe('target');
-    expect(recovering.retryInMs).toBeGreaterThan(8000);
-    expect(recovering.retryInMs).toBeLessThanOrEqual(20000);
+    expect(recovering.retryInMs).toBeGreaterThan(15000);
+    expect(recovering.retryInMs).toBeLessThanOrEqual(45000);
   });
 
   it('the desk dragon pays +10% per word (visible above stone rounding)', () => {
@@ -343,5 +343,72 @@ describe('round 2: cooldown metadata, pet perks, admin', () => {
     expect(tycoon.adminSetMoney(me, 999999999).error).toMatch(/between/);
     expect(tycoon.adminSetMoney(me, 'lol').error).toMatch(/between/);
     expect(me.state.money).toBe(5000); // junk never applied
+  });
+});
+
+describe('arena: automonkeys, robo, hats', () => {
+  it('ten automonkeys earn exactly half of honest 45wpm typing', () => {
+    const me = player('u1', 'Harry', { tier: 0, autos: 10 });
+    me.autoTs = Date.now() - 60 * 1000; // one banked minute
+    const earned = tycoon.accrueAuto(me);
+    expect(earned).toBe(22); // 10 x 2.25b = 22.5/min, floor; carry keeps the rest
+    expect(me.autoCarry).toBeCloseTo(0.5, 5);
+    expect(me.state.money).toBe(22);
+    expect(me.dirty).toBe(true);
+  });
+
+  it('the robo monkey works like three automonkeys', () => {
+    const me = player('u1', 'Harry', { tier: 0, robo: true });
+    me.autoTs = Date.now() - 60 * 1000;
+    expect(tycoon.accrueAuto(me)).toBe(6); // 3 x 2.25 = 6.75, floor 6
+  });
+
+  it('a sleeping laptop cannot cash the whole nap', () => {
+    const me = player('u1', 'Harry', { tier: 0, autos: 10 });
+    me.autoTs = Date.now() - 60 * 60 * 1000; // an hour away
+    expect(tycoon.accrueAuto(me)).toBe(112); // capped at 5 banked minutes: 22.5 x 5
+  });
+
+  it('automonkeys cost 250b, cap at 10; the robo costs 1500b, once', () => {
+    const me = player('u1', 'Harry', { tier: 1 }); // wood b=2
+    me.state.money = 100000;
+    expect(tycoon.buy(me, 'auto')).toMatchObject({ bought: 'auto', count: 1, cost: 500 });
+    me.state.autos = 10;
+    expect(tycoon.buy(me, 'auto').error).toMatch(/full of assistants/);
+    expect(tycoon.buy(me, 'robo')).toMatchObject({ bought: 'robo', cost: 3000 });
+    expect(tycoon.buy(me, 'robo').error).toMatch(/already whirring/);
+  });
+
+  it('the wardrobe upgrades slot by slot and the perks apply', () => {
+    const me = player('u1', 'Harry', { tier: 7 }); // diamond b=55 makes +2% visible
+    me.state.money = 1000000;
+    expect(tycoon.buy(me, 'acc:head')).toMatchObject({ bought: 'acc:head', level: 1, label: 'Flat cap', cost: 60 * 55 });
+    expect(progress(me, 10).earned).toBe(560); // round(55 x 1.02) = 56 per word
+    tycoon.buy(me, 'acc:head'); tycoon.buy(me, 'acc:head'); // top hat, then crown
+    expect(me.state.acc.head).toBe(3);
+    expect(tycoon.buy(me, 'acc:head').error).toMatch(/as sophisticated as it gets/);
+    // Eyes soften misses: gold monocle keeps 80% of the meter.
+    const eyes = player('u2', 'Alex', { acc: { head: 0, eyes: 3, body: 0 } });
+    eyes.meter = 20;
+    tycoon.recordProgress(eyes, { missesDelta: 1 });
+    expect(eyes.meter).toBe(16); // floor(20 x 0.8), not halved
+    // Body fattens paragraph lumps: waistcoat is +25%.
+    const suit = player('u3', 'Cam', { tier: 3, up: { streak: 0, ribbon: 0, paper: 2 }, acc: { head: 0, eyes: 0, body: 2 } });
+    expect(tycoon.recordProgress(suit, { paragraphsDelta: 1 }).paperLump).toBe(140); // 8x7x2 x 1.25
+  });
+
+  it('the fully dressed monkey is Sophisticated: +5% on top, flagged for all', () => {
+    const sir = player('u1', 'Sir Harry', { tier: 7, acc: { head: 3, eyes: 3, body: 3 } });
+    expect(tycoon.publicMember(sir).sophisticated).toBe(true);
+    // crown 1.10 x sophistication 1.05 on diamond: round(55 x 1.155) = 64.
+    expect(progress(sir, 10).earned).toBe(640);
+    const scruff = player('u2', 'Alex', { acc: { head: 3, eyes: 3, body: 2 } });
+    expect(tycoon.publicMember(scruff).sophisticated).toBe(false);
+  });
+
+  it('roster rows carry autos, robo and the outfit for the classroom scene', () => {
+    const me = player('u1', 'Harry', { autos: 3, robo: true, acc: { head: 2, eyes: 1, body: 0 } });
+    const row = tycoon.publicMember(me);
+    expect(row).toMatchObject({ autos: 3, robo: true, acc: { head: 2, eyes: 1, body: 0 }, sophisticated: false });
   });
 });

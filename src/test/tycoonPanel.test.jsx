@@ -28,6 +28,9 @@ vi.mock('../components/essay/sabotageFx', () => ({
   SABOTAGE_FX: { ink: ({ wipe }) => <div data-testid="fx-ink" data-wipe={wipe} /> },
   SABOTAGE_META: { ink: { label: 'Ink Splat', durationMs: 7000 } },
 }));
+vi.mock('../components/essay/TycoonClassroom', () => ({
+  default: ({ members, fx }) => <div data-testid="classroom" data-members={members.length} data-fx={fx.length} />,
+}));
 
 import TycoonPanel from '../components/essay/TycoonPanel';
 
@@ -61,6 +64,14 @@ const selfSnapshot = (over = {}) => ({
       { key: 'ink', label: 'Ink Splat', cost: 28, durationMs: 7000 },
       { key: 'bomb', label: 'Blur Bomb', cost: 60, durationMs: 6000 },
     ],
+    autos: { count: 2, max: 10, cost: 500 },
+    robo: { owned: false, cost: 3000 },
+    wardrobe: [
+      { slot: 'head', label: 'Head', level: 1, max: 3, current: 'Flat cap', next: { label: 'Top hat', perk: '+5% word pay', cost: 500 } },
+      { slot: 'eyes', label: 'Eyes', level: 0, max: 3, current: null, next: { label: 'Reading glasses', perk: 'misses keep 60% of your streak', cost: 160 } },
+      { slot: 'body', label: 'Body', level: 0, max: 3, current: null, next: { label: 'Scarf', perk: 'paragraph bonuses +10%', cost: 200 } },
+    ],
+    sophisticated: false,
   },
   ...over,
 });
@@ -215,12 +226,46 @@ describe('TycoonPanel', () => {
     expect(screen.queryByTestId('fx-ink')).not.toBeInTheDocument();
   });
 
-  it('compact mode is just the HUD chip plus live effects', async () => {
-    await boot({ compact: true });
-    expect(screen.getAllByText('$120').length).toBeGreaterThan(0); // wallet (and the ribbon price happens to match)
-    expect(screen.queryByTestId('monkey')).not.toBeInTheDocument();
-    expect(screen.queryByText(/Shop/i)).not.toBeInTheDocument();
+  it('game layout: classroom on top, the drill as children, the shop beside', async () => {
+    const registerReporter = vi.fn();
+    render(
+      <TycoonPanel game registerReporter={registerReporter} onExitFullscreen={vi.fn()}>
+        <div data-testid="drill" />
+      </TycoonPanel>,
+    );
+    await act(async () => { fakeSocket.ackOf('tycoon:hello')({ ok: true, self: selfSnapshot() }); });
+    expect(screen.getByTestId('classroom')).toHaveAttribute('data-members', '1'); // solo: just me
+    expect(screen.getByTestId('drill')).toBeInTheDocument();
+    expect(screen.getByText(/Copper typewriter/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Open party/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Exit game/i })).toBeInTheDocument();
+    expect(screen.queryByTestId('monkey')).not.toBeInTheDocument(); // the classroom replaces the solo scene
+    // Live effects still reach the game layout.
     await act(async () => { fakeSocket.fire('party:hit', { kind: 'ink', from: 'Alex P.', durationMs: 3000 }); });
     expect(screen.getByTestId('fx-ink')).toBeInTheDocument();
+  });
+
+  it('the classroom animates room fx and the roster feeds it members', async () => {
+    render(<TycoonPanel game registerReporter={vi.fn()} />);
+    await act(async () => {
+      fakeSocket.ackOf('tycoon:hello')({ ok: true, self: selfSnapshot(), snapshot: roomSnapshot() });
+    });
+    expect(screen.getByTestId('classroom')).toHaveAttribute('data-members', '2'); // the hello handed the room back
+    await act(async () => { fakeSocket.fire('party:fx', { kind: 'bomb', from: 'u2', to: 'u1', outcome: 'hit' }); });
+    expect(screen.getByTestId('classroom')).toHaveAttribute('data-fx', '1');
+  });
+
+  it('sells staff and wardrobe: automonkeys, robo, accessory tiers', async () => {
+    render(<TycoonPanel registerReporter={vi.fn()} />);
+    await act(async () => {
+      fakeSocket.ackOf('tycoon:hello')({ ok: true, self: selfSnapshot({ me: { ...selfSnapshot().me, money: 100000 } }) });
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Automonkey ×2\/10/i }));
+    expect(fakeSocket.emitted.some((e) => e.event === 'tycoon:buy' && e.payload.item === 'auto')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: /Robo monkey/i }));
+    expect(fakeSocket.emitted.some((e) => e.event === 'tycoon:buy' && e.payload.item === 'robo')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: /Head 1\/3 · Flat cap/i }));
+    expect(fakeSocket.emitted.some((e) => e.event === 'tycoon:buy' && e.payload.item === 'acc:head')).toBe(true);
+    expect(screen.getByText(/next: Top hat — \+5% word pay/)).toBeInTheDocument();
   });
 });

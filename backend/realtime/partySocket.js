@@ -97,12 +97,32 @@ function attachPartySocket(io) {
       return session?.roomCode ? partyRoom.getRoom(session.roomCode) : null;
     };
 
+    // Automonkeys earn while the tab is open: accrue every 15s and tell the
+    // owner so their wallet ticks up on screen.
+    const autoTimer = setInterval(() => {
+      const session = mySession();
+      if (!session || !session.connected) return;
+      const earned = partyRoom.accrueAuto(session);
+      if (earned > 0) {
+        socket.emit('tycoon:auto', { earned, self: partyRoom.selfSnapshot(session) });
+        const room = myRoom();
+        if (room) broadcastState(room);
+      }
+    }, 15 * 1000);
+    autoTimer.unref?.();
+
     socket.on('tycoon:hello', async (_payload, cb) => {
       try {
         const persisted = await loadState(socket.data.userId);
         const session = partyRoom.ensureSession(socket.data.userId, socket.data.name, persisted);
-        if (session.roomCode) socket.join(session.roomCode); // reconnect into my party
-        cb?.({ ok: true, self: partyRoom.selfSnapshot(session) });
+        session.autoTs = Date.now(); // idle time away never pays out
+        let snapshot;
+        if (session.roomCode) {
+          socket.join(session.roomCode); // reconnect into my party
+          const room = partyRoom.getRoom(session.roomCode);
+          if (room) snapshot = partyRoom.roomSnapshot(room);
+        }
+        cb?.({ ok: true, self: partyRoom.selfSnapshot(session), snapshot });
       } catch {
         cb?.({ error: 'Could not load your game.' });
       }
@@ -226,6 +246,9 @@ function attachPartySocket(io) {
       const result = partyRoom.sabotage(room, session.id, payload?.target, payload?.kind);
       if (result.error) return cb?.({ error: result.error, retryInMs: result.retryInMs, scope: result.scope });
       const label = partyRoom.SABOTAGES[result.kind].label;
+      const outcome = result.absorbed ? 'absorbed' : result.blocked || 'hit';
+      // The whole room sees the throw — the classroom scene animates it.
+      party.to(room.code).emit('party:fx', { kind: result.kind, from: session.id, to: result.target.id, outcome });
       if (result.absorbed) {
         emitToMember(room, result.target.id, 'party:blocked', { kind: result.kind, from: session.name, how: 'absorbed', bounty: result.cost });
         systemChat(room, `🧘 ${result.target.name} absorbed ${session.name}'s ${label} (+$${result.cost})`);
@@ -263,6 +286,7 @@ function attachPartySocket(io) {
     });
 
     socket.on('disconnect', async () => {
+      clearInterval(autoTimer);
       const session = mySession();
       if (!session) return;
       partyRoom.markDisconnected(socket.data.userId);

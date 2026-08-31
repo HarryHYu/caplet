@@ -3896,7 +3896,12 @@ function EssayWorkspace({ essayId }) {
                     </div>
                 )}
 
-                {tab === 'practice' && structure && (
+                {tab === 'practice' && structure && (() => {
+                    /* Gamify + fullscreen = the Tycoon Arena: one fixed screen,
+                       classroom on top, drill in the middle, shop on the right.
+                       The page itself never scrolls — only the columns do. */
+                    const gameMode = gamify && practiceFullscreen && !speedRunning;
+                    return (
                     <div
                         ref={practiceRef}
                         /* The fullscreen element paints its own ground — without a
@@ -3904,9 +3909,11 @@ function EssayWorkspace({ essayId }) {
                            content keeps a page-like measure and gains a slim
                            Caplet brand bar, so fullscreen reads as "the same
                            page, bigger", not a different app. */
-                        className={practiceFullscreen ? 'overflow-y-auto bg-surface-body px-6 py-5 md:px-10' : undefined}
+                        className={practiceFullscreen
+                            ? (gameMode ? 'h-full overflow-hidden bg-surface-body' : 'overflow-y-auto bg-surface-body px-6 py-5 md:px-10')
+                            : undefined}
                     >
-                        {practiceFullscreen && !tranceOn && (
+                        {practiceFullscreen && !tranceOn && !gameMode && (
                             <div className="mx-auto mb-2 flex w-full max-w-6xl items-center justify-between pb-2">
                                 <span className="flex items-center gap-2.5">
                                     <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-line-soft bg-surface-raised">
@@ -3918,7 +3925,19 @@ function EssayWorkspace({ essayId }) {
                                 <FullscreenButton active onToggle={toggleFullscreen} />
                             </div>
                         )}
-                        <div className={practiceFullscreen ? 'mx-auto w-full max-w-6xl' : undefined}>
+                        <div className={practiceFullscreen ? (gameMode ? 'h-full' : 'mx-auto w-full max-w-6xl') : undefined}>
+                        {(gameMode
+                            ? (inner) => (
+                                <TycoonPanel game
+                                    registerReporter={(fn) => { partyReporter.current = fn; }}
+                                    onClose={() => setGamifyPersist(false)}
+                                    onExitFullscreen={toggleFullscreen}
+                                    essayTitle={essay?.title}>
+                                    {inner}
+                                </TycoonPanel>
+                            )
+                            : (inner) => inner
+                        )(
                         <div className={gamify && !practiceFullscreen && !speedRunning ? 'xl:grid xl:grid-cols-[minmax(0,1fr)_330px] xl:items-start xl:gap-5' : undefined}>
                         <div className="min-w-0">
                         {!speedRunning && !practiceFullscreen && (
@@ -3953,13 +3972,15 @@ function EssayWorkspace({ essayId }) {
                                 /* A live speed run drops the card entirely and takes the
                                    viewport: no border, no fill, the words centred on the
                                    page ground. Every other drill keeps the card. */
-                                className={speedRunning || practiceFullscreen
-                                    ? 'flex min-h-[calc(100vh-9rem)] flex-col justify-center'
-                                    : 'surface-card min-h-[320px] flex flex-col justify-center md:p-8'}
+                                className={gameMode
+                                    ? 'flex flex-col justify-center'
+                                    : speedRunning || practiceFullscreen
+                                        ? 'flex min-h-[calc(100vh-9rem)] flex-col justify-center'
+                                        : 'surface-card min-h-[320px] flex flex-col justify-center md:p-8'}
                             >
                                 {mode === 'wordbyword' && (
                                     <MemoriseDrill initialUnit={REBUILD_UNIT_FOR_PARAM[modeParam] || 'word'}
-                                        fullscreen={practiceFullscreen}
+                                        fullscreen={practiceFullscreen && !gameMode}
                                         enterFullscreen={fullscreenSupported ? enterFullscreen : undefined}
                                         onTranceChange={setTranceOn}
                                         onWordLanded={(info) => partyReporter.current?.(info)}
@@ -3997,22 +4018,21 @@ function EssayWorkspace({ essayId }) {
                             </div>
                         )}
                         </div>
-                        {/* The tycoon column. Rendered INSIDE the fullscreen
-                            container so its HUD chip and incoming sabotage
-                            effects reach the Focus/Trance/Party scenes too;
-                            in fullscreen it collapses to a compact HUD. */}
-                        {gamify && !speedRunning && (
-                            <div className={practiceFullscreen ? undefined : 'mt-5 min-w-0 xl:mt-0 xl:sticky xl:top-5 xl:max-h-[calc(100vh-2.5rem)] xl:overflow-y-auto xl:overscroll-contain'}>
+                        {/* The tycoon side column (non-fullscreen). In gameMode
+                            the panel wraps this whole area instead. */}
+                        {gamify && !speedRunning && !gameMode && !practiceFullscreen && (
+                            <div className="mt-5 min-w-0 xl:mt-0 xl:sticky xl:top-5 xl:max-h-[calc(100vh-2.5rem)] xl:overflow-y-auto xl:overscroll-contain">
                                 <TycoonPanel
-                                    compact={practiceFullscreen}
                                     registerReporter={(fn) => { partyReporter.current = fn; }}
                                     onClose={() => setGamifyPersist(false)} />
                             </div>
                         )}
                         </div>
+                        )}
                         </div>
                     </div>
-                )}
+                    );
+                })()}
 
                 {tab === 'edit' && (
                     <div className="surface-card md:p-8">
