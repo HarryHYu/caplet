@@ -36,7 +36,21 @@ const CONFETTI = [
     { x: 148, y: 32, dx: 34, dy: -20, rr: 170, c: '#c4b5fd', shape: 'dot' },
 ];
 
-export default function TycoonMonkey({ tier = 1, typePulse = 0, celebrate = 0, className = '' }) {
+const KIND_EMOJI = { confetti: '🎉', snail: '🐌', jelly: '🍮', fog: '🌫️', cat: '🐈', thief: '🦹' };
+const BLOCK_EMOJI = { shield: '🛡️', umbrella: '☂️', pet: '🐈' };
+
+/**
+ * Extra, all-optional layers for the classroom arena — the SAME scene, worn
+ * differently per player: `acc` {head,eyes,body} wardrobe levels,
+ * `sophisticated`, `watching` (zen bubble, eyes closed), `autos`/`robo`
+ * (assistants on the floor), `impact` {kind, outcome} burst, and `throwing`
+ * (a counter that swings the arm on each sabotage thrown).
+ */
+export default function TycoonMonkey({
+    tier = 1, typePulse = 0, celebrate = 0, className = '',
+    acc = null, sophisticated = false, watching = false,
+    autos = 0, robo = false, impact = null, throwing = 0,
+}) {
     const t = Math.max(1, Math.min(8, tier));
     const m = MATERIALS[t] || MATERIALS[1];
     const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
@@ -48,10 +62,15 @@ export default function TycoonMonkey({ tier = 1, typePulse = 0, celebrate = 0, c
         setAnim((a) => ({ n: a.n + 1, kind: 'type' }));
     }, [typePulse]);
     useEffect(() => {
+        if (first.current) return;
+        setAnim((a) => ({ n: a.n + 1, kind: 'throw' }));
+    }, [throwing]);
+    useEffect(() => {
         if (first.current) { first.current = false; return; }
         setAnim((a) => ({ n: a.n + 1, kind: 'party' }));
     }, [celebrate]);
-    const animClass = anim.kind === 'type' ? 'twm-typing' : anim.kind === 'party' ? 'twm-party' : '';
+    const animClass = anim.kind === 'type' ? 'twm-typing' : anim.kind === 'party' ? 'twm-party' : anim.kind === 'throw' ? 'twm-throwing' : '';
+    const dizzy = impact && impact.outcome === 'hit';
 
     const ink = 'color-mix(in srgb, var(--text-primary) 30%, transparent)';
     const inkSoft = 'color-mix(in srgb, var(--text-primary) 18%, transparent)';
@@ -81,6 +100,12 @@ export default function TycoonMonkey({ tier = 1, typePulse = 0, celebrate = 0, c
                     .twm-party .twm-arm-b { animation: twm-cheer-b 1s ease-in-out; }
                     .twm-party .twm-hop { animation: twm-bounce 1s ease-in-out; }
                     .twm-party .twm-confetti { animation: twm-pop 1.15s cubic-bezier(0.2, 0.7, 0.4, 1) both; }
+                    .twm-throwing .twm-arm-a { animation: twm-windup 0.55s ease-in-out; }
+                    .twm-dizzy { animation: twm-wobble 0.9s ease-in-out; transform-box: fill-box; transform-origin: 50% 75%; }
+                    .twm-zen { animation: twm-zen 5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 60%; }
+                    .twm-burst { animation: twm-burst 1.3s ease-out both; transform-box: fill-box; transform-origin: 50% 50%; }
+                    .twm-burststars { animation: twm-orbit 1.3s linear both; transform-box: fill-box; transform-origin: 50% 50%; }
+                    .twm-crew { animation: twm-sway 4.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
                 }
                 @keyframes twm-breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.025); } }
                 @keyframes twm-tail { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
@@ -100,6 +125,12 @@ export default function TycoonMonkey({ tier = 1, typePulse = 0, celebrate = 0, c
                 @keyframes twm-cheer-b { 0% { transform: rotate(0deg); } 30% { transform: rotate(-146deg); } 58% { transform: rotate(-132deg); } 80% { transform: rotate(-142deg); } 100% { transform: rotate(0deg); } }
                 @keyframes twm-bounce { 0%, 100% { transform: translateY(0); } 22% { transform: translateY(-6px); } 46% { transform: translateY(0); } 66% { transform: translateY(-3.5px); } 86% { transform: translateY(0); } }
                 @keyframes twm-pop { 0% { transform: translate(0, 0) rotate(0deg); opacity: 0; } 12% { opacity: 1; } 100% { transform: translate(var(--dx, 0px), var(--dy, -28px)) rotate(var(--rr, 160deg)); opacity: 0; } }
+                @keyframes twm-windup { 0% { transform: rotate(0deg); } 35% { transform: rotate(-60deg); } 70% { transform: rotate(16deg); } 100% { transform: rotate(0deg); } }
+                @keyframes twm-wobble { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 55% { transform: rotate(4deg); } 80% { transform: rotate(-2deg); } }
+                @keyframes twm-zen { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.03); opacity: 0.82; } }
+                @keyframes twm-burst { 0% { transform: scale(0.3); opacity: 0; } 18% { transform: scale(1.15); opacity: 1; } 75% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.92); opacity: 0; } }
+                @keyframes twm-orbit { 0% { transform: rotate(0deg); } 100% { transform: rotate(120deg); } }
+                @keyframes twm-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } }
             `}</style>
             <svg viewBox="0 0 320 190" className="h-auto w-full" role="img">
                 <defs>
@@ -165,7 +196,7 @@ export default function TycoonMonkey({ tier = 1, typePulse = 0, celebrate = 0, c
                 </g>
 
                 {/* ============ Monkey — body & head (seated behind the desk) ============ */}
-                <g key={`mb-${anim.n}`} className={animClass}>
+                <g key={`mb-${anim.n}`} className={`${animClass} ${dizzy ? 'twm-dizzy' : ''}`}>
                     <g className="twm-hop">
                         <g className="twm-breathe">
                             {/* tail */}
@@ -191,15 +222,22 @@ export default function TycoonMonkey({ tier = 1, typePulse = 0, celebrate = 0, c
                             <ellipse cx="126" cy="57" rx="9.5" ry="10.5" fill={FUR.face} />
                             <ellipse cx="116" cy="71" rx="15.5" ry="12" fill={FUR.face} />
                             <ellipse cx="112" cy="66" rx="9" ry="6" fill={FUR.faceHi} opacity="0.5" />
-                            {/* eyes (blink on a slow loop) */}
-                            <g className="twm-eyes">
-                                <ellipse cx="107" cy="59" rx="5.4" ry="6.2" fill="#fdf7ea" stroke={FUR.edge} strokeWidth="1.6" />
-                                <ellipse cx="124" cy="59" rx="5.4" ry="6.2" fill="#fdf7ea" stroke={FUR.edge} strokeWidth="1.6" />
-                                <circle cx="108.6" cy="60" r="2.8" fill={FUR.ink} />
-                                <circle cx="125.6" cy="60" r="2.8" fill={FUR.ink} />
-                                <circle cx="107.7" cy="58.8" r="1" fill="#ffffff" />
-                                <circle cx="124.7" cy="58.8" r="1" fill="#ffffff" />
-                            </g>
+                            {/* eyes (blink on a slow loop; serenely closed while watching) */}
+                            {watching ? (
+                                <g stroke={FUR.edge} strokeWidth="2.2" strokeLinecap="round" fill="none">
+                                    <path d="M103 60 q4 3 8 0" />
+                                    <path d="M120 60 q4 3 8 0" />
+                                </g>
+                            ) : (
+                                <g className="twm-eyes">
+                                    <ellipse cx="107" cy="59" rx="5.4" ry="6.2" fill="#fdf7ea" stroke={FUR.edge} strokeWidth="1.6" />
+                                    <ellipse cx="124" cy="59" rx="5.4" ry="6.2" fill="#fdf7ea" stroke={FUR.edge} strokeWidth="1.6" />
+                                    <circle cx="108.6" cy="60" r="2.8" fill={FUR.ink} />
+                                    <circle cx="125.6" cy="60" r="2.8" fill={FUR.ink} />
+                                    <circle cx="107.7" cy="58.8" r="1" fill="#ffffff" />
+                                    <circle cx="124.7" cy="58.8" r="1" fill="#ffffff" />
+                                </g>
+                            )}
                             {/* brows */}
                             <path d="M102 50.5 q4.5 -3 9 -0.5" fill="none" stroke={FUR.edge} strokeWidth="2.2" strokeLinecap="round" />
                             <path d="M120 50 q4.5 -2.5 9 0.5" fill="none" stroke={FUR.edge} strokeWidth="2.2" strokeLinecap="round" />
@@ -208,6 +246,80 @@ export default function TycoonMonkey({ tier = 1, typePulse = 0, celebrate = 0, c
                             <ellipse cx="119.5" cy="68.5" rx="1.5" ry="1.1" fill="#6d4526" />
                             <path d="M106 74.5 q10 8.5 21 0" fill="none" stroke={FUR.ink} strokeWidth="2.6" strokeLinecap="round" />
                             <path d="M111 79.5 q5 2.6 10.5 0" fill="none" stroke="#8a5a34" strokeWidth="1.6" strokeLinecap="round" opacity="0.7" />
+
+                            {/* ── Wardrobe: body ── */}
+                            {acc?.body === 1 && (
+                                <g>
+                                    <path d="M94 87 Q116 99 138 87 l-1.5 8 Q116 106 97 95 z" fill="#7c6bbf" stroke="#57499a" strokeWidth="2.2" strokeLinejoin="round" />
+                                    <path d="M100 94 q-5 12 -2 22 l7 -2 q-2 -10 1 -18 z" fill="#8d7dd0" stroke="#57499a" strokeWidth="2" strokeLinejoin="round" />
+                                </g>
+                            )}
+                            {acc?.body === 2 && (
+                                <g>
+                                    <path d="M92 90 Q116 104 140 90 L136 130 Q116 137 96 130 z" fill="#4a4257" stroke="#332d3e" strokeWidth="2.6" strokeLinejoin="round" />
+                                    <path d="M110 96 l6 7 6 -7 -3 30 -6 0 z" fill={FUR.face} />
+                                    <circle cx="112" cy="112" r="1.4" fill="#c9b458" />
+                                    <circle cx="120" cy="112" r="1.4" fill="#c9b458" />
+                                </g>
+                            )}
+                            {acc?.body === 3 && (
+                                <g>
+                                    <path d="M92 90 Q116 104 140 90 L136 131 Q116 138 96 131 z" fill="#25222d" stroke="#141218" strokeWidth="2.6" strokeLinejoin="round" />
+                                    <path d="M109 95 l7 8 7 -8 -2.5 32 -9 0 z" fill="#f4f1e8" />
+                                    <path d="M110.5 95.5 l5.5 5 5.5 -5 -2 7 -7 0 z" fill="#332d3e" />
+                                    <path d="M112 99 l4 2.6 4 -2.6 0 5 -8 0 z" fill="#332d3e" stroke="#141218" strokeWidth="1" />
+                                </g>
+                            )}
+
+                            {/* ── Wardrobe: eyes ── */}
+                            {acc?.eyes === 1 && (
+                                <g fill="none" stroke="#3a3a46" strokeWidth="2.4">
+                                    <circle cx="107" cy="59" r="8" />
+                                    <circle cx="124" cy="59" r="8" />
+                                    <line x1="114" y1="59" x2="117" y2="59" />
+                                    <path d="M99 57 q-5 -2 -8 -4" strokeWidth="2" />
+                                    <path d="M132 57 q5 -2 8 -4" strokeWidth="2" />
+                                </g>
+                            )}
+                            {acc?.eyes >= 2 && (
+                                <g fill="none" stroke={acc.eyes === 3 ? '#d4a017' : '#3a3a46'} strokeWidth="2.6">
+                                    <circle cx="124" cy="59" r="8.5" />
+                                    <path d="M129 66 q4 12 1 22" strokeWidth="1.5" strokeDasharray={acc.eyes === 3 ? '2.5 2.5' : undefined} />
+                                    {acc.eyes === 3 && <path d="M119.5 55 l3.4 3.4" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" />}
+                                </g>
+                            )}
+
+                            {/* ── Wardrobe: head ── */}
+                            {acc?.head === 1 && (
+                                <g>
+                                    <path d="M92 44 q24 -22 48 0 l0 4 q-24 -8 -48 0 z" fill="#7a8471" stroke="#59614f" strokeWidth="2.4" strokeLinejoin="round" />
+                                    <path d="M138 45 q9 -1.5 12 3 l-12 1.5 z" fill="#59614f" />
+                                    <path d="M100 39 q16 -12 32 0" fill="none" stroke="#8f9a85" strokeWidth="2" strokeLinecap="round" />
+                                </g>
+                            )}
+                            {acc?.head === 2 && (
+                                <g>
+                                    <rect x="98" y="7" width="36" height="30" rx="3" fill="#25222d" stroke="#141218" strokeWidth="2.6" />
+                                    <rect x="98" y="27" width="36" height="6" fill="#57499a" />
+                                    <rect x="88" y="34" width="56" height="7" rx="3.5" fill="#25222d" stroke="#141218" strokeWidth="2.6" />
+                                    <rect x="102" y="10" width="8" height="22" fill="#ffffff" opacity="0.08" />
+                                </g>
+                            )}
+                            {acc?.head === 3 && (
+                                <g stroke="#8a660c" strokeWidth="2.2" strokeLinejoin="round">
+                                    <path d="M95 40 l3 -21 12 12 6 -17 6 17 12 -12 3 21 z" fill="#f2c94c" />
+                                    <path d="M95 40 h42 v4 h-42 z" fill="#e0a92f" />
+                                    <circle cx="103" cy="30" r="2.2" fill="#7dd8e8" stroke="none" />
+                                    <circle cx="116" cy="24" r="2.2" fill="#e88bbf" stroke="none" />
+                                    <circle cx="129" cy="30" r="2.2" fill="#7dd8e8" stroke="none" />
+                                </g>
+                            )}
+                            {sophisticated && (
+                                <g fill="#f2c94c">
+                                    <path className="twm-sparkle" d="M84 34 l2 4.5 4.5 2 -4.5 2 -2 4.5 -2 -4.5 -4.5 -2 4.5 -2 z" />
+                                    <path className="twm-sparkle" style={{ animationDelay: '-1.4s' }} d="M148 66 l1.6 3.6 3.6 1.6 -3.6 1.6 -1.6 3.6 -1.6 -3.6 -3.6 -1.6 3.6 -1.6 z" />
+                                </g>
+                            )}
                         </g>
                     </g>
                 </g>
@@ -351,7 +463,7 @@ export default function TycoonMonkey({ tier = 1, typePulse = 0, celebrate = 0, c
                 </g>
 
                 {/* ============ Monkey arms — over the desk, hammering the keys ============ */}
-                <g key={`ma-${anim.n}`} className={animClass}>
+                <g key={`ma-${anim.n}`} className={`${animClass} ${dizzy ? 'twm-dizzy' : ''}`}>
                     <g className="twm-hop">
                         <g className="twm-arm-a">
                             <path d="M134 88 Q 172 92 192 112" fill="none" stroke={FUR.base} strokeWidth="10" strokeLinecap="round" />
@@ -381,6 +493,84 @@ export default function TycoonMonkey({ tier = 1, typePulse = 0, celebrate = 0, c
                         )
                     ))}
                 </g>
+
+                {/* ============ The hired help, on the floor in front of the desk ============ */}
+                {(autos > 0 || robo) && (
+                    <g className="twm-crew">
+                        {Array.from({ length: Math.max(0, Math.min(10, autos)) }).map((_, k) => {
+                            const x = 62 + (k % 5) * 21;
+                            const y = k < 5 ? 160 : 178;
+                            return (
+                                <g key={k} transform={`translate(${x} ${y})`}>
+                                    <ellipse cx="0" cy="9" rx="7" ry="2.2" fill="color-mix(in srgb, var(--text-primary) 12%, transparent)" />
+                                    <ellipse cx="0" cy="3" rx="6.4" ry="5.6" fill={FUR.base} stroke={FUR.edge} strokeWidth="1.6" />
+                                    <circle cx="-6.2" cy="-9.5" r="2.5" fill={FUR.base} stroke={FUR.edge} strokeWidth="1.3" />
+                                    <circle cx="6.2" cy="-9.5" r="2.5" fill={FUR.base} stroke={FUR.edge} strokeWidth="1.3" />
+                                    <circle cx="0" cy="-7.5" r="6" fill={FUR.base} stroke={FUR.edge} strokeWidth="1.6" />
+                                    <ellipse cx="0" cy="-6" rx="3.6" ry="3" fill={FUR.face} />
+                                    <circle cx="-1.4" cy="-7.4" r="0.8" fill={FUR.ink} />
+                                    <circle cx="1.4" cy="-7.4" r="0.8" fill={FUR.ink} />
+                                    <path d="M-1.4 -4.6 q1.4 1 2.8 0" fill="none" stroke={FUR.ink} strokeWidth="0.8" strokeLinecap="round" />
+                                </g>
+                            );
+                        })}
+                        {robo && (
+                            <g transform="translate(178 162)">
+                                <ellipse cx="0" cy="10" rx="7.5" ry="2.2" fill="color-mix(in srgb, var(--text-primary) 12%, transparent)" />
+                                <line x1="0" y1="-19" x2="0" y2="-14" stroke="#5b6470" strokeWidth="1.8" />
+                                <circle cx="0" cy="-20" r="2" fill="#7dd8e8" />
+                                <ellipse cx="0" cy="3.5" rx="6.6" ry="6" fill="#9aa6b8" stroke="#5b6470" strokeWidth="1.7" />
+                                <circle cx="-6.4" cy="-10" r="2.6" fill="#9aa6b8" stroke="#5b6470" strokeWidth="1.4" />
+                                <circle cx="6.4" cy="-10" r="2.6" fill="#9aa6b8" stroke="#5b6470" strokeWidth="1.4" />
+                                <circle cx="0" cy="-8" r="6.3" fill="#9aa6b8" stroke="#5b6470" strokeWidth="1.7" />
+                                <ellipse cx="0" cy="-6.5" rx="3.8" ry="3.1" fill="#c7d0dd" />
+                                <rect x="-2.6" y="-8.4" width="2" height="2" rx="0.5" fill="#2b7c8e" />
+                                <rect x="0.8" y="-8.4" width="2" height="2" rx="0.5" fill="#2b7c8e" />
+                                <line x1="-1.6" y1="-4.8" x2="1.6" y2="-4.8" stroke="#5b6470" strokeWidth="0.9" />
+                            </g>
+                        )}
+                    </g>
+                )}
+
+                {/* ============ Zen bubble (watch mode absorbs everything) ============ */}
+                {watching && (
+                    <g className="twm-zen">
+                        <ellipse cx="116" cy="86" rx="56" ry="62" fill="var(--accent)" opacity="0.09" />
+                        <ellipse cx="116" cy="86" rx="56" ry="62" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.45" strokeDasharray="4 7" />
+                    </g>
+                )}
+
+                {/* ============ Sabotage impact burst ============ */}
+                {impact && impact.outcome !== 'hit' && (
+                    <g className="twm-burst" transform="translate(116 44)">
+                        <circle r="15" fill="var(--surface-raised)" opacity="0.92" stroke="var(--accent)" strokeWidth="2.4" />
+                        <text y="6" textAnchor="middle" fontSize="16">{impact.outcome === 'absorbed' ? '🧘' : BLOCK_EMOJI[impact.outcome] || '🛡️'}</text>
+                    </g>
+                )}
+                {impact && impact.outcome === 'hit' && (
+                    <g className="twm-burst" transform="translate(116 48)">
+                        {impact.kind === 'bomb' && (
+                            <g fill="#c9cfda" stroke="#8b95a3" strokeWidth="1.8">
+                                <circle cx="-11" cy="2" r="11" /><circle cx="10" cy="0" r="12" />
+                                <circle cx="0" cy="-10" r="11" /><circle cx="1" cy="9" r="10" />
+                            </g>
+                        )}
+                        {impact.kind === 'ink' && (
+                            <g fill="#181d3b">
+                                <circle cx="0" cy="0" r="12" /><circle cx="-12" cy="6" r="6" /><circle cx="12" cy="-5" r="7" />
+                                <circle cx="6" cy="11" r="5" />
+                            </g>
+                        )}
+                        <g className="twm-burststars" fill="#f2c94c" stroke="#8a660c" strokeWidth="1">
+                            <path d="M-19 -14 l1.8 4 4 1.8 -4 1.8 -1.8 4 -1.8 -4 -4 -1.8 4 -1.8 z" />
+                            <path d="M17 -19 l1.6 3.6 3.6 1.6 -3.6 1.6 -1.6 3.6 -1.6 -3.6 -3.6 -1.6 3.6 -1.6 z" />
+                            <path d="M2 -26 l1.4 3.2 3.2 1.4 -3.2 1.4 -1.4 3.2 -1.4 -3.2 -3.2 -1.4 3.2 -1.4 z" />
+                        </g>
+                        {impact.kind !== 'bomb' && impact.kind !== 'ink' && (
+                            <text y="5" textAnchor="middle" fontSize="17">{KIND_EMOJI[impact.kind] || '💥'}</text>
+                        )}
+                    </g>
+                )}
             </svg>
         </div>
     );

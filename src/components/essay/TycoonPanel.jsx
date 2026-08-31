@@ -551,20 +551,20 @@ export default function TycoonPanel({ registerReporter, game = false, onClose, o
         return (
             <div className="flex h-full min-h-0 flex-col bg-surface-body">
                 {fxOverlays}
-                {/* top bar */}
-                <div className="flex shrink-0 items-center gap-3 border-b border-line-soft px-4 py-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">🕹️ Typewriter tycoon</span>
-                    {essayTitle && <span className="truncate text-xs font-medium text-text-dim">{essayTitle}</span>}
-                    {error && <span className="truncate text-[11px] font-bold text-text-error" role="alert">{error}</span>}
-                    <span className="ml-auto flex items-center gap-1.5">
+                {/* top bar — one slim line */}
+                <div className="flex h-8 shrink-0 items-center gap-2.5 border-b border-line-soft px-3">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-text-dim">🕹️ Tycoon</span>
+                    {essayTitle && <span className="truncate text-[11px] font-medium text-text-dim">{essayTitle}</span>}
+                    {error && <span className="truncate text-[10px] font-bold text-text-error" role="alert">{error}</span>}
+                    <span className="ml-auto flex items-center gap-1">
                         <button type="button" onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Unmute sounds' : 'Mute sounds'}
-                            className="focus-ring rounded p-1 text-text-dim transition-colors hover:text-text-primary">
-                            {muted ? <SpeakerXMarkIcon className="h-4 w-4" aria-hidden="true" /> : <SpeakerWaveIcon className="h-4 w-4" aria-hidden="true" />}
+                            className="focus-ring rounded p-0.5 text-text-dim transition-colors hover:text-text-primary">
+                            {muted ? <SpeakerXMarkIcon className="h-3.5 w-3.5" aria-hidden="true" /> : <SpeakerWaveIcon className="h-3.5 w-3.5" aria-hidden="true" />}
                         </button>
                         {onExitFullscreen && (
                             <button type="button" onClick={onExitFullscreen}
-                                className="focus-ring press inline-flex items-center gap-1 rounded-lg border border-line-soft px-2 py-1 text-[11px] font-bold text-text-dim hover:text-text-primary">
-                                <ArrowsPointingInIcon className="h-3.5 w-3.5" aria-hidden="true" /> Exit game
+                                className="focus-ring press inline-flex items-center gap-1 rounded-md border border-line-soft px-1.5 py-0.5 text-[10px] font-bold text-text-dim hover:text-text-primary">
+                                <ArrowsPointingInIcon className="h-3 w-3" aria-hidden="true" /> Exit game
                             </button>
                         )}
                     </span>
@@ -578,7 +578,9 @@ export default function TycoonPanel({ registerReporter, game = false, onClose, o
                 </div>
                 {/* three fixed columns; each scrolls inside itself */}
                 <div className="flex min-h-0 flex-1">
-                    <aside className="flex w-72 shrink-0 flex-col gap-2 overflow-y-auto border-r border-line-soft p-3">
+                    <aside className="flex w-72 shrink-0 flex-col gap-2.5 overflow-y-auto border-r border-line-soft p-3">
+                        {/* The drill's settings portal in here — left side, like a control deck. */}
+                        <div id="tycoon-settings-slot" className="flex flex-col gap-2.5 rounded-lg border border-line-soft bg-surface-raised p-2.5 empty:hidden" />
                         {partyHeader}
                         {joinBlock}
                         {inParty && isHost && (

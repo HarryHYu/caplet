@@ -133,7 +133,7 @@ describe('parties and warfare', () => {
     expect(r.cost).toBe(14 * 55);
   });
 
-  it('cooldowns: 8s per attacker, 20s per victim', () => {
+  it('cooldowns: a short anti-spam breather per attacker and per victim', () => {
     const { a, b, room } = setUpDuel();
     const c = player('u3', 'Cam');
     tycoon.joinParty(room.code, c);
@@ -293,17 +293,17 @@ describe('round 2: cooldown metadata, pet perks, admin', () => {
   it('sabotage acks carry the cooldown windows; rejections carry retry info', () => {
     const { a, room } = duel();
     const hit = tycoon.sabotage(room, 'u1', 'u2', 'confetti');
-    expect(hit.reloadMs).toBe(15000); // calm cadence: study first, mischief second
-    expect(hit.targetCooldownMs).toBe(45000);
+    expect(hit.reloadMs).toBe(3000); // anti-spam only, not a mechanic
+    expect(hit.targetCooldownMs).toBe(3000);
     const reloading = tycoon.sabotage(room, 'u1', 'u2', 'confetti');
     expect(reloading.scope).toBe('attacker');
     expect(reloading.retryInMs).toBeGreaterThan(0);
-    expect(reloading.retryInMs).toBeLessThanOrEqual(15000);
+    expect(reloading.retryInMs).toBeLessThanOrEqual(3000);
     a.lastSabotageAt = 0; // reload done, but the victim is still recovering
     const recovering = tycoon.sabotage(room, 'u1', 'u2', 'confetti');
     expect(recovering.scope).toBe('target');
-    expect(recovering.retryInMs).toBeGreaterThan(15000);
-    expect(recovering.retryInMs).toBeLessThanOrEqual(45000);
+    expect(recovering.retryInMs).toBeGreaterThan(0);
+    expect(recovering.retryInMs).toBeLessThanOrEqual(3000);
   });
 
   it('the desk dragon pays +10% per word (visible above stone rounding)', () => {

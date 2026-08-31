@@ -24,10 +24,9 @@ const MAX_CHAT_KEPT = 40;
 const MAX_CHAT_LENGTH = 240;
 const ROOM_IDLE_MS = 60 * 60 * 1000;
 const ALL_GONE_MS = 2 * 60 * 1000;
-// Long on purpose: the point is studying with occasional mischief, not a
-// clicker war. One attack roughly per drill paragraph, not per sentence.
-const SABOTAGE_COOLDOWN_MS = 15 * 1000;  // per attacker
-const TARGET_COOLDOWN_MS = 45 * 1000;    // per victim — no chain-blinding
+// Just enough to stop button-mash spam — not a mechanic in itself.
+const SABOTAGE_COOLDOWN_MS = 3 * 1000;   // per attacker
+const TARGET_COOLDOWN_MS = 3 * 1000;     // per victim
 const UMBRELLA_COOLDOWN_MS = 12 * 1000;
 
 // ── The typewriter ladder — the primary upgrade ─────────────────────────────

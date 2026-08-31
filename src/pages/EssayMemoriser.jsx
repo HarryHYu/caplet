@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { useReveal } from '../lib/useReveal';
@@ -1570,10 +1571,20 @@ function TroubleReview({ trouble, onClose }) {
     );
 }
 
-export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false, enterFullscreen = undefined, onTranceChange = undefined, onWordLanded = undefined }) {
+export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabel, onEdit, initialUnit = 'word', fullscreen = false, enterFullscreen = undefined, onTranceChange = undefined, onWordLanded = undefined, settingsSlotId = undefined }) {
     const paras = paragraphs || allParagraphsOf(essay);
     const [unit, setUnit] = useState(initialUnit === 'letters' ? 'letters' : 'word');
     const letters = unit === 'letters';
+    // In the Tycoon Arena the settings move OUT of the drill card into the
+    // game's left column (a portal keeps all the state right here).
+    const [settingsSlot, setSettingsSlot] = useState(null);
+    useEffect(() => {
+        if (!settingsSlotId) { setSettingsSlot(null); return undefined; }
+        setSettingsSlot(document.getElementById(settingsSlotId));
+        // The slot mounts in the same commit but a layout switch can race us.
+        const retry = setTimeout(() => setSettingsSlot(document.getElementById(settingsSlotId)), 120);
+        return () => clearTimeout(retry);
+    }, [settingsSlotId]);
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
     const [policy, setPolicy] = useState('retype');
@@ -2372,7 +2383,14 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
             </div>
             {!fullscreen && !scene && <ProgressBar value={pIndex + (words.length ? results.length / words.length : 0)} total={paras.length} />}
 
-            {!fullscreen && !scene && (
+            {settingsSlot && createPortal(
+                <div className="flex flex-col gap-2.5">
+                    {settingsGroups}
+                    {tuneEditor}
+                </div>,
+                settingsSlot,
+            )}
+            {!fullscreen && !scene && !settingsSlot && (
                 <p className="text-xs font-medium leading-relaxed text-text-dim mb-3">
                     {watch
                         ? <>Sit back — the words <strong>play themselves</strong> at your pace, one after another. <Kbd>Space</Kbd> pauses and resumes. A watched pass is a read-through: it never counts as recall, so type it back afterwards.{' '}</>
@@ -2388,12 +2406,12 @@ export function MemoriseDrill({ essay, paragraphs, onScheduled, onNext, nextLabe
                     {' '}<Kbd>Tab</Kbd> peeks the word, again for the passage, a third time to hide.{!letters && <> Hold <Kbd>Tab</Kbd> to go fully blind.</>} Peeks trim accuracy.
                 </p>
             )}
-            {!fullscreen && !scene && (
+            {!fullscreen && !scene && !settingsSlot && (
                 <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-xl border border-line-soft bg-surface-body px-3.5 py-2.5">
                     {settingsGroups}
                 </div>
             )}
-            {!fullscreen && !scene && tuneEditor && <div className="mb-4">{tuneEditor}</div>}
+            {!fullscreen && !scene && !settingsSlot && tuneEditor && <div className="mb-4">{tuneEditor}</div>}
 
             {!paraDone ? (
                 /* In a scene the outer layer fills the screen and the inner
@@ -3981,6 +3999,7 @@ function EssayWorkspace({ essayId }) {
                                 {mode === 'wordbyword' && (
                                     <MemoriseDrill initialUnit={REBUILD_UNIT_FOR_PARAM[modeParam] || 'word'}
                                         fullscreen={practiceFullscreen && !gameMode}
+                                        settingsSlotId={gameMode ? 'tycoon-settings-slot' : undefined}
                                         enterFullscreen={fullscreenSupported ? enterFullscreen : undefined}
                                         onTranceChange={setTranceOn}
                                         onWordLanded={(info) => partyReporter.current?.(info)}
