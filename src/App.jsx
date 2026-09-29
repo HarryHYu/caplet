@@ -24,6 +24,8 @@ import RequireForumModerator from './components/forum/RequireForumModerator';
 import api from './services/api';
 
 const Home = lazy(() => import('./pages/Home'));
+const MoneyLearn = lazy(() => import('./pages/MoneyLearn'));
+const MoneyLesson = lazy(() => import('./pages/MoneyLearn').then((module) => ({ default: module.MoneyLesson })));
 const DemoApp = lazy(() => import('./pages/DemoApp'));
 const DemoPitch = lazy(() => import('./pages/DemoPitch'));
 const Contact = lazy(() => import('./pages/Contact'));
@@ -274,6 +276,8 @@ function AppRoutes() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/review" element={<RequireAuth><Review /></RequireAuth>} />
           <Route path="/money" element={<MoneyRouteGate><MoneyOverview /></MoneyRouteGate>} />
+          <Route path="/money/learn" element={<MoneyRouteGate><MoneyLearn /></MoneyRouteGate>} />
+          <Route path="/money/learn/:slug" element={<MoneyRouteGate><MoneyLesson /></MoneyRouteGate>} />
           <Route path="/money/economy" element={<MoneyRouteGate><Navigate to="/money/economy/inflation" replace /></MoneyRouteGate>} />
           <Route path="/money/economy/inflation" element={<MoneyRouteGate><MoneyInflation /></MoneyRouteGate>} />
           <Route path="/money/resources" element={<MoneyRouteGate><MoneyResources /></MoneyRouteGate>} />

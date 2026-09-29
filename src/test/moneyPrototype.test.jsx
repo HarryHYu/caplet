@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { LayoutProvider } from '../contexts/LayoutContext';
@@ -84,62 +84,26 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('Money overview and indicator interactions', () => {
-  it('turns a first-visit intent into one returning-student next action', async () => {
+  it('shows beginner course cards without unrelated Money tools', () => {
+    render(<MemoryRouter><MoneyOverview /></MemoryRouter>);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Money in Australia,made easier.');
+    expect(screen.getByRole('link', { name: /New to Australia/ })).toHaveAttribute('href', '/money/learn?course=settling-in');
+    expect(screen.getByRole('link', { name: /Starting a job/ })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Investing basics/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('Official data')).not.toBeInTheDocument();
+    expect(screen.queryByText('Try the savings calculator')).not.toBeInTheDocument();
+    expect(screen.queryByText('Resource hub')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Start with the basics' })).toHaveAttribute('href', '/money/learn/money-basics-in-australia');
+  });
+
+  it('reveals all courses without nested lesson dropdowns', async () => {
     const user = userEvent.setup();
-    featureFlagState.enabled = { 'money.mode.pilot': true, 'money.private.persistence': true };
-    render(<MemoryRouter initialEntries={['/money']}><MoneyOverview /></MemoryRouter>);
-
-    expect(screen.getByRole('heading', { name: 'Money made understandable' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /Save for something/ }));
-    expect(screen.getByRole('heading', { name: 'Build a private savings scenario' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Open My Money' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Open My Money' }));
-
-    expect(screen.getByRole('heading', { name: 'Build a private savings scenario' })).toBeInTheDocument();
-    expect(localStorage.getItem('caplet:money:intent')).toBe('"save"');
-    expect(localStorage.getItem('caplet:money:onboarded')).toBe('true');
-  });
-
-  it('offers a usable savings fallback when private Money is unavailable', () => {
-    render(
-      <MemoryRouter initialEntries={[{
-        pathname: '/money',
-        state: { moneyNotice: 'My Money is not available for this account yet.' },
-      }]}>
-        <MoneyOverview />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByRole('status')).toHaveTextContent('My Money is not available');
-    expect(screen.getByRole('heading', { name: 'Private saving is coming later.' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Try the savings calculator/ })).toHaveAttribute('href', '/money/tools/savings-goal');
-    expect(screen.queryByRole('link', { name: 'Open My Money' })).not.toBeInTheDocument();
-  });
-
-  it('uses the dated snapshot when the indicator registry has no observation yet', async () => {
-    let resolveIndicators;
-    api.getMoneyIndicators.mockReturnValueOnce(new Promise((resolve) => {
-      resolveIndicators = resolve;
-    }));
-
-    render(<MemoryRouter initialEntries={['/money']}><MoneyOverview /></MemoryRouter>);
-
-    await act(async () => {
-      resolveIndicators({
-        indicators: [{
-          key: 'au.cpi.headline.yoy',
-          displayTitle: 'Inflation',
-          nativeFrequency: 'monthly',
-          unit: 'percent',
-          current: null,
-          freshness: { state: 'unavailable', message: 'No validated observation is available.' },
-        }],
-      });
-    });
-
-    expect(screen.getByText('Inflation was 4.0% through the year to May 2026.')).toBeInTheDocument();
-    expect(screen.getAllByText('Dated local snapshot · not live')).toHaveLength(2);
-    expect(screen.getByText('Using a clearly labelled local snapshot.')).toBeInTheDocument();
+    render(<MemoryRouter><MoneyOverview /></MemoryRouter>);
+    await user.click(screen.getByRole('button', { name: 'See all 8 courses' }));
+    expect(screen.getByRole('link', { name: /Investing basics/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Your first job/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Show beginner courses' }));
+    expect(screen.queryByRole('link', { name: /Investing basics/ })).not.toBeInTheDocument();
   });
 
   it('keeps the official-data snapshot separate from a hypothetical experiment', async () => {
@@ -304,15 +268,14 @@ describe('Money routing and mode persistence', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole('heading', { name: 'Money made understandable' })).toBeInTheDocument();
-    expect(screen.getByText('My Money is not available for this account yet.')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Money in Australia/ })).toBeInTheDocument();
     await waitFor(() => expect(localStorage.getItem('caplet:last-money-route')).toBe('/money'));
 
     await user.click(screen.getByRole('button', { name: 'Study' }));
     expect(await screen.findByText('Study dashboard')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Money' }));
 
-    expect(await screen.findByRole('heading', { name: 'Money made understandable' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Money in Australia/ })).toBeInTheDocument();
     expect(screen.getByTestId('location')).toHaveTextContent('/money');
   });
 

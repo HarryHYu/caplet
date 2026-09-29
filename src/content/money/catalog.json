@@ -1,0 +1,329 @@
+[
+  {
+    "course": "settling-in",
+    "title": "Money basics for new arrivals",
+    "lessons": [
+      {
+        "slug": "money-basics-in-australia",
+        "module": 1,
+        "title": "Money basics in Australia",
+        "kind": "lesson",
+        "path": "modules/money-basics-in-australia/en.md",
+        "word_count": 704,
+        "status": "draft"
+      },
+      {
+        "slug": "opening-a-bank-account",
+        "module": 2,
+        "title": "Opening and using a bank account",
+        "kind": "lesson",
+        "path": "modules/opening-a-bank-account/en.md",
+        "word_count": 694,
+        "status": "draft"
+      },
+      {
+        "slug": "tax-file-numbers",
+        "module": 3,
+        "title": "Your tax file number",
+        "kind": "lesson",
+        "path": "modules/tax-file-numbers/en.md",
+        "word_count": 667,
+        "status": "draft"
+      },
+      {
+        "slug": "superannuation-basics",
+        "module": 4,
+        "title": "Super: money for later in life",
+        "kind": "lesson",
+        "path": "modules/superannuation-basics/en.md",
+        "word_count": 715,
+        "status": "draft"
+      },
+      {
+        "slug": "credit-history",
+        "module": 5,
+        "title": "Credit history and credit reports",
+        "kind": "lesson",
+        "path": "modules/credit-history/en.md",
+        "word_count": 698,
+        "status": "draft"
+      },
+      {
+        "slug": "spotting-scams",
+        "module": 6,
+        "title": "Spotting common scams",
+        "kind": "lesson",
+        "path": "modules/spotting-scams/en.md",
+        "word_count": 692,
+        "status": "draft"
+      },
+      {
+        "slug": "sending-money-overseas",
+        "module": 7,
+        "title": "Sending money overseas",
+        "kind": "lesson",
+        "path": "modules/sending-money-overseas/en.md",
+        "word_count": 752,
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "course": "first-job",
+    "title": "Your first job",
+    "lessons": [
+      {
+        "slug": "reading-a-payslip",
+        "module": 1,
+        "title": "Reading a payslip",
+        "kind": "lesson",
+        "path": "modules/reading-a-payslip/en.md",
+        "word_count": 725,
+        "status": "draft"
+      },
+      {
+        "slug": "tax-when-you-work",
+        "module": 2,
+        "title": "Tax when you start work",
+        "kind": "lesson",
+        "path": "modules/tax-when-you-work/en.md",
+        "word_count": 730,
+        "status": "draft"
+      },
+      {
+        "slug": "lodging-a-tax-return",
+        "module": 3,
+        "title": "Lodging your first tax return",
+        "kind": "lesson",
+        "path": "modules/lodging-a-tax-return/en.md",
+        "word_count": 732,
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "course": "everyday-money",
+    "title": "Everyday money",
+    "lessons": [
+      {
+        "slug": "making-a-budget",
+        "module": 1,
+        "title": "Making a budget",
+        "kind": "lesson",
+        "path": "modules/making-a-budget/en.md",
+        "word_count": 677,
+        "status": "draft"
+      },
+      {
+        "slug": "saving-for-a-goal",
+        "module": 2,
+        "title": "Saving for a goal",
+        "kind": "lesson",
+        "path": "modules/saving-for-a-goal/en.md",
+        "word_count": 714,
+        "status": "draft"
+      },
+      {
+        "slug": "how-interest-works",
+        "module": 3,
+        "title": "How interest works",
+        "kind": "lesson",
+        "path": "modules/how-interest-works/en.md",
+        "word_count": 696,
+        "status": "draft"
+      },
+      {
+        "slug": "buy-now-pay-later",
+        "module": 4,
+        "title": "Buy now, pay later",
+        "kind": "lesson",
+        "path": "modules/buy-now-pay-later/en.md",
+        "word_count": 683,
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "course": "business-basics",
+    "title": "How businesses work",
+    "lessons": [
+      {
+        "slug": "reading-an-income-statement",
+        "module": 2,
+        "title": "Reading a basic income statement",
+        "kind": "lesson",
+        "path": "modules/reading-an-income-statement/en.md",
+        "word_count": 699,
+        "status": "draft"
+      },
+      {
+        "slug": "debt-vs-equity",
+        "module": 3,
+        "title": "Debt vs equity",
+        "kind": "lesson",
+        "path": "modules/debt-vs-equity/en.md",
+        "word_count": 690,
+        "status": "draft"
+      },
+      {
+        "slug": "risk-and-trade-offs",
+        "module": 4,
+        "title": "Risk and trade-offs",
+        "kind": "lesson",
+        "path": "modules/risk-and-trade-offs/en.md",
+        "word_count": 679,
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "course": "borrowing",
+    "title": "Borrowing money",
+    "lessons": [
+      {
+        "slug": "what-is-a-loan",
+        "module": 1,
+        "title": "What is a loan?",
+        "kind": "lesson",
+        "path": "modules/what-is-a-loan/en.md",
+        "word_count": 663,
+        "status": "draft"
+      },
+      {
+        "slug": "credit-cards",
+        "module": 2,
+        "title": "Credit cards",
+        "kind": "lesson",
+        "path": "modules/credit-cards/en.md",
+        "word_count": 650,
+        "status": "draft"
+      },
+      {
+        "slug": "student-loans-help",
+        "module": 3,
+        "title": "Student loans (HELP)",
+        "kind": "lesson",
+        "path": "modules/student-loans-help/en.md",
+        "word_count": 683,
+        "status": "draft"
+      },
+      {
+        "slug": "getting-help-with-debt",
+        "module": 4,
+        "title": "Getting help with debt",
+        "kind": "lesson",
+        "path": "modules/getting-help-with-debt/en.md",
+        "word_count": 694,
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "course": "investing-basics",
+    "title": "Investing basics",
+    "lessons": [
+      {
+        "slug": "what-is-investing",
+        "module": 1,
+        "title": "What is investing?",
+        "kind": "lesson",
+        "path": "modules/what-is-investing/en.md",
+        "word_count": 673,
+        "status": "draft"
+      },
+      {
+        "slug": "shares-and-funds",
+        "module": 2,
+        "title": "Shares and funds",
+        "kind": "lesson",
+        "path": "modules/shares-and-funds/en.md",
+        "word_count": 690,
+        "status": "draft"
+      },
+      {
+        "slug": "diversification",
+        "module": 3,
+        "title": "Diversification: spreading investment risk",
+        "kind": "lesson",
+        "path": "modules/diversification/en.md",
+        "word_count": 710,
+        "status": "draft"
+      },
+      {
+        "slug": "investment-scams",
+        "module": 4,
+        "title": "Investment scams",
+        "kind": "lesson",
+        "path": "modules/investment-scams/en.md",
+        "word_count": 682,
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "course": "money-and-the-economy",
+    "title": "Money and the economy",
+    "lessons": [
+      {
+        "slug": "what-is-inflation",
+        "module": 1,
+        "title": "What is inflation?",
+        "kind": "lesson",
+        "path": "modules/what-is-inflation/en.md",
+        "word_count": 682,
+        "status": "draft"
+      },
+      {
+        "slug": "the-cash-rate",
+        "module": 2,
+        "title": "The cash rate and interest rates",
+        "kind": "lesson",
+        "path": "modules/the-cash-rate/en.md",
+        "word_count": 680,
+        "status": "draft"
+      },
+      {
+        "slug": "exchange-rates",
+        "module": 3,
+        "title": "Exchange rates",
+        "kind": "lesson",
+        "path": "modules/exchange-rates/en.md",
+        "word_count": 704,
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "course": "quick-reads",
+    "title": "Quick reads",
+    "lessons": [
+      {
+        "slug": "what-is-gst",
+        "module": 1,
+        "title": "What is GST?",
+        "kind": "article",
+        "path": "modules/what-is-gst/en.md",
+        "word_count": 388,
+        "status": "draft"
+      },
+      {
+        "slug": "who-looks-after-money-rules",
+        "module": 2,
+        "title": "Who looks after money rules in Australia?",
+        "kind": "article",
+        "path": "modules/who-looks-after-money-rules/en.md",
+        "word_count": 390,
+        "status": "draft"
+      },
+      {
+        "slug": "keeping-money-records",
+        "module": 3,
+        "title": "Keeping money records",
+        "kind": "article",
+        "path": "modules/keeping-money-records/en.md",
+        "word_count": 406,
+        "status": "draft"
+      }
+    ]
+  }
+]

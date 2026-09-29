@@ -6,6 +6,7 @@ const DEFAULT_META = {
 };
 
 const PUBLIC_META = [
+  { match: /^\/money\/learn(?:\/|$)/, title: 'Learn About Money — Caplet', description: 'Explore Australian financial literacy lessons and quick reads, with official sources and practice questions.' },
   { match: /^\/$/, title: DEFAULT_META.title, description: DEFAULT_META.description },
   { match: /^\/assessments$/, title: 'Upcoming Assessment Tasks 2026 — Caplet', description: 'See the remaining Year 11 assessment windows for 2026 and plan your preparation.' },
   { match: /^\/notes$/, title: 'Notes — Caplet', description: 'Keep subject notes and Google Docs together on Caplet.' },
@@ -35,6 +36,7 @@ const PUBLIC_META = [
 ];
 
 const PRIVATE_PATHS = [
+  /^\/money\/learn(?:\/|$)/, // Draft educational content awaiting editorial approval.
   /^\/login$/,
   /^\/register$/,
   /^\/forgot-password$/,

@@ -2,7 +2,7 @@ export const MONEY_MODE_PREFIX = '/money';
 
 export const moneyNavigation = [
   { path: '/money', label: 'Overview', end: true },
-  { path: '/money#learn', label: 'Learn', hash: '#learn' },
+  { path: '/money/learn', label: 'Learn', activePrefix: '/money/learn' },
   { path: '/money/economy/inflation', label: 'Economy', activePrefix: '/money/economy' },
   { path: '/money/resources', label: 'Resources', activePrefix: '/money/resources' },
   { path: '/money/tools', label: 'Tools', activePrefix: '/money/tools' },
