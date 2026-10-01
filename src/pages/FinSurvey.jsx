@@ -11,6 +11,7 @@
 import { useMemo, useRef, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import CapletLoader from '../components/CapletLoader';
 import { CONFIDENCE_TOPICS } from '../lib/finSurveyQuestions';
 
 const YEARS = ['7', '8', '9', '10', '11', '12', 'Not at school'];
@@ -116,7 +117,7 @@ function Field({ label, hint, children }) {
 const inputCls = 'w-full rounded-xl border-2 border-line-soft bg-surface-raised px-3.5 py-2.5 text-sm text-text-primary transition-colors focus:border-accent';
 
 export default function FinSurvey() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user, loading: authLoading } = useAuth();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -242,6 +243,17 @@ export default function FinSurvey() {
         }
     };
 
+    // Wait for the session check before deciding who's answering. Without
+    // this, a pasted URL renders the signed-OUT survey (signup fields and
+    // all) to someone who is logged in — which reads as "it signed me out".
+    if (authLoading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-surface-body">
+                <CapletLoader />
+            </div>
+        );
+    }
+
     if (done) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-surface-body px-4">
@@ -278,6 +290,11 @@ export default function FinSurvey() {
                         className="focus-ring press animate-fade-slide-up stagger-3 mt-8 rounded-2xl bg-accent px-8 py-3.5 text-base font-extrabold text-accent-contrast shadow-pop transition-transform hover:-translate-y-0.5">
                         Let's go →
                     </button>
+                    {isAuthenticated && (
+                        <p className="animate-fade-slide-up stagger-3 mt-4 text-xs font-bold text-text-dim">
+                            ✓ Answering as {user?.firstName || 'you'} — you're signed in, no signup involved.
+                        </p>
+                    )}
                     <p className="animate-fade-slide-up stagger-4 mt-4 text-xs text-text-muted">No spam, ever. Your email never shows up publicly.</p>
                 </div>
             </div>

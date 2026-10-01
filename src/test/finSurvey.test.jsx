@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 vi.mock('../services/api', () => ({ default: { request: vi.fn() } }));
-vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: false, user: null }) }));
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: false, user: null, loading: false }) }));
 import api from '../services/api';
 import FinSurvey from '../pages/FinSurvey';
 import FinSurveyResults from '../pages/FinSurveyResults';
