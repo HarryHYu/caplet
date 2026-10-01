@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 vi.mock('../services/api', () => ({ default: { request: vi.fn() } }));
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: false, user: null }) }));
 import api from '../services/api';
 import FinSurvey from '../pages/FinSurvey';
 import FinSurveyResults from '../pages/FinSurveyResults';
@@ -13,30 +14,37 @@ const pick = (groupName, optionName) => {
   const group = screen.getByRole('radiogroup', { name: groupName });
   fireEvent.click(within(group).getByRole('radio', { name: optionName }));
 };
+const next = () => fireEvent.click(screen.getByRole('button', { name: /Next|Submit/ }));
 
 describe('FinSurvey (hidden page)', () => {
-  it('collects everything, signs the respondent up, and says so', async () => {
+  it('walks the stages, signs the respondent up, and says so', async () => {
     api.request.mockResolvedValue({ ok: true, accountCreated: true, accountExisted: false });
     render(<FinSurvey />);
-    // The signup is announced, not sneaky.
-    expect(screen.getByText(/sets you up with a free Caplet account/i)).toBeInTheDocument();
+    // The signup is announced on the splash, not sneaky.
+    expect(screen.getByText(/free Caplet account/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Let's go/i }));
 
     fireEvent.change(screen.getByLabelText(/Full name/i), { target: { value: 'Pat Example' } });
     fireEvent.change(screen.getByLabelText(/^Email$/i), { target: { value: 'pat@example.com' } });
     fireEvent.change(screen.getByLabelText(/Choose a password/i), { target: { value: 'longenough1' } });
     fireEvent.change(screen.getByLabelText(/^School$/i), { target: { value: 'Testville High' } });
     pick('Year level', '11');
+    next();
     fireEvent.click(within(screen.getByRole('group', { name: 'Commerce subjects' })).getByRole('button', { name: /Economics/ }));
+    next();
     pick('Overall financial literacy', '2');
     fireEvent.click(within(screen.getByRole('group', { name: 'Money knowledge sources' })).getByRole('button', { name: /Social media/ }));
     pick('School teaches enough', 'Sort of, but not really');
+    next();
     ['Budgeting & saving', 'Tax (what you pay, how it works)', 'Superannuation', 'Investing & shares', 'Credit, loans & debt']
       .forEach((topic) => pick(topic, '2'));
+    next();
     pick('School course', 'Definitely');
     pick('Caplet course', 'Yes');
+    next();
     pick('AI advisor trust', 'Only for basic questions');
+    next(); // submit
 
-    fireEvent.click(screen.getByRole('button', { name: /Submit survey/i }));
     await waitFor(() => expect(api.request).toHaveBeenCalled());
     const [endpoint, options] = api.request.mock.calls[0];
     expect(endpoint).toBe('/fin-survey');
@@ -54,10 +62,11 @@ describe('FinSurvey (hidden page)', () => {
     expect(await screen.findByText(/Your Caplet account is live/i)).toBeInTheDocument();
   });
 
-  it('refuses to send a half-finished survey and says what is missing', () => {
+  it('refuses to advance a half-finished stage and says what is missing', () => {
     render(<FinSurvey />);
-    fireEvent.click(screen.getByRole('button', { name: /Submit survey/i }));
-    expect(screen.getByRole('alert')).toHaveTextContent(/Still needed/i);
+    fireEvent.click(screen.getByRole('button', { name: /Let's go/i }));
+    next();
+    expect(screen.getByRole('alert')).toHaveTextContent(/Still needs/i);
     expect(api.request).not.toHaveBeenCalled();
   });
 });
