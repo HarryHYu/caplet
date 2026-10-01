@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { User, FinSurveyResponse } = require('../models');
+const { requireAuth } = require('../middleware/auth');
 const {
   normalizeEmailInput,
   normalizeEmailForStorage,
@@ -28,6 +29,21 @@ const maskEmail = (email) => {
   const head = local.slice(0, 2);
   return `${head}${'*'.repeat(Math.max(1, local.length - 2))}@${domain}`;
 };
+
+// Has the signed-in student already answered? Lets the page open on a
+// "you're done" screen instead of the questions.
+router.get('/mine', requireAuth, async (req, res) => {
+  try {
+    const email = normalizeEmailForStorage(req.user.email);
+    const row = await FinSurveyResponse.findOne({ where: { email } });
+    return res.json(row
+      ? { responded: true, at: row.updatedAt, answers: row.answers, school: row.school }
+      : { responded: false });
+  } catch (error) {
+    console.error('Fin-survey mine error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 router.post('/', [
   body('name').trim().isLength({ min: 1, max: 120 }).withMessage('Tell us your name.'),

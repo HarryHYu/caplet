@@ -8,7 +8,7 @@
  * password mid-flow (that's Caplet signup, and the form says so); signed-in
  * users never see any of that — we already know them.
  */
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import CapletLoader from '../components/CapletLoader';
@@ -78,18 +78,19 @@ function Checks({ options, value, onChange, name }) {
 
 function Scale({ value, onChange, name, low = 'Not at all', high = 'Very' }) {
     return (
-        <div className="flex items-center gap-3">
-            <span className="w-16 text-right text-[11px] font-bold text-text-dim">{low}</span>
-            <div className="flex gap-2" role="radiogroup" aria-label={name}>
+        <div className="flex items-center gap-2 sm:gap-3">
+            <span className="hidden w-16 text-right text-[11px] font-bold text-text-dim sm:inline-block">{low}</span>
+            <div className="flex gap-1.5 sm:gap-2" role="radiogroup" aria-label={name}>
                 {[1, 2, 3, 4, 5].map((n) => (
                     <button key={n} type="button" role="radio" aria-checked={value === n}
                         onClick={() => onChange(n)}
-                        className={`focus-ring press h-11 w-11 rounded-2xl border-2 text-base font-extrabold transition-all ${value === n ? 'animate-pop border-accent bg-accent text-accent-contrast shadow-card' : 'border-line-soft bg-surface-raised text-text-dim hover:-translate-y-0.5 hover:border-text-dim hover:text-text-primary'}`}>
+                        className={`focus-ring press h-10 w-10 rounded-2xl border-2 text-base font-extrabold transition-all sm:h-11 sm:w-11 ${value === n ? 'animate-pop border-accent bg-accent text-accent-contrast shadow-card' : 'border-line-soft bg-surface-raised text-text-dim hover:-translate-y-0.5 hover:border-text-dim hover:text-text-primary'}`}>
                         {n}
                     </button>
                 ))}
             </div>
-            <span className="w-16 text-[11px] font-bold text-text-dim">{high}</span>
+            <span className="hidden w-16 text-[11px] font-bold text-text-dim sm:inline-block">{high}</span>
+            <span className="text-[10px] font-bold text-text-dim sm:hidden">{low} → {high}</span>
         </div>
     );
 }
@@ -138,7 +139,39 @@ export default function FinSurvey() {
     const [shake, setShake] = useState(0);
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(null);
+    const [mine, setMine] = useState(null);     // signed-in: {responded, at, answers, school}
+    const [editing, setEditing] = useState(false); // chose to update an earlier response
     const topRef = useRef(null);
+
+    // Signed-in students who already answered land on a "done" screen, with
+    // their earlier answers ready in case they want to change them.
+    useEffect(() => {
+        if (authLoading) return;
+        if (!isAuthenticated) { setMine({ responded: false }); return; }
+        let cancelled = false;
+        api.request('/fin-survey/mine')
+            .then((res) => { if (!cancelled) setMine(res || { responded: false }); })
+            .catch(() => { if (!cancelled) setMine({ responded: false }); });
+        return () => { cancelled = true; };
+    }, [authLoading, isAuthenticated]);
+
+    const startUpdating = () => {
+        const a = mine?.answers || {};
+        setSchool(mine?.school || '');
+        setYearLevel(a.yearLevel ?? null);
+        setCommerceSubjects(a.commerceSubjects || []);
+        setSelfRating(a.selfRating ?? null);
+        setLearnedFrom(a.learnedFrom || []);
+        setSchoolEnough(a.schoolEnough ?? null);
+        setConfidence(a.confidence || {});
+        setWouldTakeSchoolCourse(a.wouldTakeSchoolCourse ?? null);
+        setWouldTakeCapletCourse(a.wouldTakeCapletCourse ?? null);
+        setAiAdvisorTrust(a.aiAdvisorTrust ?? null);
+        setAiThoughts(a.aiThoughts || '');
+        setWishTaught(a.wishTaught || '');
+        setEditing(true);
+        setStep(1);
+    };
 
     // Signed-in students never see the account questions — we know them.
     const knownName = isAuthenticated ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim() : '';
@@ -246,7 +279,7 @@ export default function FinSurvey() {
     // Wait for the session check before deciding who's answering. Without
     // this, a pasted URL renders the signed-OUT survey (signup fields and
     // all) to someone who is logged in — which reads as "it signed me out".
-    if (authLoading) {
+    if (authLoading || mine === null) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-surface-body">
                 <CapletLoader />
@@ -260,12 +293,38 @@ export default function FinSurvey() {
                 <div className="surface-card max-w-md p-10 text-center">
                     <p className="animate-tada text-6xl" aria-hidden="true">🎉</p>
                     <span className="mt-4 inline-block -rotate-2 font-hand text-xl font-bold text-accent">you're a legend</span>
-                    <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-text-primary">That genuinely helps.</h1>
+                    <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-text-primary">
+                        {done.updated ? 'Answers updated.' : 'That genuinely helps.'}
+                    </h1>
                     <p className="mt-3 text-sm leading-relaxed text-text-dim">
                         {done.accountCreated && <>Your Caplet account is live too — log in any time with this email and the password you picked.</>}
-                        {done.accountExisted && !isAuthenticated && <>You already had a Caplet account under this email, so we kept it exactly as it was.</>}
-                        {isAuthenticated && <>Your answers are in. Watch this space — if the course happens, you'll be first to know.</>}
+                        {done.updated && !done.accountCreated && <>We replaced your earlier answers with these ones. </>}
+                        {done.accountExisted && !isAuthenticated && !done.updated && <>You already had a Caplet account under this email, so we kept it exactly as it was.</>}
+                        {isAuthenticated && !done.updated && <>Your answers are in. Watch this space — if the course happens, you'll be first to know.</>}
                     </p>
+                </div>
+            </div>
+        );
+    }
+
+    // Already answered (signed in): a done screen, not the questions again.
+    if (isAuthenticated && mine.responded && !editing) {
+        const when = mine.at ? new Date(mine.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : null;
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-surface-body px-4">
+                <div className="surface-card max-w-md p-10 text-center">
+                    <p className="animate-pop-in text-5xl" aria-hidden="true">✅</p>
+                    <span className="mt-4 inline-block -rotate-2 font-hand text-xl font-bold text-accent">already done</span>
+                    <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight text-text-primary">
+                        You've answered this one, {user?.firstName || 'legend'}.
+                    </h1>
+                    <p className="mt-3 text-sm leading-relaxed text-text-dim">
+                        {when ? `Submitted ${when}. ` : ''}Thanks — nothing more to do. Changed your mind about something?
+                    </p>
+                    <button type="button" onClick={startUpdating}
+                        className="focus-ring press mt-6 rounded-xl border-2 border-line-soft px-5 py-2.5 text-sm font-bold text-text-primary transition-colors hover:border-text-dim">
+                        Update my answers
+                    </button>
                 </div>
             </div>
         );
@@ -303,7 +362,7 @@ export default function FinSurvey() {
 
     const stage = stages[stageIndex];
     return (
-        <div className="min-h-screen bg-surface-body px-4 py-8">
+        <div className="min-h-screen bg-surface-body px-4 pb-12 pt-24">
             <div ref={topRef} className="mx-auto max-w-xl">
                 {/* progress */}
                 <div className="flex items-center gap-3">

@@ -19,6 +19,17 @@ jest.mock('../utils/emailIdentity', () => ({
   normalizeEmailForStorage: (e) => String(e).toLowerCase(),
   findUserByEmailVariants: mockFindByVariants,
 }));
+// requireAuth stands in for a signed-in student; routes that don't use it
+// are unaffected. (Jest hoists mock factories, so the variable must be
+// mock-prefixed to be referenced from one.)
+let mockSignedIn = null;
+jest.mock('../middleware/auth', () => ({
+  requireAuth: (req, res, next) => {
+    if (!mockSignedIn) return res.status(401).json({ message: 'Not signed in' });
+    req.user = mockSignedIn;
+    return next();
+  },
+}));
 
 const finSurvey = require('../routes/finSurvey');
 
@@ -36,10 +47,28 @@ const goodBody = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSignedIn = null;
   mockFindByVariants.mockResolvedValue(null);
   mockResponse.findOne.mockResolvedValue(null);
   mockResponse.create.mockResolvedValue({ id: 'r1' });
   mockUser.create.mockResolvedValue({ id: 'u1' });
+});
+
+describe('GET /api/fin-survey/mine', () => {
+  it('tells a signed-in student whether they already answered', async () => {
+    mockSignedIn = { id: 'u1', email: 'Pat@Example.com' };
+    mockResponse.findOne.mockResolvedValue({ updatedAt: '2026-10-01T00:00:00Z', answers: { yearLevel: '11' }, school: 'Testville High' });
+    const res = await request(app).get('/api/fin-survey/mine');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ responded: true, answers: { yearLevel: '11' }, school: 'Testville High' });
+    expect(mockResponse.findOne).toHaveBeenCalledWith({ where: { email: 'pat@example.com' } });
+    mockResponse.findOne.mockResolvedValue(null);
+    expect((await request(app).get('/api/fin-survey/mine')).body).toEqual({ responded: false });
+  });
+
+  it('is signed-in only', async () => {
+    expect((await request(app).get('/api/fin-survey/mine')).status).toBe(401);
+  });
 });
 
 describe('POST /api/fin-survey', () => {

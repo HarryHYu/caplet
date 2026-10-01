@@ -102,10 +102,13 @@ describe('FinSurveyResults (hidden page)', () => {
     render(<FinSurveyResults />);
     expect(await screen.findByText('Responses')).toBeInTheDocument();
     expect(screen.getAllByText('3.0').length).toBeGreaterThan(0); // avg self-rating (2+4)/2
-    expect(screen.getByText('100%')).toBeInTheDocument(); // both said yes to the course
-    expect(screen.getByText('Year 11')).toBeInTheDocument();
+    expect(screen.getAllByText('100%').length).toBeGreaterThan(0); // both said yes to the course
+    expect(screen.getByText('Y11')).toBeInTheDocument(); // year-level column axis
     expect(screen.getByText(/Only if a human checks it/)).toBeInTheDocument();
     expect(screen.getByText('pa*@example.com')).toBeInTheDocument(); // masked, never full
     expect(screen.queryByText('pat@example.com')).not.toBeInTheDocument();
+    // Every chart has a table twin.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Table' })[0]);
+    expect(screen.getByText('Not even close')).toBeInTheDocument();
   });
 });
