@@ -144,7 +144,7 @@ describe('teacher product frontend', () => {
     api.request.mockResolvedValue(ANALYTICS);
     renderClassPage();
 
-    expect(await screen.findByRole('heading', { name: 'Class learning.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Class learning' })).toBeInTheDocument();
     expect(api.request).toHaveBeenCalledWith(`/teacher-learning/classes/${CLASS_ID}/analytics?subject=economics&threshold=0.6`);
     const table = screen.getByRole('table', { name: 'Mastery probability for each student and curriculum outcome' });
     expect(within(table).getByLabelText('Ada Lovelace, E12.1: 35% mastery, 2 attempts')).toBeInTheDocument();

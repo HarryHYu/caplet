@@ -7,15 +7,14 @@ const Register = () => {
   return (
     <div className="min-h-screen flex bg-surface-body">
 
-      {/* Left — Brand Panel */}
-      <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative bg-surface-inverse overflow-hidden flex-col">
-        <div className="absolute top-[24%] left-[10%] w-[38vw] h-[38vw] max-w-[480px] max-h-[480px] rounded-full bg-accent/40 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[10%] right-[8%] w-[24vw] h-[24vw] max-w-[320px] max-h-[320px] rounded-full bg-[color:var(--mark-amber)]/25 blur-[110px] pointer-events-none" />
+      {/* Left — Brand Panel (same accent panel as Login, so the two doors match) */}
+      <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative bg-accent overflow-hidden flex-col">
+        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[42vw] h-[42vw] max-w-[560px] max-h-[560px] rounded-full bg-accent-contrast/10 blur-[120px] pointer-events-none" />
 
         {/* Wordmark */}
         <div className="relative z-10 p-12 xl:p-16">
           <Link to="/" className="group inline-flex items-center focus-ring rounded-md">
-            <span className="font-display font-extrabold tracking-[-0.02em] text-xl text-text-contrast group-hover:text-accent transition-colors duration-200">
+            <span className="font-display font-extrabold tracking-[-0.02em] text-2xl text-accent-contrast group-hover:opacity-80 transition-opacity duration-200">
               Caplet
             </span>
           </Link>
@@ -24,15 +23,15 @@ const Register = () => {
         {/* Vertically centered headline */}
         <div className="relative z-10 flex-1 flex items-center px-12 xl:px-20 pb-40">
           <div className="max-w-lg animate-rise-slow">
-            <span className="mb-6 font-hand text-2xl text-text-contrast/90 -rotate-2 inline-block">
-              free, open, and a little playful
+            <span className="mb-6 font-hand text-2xl text-accent-contrast/90 -rotate-2 inline-block">
+              free, and made for students
             </span>
-            <h2 className="text-6xl xl:text-7xl font-display font-extrabold text-text-contrast leading-[0.95] tracking-tight mb-6">
-              Start building,<br />
-              <span className="text-text-contrast">learn for life.</span>
+            <h2 className="text-6xl xl:text-7xl font-display font-extrabold text-accent-contrast leading-[0.95] tracking-tight mb-6">
+              Start with<br />
+              one subject.
             </h2>
-            <p className="text-text-contrast/80 text-xl leading-relaxed">
-              Courses, live code, graphing, quizzes, and classrooms — all free, all open-source.
+            <p className="text-accent-contrast/90 text-xl leading-relaxed">
+              Keep your subjects, notes, practice, study plan and upcoming assessments together — so you always know what to do next.
             </p>
           </div>
         </div>

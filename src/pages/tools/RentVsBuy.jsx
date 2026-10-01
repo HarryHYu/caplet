@@ -52,13 +52,13 @@ const RentVsBuy = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Property</span>
-              <h1 className="minimal-page-title">Rent vs Buy.</h1>
+              <span className="section-kicker">Money tools · Property</span>
+              <h1 className="minimal-page-title">Rent vs buy calculator</h1>
               <p className="minimal-page-description">
                 Compare the true total cost of renting versus buying a home over any time horizon.
               </p>
             </div>
-            <Link to="/money/tools" className="btn-secondary text-sm px-8">Back to Tools</Link>
+            <Link to="/money/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
           </div>
         </header>
 
@@ -69,7 +69,7 @@ const RentVsBuy = () => {
                 <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Buying</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
-                    <label htmlFor="rvb-home-price" className="text-sm font-semibold text-text-dim mb-3 block">Home Purchase Price</label>
+                    <label htmlFor="rvb-home-price" className="text-sm font-semibold text-text-dim mb-3 block">Home purchase price</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                       <input id="rvb-home-price" type="number" min="0" step="10000" value={homePrice} onChange={(e) => setHomePrice(e.target.value)} placeholder="0.00"
@@ -78,7 +78,7 @@ const RentVsBuy = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="rvb-down-payment" className="text-sm font-semibold text-text-dim mb-3 block">Down Payment</label>
+                    <label htmlFor="rvb-down-payment" className="text-sm font-semibold text-text-dim mb-3 block">Down payment</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-down-payment" type="number" min="0" max="100" step="1" value={downPaymentPct} onChange={(e) => setDownPaymentPct(e.target.value)} placeholder="20"
                         data-control-unstyled
@@ -89,7 +89,7 @@ const RentVsBuy = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
-                    <label htmlFor="rvb-mortgage-rate" className="text-sm font-semibold text-text-dim mb-3 block">Mortgage Rate (% p.a.)</label>
+                    <label htmlFor="rvb-mortgage-rate" className="text-sm font-semibold text-text-dim mb-3 block">Mortgage rate (% p.a.)</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-mortgage-rate" type="number" min="0" max="30" step="0.1" value={mortgageRate} onChange={(e) => setMortgageRate(e.target.value)} placeholder="6.5"
                         data-control-unstyled
@@ -98,7 +98,7 @@ const RentVsBuy = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="rvb-loan-term" className="text-sm font-semibold text-text-dim mb-3 block">Loan Term</label>
+                    <label htmlFor="rvb-loan-term" className="text-sm font-semibold text-text-dim mb-3 block">Loan term</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-loan-term" type="number" min="1" max="40" step="1" value={loanTermYears} onChange={(e) => setLoanTermYears(e.target.value)} placeholder="30"
                         data-control-unstyled
@@ -106,7 +106,7 @@ const RentVsBuy = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="rvb-appreciation" className="text-sm font-semibold text-text-dim mb-3 block">Expected Appreciation (% p.a.)</label>
+                    <label htmlFor="rvb-appreciation" className="text-sm font-semibold text-text-dim mb-3 block">Expected appreciation (% p.a.)</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-appreciation" type="number" min="0" max="30" step="0.1" value={homeAppreciation} onChange={(e) => setHomeAppreciation(e.target.value)} placeholder="4"
                         data-control-unstyled
@@ -115,7 +115,7 @@ const RentVsBuy = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="rvb-transfer-tax" className="text-sm font-semibold text-text-dim mb-3 block">Transfer / Stamp Duty (%)</label>
+                    <label htmlFor="rvb-transfer-tax" className="text-sm font-semibold text-text-dim mb-3 block">Transfer / stamp duty (%)</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-transfer-tax" type="number" min="0" max="20" step="0.1" value={transferTaxPct} onChange={(e) => setTransferTaxPct(e.target.value)} placeholder="4"
                         data-control-unstyled
@@ -129,7 +129,7 @@ const RentVsBuy = () => {
                 <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Renting</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
-                    <label htmlFor="rvb-monthly-rent" className="text-sm font-semibold text-text-dim mb-3 block">Monthly Rent</label>
+                    <label htmlFor="rvb-monthly-rent" className="text-sm font-semibold text-text-dim mb-3 block">Monthly rent</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                       <input id="rvb-monthly-rent" type="number" min="0" step="50" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)} placeholder="0"
@@ -138,7 +138,7 @@ const RentVsBuy = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="rvb-compare-years" className="text-sm font-semibold text-text-dim mb-3 block">Comparison Period</label>
+                    <label htmlFor="rvb-compare-years" className="text-sm font-semibold text-text-dim mb-3 block">Comparison period</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <input id="rvb-compare-years" type="number" min="1" max="40" step="1" value={compareYears} onChange={(e) => setCompareYears(e.target.value)} placeholder="10"
                         data-control-unstyled
@@ -148,7 +148,7 @@ const RentVsBuy = () => {
                   </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-5 press">Compare Costs</button>
+              <button type="submit" className="btn-primary press w-full py-5 press">Compare costs</button>
             </form>
           </div>
 
@@ -172,16 +172,16 @@ const RentVsBuy = () => {
                   </div>
                   <div className="bg-surface-raised rounded-2xl p-6 space-y-6">
                     <div>
-                      <p className="text-xs font-semibold text-text-dim mb-1">Monthly Mortgage Payment</p>
+                      <p className="text-xs font-semibold text-text-dim mb-1">Monthly mortgage payment</p>
                       <p className="text-xl font-bold">{formatCurrency(result.monthlyMortgage)}</p>
                     </div>
                     <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-xs font-semibold text-text-dim mb-1">Net Buying Cost</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Net buying cost</p>
                         <p className="text-lg font-bold">{formatCurrency(result.netBuyingCost)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-semibold text-text-dim mb-1">Total Rent Paid</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Total rent paid</p>
                         <p className="text-lg font-bold">{formatCurrency(result.totalRentingCost)}</p>
                       </div>
                     </div>

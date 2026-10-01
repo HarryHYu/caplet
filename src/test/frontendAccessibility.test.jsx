@@ -52,11 +52,11 @@ describe('financial tools UX', () => {
     render(<MemoryRouter><FinancialTools /></MemoryRouter>);
     await user.click(screen.getByRole('button', { name: 'Debt & Loans' }));
     await user.type(screen.getByLabelText('Search financial calculators'), 'mortgage');
-    expect(screen.getByRole('heading', { name: 'Mortgage Calculator' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Income Tax Calculator' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Mortgage calculator' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Income tax calculator' })).not.toBeInTheDocument();
     await user.clear(screen.getByLabelText('Search financial calculators'));
     await user.click(screen.getByRole('button', { name: 'All' }));
-    expect(screen.getByRole('heading', { name: 'Income Tax Calculator' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Income tax calculator' })).toBeInTheDocument();
   });
 
   it('exposes labelled tax inputs and current assumptions', () => {

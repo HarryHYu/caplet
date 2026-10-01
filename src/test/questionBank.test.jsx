@@ -107,7 +107,7 @@ describe('QuestionBank', () => {
     fireEvent.change(screen.getByLabelText('Workspace code'), { target: { value: 'private-code' } });
     fireEvent.click(screen.getByRole('button', { name: 'Open question bank' }));
 
-    expect(await screen.findByRole('heading', { name: 'Question bank.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Question bank' })).toBeInTheDocument();
     expect(api.editorEnter).toHaveBeenCalledWith('private-code');
     await waitFor(() => expect(api.request).toHaveBeenCalledWith('/editor/curriculum-outcomes', { auth: 'editor' }));
     expect(await screen.findByText(QUESTION.prompt)).toBeInTheDocument();

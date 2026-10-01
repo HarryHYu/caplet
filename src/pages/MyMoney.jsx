@@ -161,12 +161,12 @@ export default function MyMoney() {
 
   return (
     <div className="minimal-page selection:bg-accent selection:text-accent-contrast">
-      <div className="container-custom max-w-6xl">
+      <div className="container-custom">
         <Link to="/money" className="reveal inline-flex min-h-11 items-center gap-2 rounded-xl text-sm font-bold text-text-muted transition-colors hover:text-accent"><ArrowLeftIcon className="h-4 w-4" aria-hidden="true" /> Money overview</Link>
 
         <header className="reveal minimal-page-header mt-6">
-          <span className="section-kicker">your private space</span>
-          <h1 className="minimal-page-title">My Money.</h1>
+          <span className="section-kicker">Your private space</span>
+          <h1 className="minimal-page-title">My Money</h1>
           <p className="minimal-page-description">Try a savings scenario with sample numbers or deliberately choose to use your own.</p>
         </header>
 

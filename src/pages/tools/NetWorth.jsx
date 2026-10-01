@@ -60,13 +60,13 @@ const NetWorth = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools, Wealth</span>
-              <h1 className="minimal-page-title">Net Worth Calculator.</h1>
+              <span className="section-kicker">Money tools · Wealth &amp; Investing</span>
+              <h1 className="minimal-page-title">Net worth calculator</h1>
               <p className="minimal-page-description">
                 Total assets minus total liabilities, the single most honest number in personal finance.
               </p>
             </div>
-            <Link to="/money/tools" className="btn-secondary text-sm px-8">&larr; Back to Tools</Link>
+            <Link to="/money/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
           </div>
         </header>
 
@@ -89,7 +89,7 @@ const NetWorth = () => {
                   ))}
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-4 text-sm press">Calculate Net Worth</button>
+              <button type="submit" className="btn-primary press w-full py-4 text-sm press">Calculate net worth</button>
             </form>
           </div>
 
@@ -98,7 +98,7 @@ const NetWorth = () => {
             {result ? (
               <div className="animate-rise space-y-8 relative z-10">
                 <div>
-                  <p className="text-xs font-semibold text-text-dim mb-4 uppercase tracking-wide">Net Worth</p>
+                  <p className="text-xs font-semibold text-text-dim mb-4 uppercase tracking-wide">Net worth</p>
                   <p className={`font-display text-5xl font-extrabold tracking-tight ${result.netWorth >= 0 ? 'text-text-primary' : 'text-text-error'}`}>
                     {formatCurrency(result.netWorth)}
                   </p>
@@ -106,17 +106,17 @@ const NetWorth = () => {
                 <div className="pt-10 space-y-8">
                   <div className="flex justify-between items-end">
                     <div>
-                      <p className="text-xs font-medium text-text-dim mb-1">Total Assets</p>
+                      <p className="text-xs font-medium text-text-dim mb-1">Total assets</p>
                       <p className="text-xl font-bold text-accent">{formatCurrency(result.totalAssets)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-medium text-text-dim mb-1">Total Liabilities</p>
+                      <p className="text-xs font-medium text-text-dim mb-1">Total liabilities</p>
                       <p className="text-xl font-bold">{formatCurrency(result.totalLiabilities)}</p>
                     </div>
                   </div>
                   {result.totalAssets > 0 && (
                     <div className="pt-8 rounded-2xl bg-surface-raised p-6 shadow-pop">
-                      <p className="text-xs font-medium text-text-dim mb-2">Debt-to-Asset Ratio</p>
+                      <p className="text-xs font-medium text-text-dim mb-2">Debt-to-asset ratio</p>
                       <p className="font-display text-2xl font-bold tracking-tight">{((result.totalLiabilities / result.totalAssets) * 100).toFixed(1)}%</p>
                       <p className="text-xs text-text-dim mt-1">
                         {result.totalLiabilities / result.totalAssets < 0.36

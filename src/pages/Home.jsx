@@ -77,12 +77,12 @@ const principles = [
 ];
 
 const featureHighlights = [
-  { tag: 'build', title: 'Lesson builder', body: 'Combine text, images, video, code and quizzes into complete interactive lessons.', to: '/courses', block: 'block-blue' },
-  { tag: 'code', title: 'Live code IDE', body: 'Run Python, JavaScript and HTML in the browser with tests and guided debugging.', to: '/courses', block: 'block-blue' },
-  { tag: 'graph', title: 'Graphing tools', body: 'Use responsive plotting and geometry tools to explore ideas instead of only reading them.', to: '/courses', block: 'block-green' },
-  { tag: 'check', title: 'Quizzes and grading', body: 'Mix focused checks into lessons and keep track of progress as students practise.', to: '/practice', block: 'block-amber' },
-  { tag: 'ai', title: 'AI lesson generation', body: 'Draft structured slides, questions and a lesson plan, then edit everything before publishing.', to: '/courses', block: 'block-blue' },
-  { tag: 'class', title: 'Classrooms', body: 'Organise students, assignments and submissions without separating them from the learning material.', to: '/classes', block: 'block-blue' },
+  { tag: 'learn', title: 'Subjects and notes', body: 'Open the resources for each subject and keep your own notes and Google Docs right beside them.', to: '/library', block: 'block-blue' },
+  { tag: 'practise', title: 'Practice that adapts', body: 'Quick diagnostics, a daily five and weak-topic sets that build a mastery map as you go.', to: '/practice', block: 'block-green' },
+  { tag: 'plan', title: 'A plan for the week', body: 'Choose your subjects and study days, then let Today show you the next useful step.', to: '/study-plan', block: 'block-amber' },
+  { tag: 'write', title: 'Essay memoriser', body: 'Paste a draft, map its structure and practise it until it is word-perfect and exam-ready.', to: '/essays', block: 'block-blue' },
+  { tag: 'track', title: 'Assessments and results', body: 'See what is coming up, log each result and write down the next improvement.', to: '/assessments', block: 'block-blue' },
+  { tag: 'money', title: 'Money tools', body: 'Australian calculators for tax, super, savings and loans — plain English, no jargon.', to: '/money/tools', block: 'block-green' },
 ];
 
 const faqItems = [
@@ -169,16 +169,10 @@ export default function Home() {
             <p className="mb-2 font-hand text-base text-blue -rotate-2 inline-block">ask anything</p><p className="mb-1.5 rounded-lg rounded-tl-sm bg-[color:var(--block-blue)] p-2 text-[11px] text-text-primary">How does compound interest work?</p><p className="rounded-lg rounded-tr-sm bg-[color:var(--block-green)] p-2 text-[11px] text-text-primary">It is interest earned on interest. Let us plot it.</p>
           </Widget>
           <Widget className="right-[5vw] top-[13vh] w-60" tilt="-2deg" delay="0.3s">
-            <p className="mb-2 font-hand text-base text-blue -rotate-2 inline-block">drag &amp; drop</p><div className="mb-2.5 flex gap-1.5">{['Text', 'Code', 'Quiz'].map((item) => <span key={item} className="rounded-md bg-[color:var(--block-blue)] px-2 py-1 text-[11px] font-bold text-text-primary">{item}</span>)}</div><div className="space-y-1.5"><div className="h-2.5 w-3/4 rounded bg-line-soft" /><div className="h-2 w-full rounded bg-surface-soft" /><div className="flex h-10 items-center justify-center rounded-lg bg-[color:var(--block-amber)] text-[11px] font-bold text-text-primary">Live preview</div></div>
+            <p className="mb-2 font-hand text-base text-blue -rotate-2 inline-block">this week</p><div className="grid grid-cols-7 gap-1.5 text-center">{[['Mo', 'done'], ['Tu', 'done'], ['We', 'done'], ['Th', 'today'], ['Fr', ''], ['Sa', ''], ['Su', '']].map(([day, state]) => <span key={day} className={`grid h-7 place-items-center rounded-md text-[11px] font-bold ${state === 'done' ? 'bg-[color:var(--block-green)] text-text-primary' : state === 'today' ? 'bg-[color:var(--block-blue)] text-text-primary' : 'bg-surface-raised text-text-muted'}`}>{day}</span>)}</div><p className="mt-2.5 text-[11px] font-bold text-text-primary">3 of 4 planned days done</p>
           </Widget>
-          {/* Token exemption: the raw hex below is a deliberate mock of a code
-              editor/terminal chrome (macOS traffic lights + VS Code syntax
-              colours). It stays theme-independent by design, so these literals
-              intentionally bypass the surface/text token system. */}
           <Widget className="left-[5vw] top-[50vh] w-56" tilt="-3deg" delay="0.9s" block="block-cream">
-            {/* Code-editor mock — a picture of an always-dark editor chrome, so its
-                literal hex ink (including text-white) is intentional, not a token gap. */}
-            <div className="overflow-hidden rounded-lg bg-[#1b1b1b] font-mono text-[10px] text-[#d4d4d4]"><div className="flex gap-1 bg-[#262626] px-2.5 py-1.5"><span className="h-2 w-2 rounded-full bg-[#ff5f56]" /><span className="h-2 w-2 rounded-full bg-[#ffbd2e]" /><span className="h-2 w-2 rounded-full bg-[#27c93f]" /></div><div className="p-2.5 leading-relaxed"><div><span className="text-[#569cd6]">def</span> <span className="text-[#dcdcaa]">value</span>(x):</div><div className="pl-3"><span className="text-[#c586c0]">return</span> x ** <span className="text-[#b5cea8]">2</span></div><div className="mt-1 text-white">&gt; 2.56</div></div></div>
+            <div className="mb-2 flex items-center justify-between"><span className="font-hand text-base text-blue -rotate-2 inline-block">mastery</span><span className="text-[11px] font-bold text-text-primary">72%</span></div><div className="space-y-2">{[['Market structures', 86], ['Fiscal policy', 64], ['Exchange rates', 41]].map(([label, pct]) => <div key={label}><div className="mb-1 flex justify-between text-[10px] font-semibold text-text-muted"><span>{label}</span><span>{pct}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-surface-soft"><div className="h-full rounded-full bg-[color:var(--mark-blue)]" style={{ width: `${pct}%` }} /></div></div>)}</div>
           </Widget>
           <Widget className="right-[4vw] top-[46vh] w-56" tilt="3deg" delay="1.1s" block="block-cream">
             <div className="mb-2 flex items-center justify-between"><span className="font-mono text-[11px] text-text-primary">f(x) = sin x</span><span className="font-hand text-base text-blue -rotate-2 inline-block">drag me</span></div><div className="relative h-16"><div className="absolute inset-x-0 top-1/2 h-px bg-line-soft" /><svg viewBox="0 0 200 70" className="h-full w-full text-[color:var(--mark-blue)]" preserveAspectRatio="none" aria-hidden="true"><path d="M0 35 Q 25 4 50 35 T 100 35 T 150 35 T 200 35" fill="none" stroke="currentColor" strokeWidth="2.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" /></svg></div>
@@ -243,7 +237,7 @@ export default function Home() {
               <p className="section-kicker">More than a dashboard</p>
               <h2 id="home-features" className="font-display text-3xl font-extrabold tracking-tight md:text-5xl">Everything is in the box.</h2>
             </div>
-            <p className="max-w-md text-base leading-relaxed text-text-muted">Build lessons, practise actively and keep the work around each subject connected.</p>
+            <p className="max-w-md text-base leading-relaxed text-text-muted">Practise actively, plan the week and keep everything around each subject connected.</p>
           </div>
           <div className="reveal-stagger mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {featureHighlights.map((feature) => (

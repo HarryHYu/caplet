@@ -40,8 +40,8 @@ const RuleOf72 = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Savings and growth</span>
-              <h1 className="minimal-page-title">Rule of 72.</h1>
+              <span className="section-kicker">Money tools · Savings &amp; Growth</span>
+              <h1 className="minimal-page-title">Rule of 72</h1>
               <p className="minimal-page-description">
                 Divide 72 by an interest rate to find how many years it takes to double your money, or work it the other way around.
               </p>

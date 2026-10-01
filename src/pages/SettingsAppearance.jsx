@@ -35,7 +35,7 @@ export default function SettingsAppearance() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">make it yours</p>
+        <p className="section-kicker">Make it yours</p>
         <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Appearance</h2>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">
           Choose how Caplet feels across every page. Your preference is saved on this device.

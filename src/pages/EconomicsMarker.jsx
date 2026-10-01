@@ -388,7 +388,7 @@ export default function EconomicsMarker() {
         ) : (
           <>
             <header className="minimal-page-header reveal">
-              <span className="section-kicker">capletmark</span>
+              <span className="section-kicker">CapletMark</span>
               <h1 className="minimal-page-title">Mark my HSC Economics answer.</h1>
               <p className="minimal-page-description">
                 Paste an answer, get an estimated mark, what it did well, what was missing, and a stronger model answer — instantly.

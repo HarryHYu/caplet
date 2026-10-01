@@ -39,8 +39,8 @@ const InflationCalculator = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools, savings and growth</span>
-              <h1 className="minimal-page-title">Inflation Calculator.</h1>
+              <span className="section-kicker">Money tools · Savings &amp; Growth</span>
+              <h1 className="minimal-page-title">Inflation calculator</h1>
               <p className="minimal-page-description">
                 See how inflation erodes purchasing power (or inflates future costs) over time.
               </p>
@@ -83,7 +83,7 @@ const InflationCalculator = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 <div>
-                  <label htmlFor="infl-rate" className="text-sm font-bold text-text-dim mb-3 block">Annual Inflation Rate (%)</label>
+                  <label htmlFor="infl-rate" className="text-sm font-bold text-text-dim mb-3 block">Annual inflation rate (%)</label>
                   <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                     <input id="infl-rate"
                       type="number" min="0" max="50" step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="3.0"
@@ -95,7 +95,7 @@ const InflationCalculator = () => {
                   <p className="text-xs text-text-dim mt-2">AU long-run average is roughly 3%.</p>
                 </div>
                 <div>
-                  <label htmlFor="infl-years" className="text-sm font-bold text-text-dim mb-3 block">Time Period</label>
+                  <label htmlFor="infl-years" className="text-sm font-bold text-text-dim mb-3 block">Time period</label>
                   <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                     <input id="infl-years"
                       type="number" min="1" max="100" step="1" value={years} onChange={(e) => setYears(e.target.value)} placeholder="Years"
@@ -110,7 +110,7 @@ const InflationCalculator = () => {
           </div>
 
           <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col relative overflow-hidden card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-8 relative z-10">Inflation Impact</h2>
+            <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-8 relative z-10">Inflation impact</h2>
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-bold text-text-error relative z-10">{result.error}</p>

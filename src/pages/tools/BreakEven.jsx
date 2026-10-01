@@ -46,22 +46,22 @@ const BreakEven = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools, Business</span>
-              <h1 className="minimal-page-title">Break-Even Calculator.</h1>
+              <span className="section-kicker">Money tools · Business</span>
+              <h1 className="minimal-page-title">Break-even calculator</h1>
               <p className="minimal-page-description">
                 Find out exactly how many units you need to sell before you start making money.
               </p>
             </div>
-            <Link to="/money/tools" className="btn-secondary text-sm px-8">Back to Tools</Link>
+            <Link to="/money/tools" className="btn-secondary text-sm px-8">&larr; Back to tools</Link>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Cost and Revenue Structure</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Cost and revenue structure</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
-                <label htmlFor="be-fixed-costs-per-period" className="text-sm font-semibold text-text-dim mb-4 block">Fixed Costs (per period)</label>
+                <label htmlFor="be-fixed-costs-per-period" className="text-sm font-semibold text-text-dim mb-4 block">Fixed costs (per period)</label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input id="be-fixed-costs-per-period" type="number" min="0" step="100" value={fixedCosts} onChange={(e) => setFixedCosts(e.target.value)} placeholder="0.00"
@@ -72,7 +72,7 @@ const BreakEven = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div>
-                  <label htmlFor="be-variable-cost-per-unit" className="text-sm font-semibold text-text-dim mb-4 block">Variable Cost per Unit</label>
+                  <label htmlFor="be-variable-cost-per-unit" className="text-sm font-semibold text-text-dim mb-4 block">Variable cost per unit</label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input id="be-variable-cost-per-unit" type="number" min="0" step="0.01" value={variableCost} onChange={(e) => setVariableCost(e.target.value)} placeholder="0.00"
@@ -82,7 +82,7 @@ const BreakEven = () => {
                   <p className="text-xs text-text-dim mt-2">Materials, packaging, commissions per unit.</p>
                 </div>
                 <div>
-                  <label htmlFor="be-selling-price-per-unit" className="text-sm font-semibold text-text-dim mb-4 block">Selling Price per Unit</label>
+                  <label htmlFor="be-selling-price-per-unit" className="text-sm font-semibold text-text-dim mb-4 block">Selling price per unit</label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input id="be-selling-price-per-unit" type="number" min="0" step="0.01" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} placeholder="0.00"
@@ -92,7 +92,7 @@ const BreakEven = () => {
                 </div>
               </div>
               <div className="max-w-xs">
-                <label htmlFor="be-target-profit-optional" className="text-sm font-semibold text-text-dim mb-4 block">Target Profit (optional)</label>
+                <label htmlFor="be-target-profit-optional" className="text-sm font-semibold text-text-dim mb-4 block">Target profit (optional)</label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                   <input id="be-target-profit-optional" type="number" min="0" step="100" value={targetProfit} onChange={(e) => setTargetProfit(e.target.value)} placeholder="0"
@@ -101,19 +101,19 @@ const BreakEven = () => {
                 </div>
                 <p className="text-xs text-text-dim mt-2">Shows units needed for this profit.</p>
               </div>
-              <button type="submit" className="btn-primary press w-full py-5 text-sm">Calculate Break-Even</button>
+              <button type="submit" className="btn-primary press w-full py-5 text-sm">Calculate break-even</button>
             </form>
           </div>
 
           <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col relative overflow-hidden card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-8 relative z-10">Break-Even Analysis</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-8 relative z-10">Break-even analysis</h2>
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-medium text-text-error relative z-10">{result.error}</p>
               ) : (
                 <div className="animate-rise space-y-8 relative z-10">
                   <div>
-                    <p className="text-xs font-semibold text-text-dim mb-4">Break-Even Units</p>
+                    <p className="text-xs font-semibold text-text-dim mb-4">Break-even units</p>
                     <p className="text-5xl font-black tracking-tighter text-text-primary">
                       {result.breakEvenUnits.toLocaleString()}
                     </p>
@@ -122,16 +122,16 @@ const BreakEven = () => {
                   <div className="pt-10 border-t border-line-soft/60 space-y-8">
                     <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-xs font-semibold text-text-dim mb-1">Break-Even Revenue</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Break-even revenue</p>
                         <p className="text-xl font-bold">{formatCurrency(result.breakEvenRevenue)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-semibold text-text-dim mb-1">Contribution Margin</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Contribution margin</p>
                         <p className="text-xl font-bold text-accent">{formatCurrency(result.contributionMargin)}/unit</p>
                       </div>
                     </div>
                     <div className="pt-4">
-                      <p className="text-xs font-semibold text-text-dim mb-2">Contribution Margin %</p>
+                      <p className="text-xs font-semibold text-text-dim mb-2">Contribution margin %</p>
                       <p className="text-2xl font-bold">{result.contributionMarginPct.toFixed(1)}%</p>
                       <p className="text-xs text-text-dim mt-1">The share of each sale that covers fixed costs.</p>
                     </div>

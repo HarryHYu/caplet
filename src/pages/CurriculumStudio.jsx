@@ -464,7 +464,7 @@ function ImportSubjectPack({ onCreated, onCancel }) {
       <div className="container-custom max-w-6xl">
         <header className="minimal-page-header">
           {onCancel && <button type="button" onClick={onCancel} className="btn-secondary mb-8"><ArrowRightIcon className="h-4 w-4 rotate-180" /> Back to subject packs</button>}
-          <span className="section-kicker">turn a syllabus into learning</span>
+          <span className="section-kicker">Turn a syllabus into learning</span>
           <h1 className="minimal-page-title">Build a subject pack.</h1>
           <p className="minimal-page-description">Import a trusted syllabus, review only the decisions that need human judgement, then publish adaptive practice and mastery tracking.</p>
         </header>

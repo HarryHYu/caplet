@@ -165,8 +165,8 @@ export default function AdminOperations() {
         <header className="minimal-page-header flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <Link to="/metrics" className="text-xs font-bold text-accent">← Platform metrics</Link>
-            <p className="section-kicker mt-4">release with evidence</p>
-            <h1 className="minimal-page-title">Operations.</h1>
+            <p className="section-kicker mt-4">Release with evidence</p>
+            <h1 className="minimal-page-title">Operations</h1>
             <p className="minimal-page-description">Database, migration, backup, and controlled-rollout evidence for administrators.</p>
           </div>
           <button type="button" onClick={load} disabled={loading} className="btn-secondary"><ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /> Refresh</button>

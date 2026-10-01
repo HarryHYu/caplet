@@ -179,8 +179,8 @@ const FinancialTwin = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools &rarr; Savings &amp; Growth</span>
-              <h1 className="minimal-page-title">Financial Twin.</h1>
+              <span className="section-kicker">Money tools · Savings &amp; Growth</span>
+              <h1 className="minimal-page-title">Financial twin</h1>
               <p className="minimal-page-description">
                 A simulation of your finances built from your real (for now, sample) transaction data &mdash;
                 projected forward as a <em>range</em> of scenarios, because nobody&rsquo;s future is a single line.
@@ -197,7 +197,7 @@ const FinancialTwin = () => {
           </div>
         ) : !isAuthenticated ? (
           <div className="max-w-xl surface-card block-cream md:p-8">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-4">Sign in to build your Financial Twin</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-4">Sign in to build your financial twin</h2>
             <p className="text-text-muted leading-relaxed mb-8">
               The twin runs on data you consent to share and the figures saved on your Caplet profile.
               Log in to get started.

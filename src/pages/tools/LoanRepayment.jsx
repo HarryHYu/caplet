@@ -48,8 +48,8 @@ const LoanRepayment = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Loan repayments</span>
-              <h1 className="minimal-page-title">Loan repayments.</h1>
+              <span className="section-kicker">Money tools · Debt &amp; Loans</span>
+              <h1 className="minimal-page-title">Loan repayment calculator</h1>
               <p className="minimal-page-description">
                 See your monthly payment, total interest, and how long it takes to clear the loan.
               </p>
@@ -62,11 +62,11 @@ const LoanRepayment = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Loan Details</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Loan details</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="loan-amount" className="text-sm font-semibold text-text-dim mb-4 block">
-                  Loan Amount (AUD)
+                  Loan amount (AUD)
                 </label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -86,7 +86,7 @@ const LoanRepayment = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div>
                   <label htmlFor="loan-rate" className="text-sm font-semibold text-text-dim mb-4 block">
-                    Annual Rate (%)
+                    Annual rate (%)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input id="loan-rate"
@@ -106,7 +106,7 @@ const LoanRepayment = () => {
 
                 <div>
                   <label htmlFor="loan-term" className="text-sm font-semibold text-text-dim mb-4 block">
-                    Loan Term (Years)
+                    Loan term (years)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input id="loan-term"
@@ -125,13 +125,13 @@ const LoanRepayment = () => {
               </div>
 
               <button type="submit" className="btn-primary press w-full py-5 mt-4 press">
-                Calculate Repayments
+                Calculate repayments
               </button>
             </form>
           </div>
 
           <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Your Results</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Your results</h2>
 
             {result ? (
               result.error ? (
@@ -140,7 +140,7 @@ const LoanRepayment = () => {
                 <>
                   <div className="animate-rise space-y-6">
                     <div>
-                      <p className="text-xs font-semibold text-text-dim mb-3">Monthly Payment</p>
+                      <p className="text-xs font-semibold text-text-dim mb-3">Monthly payment</p>
                       <p className="text-5xl font-display font-extrabold tracking-tight text-text-primary">
                         {formatCurrency(result.monthlyPayment)}
                       </p>
@@ -149,11 +149,11 @@ const LoanRepayment = () => {
                     <div className="space-y-8">
                       <div className="flex justify-between items-end">
                         <div>
-                          <p className="text-xs font-semibold text-text-dim mb-1">Total Paid</p>
+                          <p className="text-xs font-semibold text-text-dim mb-1">Total paid</p>
                           <p className="text-xl font-bold">{formatCurrency(result.totalPayments)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-semibold text-text-dim mb-1">Total Interest</p>
+                          <p className="text-xs font-semibold text-text-dim mb-1">Total interest</p>
                           <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
                         </div>
                       </div>

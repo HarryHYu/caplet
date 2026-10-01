@@ -329,7 +329,7 @@ export default function Revision() {
             await api.categorizeSavedSlides();
             await refetch();
         } catch (e) {
-            setOrganizeError(e?.message || 'Could not organize right now.');
+            setOrganizeError(e?.message || 'Could not organise right now.');
         } finally {
             setOrganizing(false);
         }
@@ -371,10 +371,10 @@ export default function Revision() {
             <div className="container-custom">
                 <header className="minimal-page-header flex flex-col md:flex-row md:items-end justify-between gap-8 reveal">
                     <div>
-                        <span className="section-kicker">your revision</span>
-                        <h1 className="minimal-page-title">Archived slides.</h1>
+                        <span className="section-kicker">Your revision</span>
+                        <h1 className="minimal-page-title">Archived slides</h1>
                         <p className="minimal-page-description">
-                            Every slide you've flagged, organized into topics by AI.
+                            Every slide you've flagged, organised into topics by AI.
                         </p>
                     </div>
                     {savedSlides.length > 0 && (
@@ -385,7 +385,7 @@ export default function Revision() {
                             className="btn-secondary focus-ring card-lift flex items-center gap-2 disabled:opacity-40"
                         >
                             <BookmarkIcon className="w-4 h-4" />
-                            {organizing ? 'Organizing…' : 'Organize with AI'}
+                            {organizing ? 'Organising…' : 'Organise with AI'}
                         </button>
                     )}
                 </header>

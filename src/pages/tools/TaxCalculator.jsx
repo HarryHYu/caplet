@@ -52,21 +52,21 @@ const TaxCalculator = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools, compliance</span>
-              <h1 className="minimal-page-title">Tax Architecture</h1>
+              <span className="section-kicker">Money tools · Tax &amp; Income</span>
+              <h1 className="minimal-page-title">Income tax calculator</h1>
               <p className="minimal-page-description">
-                Work out your fiscal obligation and net outcome based on residency brackets.
+                Estimate the income tax and Medicare levy on your annual income — and what you keep.
               </p>
             </div>
             <Link to="/money/tools" className="btn-secondary text-sm px-8 press">
-              &larr; Back to Tools
+              &larr; Back to tools
             </Link>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Assessment Parameters</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Your income</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <FormField id="tax-year" label="Financial year">
                 {(fieldProps) => (
@@ -111,19 +111,19 @@ const TaxCalculator = () => {
               </div>
 
               <button type="submit" className="btn-primary press w-full py-5 press">
-                Calculate Tax
+                Calculate tax
               </button>
             </form>
           </div>
 
           <div className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Fiscal Summary</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Your tax estimate</h2>
 
             <div aria-live="polite" aria-atomic="true" className="flex-1">
             {result ? (
               <div className="space-y-6">
                 <div>
-                  <p className="text-xs font-semibold text-text-dim mb-3">Estimated liability</p>
+                  <p className="text-xs font-semibold text-text-dim mb-3">Estimated tax</p>
                   <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
                     {formatCurrency(result.totalTax)}
                   </p>

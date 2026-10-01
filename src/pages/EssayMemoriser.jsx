@@ -3773,7 +3773,7 @@ function EssayWorkspace({ essayId }) {
 
                 <div className={`flex-col lg:flex-row lg:items-end justify-between gap-6 mb-6 ${speedRunning ? 'hidden' : 'flex'}`}>
                     <div className="min-w-0">
-                        <span className="section-kicker">essay</span>
+                        <span className="section-kicker">Essay</span>
                         <h1 className="minimal-page-title break-words">{essay.title}</h1>
                         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-text-dim">
                             <span>{wordCountOf(essay.originalText)} words</span>
@@ -4150,7 +4150,7 @@ function EssayLibrary() {
         <div className="minimal-page pb-16 selection:bg-accent selection:text-accent-contrast">
             <div className="container-custom">
                 <header className="minimal-page-header reveal">
-                    <span className="section-kicker">essay memoriser</span>
+                    <span className="section-kicker">Essay memoriser</span>
                     <h1 className="minimal-page-title">Learn it by heart.</h1>
                     <p className="minimal-page-description">
                         Every essay is its own workspace: read it, edit it, and practise it until it is word-perfect and exam-ready.

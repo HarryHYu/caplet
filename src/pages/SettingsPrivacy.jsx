@@ -648,7 +648,7 @@ export default function SettingsPrivacy() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your data, your choices</p>
+        <p className="section-kicker">Your data, your choices</p>
         <h2 className="text-3xl font-display font-extrabold tracking-tight text-text-primary">Privacy & data</h2>
         <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-text-muted">Inspect what Caplet stores, control optional processing, download your information, or delete it permanently.</p>
       </div>

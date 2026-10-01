@@ -97,10 +97,10 @@ function QueueScreen({ queue, onStart }) {
   const activeGroups = queue.groups.filter((group) => group.count > 0);
   if (!queue.items.length) {
     return (
-      <div className="mx-auto max-w-5xl">
+      <div>
         <header className="minimal-page-header">
-          <span className="section-kicker">ready when memory is</span>
-          <h1 className="minimal-page-title">Review.</h1>
+          <span className="section-kicker">Ready when memory is</span>
+          <h1 className="minimal-page-title">Review</h1>
           <p className="minimal-page-description">
             Caplet has combined what is most likely to fade, so your time is focused where it matters.
           </p>
@@ -117,9 +117,9 @@ function QueueScreen({ queue, onStart }) {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div>
       <header className="minimal-page-header">
-        <span className="section-kicker">ready when memory is</span>
+        <span className="section-kicker">Ready when memory is</span>
         <h1 className="minimal-page-title">Your review is lined up.</h1>
         <p className="minimal-page-description">
           Caplet has combined what is most likely to fade, so your time is focused where it matters.
@@ -241,7 +241,7 @@ function RepairScreen({ item, previousAnswer, value, setValue, submitted, onSubm
   return (
     <div>
       <header className="minimal-page-header">
-        <span className="section-kicker">mistake-led replay</span>
+        <span className="section-kicker">Mistake-led replay</span>
         <h1 className="minimal-page-title">Fix what slipped.</h1>
         <p className="minimal-page-description">Let’s repair this idea and make it stick.</p>
       </header>

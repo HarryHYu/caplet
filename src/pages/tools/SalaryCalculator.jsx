@@ -25,25 +25,25 @@ const SalaryCalculator = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools, compensation</span>
-              <h1 className="minimal-page-title">Salary Calculator</h1>
+              <span className="section-kicker">Money tools · Tax &amp; Income</span>
+              <h1 className="minimal-page-title">Salary calculator</h1>
               <p className="minimal-page-description">
                 Work out your net pay and see how your total compensation package breaks down.
               </p>
             </div>
             <Link to="/money/tools" className="btn-secondary text-sm px-8">
-              Back to Tools
+              &larr; Back to tools
             </Link>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Compensation Inputs</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Compensation inputs</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="gross-salary" className="text-sm font-semibold text-text-dim mb-4 block">
-                  Gross Annual Salary (AUD)
+                  Gross annual salary (AUD)
                 </label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -64,7 +64,7 @@ const SalaryCalculator = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="super-rate" className="text-sm font-semibold text-text-dim mb-4 block">
-                    Superannuation Rate (%)
+                    Superannuation rate (%)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
@@ -98,13 +98,13 @@ const SalaryCalculator = () => {
               </div>
 
               <button type="submit" className="btn-primary press w-full py-4 mt-4 press">
-                Calculate Breakdown
+                Calculate breakdown
               </button>
             </form>
           </div>
 
           <div className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Net Projection</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Net projection</h2>
 
             <div aria-live="polite" aria-atomic="true" className="flex-1">
             {result ? (
@@ -113,7 +113,7 @@ const SalaryCalculator = () => {
               ) : (
                 <div className="animate-rise space-y-6">
                   <div>
-                    <p className="text-xs font-semibold text-text-muted mb-3">Annual Net Pay</p>
+                    <p className="text-xs font-semibold text-text-muted mb-3">Annual net pay</p>
                     <p className="text-5xl font-black tracking-tight text-text-primary">
                       {formatCurrency(result.netPay)}
                     </p>
@@ -121,13 +121,13 @@ const SalaryCalculator = () => {
 
                   <div className="space-y-6">
                     <div className="flex justify-between items-end">
-                      <p className="text-xs font-semibold text-text-muted">Gross Annual</p>
+                      <p className="text-xs font-semibold text-text-muted">Gross annual</p>
                       <p className="text-xl font-bold">{formatCurrency(result.gross)}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-surface-raised rounded-2xl p-5">
-                        <p className="text-xs font-semibold text-text-muted mb-1">Income Tax</p>
+                        <p className="text-xs font-semibold text-text-muted mb-1">Income tax</p>
                         <p className="text-lg font-bold">{formatCurrency(result.incomeTax)}</p>
                       </div>
                       <div className="bg-surface-raised rounded-2xl p-5">

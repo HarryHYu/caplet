@@ -52,25 +52,25 @@ const MortgageCalculator = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools / Mortgage</span>
-              <h1 className="minimal-page-title">Mortgage Calculator.</h1>
+              <span className="section-kicker">Money tools · Debt &amp; Loans</span>
+              <h1 className="minimal-page-title">Mortgage calculator</h1>
               <p className="minimal-page-description">
                 Work out your repayments, total interest, and the real cost of a property loan over its full term.
               </p>
             </div>
             <Link to="/money/tools" className="btn-secondary text-sm px-8">
-              &larr; Back to Tools
+              &larr; Back to tools
             </Link>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Loan Details</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Loan details</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="mort-amount" className="text-sm font-semibold text-text-dim mb-3 block">
-                  Property Loan Amount (AUD)
+                  Property loan amount (AUD)
                 </label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -90,7 +90,7 @@ const MortgageCalculator = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="mort-rate" className="text-sm font-semibold text-text-dim mb-3 block">
-                    Annual Rate (%)
+                    Annual rate (%)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input id="mort-rate"
@@ -110,7 +110,7 @@ const MortgageCalculator = () => {
 
                 <div>
                   <label htmlFor="mort-term" className="text-sm font-semibold text-text-dim mb-3 block">
-                    Loan Term
+                    Loan term
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input id="mort-term"
@@ -129,13 +129,13 @@ const MortgageCalculator = () => {
               </div>
 
               <button type="submit" className="btn-primary press w-full py-4 mt-4 press">
-                Calculate Repayments
+                Calculate repayments
               </button>
             </form>
           </div>
 
           <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Your Repayments</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-8">Your repayments</h2>
 
             {result ? (
               result.error ? (
@@ -144,7 +144,7 @@ const MortgageCalculator = () => {
                 <>
                   <div className="animate-rise space-y-6">
                     <div>
-                      <p className="text-xs font-semibold text-text-dim mb-3">Monthly Repayment</p>
+                      <p className="text-xs font-semibold text-text-dim mb-3">Monthly repayment</p>
                       <p className="text-5xl font-display font-extrabold tracking-tight text-blue">
                         {formatCurrency(result.monthlyPayment)}
                       </p>
@@ -164,11 +164,11 @@ const MortgageCalculator = () => {
                     <div className="bg-surface-raised rounded-2xl p-6 space-y-6">
                       <div className="flex justify-between items-end">
                         <div>
-                          <p className="text-xs font-semibold text-text-dim mb-1">Total Repaid</p>
+                          <p className="text-xs font-semibold text-text-dim mb-1">Total repaid</p>
                           <p className="text-xl font-bold">{formatCurrency(result.totalPayments)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-semibold text-text-dim mb-1">Total Interest</p>
+                          <p className="text-xs font-semibold text-text-dim mb-1">Total interest</p>
                           <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
                         </div>
                       </div>

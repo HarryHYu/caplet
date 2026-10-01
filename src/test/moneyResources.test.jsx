@@ -19,7 +19,7 @@ describe('Money resource hub', () => {
   it('renders the curated catalog without duplicating spotlight links', () => {
     render(<MemoryRouter><MoneyResources /></MemoryRouter>);
 
-    expect(screen.getByRole('heading', { name: 'The Money resource hub.' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'The Money resource hub' })).toBeInTheDocument();
     expect(screen.getByText(`${MONEY_RESOURCES.length} bookmarks · ${MONEY_RESOURCE_CATEGORIES.length} categories`)).toBeInTheDocument();
     // Avoid recomputing accessible names for the entire 200+ card catalogue.
     // That made this assertion exceed the suite-wide five-second timeout.

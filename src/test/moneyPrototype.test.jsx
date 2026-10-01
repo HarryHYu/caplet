@@ -189,9 +189,9 @@ describe('Money tool availability', () => {
   it('does not advertise gated tools that would immediately redirect', () => {
     render(<MemoryRouter><FinancialTools /></MemoryRouter>);
 
-    expect(screen.queryByRole('heading', { name: 'Financial Twin' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Debt Sequencer' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Savings Goal Calculator' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Financial twin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Debt sequencer' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Savings goal calculator' })).toBeInTheDocument();
   });
 
   it('shows gated tools when their flags and authentication allow access', () => {
@@ -202,8 +202,8 @@ describe('Money tool availability', () => {
     };
     render(<MemoryRouter><FinancialTools /></MemoryRouter>);
 
-    expect(screen.getByRole('heading', { name: 'Financial Twin' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Debt Sequencer' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Financial twin' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Debt sequencer' })).toBeInTheDocument();
   });
 });
 

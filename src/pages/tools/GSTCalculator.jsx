@@ -50,21 +50,21 @@ const GSTCalculator = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Australian tax helper</span>
-              <h1 className="minimal-page-title">GST Calculator</h1>
+              <span className="section-kicker">Money tools · Tax &amp; Income</span>
+              <h1 className="minimal-page-title">GST calculator</h1>
               <p className="minimal-page-description">
                 Add or remove 10% goods and services tax with statutory precision.
               </p>
             </div>
             <Link to="/money/tools" className="btn-secondary text-sm px-8">
-              &larr; Back to Tools
+              &larr; Back to tools
             </Link>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Transaction Details</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Transaction details</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="gst-amount" className="text-sm font-semibold text-text-dim mb-3 block">

@@ -252,6 +252,9 @@ export default function Dashboard() {
             : dashboardAction.title;
     const primaryLabel = dashboardAction.type === 'resume' ? 'Continue' : 'Start';
     const activeSubject = nextStudyTask?.subjectLabel || 'Economics';
+    // The set-up prompt is not an Economics action yet, so it keeps its own
+    // eyebrow instead of claiming a subject the student has not chosen.
+    const actionEyebrow = dashboardAction.type === 'study_task' && !nextStudyTask ? dashboardAction.eyebrow : activeSubject;
     const week = dashboardWeek(studyMomentum);
     const weekActiveDays = week.filter((day) => day.count > 0).length;
     const dateLabel = new Intl.DateTimeFormat('en-AU', {
@@ -282,9 +285,14 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                <section aria-label="Today’s study overview" className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+                {/* Both grids spell out minmax(0,…) columns on every breakpoint:
+                    a grid track's automatic minimum is its content's min-content
+                    width, and the nowrap `truncate` rows in "This week" are wider
+                    than a phone, so an implicit auto column grew past the viewport
+                    and the whole page scrolled sideways. */}
+                <section aria-label="Today’s study overview" className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
                     <div className="animate-rise surface-card flex flex-col rounded-3xl p-7 md:p-9">
-                        <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-accent">{activeSubject}</p>
+                        <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-accent">{actionEyebrow}</p>
                         <h2 className="mt-4 max-w-md font-display text-3xl font-extrabold tracking-[-0.025em] text-text-primary md:text-4xl">{primaryTitle}</h2>
                         <p className="mt-3 max-w-lg text-lg font-medium text-text-muted">{dashboardAction.detail}</p>
                         <div className="mt-7 flex flex-wrap items-center gap-4">
@@ -323,7 +331,7 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="grid content-start gap-6">
+                    <div className="grid grid-cols-[minmax(0,1fr)] content-start gap-6">
                         <div className="animate-rise surface-card" style={{ animationDelay: '70ms' }}>
                             <div className="flex items-center justify-between gap-4">
                                 <h2 id="my-subjects-heading" className="card-section-title mb-0">My subjects</h2>

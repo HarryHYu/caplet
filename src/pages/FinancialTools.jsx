@@ -8,7 +8,7 @@ import ToolCard from '../components/ToolCard';
 
 const tools = [
   {
-    title: 'Income Tax Calculator',
+    title: 'Income tax calculator',
     description: 'Estimate your annual Australian income tax, Medicare levy, and net pay.',
     path: '/money/tools/tax-calculator',
     category: 'Tax & Income',
@@ -19,7 +19,7 @@ const tools = [
     ),
   },
   {
-    title: 'Salary Calculator',
+    title: 'Salary calculator',
     description: 'Calculate your take-home pay from gross salary, including tax, Medicare, and super.',
     path: '/money/tools/salary',
     category: 'Tax & Income',
@@ -30,7 +30,7 @@ const tools = [
     ),
   },
   {
-    title: 'GST Calculator',
+    title: 'GST calculator',
     description: 'Add or remove GST (10%) from amounts for Australian Goods and Services Tax calculations.',
     path: '/money/tools/gst',
     category: 'Tax & Income',
@@ -41,7 +41,7 @@ const tools = [
     ),
   },
   {
-    title: 'Budget Planner',
+    title: 'Budget planner',
     description: 'Plan your monthly budget and track spending across different categories.',
     path: '/money/tools/budget-planner',
     category: 'Budgeting',
@@ -52,7 +52,7 @@ const tools = [
     ),
   },
   {
-    title: 'Emergency Fund Calculator',
+    title: 'Emergency fund calculator',
     description: 'Calculate how much you should have in your emergency fund to cover unexpected expenses.',
     path: '/money/tools/emergency-fund',
     category: 'Budgeting',
@@ -63,7 +63,7 @@ const tools = [
     ),
   },
   {
-    title: 'Savings Goal Calculator',
+    title: 'Savings goal calculator',
     description: 'Calculate how long it takes to reach your savings goal with contributions and interest.',
     path: '/money/tools/savings-goal',
     category: 'Savings & Growth',
@@ -74,7 +74,7 @@ const tools = [
     ),
   },
   {
-    title: 'Compound Interest Calculator',
+    title: 'Compound interest calculator',
     description: 'See how your money grows with compound interest and regular contributions over time.',
     path: '/money/tools/compound-interest',
     category: 'Savings & Growth',
@@ -85,7 +85,7 @@ const tools = [
     ),
   },
   {
-    title: 'Super Contribution Calculator',
+    title: 'Super contribution calculator',
     description: 'Project your superannuation balance with employer and personal contributions.',
     path: '/money/tools/super-contribution',
     category: 'Savings & Growth',
@@ -96,7 +96,7 @@ const tools = [
     ),
   },
   {
-    title: 'Loan Repayment Calculator',
+    title: 'Loan repayment calculator',
     description: 'Calculate monthly loan repayments, total interest, and total amount payable.',
     path: '/money/tools/loan-repayment',
     category: 'Debt & Loans',
@@ -107,7 +107,7 @@ const tools = [
     ),
   },
   {
-    title: 'Mortgage Calculator',
+    title: 'Mortgage calculator',
     description: 'Calculate home loan repayments, total interest, and explore different payment frequencies.',
     path: '/money/tools/mortgage',
     category: 'Debt & Loans',
@@ -118,7 +118,7 @@ const tools = [
     ),
   },
   {
-    title: 'Credit Card Payoff',
+    title: 'Credit card payoff',
     description: 'See exactly how long it takes to clear your balance and how much interest you can save by paying more.',
     path: '/money/tools/credit-card-payoff',
     category: 'Debt & Loans',
@@ -129,7 +129,7 @@ const tools = [
     ),
   },
   {
-    title: 'Financial Twin',
+    title: 'Financial twin',
     description: 'A live simulation of your finances, projected 10\u201320 years ahead as ranges of scenarios \u2014 not a single guess.',
     path: '/money/tools/financial-twin',
     category: 'Savings & Growth',
@@ -140,7 +140,7 @@ const tools = [
     ),
   },
   {
-    title: 'Debt Sequencer',
+    title: 'Debt sequencer',
     description: 'Rank your debts by what they actually cost to carry, with HECS/HELP handled on its own terms.',
     path: '/money/tools/debt-sequencer',
     category: 'Debt & Loans',
@@ -151,7 +151,7 @@ const tools = [
     ),
   },
   {
-    title: 'Debt-to-Income Ratio',
+    title: 'Debt-to-income ratio',
     description: 'Calculate your DTI ratio, the first thing lenders check before approving any loan.',
     path: '/money/tools/debt-to-income',
     category: 'Debt & Loans',
@@ -162,7 +162,7 @@ const tools = [
     ),
   },
   {
-    title: 'Capital Gains Estimator',
+    title: 'Capital gains estimator',
     description: 'Estimate CGT on shares, property, or other assets under Australian tax rules including the 50% discount.',
     path: '/money/tools/capital-gains',
     category: 'Tax & Income',
@@ -173,7 +173,7 @@ const tools = [
     ),
   },
   {
-    title: 'Inflation Calculator',
+    title: 'Inflation calculator',
     description: 'See how inflation erodes purchasing power over time, or how much something will cost in the future.',
     path: '/money/tools/inflation',
     category: 'Savings & Growth',
@@ -195,7 +195,7 @@ const tools = [
     ),
   },
   {
-    title: 'Net Worth Calculator',
+    title: 'Net worth calculator',
     description: 'Add up all your assets and liabilities to find your true net worth and your debt-to-asset ratio.',
     path: '/money/tools/net-worth',
     category: 'Wealth & Investing',
@@ -206,7 +206,7 @@ const tools = [
     ),
   },
   {
-    title: 'ROI Calculator',
+    title: 'ROI calculator',
     description: 'Calculate total return on investment and annualised CAGR for any asset (shares, property, business, or otherwise).',
     path: '/money/tools/roi',
     category: 'Wealth & Investing',
@@ -217,7 +217,7 @@ const tools = [
     ),
   },
   {
-    title: 'FIRE Number Calculator',
+    title: 'FIRE number calculator',
     description: 'Calculate how much you need to retire early and how long it will take you to get there.',
     path: '/money/tools/fire-number',
     category: 'Wealth & Investing',
@@ -229,7 +229,7 @@ const tools = [
     ),
   },
   {
-    title: 'Rent vs Buy Calculator',
+    title: 'Rent vs buy calculator',
     description: 'Compare the true total cost of renting versus buying a home over any time horizon.',
     path: '/money/tools/rent-vs-buy',
     category: 'Property',
@@ -240,7 +240,7 @@ const tools = [
     ),
   },
   {
-    title: 'Break-Even Calculator',
+    title: 'Break-even calculator',
     description: 'Find how many units you need to sell to cover costs and what it takes to hit a profit target.',
     path: '/money/tools/break-even',
     category: 'Business',

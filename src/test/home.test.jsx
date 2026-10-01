@@ -42,9 +42,9 @@ describe('public homepage', () => {
     render(<MemoryRouter><Home /></MemoryRouter>);
 
     expect(screen.getByRole('heading', { name: /Study, practise, and stay on track/i })).toBeInTheDocument();
-    expect(screen.getByText('Lesson builder')).toBeInTheDocument();
-    expect(screen.getByText('Live code IDE')).toBeInTheDocument();
-    expect(screen.getByText('AI lesson generation')).toBeInTheDocument();
+    expect(screen.getByText('Subjects and notes')).toBeInTheDocument();
+    expect(screen.getByText('Practice that adapts')).toBeInTheDocument();
+    expect(screen.getByText('Essay memoriser')).toBeInTheDocument();
   });
 
   it('does not fabricate a live learner count', () => {

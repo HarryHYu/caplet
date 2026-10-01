@@ -253,8 +253,8 @@ function ExamPracticePacksSection({ detail = false }) {
     <section className="mb-8">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="text-xs font-extrabold uppercase tracking-wide text-text-dim">Exam practice packs</div>
-          <h2 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-text-primary">
+          <p className="section-kicker">Exam practice packs</p>
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">
             Paper-style preparation for the transition and new syllabus
           </h2>
         </div>
@@ -313,8 +313,8 @@ function AssessmentPage() {
       <div className="container-custom">
         <BackLink to="/library/economics">Economics</BackLink>
         <section className="mb-8 max-w-3xl">
-          <p className="text-sm font-extrabold uppercase tracking-wide text-accent">Assessment guide</p>
-          <h1 className="minimal-page-title mt-2">Know what the course asks of you.</h1>
+          <p className="section-kicker">Assessment guide</p>
+          <h1 className="minimal-page-title">Know what the course asks of you.</h1>
           <p className="minimal-page-description">Use this as a planning reference for HSC-style practice and school assessments. Check the official links below for the current rules.</p>
         </section>
         <section className="grid gap-4 md:grid-cols-3">{assessmentPages.map((page) => <Link key={page.id} to={`/library/economics/assessment/${page.id}`} className="card-lift focus-ring group rounded-2xl border border-line-soft bg-surface-raised p-6 hover:border-accent"><p className="text-xs font-extrabold uppercase tracking-wide text-text-dim">{page.eyebrow}</p><h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight group-hover:text-accent">{page.title}</h2><p className="mt-3 text-sm font-medium leading-relaxed text-text-muted">{page.body}</p><span className="mt-6 inline-flex items-center gap-1 text-sm font-extrabold text-accent">Open <ArrowRightIcon className="h-4 w-4" /></span></Link>)}</section>
@@ -338,7 +338,7 @@ function YearPage({ year }) {
   const areas = economicsResourceLibrary.focusAreas.filter((area) => area.year === year);
   return (
     <main className="min-h-screen bg-surface-body pb-28 pt-24 text-text-primary md:pt-28">
-      <div className="container-custom max-w-6xl">
+      <div className="container-custom">
         <BackLink to="/library/economics">Economics</BackLink>
         <LearningPageHeader eyebrow={`Year ${year}`} title={year === 11 ? 'Build the economic toolkit.' : 'Practise the HSC course.'} description="Use the recommended next action or choose a topic. Each topic shows its complete activity set before you begin." className="mb-10" />
         <EconomicsNextAction source={`library_year_${year}`} className="mb-10" />
@@ -376,11 +376,11 @@ function PracticePlayer({ area }) {
 }
 
 function ExamPracticePage() {
-  return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom max-w-5xl"><BackLink to="/library/economics">Economics</BackLink><section className="mb-10 max-w-3xl"><p className="text-sm font-extrabold uppercase tracking-wide text-accent">Timed practice</p><h1 className="mt-2 font-display text-4xl font-extrabold tracking-tight md:text-5xl">Choose an exam pack.</h1><p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Open a pack to browse its sections, or begin a focused timed written session straight away.</p></section><ExamPracticePacksSection /></div></main>;
+  return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom"><BackLink to="/library/economics">Economics</BackLink><section className="mb-10 max-w-3xl"><p className="section-kicker">Timed practice</p><h1 className="minimal-page-title">Choose an exam pack.</h1><p className="mt-4 text-base font-medium leading-relaxed text-text-muted">Open a pack to browse its sections, or begin a focused timed written session straight away.</p></section><ExamPracticePacksSection /></div></main>;
 }
 
 function ExamPackDetailPage({ pack }) {
-  return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom max-w-5xl"><BackLink to="/library/economics/exam-practice">Exam practice</BackLink><ExamPracticePackCard pack={pack} detail /></div></main>;
+  return <main className="min-h-screen bg-surface-body pb-20 pt-24 text-text-primary"><div className="container-custom"><BackLink to="/library/economics/exam-practice">Exam practice</BackLink><ExamPracticePackCard pack={pack} detail /></div></main>;
 }
 
 export default function ResourceLibrary() {

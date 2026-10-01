@@ -52,8 +52,8 @@ const SavingsGoal = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Savings goal</span>
-              <h1 className="minimal-page-title">Reach your <span className="hl-swipe hl-blue">target</span>.</h1>
+              <span className="section-kicker">Money tools · Savings &amp; Growth</span>
+              <h1 className="minimal-page-title">Savings goal calculator</h1>
               <p className="minimal-page-description">
                 Set a savings goal and see how long it takes to get there.
               </p>
@@ -71,7 +71,7 @@ const SavingsGoal = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="savings-goal-target" className="text-sm font-semibold text-text-dim mb-4 block">
-                    Target Amount (AUD)
+                    Target amount (AUD)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -91,7 +91,7 @@ const SavingsGoal = () => {
 
                 <div>
                   <label htmlFor="savings-goal-current" className="text-sm font-semibold text-text-dim mb-4 block">
-                    Current Savings
+                    Current savings
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -113,7 +113,7 @@ const SavingsGoal = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div>
                   <label htmlFor="savings-goal-monthly" className="text-sm font-semibold text-text-dim mb-4 block">
-                    Monthly Contribution
+                    Monthly contribution
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
@@ -132,7 +132,7 @@ const SavingsGoal = () => {
 
                 <div>
                   <label htmlFor="savings-goal-rate" className="text-sm font-semibold text-text-dim mb-4 block">
-                    Interest Rate (%)
+                    Interest rate (%)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
@@ -153,7 +153,7 @@ const SavingsGoal = () => {
               </div>
 
               <button type="submit" className="btn-primary press w-full py-5 text-base mt-4 press">
-                Calculate Timeline
+                Calculate timeline
               </button>
             </form>
           </div>

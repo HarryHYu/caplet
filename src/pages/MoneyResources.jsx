@@ -160,7 +160,7 @@ export default function MoneyResources() {
           <span className="section-kicker">Money · research, clearly sorted</span>
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="minimal-page-title">The Money resource hub.</h1>
+              <h1 className="minimal-page-title">The Money resource hub</h1>
               <p className="minimal-page-description">A growing shelf of useful websites for data, markets, investing, work and everyday money. Search one place instead of starting from scratch.</p>
             </div>
             <div className="flex shrink-0 items-center gap-2 rounded-2xl border border-line-soft bg-surface-raised px-4 py-3 text-sm font-bold text-text-primary shadow-card">

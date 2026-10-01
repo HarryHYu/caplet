@@ -213,11 +213,11 @@ export default function AssessmentSchedule() {
 
   return (
     <div className="min-h-screen bg-surface-body pb-24 pt-24 text-text-primary selection:bg-accent selection:text-accent-contrast md:pt-28">
-      <div className="container-custom max-w-5xl">
+      <div className="container-custom">
         <header className="minimal-page-header flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
-            <p className="text-sm font-extrabold text-accent">Year 11 · 2026</p>
-            <h1 className="minimal-page-title mt-2">Upcoming assessment tasks</h1>
+            <span className="section-kicker">Year 11 · 2026</span>
+            <h1 className="minimal-page-title">Upcoming assessment tasks</h1>
             <p className="minimal-page-description">See upcoming tasks for your chosen subjects, then adjust your personal schedule.</p>
           </div>
           <div className="flex flex-wrap gap-3"><Link to="/assessment-log" className="btn-secondary w-fit">Results</Link><button type="button" onClick={openAdd} className="btn-primary w-fit"><PlusIcon className="h-4 w-4" aria-hidden="true" /> Add assessment</button></div>
@@ -251,8 +251,8 @@ export default function AssessmentSchedule() {
             <div><p className="text-xs font-extrabold text-text-dim">Date order</p><h2 id="timeline-heading" className="mt-1 font-display text-2xl font-extrabold tracking-tight">Assessment timeline</h2><p className="mt-2 text-sm font-medium text-text-muted">Showing {filteredTasks.length} of {subjectTasks.length} tasks.</p></div>
             <div className="flex w-full flex-col gap-3 rounded-2xl bg-surface-soft p-3 sm:w-auto sm:flex-row sm:items-end" aria-label="Timeline filters">
               <div className="flex items-center gap-2 text-xs font-extrabold text-text-dim sm:pb-2"><FunnelIcon className="h-4 w-4" aria-hidden="true" /> Filter</div>
-              <label className="grid gap-1 text-xs font-bold text-text-muted"><span>Subject</span><select value={subjectFilter} onChange={(event) => setSubjectFilter(event.target.value)} className="min-h-10 rounded-lg border border-line-soft bg-surface-raised px-3 text-sm font-bold text-text-primary outline-none focus:border-accent"><option value="all">{mySubjects.length ? 'All my subjects' : 'All subjects'}</option>{subjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}</select></label>
-              <label className="grid gap-1 text-xs font-bold text-text-muted"><span>View</span><select value={groupFilter} onChange={(event) => setGroupFilter(event.target.value)} className="min-h-10 rounded-lg border border-line-soft bg-surface-raised px-3 text-sm font-bold text-text-primary outline-none focus:border-accent"><option value="all">All tasks</option><option value="Term 3">Term 3</option><option value="Yearly exams">Yearly exams</option><option value="Other">Other</option></select></label>
+              <label className="grid gap-1 text-xs font-bold text-text-muted"><span>Subject</span><select value={subjectFilter} onChange={(event) => setSubjectFilter(event.target.value)} className="min-h-10 w-full min-w-0 rounded-lg border border-line-soft bg-surface-raised px-3 text-sm font-bold text-text-primary outline-none focus:border-accent"><option value="all">{mySubjects.length ? 'All my subjects' : 'All subjects'}</option>{subjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}</select></label>
+              <label className="grid gap-1 text-xs font-bold text-text-muted"><span>View</span><select value={groupFilter} onChange={(event) => setGroupFilter(event.target.value)} className="min-h-10 w-full min-w-0 rounded-lg border border-line-soft bg-surface-raised px-3 text-sm font-bold text-text-primary outline-none focus:border-accent"><option value="all">All tasks</option><option value="Term 3">Term 3</option><option value="Yearly exams">Yearly exams</option><option value="Other">Other</option></select></label>
             </div>
           </div>
 

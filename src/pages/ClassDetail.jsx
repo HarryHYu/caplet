@@ -191,7 +191,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-body">
         <div className="text-center max-w-md mx-auto px-6">
-          <span className="section-kicker mb-6">Sign In Required</span>
+          <span className="section-kicker mb-6">Sign in required</span>
           <h2 className="text-3xl font-semibold text-text-primary mb-6">
             Please Sign In <br />to Continue.
           </h2>
@@ -1616,7 +1616,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
           >
               <div className="flex items-start justify-between mb-10">
                 <div>
-                  <span className="section-kicker mb-2">Create Assignment</span>
+                  <span className="section-kicker mb-2">Create assignment</span>
                   <h2 id="new-assignment-heading" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">
                     New Assignment
                   </h2>
@@ -1737,7 +1737,7 @@ const ClassDetail = ({ initialTab = 'stream' }) => {
           >
               <div className="flex items-start justify-between mb-8">
                 <div>
-                  <span className="section-kicker mb-2">Add Teacher</span>
+                  <span className="section-kicker mb-2">Add teacher</span>
                   <h2 id="add-teacher-heading" className="font-display text-xl font-extrabold tracking-tight text-text-primary">
                     Add Teacher
                   </h2>

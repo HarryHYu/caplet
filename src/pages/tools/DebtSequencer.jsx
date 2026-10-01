@@ -118,8 +118,8 @@ const DebtSequencer = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools &rarr; Debt &amp; Loans</span>
-              <h1 className="minimal-page-title">Debt Sequencer.</h1>
+              <span className="section-kicker">Money tools · Debt &amp; Loans</span>
+              <h1 className="minimal-page-title">Debt sequencer</h1>
               <p className="minimal-page-description">
                 Compare what each of your debts actually costs to carry, so you can see which one a spare
                 dollar clears the most cost from &mdash; with HECS handled on its own terms, not as a credit card.
@@ -135,7 +135,7 @@ const DebtSequencer = () => {
           </div>
         ) : !isAuthenticated ? (
           <div className="max-w-xl surface-card block-cream md:p-8">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-4">Sign in to use the Debt Sequencer</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-4">Sign in to use the debt sequencer</h2>
             <p className="text-text-muted leading-relaxed mb-8">
               This tool reads the debts saved on your Caplet profile so you don&apos;t have to re-enter them, and
               saves your changes back. Log in to get started.

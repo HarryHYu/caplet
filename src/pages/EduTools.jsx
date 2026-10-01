@@ -86,7 +86,7 @@ const EduTools = () => {
           <span className="section-kicker">Learn it, then keep it</span>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <h1 className="minimal-page-title">Education tools.</h1>
+              <h1 className="minimal-page-title">Education tools</h1>
               <p className="minimal-page-description">
                 Free tools for practising and reviewing what you've learned — AI-marked answers, flagged slides, and essay practice.
               </p>

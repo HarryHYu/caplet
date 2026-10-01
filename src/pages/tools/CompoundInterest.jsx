@@ -40,8 +40,8 @@ const CompoundInterest = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Watch your money grow</span>
-              <h1 className="minimal-page-title">Compound Interest.</h1>
+              <span className="section-kicker">Money tools · Savings &amp; Growth</span>
+              <h1 className="minimal-page-title">Compound interest calculator</h1>
               <p className="minimal-page-description">
                 See how your savings grow with <span className="hl-swipe hl-blue">compounding</span> over time.
               </p>
@@ -54,12 +54,12 @@ const CompoundInterest = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Growth Parameters</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Growth parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="ci-principal" className="text-sm font-semibold text-text-muted mb-3 block">
-                    Starting Amount (AUD)
+                    Starting amount (AUD)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">$</span>
@@ -79,7 +79,7 @@ const CompoundInterest = () => {
 
                 <div>
                   <label htmlFor="ci-monthly" className="text-sm font-semibold text-text-muted mb-3 block">
-                    Monthly Contribution
+                    Monthly contribution
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">$</span>
@@ -101,7 +101,7 @@ const CompoundInterest = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="ci-rate" className="text-sm font-semibold text-text-muted mb-3 block">
-                    Annual Interest Rate (%)
+                    Annual interest rate (%)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
@@ -122,7 +122,7 @@ const CompoundInterest = () => {
 
                 <div>
                   <label htmlFor="ci-years" className="text-sm font-semibold text-text-muted mb-3 block">
-                    Time Horizon
+                    Time horizon
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
@@ -142,13 +142,13 @@ const CompoundInterest = () => {
               </div>
 
               <button type="submit" className="btn-primary press w-full py-4 mt-2 press">
-                Calculate Growth
+                Calculate growth
               </button>
             </form>
           </div>
 
           <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Your Projection</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Your projection</h2>
 
             {result ? (
               result.error ? (
@@ -156,7 +156,7 @@ const CompoundInterest = () => {
               ) : (
                 <div className="animate-rise space-y-6">
                   <div>
-                    <p className="text-xs font-semibold text-text-muted mb-3">Final Balance</p>
+                    <p className="text-xs font-semibold text-text-muted mb-3">Final balance</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
                       {formatCurrency(result.finalBalance)}
                     </p>
@@ -165,17 +165,17 @@ const CompoundInterest = () => {
                   <div className="space-y-6">
                     <div className="flex justify-between items-end gap-4">
                       <div className="bg-surface-raised rounded-2xl px-5 py-4 flex-1">
-                        <p className="text-xs font-semibold text-text-muted mb-1">Total Contributed</p>
+                        <p className="text-xs font-semibold text-text-muted mb-1">Total contributed</p>
                         <p className="text-xl font-bold">{formatCurrency(result.totalContributions)}</p>
                       </div>
                       <div className="bg-surface-raised rounded-2xl px-5 py-4 flex-1 text-right">
-                        <p className="text-xs font-semibold text-text-muted mb-1">Interest Earned</p>
+                        <p className="text-xs font-semibold text-text-muted mb-1">Interest earned</p>
                         <p className="text-xl font-bold text-accent">{formatCurrency(result.interestEarned)}</p>
                       </div>
                     </div>
 
                     <div className="bg-surface-raised rounded-2xl px-5 py-4">
-                      <p className="text-xs font-semibold text-text-muted mb-3">The Breakdown</p>
+                      <p className="text-xs font-semibold text-text-muted mb-3">The breakdown</p>
                       <div className="flex items-center gap-4 text-sm font-semibold">
                         <span className="text-text-primary">{result.years} year horizon</span>
                         <div className="w-px h-3 bg-line-soft" />

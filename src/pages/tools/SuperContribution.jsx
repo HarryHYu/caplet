@@ -41,26 +41,26 @@ const SuperContribution = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Plan your future</span>
-              <h1 className="minimal-page-title">Super Contribution Planner</h1>
+              <span className="section-kicker">Money tools · Savings &amp; Growth</span>
+              <h1 className="minimal-page-title">Super contribution calculator</h1>
               <p className="minimal-page-description">
                 Project your superannuation balance and see how steady contributions build long-term equity.
               </p>
             </div>
             <Link to="/money/tools" className="btn-secondary text-sm px-8">
-              Back to tools
+              &larr; Back to tools
             </Link>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Contribution Inputs</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Contribution inputs</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="super-opening-balance" className="text-sm font-semibold text-text-dim mb-2 block">
-                    Opening Balance (AUD)
+                    Opening balance (AUD)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -80,7 +80,7 @@ const SuperContribution = () => {
 
                 <div>
                   <label htmlFor="super-annual-salary" className="text-sm font-semibold text-text-dim mb-2 block">
-                    Annual Salary
+                    Annual salary
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -102,7 +102,7 @@ const SuperContribution = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="super-employer-rate" className="text-sm font-semibold text-text-dim mb-2 block">
-                    Employer Rate (%)
+                    Employer rate (%)
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
@@ -124,7 +124,7 @@ const SuperContribution = () => {
 
                 <div>
                   <label htmlFor="super-time-horizon" className="text-sm font-semibold text-text-dim mb-2 block">
-                    Time Horizon
+                    Time horizon
                   </label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
@@ -145,7 +145,7 @@ const SuperContribution = () => {
 
               <div>
                 <label htmlFor="super-personal-topup" className="text-sm font-semibold text-text-dim mb-2 block">
-                  Annual Personal Top-up (Optional)
+                  Annual personal top-up (optional)
                 </label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
@@ -164,13 +164,13 @@ const SuperContribution = () => {
               </div>
 
               <button type="submit" className="btn-primary press w-full py-4 press">
-                Calculate Projection
+                Calculate projection
               </button>
             </form>
           </div>
 
           <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Maturity Projection</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Maturity projection</h2>
 
             {result ? (
               result.error ? (
@@ -178,7 +178,7 @@ const SuperContribution = () => {
               ) : (
                 <div className="animate-rise space-y-6">
                   <div>
-                    <p className="text-xs font-semibold text-text-dim mb-3">Projected Portfolio Value</p>
+                    <p className="text-xs font-semibold text-text-dim mb-3">Projected portfolio value</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
                       {formatCurrency(result.futureBalance)}
                     </p>
@@ -187,7 +187,7 @@ const SuperContribution = () => {
 
                   <div className="space-y-6">
                     <div className="flex justify-between items-end">
-                      <p className="text-xs font-semibold text-text-dim">Total Contributions</p>
+                      <p className="text-xs font-semibold text-text-dim">Total contributions</p>
                       <p className="text-xl font-bold text-text-primary">{formatCurrency(result.totalContributions)}</p>
                     </div>
 
@@ -203,7 +203,7 @@ const SuperContribution = () => {
                     </div>
 
                     <div className="flex justify-between items-end text-accent">
-                      <p className="text-xs font-semibold">Investment Growth</p>
+                      <p className="text-xs font-semibold">Investment growth</p>
                       <p className="text-2xl font-extrabold">{formatCurrency(result.growth)}</p>
                     </div>
 

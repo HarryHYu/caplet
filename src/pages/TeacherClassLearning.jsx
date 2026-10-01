@@ -102,8 +102,8 @@ export default function TeacherClassLearning() {
         </Link>
         <header className="minimal-page-header flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <span className="section-kicker">teach from evidence</span>
-            <h1 className="minimal-page-title">Class learning.</h1>
+            <span className="section-kicker">Teach from evidence</span>
+            <h1 className="minimal-page-title">Class learning</h1>
             <p className="minimal-page-description">{state.data?.classroom?.name || 'Economics class'} · Outcome-level signals and next actions</p>
           </div>
           <div className="flex flex-wrap items-end gap-3">

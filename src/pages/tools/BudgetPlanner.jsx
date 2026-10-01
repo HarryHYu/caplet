@@ -49,14 +49,14 @@ const BudgetPlanner = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Plan your money</span>
-              <h1 className="minimal-page-title">Budget Planner.</h1>
+              <span className="section-kicker">Money tools · Budgeting</span>
+              <h1 className="minimal-page-title">Budget planner</h1>
               <p className="minimal-page-description">
                 See your monthly cash flow at a glance and track how you allocate across your main cost centers.
               </p>
             </div>
             <Link to="/money/tools" className="btn-secondary text-sm px-8">
-              &larr; Back to Tools
+              &larr; Back to tools
             </Link>
           </div>
         </header>
@@ -69,7 +69,7 @@ const BudgetPlanner = () => {
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="budget-net-monthly-income-aud" className="text-sm font-semibold text-text-dim mb-4 block">
-                  Net Monthly Income (AUD)
+                  Net monthly income (AUD)
                 </label>
                 <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -110,7 +110,7 @@ const BudgetPlanner = () => {
               </div>
 
               <button type="submit" className="btn-primary press w-full py-5 mt-8 press">
-                Calculate Budget
+                Calculate budget
               </button>
             </form>
           </div>
@@ -123,11 +123,11 @@ const BudgetPlanner = () => {
               <div className="animate-rise space-y-8 relative z-10">
                 <div className="grid grid-cols-2 gap-8">
                   <div>
-                    <p className="text-xs font-medium text-text-dim mb-2">Total Income</p>
+                    <p className="text-xs font-medium text-text-dim mb-2">Total income</p>
                     <p className="font-display text-3xl font-bold tracking-tight">{formatCurrency(result.income)}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-text-dim mb-2">Total Outflow</p>
+                    <p className="text-xs font-medium text-text-dim mb-2">Total outflow</p>
                     <p className="font-display text-3xl font-bold tracking-tight">{formatCurrency(result.totalExpenses)}</p>
                   </div>
                 </div>
@@ -146,7 +146,7 @@ const BudgetPlanner = () => {
                 </div>
 
                 <div className="space-y-6 pt-8">
-                  <p className="text-xs font-black text-text-dim mb-8">Allocation Breakdown</p>
+                  <p className="text-xs font-black text-text-dim mb-8">Allocation breakdown</p>
                   {result.breakdown.map((item) => (
                     item.amount > 0 && (
                       <div key={item.category}>

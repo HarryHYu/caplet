@@ -45,8 +45,8 @@ const CapitalGains = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tax &amp; income</span>
-              <h1 className="minimal-page-title">Capital Gains Estimator.</h1>
+              <span className="section-kicker">Money tools · Tax &amp; Income</span>
+              <h1 className="minimal-page-title">Capital gains estimator</h1>
               <p className="minimal-page-description">
                 Estimate CGT on the sale of shares, property, or other assets under Australian tax rules.
               </p>
@@ -59,10 +59,10 @@ const CapitalGains = () => {
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
-                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-6">Asset Details</h2>
+                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-6">Asset details</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="cgt-purchase-price" className="text-sm font-semibold text-text-dim mb-4 block">Purchase Price</label>
+                    <label htmlFor="cgt-purchase-price" className="text-sm font-semibold text-text-dim mb-4 block">Purchase price</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                       <input id="cgt-purchase-price" type="number" min="0" step="100" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} placeholder="0.00"
@@ -71,7 +71,7 @@ const CapitalGains = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="cgt-sale-price" className="text-sm font-semibold text-text-dim mb-4 block">Sale Price</label>
+                    <label htmlFor="cgt-sale-price" className="text-sm font-semibold text-text-dim mb-4 block">Sale price</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                       <input id="cgt-sale-price" type="number" min="0" step="100" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} placeholder="0.00"
@@ -85,7 +85,7 @@ const CapitalGains = () => {
                 <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-6">Costs (optional)</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div>
-                    <label htmlFor="cgt-acquisition-costs" className="text-sm font-semibold text-text-dim mb-4 block">Acquisition Costs</label>
+                    <label htmlFor="cgt-acquisition-costs" className="text-sm font-semibold text-text-dim mb-4 block">Acquisition costs</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                       <input id="cgt-acquisition-costs" type="number" min="0" step="10" value={purchaseCosts} onChange={(e) => setPurchaseCosts(e.target.value)} placeholder="0"
@@ -95,7 +95,7 @@ const CapitalGains = () => {
                     <p className="text-xs text-text-dim mt-2">Stamp duty, legal fees, brokerage</p>
                   </div>
                   <div>
-                    <label htmlFor="cgt-disposal-costs" className="text-sm font-semibold text-text-dim mb-4 block">Disposal Costs</label>
+                    <label htmlFor="cgt-disposal-costs" className="text-sm font-semibold text-text-dim mb-4 block">Disposal costs</label>
                     <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                       <input id="cgt-disposal-costs" type="number" min="0" step="10" value={saleCosts} onChange={(e) => setSaleCosts(e.target.value)} placeholder="0"
@@ -108,7 +108,7 @@ const CapitalGains = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div>
-                  <label htmlFor="cgt-other-income" className="text-sm font-semibold text-text-dim mb-4 block">Other Annual Income</label>
+                  <label htmlFor="cgt-other-income" className="text-sm font-semibold text-text-dim mb-4 block">Other annual income</label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input id="cgt-other-income" type="number" min="0" step="1000" value={otherIncome} onChange={(e) => setOtherIncome(e.target.value)} placeholder="0"
@@ -118,7 +118,7 @@ const CapitalGains = () => {
                   <p className="text-xs text-text-dim mt-2">Used to determine marginal tax rate</p>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-text-dim mb-6 block">Holding Period</label>
+                  <label className="text-sm font-semibold text-text-dim mb-6 block">Holding period</label>
                   <div className="flex gap-4">
                     {[
                       { val: true, label: '12+ months' },
@@ -133,7 +133,7 @@ const CapitalGains = () => {
                   <p className="text-xs text-text-dim mt-2">{heldOver12m ? '50% CGT discount applies' : 'No discount, full gain is taxable'}</p>
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-4 text-sm press">Estimate Capital Gains Tax</button>
+              <button type="submit" className="btn-primary press w-full py-4 text-sm press">Estimate capital gains tax</button>
             </form>
           </div>
 
@@ -145,7 +145,7 @@ const CapitalGains = () => {
               ) : result.isLoss ? (
                 <div className="animate-rise space-y-6 relative z-10">
                   <div>
-                    <p className="text-xs font-semibold text-text-dim mb-4">Capital Loss</p>
+                    <p className="text-xs font-semibold text-text-dim mb-4">Capital loss</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-error">{formatCurrency(result.capitalLoss)}</p>
                   </div>
                   <div className="bg-surface-raised/70 rounded-2xl p-6">
@@ -161,21 +161,21 @@ const CapitalGains = () => {
                   <div className="bg-surface-raised/70 rounded-2xl p-6 space-y-6">
                     <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-xs font-semibold text-text-dim mb-1">Gross Capital Gain</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Gross capital gain</p>
                         <p className="text-xl font-bold">{formatCurrency(result.grossGain)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-semibold text-text-dim mb-1">Taxable Gain</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Taxable gain</p>
                         <p className="text-xl font-bold text-accent">{formatCurrency(result.discountedGain)}</p>
                       </div>
                     </div>
                     <div className="flex justify-between items-end pt-2">
                       <div>
-                        <p className="text-xs font-semibold text-text-dim mb-1">Marginal Rate Applied</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Marginal rate applied</p>
                         <p className="text-2xl font-bold">{(result.marginalRate * 100).toFixed(0)}%</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-semibold text-text-dim mb-1">Effective Rate On Gross Gain</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Effective rate on gross gain</p>
                         <p className="text-2xl font-bold">{result.effectiveRate.toFixed(1)}%</p>
                       </div>
                     </div>
@@ -184,7 +184,7 @@ const CapitalGains = () => {
                     )}
                   </div>
                   <p className="text-xs text-text-dim leading-relaxed">
-                    Australian resident 2026–27 rates (shared with the Tax Calculator). Excludes Medicare levy and offsets. Consult a tax professional.
+                    Australian resident 2026–27 rates (shared with the tax calculator). Excludes Medicare levy and offsets. Consult a tax professional.
                   </p>
                 </div>
               )

@@ -85,7 +85,7 @@ describe('school-buyer Demo tour', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Open Demo menu' }));
     fireEvent.click(screen.getAllByRole('button', { name: /Help the students/i }).at(-1));
-    expect(await screen.findByRole('heading', { name: 'Class learning.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Class learning' })).toBeInTheDocument();
     expect(screen.getByRole('table', { name: /Mastery probability/i })).toBeInTheDocument();
   });
 

@@ -54,13 +54,13 @@ const DebtToIncome = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools, Debt & Loans</span>
-              <h1 className="minimal-page-title">Debt-to-Income Ratio.</h1>
+              <span className="section-kicker">Money tools · Debt &amp; Loans</span>
+              <h1 className="minimal-page-title">Debt-to-income ratio</h1>
               <p className="minimal-page-description">
                 Your DTI is the first thing lenders check. Know yours before they do.
               </p>
             </div>
-            <Link to="/money/tools" className="btn-secondary text-sm px-8 press">Back to tools</Link>
+            <Link to="/money/tools" className="btn-secondary text-sm px-8 press">&larr; Back to tools</Link>
           </div>
         </header>
 
@@ -68,7 +68,7 @@ const DebtToIncome = () => {
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
-                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-8">Gross Income</h2>
+                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-8">Gross income</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="dti-amount-aud" className="text-sm font-semibold text-text-dim mb-3 block">Amount (AUD)</label>
@@ -93,7 +93,7 @@ const DebtToIncome = () => {
                 </div>
               </div>
               <div>
-                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-8">Monthly Debt Payments</h2>
+                <h2 className="font-display font-bold tracking-tight text-lg text-text-primary mb-8">Monthly debt payments</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   {DEBT_FIELDS.map(({ label, key }) => (
                     <div key={key}>
@@ -130,11 +130,11 @@ const DebtToIncome = () => {
                     <div className="space-y-8">
                       <div className="flex justify-between items-end">
                         <div>
-                          <p className="text-xs font-semibold text-text-dim mb-1">Monthly Income</p>
+                          <p className="text-xs font-semibold text-text-dim mb-1">Monthly income</p>
                           <p className="text-xl font-bold">{formatCurrency(result.monthlyIncome)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-semibold text-text-dim mb-1">Total Monthly Debt</p>
+                          <p className="text-xs font-semibold text-text-dim mb-1">Total monthly debt</p>
                           <p className="text-xl font-bold text-accent">{formatCurrency(result.totalDebt)}</p>
                         </div>
                       </div>

@@ -126,7 +126,7 @@ const SettingsFinancial = () => {
   return (
     <div className="space-y-6">
       <div>
-        <p className="mb-1 font-hand text-lg text-accent -rotate-2 inline-block">your money, at a glance</p>
+        <p className="section-kicker">Your money, at a glance</p>
         <h2 className="font-display text-3xl font-extrabold tracking-tight text-text-primary">Financial Profile</h2>
         <p className="text-sm font-medium text-text-dim mt-2">
           Your current snapshot. We use it to tailor the tools and your next steps. It&apos;s private to you.

@@ -44,25 +44,25 @@ const EmergencyFund = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools / Risk management</span>
-              <h1 className="minimal-page-title">Emergency Fund.</h1>
+              <span className="section-kicker">Money tools · Budgeting</span>
+              <h1 className="minimal-page-title">Emergency fund calculator</h1>
               <p className="minimal-page-description">
-                Analyze your capital resilience and define the liquidity buffer you need for unexpected transitions.
+                Work out how much to keep aside for the unexpected, and see how close you already are.
               </p>
             </div>
             <Link to="/money/tools" className="btn-secondary text-sm px-8 press">
-              Back to Tools
+              &larr; Back to tools
             </Link>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Reserve Parameters</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Your monthly costs</h2>
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label htmlFor="ef-critical-monthly-burn-rate" className="text-sm font-bold text-text-dim mb-3 block">
-                  Critical Monthly Burn Rate (AUD)
+                  Essential monthly expenses (AUD)
                 </label>
                 <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -78,29 +78,29 @@ const EmergencyFund = () => {
                   />
                 </div>
                 <p className="text-xs font-medium text-text-dim mt-3">
-                  Includes shelter, food, and mandatory liabilities.
+                  Rent or mortgage, food, bills and any repayments you cannot skip.
                 </p>
               </div>
 
               <div>
                 <label htmlFor="ef-sustainability-window" className="text-sm font-bold text-text-dim mb-3 block">
-                  Sustainability Window
+                  Months to cover
                 </label>
                 <select id="ef-sustainability-window"
                   value={monthsCoverage}
                   onChange={(e) => setMonthsCoverage(e.target.value)}
                   className="w-full rounded-xl bg-surface-body border border-line-soft px-5 py-4 text-sm font-bold text-text-primary outline-none focus:border-accent appearance-none cursor-pointer"
                 >
-                  <option value="3">3 Months (Standard)</option>
-                  <option value="6">6 Months (Recommended)</option>
-                  <option value="9">9 Months (Conservative)</option>
-                  <option value="12">12 Months (Maximum)</option>
+                  <option value="3">3 months (a starting point)</option>
+                  <option value="6">6 months (recommended)</option>
+                  <option value="9">9 months (cautious)</option>
+                  <option value="12">12 months (maximum)</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="ef-current-savings" className="text-sm font-bold text-text-dim mb-3 block">
-                  Current Savings
+                  Current savings
                 </label>
                 <div className="relative rounded-xl bg-surface-body border border-line-soft focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
@@ -118,13 +118,13 @@ const EmergencyFund = () => {
               </div>
 
               <button type="submit" className="btn-primary press w-full py-4 mt-2 press">
-                Analyze Resilience
+                Check my safety net
               </button>
             </form>
           </div>
 
           <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Resilience Analysis</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl text-text-primary mb-6">Your safety net</h2>
 
             {result ? (
               result.error ? (
@@ -132,7 +132,7 @@ const EmergencyFund = () => {
               ) : (
                 <div className="animate-rise space-y-6">
                   <div>
-                    <p className="text-xs font-bold text-text-dim mb-3">Target Liquid Reserve</p>
+                    <p className="text-xs font-bold text-text-dim mb-3">Target emergency fund</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
                       {formatCurrency(result.recommended)}
                     </p>
@@ -144,7 +144,7 @@ const EmergencyFund = () => {
                   {result.current > 0 && (
                     <div className="rounded-2xl bg-surface-raised p-6 space-y-8 shadow-pop">
                       <div>
-                        <p className="text-xs font-bold text-text-dim mb-4">Saturation Level</p>
+                        <p className="text-xs font-bold text-text-dim mb-4">Saved so far</p>
                         <div className="flex items-end justify-between mb-3">
                           <p className="text-2xl font-bold">{formatCurrency(result.current)}</p>
                           <p className="text-xs font-bold text-accent">{result.percentage.toFixed(1)}%</p>
@@ -159,13 +159,13 @@ const EmergencyFund = () => {
 
                       {result.shortfall > 0 ? (
                         <div>
-                          <p className="text-xs font-bold text-text-dim mb-2">Capital Shortfall</p>
+                          <p className="text-xs font-bold text-text-dim mb-2">Still to save</p>
                           <p className="text-xl font-bold text-text-primary">{formatCurrency(result.shortfall)}</p>
                         </div>
                       ) : (
                         <div className="rounded-xl p-5 bg-accent/10">
                           <p className="text-sm font-extrabold text-accent">
-                            Target saturation achieved
+                            Target reached — nice work
                           </p>
                         </div>
                       )}
@@ -174,9 +174,9 @@ const EmergencyFund = () => {
 
                   <div className="rounded-2xl bg-surface-raised p-6 space-y-4 shadow-pop">
                     {[
-                      'Prioritize immediate liquidity',
-                      'Exclude non-essential consumption',
-                      'Recalibrate per life stage shift'
+                      'Keep it somewhere you can reach quickly',
+                      'Count only the essentials',
+                      'Revisit it whenever your life changes'
                     ].map((step, idx) => (
                       <div key={idx} className="flex items-center gap-3 text-sm font-medium text-text-dim">
                         <div className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />

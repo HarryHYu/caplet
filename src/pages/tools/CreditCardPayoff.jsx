@@ -64,8 +64,8 @@ const CreditCardPayoff = () => {
         <header className="minimal-page-header reveal">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <span className="section-kicker">Tools &rarr; Debt & Loans</span>
-              <h1 className="minimal-page-title">Credit Card Payoff.</h1>
+              <span className="section-kicker">Money tools · Debt &amp; Loans</span>
+              <h1 className="minimal-page-title">Credit card payoff</h1>
               <p className="minimal-page-description">
                 See exactly how long it takes to clear your balance, and how much interest you save by paying more.
               </p>
@@ -76,10 +76,10 @@ const CreditCardPayoff = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 surface-card md:p-8 card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Debt Parameters</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Debt parameters</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="cc-balance" className="text-sm font-semibold text-text-dim mb-3 block">Current Balance (AUD)</label>
+                <label htmlFor="cc-balance" className="text-sm font-semibold text-text-dim mb-3 block">Current balance (AUD)</label>
                 <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold">$</span>
                   <input
@@ -91,7 +91,7 @@ const CreditCardPayoff = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
                 <div>
-                  <label htmlFor="cc-apr" className="text-sm font-semibold text-text-dim mb-3 block">Annual Interest Rate (APR %)</label>
+                  <label htmlFor="cc-apr" className="text-sm font-semibold text-text-dim mb-3 block">Annual interest rate (APR %)</label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <input
                       id="cc-apr" aria-describedby="cc-apr-hint" type="number" min="0" max="100" step="0.1" value={apr} onChange={(e) => setApr(e.target.value)} placeholder="19.9"
@@ -103,7 +103,7 @@ const CreditCardPayoff = () => {
                   <p id="cc-apr-hint" className="text-xs text-text-dim mt-2">AU avg is roughly 19 to 20%.</p>
                 </div>
                 <div>
-                  <label htmlFor="cc-monthly" className="text-sm font-semibold text-text-dim mb-3 block">Monthly Payment (AUD)</label>
+                  <label htmlFor="cc-monthly" className="text-sm font-semibold text-text-dim mb-3 block">Monthly payment (AUD)</label>
                   <div className="relative rounded-xl border border-line-soft bg-surface-body focus-within:border-accent transition-colors">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim font-bold text-sm">$</span>
                     <input
@@ -114,19 +114,19 @@ const CreditCardPayoff = () => {
                   </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary press w-full py-5 text-sm press">Calculate Payoff</button>
+              <button type="submit" className="btn-primary press w-full py-5 text-sm press">Calculate payoff</button>
             </form>
           </div>
 
           <div aria-live="polite" className="lg:col-span-5 lg:self-start lg:min-h-[19rem] surface-card block-blue md:p-8 flex flex-col card-lift reveal">
-            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Payoff Projection</h2>
+            <h2 className="font-display font-bold tracking-tight text-2xl mb-6">Payoff projection</h2>
             {result ? (
               result.error ? (
                 <p role="alert" className="text-sm font-semibold text-text-error">{result.error}</p>
               ) : (
                 <div className="space-y-6">
                   <div>
-                    <p className="text-xs font-semibold text-text-dim mb-3">Time to Pay Off</p>
+                    <p className="text-xs font-semibold text-text-dim mb-3">Time to pay off</p>
                     <p className="font-display text-5xl font-extrabold tracking-tight text-text-primary">
                       {result.years > 0 ? `${result.years}y ` : ''}{result.remMonths > 0 ? `${result.remMonths}m` : result.years === 0 ? `${result.months}m` : ''}
                     </p>
@@ -134,11 +134,11 @@ const CreditCardPayoff = () => {
                   <div className="rounded-2xl bg-surface-raised p-6 space-y-6">
                     <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-xs font-semibold text-text-dim mb-1">Total Paid</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Total paid</p>
                         <p className="text-xl font-bold">{formatCurrency(result.totalPaid)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-semibold text-text-dim mb-1">Interest Cost</p>
+                        <p className="text-xs font-semibold text-text-dim mb-1">Interest cost</p>
                         <p className="text-xl font-bold text-accent">{formatCurrency(result.totalInterest)}</p>
                       </div>
                     </div>
