@@ -101,6 +101,9 @@ const Metrics = lazy(() => import('./pages/Metrics'));
 const AdminOperations = lazy(() => import('./pages/AdminOperations'));
 const Survey = lazy(() => import('./pages/Survey'));
 const SurveyResults = lazy(() => import('./pages/SurveyResults'));
+// Temporary financial-literacy survey — hidden by URL only, on purpose.
+const FinSurvey = lazy(() => import('./pages/FinSurvey'));
+const FinSurveyResults = lazy(() => import('./pages/FinSurveyResults'));
 const Editor = lazy(() => import('./pages/Editor'));
 const QuestionBank = lazy(() => import('./pages/QuestionBank'));
 const HostLive = lazy(() => import('./pages/live/HostLive'));
@@ -344,6 +347,9 @@ function AppRoutes() {
           <Route path="/operations" element={<RequireAdmin><AdminOperations /></RequireAdmin>} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/survey-results" element={<RequireAdmin><SurveyResults /></RequireAdmin>} />
+          {/* Temporary research survey — unlinked, unguarded, URL-only. */}
+          <Route path="/fin-survey" element={<FinSurvey />} />
+          <Route path="/fin-survey/results" element={<FinSurveyResults />} />
           <Route path="/editor" element={<Editor />} />
           <Route path="/editor/questions" element={<QuestionBank />} />
           <Route path="/live/host/:code" element={<RequireAuth><HostLive /></RequireAuth>} />

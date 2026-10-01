@@ -21,6 +21,7 @@ const ReviewItem = require('./ReviewItem');
 const Essay = require('./Essay');
 const TycoonState = require('./TycoonState');
 const TycoonSave = require('./TycoonSave');
+const FinSurveyResponse = require('./FinSurveyResponse');
 const EssayContextDoc = require('./EssayContextDoc');
 const EssayAnnotation = require('./EssayAnnotation');
 const LiveSession = require('./LiveSession');
@@ -906,6 +907,7 @@ module.exports = {
   User,
   TycoonState,
   TycoonSave,
+  FinSurveyResponse,
   Course,
   Module,
   Lesson,

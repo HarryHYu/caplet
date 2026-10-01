@@ -148,20 +148,28 @@ describe('minimal dashboard study flow', () => {
   });
 
   it('uses a personalised exam when it is the next assessment', async () => {
-    localStorage.setItem('caplet:my-subjects', JSON.stringify(['Biology']));
-    localStorage.setItem('caplet:assessment-customisations', JSON.stringify({
-      customTasks: [{
-        id: 'biology-exam', subject: 'Biology', date: '2026-08-15', dateLabel: '15 Aug',
-        group: 'Yearly exams', type: 'Exam', status: 'Preparing', detail: 'Personal task.', source: 'Personalised', custom: true,
-      }],
-      overrides: {},
-      hiddenIds: [],
-    }));
-    api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
+    // Same clock pin as the countdown test: the custom exam is dated
+    // 2026-08-15, which the real calendar has since passed.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-06-01T09:00:00'));
+    try {
+      localStorage.setItem('caplet:my-subjects', JSON.stringify(['Biology']));
+      localStorage.setItem('caplet:assessment-customisations', JSON.stringify({
+        customTasks: [{
+          id: 'biology-exam', subject: 'Biology', date: '2026-08-15', dateLabel: '15 Aug',
+          group: 'Yearly exams', type: 'Exam', status: 'Preparing', detail: 'Personal task.', source: 'Personalised', custom: true,
+        }],
+        overrides: {},
+        hiddenIds: [],
+      }));
+      api.getStudyPlan.mockResolvedValue({ studyPlan: { tasks: [] } });
 
-    render(<MemoryRouter><Dashboard /></MemoryRouter>);
+      render(<MemoryRouter><Dashboard /></MemoryRouter>);
 
-    expect(await screen.findByRole('link', { name: /days.*until Biology/i })).toHaveAttribute('href', '/assessments');
+      expect(await screen.findByRole('link', { name: /days.*until Biology/i })).toHaveAttribute('href', '/assessments');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('resumes a saved practice session with one clear primary action', async () => {
