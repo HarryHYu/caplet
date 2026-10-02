@@ -13,7 +13,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
-import { CONFIDENCE_TOPICS } from '../lib/finSurveyQuestions';
+import { CONFIDENCE_TOPICS, NOT_SURE, QUIZ, quizScore } from '../lib/finSurveyQuestions';
 
 const LABELS = {
     yearLevel: { 7: 'Year 7', 8: 'Year 8', 9: 'Year 9', 10: 'Year 10', 11: 'Year 11', 12: 'Year 12', 'Not at school': 'Not at school' },
@@ -206,6 +206,36 @@ function HBars({ data, tip }) {
     );
 }
 
+// ── Paired bars: per topic, share who feel confident vs share who got it right
+const PAIR = [
+    { key: 'confident', label: 'Feel confident (rated 4–5)', color: 'var(--fsr-o2)' },
+    { key: 'correct', label: 'Answered correctly', color: 'var(--fsr-o5)' },
+];
+function PairedBars({ rows, tip }) {
+    return (
+        <div className="flex flex-col gap-3">
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-text-dim" aria-label="Legend">
+                {PAIR.map((p) => <li key={p.key} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: p.color }} />{p.label}</li>)}
+            </ul>
+            {rows.map((row, r) => (
+                <div key={row.label} className="flex items-center gap-3 text-xs">
+                    <span className="w-28 shrink-0 truncate font-medium text-text-primary sm:w-40" title={row.label}>{row.label}</span>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        {PAIR.map((p) => (
+                            <div key={p.key} className="flex items-center gap-2">
+                                <div className="fsr-mark relative h-3.5 min-w-0 flex-1" {...tip.bind(`${row.label} — ${p.label}`, `${row[p.key]}%`)}>
+                                    <div className="fsr-grow-x absolute inset-y-0 left-0 rounded-r-[4px]" style={{ width: `${row[p.key]}%`, background: p.color, transitionDelay: `${r * 40}ms` }} />
+                                </div>
+                                <span className="w-9 shrink-0 text-right font-mono text-[11px] font-bold tabular-nums text-text-dim">{row[p.key]}%</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 // ── Diverging stack: Likert 1..5 per topic, centred on neutral ──────────────
 function LikertStack({ rows, tip }) {
     // One shared scale for every row: the track spans the furthest any row
@@ -306,6 +336,25 @@ export default function FinSurveyResults() {
             label: t.label.replace(/\s*\(.*\)/, ''),
             counts: [1, 2, 3, 4, 5].map((n) => rs.filter((r) => Number(r.answers?.confidence?.[t.key]) === n).length),
         }));
+        // Only responses that took the quiz (it was added after launch) count here.
+        const quizRs = rs.filter((r) => r.answers?.quiz && Object.keys(r.answers.quiz).length);
+        const qn = quizRs.length;
+        const scores = quizRs.map((r) => quizScore(r.answers.quiz));
+        const avgQuiz = qn ? scores.reduce((a, b) => a + b, 0) / qn : 0;
+        const scoreDist = Array.from({ length: QUIZ.length + 1 }, (_, s) => ({ label: `${s} of ${QUIZ.length}`, short: String(s), value: scores.filter((v) => v === s).length, total: qn, color: 'var(--fsr-s1)' }));
+        const knowVsFeel = CONFIDENCE_TOPICS.map((tp) => {
+            const rated = quizRs.filter((r) => r.answers?.confidence?.[tp.key]);
+            const confidentN = rated.filter((r) => Number(r.answers.confidence[tp.key]) >= 4).length;
+            const qs = QUIZ.filter((q) => q.topic === tp.key);
+            const right = quizRs.reduce((n, r) => n + qs.filter((q) => r.answers.quiz[q.id] === q.answer).length, 0);
+            return { label: tp.label.replace(/\s*\(.*\)/, ''), confident: pct(confidentN, rated.length), correct: pct(right, qn * qs.length) };
+        });
+        const perQuestion = QUIZ.map((q) => ({
+            label: q.short,
+            value: quizRs.filter((r) => r.answers.quiz[q.id] === q.answer).length,
+            unsure: quizRs.filter((r) => r.answers.quiz[q.id] === NOT_SURE).length,
+            total: qn,
+        }));
         const byDay = {};
         rs.forEach((r) => { const d = new Date(r.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); byDay[d] = (byDay[d] || 0) + 1; });
         const timeline = Object.entries(byDay).reverse().map(([label, value]) => ({ label, value, total }));
@@ -323,6 +372,11 @@ export default function FinSurveyResults() {
             likert,
             schoolCourse: countBy('wouldTakeSchoolCourse', ORDERS.wouldTakeSchoolCourse),
             capletCourse: countBy('wouldTakeCapletCourse', ORDERS.wouldTakeCapletCourse),
+            quizN: qn,
+            avgQuiz,
+            scoreDist,
+            knowVsFeel,
+            perQuestion,
             industryDist,
             industryAnswered: industryViews.length,
             industryWords: multiCountBy('industryWords'),
@@ -371,6 +425,7 @@ export default function FinSurveyResults() {
                             <StatTile label="Responses" value={stats.total} />
                             <StatTile label="Accounts created" value={data.accountsCreated} sub="new Caplet signups" />
                             <StatTile label="Self-rated literacy" value={stats.avgSelf.toFixed(1)} sub="average out of 5" />
+                            {stats.quizN > 0 && <StatTile label="Quiz score" value={`${stats.avgQuiz.toFixed(1)}/${QUIZ.length}`} sub={`average of ${stats.quizN}`} />}
                             <StatTile label="Would take an online course" value={`${stats.yesCapletPct}%`} sub="answered a straight yes" />
                         </div>
 
@@ -389,6 +444,22 @@ export default function FinSurveyResults() {
                                             <HBars data={stats.industryWords} tip={tip} />
                                         </ChartCard>
                                     )}
+                                </>
+                            )}
+
+                            {stats.quizN > 0 && (
+                                <>
+                                    <ChartCard wide title="Feeling vs knowing" note={`Per topic: who rated themselves 4–5, against the share of that topic's quiz questions answered correctly (${stats.quizN} quiz takers).`}
+                                        rows={stats.knowVsFeel.map((r) => ({ label: r.label, value: `confident ${r.confident}% · correct ${r.correct}%` }))}>
+                                        <PairedBars rows={stats.knowVsFeel} tip={tip} />
+                                    </ChartCard>
+                                    <ChartCard title="Quiz scores" note={`Out of ${QUIZ.length}. “Not sure” counts as not correct.`} rows={rowsOf(stats.scoreDist)}>
+                                        <Columns data={stats.scoreDist} tip={tip} />
+                                    </ChartCard>
+                                    <ChartCard title="Correct, by question" note="Share of quiz takers who got each one right."
+                                        rows={stats.perQuestion.map((d) => ({ label: d.label, value: `${d.value} correct · ${d.unsure} not sure · of ${d.total}` }))}>
+                                        <HBars data={stats.perQuestion} tip={tip} />
+                                    </ChartCard>
                                 </>
                             )}
 

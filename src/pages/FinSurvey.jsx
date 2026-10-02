@@ -13,7 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import CapletLoader from '../components/CapletLoader';
-import { CONFIDENCE_TOPICS } from '../lib/finSurveyQuestions';
+import { CONFIDENCE_TOPICS, NOT_SURE, QUIZ, quizScore } from '../lib/finSurveyQuestions';
 
 const YEARS = ['7', '8', '9', '10', '11', '12', 'Not at school'];
 const COMMERCE = ['Commerce', 'Economics', 'Business Studies', 'Legal Studies', 'None of these'];
@@ -97,6 +97,25 @@ function Scale({ value, onChange, name, low = 'Not at all', high = 'Very' }) {
     );
 }
 
+function QuizOptions({ question, value, onChange }) {
+    const options = [...question.options, { key: NOT_SURE, label: 'Not sure' }];
+    return (
+        <div className="flex flex-col gap-2" role="radiogroup" aria-label={question.short}>
+            {options.map((opt) => {
+                const active = value === opt.key;
+                const unsure = opt.key === NOT_SURE;
+                return (
+                    <button key={opt.key} type="button" role="radio" aria-checked={active}
+                        onClick={() => onChange(opt.key)}
+                        className={`focus-ring press rounded-xl border-2 px-4 py-2.5 text-left text-sm font-bold transition-all ${active ? 'animate-pop border-accent bg-accent text-accent-contrast shadow-card' : `border-line-soft bg-surface-raised hover:-translate-y-0.5 hover:border-text-dim hover:text-text-primary ${unsure ? 'text-text-muted' : 'text-text-dim'}`}`}>
+                        {opt.label}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
 function Question({ label, hint, children }) {
     return (
         <div>
@@ -131,6 +150,7 @@ export default function FinSurvey() {
     const [learnedFrom, setLearnedFrom] = useState([]);
     const [schoolEnough, setSchoolEnough] = useState(null);
     const [confidence, setConfidence] = useState({});
+    const [quiz, setQuiz] = useState({});
     const [wouldTakeSchoolCourse, setWouldTakeSchoolCourse] = useState(null);
     const [wouldTakeCapletCourse, setWouldTakeCapletCourse] = useState(null);
     const [industryView, setIndustryView] = useState(null);
@@ -168,6 +188,7 @@ export default function FinSurvey() {
         setLearnedFrom(a.learnedFrom || []);
         setSchoolEnough(a.schoolEnough ?? null);
         setConfidence(a.confidence || {});
+        setQuiz(a.quiz || {});
         setWouldTakeSchoolCourse(a.wouldTakeSchoolCourse ?? null);
         setWouldTakeCapletCourse(a.wouldTakeCapletCourse ?? null);
         setIndustryView(a.industryView ?? null);
@@ -185,6 +206,7 @@ export default function FinSurvey() {
 
     const stages = useMemo(() => ([
         {
+            id: 'intro',
             emoji: '👋',
             kicker: isAuthenticated ? `hey ${user?.firstName || 'you'}` : 'first things first',
             title: isAuthenticated ? 'Quick intro' : 'Who are you?',
@@ -197,12 +219,14 @@ export default function FinSurvey() {
             },
         },
         {
+            id: 'subjects',
             emoji: '📚',
             kicker: 'subjects',
             title: 'What do you study?',
             valid: () => (commerceSubjects.length ? null : 'the subjects question — "None of these" counts'),
         },
         {
+            id: 'money',
             emoji: '💸',
             kicker: 'be honest',
             title: 'You and money',
@@ -213,12 +237,22 @@ export default function FinSurvey() {
             },
         },
         {
+            id: 'confidence',
             emoji: '💪',
             kicker: 'no judgement',
             title: 'How confident are you?',
             valid: () => (CONFIDENCE_TOPICS.some((t) => !confidence[t.key]) ? 'a rating for every topic' : null),
         },
+        ...[QUIZ.slice(0, 6), QUIZ.slice(6)].map((questions, part) => ({
+            id: `quiz-${part}`,
+            emoji: part === 0 ? '🧠' : '🧮',
+            kicker: part === 0 ? 'pop quiz — no pressure' : 'pop quiz, part two',
+            title: part === 0 ? 'Let\u2019s test that' : 'Nearly there',
+            questions,
+            valid: () => (questions.some((q) => !quiz[q.id]) ? 'an answer for every question — "Not sure" is fine' : null),
+        })),
         {
+            id: 'course',
             emoji: '🎓',
             kicker: 'hypothetically…',
             title: 'If a course existed',
@@ -229,6 +263,7 @@ export default function FinSurvey() {
             },
         },
         {
+            id: 'industry',
             emoji: '🏦',
             kicker: 'last one',
             title: 'The finance industry',
@@ -238,7 +273,7 @@ export default function FinSurvey() {
                 return null;
             },
         },
-    ]), [isAuthenticated, user, name, email, password, yearLevel, commerceSubjects, selfRating, schoolEnough, confidence, wouldTakeSchoolCourse, wouldTakeCapletCourse, industryView, financeCareer]);
+    ]), [isAuthenticated, user, name, email, password, yearLevel, commerceSubjects, selfRating, schoolEnough, confidence, quiz, wouldTakeSchoolCourse, wouldTakeCapletCourse, industryView, financeCareer]);
 
     const stageIndex = step - 1; // step 0 is the splash
     const progress = step === 0 ? 0 : Math.round((stageIndex / stages.length) * 100);
@@ -272,7 +307,7 @@ export default function FinSurvey() {
                     school: school.trim(),
                     answers: {
                         yearLevel, commerceSubjects, selfRating, learnedFrom, schoolEnough,
-                        confidence, wouldTakeSchoolCourse, wouldTakeCapletCourse,
+                        confidence, quiz, wouldTakeSchoolCourse, wouldTakeCapletCourse,
                         industryView, industryWords, financeCareer,
                         industryThoughts: industryThoughts.trim().slice(0, 1000),
                         wishTaught: wishTaught.trim().slice(0, 1000),
@@ -312,6 +347,9 @@ export default function FinSurvey() {
                         {done.updated && !done.accountCreated && <>We replaced your earlier answers with these ones. </>}
                         {done.accountExisted && !isAuthenticated && !done.updated && <>You already had a Caplet account under this email, so we kept it exactly as it was.</>}
                         {isAuthenticated && !done.updated && <>Your answers are in. Thanks for helping with the research.</>}
+                    </p>
+                    <p className="mt-4 inline-block rounded-full bg-accent-soft px-4 py-1.5 text-sm font-extrabold text-accent">
+                        Pop quiz: {quizScore(quiz)}/{QUIZ.length}
                     </p>
                 </div>
             </div>
@@ -393,7 +431,7 @@ export default function FinSurvey() {
                     </h1>
 
                     <div key={`card-${shake}`} className={`surface-card mt-5 flex flex-col gap-5 p-6 ${shake && error ? 'animate-shake-x' : ''}`}>
-                        {stageIndex === 0 && (
+                        {stage.id === 'intro' && (
                             <>
                                 {!isAuthenticated && (
                                     <>
@@ -416,7 +454,7 @@ export default function FinSurvey() {
                                 </Question>
                             </>
                         )}
-                        {stageIndex === 1 && (
+                        {stage.id === 'subjects' && (
                             <Question label="Do you take any commerce subjects?" hint="Pick everything you currently study.">
                                 <Checks name="Commerce subjects" options={COMMERCE}
                                     value={commerceSubjects}
@@ -427,7 +465,7 @@ export default function FinSurvey() {
                                     )} />
                             </Question>
                         )}
-                        {stageIndex === 2 && (
+                        {stage.id === 'money' && (
                             <>
                                 <Question label="How would you rate your financial literacy overall?">
                                     <Scale name="Overall financial literacy" value={selfRating} onChange={setSelfRating} low="Clueless" high="Confident" />
@@ -440,14 +478,25 @@ export default function FinSurvey() {
                                 </Question>
                             </>
                         )}
-                        {stageIndex === 3 && CONFIDENCE_TOPICS.map((topic, i) => (
+                        {stage.id === 'confidence' && CONFIDENCE_TOPICS.map((topic, i) => (
                             <div key={topic.key} className={`animate-fade-slide-up stagger-${Math.min(4, i + 1)}`}>
                                 <span className="mb-1.5 block text-sm font-bold text-text-primary">{topic.label}</span>
                                 <Scale name={topic.label} value={confidence[topic.key] ?? null}
                                     onChange={(n) => setConfidence((prev) => ({ ...prev, [topic.key]: n }))} />
                             </div>
                         ))}
-                        {stageIndex === 4 && (
+                        {stage.questions && (
+                            <>
+                                <p className="-mb-1 text-xs leading-relaxed text-text-muted">Quick checks on the topics you just rated. Pick “Not sure” rather than guessing — that’s useful too.</p>
+                                {stage.questions.map((q, i) => (
+                                    <div key={q.id} className={`animate-fade-slide-up stagger-${Math.min(4, i + 1)}`}>
+                                        <span className="mb-2 block text-sm font-bold leading-snug text-text-primary">{q.prompt}</span>
+                                        <QuizOptions question={q} value={quiz[q.id] ?? null} onChange={(k) => setQuiz((prev) => ({ ...prev, [q.id]: k }))} />
+                                    </div>
+                                ))}
+                            </>
+                        )}
+                        {stage.id === 'course' && (
                             <>
                                 <Question label="If your school offered a financial literacy course, would you take it?">
                                     <Pills name="School course" options={SCHOOL_COURSE} value={wouldTakeSchoolCourse} onChange={setWouldTakeSchoolCourse} />
@@ -457,7 +506,7 @@ export default function FinSurvey() {
                                 </Question>
                             </>
                         )}
-                        {stageIndex === 5 && (
+                        {stage.id === 'industry' && (
                             <>
                                 <Question label="Overall, how do you feel about the finance industry — banks, super funds, investing, financial advisers?">
                                     <Scale name="Finance industry view" value={industryView} onChange={setIndustryView} low="Negative" high="Positive" />

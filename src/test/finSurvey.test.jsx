@@ -39,6 +39,14 @@ describe('FinSurvey (hidden page)', () => {
     ['Budgeting & saving', 'Tax (what you pay, how it works)', 'Superannuation', 'Investing & shares', 'Credit, loans & debt']
       .forEach((topic) => pick(topic, '2'));
     next();
+    // Pop quiz: first answer right, the rest "Not sure"; can't skip a question.
+    next();
+    expect(screen.getByRole('alert')).toHaveTextContent(/Not sure/);
+    pick('50/30/20 rule', '$160');
+    ['Inflation vs savings', 'Tax brackets', 'Financial year end', 'Who pays super', 'Accessing super'].forEach((q) => pick(q, 'Not sure'));
+    next();
+    ['Diversification', 'Compound growth', 'Minimum repayments', 'HECS-HELP repayments'].forEach((q) => pick(q, 'Not sure'));
+    next();
     pick('School course', 'Definitely');
     pick('Online course', 'Yes');
     next();
@@ -64,6 +72,9 @@ describe('FinSurvey (hidden page)', () => {
       financeCareer: 'maybe',
     });
     expect(body.answers).not.toHaveProperty('aiAdvisorTrust');
+    expect(body.answers.quiz).toMatchObject({ budget1: 'c', tax1: 'unsure', debt2: 'unsure' });
+    expect(Object.keys(body.answers.quiz)).toHaveLength(10);
+    expect(await screen.findByText('Pop quiz: 1/10')).toBeInTheDocument();
     expect(body.answers.confidence).toEqual({ budgeting: 2, tax: 2, super: 2, investing: 2, debt: 2 });
     expect(await screen.findByText(/Your Caplet account is live/i)).toBeInTheDocument();
   });
@@ -91,6 +102,7 @@ describe('FinSurveyResults (hidden page)', () => {
             learnedFrom: ['Social media'], schoolEnough: 'no',
             confidence: { budgeting: 2, tax: 1, super: 1, investing: 2, debt: 2 },
             wouldTakeSchoolCourse: 'definitely', wouldTakeCapletCourse: 'yes',
+            quiz: { budget1: 'c', budget2: 'c', tax1: 'b', tax2: 'a', super1: 'a', super2: 'unsure', invest1: 'a', invest2: 'b', debt1: 'b', debt2: 'b' },
             industryView: 2, industryWords: ['Confusing', 'Greedy'], financeCareer: 'maybe',
             industryThoughts: 'Feels built for people who already have money.', wishTaught: 'Tax returns.',
           },
@@ -113,6 +125,8 @@ describe('FinSurveyResults (hidden page)', () => {
     expect(screen.getByText('Y11')).toBeInTheDocument(); // year-level column axis
     expect(screen.getByText(/built for people who already have money/)).toBeInTheDocument();
     expect(screen.getByText('Overall view of the finance industry')).toBeInTheDocument();
+    expect(screen.getByText('Feeling vs knowing')).toBeInTheDocument();
+    expect(screen.getByText('8.0/10')).toBeInTheDocument(); // only r1 took the quiz
     expect(screen.getByText('Would consider a finance career')).toBeInTheDocument();
     expect(screen.queryByText(/AI financial advi/i)).not.toBeInTheDocument();
     expect(screen.getByText('pa*@example.com')).toBeInTheDocument(); // masked, never full
