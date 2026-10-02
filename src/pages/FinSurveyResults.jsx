@@ -1,5 +1,5 @@
 /**
- * Financial-literacy survey results (temporary). Hidden on purpose:
+ * Financial-literacy survey results (temporary; case-competition research). Hidden on purpose:
  * reachable only by pasting /fin-survey/results — ungated by design, so the
  * API masks respondent emails and this page never sees full addresses.
  *
@@ -20,14 +20,14 @@ const LABELS = {
     schoolEnough: { yes: 'Yes, plenty', 'sort-of': 'Sort of', no: 'Not even close' },
     wouldTakeSchoolCourse: { definitely: 'Definitely', probably: 'Probably', maybe: 'Maybe', no: 'No' },
     wouldTakeCapletCourse: { yes: 'Yes', maybe: 'Maybe', no: 'No' },
-    aiAdvisorTrust: { yes: 'Yes, for most things', basics: 'Basics only', no: 'Would not trust it' },
+    financeCareer: { yes: 'Yes', maybe: 'Maybe', no: 'No' },
 };
 const ORDERS = {
     yearLevel: ['7', '8', '9', '10', '11', '12', 'Not at school'],
     schoolEnough: ['yes', 'sort-of', 'no'],
     wouldTakeSchoolCourse: ['definitely', 'probably', 'maybe', 'no'],
     wouldTakeCapletCourse: ['yes', 'maybe', 'no'],
-    aiAdvisorTrust: ['yes', 'basics', 'no'],
+    financeCareer: ['yes', 'maybe', 'no'],
 };
 // Ordinal ramp, dark→light, for ordered answers (most positive first).
 const ORDINAL = ['var(--fsr-o5)', 'var(--fsr-o4)', 'var(--fsr-o3)', 'var(--fsr-o2)', 'var(--fsr-o1)'];
@@ -300,6 +300,8 @@ export default function FinSurveyResults() {
         const selfRatings = rs.map((r) => Number(r.answers?.selfRating)).filter((n) => n >= 1 && n <= 5);
         const avgSelf = selfRatings.length ? selfRatings.reduce((a, b) => a + b, 0) / selfRatings.length : 0;
         const ratingDist = [1, 2, 3, 4, 5].map((n, i) => ({ label: `${n} of 5`, short: String(n), value: selfRatings.filter((v) => v === n).length, total, color: ORDINAL[4 - i] }));
+        const industryViews = rs.map((r) => Number(r.answers?.industryView)).filter((n) => n >= 1 && n <= 5);
+        const industryDist = [1, 2, 3, 4, 5].map((n, i) => ({ label: `${n} of 5`, short: String(n), value: industryViews.filter((v) => v === n).length, total: industryViews.length, color: ORDINAL[4 - i] }));
         const likert = CONFIDENCE_TOPICS.map((t) => ({
             label: t.label.replace(/\s*\(.*\)/, ''),
             counts: [1, 2, 3, 4, 5].map((n) => rs.filter((r) => Number(r.answers?.confidence?.[t.key]) === n).length),
@@ -321,9 +323,12 @@ export default function FinSurveyResults() {
             likert,
             schoolCourse: countBy('wouldTakeSchoolCourse', ORDERS.wouldTakeSchoolCourse),
             capletCourse: countBy('wouldTakeCapletCourse', ORDERS.wouldTakeCapletCourse),
-            aiTrust: countBy('aiAdvisorTrust', ORDERS.aiAdvisorTrust),
+            industryDist,
+            industryAnswered: industryViews.length,
+            industryWords: multiCountBy('industryWords'),
+            financeCareer: countBy('financeCareer', ORDERS.financeCareer),
             timeline,
-            aiThoughts: texts('aiThoughts'),
+            industryThoughts: texts('industryThoughts'),
             wishTaught: texts('wishTaught'),
         };
     }, [data]);
@@ -366,14 +371,26 @@ export default function FinSurveyResults() {
                             <StatTile label="Responses" value={stats.total} />
                             <StatTile label="Accounts created" value={data.accountsCreated} sub="new Caplet signups" />
                             <StatTile label="Self-rated literacy" value={stats.avgSelf.toFixed(1)} sub="average out of 5" />
-                            <StatTile label="Would take our course" value={`${stats.yesCapletPct}%`} sub="answered a straight yes" />
+                            <StatTile label="Would take an online course" value={`${stats.yesCapletPct}%`} sub="answered a straight yes" />
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <ChartCard title="Does school teach enough about money?" rows={rowsOf(stats.enough)}>{donut(stats.enough)}</ChartCard>
-                            <ChartCard title="Would take a free Caplet course" rows={rowsOf(stats.capletCourse)}>{donut(stats.capletCourse)}</ChartCard>
+                            <ChartCard title="Would take a free online course" rows={rowsOf(stats.capletCourse)}>{donut(stats.capletCourse)}</ChartCard>
                             <ChartCard title="Would take a school fin-lit course" rows={rowsOf(stats.schoolCourse)}>{donut(stats.schoolCourse)}</ChartCard>
-                            <ChartCard title="Would trust an AI financial advisor" rows={rowsOf(stats.aiTrust)}>{donut(stats.aiTrust)}</ChartCard>
+                            {stats.industryAnswered > 0 && (
+                                <>
+                                    <ChartCard title="Overall view of the finance industry" note="1 = negative, 5 = positive." rows={rowsOf(stats.industryDist)}>
+                                        <Columns data={stats.industryDist} tip={tip} />
+                                    </ChartCard>
+                                    <ChartCard title="Would consider a finance career" rows={rowsOf(stats.financeCareer)}>{donut(stats.financeCareer)}</ChartCard>
+                                    {stats.industryWords.length > 0 && (
+                                        <ChartCard title="Words they'd use for the finance industry" note="Multi-select." rows={rowsOf(stats.industryWords)}>
+                                            <HBars data={stats.industryWords} tip={tip} />
+                                        </ChartCard>
+                                    )}
+                                </>
+                            )}
 
                             <ChartCard wide title="Confidence by topic" note="1 = not at all, 5 = very. The neutral band straddles the centre line; blue to the right is confident."
                                 rows={stats.likert.map((r) => ({ label: r.label, value: r.counts.map((c, i) => `${i + 1}:${c}`).join('  ') }))}>
@@ -399,7 +416,7 @@ export default function FinSurveyResults() {
                             )}
                         </div>
 
-                        {[['Thoughts on AI financial advice', stats.aiThoughts], ['Money topics they wish someone taught', stats.wishTaught]].map(([title, items]) => items.length > 0 && (
+                        {[['Views on the finance industry', stats.industryThoughts], ['Money topics they wish someone taught', stats.wishTaught]].map(([title, items]) => items.length > 0 && (
                             <section key={title} className="surface-card p-5">
                                 <h2 className="font-display text-base font-extrabold text-text-primary">{title}</h2>
                                 <ul className="mt-3 grid gap-3 sm:grid-cols-2">

@@ -40,9 +40,12 @@ describe('FinSurvey (hidden page)', () => {
       .forEach((topic) => pick(topic, '2'));
     next();
     pick('School course', 'Definitely');
-    pick('Caplet course', 'Yes');
+    pick('Online course', 'Yes');
     next();
-    pick('AI advisor trust', 'Only for basic questions');
+    expect(screen.queryByText(/\bAI\b/)).not.toBeInTheDocument();
+    pick('Finance industry view', '3');
+    fireEvent.click(within(screen.getByRole('group', { name: 'Finance industry words' })).getByRole('button', { name: /Confusing/ }));
+    pick('Finance career', 'Maybe');
     next(); // submit
 
     await waitFor(() => expect(api.request).toHaveBeenCalled());
@@ -56,8 +59,11 @@ describe('FinSurvey (hidden page)', () => {
       selfRating: 2,
       schoolEnough: 'sort-of',
       wouldTakeCapletCourse: 'yes',
-      aiAdvisorTrust: 'basics',
+      industryView: 3,
+      industryWords: ['Confusing'],
+      financeCareer: 'maybe',
     });
+    expect(body.answers).not.toHaveProperty('aiAdvisorTrust');
     expect(body.answers.confidence).toEqual({ budgeting: 2, tax: 2, super: 2, investing: 2, debt: 2 });
     expect(await screen.findByText(/Your Caplet account is live/i)).toBeInTheDocument();
   });
@@ -85,7 +91,8 @@ describe('FinSurveyResults (hidden page)', () => {
             learnedFrom: ['Social media'], schoolEnough: 'no',
             confidence: { budgeting: 2, tax: 1, super: 1, investing: 2, debt: 2 },
             wouldTakeSchoolCourse: 'definitely', wouldTakeCapletCourse: 'yes',
-            aiAdvisorTrust: 'basics', aiThoughts: 'Only if a human checks it.', wishTaught: 'Tax returns.',
+            industryView: 2, industryWords: ['Confusing', 'Greedy'], financeCareer: 'maybe',
+            industryThoughts: 'Feels built for people who already have money.', wishTaught: 'Tax returns.',
           },
         },
         {
@@ -94,7 +101,7 @@ describe('FinSurveyResults (hidden page)', () => {
           answers: {
             yearLevel: '12', commerceSubjects: ['None of these'], selfRating: 4,
             schoolEnough: 'no', confidence: { budgeting: 4, tax: 3, super: 2, investing: 3, debt: 4 },
-            wouldTakeSchoolCourse: 'maybe', wouldTakeCapletCourse: 'yes', aiAdvisorTrust: 'no',
+            wouldTakeSchoolCourse: 'maybe', wouldTakeCapletCourse: 'yes', industryView: 4, financeCareer: 'yes',
           },
         },
       ],
@@ -104,7 +111,10 @@ describe('FinSurveyResults (hidden page)', () => {
     expect(screen.getAllByText('3.0').length).toBeGreaterThan(0); // avg self-rating (2+4)/2
     expect(screen.getAllByText('100%').length).toBeGreaterThan(0); // both said yes to the course
     expect(screen.getByText('Y11')).toBeInTheDocument(); // year-level column axis
-    expect(screen.getByText(/Only if a human checks it/)).toBeInTheDocument();
+    expect(screen.getByText(/built for people who already have money/)).toBeInTheDocument();
+    expect(screen.getByText('Overall view of the finance industry')).toBeInTheDocument();
+    expect(screen.getByText('Would consider a finance career')).toBeInTheDocument();
+    expect(screen.queryByText(/AI financial advi/i)).not.toBeInTheDocument();
     expect(screen.getByText('pa*@example.com')).toBeInTheDocument(); // masked, never full
     expect(screen.queryByText('pat@example.com')).not.toBeInTheDocument();
     // Every chart has a table twin.

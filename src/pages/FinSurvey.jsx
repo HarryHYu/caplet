@@ -1,6 +1,7 @@
 /**
- * Financial-literacy survey (temporary). Hidden on purpose: reachable only
- * by pasting /fin-survey — no nav links anywhere.
+ * Financial-literacy survey (temporary) — research for a case competition,
+ * not a product pitch. Hidden on purpose: reachable only by pasting
+ * /fin-survey — no nav links anywhere.
  *
  * A short multi-stage wizard in the site's own voice: hand-written kickers,
  * display headlines, rise/pop micro-animations, one question group per
@@ -33,10 +34,11 @@ const CAPLET_COURSE = [
     { key: 'maybe', label: 'Maybe' },
     { key: 'no', label: 'No' },
 ];
-const AI_TRUST = [
-    { key: 'yes', label: 'Yes, for most things' },
-    { key: 'basics', label: 'Only for basic questions' },
-    { key: 'no', label: 'I would not trust it' },
+const INDUSTRY_WORDS = ['Helpful', 'Trustworthy', 'Confusing', 'Greedy', 'Risky', 'Exciting', 'Only for rich people', 'Out of touch with young people'];
+const FINANCE_CAREER = [
+    { key: 'yes', label: 'Yes' },
+    { key: 'maybe', label: 'Maybe' },
+    { key: 'no', label: 'No' },
 ];
 
 function Pills({ options, value, onChange, name }) {
@@ -131,8 +133,10 @@ export default function FinSurvey() {
     const [confidence, setConfidence] = useState({});
     const [wouldTakeSchoolCourse, setWouldTakeSchoolCourse] = useState(null);
     const [wouldTakeCapletCourse, setWouldTakeCapletCourse] = useState(null);
-    const [aiAdvisorTrust, setAiAdvisorTrust] = useState(null);
-    const [aiThoughts, setAiThoughts] = useState('');
+    const [industryView, setIndustryView] = useState(null);
+    const [industryWords, setIndustryWords] = useState([]);
+    const [financeCareer, setFinanceCareer] = useState(null);
+    const [industryThoughts, setIndustryThoughts] = useState('');
     const [wishTaught, setWishTaught] = useState('');
     const [step, setStep] = useState(0); // 0 = splash
     const [error, setError] = useState(null);
@@ -166,8 +170,10 @@ export default function FinSurvey() {
         setConfidence(a.confidence || {});
         setWouldTakeSchoolCourse(a.wouldTakeSchoolCourse ?? null);
         setWouldTakeCapletCourse(a.wouldTakeCapletCourse ?? null);
-        setAiAdvisorTrust(a.aiAdvisorTrust ?? null);
-        setAiThoughts(a.aiThoughts || '');
+        setIndustryView(a.industryView ?? null);
+        setIndustryWords(a.industryWords || []);
+        setFinanceCareer(a.financeCareer ?? null);
+        setIndustryThoughts(a.industryThoughts || '');
         setWishTaught(a.wishTaught || '');
         setEditing(true);
         setStep(1);
@@ -218,17 +224,21 @@ export default function FinSurvey() {
             title: 'If a course existed',
             valid: () => {
                 if (!wouldTakeSchoolCourse) return 'the school course question';
-                if (!wouldTakeCapletCourse) return 'the Caplet course question';
+                if (!wouldTakeCapletCourse) return 'the online course question';
                 return null;
             },
         },
         {
-            emoji: '🤖',
+            emoji: '🏦',
             kicker: 'last one',
-            title: 'AI and your money',
-            valid: () => (aiAdvisorTrust ? null : 'the AI advisor question'),
+            title: 'The finance industry',
+            valid: () => {
+                if (!industryView) return 'your overall view of the finance industry';
+                if (!financeCareer) return 'the finance career question';
+                return null;
+            },
         },
-    ]), [isAuthenticated, user, name, email, password, yearLevel, commerceSubjects, selfRating, schoolEnough, confidence, wouldTakeSchoolCourse, wouldTakeCapletCourse, aiAdvisorTrust]);
+    ]), [isAuthenticated, user, name, email, password, yearLevel, commerceSubjects, selfRating, schoolEnough, confidence, wouldTakeSchoolCourse, wouldTakeCapletCourse, industryView, financeCareer]);
 
     const stageIndex = step - 1; // step 0 is the splash
     const progress = step === 0 ? 0 : Math.round((stageIndex / stages.length) * 100);
@@ -262,8 +272,9 @@ export default function FinSurvey() {
                     school: school.trim(),
                     answers: {
                         yearLevel, commerceSubjects, selfRating, learnedFrom, schoolEnough,
-                        confidence, wouldTakeSchoolCourse, wouldTakeCapletCourse, aiAdvisorTrust,
-                        aiThoughts: aiThoughts.trim().slice(0, 1000),
+                        confidence, wouldTakeSchoolCourse, wouldTakeCapletCourse,
+                        industryView, industryWords, financeCareer,
+                        industryThoughts: industryThoughts.trim().slice(0, 1000),
                         wishTaught: wishTaught.trim().slice(0, 1000),
                     },
                 }),
@@ -300,7 +311,7 @@ export default function FinSurvey() {
                         {done.accountCreated && <>Your Caplet account is live too — log in any time with this email and the password you picked.</>}
                         {done.updated && !done.accountCreated && <>We replaced your earlier answers with these ones. </>}
                         {done.accountExisted && !isAuthenticated && !done.updated && <>You already had a Caplet account under this email, so we kept it exactly as it was.</>}
-                        {isAuthenticated && !done.updated && <>Your answers are in. Watch this space — if the course happens, you'll be first to know.</>}
+                        {isAuthenticated && !done.updated && <>Your answers are in. Thanks for helping with the research.</>}
                     </p>
                 </div>
             </div>
@@ -341,8 +352,9 @@ export default function FinSurvey() {
                         Money, school,<br />and you.
                     </h1>
                     <p className="animate-fade-slide-up stagger-2 mx-auto mt-5 max-w-md text-base leading-relaxed text-text-dim">
-                        Does school actually prepare you for real money decisions? We're finding out —
-                        and deciding whether to build a short financial literacy course.
+                        Does school actually prepare you for real money decisions? We're asking students
+                        what they know, what they wish they knew, and how they see the finance world —
+                        research for a student case competition.
                         {!isAuthenticated && <> Answering sets you up with a <strong className="text-text-primary">free Caplet account</strong> along the way (we'll say when).</>}
                     </p>
                     <button type="button" onClick={() => setStep(1)}
@@ -440,18 +452,24 @@ export default function FinSurvey() {
                                 <Question label="If your school offered a financial literacy course, would you take it?">
                                     <Pills name="School course" options={SCHOOL_COURSE} value={wouldTakeSchoolCourse} onChange={setWouldTakeSchoolCourse} />
                                 </Question>
-                                <Question label="If Caplet offered a free, short online financial literacy course, would you take it?">
-                                    <Pills name="Caplet course" options={CAPLET_COURSE} value={wouldTakeCapletCourse} onChange={setWouldTakeCapletCourse} />
+                                <Question label="If a free, short online financial literacy course existed, would you take it?">
+                                    <Pills name="Online course" options={CAPLET_COURSE} value={wouldTakeCapletCourse} onChange={setWouldTakeCapletCourse} />
                                 </Question>
                             </>
                         )}
                         {stageIndex === 5 && (
                             <>
-                                <Question label="Would you trust an AI as a financial advisor?">
-                                    <Pills name="AI advisor trust" options={AI_TRUST} value={aiAdvisorTrust} onChange={setAiAdvisorTrust} />
+                                <Question label="Overall, how do you feel about the finance industry — banks, super funds, investing, financial advisers?">
+                                    <Scale name="Finance industry view" value={industryView} onChange={setIndustryView} low="Negative" high="Positive" />
                                 </Question>
-                                <Field label="Any thoughts on AI giving financial advice? (optional)">
-                                    <textarea value={aiThoughts} onChange={(e) => setAiThoughts(e.target.value)} rows={3} maxLength={1000}
+                                <Question label="Which words fit the finance industry for you?" hint="Optional, pick any.">
+                                    <Checks name="Finance industry words" options={INDUSTRY_WORDS} value={industryWords} onChange={setIndustryWords} />
+                                </Question>
+                                <Question label="Would you ever consider a career in finance?">
+                                    <Pills name="Finance career" options={FINANCE_CAREER} value={financeCareer} onChange={setFinanceCareer} />
+                                </Question>
+                                <Field label="Anything else you think about the finance industry? (optional)">
+                                    <textarea value={industryThoughts} onChange={(e) => setIndustryThoughts(e.target.value)} rows={3} maxLength={1000}
                                         className={inputCls} placeholder="Honest takes welcome — good, bad, suspicious…" />
                                 </Field>
                                 <Field label="One money topic you wish someone would actually teach you? (optional)">
