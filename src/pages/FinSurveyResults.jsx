@@ -208,6 +208,17 @@ function HBars({ data, tip }) {
 
 // ── Diverging stack: Likert 1..5 per topic, centred on neutral ──────────────
 function LikertStack({ rows, tip }) {
+    // One shared scale for every row: the track spans the furthest any row
+    // reaches left of neutral-centre plus the furthest any row reaches right.
+    // A fixed 50% centre let a mostly-negative topic run off the card.
+    const shares = rows.map((row) => {
+        const n = row.counts.reduce((a, b) => a + b, 0) || 1;
+        return row.counts.map((c) => c / n);
+    });
+    const negExtent = Math.max(0, ...shares.map((s) => s[0] + s[1] + s[2] / 2));
+    const posExtent = Math.max(0, ...shares.map((s) => s[3] + s[4] + s[2] / 2));
+    const span = negExtent + posExtent || 1;
+    const centre = negExtent / span;
     return (
         <div className="flex flex-col gap-3">
             <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-text-dim" aria-label="Legend">
@@ -215,24 +226,23 @@ function LikertStack({ rows, tip }) {
                     <li key={l} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: LIKERT[i] }} />{l}</li>
                 ))}
             </ul>
-            {rows.map((row) => {
+            {rows.map((row, r) => {
                 const n = row.counts.reduce((a, b) => a + b, 0) || 1;
-                const share = row.counts.map((c) => c / n);
+                const share = shares[r];
                 // Start so the neutral band straddles the centre line.
-                const start = 0.5 - (share[0] + share[1] + share[2] / 2);
-                let x = start;
+                let x = centre - (share[0] + share[1] + share[2] / 2) / span;
                 const confident = pct(row.counts[3] + row.counts[4], n);
                 return (
                     <div key={row.label} className="flex items-center gap-3 text-xs">
-                        <span className="w-28 shrink-0 truncate font-medium text-text-primary sm:w-40">{row.label}</span>
-                        <div className="relative h-6 min-w-0 flex-1">
-                            <span className="absolute inset-y-0 left-1/2 w-px bg-[color:var(--line-strong)] opacity-40" />
+                        <span className="w-28 shrink-0 truncate font-medium text-text-primary sm:w-40" title={row.label}>{row.label}</span>
+                        <div className="relative h-6 min-w-0 flex-1 overflow-hidden">
+                            <span className="absolute inset-y-0 w-px bg-[color:var(--line-strong)] opacity-40" style={{ left: `${centre * 100}%` }} />
                             {share.map((s, i) => {
-                                const left = x; x += s;
+                                const left = x; const w = s / span; x += w;
                                 if (s <= 0) return null;
                                 return (
                                     <div key={i} className="fsr-mark absolute inset-y-0 rounded-[3px]"
-                                        style={{ left: `calc(${left * 100}% + 1px)`, width: `calc(${s * 100}% - 2px)`, background: LIKERT[i] }}
+                                        style={{ left: `calc(${left * 100}% + 1px)`, width: `calc(${w * 100}% - 2px)`, background: LIKERT[i] }}
                                         {...tip.bind(`${row.label} — ${LIKERT_LABELS[i]}`, `${row.counts[i]} · ${pct(row.counts[i], n)}%`)} />
                                 );
                             })}
