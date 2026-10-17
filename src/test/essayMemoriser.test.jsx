@@ -73,18 +73,23 @@ const parsedEssay = {
 describe('EssayMemoriser', () => {
   it('keeps the library calm, then opens the new-essay composer with a model picker', async () => {
     renderAt('/essays');
-    expect(await screen.findByText(/Learn it by heart/i)).toBeInTheDocument();
-    expect(screen.getByText(/Start a new essay/i)).toBeInTheDocument();
-    expect(await screen.findByText(/No essays yet/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Know your essays by heart/i)).toBeInTheDocument();
+    // An empty library explains the whole flow before asking for anything.
+    expect(await screen.findByText(/Three steps from draft to memorised/i)).toBeInTheDocument();
+    expect(screen.getByText(/No essays yet/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add your first essay/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Add essay/i }));
-    expect(screen.getByText(/Add an essay/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Create workspace/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Add essay$/i }));
+    expect(screen.getByRole('heading', { name: /Add an essay/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Add essay$/i })).toBeInTheDocument();
     expect(screen.getByText(/uses AI to map the essay’s structure/i)).toBeInTheDocument();
     // PDFs attach as named files, never dumped as raw text into the textarea.
     expect(screen.getByText(/Attach essay PDF/i)).toBeInTheDocument();
-    // Context can be supplied up front, beside the essay.
-    expect(screen.getByText(/Context library|Marker feedback, quote banks/i)).toBeInTheDocument();
+    // Sources and the model choice are there, but behind "More options" so a
+    // first essay is just title + text.
+    expect(screen.queryByText(/Marker feedback, quote banks/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /More options/i }));
+    expect(screen.getByText(/Marker feedback, quote banks/i)).toBeInTheDocument();
     // The AI model is choosable before generating, like the lesson generator.
     fireEvent.click(screen.getByRole('button', { name: /GPT-5\.4 Mini/i }));
     expect(screen.getByRole('option', { name: /GPT-5\.5/i })).toBeInTheDocument();
@@ -99,19 +104,24 @@ describe('EssayMemoriser', () => {
     expect(card).toHaveAttribute('href', '/essays/essay-1');
   });
 
-  it('opens a workspace with Document, Context, Practice and Edit sections', async () => {
+  it('opens a workspace with Read, Practise, Sources and Edit text sections', async () => {
     api.getEssay.mockResolvedValue({ essay: parsedEssay });
     renderAt('/essays/essay-1');
 
     expect(await screen.findByRole('heading', { name: /Macbeth: ambition/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /All essays/i })).toHaveAttribute('href', '/essays');
-    expect(screen.getByRole('button', { name: /Document/i })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('button', { name: /Context/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Practice/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Edit$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Read$/i })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: /^Sources$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Practise$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Edit text$/i })).toBeInTheDocument();
+    // Every section says what it is for.
+    expect(screen.getByText(/structure marked up/i)).toBeInTheDocument();
+    // A visitor who lands on the essay sees one primary action.
+    expect(screen.getByRole('button', { name: /Practise this essay/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Practice/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Practise$/i }));
     expect(await screen.findByText(/Your learning path/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Start with step 1/i })).toBeInTheDocument();
     // Three consolidated tools — overlapping modes became option toggles.
     expect(screen.getByRole('button', { name: /Memorise/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Exam run/i })).toBeInTheDocument();
@@ -785,9 +795,9 @@ describe('EssayMemoriser', () => {
     expect(await screen.findByLabelText(/Essay text/i)).toBeInTheDocument();
     // Switching to Practice must not strand the user — the tab bar stays and
     // the setup card renders instead of a blank page.
-    fireEvent.click(screen.getByRole('button', { name: /Practice/i }));
-    expect(await screen.findByRole('button', { name: /Set up practice/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Edit$/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Practise$/i }));
+    expect(await screen.findByRole('button', { name: /Map my essay/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Edit text$/i })).toBeInTheDocument();
   });
 
   it('edits the essay in place and rescans with the chosen model', async () => {
@@ -830,13 +840,13 @@ describe('EssayMemoriser', () => {
     api.parseEssay.mockRejectedValueOnce(new Error('AI assistance is temporarily paused.'));
 
     renderAt('/essays/essay-2');
-    expect(await screen.findByRole('button', { name: /Set up practice/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Set up practice/i }));
+    expect(await screen.findByRole('button', { name: /Map my essay/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Map my essay/i }));
 
     expect(await screen.findByText(/AI assistance is temporarily paused/i)).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(api.request).not.toHaveBeenCalledWith('/privacy/consents', expect.anything());
-    expect(screen.getByRole('button', { name: /Try setup again/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Try mapping again/i })).toBeInTheDocument();
   });
 
   it('scores typed words with smart-quote tolerance', async () => {

@@ -440,7 +440,7 @@ export default function Dashboard() {
                             const details = {
                                 'resource-library': { icon: BookOpenIcon, detail: 'Notes, guides and past papers' },
                                 'subject-notes': { icon: DocumentTextIcon, detail: 'Google Docs and your own notes' },
-                                'essay-practice': { icon: DocumentTextIcon, detail: 'Plan, write and improve essays' },
+                                'essay-practice': { icon: DocumentTextIcon, detail: 'Memorise essays word for word' },
                                 'assessment-dates': { icon: CalendarDaysIcon, detail: 'See key dates and exam information' },
                                 'assessment-log': { icon: BookmarkIcon, detail: 'Results, reflections and scanned tasks' },
                                 'financial-tools': { icon: CalculatorIcon, detail: 'Budgeting, interest and more' },

@@ -75,7 +75,7 @@ describe('minimal dashboard study flow', () => {
 
     expect(await screen.findByRole('heading', { name: 'Resources & tools' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Resource library.*Notes, guides/i })).toHaveAttribute('href', '/library');
-    expect(screen.getByRole('link', { name: /Essay practice.*improve essays/i })).toHaveAttribute('href', '/essays');
+    expect(screen.getByRole('link', { name: /Essay practice.*word for word/i })).toHaveAttribute('href', '/essays');
     expect(screen.getByRole('link', { name: /Assessment dates.*exam information/i })).toHaveAttribute('href', '/assessments');
     expect(screen.getByRole('link', { name: /Financial tools.*interest/i })).toHaveAttribute('href', '/money/tools');
     expect(screen.getByRole('button', { name: 'Add Resource library to sidebar' })).toBeInTheDocument();

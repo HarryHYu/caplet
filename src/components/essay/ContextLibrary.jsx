@@ -170,10 +170,10 @@ export default function ContextLibrary({ docs, onAdd, onDelete, busy, loading })
         <div>
             <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Context library</h2>
+                    <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Sources for the assistant</h2>
                     <p className="mt-1 max-w-xl text-sm text-text-muted">
-                        Everything the assistant reads from: marker feedback, quote banks, historical context, class analysis.
-                        Kept beside your essay — never mixed into it.
+                        Optional. Whatever you add here — marker feedback, quote banks, historical context, class analysis — the
+                        &ldquo;Ask about this essay&rdquo; assistant reads before it answers. Kept beside your essay, never mixed into it.
                     </p>
                 </div>
                 <span className="text-xs font-bold text-text-dim">

@@ -2927,6 +2927,7 @@ function NewEssayForm({ onCreated }) {
     const [pdfBusy, setPdfBusy] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [moreOpen, setMoreOpen] = useState(false);
     // Context sources collected up front, saved once the essay exists.
     const [pendingContext, setPendingContext] = useState([]);
 
@@ -2967,14 +2968,14 @@ function NewEssayForm({ onCreated }) {
     return (
         <div className="pt-5">
             <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-text-dim" htmlFor="new-essay-title">
-                Essay
+                Title
             </label>
             <input
                 id="new-essay-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Essay title"
+                placeholder="e.g. Macbeth — ambition essay"
                 className="w-full mb-3 px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-body"
             />
             {sourceFile ? (
@@ -2991,38 +2992,15 @@ function NewEssayForm({ onCreated }) {
                 <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    placeholder="Paste your essay here, or attach it as a PDF."
+                    placeholder="Paste the whole essay here, or attach it as a PDF below."
                     rows={8}
                     aria-label="Essay text"
                     className="w-full px-4 py-3 rounded-xl bg-surface-body border border-line-soft text-text-primary placeholder:text-text-dim outline-none focus:border-accent transition-colors font-body resize-y"
                 />
             )}
 
-            <div className="mt-6 border-t border-line-soft pt-5">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Context <span className="font-medium normal-case tracking-normal text-text-dim">(optional)</span></p>
-                <p className="mt-1 mb-3 text-sm text-text-muted">
-                    Marker feedback, quote banks, background reading — what the assistant will reason from. Kept separate from your essay.
-                </p>
-                {pendingContext.length > 0 && (
-                    <ul className="mb-3 space-y-2">
-                        {pendingContext.map((doc, i) => (
-                            <ContextDocRow
-                                key={i}
-                                doc={{ ...doc, id: i, chars: doc.content.length, preview: doc.content.slice(0, 160) }}
-                                onDelete={() => setPendingContext((prev) => prev.filter((_, idx) => idx !== i))}
-                            />
-                        ))}
-                    </ul>
-                )}
-                <AddContextForm
-                    onAdd={async (doc) => { setPendingContext((prev) => [...prev, doc]); }}
-                    disabled={pendingContext.length >= MAX_CONTEXT_DOCS}
-                    disabledReason={`That is the ${MAX_CONTEXT_DOCS}-source limit — you can manage sources inside the essay too.`}
-                />
-            </div>
-
             {error && <p role="alert" className="text-sm text-text-error mt-4 font-medium">{error}</p>}
-            <div className="flex flex-wrap items-center gap-3 mt-5 border-t border-line-soft pt-5">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
                 {!sourceFile && (
                     <label className="btn-secondary inline-flex items-center gap-2 cursor-pointer press">
                         <ArrowUpTrayIcon className="w-4 h-4" />
@@ -3030,29 +3008,111 @@ function NewEssayForm({ onCreated }) {
                         <input type="file" accept="application/pdf" className="hidden" onChange={onPdf} disabled={pdfBusy} />
                     </label>
                 )}
-                <EssayModelPicker model={model} onChange={setModel} disabled={submitting || pdfBusy} />
                 <button type="button" onClick={submit} disabled={submitting || pdfBusy}
                     className="btn-primary inline-flex items-center gap-2 press disabled:opacity-40">
                     <PlusIcon className="w-4 h-4" />
-                    {submitting ? 'Setting up…' : 'Create workspace'}
+                    {submitting ? 'Setting up…' : 'Add essay'}
                 </button>
             </div>
             <p className="mt-3 text-xs font-medium leading-relaxed text-text-dim">
-                Caplet uses AI to map the essay’s structure for practice. Your original wording is kept unchanged.
+                Next, Caplet uses AI to map the essay’s structure — thesis, paragraphs, quotes — so you can practise it. Your original wording is kept unchanged.
             </p>
+
+            {/* The assistant's sources and the model choice matter to a few
+                people and confuse everyone else on their first essay, so they
+                sit behind one disclosure. */}
+            <div className="mt-5 border-t border-line-soft pt-4">
+                <button type="button" onClick={() => setMoreOpen((v) => !v)} aria-expanded={moreOpen}
+                    className="focus-ring inline-flex items-center gap-1.5 rounded-md text-xs font-bold text-text-dim transition-colors hover:text-text-primary">
+                    <ChevronDownIcon className={`h-3.5 w-3.5 transition-transform ${moreOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                    More options<span className="font-medium"> · sources, AI model</span>
+                </button>
+                {moreOpen && (
+                    <div className="mt-4 space-y-5">
+                        <div>
+                            <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Sources for the assistant <span className="font-medium normal-case tracking-normal text-text-dim">(optional)</span></p>
+                            <p className="mt-1 mb-3 text-sm text-text-muted">
+                                Marker feedback, quote banks, background reading — what the assistant will reason from. Kept separate from your essay.
+                            </p>
+                            {pendingContext.length > 0 && (
+                                <ul className="mb-3 space-y-2">
+                                    {pendingContext.map((doc, i) => (
+                                        <ContextDocRow
+                                            key={i}
+                                            doc={{ ...doc, id: i, chars: doc.content.length, preview: doc.content.slice(0, 160) }}
+                                            onDelete={() => setPendingContext((prev) => prev.filter((_, idx) => idx !== i))}
+                                        />
+                                    ))}
+                                </ul>
+                            )}
+                            <AddContextForm
+                                onAdd={async (doc) => { setPendingContext((prev) => [...prev, doc]); }}
+                                disabled={pendingContext.length >= MAX_CONTEXT_DOCS}
+                                disabledReason={`That is the ${MAX_CONTEXT_DOCS}-source limit — you can manage sources inside the essay too.`}
+                            />
+                        </div>
+                        <div>
+                            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">AI model for mapping</p>
+                            <EssayModelPicker model={model} onChange={setModel} disabled={submitting || pdfBusy} />
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
 
-function NewEssayComposer({ onCreated }) {
-    const [open, setOpen] = useState(false);
+const HOW_IT_WORKS = [
+    { title: 'Add your essay', body: 'Paste the text or attach a PDF. Your wording is stored exactly as you wrote it.' },
+    { title: 'Caplet maps the structure', body: 'AI finds the thesis, body paragraphs, quotes and techniques — about half a minute.' },
+    { title: 'Practise until it sticks', body: 'Type it back, run it under exam conditions, then review on a schedule so it stays known.' },
+];
+
+/** The three-step explainer: a full card for an empty library, a compact list beside the composer once essays exist. */
+function HowItWorks({ compact = false }) {
+    if (compact) {
+        return (
+            <section className="surface-card p-5" aria-label="How essays work">
+                <p className="card-section-title mb-3">How it works</p>
+                <ol className="space-y-2.5">
+                    {HOW_IT_WORKS.map((s, i) => (
+                        <li key={s.title} className="flex gap-3 text-sm">
+                            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent-soft text-[11px] font-extrabold text-accent">{i + 1}</span>
+                            <span><span className="font-bold text-text-primary">{s.title}.</span> <span className="text-text-muted">{s.body}</span></span>
+                        </li>
+                    ))}
+                </ol>
+            </section>
+        );
+    }
+    return (
+        <section className="surface-card block-blue md:p-8" aria-labelledby="essays-how">
+            <p className="card-section-title mb-1">How it works</p>
+            <h2 id="essays-how" className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Three steps from draft to memorised.</h2>
+            <ol className="mt-5 grid gap-3 sm:grid-cols-3">
+                {HOW_IT_WORKS.map((s, i) => (
+                    <li key={s.title} className="rounded-2xl bg-surface-raised p-4">
+                        <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-xs font-extrabold text-accent-contrast">{i + 1}</span>
+                        <p className="mt-3 text-sm font-bold text-text-primary">{s.title}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-text-muted">{s.body}</p>
+                    </li>
+                ))}
+            </ol>
+        </section>
+    );
+}
+
+function NewEssayComposer({ onCreated, open: controlledOpen, onOpenChange }) {
+    const [localOpen, setLocalOpen] = useState(false);
+    const open = controlledOpen ?? localOpen;
+    const setOpen = (value) => { setLocalOpen(value); onOpenChange?.(value); };
 
     if (open) {
         return (
             <section className="surface-card md:p-8">
                 <div className="flex items-start justify-between gap-4 mb-1">
                     <div>
-                        <p className="card-section-title mb-2">New material</p>
+                        <p className="card-section-title mb-2">New essay</p>
                         <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Add an essay</h2>
                     </div>
                     <button
@@ -3073,8 +3133,8 @@ function NewEssayComposer({ onCreated }) {
             <div className="w-10 h-10 rounded-xl bg-surface-raised flex items-center justify-center mb-5">
                 <PlusIcon className="w-5 h-5 text-accent" />
             </div>
-            <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Start a new essay</h2>
-            <p className="text-sm leading-relaxed text-text-muted mt-2 mb-5">Paste your draft or bring in a PDF. We’ll map the structure before you practise.</p>
+            <h2 className="font-display text-xl font-extrabold tracking-tight text-text-primary">Add an essay</h2>
+            <p className="text-sm leading-relaxed text-text-muted mt-2 mb-5">Paste it or attach a PDF. Set-up takes about a minute, then you can practise straight away.</p>
             <button
                 type="button"
                 onClick={() => setOpen(true)}
@@ -3089,9 +3149,9 @@ function NewEssayComposer({ onCreated }) {
 // ── Practice hub — every activity visible, guided chain intact ──────────────
 
 const PRACTICE_STEPS = [
-    { key: 'wordbyword', step: '1', label: 'Memorise', icon: PencilIcon, desc: 'Type it back — full words or first letters, with your own mistake rules.' },
-    { key: 'typeit', step: '2', label: 'Exam run', icon: DocumentTextIcon, desc: 'Write the whole selection, no hints, timed.' },
-    { key: 'recall', step: '3', label: 'Review', icon: ClockIcon, desc: 'Cloze cards or written openings, on the schedule.' },
+    { key: 'wordbyword', step: '1', label: 'Memorise', icon: PencilIcon, desc: 'Type the essay back from memory, with as much or as little help as you want.' },
+    { key: 'typeit', step: '2', label: 'Exam run', icon: DocumentTextIcon, desc: 'Write a whole section with no hints, against the clock — like the real thing.' },
+    { key: 'recall', step: '3', label: 'Review', icon: ClockIcon, desc: 'Short recall cards spaced over days, so it stays in your head.' },
 ];
 
 const DRILL_MODES = [
@@ -3216,16 +3276,21 @@ function PracticeHub({ mode, onChange, dueCount, drills }) {
 
     return (
         <section aria-label="Essay learning path" className="mb-6 rounded-2xl border border-line-soft bg-surface-raised p-3 md:p-4 shadow-card">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-2 mb-3">
-                <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Your learning path</p>
-                    <p className="text-sm text-text-muted mt-1">Move from understanding to independent recall.</p>
-                </div>
-                {dueCount > 0 && (
-                    <button type="button" onClick={() => onChange('recall')} className="text-xs font-bold text-accent hover:opacity-75 transition-opacity">
-                        {dueCount} due now →
-                    </button>
-                )}
+            <div className="px-2 mb-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-text-dim">Your learning path</p>
+                <p className="text-sm text-text-muted mt-1">Three steps, in order: get it into your head, prove it under pressure, then keep it fresh.</p>
+            </div>
+            {/* One obvious place to start, so a first visit never ends in
+                "which of these do I click?". Due cards win over step 1. */}
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-accent-soft px-4 py-3">
+                <p className="text-sm text-text-primary">
+                    <span className="font-bold">{dueCount > 0 ? `${dueCount} review card${dueCount === 1 ? '' : 's'} due today.` : 'New to this essay?'}</span>{' '}
+                    {dueCount > 0 ? 'Keeping to the schedule is what makes it stick.' : 'Begin with step 1 and work along the path.'}
+                </p>
+                <button type="button" onClick={() => onChange(dueCount > 0 ? 'recall' : 'wordbyword')}
+                    className="btn-primary press inline-flex items-center gap-2">
+                    {dueCount > 0 ? 'Do today’s cards' : 'Start with step 1'} <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+                </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
                 {PRACTICE_STEPS.map((item) => {
@@ -3248,7 +3313,7 @@ function PracticeHub({ mode, onChange, dueCount, drills }) {
             </div>
             {availableDrills.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2 px-2 pt-3">
-                    <span className="text-xs font-bold text-text-dim">Extra drills:</span>
+                    <span className="text-xs font-bold text-text-dim">More ways to practise:</span>
                     {availableDrills.map((item) => {
                         const Icon = item.icon;
                         return (
@@ -3281,11 +3346,13 @@ const pendingContextStore = {
     },
 };
 
+// Keys are stable (they live in URLs and bookmarks). The labels and blurbs are
+// what a newcomer reads, so they say what each section is for.
 const WORKSPACE_TABS = [
-    { key: 'overview', label: 'Document', icon: BookOpenIcon },
-    { key: 'context', label: 'Context', icon: RectangleGroupIcon },
-    { key: 'practice', label: 'Practice', icon: AcademicCapIcon },
-    { key: 'edit', label: 'Edit', icon: PencilSquareIcon },
+    { key: 'overview', label: 'Read', icon: BookOpenIcon, blurb: 'Your essay with its structure marked up — topic sentences, quotes and your own notes. Select any text to add a note or ask the assistant about it.' },
+    { key: 'practice', label: 'Practise', icon: AcademicCapIcon, blurb: 'Three steps that take you from reading the essay to writing it from memory, plus extra drills.' },
+    { key: 'context', label: 'Sources', icon: RectangleGroupIcon, blurb: 'Optional extras for the assistant to read from — marker feedback, quote banks, class notes. Kept beside your essay, never mixed into it.' },
+    { key: 'edit', label: 'Edit text', icon: PencilSquareIcon, blurb: 'Change the title or the wording. Caplet re-maps the structure after you save.' },
 ];
 
 function EditPanel({ essay, onSaved, saving, parsing = false, error }) {
@@ -3786,10 +3853,17 @@ function EssayWorkspace({ essayId }) {
                             )}
                         </div>
                     </div>
-                    <button type="button" onClick={() => { setConfirmingDelete(true); setDeleteError(null); }}
-                        className="btn-secondary shrink-0 inline-flex items-center gap-2 press hover:text-text-error">
-                        <TrashIcon className="w-4 h-4" /> Delete
-                    </button>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        {structure && tab !== 'practice' && (
+                            <button type="button" onClick={() => setTab('practice')} className="btn-primary press inline-flex items-center gap-2">
+                                <AcademicCapIcon className="h-4 w-4" aria-hidden="true" /> Practise this essay
+                            </button>
+                        )}
+                        <button type="button" onClick={() => { setConfirmingDelete(true); setDeleteError(null); }}
+                            className="focus-ring press inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-bold text-text-dim transition-colors hover:text-text-error">
+                            <TrashIcon className="w-4 h-4" /> Delete
+                        </button>
+                    </div>
                 </div>
 
                 {confirmingDelete && (
@@ -3803,7 +3877,8 @@ function EssayWorkspace({ essayId }) {
                 )}
 
                 {/* ── Workspace section tabs — hidden only while a speed run owns the screen ── */}
-                <nav aria-label="Essay workspace sections" className={`mb-6 items-center gap-1 border-b border-line-soft ${speedRunning ? 'hidden' : 'flex'}`}>
+                {/* Scrolls sideways on a phone instead of forcing the page wider. */}
+                <nav aria-label="Essay workspace sections" className={`nav-scrollbar-hidden mb-3 items-center gap-1 overflow-x-auto border-b border-line-soft ${speedRunning ? 'hidden' : 'flex'}`}>
                     {WORKSPACE_TABS.map((t) => {
                         const Icon = t.icon;
                         const active = tab === t.key;
@@ -3813,17 +3888,20 @@ function EssayWorkspace({ essayId }) {
                                 type="button"
                                 aria-current={active ? 'page' : undefined}
                                 onClick={() => setTab(t.key)}
-                                className={`inline-flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 -mb-px transition-colors ${
+                                className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-3 text-sm font-bold border-b-2 -mb-px transition-colors sm:px-4 ${
                                     active
                                         ? 'border-accent text-accent'
                                         : 'border-transparent text-text-dim hover:text-text-primary'
                                 }`}
                             >
-                                <Icon className="w-4 h-4" /> {t.label}
+                                <Icon className="hidden h-4 w-4 sm:block" aria-hidden="true" /> {t.label}
                             </button>
                         );
                     })}
                 </nav>
+                {!speedRunning && !(tab !== 'edit' && !structure) && (
+                    <p className="mb-6 max-w-3xl text-sm text-text-muted">{WORKSPACE_TABS.find((t) => t.key === tab)?.blurb}</p>
+                )}
 
                 {tab !== 'edit' && !structure && (
                     /* ── Setup: choose a model and map the structure ── */
@@ -3841,8 +3919,10 @@ function EssayWorkspace({ essayId }) {
                         ) : (
                             <>
                                 <SparklesIcon className="w-8 h-8 text-accent mx-auto mb-5" />
-                                <p className="text-base text-text-primary font-medium mb-2">
-                                    Use AI to map this essay into its structure — introduction, thesis, body paragraphs, quotes and techniques — before you practise it.
+                                <p className="card-section-title mb-2">One step before practising</p>
+                                <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary mb-3">Map the essay’s structure</h2>
+                                <p className="mx-auto max-w-xl text-base text-text-muted font-medium mb-2">
+                                    Caplet uses AI to find the introduction, thesis, body paragraphs, quotes and techniques, so every drill knows what to test you on. It takes about half a minute.
                                 </p>
                                 <p className="mb-6 font-hand text-base text-accent -rotate-2 inline-block">
                                     Your original wording stays exactly as you wrote it.
@@ -3858,7 +3938,7 @@ function EssayWorkspace({ essayId }) {
                                     <button type="button" onClick={() => parse()} disabled={parsing || saving}
                                         className="btn-primary inline-flex items-center gap-2 press disabled:opacity-40">
                                         <SparklesIcon className="w-4 h-4" />
-                                        {parseError ? 'Try setup again' : 'Set up practice'}
+                                        {parseError ? 'Try mapping again' : 'Map my essay'}
                                     </button>
                                 </div>
                                 <div className="mt-6">
@@ -4099,9 +4179,19 @@ function EssayLibrary() {
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState(false);
     const [dueByEssay, setDueByEssay] = useState({});
+    const [composerOpen, setComposerOpen] = useState(false);
     const mountedRef = useRef(true);
+    const asideRef = useRef(null);
 
     useReveal(undefined, [loading]);
+
+    const openComposer = () => {
+        setComposerOpen(true);
+        // On a phone the composer sits below the list — bring it into view.
+        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            window.setTimeout(() => asideRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }), 50);
+        }
+    };
 
     useEffect(() => {
         mountedRef.current = true;
@@ -4150,76 +4240,86 @@ function EssayLibrary() {
         <div className="minimal-page pb-16 selection:bg-accent selection:text-accent-contrast">
             <div className="container-custom">
                 <header className="minimal-page-header reveal">
-                    <span className="section-kicker">Essay memoriser</span>
-                    <h1 className="minimal-page-title">Learn it by heart.</h1>
+                    <span className="section-kicker">Essays</span>
+                    <h1 className="minimal-page-title">Know your essays by heart.</h1>
                     <p className="minimal-page-description">
-                        Every essay is its own workspace: read it, edit it, and practise it until it is word-perfect and exam-ready.
+                        Paste an essay you need to reproduce in an exam. Caplet maps its structure, then drills you — type it back, run it under exam conditions, review it on a schedule — until you can write it from memory.
                     </p>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-6 items-start reveal-stagger">
-                    <section className="surface-card md:p-8">
-                        <div className="flex flex-wrap items-baseline justify-between gap-3 mb-5">
-                            <div>
-                                <p className="card-section-title mb-1">Your library</p>
-                                <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Your essays</h2>
+                    <div className="flex min-w-0 flex-col gap-6">
+                        {essays.length === 0 && !loadError && <HowItWorks />}
+                        <section className="surface-card md:p-8">
+                            <div className="flex flex-wrap items-baseline justify-between gap-3 mb-5">
+                                <div>
+                                    <p className="card-section-title mb-1">Your library</p>
+                                    <h2 className="font-display text-2xl font-extrabold tracking-tight text-text-primary">Your essays</h2>
+                                </div>
+                                {essays.length > 0 && <span className="text-xs font-bold text-text-dim">{essays.length} saved</span>}
                             </div>
-                            {essays.length > 0 && <span className="text-xs font-bold text-text-dim">{essays.length} saved</span>}
-                        </div>
-                        {loadError ? (
-                            <div className="rounded-2xl border border-line-soft block-cream p-10 text-center">
-                                <p className="text-text-primary text-sm font-bold">Could not load your essays.</p>
-                                <button type="button" onClick={loadEssays} className="mt-3 text-sm font-semibold text-accent hover:opacity-70 transition-opacity">
-                                    Try again
-                                </button>
-                            </div>
-                        ) : essays.length === 0 ? (
-                            <div className="rounded-2xl border border-dashed border-line-strong block-cream px-8 py-14 text-center">
-                                <DocumentTextIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
-                                <p className="text-text-primary text-sm font-bold">No essays yet.</p>
-                                <p className="text-text-dim text-sm mt-1">Add one when you’re ready to start practising.</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 gap-3">
-                                {essays.map((e) => {
-                                    const due = dueByEssay[String(e.id)] || 0;
-                                    return (
-                                        <Link key={e.id} to={`/essays/${e.id}`}
-                                            className="rounded-2xl border border-line-soft bg-surface-raised p-5 flex items-center justify-between gap-4 group card-lift focus-ring press">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                                    e.parsed ? 'block-green' : 'bg-accent-soft'
-                                                }`}>
-                                                    {e.parsed
-                                                        ? <BookOpenIcon className="w-4 h-4 text-[color:var(--mark-green)]" />
-                                                        : <SparklesIcon className="w-4 h-4 text-accent" />}
+                            {loadError ? (
+                                <div className="rounded-2xl border border-line-soft block-cream p-10 text-center">
+                                    <p className="text-text-primary text-sm font-bold">Could not load your essays.</p>
+                                    <button type="button" onClick={loadEssays} className="mt-3 text-sm font-semibold text-accent hover:opacity-70 transition-opacity">
+                                        Try again
+                                    </button>
+                                </div>
+                            ) : essays.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-line-strong block-cream px-8 py-12 text-center">
+                                    <DocumentTextIcon className="w-8 h-8 text-text-dim mx-auto mb-4" />
+                                    <p className="text-text-primary text-sm font-bold">No essays yet.</p>
+                                    <p className="text-text-dim text-sm mt-1">Add the first one — it takes about a minute, and you can start practising straight away.</p>
+                                    <button type="button" onClick={openComposer} className="btn-primary press mt-5 inline-flex items-center gap-2">
+                                        <PlusIcon className="w-4 h-4" aria-hidden="true" /> Add your first essay
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {essays.map((e) => {
+                                        const due = dueByEssay[String(e.id)] || 0;
+                                        const words = typeof e.wordCount === 'number' ? `${e.wordCount} words` : '';
+                                        return (
+                                            <Link key={e.id} to={`/essays/${e.id}`}
+                                                className="rounded-2xl border border-line-soft bg-surface-raised p-5 flex items-center justify-between gap-4 group card-lift focus-ring press">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                                        e.parsed ? 'block-green' : 'block-amber'
+                                                    }`}>
+                                                        {e.parsed
+                                                            ? <BookOpenIcon className="w-4 h-4 text-[color:var(--mark-green)]" />
+                                                            : <SparklesIcon className="w-4 h-4 text-[color:var(--mark-amber)]" />}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">{e.title}</p>
+                                                        {e.excerpt && <p className="text-xs font-medium text-text-dim mt-1 truncate font-serif">{e.excerpt}</p>}
+                                                        <p className="text-xs font-medium text-text-dim mt-1">
+                                                            {e.parsed
+                                                                ? [`Ready to practise`, words, `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}`].filter(Boolean).join(' · ')
+                                                                : <><span className="font-bold text-[color:var(--mark-amber)]">Needs set-up</span>{words ? ` · ${words}` : ''} · open to map the structure</>}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors truncate">{e.title}</p>
-                                                    {e.excerpt && <p className="text-xs font-medium text-text-dim mt-1 truncate font-serif">{e.excerpt}</p>}
-                                                    <p className="text-xs font-medium text-text-dim mt-1">
-                                                        {typeof e.wordCount === 'number' ? `${e.wordCount} words · ` : ''}
-                                                        {e.parsed ? `${e.paragraphCount} body paragraph${e.paragraphCount === 1 ? '' : 's'}` : 'Set-up needed — open to continue'}
-                                                    </p>
+                                                <div className="flex items-center gap-3 shrink-0">
+                                                    {due > 0 && (
+                                                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-accent-soft text-accent">
+                                                            {due} to review
+                                                        </span>
+                                                    )}
+                                                    <span className="hidden text-xs font-bold text-text-dim group-hover:text-accent sm:inline">{e.parsed ? 'Open' : 'Finish set-up'}</span>
+                                                    <ArrowRightIcon className="w-4 h-4 text-text-dim group-hover:text-accent transition-colors" />
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-3 shrink-0">
-                                                {due > 0 && (
-                                                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-accent-soft text-accent">
-                                                        {due} due
-                                                    </span>
-                                                )}
-                                                <ArrowRightIcon className="w-4 h-4 text-text-dim group-hover:text-accent transition-colors" />
-                                            </div>
-                                        </Link>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </section>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </section>
+                    </div>
 
-                    <aside>
-                        <NewEssayComposer onCreated={handleCreate} />
+                    <aside ref={asideRef} className="flex flex-col gap-6">
+                        <NewEssayComposer open={composerOpen} onOpenChange={setComposerOpen} onCreated={handleCreate} />
+                        {essays.length > 0 && <HowItWorks compact />}
                     </aside>
                 </div>
             </div>
