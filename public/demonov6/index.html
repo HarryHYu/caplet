@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knoxi HSC Page Structure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1d3f7d; --navy-d:#163266; --link:#1d4f9c; --ink:#1f2328; --muted:#5d6570;
+    --bg:#f4f5f7; --panel:#ffffff; --head:#e6e8ec; --line:#d9dce1; --amber:#c27a12; --chip:#e9eef8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.45}
+  a{color:var(--link);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+  /* sidebar */
+  aside{background:#fff;border-right:1px solid var(--line);padding:22px 0 40px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .brand{padding:0 24px 18px;display:flex;align-items:baseline;gap:8px}
+  .brand .word{font-size:40px;font-weight:700;color:var(--navy);letter-spacing:-1.5px}
+  .brand .word i{font-family:Georgia,serif;font-weight:400;color:#2b6fd1}
+  .brand small{color:var(--muted);font-size:12px}
+  .search{margin:0 20px 14px;position:relative}
+  .search input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fafbfc}
+  .search input:focus{outline:2px solid #9ab7e8;border-color:transparent}
+  .navhead{font-size:17px;padding:14px 24px 6px;color:var(--ink);font-weight:500}
+  .home-link{display:block;padding:6px 24px;font-size:15px}
+  .fac{margin-top:10px}
+  .fac h4{margin:0;padding:10px 24px 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .fac a{display:block;padding:5px 24px 5px 24px;font-size:14.5px;border-left:3px solid transparent}
+  .fac a.on{background:var(--chip);border-left-color:var(--navy);font-weight:600;text-decoration:none}
+  .fac a .n{float:right;color:var(--muted);font-size:12px;font-weight:400}
+  /* top bar */
+  main{padding:20px 28px 60px;min-width:0}
+  .topbar{background:var(--navy);color:#fff;border-radius:2px;display:flex;align-items:center;gap:6px;padding:10px 18px;flex-wrap:wrap}
+  .topbar .item{display:flex;flex-direction:column;align-items:center;padding:4px 14px;font-size:14.5px;opacity:.95;cursor:pointer;border-radius:6px;background:none;border:0;color:#fff;font-family:inherit}
+  .topbar .item:hover{background:var(--navy-d)}
+  .topbar .item svg{width:22px;height:22px;margin-bottom:3px}
+  .topbar .spacer{flex:1}
+  .topbar .tag{font-size:12px;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:20px}
+  h1{font-weight:500;font-size:34px;margin:22px 0 18px;letter-spacing:-.3px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+  .panel{background:var(--panel);border:1px solid var(--line);margin-bottom:18px}
+  .panel>.ph{background:var(--head);padding:12px 14px;font-size:15px;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .panel>.pb{padding:4px 0}
+  .ph .sort{text-transform:none;letter-spacing:0;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:3px 10px;color:var(--muted)}
+  .ph .sort b{color:var(--ink);font-weight:600}
+  .grp{padding:12px 16px 2px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+  details.page{border-top:1px solid #eef0f3}
+  details.page:first-of-type{border-top:0}
+  details.page summary{list-style:none;cursor:pointer;padding:11px 16px;display:flex;gap:12px;align-items:baseline}
+  details.page summary::-webkit-details-marker{display:none}
+  details.page summary .num{color:var(--muted);font-variant-numeric:tabular-nums;min-width:22px;font-size:13px}
+  details.page summary .t{color:var(--link);font-size:17px;flex:1}
+  details.page summary .meta{color:var(--amber);font-size:13px;white-space:nowrap}
+  details.page summary .car{color:var(--muted);transition:transform .15s}
+  details.page[open] summary .car{transform:rotate(90deg)}
+  details.page ul{margin:0 0 12px 50px;padding:0 16px 0 0;color:var(--ink)}
+  details.page li{margin:3px 0;font-size:14.5px}
+  details.page .desc{margin:0 16px 8px 50px;color:var(--muted);font-size:14px}
+  .banner{background:#000;color:#fff;font-family:Oswald,sans-serif;font-size:28px;padding:10px 16px;display:flex;align-items:center;gap:14px;margin-bottom:18px;border:1px solid #000}
+  .banner .chev{width:34px;height:44px;flex:none}
+  .kv{padding:12px 16px;border-top:1px solid #eef0f3;font-size:14.5px}
+  .kv:first-child{border-top:0}
+  .kv .k{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px}
+  .note{padding:12px 16px;font-size:14px;color:var(--ink)}
+  .note.warn{background:#fff7e6;border-left:3px solid var(--amber)}
+  .btn{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid var(--navy);background:var(--navy);color:#fff;cursor:pointer}
+  .btn.ghost{background:#fff;color:var(--navy)}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px}
+  /* overview */
+  .ov{width:100%;border-collapse:collapse;font-size:14.5px}
+  .ov th{text-align:left;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:10px 16px;border-bottom:1px solid var(--line)}
+  .ov td{padding:9px 16px;border-bottom:1px solid #eef0f3;vertical-align:top}
+  .ov tr.fh td{background:#fafbfc;font-weight:600;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:.05em}
+  .ov td.c{color:var(--muted)}
+  .pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:20px;background:var(--chip);color:var(--navy);white-space:nowrap}
+  .pill.new{background:#e5f4ea;color:#1d6b38}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:9px 16px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.on{opacity:1}
+  .mob{display:none}
+  .empty{padding:16px;color:var(--muted)}
+  @media (max-width:980px){
+    .app{grid-template-columns:1fr}
+    aside{display:none}
+    .mob{display:block;margin:14px 0 0}
+    .mob select{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:8px;background:#fff}
+    .grid{grid-template-columns:1fr}
+    main{padding:14px}
+    .topbar .item span{display:none}
+    h1{font-size:27px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><span class="word">knox<i>i</i></span><small>HSC page plan</small></div>
+    <div class="search"><input id="q" type="search" placeholder="Search subjects or topics…" aria-label="Search"></div>
+    <div class="navhead">Navigation</div>
+    <a class="home-link" href="#overview">All subjects overview</a>
+    <div id="nav"></div>
+  </aside>
+  <main>
+    <div class="topbar">
+      <button class="item" onclick="location.hash='overview'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Overview</span></button>
+      <button class="item" onclick="expandAll(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Expand all</span></button>
+      <button class="item" onclick="expandAll(false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h16"/></svg><span>Collapse all</span></button>
+      <button class="item" onclick="copyAll()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg><span>Copy everything</span></button>
+      <div class="spacer"></div>
+      <span class="tag">HSC 2027 cohort · Year 12 from Term 4 2026</span>
+    </div>
+    <div class="mob"><select id="mobsel" aria-label="Choose subject"></select></div>
+    <div id="view"></div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- DATA ----------
+   Each subject: id, name, fac, by (sort basis), syl (syllabus in force for HSC 2027), units[]
+   unit: {t: page title, g: group heading (optional), d: description (optional), s: [sub-pages] (optional)}
+*/
+const NEW = 'New 2024 syllabus · first HSC 2027';
+const S = [
+ // ENGLISH
+ {id:'english-studies',name:'12 English Studies',fac:'English',by:'Focus area',syl:NEW,units:[
+  {t:'Narrative and human experiences',d:'Mandatory'},
+  {t:'Writing for purpose',d:'Mandatory'},
+  {t:'Elective focus area 1',d:'School-chosen elective; rename the page to the elective taught (e.g. sport, media, travel, family)'},
+  {t:'Elective focus area 2',d:'Second school-chosen elective'}]},
+ {id:'english-eald',name:'12 English (EAL/D)',fac:'English',by:'Focus area',syl:NEW,units:[
+  {t:'Texts and human experiences'},{t:'Language, identity and culture'},{t:'Close study of text'},{t:'Writing'}]},
+ {id:'english-standard',name:'12 English Standard',fac:'English',by:'Focus area',syl:NEW,units:[
+  {t:'Texts and human experiences'},{t:'Language, identity and culture'},{t:'Close study of literature'},{t:'The craft of writing'}]},
+ {id:'english-advanced',name:'12 English Advanced',fac:'English',by:'Focus area',syl:NEW,units:[
+  {t:'Texts and human experiences'},{t:'Textual conversations'},{t:'Critical study of literature'},{t:'The craft of writing'}]},
+ {id:'english-ext-1',name:'12 English Extension 1',fac:'English',by:'Focus area + elective',syl:NEW,units:[
+  {t:'Literary worlds',d:'Common focus area (HSC Section I)'},
+  {t:'Elective',d:'Each class studies ONE. Keep the one your class does, delete the rest.',s:['Confessional worlds','Historical worlds','Hybrid worlds','Natural worlds','Shakespearean worlds']}]},
+ {id:'english-ext-2',name:'12 English Extension 2',fac:'English',by:'Focus area',syl:NEW,units:[
+  {t:'Author and authority',d:'New focus area with an author study and a written exam'},
+  {t:'Major work',s:['Proposal and concept','Research and investigation','Drafting and journal','Reflection statement','Final submission']}]},
+ // MATHS
+ {id:'maths-std-1',name:'12 Mathematics Standard 1',fac:'Mathematics',by:'Topic (focus area)',syl:NEW,units:[
+  {g:'Algebra',t:'Algebraic relationships'},
+  {g:'Financial mathematics',t:'Investment'},{g:'Financial mathematics',t:'Depreciation and loans'},
+  {g:'Measurement',t:'Right-angled triangles'},{g:'Measurement',t:'Ratios and rates'},
+  {g:'Statistics',t:'Bivariate data analysis'},{g:'Statistics',t:'Relative frequency and probability'}]},
+ {id:'maths-std-2',name:'12 Mathematics Standard 2',fac:'Mathematics',by:'Topic (focus area)',syl:NEW,units:[
+  {g:'Algebra',t:'Algebraic relationships'},
+  {g:'Financial mathematics',t:'Investment and loans'},{g:'Financial mathematics',t:'Annuities'},
+  {g:'Measurement',t:'Trigonometry'},{g:'Measurement',t:'Ratios and rates'},
+  {g:'Networks',t:'Network flow'},{g:'Networks',t:'Critical path analysis'},
+  {g:'Statistics',t:'Bivariate data analysis'},{g:'Statistics',t:'Relative frequency and probability'},{g:'Statistics',t:'The normal distribution'}]},
+ {id:'maths-advanced',name:'12 Mathematics Advanced',fac:'Mathematics',by:'Topic (focus area)',syl:NEW,units:[
+  {g:'Functions',t:'Further graph transformations and modelling'},
+  {g:'Sequences and series',t:'Sequences and series'},
+  {g:'Calculus',t:'Differential calculus'},{g:'Calculus',t:'Integral calculus'},{g:'Calculus',t:'Applications of calculus'},
+  {g:'Statistical analysis',t:'Random variables'},
+  {g:'Financial mathematics',t:'Financial mathematics'}]},
+ {id:'maths-ext-1',name:'12 Mathematics Extension 1',fac:'Mathematics',by:'Topic (focus area)',syl:NEW,units:[
+  {g:'Proof',t:'Proof by mathematical induction'},
+  {g:'Vectors',t:'Introduction to vectors'},
+  {g:'Trigonometric functions',t:'Inverse trigonometric functions'},
+  {g:'Calculus',t:'Further calculus skills'},{g:'Calculus',t:'Further applications of calculus'},
+  {g:'Statistical analysis',t:'The binomial distribution and the sampling distribution of the mean'}]},
+ {id:'maths-ext-2',name:'12 Mathematics Extension 2',fac:'Mathematics',by:'Topic (focus area)',syl:NEW,units:[
+  {g:'Proof',t:'The nature of proof'},{g:'Vectors',t:'Further work with vectors'},
+  {g:'Complex numbers',t:'Introduction to complex numbers'},{g:'Calculus',t:'Further integration'},
+  {g:'Mechanics',t:'Applications of calculus to mechanics'}]},
+ // AGRICULTURE
+ {id:'agriculture',name:'12 Agriculture',fac:'Agriculture',by:'Core and elective',units:[
+  {t:'Plant/Animal Production',d:'Core 1'},{t:'Farm Case Study',d:'Core 2'},
+  {t:'Elective',d:'One taught',s:['Agri-food, Fibre and Fuel Technologies','Climate Challenge','Farming for the 21st Century']}]},
+ // DRAMA
+ {id:'drama',name:'12 Drama',fac:'Creative Arts',by:'Component',units:[
+  {t:'Australian Drama and Theatre',d:'Core topic'},{t:'Studies in Drama and Theatre',d:'School-chosen topic'},
+  {t:'Group Performance'},{t:'Individual Project',d:'Performance, design, critical analysis, script or video'}]},
+ // BUSINESS / HSIE
+ {id:'business-studies',name:'12 Business Studies',fac:'Business & Economics',by:'Topic',units:[
+  {t:'Operations'},{t:'Marketing'},{t:'Finance'},{t:'Human Resources'}]},
+ {id:'vet-business',name:'12 VET Cert III Business Services',fac:'Business & Economics',by:'Unit cluster',units:[
+  {t:'Working in a business environment',d:'Teamwork, workplace relationships, personal work priorities'},
+  {t:'Customer service'},{t:'Work health and safety'},
+  {t:'Business documents and technology',d:'Producing documents, spreadsheets, digital records'},
+  {t:'Workplace information and sustainability'},
+  {t:'HSC exam preparation and work placement'}]},
+ {id:'economics',name:'12 Economics',fac:'Business & Economics',by:'Topic',units:[
+  {t:'The Global Economy'},{t:"Australia's Place in the Global Economy"},{t:'Economic Issues'},{t:'Economic Policies and Management'}]},
+ {id:'legal-studies',name:'12 Legal Studies',fac:'Business & Economics',by:'Topic',units:[
+  {g:'Core',t:'Crime'},{g:'Core',t:'Human Rights'},
+  {g:'Options (two taught)',t:'Options',s:['Consumers','Global Environmental Protection','Family','Indigenous Peoples','Shelter','Workplace','World Order']}]},
+ {id:'geography',name:'12 Geography',fac:'HSIE',by:'Topic',units:[
+  {t:'Ecosystems at Risk'},{t:'Urban Places'},{t:'People and Economic Activity'}]},
+ {id:'ancient-history',name:'12 Ancient History',fac:'HSIE',by:'Topic',units:[
+  {t:'Core: Cities of Vesuvius (Pompeii and Herculaneum)'},{t:'Ancient Societies'},{t:'Personalities in their Times'},{t:'Historical Periods'}]},
+ {id:'modern-history',name:'12 Modern History',fac:'HSIE',by:'Topic',units:[
+  {t:'Core: Power and Authority in the Modern World 1919–1946'},{t:'National Studies'},{t:'Peace and Conflict'},{t:'Change in the Modern World'}]},
+ {id:'history-ext',name:'12 History Extension',fac:'HSIE',by:'Part',units:[
+  {t:'Part I: What is History?',s:['Key questions and historiography','Case study']},
+  {t:'Part II: History Project',s:['Proposal','Annotated bibliography','Essay']}]},
+ // LANGUAGES
+ ...[['chinese-context','12 Chinese in Context'],['french-cont','12 French Continuers'],['german-cont','12 German Continuers'],['japanese-cont','12 Japanese Continuers']].map(([id,name])=>({
+   id,name,fac:'Languages',by:'Skill',note:'Languages split best by exam skill; each page can hold theme and topic vocab.',units:[
+   {t:'Listening'},{t:'Reading'},{t:'Writing'},{t:'Speaking (oral exam)'},{t:'Themes, topics and vocabulary'}]})),
+ ...[['french-ext','12 French Extension'],['german-ext','12 German Extension'],['japanese-ext','12 Japanese Extension']].map(([id,name])=>({
+   id,name,fac:'Languages',by:'Component',units:[
+   {t:'Prescribed issues'},{t:'Prescribed text'},{t:'Writing in the language'},{t:'Speaking'}]})),
+ // MUSIC
+ ...[['music-1','12 Music 1'],['music-2','12 Music 2']].map(([id,name])=>({
+   id,name,fac:'Creative Arts',by:'Concept',units:[
+   {t:'Pitch'},{t:'Duration'},{t:'Texture'},{t:'Tone colour'},{t:'Dynamics and expressive techniques'},{t:'Structure'}]})),
+ {id:'music-ext',name:'12 Music Extension',fac:'Creative Arts',by:'Specialisation',note:'Extension has no concept framework of its own, so it is split by specialisation. Students do one.',units:[
+  {t:'Performance'},{t:'Composition'},{t:'Musicology'}]},
+ // HMS
+ {id:'hms',name:'12 Health & Movement Science',fac:'PDHPE',by:'Focus area',syl:'New syllabus · first HSC 2026',units:[
+  {t:'Health in an Australian and global context',d:'Focus Area 1'},{t:'Training for improved performance',d:'Focus Area 2'},{t:'Depth studies'}]},
+ // SCIENCE
+ {id:'biology',name:'12 Biology',fac:'Science',by:'Module',units:[
+  {t:'Module 5: Heredity'},{t:'Module 6: Genetic Change'},{t:'Module 7: Infectious Disease'},{t:'Module 8: Non-infectious Disease and Disorders'}]},
+ {id:'chemistry',name:'12 Chemistry',fac:'Science',by:'Module',units:[
+  {t:'Module 5: Equilibrium and Acid Reactions'},{t:'Module 6: Acid/Base Reactions'},{t:'Module 7: Organic Chemistry'},{t:'Module 8: Applying Chemical Ideas'}]},
+ {id:'ees',name:'12 Earth & Environmental Science',fac:'Science',by:'Module',units:[
+  {t:"Module 5: Earth's Resources"},{t:'Module 6: Hazards'},{t:'Module 7: Climate Science'},{t:'Module 8: Resource Management'}]},
+ {id:'investigating-science',name:'12 Investigating Science',fac:'Science',by:'Module',units:[
+  {t:'Module 5: Scientific Investigations'},{t:'Module 6: Technologies'},{t:'Module 7: Fact or Fallacy?'},{t:'Module 8: Science and Society'}]},
+ {id:'science-ext',name:'12 Science Extension',fac:'Science',by:'Module',units:[
+  {t:'Module 1: The Foundations of Scientific Thinking'},{t:'Module 2: The Scientific Research Proposal'},{t:'Module 3: The Data, Evidence and Decisions'},{t:'Module 4: The Scientific Research Report'}]},
+ {id:'physics',name:'12 Physics',fac:'Science',by:'Module',units:[
+  {t:'Module 5: Advanced Mechanics'},{t:'Module 6: Electromagnetism'},{t:'Module 7: The Nature of Light'},{t:'Module 8: From the Universe to the Atom'}]},
+ // SOR
+ {id:'sor-1',name:'12 Studies of Religion I',fac:'Religion',by:'Topic',units:[
+  {t:'Religion and Belief Systems in Australia post-1945'},
+  {t:'Religious Tradition Depth Studies',d:'Two traditions studied',s:['Buddhism','Christianity','Hinduism','Islam','Judaism']}]},
+ {id:'sor-2',name:'12 Studies of Religion II',fac:'Religion',by:'Topic',units:[
+  {t:'Religion and Belief Systems in Australia post-1945'},
+  {t:'Religious Tradition Depth Studies',s:['Buddhism','Christianity','Hinduism','Islam','Judaism']},
+  {t:'Religion and Peace'},{t:'Religion and Non-Religion'}]},
+ // TAS
+ {id:'design-tech',name:'12 Design & Technology',fac:'TAS',by:'Topic',units:[
+  {t:'Innovation and Emerging Technologies',d:'Includes the case study of an innovation'},
+  {t:'Major Design Project',s:['Project proposal and management','Project development and realisation','Project evaluation']}]},
+ {id:'enterprise-computing',name:'12 Enterprise Computing',fac:'TAS',by:'Topic',syl:'New syllabus · first HSC 2025',units:[
+  {t:'Interactive media and the user experience'},{t:'Data science'},{t:'Data visualisation'},{t:'Enterprise project'}]},
+ {id:'engineering',name:'12 Engineering Studies',fac:'TAS',by:'Module',units:[
+  {t:'Civil Structures'},{t:'Personal and Public Transport'},{t:'Aeronautical Engineering'},{t:'Telecommunications Engineering'}]},
+ {id:'industrial-tech',name:'12 Industrial Technology',fac:'TAS',by:'Section',units:[
+  {t:'Industry Study'},{t:'Design, Management and Communication',d:'Major project folio'},{t:'Production',d:'Major project'},{t:'Industry Related Manufacturing Technology'}]},
+ {id:'software-engineering',name:'12 Software Engineering',fac:'TAS',by:'Topic',syl:'New syllabus · first HSC 2025',units:[
+  {t:'Secure software architecture'},{t:'Programming for the web'},{t:'Software automation'},{t:'Software engineering project'}]},
+ {id:'visual-arts',name:'12 Visual Arts',fac:'Creative Arts',by:'Content area',units:[
+  {t:'Artmaking: Body of Work'},{t:'Practice'},{t:'The Conceptual Framework',s:['Artist','Artwork','World','Audience']},
+  {t:'The Frames',s:['Subjective','Structural','Cultural','Postmodern']},{t:'Case studies (art criticism and history)'}]},
+];
+const FAC_ORDER=['English','Mathematics','Science','Business & Economics','HSIE','Languages','Creative Arts','PDHPE','TAS','Religion','Agriculture'];
+S.forEach(s=>{ if(!s.syl) s.syl='Current syllabus · unchanged for HSC 2027'; });
+
+/* ---------- RENDER ---------- */
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pageCount=s=>s.units.length;
+const byFac=()=>FAC_ORDER.map(f=>[f,S.filter(s=>s.fac===f)]).filter(([,a])=>a.length);
+
+function nav(filter=''){
+  const f=filter.trim().toLowerCase();
+  const html=byFac().map(([fac,subs])=>{
+    const shown=subs.filter(s=>!f||s.name.toLowerCase().includes(f)||s.units.some(u=>(u.t+' '+(u.s||[]).join(' ')).toLowerCase().includes(f)));
+    if(!shown.length) return '';
+    return `<div class="fac"><h4>${esc(fac)}</h4>${shown.map(s=>`<a href="#${s.id}" data-id="${s.id}">${esc(s.name.replace(/^12 /,''))}<span class="n">${pageCount(s)}</span></a>`).join('')}</div>`;
+  }).join('');
+  $('#nav').innerHTML=html||'<div class="empty">No matches.</div>';
+  mark();
+}
+function mark(){const id=location.hash.slice(1);document.querySelectorAll('.fac a').forEach(a=>a.classList.toggle('on',a.dataset.id===id));}
+
+function mob(){
+  $('#mobsel').innerHTML='<option value="overview">All subjects overview</option>'+byFac().map(([fac,subs])=>`<optgroup label="${esc(fac)}">${subs.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</optgroup>`).join('');
+  $('#mobsel').onchange=e=>location.hash=e.target.value;
+}
+
+function subjectText(s){
+  let out=`${s.name}  (sorted by ${s.by.toLowerCase()})\n`;
+  let i=0,lastG=null;
+  s.units.forEach(u=>{
+    if(u.g&&u.g!==lastG){out+=`  [${u.g}]\n`;lastG=u.g;}
+    i++; out+=`  ${i}. ${u.t}\n`;
+    (u.s||[]).forEach(x=>out+=`      - ${x}\n`);
+  });
+  return out;
+}
+
+function renderSubject(s){
+  let i=0,lastG=null;
+  const rows=s.units.map(u=>{
+    let g='';
+    if(u.g&&u.g!==lastG){g=`<div class="grp">${esc(u.g)}</div>`;lastG=u.g;}
+    i++;
+    const sub=u.s?`<ul>${u.s.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'';
+    const desc=u.d?`<p class="desc">${esc(u.d)}</p>`:'';
+    const meta=u.s?`${u.s.length} sub-pages`:'';
+    const hasBody=sub||desc;
+    return `${g}<details class="page"${hasBody?'':' data-empty'}><summary><span class="num">${i}</span><span class="t">${esc(u.t)}</span><span class="meta">${meta}</span>${hasBody?'<span class="car">›</span>':''}</summary>${desc}${sub}</details>`;
+  }).join('');
+  const isNew=/New/.test(s.syl);
+  $('#view').innerHTML=`
+    <h1>${esc(s.name)}</h1>
+    <div class="grid">
+      <div>
+        <div class="panel"><div class="ph">Pages<span class="sort">Sorted by <b>${esc(s.by)}</b></span></div><div class="pb">${rows}</div></div>
+        ${s.note?`<div class="panel"><div class="note">${esc(s.note)}</div></div>`:''}
+      </div>
+      <div>
+        <div class="banner"><svg class="chev" viewBox="0 0 34 44"><path d="M30 2 6 22l24 20" fill="none" stroke="#fff" stroke-width="4"/><path d="M22 2 0 22l22 20" fill="none" stroke="#fff" stroke-width="2"/></svg>${esc(s.name)}</div>
+        <div class="panel"><div class="ph">Structure</div>
+          <div class="kv"><div class="k">Organised by</div>${esc(s.by)}</div>
+          <div class="kv"><div class="k">Pages</div>${pageCount(s)} top-level${s.units.some(u=>u.s)?' + sub-pages':''}</div>
+          <div class="kv"><div class="k">Syllabus</div><span class="pill ${isNew?'new':''}">${esc(s.syl)}</span></div>
+          <div class="btnrow"><button class="btn" onclick="copySubject('${s.id}')">Copy this structure</button><button class="btn ghost" onclick="location.hash='overview'">All subjects</button></div>
+        </div>
+        ${isNew&&s.fac==='English'?'<div class="panel"><div class="note warn">Year 12 English moved to the 2024 syllabus in Term 4 2026. Focus areas replace the old modules, and Extension 1 has five new electives.</div></div>':''}
+        ${isNew&&s.fac==='Mathematics'?'<div class="panel"><div class="note warn">Year 12 Maths moved to the 2024 syllabus in Term 4 2026, so the old MA-/ME- topic codes no longer apply. Pages use the new focus-area names.</div></div>':''}
+      </div>
+    </div>`;
+}
+
+function renderOverview(){
+  const total=S.reduce((a,s)=>a+pageCount(s),0);
+  const rows=byFac().map(([fac,subs])=>`<tr class="fh"><td colspan="4">${esc(fac)}</td></tr>`+subs.map(s=>`
+    <tr><td><a href="#${s.id}">${esc(s.name)}</a></td><td class="c">${esc(s.by)}</td><td>${pageCount(s)}</td><td>${/New/.test(s.syl)?`<span class="pill new">${esc(s.syl.replace('New ','').replace(' syllabus',''))}</span>`:''}</td></tr>`).join('')).join('');
+  $('#view').innerHTML=`
+    <h1>HSC page structure</h1>
+    <div class="grid">
+      <div class="panel"><div class="ph">All subjects<span class="sort"><b>${S.length}</b> courses · <b>${total}</b> top-level pages</span></div>
+        <div style="overflow-x:auto"><table class="ov"><thead><tr><th>Course</th><th>Sorted by</th><th>Pages</th><th>Syllabus</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+      <div>
+        <div class="banner"><svg class="chev" viewBox="0 0 34 44"><path d="M30 2 6 22l24 20" fill="none" stroke="#fff" stroke-width="4"/><path d="M22 2 0 22l22 20" fill="none" stroke="#fff" stroke-width="2"/></svg>Year 12 · HSC</div>
+        <div class="panel"><div class="ph">How it's split</div>
+          <div class="kv"><div class="k">Rule of thumb</div>One page per official syllabus unit (module, focus area or topic). That's usually 3–7 per course, so each page has enough in it to be worth having.</div>
+          <div class="kv"><div class="k">Electives and options</div>Shown as sub-pages. Keep only the ones your class actually studies.</div>
+          <div class="kv"><div class="k">Heads up</div>English and Maths use the new 2024 syllabuses for the HSC 2027 cohort, so the names differ from older resources.</div>
+          <div class="btnrow"><button class="btn" onclick="copyAll()">Copy everything as text</button></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function route(){
+  const id=location.hash.slice(1)||'overview';
+  const s=S.find(x=>x.id===id);
+  s?renderSubject(s):renderOverview();
+  $('#mobsel').value=s?s.id:'overview';
+  mark(); window.scrollTo(0,0);
+}
+function expandAll(open){document.querySelectorAll('details.page:not([data-empty])').forEach(d=>d.open=open);}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1600);}
+async function copyText(txt,msg){try{await navigator.clipboard.writeText(txt);toast(msg);}catch(e){toast('Copy was blocked by the browser');}}
+function copySubject(id){const s=S.find(x=>x.id===id);copyText(subjectText(s),'Copied '+s.name);}
+function copyAll(){copyText(byFac().map(([f,subs])=>`=== ${f.toUpperCase()} ===\n`+subs.map(subjectText).join('\n')).join('\n'),'Copied all subjects');}
+
+$('#q').addEventListener('input',e=>nav(e.target.value));
+window.addEventListener('hashchange',route);
+nav(); mob(); route();
+</script>
+</body>
+</html>
